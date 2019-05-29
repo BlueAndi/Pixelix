@@ -1,0 +1,35 @@
+@startuml
+
+title ESP-RGB-LED Matrix
+
+component "Power Supply" as powerSupply
+
+package "Housing" {
+
+    package "PCB" as pcb {
+        component "Overcurrent protection" as ocp
+        component "Inverse connection protection" as icp
+        component "Overvoltage protection" as ovp
+        
+        package "Wemos D1 Mini connector" {
+        
+            component "Wemos D1 Mini" as wemosD1Mini
+        }
+    }
+    
+    component "LED matrix" as ledMatrix
+    component "Button" as button
+    component "Ambilight sensor" as ambilightSensor
+}
+
+powerSupply -- ocp: 5 V / 4 A
+ocp -- icp
+icp -- ovp
+ovp -r- wemosD1Mini: protected power
+ovp -- ledMatrix: protected power
+
+wemosD1Mini -- ledMatrix: data
+wemosD1Mini -- button: input
+wemosD1Mini -- ambilightSensor
+
+@enduml

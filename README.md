@@ -15,6 +15,8 @@ The main parts are:
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 
+![system-diagram](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/design/system.png)
+
 ## Issues, Ideas and bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
