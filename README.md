@@ -7,7 +7,7 @@ Full RGB LED matrix, based on an ESP and WS2812B LEDs.
 Having a remote display to show any kind of information.
 
 ## Requirements
-See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/REQUIREMENTS.md).
+See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/REQUIREMENTS.md).
 
 ## Electronic
 The main parts are:
