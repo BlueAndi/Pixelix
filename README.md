@@ -17,6 +17,19 @@ The main parts are:
 
 ![system-diagram](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/design/system.png)
 
+## Software
+
+### IDE
+The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the development. Its build on top of Microsoft Visual Studio Code.
+
+### Installation
+1. Install [VSCode](https://code.visualstudio.com/).
+2. Install PlatformIO IDE according to this [HowTo](https://platformio.org/install/ide?install=vscode).
+3. Recommended is to take a look to the [quick-start guide](https://docs.platformio.org/en/latest/ide/vscode.html#quick-start).
+
+### Used libraries
+* [FastLED](https://github.com/FastLED/FastLED) - Controlling the LED matrix.
+
 ## Issues, Ideas and bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
