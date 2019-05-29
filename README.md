@@ -7,7 +7,7 @@ Full RGB LED matrix, based on an ESP and WS2812B LEDs.
 Having a remote display to show any kind of information.
 
 ## Requirements
-Next available REQ id: 11
+Next available REQ id: 17
 
 ### General
 * REQ-01: The display shall be able to show bitmaps and text.
