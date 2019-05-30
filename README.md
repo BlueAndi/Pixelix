@@ -7,7 +7,7 @@ Full RGB LED matrix, based on an ESP and WS2812B LEDs.
 Having a remote display to show any kind of information, running 24/7 reliable.
 
 ## Requirements
-See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/REQUIREMENTS.md).
+See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/REQUIREMENTS.md).
 
 ## Electronic
 The main parts are:
@@ -15,7 +15,7 @@ The main parts are:
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 
-![system-diagram](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/design/system.png)
+![system-diagram](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/design/system.png)
 
 ## Software
 
@@ -34,8 +34,9 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 ### Structure
 
 <pre>
-+---datasheets      (Datasheets of electronic parts)
-+---design          (Desgin related documents)
++---doc             (Documentation)
+    +---datasheets  (Datasheets of electronic parts)
+    \---design      (Desgin related documents)
 +---include         (Include files)
 +---lib             (Project specific (private) libraries)
 +---src             (Sourcecode)
