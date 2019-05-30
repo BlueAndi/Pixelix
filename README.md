@@ -46,7 +46,7 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 +---include         (Include files)
 +---lib             (Project specific (private) libraries)
 +---src             (Sourcecode)
-+---test            (Module tests)
++---test            (Unit tests)
 \---platform.ini    (Project configuration file)
 </pre>
 
