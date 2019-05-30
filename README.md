@@ -25,7 +25,13 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 ### Installation
 1. Install [VSCode](https://code.visualstudio.com/).
 2. Install PlatformIO IDE according to this [HowTo](https://platformio.org/install/ide?install=vscode).
-3. Recommended is to take a look to the [quick-start guide](https://docs.platformio.org/en/latest/ide/vscode.html#quick-start).
+3. Close and start VSCode again.
+4. Recommended is to take a look to the [quick-start guide](https://docs.platformio.org/en/latest/ide/vscode.html#quick-start).
+
+### Compiling project
+1. Load workspace in VSCode.
+2. Change to PlatformIO toolbar.
+3. _Project Tasks -> Build_ or via hotkey ctrl-alt-b
 
 ### Used libraries
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework
