@@ -28,8 +28,20 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 3. Recommended is to take a look to the [quick-start guide](https://docs.platformio.org/en/latest/ide/vscode.html#quick-start).
 
 ### Used libraries
-* [ESP8266 Non-OS SDK](https://docs.platformio.org/en/latest/frameworks/esp8266-nonos-sdk.html#framework-esp8266-nonos-sdk) - ESP framework
+* [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework
 * [FastLED](https://github.com/FastLED/FastLED) - Controlling the LED matrix.
+
+### Structure
+
+<pre>
++---datasheets      (Datasheets of electronic parts)
++---design          (Desgin related documents)
++---include         (Include files)
++---lib             (Project specific (private) libraries)
++---src             (Sourcecode)
++---test            (Module tests)
+\---platform.ini    (Project configuration file)
+</pre>
 
 ## Issues, Ideas and bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

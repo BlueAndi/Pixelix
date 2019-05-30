@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "esp-rgb-led-matrix",
+			"path": "esp-rgb-led-matrix"
+		}
+	],
+	"settings": {}
+}
