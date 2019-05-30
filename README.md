@@ -4,14 +4,14 @@ Full RGB LED matrix, based on an ESP and WS2812B LEDs.
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
 ## Motivation
-Having a remote display to show any kind of information.
+Having a remote display to show any kind of information, running 24/7 reliable.
 
 ## Requirements
 See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/REQUIREMENTS.md).
 
 ## Electronic
 The main parts are:
-* [Wemos D1 Mini](https://wiki.wemos.cc/products:d1:d1_mini) - A mini wifi board with 4MB flash based on ESP-8266EX.
+* [Wemos D1 Mini](https://wiki.wemos.cc/products:d1:d1_mini) - A mini wifi board with 4 MB flash, 80 KB RAM and 80 MHz clock based on ESP-8266EX.
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 
@@ -28,6 +28,7 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 3. Recommended is to take a look to the [quick-start guide](https://docs.platformio.org/en/latest/ide/vscode.html#quick-start).
 
 ### Used libraries
+* [ESP8266 Non-OS SDK](https://docs.platformio.org/en/latest/frameworks/esp8266-nonos-sdk.html#framework-esp8266-nonos-sdk) - ESP framework
 * [FastLED](https://github.com/FastLED/FastLED) - Controlling the LED matrix.
 
 ## Issues, Ideas and bugs
