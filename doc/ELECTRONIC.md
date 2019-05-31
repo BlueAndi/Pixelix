@@ -5,7 +5,7 @@ Full RGB LED matrix, based on an ESP and WS2812B LEDs.
 
 ## Electronic
 
-## System diagram
+### System diagram
 
 ![system-diagram](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/design/system.png)
 
@@ -29,3 +29,19 @@ Full RGB LED matrix, based on an ESP and WS2812B LEDs.
 | 5V | 5V | - | Vcc_protected |
 | 3V3 | 3.3V | 3.3V | - |
 | RST | Reset | RST | - |
+
+Important note: All of the I/O pins run at 3.3 V.
+
+### LED Matrix
+
+The LED matrix consists of 8 x 12 WS2812B LEDs. Each LED has a max. current of 60 mA, which would result in a max. power consumption of 5 V / 15.36 A. The flexible LED panel matrix would be damaged with this high nominal power consumption, therefore it shall be limited to 5 V / 4 A.
+
+Input voltage level:
+* High - Min. 0.7 * VDD
+  * => 0.7 * 5 V = 3.5 V
+* Low - Max. 0.3 * VDD
+  * => 0.3 * 5 V = 1.5 V
+
+The I/O pins of the Wemos D1 mini are running with a 3.3 V level, which could cause a problem in detection a high!
+
+Therefore the level must be shifted from 3.3 V to 5V.
