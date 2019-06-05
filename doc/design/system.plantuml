@@ -11,9 +11,9 @@ package "Housing" {
         component "Inverse connection protection" as icp
         component "Overvoltage protection" as ovp
         
-        package "Wemos D1 Mini connector" {
+        package "NodeMCU ESP-32S connector" {
         
-            component "Wemos D1 Mini" as wemosD1Mini
+            component "NodeMCU ESP-32S" as esp32s
         }
     }
     
@@ -25,11 +25,11 @@ package "Housing" {
 powerSupply -- ocp: 5 V / 4 A
 ocp -- icp
 icp -- ovp
-ovp -r- wemosD1Mini: protected power
+ovp -r- esp32s: protected power
 ovp -- ledMatrix: protected power
 
-wemosD1Mini -- ledMatrix: data
-wemosD1Mini -- button: input
-wemosD1Mini -- ambilightSensor
+esp32s -- ledMatrix: data
+esp32s -- button: input
+esp32s -- ambilightSensor
 
 @enduml
