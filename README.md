@@ -42,7 +42,9 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 <pre>
 +---doc             (Documentation)
     +---datasheets  (Datasheets of electronic parts)
-    \---design      (Desgin related documents)
+    +---design      (Design related documents)
+    +---eagle-libs  (Eagle libraries)
+    \---schematics  (Schematics)
 +---include         (Include files)
 +---lib             (Project specific (private) libraries)
 +---src             (Sourcecode)
