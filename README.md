@@ -1,5 +1,5 @@
 # esp-rgb-led-matrix
-Full RGB LED matrix, based on an ESP and WS2812B LEDs.
+Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
@@ -11,7 +11,7 @@ See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/do
 
 ## Electronic
 The main parts are:
-* [Wemos D1 Mini](https://wiki.wemos.cc/products:d1:d1_mini) - A mini wifi board with 4 MB flash, 80 KB RAM and 80 MHz clock based on ESP-8266EX.
+* [NodeMCU development board ESP-32S](https://docs.zerynth.com/latest/official/board.zerynth.nodemcu_esp32/docs/index.html)
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 
@@ -35,7 +35,7 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 
 ### Used libraries
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework
-* [FastLED](https://github.com/FastLED/FastLED) - Controlling the LED matrix.
+* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (I2S).
 
 ### Structure
 
