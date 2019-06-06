@@ -12,7 +12,7 @@ Next available REQ id: 19
 
 ### Communication
 * REQ-03: The communication with the display shall be via wifi.
-* REQ-04: The display shall provide a REST API.
+* REQ-04: The display shall provide a [REST](https://en.wikipedia.org/wiki/Representational_state_transfer) API to exchange [JSON](https://en.wikipedia.org/wiki/JSON).
 * REQ-05: The display shall provide a [websocket](https://en.wikipedia.org/wiki/WebSocket) interface.
 
 ### User Interaction
