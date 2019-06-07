@@ -34,8 +34,9 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 3. _Project Tasks -> Build_ or via hotkey ctrl-alt-b
 
 ### Used libraries
-* [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework
-* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (I2S).
+* [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.
+* [FastLED](https://github.com/FastLED/FastLED) - Controlling the LED matrix with hardware support (RMT).
+* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Alternative to FastLED with hardware support (I2S).
 
 ### Structure
 
