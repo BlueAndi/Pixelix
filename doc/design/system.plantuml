@@ -11,9 +11,9 @@ package "Housing" {
         component "Inverse connection protection" as icp
         component "Overvoltage protection" as ovp
         
-        package "NodeMCU ESP-32S connector" {
+        package "ESP32 DevKitV1 connector" {
         
-            component "NodeMCU ESP-32S" as esp32s
+            component "ESP32 DevKitV1" as esp32s
         }
     }
     
@@ -22,11 +22,11 @@ package "Housing" {
     component "Ambilight sensor" as ambilightSensor
 }
 
-powerSupply -- ocp: 5 V / 4 A
+powerSupply -- ocp: Vcc (5 V / 4 A)
 ocp -- icp
 icp -- ovp
-ovp -r- esp32s: protected power
-ovp -- ledMatrix: protected power
+ovp -r- esp32s: Vcc_protected
+ovp -- ledMatrix: Vcc_protected
 
 esp32s -- ledMatrix: data
 esp32s -- button: input
