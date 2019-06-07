@@ -18,13 +18,13 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 | VIN | J1-1 | VIN | 5V power supply |
 | GND | J1-2 | GND | Ground |
 | D13 | J1-3 | GPIO 13 | |
-| D12 | J1-4 | GPIO 12 | |
+| D12 | J1-4 | GPIO 12 | Data Out to LED matrix |
 | D14 | J1-5 | GPIO 14 | |
 | D27 | J1-6 | GPIO 27 | |
 | D26 | J1-7 | GPIO 26 (A9) | |
 | D25 | J1-8 | GPIO 25 (A8) | |
-| D33 | J1-9 | GPIO 33 (A5) | |
-| D32 | J1-10 | GPIO 32 (A4) | |
+| D33 | J1-9 | GPIO 33 (A5) | 32.768 kHz crystal (32K_XN) |
+| D32 | J1-10 | GPIO 32 (A4) | 32.768 kHz crystal (32K_XP) |
 | D35 | J1-11 | GPIO 35 (A7) | |
 | D34 | J1-12 | GPIO 34 (A6) | |
 | VN | J1-13 | GPIO 39 (VN) | |
