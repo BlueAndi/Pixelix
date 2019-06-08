@@ -13,39 +13,59 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 ![ESP32 DevKitV1 Pinout](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/datasheets/pinoutDOIT32devkitv1.png)
 
-| ESP32 DevKit V1 Pin | ESP32 DevKit V1 Pin Header | WROOM32 Pin | Function |
+| ESP32 DevKit V1 Pin | ESP32 DevKit V1 Pin Header | WROOM32 Pin | Description |
 | --- | --- | --- | --- |
 | VIN | J1-1 | VIN | 5V power supply |
 | GND | J1-2 | GND | Ground |
-| D13 | J1-3 | GPIO 13 | |
-| D12 | J1-4 | GPIO 12 | Data Out to LED matrix |
-| D14 | J1-5 | GPIO 14 | |
-| D27 | J1-6 | GPIO 27 | |
+| D13 | J1-3 | GPIO 13 | Data Out to LED matrix |
+| D12 | J1-4 | GPIO 12 | Strapping pin; Fails if high at power-up, therefore not used. |
+| D14 | J1-5 | GPIO 14 | Output PWM at power-up! |
+| D27 | J1-6 | GPIO 27 | - |
 | D26 | J1-7 | GPIO 26 (A9) | |
 | D25 | J1-8 | GPIO 25 (A8) | |
 | D33 | J1-9 | GPIO 33 (A5) | 32.768 kHz crystal (32K_XN) |
 | D32 | J1-10 | GPIO 32 (A4) | 32.768 kHz crystal (32K_XP) |
-| D35 | J1-11 | GPIO 35 (A7) | |
-| D34 | J1-12 | GPIO 34 (A6) | |
-| VN | J1-13 | GPIO 39 (VN) | |
-| VP | J1-14 | GPIO 36 (VP) | |
+| D35 | J1-11 | GPIO 35 (A7) | Input only! |
+| D34 | J1-12 | GPIO 34 (A6) | Input only! |
+| VN | J1-13 | GPIO 39 (VN) | Input only! |
+| VP | J1-14 | GPIO 36 (VP) | Input only! |
 | EN | J1-15 | EN | 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND; USB RTS |
 | VDD3V3 | J2-1 | VDD3V3 | 3.3 V output |
 | GND | J2-2 | GND | Ground |
-| D15 | J2-3 | GPIO 15 | |
-| D2 | J2-4 | GPIO 2 | Blue LED on ESP32 DevKit V1 |
+| D15 | J2-3 | GPIO 15 | Strapping pin; Pin heade to be able to enable/disable debugging log at power-up. |
+| D2 | J2-4 | GPIO 2 | Strapping pin; onboard LED on ESP32 DevKit V1 |
 | D4 | J2-5 | GPIO 4 | |
 | RX2 | J2-6 | GPIO 16 (RX2) | |
 | TX2 | J2-7 | GPIO 17 (TX)2 | |
-| D5 | J2-8 | GPIO 5 | 10k Pull-Up on ESP32 DevKit V1 |
+| D5 | J2-8 | GPIO 5 | Strapping pin; 10k Pull-Up on ESP32 DevKit V1 |
 | D18 | J2-9 | GPIO 18 | |
 | D19 | J2-10 | GPIO 19 | |
-| D21 | J2-11 | GPIO 21 | |
+| D21 | J2-11 | GPIO 21 | I2C SDA (Arduino Standard) |
 | RX0 | J2-12 | GPIO 3 (RX0) | USB RX |
 | TX0 | J2-13 | GPIO 1 (TX0) | on ESP32 DevKit V1; USB TX |
-| D22 | J2-14 | GPIO 22 | |
+| D22 | J2-14 | GPIO 22 | I2C SCL (Arduino Standard) |
 | D23 | J2-15 | GPIO 23 | |
-| - | - | GPIO 0 | 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND; USB DTR |
+| - | - | GPIO 0 | Strapping pin, 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND; USB DTR |
+
+#### Strapping Pins
+
+The following table shows the strapping bit status on the ESP32 DevKitV1 board.
+
+| Strapping pin | Level | Function |
+| --- | --- | --- |
+| Voltage of internal LDO (VDD_SDIO) |
+| GPIO 12 (MTDI) | Low | 3.3 V |
+| Booting mode |
+| GPIO 0 | High | SPI boot |
+| GPIO 2 | Low | Don't care |
+| Enabling/Disabling debugging log print over U0TXD during booting |
+| GPIO 15 (MTDO) | High | U0TXD toggling |
+| Timing of SDIO slave |
+| GPIO 15 (MTDO) | High | Rising edge smapling |
+| GPIO 5 | High | Rising edge output |
+
+#### Input Only Pins
+GPIOs 34 to 39 are input only pins. These pins don’t have internal pull-ups or pull-down resistors. They can’t be used as outputs, so use these pins only as inputs.
 
 ### LED Matrix
 
