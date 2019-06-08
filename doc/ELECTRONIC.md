@@ -17,10 +17,10 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 | --- | --- | --- | --- |
 | VIN | J1-1 | VIN | 5V power supply |
 | GND | J1-2 | GND | Ground |
-| D13 | J1-3 | GPIO 13 | Data Out to LED matrix |
-| D12 | J1-4 | GPIO 12 | Strapping pin; Fails if high at power-up, therefore not used. |
-| D14 | J1-5 | GPIO 14 | Output PWM at power-up! |
-| D27 | J1-6 | GPIO 27 | - |
+| D13 | J1-3 | GPIO 13 | JTAG MTCK |
+| D12 | J1-4 | GPIO 12 | Strapping pin; Fails if high at power-up, therefore not used. JTAG MTDI |
+| D14 | J1-5 | GPIO 14 | Output PWM at power-up! JTAG MTMS |
+| D27 | J1-6 | GPIO 27 | Data Out to LED matrix |
 | D26 | J1-7 | GPIO 26 (A9) | |
 | D25 | J1-8 | GPIO 25 (A8) | |
 | D33 | J1-9 | GPIO 33 (A5) | 32.768 kHz crystal (32K_XN) |
@@ -32,7 +32,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 | EN | J1-15 | EN | 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND; USB RTS |
 | VDD3V3 | J2-1 | VDD3V3 | 3.3 V output |
 | GND | J2-2 | GND | Ground |
-| D15 | J2-3 | GPIO 15 | Strapping pin; Pin heade to be able to enable/disable debugging log at power-up. |
+| D15 | J2-3 | GPIO 15 | Strapping pin; JTAG MTDO |
 | D2 | J2-4 | GPIO 2 | Strapping pin; onboard LED on ESP32 DevKit V1 |
 | D4 | J2-5 | GPIO 4 | |
 | RX2 | J2-6 | GPIO 16 (RX2) | |
@@ -66,6 +66,17 @@ The following table shows the strapping bit status on the ESP32 DevKitV1 board.
 
 #### Input Only Pins
 GPIOs 34 to 39 are input only pins. These pins don’t have internal pull-ups or pull-down resistors. They can’t be used as outputs, so use these pins only as inputs.
+
+#### JTAG
+
+| Pin | Function |
+| --- | --- |
+| MTDI (GPIO 12) | Test Data Input |
+| MTCK (GPIO 13) | Test Clock |
+| MTMS (GPIO 14) | Test Mode Select |
+| MTDO (GPIO 15) | Test Data Output |
+
+See [ESP-PROG](https://docs.platformio.org/en/latest/plus/debug-tools/esp-prog.html#debugging-tool-esp-prog).
 
 ### LED Matrix
 
