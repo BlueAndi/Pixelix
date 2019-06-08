@@ -16,7 +16,7 @@ Next available REQ id: 19
 * REQ-05: The display shall provide a [websocket](https://en.wikipedia.org/wiki/WebSocket) interface.
 
 ### User Interaction
-* REQ-10: The display shall provide a button for user interaction.
+* REQ-10: The display shall provide a user button for user interaction.
 * REQ-17: The display shall provide a reset button.
 
 #### Wifi

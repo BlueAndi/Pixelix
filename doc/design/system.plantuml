@@ -2,34 +2,48 @@
 
 title ESP-RGB-LED Matrix
 
-component "Power Supply" as powerSupply
+component "Ext. Power Supply" as extPowerSupply
+
+interface "Vcc" as iVcc
 
 package "Housing" {
 
     package "PCB" as pcb {
-        component "Overcurrent protection" as ocp
-        component "Inverse connection protection" as icp
-        component "Overvoltage protection" as ovp
+
+        package "Power Supply Protection" {
+
+            component "Overcurrent protection" as ocp
+            component "Inverse connection protection" as icp
+            component "Overvoltage protection" as ovp
+        }
         
         package "ESP32 DevKitV1 connector" {
         
-            component "ESP32 DevKitV1" as esp32s
+            component "ESP32 DevKitV1" as esp32
         }
+
+        interface "JTAG" as iJtag
+
+        esp32 -u- iJtag
     }
     
     component "LED matrix" as ledMatrix
-    component "Button" as button
+    component "User Button" as userButton
+    component "Reset Button" as resetButton
     component "Ambilight sensor" as ambilightSensor
+    
 }
 
-powerSupply -- ocp: Vcc (5 V / 4 A)
+extPowerSupply --( iVcc
+iVcc -- ocp
 ocp -- icp
 icp -- ovp
-ovp -r- esp32s: Vcc_protected
+ovp -r- esp32: Vcc_protected
 ovp -- ledMatrix: Vcc_protected
 
-esp32s -- ledMatrix: data
-esp32s -- button: input
-esp32s -- ambilightSensor
+esp32 -- ledMatrix: data
+esp32 -- userButton: input
+esp32 -- resetButton: reset
+esp32 -- ambilightSensor: control brightness
 
 @enduml
