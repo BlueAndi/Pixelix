@@ -9,43 +9,43 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 ![system-diagram](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/design/system.png)
 
-### NodeMCU ESP-32S
+### ESP32 DevKit V1
 
-The [NodeMCU development board ESP-32S](https://docs.zerynth.com/latest/official/board.zerynth.nodemcu_esp/docs/index.html) is used.
+![ESP32 DevKitV1 Pinout](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/datasheets/pinoutDOIT32devkitv1.png)
 
-| Dev. Board ESP-32S Pin | ESP32 Pin | Function on Dev. Board ESP-32S |
-| --- | --- | --- |
-| VIN (J1-1) | VIN | |
-| GND (J1-2) | GND | |
-| D13 (J1-3) | GPIO 13 | |
-| D12 (J1-4) | GPIO 12 | |
-| D14 (J1-5) | GPIO 14 | |
-| D27 (J1-6) | GPIO 27 | |
-| D26 (J1-7) | A9 | |
-| D25 (J1-8) | A8 | |
-| D33 (J1-9) | A5 | |
-| D32 (J1-10) | A4 | |
-| D35 (J1-11) | A7 | |
-| D34 (J1-12) | A6 | |
-| VN (J1-13) | VN | |
-| VP (J1-14) | VP | |
-| EN (J1-15); 10k Pull-Up | EN | Button on board, closing to GND; USB RTS |
-| VDD3V3 (J2-1) | VDD3V3 | |
-| GND (J2-2) | GND | |
-| D15 (J2-3) | GPIO 15 | |
-| D2 (J2-4); Blue LED | GPIO 2 | |
-| D4 (J2-5) | GPIO 4 | |
-| RX2 (J2-6) | RX2 | |
-| TX2 (J2-7) | TX2 | |
-| D5 (J2-8); 10k Pull-Up | GPIO 5 | |
-| D18 (J2-9) | GPIO 18 | |
-| D19 (J2-10) | GPIO 19 | |
-| D21 (J2-11) | GPIO 21 | |
-| RX0 (J2-12) | RX0 | USB RX |
-| TX0 (J2-13); 10k Pull-Up | TX0 | USB TX |
-| D22 (J2-14) | GPIO 22 | |
-| D23 (J2-15) | GPIO 23 | |
-| - | GPIO 0 | 10k Pull-Up; Button on board, closing to GND; USB DTR |
+| ESP32 DevKit V1 Pin | ESP32 DevKit V1 Pin Header | WROOM32 Pin | Function |
+| --- | --- | --- | --- |
+| VIN | J1-1 | VIN | 5V power supply |
+| GND | J1-2 | GND | Ground |
+| D13 | J1-3 | GPIO 13 | |
+| D12 | J1-4 | GPIO 12 | |
+| D14 | J1-5 | GPIO 14 | |
+| D27 | J1-6 | GPIO 27 | |
+| D26 | J1-7 | GPIO 26 (A9) | |
+| D25 | J1-8 | GPIO 25 (A8) | |
+| D33 | J1-9 | GPIO 33 (A5) | |
+| D32 | J1-10 | GPIO 32 (A4) | |
+| D35 | J1-11 | GPIO 35 (A7) | |
+| D34 | J1-12 | GPIO 34 (A6) | |
+| VN | J1-13 | GPIO 39 (VN) | |
+| VP | J1-14 | GPIO 36 (VP) | |
+| EN | J1-15 | EN | 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND; USB RTS |
+| VDD3V3 | J2-1 | VDD3V3 | 3.3 V output |
+| GND | J2-2 | GND | Ground |
+| D15 | J2-3 | GPIO 15 | |
+| D2 | J2-4 | GPIO 2 | Blue LED on ESP32 DevKit V1 |
+| D4 | J2-5 | GPIO 4 | |
+| RX2 | J2-6 | GPIO 16 (RX2) | |
+| TX2 | J2-7 | GPIO 17 (TX)2 | |
+| D5 | J2-8 | GPIO 5 | 10k Pull-Up on ESP32 DevKit V1 |
+| D18 | J2-9 | GPIO 18 | |
+| D19 | J2-10 | GPIO 19 | |
+| D21 | J2-11 | GPIO 21 | |
+| RX0 | J2-12 | GPIO 3 (RX0) | USB RX |
+| TX0 | J2-13 | GPIO 1 (TX0) | on ESP32 DevKit V1; USB TX |
+| D22 | J2-14 | GPIO 22 | |
+| D23 | J2-15 | GPIO 23 | |
+| - | - | GPIO 0 | 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND; USB DTR |
 
 ### LED Matrix
 
@@ -57,8 +57,7 @@ Input voltage level:
 * Low - Max. 0.3 * VDD
   * => 0.3 * 5 V = 1.5 V
 
-The I/O pins of the Wemos D1 mini are running with a 3.3 V level, which could cause a problem in detection a high!
-
+The i/o pins of the ESP32 are running with a 3.3 V level, which could cause a problem in detection a high!
 Therefore the level must be shifted from 3.3 V to 5V.
 
 ### Ambient Light Sensor

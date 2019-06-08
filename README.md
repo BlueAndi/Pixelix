@@ -11,7 +11,7 @@ See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/do
 
 ## Electronic
 The main parts are:
-* [NodeMCU development board ESP-32S](https://docs.zerynth.com/latest/official/board.zerynth.nodemcu_esp32/docs/index.html)
+* [ESP32 DevKitV1](https://github.com/playelek/pinout-doit-32devkitv1)
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 
