@@ -1,0 +1,38 @@
+@startuml
+title Startup
+
+(*)--> "check button state"
+if "pressed?" then
+  -right-> [false] "check SPIFFS for wifi credentials"
+  if "available?" then
+    -right-> [false] "show instructions on matrix" 
+    note right
+      e.g. 
+      "restart with pressed button"
+    end note
+  else
+    ---> [true] "try to establish wifi connection"
+    if "successful?" then
+    -right-> [false] "show error message on matrix" 
+    note right
+      e.g. 
+    "unknown SSID/PW, reconfigure"
+    end note
+  else
+    ---> [true] "go on"
+ 
+  endif
+  
+  endif
+  else
+  --> [true] "access-point (AP)"
+  --> show name of AP on the matrix
+  Note left
+  e.g. 
+  connect to 
+  "ESP-RGB-LED-MATRIX"
+  end note
+
+endif
+    
+@enduml
