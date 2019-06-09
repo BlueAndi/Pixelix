@@ -9,43 +9,74 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 ![system-diagram](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/design/system.png)
 
-### NodeMCU ESP-32S
+### ESP32 DevKit V1
 
-The [NodeMCU development board ESP-32S](https://docs.zerynth.com/latest/official/board.zerynth.nodemcu_esp/docs/index.html) is used.
+![ESP32 DevKitV1 Pinout](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/datasheets/pinoutDOIT32devkitv1.png)
 
-| Dev. Board ESP-32S Pin | ESP32 Pin | Function on Dev. Board ESP-32S |
+| ESP32 DevKit V1 Pin | ESP32 DevKit V1 Pin Header | WROOM32 Pin | Description |
+| --- | --- | --- | --- |
+| VIN | J1-1 | VIN | 5V power supply |
+| GND | J1-2 | GND | Ground |
+| D13 | J1-3 | GPIO 13 | JTAG MTCK |
+| D12 | J1-4 | GPIO 12 | Strapping pin; Fails if high at power-up, therefore not used. JTAG MTDI |
+| D14 | J1-5 | GPIO 14 | Output PWM at power-up! JTAG MTMS |
+| D27 | J1-6 | GPIO 27 | Data Out to LED matrix |
+| D26 | J1-7 | GPIO 26 (A9) | |
+| D25 | J1-8 | GPIO 25 (A8) | |
+| D33 | J1-9 | GPIO 33 (A5) | 32.768 kHz crystal (32K_XN) |
+| D32 | J1-10 | GPIO 32 (A4) | 32.768 kHz crystal (32K_XP) |
+| D35 | J1-11 | GPIO 35 (A7) | Input only! |
+| D34 | J1-12 | GPIO 34 (A6) | Input only! |
+| VN | J1-13 | GPIO 39 (VN) | Input only! |
+| VP | J1-14 | GPIO 36 (VP) | Input only! |
+| EN | J1-15 | EN | 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND; USB RTS |
+| VDD3V3 | J2-1 | VDD3V3 | 3.3 V output |
+| GND | J2-2 | GND | Ground |
+| D15 | J2-3 | GPIO 15 | Strapping pin; JTAG MTDO |
+| D2 | J2-4 | GPIO 2 | Strapping pin; onboard LED on ESP32 DevKit V1 |
+| D4 | J2-5 | GPIO 4 | |
+| RX2 | J2-6 | GPIO 16 (RX2) | |
+| TX2 | J2-7 | GPIO 17 (TX)2 | |
+| D5 | J2-8 | GPIO 5 | Strapping pin; 10k Pull-Up on ESP32 DevKit V1 |
+| D18 | J2-9 | GPIO 18 | |
+| D19 | J2-10 | GPIO 19 | |
+| D21 | J2-11 | GPIO 21 | I2C SDA (Arduino Standard) |
+| RX0 | J2-12 | GPIO 3 (RX0) | USB RX |
+| TX0 | J2-13 | GPIO 1 (TX0) | on ESP32 DevKit V1; USB TX |
+| D22 | J2-14 | GPIO 22 | I2C SCL (Arduino Standard) |
+| D23 | J2-15 | GPIO 23 | |
+| - | - | GPIO 0 | Strapping pin, 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND; USB DTR |
+
+#### Strapping Pins
+
+The following table shows the strapping bit status on the ESP32 DevKitV1 board.
+
+| Strapping pin | Level | Function |
 | --- | --- | --- |
-| VIN (J1-1) | VIN | |
-| GND (J1-2) | GND | |
-| D13 (J1-3) | GPIO 13 | |
-| D12 (J1-4) | GPIO 12 | |
-| D14 (J1-5) | GPIO 14 | |
-| D27 (J1-6) | GPIO 27 | |
-| D26 (J1-7) | A9 | |
-| D25 (J1-8) | A8 | |
-| D33 (J1-9) | A5 | |
-| D32 (J1-10) | A4 | |
-| D35 (J1-11) | A7 | |
-| D34 (J1-12) | A6 | |
-| VN (J1-13) | VN | |
-| VP (J1-14) | VP | |
-| EN (J1-15); 10k Pull-Up | EN | Button on board, closing to GND; USB RTS |
-| VDD3V3 (J2-1) | VDD3V3 | |
-| GND (J2-2) | GND | |
-| D15 (J2-3) | GPIO 15 | |
-| D2 (J2-4); Blue LED | GPIO 2 | |
-| D4 (J2-5) | GPIO 4 | |
-| RX2 (J2-6) | RX2 | |
-| TX2 (J2-7) | TX2 | |
-| D5 (J2-8); 10k Pull-Up | GPIO 5 | |
-| D18 (J2-9) | GPIO 18 | |
-| D19 (J2-10) | GPIO 19 | |
-| D21 (J2-11) | GPIO 21 | |
-| RX0 (J2-12) | RX0 | USB RX |
-| TX0 (J2-13); 10k Pull-Up | TX0 | USB TX |
-| D22 (J2-14) | GPIO 22 | |
-| D23 (J2-15) | GPIO 23 | |
-| - | GPIO 0 | 10k Pull-Up; Button on board, closing to GND; USB DTR |
+| Voltage of internal LDO (VDD_SDIO) |
+| GPIO 12 (MTDI) | Low | 3.3 V |
+| Booting mode |
+| GPIO 0 | High | SPI boot |
+| GPIO 2 | Low | Don't care |
+| Enabling/Disabling debugging log print over U0TXD during booting |
+| GPIO 15 (MTDO) | High | U0TXD toggling |
+| Timing of SDIO slave |
+| GPIO 15 (MTDO) | High | Rising edge smapling |
+| GPIO 5 | High | Rising edge output |
+
+#### Input Only Pins
+GPIOs 34 to 39 are input only pins. These pins don’t have internal pull-ups or pull-down resistors. They can’t be used as outputs, so use these pins only as inputs.
+
+#### JTAG
+
+| Pin | Function |
+| --- | --- |
+| MTDI (GPIO 12) | Test Data Input |
+| MTCK (GPIO 13) | Test Clock |
+| MTMS (GPIO 14) | Test Mode Select |
+| MTDO (GPIO 15) | Test Data Output |
+
+See [ESP-PROG](https://docs.platformio.org/en/latest/plus/debug-tools/esp-prog.html#debugging-tool-esp-prog).
 
 ### LED Matrix
 
@@ -57,8 +88,7 @@ Input voltage level:
 * Low - Max. 0.3 * VDD
   * => 0.3 * 5 V = 1.5 V
 
-The I/O pins of the Wemos D1 mini are running with a 3.3 V level, which could cause a problem in detection a high!
-
+The i/o pins of the ESP32 are running with a 3.3 V level, which could cause a problem in detection a high!
 Therefore the level must be shifted from 3.3 V to 5V.
 
 ### Ambient Light Sensor

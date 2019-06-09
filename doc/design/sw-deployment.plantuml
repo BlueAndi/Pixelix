@@ -1,0 +1,20 @@
+@startuml
+
+title SW Deployment on ESP32
+
+node "ESP32" {
+
+    node "Core 0" {
+    }
+    
+    node "Core 1" {
+    
+        component "Task Arduino\n(loopTask)" as taskArduino
+        component "OS\n(FreeRTOS)" as os
+    
+        taskArduino <-- os: <<calls>>
+    }
+
+}
+
+@enduml

@@ -11,7 +11,7 @@ See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/do
 
 ## Electronic
 The main parts are:
-* [NodeMCU development board ESP-32S](https://docs.zerynth.com/latest/official/board.zerynth.nodemcu_esp32/docs/index.html)
+* [ESP32 DevKitV1](https://github.com/playelek/pinout-doit-32devkitv1)
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 
@@ -34,8 +34,9 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 3. _Project Tasks -> Build_ or via hotkey ctrl-alt-b
 
 ### Used libraries
-* [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework
-* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (I2S).
+* [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.
+* [FastLED](https://github.com/FastLED/FastLED) - Controlling the LED matrix with hardware support (RMT).
+* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Alternative to FastLED with hardware support (I2S).
 
 ### Structure
 
