@@ -21,7 +21,7 @@ Next available REQ id: 19
 
 #### Wifi
 
-* REQ-07: The display shall spawn an wifi access point on user demand (via button) after a power-cycle.
+* REQ-07: The display shall setting up an wifi access point on user demand (via user button) after a power-cycle.
 * REQ-08: The wifi access point shall have the following configuration:
     * SSID: ESP-RGB-LED-MATRIX
     * Security: TBD

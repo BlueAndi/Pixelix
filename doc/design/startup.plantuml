@@ -1,38 +1,47 @@
 @startuml
 title Startup
 
-(*)--> "check button state"
-if "pressed?" then
-  -right-> [false] "check SPIFFS for wifi credentials"
-  if "available?" then
-    -right-> [false] "show instructions on matrix" 
-    note right
-      e.g. 
-      "restart with pressed button"
-    end note
-  else
-    ---> [true] "try to establish wifi connection"
-    if "successful?" then
-    -right-> [false] "show error message on matrix" 
-    note right
-      e.g. 
-    "unknown SSID/PW, reconfigure"
-    end note
-  else
-    ---> [true] "go on"
- 
-  endif
-  
-  endif
-  else
-  --> [true] "access-point (AP)"
-  --> show name of AP on the matrix
-  Note left
-  e.g. 
-  connect to 
-  "ESP-RGB-LED-MATRIX"
-  end note
+(*) --> "Initialize hardware"
 
+--> "Check user button state"
+
+if "Is pressed?" then
+    --> [false] "Check SPIFFS for wifi credentials"
+    if "Is available?" then
+        --> [false] "Show instructions on matrix" 
+        note top
+            E.g. 
+            "restart with pressed button"
+        end note
+        --> ===Failed===
+    else
+        --> [true] "Try to establish wifi connection"
+        if "Connection successful established?" then
+            --> [false] "Show error message on matrix" 
+            note bottom
+                E.g. 
+                "unknown SSID/PW, reconfigure"
+            end note
+            --> ===Failed===
+        else
+            --> [true] ===Success===
+        endif
+    endif
+else
+    --> [true] "Setting up access-point (AP)"
+    --> "Show SSID of AP on the matrix"
+    note right
+        E.g. connect to 
+        "ESP-RGB-LED-MATRIX"
+    end note
+    --> ===Success===
 endif
-    
+
+===Failed=== --> "Waiting for reboot"
+--> (*)
+
+===Success=== --> "Setting up tcp/ip server"
+--> "Handle all kind of requests"
+--> (*)
+
 @enduml
