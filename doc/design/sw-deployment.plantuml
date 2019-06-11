@@ -9,10 +9,12 @@ node "ESP32" {
     
     node "Core 1" {
     
+        component "Task Button" as taskButton
         component "Task Arduino\n(loopTask)" as taskArduino
         component "OS\n(FreeRTOS)" as os
     
         taskArduino <-- os: <<calls>>
+        taskButton <-- os: <<calls>>
     }
 
 }
