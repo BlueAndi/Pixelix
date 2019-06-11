@@ -1,47 +1,59 @@
 @startuml
 title Startup
 
-(*) --> "Initialize hardware"
+start
+:Initialize hardware;
+:Check user button state;
 
---> "Check user button state"
+if (Is pressed?) then (yes)
 
-if "Is pressed?" then
-    --> [false] "Check SPIFFS for wifi credentials"
-    if "Is available?" then
-        --> [false] "Show instructions on matrix" 
-        note top
+    :Check SPIFFS for wifi credentials;
+
+    if (Is available?) then (yes)
+
+        repeat
+            :Show connection establishment on LED matrix.;
+            :Try to establish wifi connection.;
+
+            if (Wifi with SSID not found?) then (yes)
+                :Show SSID not found on LED matrix.;
+                :Wait 30 s.;
+            else if (Password wrong?) then (yes)
+                :Show invalid password on LED matrix.;
+                stop
+            else if (Any other error?) then (yes)
+                :Show error on LED matrix.;
+                stop
+            else (no)
+            endif
+
+        repeat while(Connection successful established?)
+
+    else (no)
+
+        :Show instructions on matrix;
+        note right
             E.g. 
             "restart with pressed button"
         end note
-        --> ===Failed===
-    else
-        --> [true] "Try to establish wifi connection"
-        if "Connection successful established?" then
-            --> [false] "Show error message on matrix" 
-            note bottom
-                E.g. 
-                "unknown SSID/PW, reconfigure"
-            end note
-            --> ===Failed===
-        else
-            --> [true] ===Success===
-        endif
+
+        :Wait for restart;
+        stop
+
     endif
+
 else
-    --> [true] "Setting up access-point (AP)"
-    --> "Show SSID of AP on the matrix"
+
+    :Setting up access-point (AP);
+    :Show SSID of AP on the matrix;
     note right
         E.g. connect to 
         "ESP-RGB-LED-MATRIX"
     end note
-    --> ===Success===
+
 endif
 
-===Failed=== --> "Waiting for reboot"
---> (*)
-
-===Success=== --> "Setting up tcp/ip server"
---> "Handle all kind of requests"
---> (*)
+:Handle all kind of requests;
+stop
 
 @enduml
