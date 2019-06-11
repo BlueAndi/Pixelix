@@ -2,12 +2,12 @@
 title Startup
 
 start
-:Initialize hardware;
-:Check user button state;
+:Initialize hardware.;
+:Check user button state.;
 
 if (Is pressed?) then (yes)
 
-    :Check SPIFFS for wifi credentials;
+    :Check SPIFFS for wifi credentials.;
 
     if (Is available?) then (yes)
 
@@ -31,29 +31,20 @@ if (Is pressed?) then (yes)
 
     else (no)
 
-        :Show instructions on matrix;
-        note right
-            E.g. 
-            "restart with pressed button"
-        end note
-
-        :Wait for restart;
+        :Show instructions on matrix.;
+        :Wait for restart.;
         stop
 
     endif
 
 else
 
-    :Setting up access-point (AP);
-    :Show SSID of AP on the matrix;
-    note right
-        E.g. connect to 
-        "ESP-RGB-LED-MATRIX"
-    end note
+    :Setting up access-point (AP).;
+    :Show SSID of AP on the matrix.;
 
 endif
 
-:Handle all kind of requests;
+:Handle all kind of requests.;
 stop
 
 @enduml
