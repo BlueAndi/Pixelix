@@ -1,0 +1,59 @@
+@startuml
+
+title User Button Debouncing\n
+
+start
+
+note left
+    Design: The user button ISR counts the number of detected button triggers.
+    The button task determines every 10 ms how many trigger are detected.
+    If there are 0 triggers over 100 ms, the current user button state is valid.
+end note
+
+:Install ISR on falling and rising edge.;
+
+fork
+
+    :Increase trigger counter;
+    
+    note left: Runs in ISR.
+
+fork again
+
+    repeat
+    
+        if (0 == trigger counter) then (yes)
+            
+            :Set lastButtonState to current user button state;
+            :Increase cycle counter;
+    
+            if (10 >= cycle counter?) then (yes)
+            
+                :Push lastButtonState to button queue.;
+                
+                note left
+                    The button queue will be handled in a
+                    different task.
+                end note
+                
+            else (no)
+    
+            endif
+            
+        else (no)
+        
+            :Reset cycle counter;
+            
+        endif
+        
+        :Reset trigger counter;
+    
+        :Wait 10 ms.;
+    
+    repeat while(Repeat infinite)
+
+end fork
+
+stop
+
+@enduml
