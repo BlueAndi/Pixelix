@@ -22,50 +22,107 @@
  */
 
 /******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
+
+/******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
-#include "./Drivers/GPIODrv.h"
+#include "GPIODrv.h"
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
+/** Get number of array elements. */
+#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
+
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
+
+/** This type defines a pin configuration. */
+typedef struct
+{
+    GPIODrv::PinNo  pinNo;  /**< Arduino pin number */
+    uint8_t         mode;   /**< Pin mode */
+
+} PinConfig;
 
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
 /******************************************************************************
- * Variables
+ * Local Variables
  *****************************************************************************/
+
+/* Initialize GPIO driver instance. */
+GPIODrv GPIODrv::m_instance;
+
+/** Pin configuration */
+static const PinConfig  pinConfiguration[] =
+{
+    { GPIODrv::PINNO_ONBOARD_LED,           OUTPUT       },
+    { GPIODrv::PINNO_USER_BUTTON,           INPUT_PULLUP },
+    { GPIODrv::PINNO_LED_MATRIX_DATA_OUT,   OUTPUT       }
+};
 
 /******************************************************************************
- * External functions
+ * Public Methods
  *****************************************************************************/
 
-/**
- * Setup the system.
- */
-void setup()
+void GPIODrv::init()
 {
-    /* Initialize drivers */
-    GPIODrv::getInstance().init();
+    uint8_t index = 0u;
+
+    /* Initialize pin configuration */
+    for(index = 0u; index < ARRAY_NUM(pinConfiguration); ++index)
+    {
+        pinMode(pinConfiguration[index].pinNo, pinConfiguration[index].mode);
+    }
 
     return;
 }
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
+GPIODrv::Level GPIODrv::getUserButtonState()
 {
+    Level   level = LEVEL_LOW;
+
+    if (LOW != digitalRead(PINNO_USER_BUTTON))
+    {
+        level = LEVEL_HIGH;
+    }
+
+    return level;
+}
+
+void GPIODrv::setOnboardLED(bool enable)
+{
+    if (false == enable)
+    {
+        digitalWrite(PINNO_ONBOARD_LED, HIGH);
+    }
+    else
+    {
+        digitalWrite(PINNO_ONBOARD_LED, LOW);
+    }
+
     return;
 }
 
 /******************************************************************************
- * Local functions
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
  *****************************************************************************/
