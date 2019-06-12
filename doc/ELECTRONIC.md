@@ -61,7 +61,7 @@ The following table shows the strapping bit status on the ESP32 DevKitV1 board.
 | Enabling/Disabling debugging log print over U0TXD during booting |
 | GPIO 15 (MTDO) | High | U0TXD toggling |
 | Timing of SDIO slave |
-| GPIO 15 (MTDO) | High | Rising edge smapling |
+| GPIO 15 (MTDO) | High | Rising edge sampling |
 | GPIO 5 | High | Rising edge output |
 
 #### Input Only Pins
