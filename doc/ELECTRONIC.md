@@ -25,10 +25,10 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 | D25 | J1-8 | GPIO 25 (A8) | - | - |
 | D33 | J1-9 | GPIO 33 (A5) | - | 32.768 kHz crystal (32K_XN) |
 | D32 | J1-10 | GPIO 32 (A4) | - | 32.768 kHz crystal (32K_XP) |
-| D35 | J1-11 | GPIO 35 (A7) | Input only! | - |
-| D34 | J1-12 | GPIO 34 (A6) | Input only! | - |
-| VN | J1-13 | GPIO 39 (VN) | Input only! | - |
-| VP | J1-14 | GPIO 36 (VP) | Input only! | - |
+| D35 | J1-11 | GPIO 35 (A7) | Input only! See ESP32 tech. reference manual, chapter 4.1 | - |
+| D34 | J1-12 | GPIO 34 (A6) | Input only! See ESP32 tech. reference manual, chapter 4.1 | - |
+| VN | J1-13 | GPIO 39 (VN) | Input only! See ESP32 tech. reference manual, chapter 4.1 | - |
+| VP | J1-14 | GPIO 36 (VP) | Input only! See ESP32 tech. reference manual, chapter 4.1 | - |
 | EN | J1-15 | EN | 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND | USB RTS |
 | VDD3V3 | J2-1 | VDD3V3 | 3.3 V output | 3.3 V output |
 | GND | J2-2 | GND | Ground | Ground |
@@ -49,20 +49,37 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 #### Strapping Pins
 
-The following table shows the strapping bit status on the ESP32 DevKitV1 board.
+The following table shows the strapping bit status on the ESP32 DevKitV1 board. See also ESP32 series datasheet chapter 2.4
 
-| Strapping pin | Level | Function |
-| --- | --- | --- |
+| Pin | Default | Function 1 | Function 2 |
+| --- | --- | --- | --- | --- | --- |
 | Voltage of internal LDO (VDD_SDIO) |
-| GPIO 12 (MTDI) | Low | 3.3 V |
+| Pin | Default | 3.3 V | 1.8 V |
+| GPIO 12 (MTDI) | Low | Low | High |
+Result: 3.3 V
+
+| Pin | Default | Function 1 | Function 2 |
+| --- | --- | --- | --- | --- | --- |
 | Booting mode |
-| GPIO 0 | High | SPI boot |
-| GPIO 2 | Low | Don't care |
+| Pin | Default | SPI Boot | Download Boot |
+| GPIO 0 | High | High | Low |
+| GPIO 2 | Low | Don't care | 0 |
+Result: SPI Boot
+
+| Pin | Default | Function 1 | Function 2 |
+| --- | --- | --- | --- | --- | --- |
 | Enabling/Disabling debugging log print over U0TXD during booting |
-| GPIO 15 (MTDO) | High | U0TXD toggling |
+| Pin | Default | U0TXD Toggling | U0TXD Silent |
+| GPIO 15 (MTDO) | High | High | Low |
+Result: U0TXD Toggling
+
+| Pin | Default | Function 1 | Function 2 | Function 3 | Function 4 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 | Timing of SDIO slave |
-| GPIO 15 (MTDO) | High | Rising edge sampling |
-| GPIO 5 | High | Rising edge output |
+| Pin | Default | Falling-edge Sampling | Falling-edge Sampling | Rising-edge Sampling | Rising-edge Sampling |
+| GPIO 15 (MTDO) | High | Low | Low | High | High |
+| GPIO 5 | High | Low | High | Low | High |
+Result: Rising-edge Sampling
 
 #### Input Only Pins
 GPIOs 34 to 39 are input only pins. These pins don’t have internal pull-ups or pull-down resistors. They can’t be used as outputs, so use these pins only as inputs.
