@@ -21,7 +21,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 | D12 | J1-4 | GPIO 12 | Strapping pin; Fails if high at power-up, therefore not used. | JTAG MTDI |
 | D14 | J1-5 | GPIO 14 | Output PWM at power-up! | JTAG MTMS |
 | D27 | J1-6 | GPIO 27 | - | Data Out to LED matrix |
-| D26 | J1-7 | GPIO 26 (A9) | - | - |
+| D26 | J1-7 | GPIO 26 (A9) | - | LDR analog in |
 | D25 | J1-8 | GPIO 25 (A8) | - | - |
 | D33 | J1-9 | GPIO 33 (A5) | - | 32.768 kHz crystal (32K_XN) |
 | D32 | J1-10 | GPIO 32 (A4) | - | 32.768 kHz crystal (32K_XP) |
