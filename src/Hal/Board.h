@@ -21,17 +21,38 @@
  * SOFTWARE.
  */
 
-#ifndef __GPIODRV_H__
-#define __GPIODRV_H__
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+@brief  Board Abstraction
+@author Andreas Merkle <web@blue-andi.de>
 
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
+@section desc Description
+This module provides the hardware board abstraction.
+
+*******************************************************************************/
+/** @defgroup board Board Abstraction
+ * The board abstraction is unique for the electronic hardware board and
+ * provides its functionality on a lower level interface.
+ *
+ * @{
+ */
+
+#ifndef __BOARD_H__
+#define __BOARD_H__
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
+#include "Io.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
+
+namespace Board
+{
 
 /******************************************************************************
  * Macros
@@ -41,81 +62,32 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * The GPIO driver is responsible to initialize all kind of GPIOs
- * and provide an interface for external peripherals.
- */
-class GPIODrv
-{
-public:
+/******************************************************************************
+ * Variables
+ *****************************************************************************/
 
-    /** GPIO levels */
-    enum Level
-    {
-        LEVEL_LOW = 0,  /**< Low */
-        LEVEL_HIGH      /**< High */
-    };
+/** Onboard LED (output) */
+static const DOutPin<2u>                onBoardLedOut;
 
-    /**
-     * Pin number of used GPIO pins.
-     * The pin number corresponds to the arduino pin scheme.
-     */
-    enum PinNo
-    {
-        PINNO_ONBOARD_LED           = 2,    /**< Onboard LED pin number */
-        PINNO_USER_BUTTON           = 4,    /**< User button pin number */
-        PINNO_LED_MATRIX_DATA_OUT   = 27    /**< LED matrix pin number */
-    };
+/** User button (input with pull-up) */
+static const DInPin<4u, INPUT_PULLUP>   userButtonIn;
 
-    /**
-     * Get GPIO driver instance.
-     * 
-     * @return GPIO driver instance.
-     */
-    static GPIODrv& getInstance()
-    {
-        return m_instance;
-    }
+static const AnalogPin<26u>             ldrIn;
 
-    /**
-     * Initialize the GPIOs.
-     */
-    void init();
-
-    /**
-     * Get user button state without debouncing.
-     * 
-     * @return User button level.
-     */
-    Level getUserButtonState();
-
-    /**
-     * Enable/Disable onboard LED.
-     */
-    void setOnboardLED(bool enable);
-
-private:
-
-    static GPIODrv  m_instance; /**< GPIO driver instance */
-
-    /**
-     * Initializes the complete GPIOs of the board.
-     */
-    GPIODrv()
-    {
-        /* Nothing to do */
-    }
-
-    /* Copy-constructor is not allowed. */
-    GPIODrv(const GPIODrv& gpioDrv);
-
-    /* Assignment operator is not allowed. */
-    GPIODrv& operator=(const GPIODrv& gpioDrv);
-
-};
+/** LED matrix data out (output) */
+static const DOutPin<27u>               ledMatrixDataOut;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __GPIODRV_H__ */
+/**
+ * Initialize all i/o pins.
+ */
+extern void init();
+
+};
+
+#endif  /* __BOARD_H__ */
+
+/** @} */

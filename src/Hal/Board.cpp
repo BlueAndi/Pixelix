@@ -21,14 +21,28 @@
  * SOFTWARE.
  */
 
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+@brief  Board Abstraction
+@author Andreas Merkle <web@blue-andi.de>
+
+@section desc Description
+@see Board.h
+
+*******************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "GPIODrv.h"
+#include "Board.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
+
+using namespace Board;
 
 /******************************************************************************
  * Macros
@@ -41,14 +55,6 @@
  * Types and classes
  *****************************************************************************/
 
-/** This type defines a pin configuration. */
-typedef struct
-{
-    GPIODrv::PinNo  pinNo;  /**< Arduino pin number */
-    uint8_t         mode;   /**< Pin mode */
-
-} PinConfig;
-
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -57,59 +63,18 @@ typedef struct
  * Local Variables
  *****************************************************************************/
 
-/* Initialize GPIO driver instance. */
-GPIODrv GPIODrv::m_instance;
-
-/** Pin configuration */
-static const PinConfig  pinConfiguration[] =
+/** A list of all used i/o pins, used for intializaton. */
+static const IoPin* ioPinList[] =
 {
-    { GPIODrv::PINNO_ONBOARD_LED,           OUTPUT       },
-    { GPIODrv::PINNO_USER_BUTTON,           INPUT_PULLUP },
-    { GPIODrv::PINNO_LED_MATRIX_DATA_OUT,   OUTPUT       }
+    &onBoardLedOut,
+    &userButtonIn,
+    &ldrIn,
+    &ledMatrixDataOut
 };
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
-
-void GPIODrv::init()
-{
-    uint8_t index = 0u;
-
-    /* Initialize pin configuration */
-    for(index = 0u; index < ARRAY_NUM(pinConfiguration); ++index)
-    {
-        pinMode(pinConfiguration[index].pinNo, pinConfiguration[index].mode);
-    }
-
-    return;
-}
-
-GPIODrv::Level GPIODrv::getUserButtonState()
-{
-    Level   level = LEVEL_LOW;
-
-    if (LOW != digitalRead(PINNO_USER_BUTTON))
-    {
-        level = LEVEL_HIGH;
-    }
-
-    return level;
-}
-
-void GPIODrv::setOnboardLED(bool enable)
-{
-    if (false == enable)
-    {
-        digitalWrite(PINNO_ONBOARD_LED, HIGH);
-    }
-    else
-    {
-        digitalWrite(PINNO_ONBOARD_LED, LOW);
-    }
-
-    return;
-}
 
 /******************************************************************************
  * Protected Methods
@@ -122,6 +87,22 @@ void GPIODrv::setOnboardLED(bool enable)
 /******************************************************************************
  * External Functions
  *****************************************************************************/
+
+extern void Board::init()
+{
+    uint8_t index = 0u;
+
+    /* Initialize all i/o pins */
+    for(index = 0u; index < ARRAY_NUM(ioPinList); ++index)
+    {
+        if (NULL != ioPinList[index])
+        {
+            ioPinList[index]->init();
+        }
+    }
+
+    return;
+}
 
 /******************************************************************************
  * Local Functions
