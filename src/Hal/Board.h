@@ -66,16 +66,48 @@ namespace Board
  * Variables
  *****************************************************************************/
 
-/** Onboard LED (output) */
-static const DOutPin<2u>                onBoardLedOut;
+/** Pin number of all used pins. */
+namespace Pin
+{
+    /** Pin number of onboard LED */
+    static const uint8_t    onBoardLedPinNo         = 2u;
+    /** Pin number of user button */
+    static const uint8_t    userButtonPinNo         = 4u;
+    /** Pin number of LDR in */
+    static const uint8_t    ldrInPinNo              = 26u;
+    /** Pin number of LED matrix data out */
+    static const uint8_t    ledMatrixDataOutPinNo   = 27u;
+};
 
-/** User button (input with pull-up) */
-static const DInPin<4u, INPUT_PULLUP>   userButtonIn;
+/** Digital output pin: Onboard LED */
+static const DOutPin<Pin::onBoardLedPinNo>              onBoardLedOut;
 
-static const AnalogPin<26u>             ldrIn;
+/** Digital input pin: User button (input with pull-up) */
+static const DInPin<Pin::userButtonPinNo, INPUT_PULLUP> userButtonIn;
 
-/** LED matrix data out (output) */
-static const DOutPin<27u>               ledMatrixDataOut;
+/** Analog input pin: LDR in */
+static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
+
+/** Digital output pin: LED matrix data out */
+static const DOutPin<Pin::ledMatrixDataOutPinNo>        ledMatrixDataOut;
+
+/** LED matrix specific values */
+namespace LedMatrix
+{
+
+/** LED matrix width in pixels */
+static const uint8_t    width               = 32u;
+
+/** LED matrix height in pixels */
+static const uint8_t    heigth              = 8u;
+
+/** LED matrix supply voltage in volt */
+static const uint8_t    supplyVoltage       = 5u;
+
+/** LED matrix max. supply current in mA */
+static const uint32_t   supplyCurrentMax    = 3500u;
+
+};
 
 /******************************************************************************
  * Functions

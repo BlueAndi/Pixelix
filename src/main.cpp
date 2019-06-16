@@ -41,9 +41,16 @@ has the main loop.
 #include "Board.h"
 #include "ButtonDrv.h"
 
+/** FastLED RMT driver shall use only one channel to avoid wasting time and memory. */
+#define FASTLED_RMT_MAX_CHANNELS    1
+#include "FastLED.h"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
+/** Get number of array elements. */
+#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
 /******************************************************************************
  * Types and Classes
@@ -58,7 +65,10 @@ has the main loop.
  *****************************************************************************/
 
 /** Serial interface baudrate. */
-static const uint32_t   gSerialBaudrate  = 115200u;
+static const uint32_t   gSerialBaudrate = 115200u;
+
+/** Pixel representation of the LED matrix */
+static CRGB             gLedMatrix[Board::LedMatrix::width * Board::LedMatrix::heigth];
 
 /******************************************************************************
  * External functions
@@ -77,6 +87,10 @@ void setup()
 
     /* Initialize drivers */
     ButtonDrv::getInstance().init();
+
+    /* Setup LED matrix and limit max. power. */
+    FastLED.addLeds<NEOPIXEL, Board::Pin::ledMatrixDataOutPinNo>(gLedMatrix, ARRAY_NUM(gLedMatrix)).setCorrection(TypicalLEDStrip);
+    FastLED.setMaxPowerInVoltsAndMilliamps(Board::LedMatrix::supplyVoltage, Board::LedMatrix::supplyCurrentMax);
 
     /* User request for setting up an wifi access point?
      * Because we just initialized the button driver, the delay
