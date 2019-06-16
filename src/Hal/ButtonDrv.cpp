@@ -178,18 +178,23 @@ void ButtonDrv::buttonTask(void *parameters)
                  */
                 if (STATE_TRIGGERED != buttonDrv->m_state)
                 {
-                    /* LOW -> HIGH? */
+                    /* Button pressed now? */
                     if ((STATE_RELEASED == buttonDrv->m_state) &&
-                        (HIGH == buttonValue))
+                        (LOW == buttonValue))
                     {
                         buttonDrv->m_state = STATE_PRESSED;
                     }
-                    /* HIGH -> LOW? */
+                    /* Button released now? */
                     else if ((STATE_PRESSED == buttonDrv->m_state) &&
-                             (LOW == buttonValue))
+                             (HIGH == buttonValue))
                     {
                         buttonDrv->m_state = STATE_TRIGGERED;
                     }
+                    else
+                    {
+                        ;
+                    }
+                    
                 }
 
                 if (pdTRUE != xSemaphoreGive(buttonDrv->m_semaphore))
