@@ -45,6 +45,9 @@ has the main loop.
 #define FASTLED_RMT_MAX_CHANNELS    1
 #include "FastLED.h"
 
+#include <WiFi.h>
+#include <WebServer.h>
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -60,15 +63,39 @@ has the main loop.
  * Prototypes
  *****************************************************************************/
 
+static bool handleAuthentication();
+static void handleRoot();
+
 /******************************************************************************
  * Variables
  *****************************************************************************/
 
 /** Serial interface baudrate. */
-static const uint32_t   gSerialBaudrate = 115200u;
+static const uint32_t   gSerialBaudrate     = 115200u;
 
 /** Pixel representation of the LED matrix */
 static CRGB             gLedMatrix[Board::LedMatrix::width * Board::LedMatrix::heigth];
+
+/** Access point SSID */
+static const char*      gAPSSID             = "esp32-rgb-led-matrix";
+
+/** Access point passphrase (min. 8 characters) */
+static const char*      gAPPassphrase       = "Luke, I am your father.";
+
+/** Port for HTTP */
+static const uint32_t   gWebServerPort      = 80u;
+
+/** HTTP server */
+static WebServer        gWebServer(gWebServerPort);
+
+/** Webserver login user */
+static const char*      gWebLoginUser       = "luke";
+
+/** Webserver login password */
+static const char*      gWebLoginPassword   = "skywalker";
+
+/** If a fatal error happened, it shall be set true otherwise false. */
+static bool             gIsFatalError       = false;
 
 /******************************************************************************
  * External functions
@@ -79,11 +106,16 @@ static CRGB             gLedMatrix[Board::LedMatrix::width * Board::LedMatrix::h
  */
 void setup()
 {
+    bool isAPMode = false;
+
     /* Initialize hardware */
     Board::init();
 
     /* Setup serial interface */
     Serial.begin(gSerialBaudrate);
+    
+    /* TODO */
+    Serial.println("Booting ...");
 
     /* Initialize drivers */
     ButtonDrv::getInstance().init();
@@ -100,10 +132,53 @@ void setup()
     if (ButtonDrv::STATE_PRESSED == ButtonDrv::getInstance().getState())
     {
         /* Setup wifi access point. */
+        if (false == WiFi.softAP(gAPSSID, gAPPassphrase))
+        {
+            /* Fatal error */
+            /* TODO */
+            gIsFatalError = true;
+        }
+        else
+        {
+            /* Show SSID on the LED marix */
+            /* TODO */
+
+            /* Show SSID on the debug interface */
+            /* TODO */
+            Serial.print("SSID: ");
+            Serial.println(gAPSSID);
+
+            isAPMode = true;
+        }
+        
     }
     else
     {
         /* Connect to a wifi access point. */
+        /* TODO */
+    }
+
+    /* Continoue only if no error happened. */
+    if (false == gIsFatalError)
+    {
+        /* Start webserver */
+        gWebServer.begin();
+
+        /* Access point active? */
+        if (true == isAPMode)
+        {
+            IPAddress ipAddress = WiFi.softAPIP();
+
+            gWebServer.on("/", handleRoot);
+
+            /* Show the ip address on the LED matrix */
+            /* TODO */
+
+            /* Show the ip address on the debug terminal */
+            /* TODO */
+            Serial.print("AP IP address: ");
+            Serial.println(ipAddress);
+        }
     }
 
     return;
@@ -114,9 +189,66 @@ void setup()
  */
 void loop()
 {
+    /* If a fatal error happened, wait till manual reset. */
+    if (true == gIsFatalError)
+    {
+        /* Wait till manual reset. */
+        ;
+    }
+    else
+    /* Normal operation */
+    {
+        gWebServer.handleClient();
+    }
+
     return;
 }
 
 /******************************************************************************
  * Local functions
  *****************************************************************************/
+
+/**
+ * Handle webserver authentication. If the client is not authenticated, an
+ * authenticatio process will be performed.
+ * 
+ * @return If authentication is successful it returns true otherwise false.
+ * @retval false    Authentication failed.
+ * @retval true     Authentication successful.
+ */
+static bool handleAuthentication()
+{
+    bool status = true;
+
+    /* If there is no authentication with the client, it will be requested. */
+    if (false == gWebServer.authenticate(gWebLoginUser, gWebLoginPassword))
+    {
+        const String authFailResponse = "Authentication failed!";
+
+        /* Use encrypted communication for authentication request to avoid
+         * that the credentials can be read by everyone.
+         */
+        gWebServer.requestAuthentication(DIGEST_AUTH, NULL, authFailResponse);
+        
+        status = false;
+    }
+
+    return status;
+}
+
+/**
+ * Handle webserver "/" access.
+ */
+static void handleRoot()
+{
+    /* Perform authentication */
+    if (false == handleAuthentication())
+    {
+        /* Authentication failed. */
+        return;
+    }
+
+    gWebServer.send(200, "text/plain", "Root directory");
+
+    return;
+}
