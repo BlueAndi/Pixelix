@@ -40,6 +40,7 @@ has the main loop.
 #include <Arduino.h>
 #include "Board.h"
 #include "ButtonDrv.h"
+#include "Settings.h"
 
 /** FastLED RMT driver shall use only one channel to avoid wasting time and memory. */
 #define FASTLED_RMT_MAX_CHANNELS    1
@@ -71,31 +72,34 @@ static void handleRoot();
  *****************************************************************************/
 
 /** Serial interface baudrate. */
-static const uint32_t   gSerialBaudrate     = 115200u;
+static const uint32_t   SERIAL_BAUDRATE     = 115200u;
 
 /** Pixel representation of the LED matrix */
 static CRGB             gLedMatrix[Board::LedMatrix::width * Board::LedMatrix::heigth];
 
 /** Access point SSID */
-static const char*      gAPSSID             = "esp32-rgb-led-matrix";
+static const char*      WIFI_AP_SSID        = "esp32-rgb-led-matrix";
 
 /** Access point passphrase (min. 8 characters) */
-static const char*      gAPPassphrase       = "Luke, I am your father.";
+static const char*      WIFI_AP_PASSPHRASE  = "Luke, I am your father.";
 
 /** Port for HTTP */
-static const uint32_t   gWebServerPort      = 80u;
+static const uint32_t   WEBSERVER_PORT      = 80u;
 
 /** HTTP server */
-static WebServer        gWebServer(gWebServerPort);
+static WebServer        gWebServer(WEBSERVER_PORT);
 
 /** Webserver login user */
-static const char*      gWebLoginUser       = "luke";
+static const char*      WEB_LOGIN_USER      = "luke";
 
 /** Webserver login password */
-static const char*      gWebLoginPassword   = "skywalker";
+static const char*      WEB_LOGIN_PASSWORD  = "skywalker";
 
 /** If a fatal error happened, it shall be set true otherwise false. */
 static bool             gIsFatalError       = false;
+
+/** Retry delay after a failed connection attempt in ms. */
+static const uint32_t   RETRY_DELAY         = 30000u;
 
 /******************************************************************************
  * External functions
@@ -112,7 +116,7 @@ void setup()
     Board::init();
 
     /* Setup serial interface */
-    Serial.begin(gSerialBaudrate);
+    Serial.begin(SERIAL_BAUDRATE);
     
     /* TODO */
     Serial.println("Booting ...");
@@ -132,7 +136,7 @@ void setup()
     if (ButtonDrv::STATE_PRESSED == ButtonDrv::getInstance().getState())
     {
         /* Setup wifi access point. */
-        if (false == WiFi.softAP(gAPSSID, gAPPassphrase))
+        if (false == WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSPHRASE))
         {
             /* Fatal error */
             /* TODO */
@@ -143,10 +147,10 @@ void setup()
             /* Show SSID on the LED marix */
             /* TODO */
 
-            /* Show SSID on the debug interface */
+            /* Show SSID on the serial interface */
             /* TODO */
             Serial.print("SSID: ");
-            Serial.println(gAPSSID);
+            Serial.println(WIFI_AP_SSID);
 
             isAPMode = true;
         }
@@ -154,8 +158,40 @@ void setup()
     }
     else
     {
-        /* Connect to a wifi access point. */
-        /* TODO */
+        String  wifiSSID;
+        String  wifiPassphrase;
+
+        /* Are remote wifi network informations available? */
+        wifiSSID        = Settings::getInstance().getWifiSSID();
+        wifiPassphrase  = Settings::getInstance().getWifiPassphrase();
+
+        if ((0 == wifiSSID.length()) ||
+            (0 == wifiPassphrase.length()))
+        {
+            /* No remote wifi network informations available. */
+            /* TODO Show info on LED matrix. */
+            /* TODO Show info on serial interface. */
+            gIsFatalError = true;
+        }
+        else
+        {
+            wl_status_t status = WL_IDLE_STATUS;
+
+            /* Remote wifi network informations are available, try to establish a connection. */
+            while(WL_CONNECTED != status)
+            {
+                /* TODO Show info on LED matrix. */
+                /* TODO Show info on serial interface. */
+                status = WiFi.begin(wifiSSID.c_str(), wifiPassphrase.c_str());
+
+                if (WL_CONNECTED != status)
+                {
+                    delay(RETRY_DELAY);
+                }
+                
+                /* TODO How to determine whats wrong? SSID or password? */
+            }
+        }
     }
 
     /* Continoue only if no error happened. */
@@ -199,6 +235,8 @@ void loop()
     /* Normal operation */
     {
         gWebServer.handleClient();
+
+        /* TODO Handle unexpected disconnect from wifi network */
     }
 
     return;
@@ -221,7 +259,7 @@ static bool handleAuthentication()
     bool status = true;
 
     /* If there is no authentication with the client, it will be requested. */
-    if (false == gWebServer.authenticate(gWebLoginUser, gWebLoginPassword))
+    if (false == gWebServer.authenticate(WEB_LOGIN_USER, WEB_LOGIN_PASSWORD))
     {
         const String authFailResponse = "Authentication failed!";
 
