@@ -113,9 +113,9 @@ public:
      * 
      * @param[in] passphrase Wifi network passphrase
      */
-    void setWifiPassphrase(const String& ssid)
+    void setWifiPassphrase(const String& passphrase)
     {
-        m_preferences.putString(KEY_WIFI_PASSPHRASE, ssid);
+        m_preferences.putString(KEY_WIFI_PASSPHRASE, passphrase);
         return;
     }
 
