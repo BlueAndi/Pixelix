@@ -162,8 +162,13 @@ void setup()
         String  wifiPassphrase;
 
         /* Are remote wifi network informations available? */
-        wifiSSID        = Settings::getInstance().getWifiSSID();
-        wifiPassphrase  = Settings::getInstance().getWifiPassphrase();
+        if (true == Settings::getInstance().open(true))
+        {
+            wifiSSID        = Settings::getInstance().getWifiSSID();
+            wifiPassphrase  = Settings::getInstance().getWifiPassphrase();
+
+            Settings::getInstance().close();
+        }
 
         if ((0 == wifiSSID.length()) ||
             (0 == wifiPassphrase.length()))

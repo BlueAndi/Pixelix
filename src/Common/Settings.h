@@ -76,6 +76,34 @@ public:
     }
 
     /**
+     * Open settings.
+     * 
+     * @param[in] readOnly  Open read only or read/write
+     * 
+     * @return Status
+     * @retval false    Failed to open
+     * @retval true     Successful opened
+     */
+    bool open(bool readOnly)
+    {
+        /* Open Preferences with namespace. Each application module, library, etc
+         * has to use a namespace name to prevent key name collisions. We will open storage in
+         * RW-mode (second parameter has to be false).
+         * Note: Namespace name is limited to 15 chars.
+         */
+        return m_preferences.begin(PREF_NAMESPACE, readOnly);
+    }
+
+    /**
+     * Close settings.
+     */
+    void close()
+    {
+        m_preferences.end();
+        return;
+    }
+
+    /**
      * Get remote wifi network SSID.
      * If there is no SSID available, a empty string will be returned.
      * 
@@ -132,14 +160,9 @@ private:
     /**
      * Constructs the settings instance.
      */
-    Settings()
+    Settings() :
+        m_preferences()
     {
-        /* Open Preferences with namespace. Each application module, library, etc
-         * has to use a namespace name to prevent key name collisions. We will open storage in
-         * RW-mode (second parameter has to be false).
-         * Note: Namespace name is limited to 15 chars.
-         */
-        m_preferences.begin(PREF_NAMESPACE, false);
     }
 
     /**
