@@ -37,6 +37,9 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.
 * [FastLED](https://github.com/FastLED/FastLED) - Controlling the LED matrix with hardware support (RMT).
 * [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Alternative to FastLED with hardware support (I2S).
+* [FastLED_NeoMatrix](https://github.com/marcmerlin/FastLED_NeoMatrix) - Matrix support.
+* [Framebuffer_GFX](https://github.com/marcmerlin/Framebuffer_GFX) - Adapter for using Adafruit_GFX.
+* [Adafruit_GFX](https://github.com/adafruit/Adafruit-GFX-Library) - GFX.
 
 ### Structure
 

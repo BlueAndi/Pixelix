@@ -1,0 +1,32 @@
+@startuml
+
+title GFX
+
+package "marcmerlin" {
+    class FastLED_NeoMatrix
+    class Framebuffer_GFX
+}
+
+package "Fast_LED" {
+    class CRGB
+}
+
+package "Adafruit" {
+    class Adafruit_GFX
+
+    note left of Adafruit_GFX
+        Disadvantages:
+        * Supports only 16 bit color (RGB565).
+        * Needs SPI as header include.
+    end note
+}
+
+Adafruit_GFX <|-- Framebuffer_GFX
+Framebuffer_GFX <|-- FastLED_NeoMatrix
+FastLED_NeoMatrix ..> CRGB: <<uses>>
+
+class "App" as app
+
+app .> FastLED_NeoMatrix: <<uses>>
+
+@enduml
