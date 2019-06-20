@@ -1,0 +1,7 @@
+FastLED and LEDMatrix both have features that you might want to use.
+It is possible to define a single FastLED strip used as a matrix, and 
+alternate between NeoMatrix and LEDMatrix writing to it.
+
+This example code shows how.
+
+Enjoy, Marc <marc_soft@merlins.org>
