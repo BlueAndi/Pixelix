@@ -44,7 +44,8 @@ has the main loop.
 
 /** FastLED RMT driver shall use only one channel to avoid wasting time and memory. */
 #define FASTLED_RMT_MAX_CHANNELS    1
-#include "FastLED.h"
+#include <FastLED.h>
+#include <FastLED_NeoMatrix.h>
 
 #include <WiFi.h>
 #include <WebServer.h>
@@ -76,6 +77,15 @@ static const uint32_t   SERIAL_BAUDRATE     = 115200u;
 
 /** Pixel representation of the LED matrix */
 static CRGB             gLedMatrix[Board::LedMatrix::width * Board::LedMatrix::heigth];
+
+/** Pixel matrix, used to draw and show texts. */
+static FastLED_NeoMatrix    gMatrix(gLedMatrix,
+                                    Board::LedMatrix::width,
+                                    Board::LedMatrix::heigth,
+                                    NEO_MATRIX_TOP |
+                                    NEO_MATRIX_LEFT |
+                                    NEO_MATRIX_ROWS |
+                                    NEO_MATRIX_ZIGZAG);
 
 /** Access point SSID */
 static const char*      WIFI_AP_SSID        = "esp32-rgb-led-matrix";
