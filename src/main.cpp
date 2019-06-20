@@ -50,6 +50,8 @@ has the main loop.
 #include <WiFi.h>
 #include <WebServer.h>
 
+#include <ArduinoOTA.h>
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -67,16 +69,23 @@ has the main loop.
 
 static bool handleAuthentication();
 static void handleRoot();
+static void otaOnStart(void);
+static void otaOnEnd(void);
+static void otaOnProgress(unsigned int total, unsigned int size);
+static void otaOnError(ota_error_t error);
 
 /******************************************************************************
  * Variables
  *****************************************************************************/
 
+/** Current SW version */
+static const char*          SW_VERSION          = "Trunk";
+
 /** Serial interface baudrate. */
-static const uint32_t   SERIAL_BAUDRATE     = 115200u;
+static const uint32_t       SERIAL_BAUDRATE     = 115200u;
 
 /** Pixel representation of the LED matrix */
-static CRGB             gLedMatrix[Board::LedMatrix::width * Board::LedMatrix::heigth];
+static CRGB                 gLedMatrix[Board::LedMatrix::width * Board::LedMatrix::heigth];
 
 /** Pixel matrix, used to draw and show texts. */
 static FastLED_NeoMatrix    gMatrix(gLedMatrix,
@@ -88,28 +97,34 @@ static FastLED_NeoMatrix    gMatrix(gLedMatrix,
                                     NEO_MATRIX_ZIGZAG);
 
 /** Access point SSID */
-static const char*      WIFI_AP_SSID        = "esp32-rgb-led-matrix";
+static const char*          WIFI_AP_SSID        = "esp32-rgb-led-matrix";
 
 /** Access point passphrase (min. 8 characters) */
-static const char*      WIFI_AP_PASSPHRASE  = "Luke, I am your father.";
+static const char*          WIFI_AP_PASSPHRASE  = "Luke, I am your father.";
 
 /** Port for HTTP */
-static const uint32_t   WEBSERVER_PORT      = 80u;
+static const uint32_t       WEBSERVER_PORT      = 80u;
 
 /** HTTP server */
-static WebServer        gWebServer(WEBSERVER_PORT);
+static WebServer            gWebServer(WEBSERVER_PORT);
 
 /** Webserver login user */
-static const char*      WEB_LOGIN_USER      = "luke";
+static const char*          WEB_LOGIN_USER      = "luke";
 
 /** Webserver login password */
-static const char*      WEB_LOGIN_PASSWORD  = "skywalker";
+static const char*          WEB_LOGIN_PASSWORD  = "skywalker";
 
 /** If a fatal error happened, it shall be set true otherwise false. */
-static bool             gIsFatalError       = false;
+static bool                 gIsFatalError       = false;
 
 /** Retry delay after a failed connection attempt in ms. */
-static const uint32_t   RETRY_DELAY         = 30000u;
+static const uint32_t       RETRY_DELAY         = 30000u;
+
+/** Over-the-air update password */
+static const char*          OTA_PASSWORD        = "maytheforcebewithyou";
+
+/** Is over-the-air update started? */
+static bool                 gisUpdateStarted    = false;
 
 /******************************************************************************
  * External functions
@@ -130,6 +145,15 @@ void setup()
     
     /* TODO */
     Serial.println("Booting ...");
+    
+    Serial.print("SW version: ");
+    Serial.println(SW_VERSION);
+
+    Serial.print("ESP32 chip rev.: ");
+    Serial.println(ESP.getChipRevision());
+
+    Serial.print("ESP32 SDK version: ");
+    Serial.println(ESP.getSdkVersion());
 
     /* Initialize drivers */
     ButtonDrv::getInstance().init();
@@ -238,6 +262,22 @@ void setup()
             Serial.print("AP IP address: ");
             Serial.println(ipAddress);
         }
+
+        /* Prepare over the air update. */
+        ArduinoOTA.begin();
+        ArduinoOTA.setPassword(OTA_PASSWORD);
+        ArduinoOTA.onStart(otaOnStart);
+        ArduinoOTA.onEnd(otaOnEnd);
+        ArduinoOTA.onProgress(otaOnProgress);
+        ArduinoOTA.onError(otaOnError);
+
+        /* TODO Use logger */
+        Serial.print("Sketch size: ");
+        Serial.print(ESP.getSketchSize());
+        Serial.println(" bytes");
+        Serial.print("Free size: ");
+        Serial.print(ESP.getFreeSketchSpace());
+        Serial.println(" bytes");
     }
 
     return;
@@ -254,12 +294,18 @@ void loop()
         /* Wait till manual reset. */
         ;
     }
-    else
     /* Normal operation */
+    else
     {
-        gWebServer.handleClient();
+        ArduinoOTA.handle();
 
-        /* TODO Handle unexpected disconnect from wifi network */
+        /* As long as no update is running, do handle all other connections. */
+        if (false == gisUpdateStarted)
+        {
+            gWebServer.handleClient();
+
+            /* TODO Handle unexpected disconnect from wifi network */
+        }
     }
 
     return;
@@ -310,6 +356,81 @@ static void handleRoot()
     }
 
     gWebServer.send(200, "text/plain", "Root directory");
+
+    return;
+}
+
+/**
+ * On start of over-the-air update.
+ */
+static void otaOnStart(void)
+{
+    gisUpdateStarted = true;
+    gMatrix.clear();
+
+    return;
+}
+
+/**
+ * On end of over-the-air update.
+ */
+static void otaOnEnd(void)
+{
+    gisUpdateStarted = false;
+
+    return;
+}
+
+/**
+ * On progress of over-the-air update.
+ * 
+ * @param[in] total Total number of written bytes.
+ * @param[in] size  Size of the whole binary, which to update.
+ */
+static void otaOnProgress(unsigned int total, unsigned int size)
+{
+    /* TODO */
+
+    return;
+}
+
+/**
+ * On error of over-the-air update.
+ * 
+ * @param[in] error Error information
+ */
+static void otaOnError(ota_error_t error)
+{
+    gisUpdateStarted    = false;
+    gIsFatalError       = true;
+
+    /* TODO Use Logger */
+    switch(error)
+    {
+    case OTA_AUTH_ERROR:
+        Serial.println("OTA - Authentication error.");
+        break;
+
+    case OTA_BEGIN_ERROR:
+        Serial.println("OTA - Begin error.");
+        break;
+
+    case OTA_CONNECT_ERROR:
+        Serial.println("OTA - Connect error.");
+        break;
+
+    case OTA_RECEIVE_ERROR:
+        Serial.println("OTA - Receive error.");
+        break;
+
+    case OTA_END_ERROR:
+        Serial.println("OTA - End error.");
+        break;
+
+    default:
+        Serial.println("OTA - Unknown error.");
+        break;
+    }
 
     return;
 }
