@@ -138,11 +138,19 @@ void setup()
     FastLED.addLeds<NEOPIXEL, Board::Pin::ledMatrixDataOutPinNo>(gLedMatrix, ARRAY_NUM(gLedMatrix)).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(Board::LedMatrix::supplyVoltage, Board::LedMatrix::supplyCurrentMax);
 
-    /* User request for setting up an wifi access point?
-     * Because we just initialized the button driver, the delay
-     * ensures that a reliable value can be read the first time.
+    /* Start LED matrix */
+    gMatrix.begin();
+
+    /* Does the user request for setting up an wifi access point?
+     * Because we just initialized the button driver, wait until
+     * the button state has a reliable value.
      */
-    delay(250u);
+    while(false == ButtonDrv::getInstance().isUpdated())
+    {
+        /* Give other tasks a chance. */
+        delay(1u);
+    }
+
     if (ButtonDrv::STATE_PRESSED == ButtonDrv::getInstance().getState())
     {
         /* Setup wifi access point. */

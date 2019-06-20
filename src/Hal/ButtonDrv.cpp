@@ -130,6 +130,27 @@ ButtonDrv::State ButtonDrv::getState()
     return state;
 }
 
+bool ButtonDrv::isUpdated() const
+{
+    bool    isUpdated   = false;
+
+    if (pdTRUE != xSemaphoreTake(m_semaphore, portMAX_DELAY))
+    {
+        /* Warning, update of button state not possible. */
+    }
+    else
+    {
+        isUpdated = m_isUpdated;
+
+        if (pdTRUE != xSemaphoreGive(m_semaphore))
+        {
+            /* Fatal error */
+        }
+    }
+
+    return isUpdated;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -183,12 +204,14 @@ void ButtonDrv::buttonTask(void *parameters)
                         (LOW == buttonValue))
                     {
                         buttonDrv->m_state = STATE_PRESSED;
+                        buttonDrv->m_isUpdated = true;
                     }
                     /* Button released now? */
                     else if ((STATE_PRESSED == buttonDrv->m_state) &&
                              (HIGH == buttonValue))
                     {
                         buttonDrv->m_state = STATE_TRIGGERED;
+                        buttonDrv->m_isUpdated = true;
                     }
                     else
                     {

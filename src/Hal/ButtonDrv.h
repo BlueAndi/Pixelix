@@ -106,6 +106,15 @@ public:
      */
     State getState();
 
+    /**
+     * Is button state updated?
+     * Use this to check after initialization whether the
+     * button state was at least once updated.
+     * 
+     * @return Updated or not.
+     */
+    bool isUpdated() const;
+
 private:
 
     static ButtonDrv    m_instance;         /**< Button driver instance */
@@ -113,6 +122,7 @@ private:
     TaskHandle_t        m_buttonTaskHandle; /**< Button task handle */
     State               m_state;            /**< Current button state */
     SemaphoreHandle_t   m_semaphore;        /**< Semaphore lock */
+    bool                m_isUpdated;        /**< Button state is updated after start or not */
 
     /** Button task stack size in bytes */
     static const uint32_t   BUTTON_TASK_STACKE_SIZE = 1024u;
@@ -132,7 +142,8 @@ private:
     ButtonDrv() :
         m_buttonTaskHandle(NULL),
         m_state(STATE_RELEASED),
-        m_semaphore(NULL)
+        m_semaphore(NULL),
+        m_isUpdated(false)
     {
     }
 
