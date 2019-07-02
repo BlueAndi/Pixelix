@@ -51,6 +51,7 @@ has the main loop.
 #include <WebServer.h>
 
 #include <ArduinoOTA.h>
+#include <SPIFFS.h>
 
 /******************************************************************************
  * Macros
@@ -71,7 +72,7 @@ static bool handleAuthentication();
 static void handleRoot();
 static void otaOnStart(void);
 static void otaOnEnd(void);
-static void otaOnProgress(unsigned int total, unsigned int size);
+static void otaOnProgress(unsigned int progress, unsigned int total);
 static void otaOnError(ota_error_t error);
 
 /******************************************************************************
@@ -247,6 +248,10 @@ void setup()
         /* Start webserver */
         gWebServer.begin();
 
+        /* TODO */
+        Serial.print("Hostname: ");
+        Serial.println(WiFi.getHostname());
+
         /* Access point active? */
         if (true == isAPMode)
         {
@@ -272,6 +277,8 @@ void setup()
         ArduinoOTA.onError(otaOnError);
 
         /* TODO Use logger */
+        Serial.print("OTA hostname: ");
+        Serial.println(ArduinoOTA.getHostname());
         Serial.print("Sketch size: ");
         Serial.print(ESP.getSketchSize());
         Serial.println(" bytes");
@@ -368,6 +375,23 @@ static void otaOnStart(void)
     gisUpdateStarted = true;
     gMatrix.clear();
 
+    /* TODO */
+    Serial.print("Start updating ");
+
+    if (U_FLASH == ArduinoOTA.getCommand())
+    {
+        Serial.println("sketch.");
+    }
+    else
+    {
+        Serial.println("filesystem.");
+
+        /* Close filesystem before continue. 
+         * Note, this needs a restart after update is finished.
+         */
+        SPIFFS.end();
+    }
+
     return;
 }
 
@@ -378,18 +402,27 @@ static void otaOnEnd(void)
 {
     gisUpdateStarted = false;
 
+    Serial.println("Update successful finished.");
+
+    /* Restart after 200 ms to give the serial
+     * output a chance.
+     */
+    delay(200u);
+    ESP.restart();
+
     return;
 }
 
 /**
  * On progress of over-the-air update.
  * 
- * @param[in] total Total number of written bytes.
- * @param[in] size  Size of the whole binary, which to update.
+ * @param[in] progress  Number of written bytes.
+ * @param[in] total     Total size of the whole binary, which to update.
  */
-static void otaOnProgress(unsigned int total, unsigned int size)
+static void otaOnProgress(unsigned int progress, unsigned int total)
 {
     /* TODO */
+    Serial.printf("Progress: %u%%\r\n", (progress / (total / 100u)));
 
     return;
 }
@@ -403,6 +436,8 @@ static void otaOnError(ota_error_t error)
 {
     gisUpdateStarted    = false;
     gIsFatalError       = true;
+
+    Serial.print("Update failed: ");
 
     /* TODO Use Logger */
     switch(error)
@@ -431,6 +466,12 @@ static void otaOnError(ota_error_t error)
         Serial.println("OTA - Unknown error.");
         break;
     }
+
+    /* Restart after 200 ms to give the serial
+     * output a chance.
+     */
+    delay(200u);
+    ESP.restart();
 
     return;
 }
