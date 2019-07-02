@@ -30,12 +30,12 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 3. Close and start VSCode again.
 4. Recommended is to take a look to the [quick-start guide](https://docs.platformio.org/en/latest/ide/vscode.html#quick-start).
 
-### Compiling project
+### Compiling Project
 1. Load workspace in VSCode.
 2. Change to PlatformIO toolbar.
 3. _Project Tasks -> Build_ or via hotkey ctrl-alt-b
 
-### Used libraries
+### Used Libraries
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.
 * [FastLED](https://github.com/FastLED/FastLED) - Controlling the LED matrix with hardware support (RMT).
 * [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Alternative to FastLED with hardware support (I2S).
@@ -58,8 +58,8 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 \---platform.ini    (Project configuration file)
 </pre>
 
-## Issues, Ideas and bugs
+# Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
-## License
+# License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
