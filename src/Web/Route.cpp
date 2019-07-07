@@ -39,6 +39,8 @@
 #include "Route.h"
 #include "MyWebServer.hpp"
 #include "IndexPage.h"
+#include "ErrorPage.h"
+#include "Html.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -126,9 +128,22 @@ private:
 static AuthHandler          gAuthHandler;
 
 /**
+ * Error page, shown for any unsupported web request.
+ */
+static ErrorPage            gErrorPage404(Html::STATUS_CODE_NOT_FOUND, "Page not found.");
+
+/**
+ * Route unsupported requests to corresponding error page.
+ */
+static StaticCallback<0u>   gRouteToErrorPage404(   MyWebServer::srv,
+                                                    NULL,
+                                                    gErrorPage404,
+                                                    NULL);
+
+/**
  * Route "/" request to index.html
  */
-static StaticCallback<0u>   gRouteToIndexPage(  MyWebServer::srv,
+static StaticCallback<1u>   gRouteToIndexPage(  MyWebServer::srv,
                                                 "/",
                                                 IndexPage::getInstance(),
                                                 &gAuthHandler);
@@ -139,7 +154,8 @@ static StaticCallback<0u>   gRouteToIndexPage(  MyWebServer::srv,
  */
 static Route*               gRoutes[] =
 {
-    &gRouteToIndexPage
+    /* 0 */ &gRouteToErrorPage404,
+    /* 1 */ &gRouteToIndexPage
 };
 
 /******************************************************************************

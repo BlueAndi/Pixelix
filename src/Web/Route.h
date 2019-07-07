@@ -126,13 +126,21 @@ public:
      * Creates a static callback.
      * 
      * @param[in] srv           Web server, used to retrieve request arguments.
+     * @param[in] path          Route path; it may be NULL to register a web page for unsupported paths.
      * @param[in] webPage       The web page, which shall be shown on request.
      * @param[in] authHandler   Optional authentication handler, used for web page access.
      */
     StaticCallback(WebServer& srv, const char* path, IWebPage& webPage, IAuthHandler* authHandler) :
         Route(srv, webPage, authHandler)
     {
-        srv.on(path, handler);
+        if (NULL == path)
+        {
+            srv.onNotFound(handler);
+        }
+        else
+        {
+            srv.on(path, handler);
+        }
     }
 
     /**
