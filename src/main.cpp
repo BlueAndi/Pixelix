@@ -48,10 +48,11 @@ has the main loop.
 #include <FastLED_NeoMatrix.h>
 
 #include <WiFi.h>
-#include <WebServer.h>
 
 #include <ArduinoOTA.h>
 #include <SPIFFS.h>
+
+#include "MyWebServer.hpp"
 
 /******************************************************************************
  * Macros
@@ -68,8 +69,6 @@ has the main loop.
  * Prototypes
  *****************************************************************************/
 
-static bool handleAuthentication();
-static void handleRoot();
 static void otaOnStart(void);
 static void otaOnEnd(void);
 static void otaOnProgress(unsigned int progress, unsigned int total);
@@ -80,10 +79,10 @@ static void otaOnError(ota_error_t error);
  *****************************************************************************/
 
 /** Current SW version */
-static const char*          SW_VERSION          = "Trunk";
+static const char           SW_VERSION[]            = "Trunk";
 
 /** Serial interface baudrate. */
-static const uint32_t       SERIAL_BAUDRATE     = 115200u;
+static const uint32_t       SERIAL_BAUDRATE         = 115200u;
 
 /** Pixel representation of the LED matrix */
 static CRGB                 gLedMatrix[Board::LedMatrix::width * Board::LedMatrix::heigth];
@@ -98,34 +97,22 @@ static FastLED_NeoMatrix    gMatrix(gLedMatrix,
                                     NEO_MATRIX_ZIGZAG);
 
 /** Access point SSID */
-static const char*          WIFI_AP_SSID        = "esp32-rgb-led-matrix";
+static const char           WIFI_AP_SSID[]          = "esp32-rgb-led-matrix";
 
 /** Access point passphrase (min. 8 characters) */
-static const char*          WIFI_AP_PASSPHRASE  = "Luke, I am your father.";
-
-/** Port for HTTP */
-static const uint32_t       WEBSERVER_PORT      = 80u;
-
-/** HTTP server */
-static WebServer            gWebServer(WEBSERVER_PORT);
-
-/** Webserver login user */
-static const char*          WEB_LOGIN_USER      = "luke";
-
-/** Webserver login password */
-static const char*          WEB_LOGIN_PASSWORD  = "skywalker";
+static const char           WIFI_AP_PASSPHRASE[]    = "Luke, I am your father.";
 
 /** If a fatal error happened, it shall be set true otherwise false. */
-static bool                 gIsFatalError       = false;
+static bool                 gIsFatalError           = false;
 
 /** Retry delay after a failed connection attempt in ms. */
-static const uint32_t       RETRY_DELAY         = 30000u;
+static const uint32_t       RETRY_DELAY             = 30000u;
 
 /** Over-the-air update password */
-static const char*          OTA_PASSWORD        = "maytheforcebewithyou";
+static const char           OTA_PASSWORD[]          = "maytheforcebewithyou";
 
 /** Is over-the-air update started? */
-static bool                 gisUpdateStarted    = false;
+static bool                 gisUpdateStarted        = false;
 
 /******************************************************************************
  * External functions
@@ -246,7 +233,7 @@ void setup()
     if (false == gIsFatalError)
     {
         /* Start webserver */
-        gWebServer.begin();
+        MyWebServer::srv.begin();
 
         /* TODO */
         Serial.print("Hostname: ");
@@ -256,8 +243,6 @@ void setup()
         if (true == isAPMode)
         {
             IPAddress ipAddress = WiFi.softAPIP();
-
-            gWebServer.on("/", handleRoot);
 
             /* Show the ip address on the LED matrix */
             /* TODO */
@@ -309,7 +294,7 @@ void loop()
         /* As long as no update is running, do handle all other connections. */
         if (false == gisUpdateStarted)
         {
-            gWebServer.handleClient();
+            MyWebServer::srv.handleClient();
 
             /* TODO Handle unexpected disconnect from wifi network */
         }
@@ -321,51 +306,6 @@ void loop()
 /******************************************************************************
  * Local functions
  *****************************************************************************/
-
-/**
- * Handle webserver authentication. If the client is not authenticated, an
- * authenticatio process will be performed.
- * 
- * @return If authentication is successful it returns true otherwise false.
- * @retval false    Authentication failed.
- * @retval true     Authentication successful.
- */
-static bool handleAuthentication()
-{
-    bool status = true;
-
-    /* If there is no authentication with the client, it will be requested. */
-    if (false == gWebServer.authenticate(WEB_LOGIN_USER, WEB_LOGIN_PASSWORD))
-    {
-        const String authFailResponse = "Authentication failed!";
-
-        /* Use encrypted communication for authentication request to avoid
-         * that the credentials can be read by everyone.
-         */
-        gWebServer.requestAuthentication(DIGEST_AUTH, NULL, authFailResponse);
-        
-        status = false;
-    }
-
-    return status;
-}
-
-/**
- * Handle webserver "/" access.
- */
-static void handleRoot()
-{
-    /* Perform authentication */
-    if (false == handleAuthentication())
-    {
-        /* Authentication failed. */
-        return;
-    }
-
-    gWebServer.send(200, "text/plain", "Root directory");
-
-    return;
-}
 
 /**
  * On start of over-the-air update.
