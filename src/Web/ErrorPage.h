@@ -73,7 +73,7 @@ public:
      * @param[in] errorCode     The error code corresponds to HTTP status code and will be send the client.
      * @param[in] errorMessage  The error message will be shown on the page.
      */
-    ErrorPage(uint8_t errorCode, const char* errorMessage) :
+    ErrorPage(uint32_t errorCode, const char* errorMessage) :
         IWebPage(),
         m_errorCode(errorCode),
         m_errorMessage(errorMessage)
@@ -101,7 +101,7 @@ public:
 
 private:
 
-    uint8_t         m_errorCode;    /**< Error code, equal to web status code. */
+    uint32_t        m_errorCode;    /**< Error code, equal to web status code. */
     const String    m_errorMessage; /**< Error message, shown on page. */
 
     ErrorPage(const ErrorPage& page);
