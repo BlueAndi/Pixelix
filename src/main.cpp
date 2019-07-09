@@ -52,7 +52,9 @@ has the main loop.
 #include <ArduinoOTA.h>
 #include <SPIFFS.h>
 
-#include "MyWebServer.hpp"
+#include "WebServer.h"
+#include "WebConfig.h"
+#include "Pages.h"
 
 /******************************************************************************
  * Macros
@@ -113,6 +115,9 @@ static const char           OTA_PASSWORD[]          = "maytheforcebewithyou";
 
 /** Is over-the-air update started? */
 static bool                 gisUpdateStarted        = false;
+
+/** Web server */
+static WebServer            gWebServer(WebConfig::WEBSERVER_PORT);
 
 /******************************************************************************
  * External functions
@@ -232,8 +237,9 @@ void setup()
     /* Continoue only if no error happened. */
     if (false == gIsFatalError)
     {
-        /* Start webserver */
-        MyWebServer::srv.begin();
+        /* Start webserver and register all web pages */
+        gWebServer.begin();
+        Pages::init(gWebServer);
 
         /* TODO */
         Serial.print("Hostname: ");
@@ -294,7 +300,7 @@ void loop()
         /* As long as no update is running, do handle all other connections. */
         if (false == gisUpdateStarted)
         {
-            MyWebServer::srv.handleClient();
+            gWebServer.handleClient();
 
             /* TODO Handle unexpected disconnect from wifi network */
         }

@@ -25,21 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Index page
+@brief  Pages
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the root page.
+This module provides all web pages.
 
 *******************************************************************************/
-/** @defgroup index Index page
- * This module provides the root page.
+/** @defgroup pages Pages
+ * This module provides all web pages.
  *
  * @{
  */
 
-#ifndef __INDEXPAGE_H__
-#define __INDEXPAGE_H__
+#ifndef __PAGES_H__
+#define __PAGES_H__
 
 /******************************************************************************
  * Compile Switches
@@ -50,7 +50,9 @@ This module provides the root page.
  *****************************************************************************/
 #include <WebServer.h>
 #include <stdint.h>
-#include "IWebPage.hpp"
+
+namespace Pages
+{
 
 /******************************************************************************
  * Macros
@@ -60,63 +62,19 @@ This module provides the root page.
  * Types and Classes
  *****************************************************************************/
 
-/**
- * Index web page (root page).
- */
-class IndexPage : public IWebPage
-{
-public:
-
-    /**
-     * Constructs the index page.
-     */
-    IndexPage() :
-        IWebPage()
-    {
-    }
-
-    /**
-     * Destroys the index page.
-     */
-    ~IndexPage()
-    {
-    }
-
-    /**
-     * Get instance of page.
-     * 
-     * @return Instance
-     */
-    static IndexPage& getInstance(void)
-    {
-        return m_instance;
-    }
-
-private:
-
-    static IndexPage    m_instance; /**< Singleton instance */
-
-    /**
-     * Show the web page.
-     * With the web server reference, the web page is able to
-     * retrieve arguments or request headers.
-     * 
-     * If an authentication handler is available, every access will be authenticated.
-     * 
-     * @param[in] srv           Web server
-     * @param[in] authHandler   Authentication handler (optional)
-     */
-    void show(WebServer& srv, IAuthHandler* authHandler);
-
-    IndexPage(const IndexPage& page);
-    IndexPage& operator=(const IndexPage& page);
-
-};
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __INDEXPAGE_H__ */
+/**
+ * Initialize all web pages and register them on the web server.
+ * 
+ * @param[in] srv   Web server
+ */
+void init(WebServer& srv);
+
+}
+
+#endif  /* __PAGES_H__ */
 
 /** @} */

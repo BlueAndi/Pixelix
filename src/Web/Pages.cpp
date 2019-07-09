@@ -25,18 +25,18 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Index page
+@brief  Pages
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-@see IndexPage.h
+@see Pages.h
 
 *******************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "IndexPage.h"
+#include "Pages.h"
 #include "Html.h"
 #include "WebConfig.h"
 
@@ -48,6 +48,9 @@
  * Macros
  *****************************************************************************/
 
+/** Get number of array elements. */
+#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -56,12 +59,18 @@
  * Prototypes
  *****************************************************************************/
 
+static bool authenticate(WebServer& srv);
+static void errorNotFound(void);
+static void indexPage(void);
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
 
-/* Initialize index page instance. */
-IndexPage   IndexPage::m_instance;
+/**
+ * Web server
+ */
+static WebServer*   gWebServer  = NULL;
 
 /******************************************************************************
  * Public Methods
@@ -75,12 +84,86 @@ IndexPage   IndexPage::m_instance;
  * Private Methods
  *****************************************************************************/
 
-void IndexPage::show(WebServer& srv, IAuthHandler* authHandler)
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+void Pages::init(WebServer& srv)
+{
+    gWebServer = &srv;
+
+    gWebServer->onNotFound(errorNotFound);
+    gWebServer->on("/", HTTP_GET, indexPage);
+
+    return;
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
+
+/**
+ * This function will be called to authenticate the client.
+ * A web page can request this on demand.
+ * 
+ * @param[in] srv   Web server
+ * 
+ * @return Authentication result
+ * @retval false    Authentication failed
+ * @retval true     Authentication successful
+ */
+static bool authenticate(WebServer& srv)
+{
+    bool status = false;
+
+    /* If there is no authentication with the client, it will be requested. */
+    if (false == srv.authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        const String authFailResponse = "Authentication failed!";
+
+        /* Use encrypted communication for authentication request to avoid
+        * that the credentials can be read by everyone.
+        */
+        srv.requestAuthentication(DIGEST_AUTH, NULL, authFailResponse);
+        
+        status = false;
+    }
+
+    return status;
+}
+
+/**
+ * Error web page used in case a requested path was not found.
+ */
+static void errorNotFound(void)
 {
     String page;
 
-    if ((NULL != authHandler) &&
-        (false == authHandler->authenticate(srv)))
+    if (NULL == gWebServer)
+    {
+        return;
+    }
+
+    page  = Html::htmlHead(WebConfig::PROJECT_TITLE);
+    page += Html::heading(WebConfig::PROJECT_TITLE, 1);
+    page += Html::heading("Error", 2);
+    page += Html::paragraph("Requested path not found.");
+    page += Html::htmlTail();
+
+    gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/plain", page);
+
+    return;
+}
+
+/**
+ * Index page on root path ("/").
+ */
+static void indexPage(void)
+{
+    String page;
+
+    /* If authentication fails, a error page is automatically shown. */
+    if (false == authenticate(*gWebServer))
     {
         return;
     }
@@ -90,15 +173,7 @@ void IndexPage::show(WebServer& srv, IAuthHandler* authHandler)
     page += Html::paragraph("Root directory.");
     page += Html::htmlTail();
 
-    srv.send(Html::STATUS_CODE_OK, "text/plain", page);
+    gWebServer->send(Html::STATUS_CODE_OK, "text/plain", page);
 
     return;
 }
-
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
