@@ -55,6 +55,7 @@ has the main loop.
 #include "WebServer.h"
 #include "WebConfig.h"
 #include "Pages.h"
+#include "RestApi.h"
 
 /******************************************************************************
  * Macros
@@ -240,6 +241,7 @@ void setup()
         /* Start webserver and register all web pages */
         gWebServer.begin();
         Pages::init(gWebServer);
+        RestApi::init(gWebServer);
 
         /* TODO */
         Serial.print("Hostname: ");
