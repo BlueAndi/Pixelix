@@ -150,7 +150,7 @@ static void errorNotFound(void)
     page += Html::paragraph("Requested path not found.");
     page += Html::htmlTail();
 
-    gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/plain", page);
+    gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/html", page);
 
     return;
 }
@@ -173,7 +173,7 @@ static void indexPage(void)
     page += Html::paragraph("Root directory.");
     page += Html::htmlTail();
 
-    gWebServer->send(Html::STATUS_CODE_OK, "text/plain", page);
+    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page);
 
     return;
 }
