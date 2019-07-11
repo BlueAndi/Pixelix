@@ -40,6 +40,7 @@
 #include "Html.h"
 #include <ArduinoJson.h>
 #include "Settings.h"
+#include "LedMatrix.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -71,6 +72,7 @@ typedef enum
  *****************************************************************************/
 
 static void status(void);
+static void display(void);
 
 /******************************************************************************
  * Local Variables
@@ -104,6 +106,7 @@ void RestApi::init(WebServer& srv)
     gWebServer = &srv;
 
     gWebServer->on("/api/v1/status", status);
+    gWebServer->on("/api/v1/display", display);
 
     return;
 }
@@ -131,19 +134,61 @@ static void status(void)
         JsonObject  dataObj = jsonDoc.createNestedObject("data");
         JsonObject  wifiObj = dataObj.createNestedObject("wifi");
 
+        /* Prepare response */
         jsonDoc["status"]   = STATUS_CODE_OK;
         wifiObj["ssid"]     = Settings::getInstance().getWifiSSID();
-
-        httpStatusCode = Html::STATUS_CODE_OK;
+        httpStatusCode      = Html::STATUS_CODE_OK;
     }
     else
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
+        /* Prepare response */
         jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
         errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+    }
 
-        httpStatusCode = Html::STATUS_CODE_NOT_FOUND;
+    serializeJsonPretty(jsonDoc, content);
+    gWebServer->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * Display resource.
+ */
+static void display(void)
+{
+    String                  content;
+    StaticJsonDocument<200> jsonDoc;
+    uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
+
+    if (NULL == gWebServer)
+    {
+        return;
+    }
+
+    if ((HTTP_POST == gWebServer->method()) &&
+        (0 == gWebServer->arg("op").compareTo("clear")))
+    {
+        (void)jsonDoc.createNestedObject("data");
+
+        /* Clear display */
+        LedMatrix::getInstance().clear();
+
+        /* Prepare response */
+        jsonDoc["status"]   = STATUS_CODE_OK;
+        httpStatusCode      = Html::STATUS_CODE_OK;
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
     }
 
     serializeJsonPretty(jsonDoc, content);
