@@ -1,0 +1,79 @@
+@startuml
+
+title ESP-RGB-LED Matrix
+
+class Adafruit_GFX
+class FastLED_NeoMatrix
+class LedMatrix
+
+FastLED_NeoMatrix <|-- LedMatrix
+
+class Canvas<maxWidgets: uint8_t> {
+    - m_x : uint16_t
+    - m_y : uint16_t
+    - m_widgets : Widget*[maxWidgets]
+    + Canvas(x : uint16_t, y : uint16_t, width : uint16_t, height : uint16_t, matrix : LedMatrix&)
+    + addWidget(widget : Widget&) : bool
+    + removeWidget(widget : Widget&) : bool
+    + moveWidget(widget : Widget&, x : uint16_t, y : uint16_t) : void
+    + update() : void
+    - drawPixel(x : int16_t, y : int16_t, color : uint16_t) : void
+}
+
+Adafruit_GFX <|-- Canvas
+Canvas .l.> LedMatrix: <<uses>>
+Canvas o--> Widget
+
+note right of Canvas
+    A canvas can contain several widgets and
+    will update them periodically. It ensures
+    that a widget can not draw over the canvas
+    borders.
+end note
+
+class Widget {
+    - m_posX : uint16_t
+    - m_posY : uint16_t
+    + move(x : uint16_t, y : uint16_t) : void
+    + getPos(x : uint16_t&, y : uint16_t&) const : void
+    + {abstract} update(gfx : Adafruit_GFX&) = 0 : void
+}
+
+note left of Widget
+    The base widget contains the
+    position inside a canvas and declares
+    the graphics interface.
+end note
+
+class TextWidget {
+    - m_str : String
+    - m_textColor : uint16_t
+    + setStr(str : const String&) : void
+    + getStr() : String
+    + setTextColor(color : uint16_t) : void
+    + getTextColor() const : uint16_t
+    + update(gfx : Adafruit_GFX&) : void
+}
+
+Widget <|-- TextWidget
+
+class BitmapWidget {
+    - m_buffer : uint16_t*
+    - m_width : uint16_t
+    - m_height : uint16_t
+    + BitmapWidget(buffer : const uint16_t[])
+    + update(gfx : Adafruit_GFX&) : void
+}
+
+Widget <|-- BitmapWidget
+
+class LampWidget {
+    - m_isOn : bool
+    - m_colorOff : uint16_t
+    - m_colorOn : uint16_t
+    + update(gfx : Adafruit_GFX&) : void
+}
+
+Widget <|-- LampWidget
+
+@enduml

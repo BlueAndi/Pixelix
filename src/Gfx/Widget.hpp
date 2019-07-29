@@ -25,21 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  LED matrix
+@brief  Base Widget
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides access to the LED matrix.
+This module provides the basic widget.
 
 *******************************************************************************/
-/** @defgroup ledmatrix LED matrix
- * This module provides access to the LED matrix.
+/** @defgroup widget Base Widget
+ * This module provides the basic widget.
  *
  * @{
  */
 
-#ifndef __LEDMATRIX_H__
-#define __LEDMATRIX_H__
+#ifndef __WIDGET_HPP__
+#define __WIDGET_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -49,13 +49,7 @@ This module provides access to the LED matrix.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-
-/** FastLED RMT driver shall use only one channel to avoid wasting time and memory. */
-#define FASTLED_RMT_MAX_CHANNELS    1
-#include <FastLED.h>
-#include <FastLED_NeoMatrix.h>
-
-#include "Board.h"
+#include <Adafruit_GFX.h>
 
 /******************************************************************************
  * Macros
@@ -66,48 +60,110 @@ This module provides access to the LED matrix.
  *****************************************************************************/
 
 /**
- * Specific LED matrix.
+ * Base widget, which contains the position
+ * inside a canvas and declares the graphics interface.
  */
-class LedMatrix : public FastLED_NeoMatrix
+class Widget
 {
 public:
 
     /**
-     * Get LED matrix instance.
-     * 
-     * @return LED matrix
+     * Constructs a widget at position (0, 0) in the canvas.
      */
-    static LedMatrix& getInstance(void)
+    Widget() :
+        m_posX(0),
+        m_posY(0)
     {
-        return m_instance;
     }
 
-private:
-
-    /** LedMatrix instance */
-    static LedMatrix    m_instance;
-
-    /** Pixel representation of the LED matrix */
-    //static CRGB         m_matrixBuffer[Board::LedMatrix::width * Board::LedMatrix::heigth];
+    /**
+     * Constructs a widget a the given position in the canvas.
+     * 
+     * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
+    */
+    Widget(uint16_t x, uint16_t y) :
+        m_posX(x),
+        m_posY(y)
+    {
+    }
 
     /**
-     * Construct LED matrix.
-     */
-    LedMatrix();
+     * Constructs a widget by copying a widget.
+     * 
+     * @param[in] widget The widget, which to copy.
+    */
+    Widget(const Widget& widget) :
+        m_posX(widget.m_posX),
+        m_posY(widget.m_posY)
+    {
+    }
 
     /**
-     * Destroys LED matrix.
+     * Destroys a widget.
      */
-    ~LedMatrix();
+    virtual ~Widget()
+    {
+    }
 
-    LedMatrix(const LedMatrix& matrix);
-    LedMatrix& operator=(const LedMatrix& matrix);
+    /**
+     * Assign content of another widget.
+     * 
+     * @param[in] widget The widget, which to copy.
+     * 
+     * @return Widget
+    */
+    Widget& operator=(const Widget& widget)
+    {
+        m_posX = widget.m_posX;
+        m_posY = widget.m_posY;
+        return *this;
+    }
+
+    /**
+     * Move the widget to the given position in the canvas.
+     * 
+     * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
+     */
+    void move(uint16_t x, uint16_t y)
+    {
+        m_posX = x;
+        m_posY = y;
+        return;
+    }
+
+    /**
+     * Get current position in the canvas.
+     * 
+     * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
+     */
+    void getPos(uint16_t& x, uint16_t& y) const
+    {
+        x = m_posX;
+        y = m_posY;
+        return;
+    }
+
+    /**
+     * Update/Draw the widget in the canvas with the
+     * given graphics interface.
+     * 
+     * @param[in] gfx   Graphics interface
+     */
+    virtual void update(Adafruit_GFX& gfx) = 0;
+
+protected:
+
+    uint16_t    m_posX; /**< Upper left corner (x-coordinate) of the widget in a canvas. */
+    uint16_t    m_posY; /**< Upper left corner (y-coordinate) of the widget in a canvas. */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __LEDMATRIX_H__ */
+#endif  /* __WIDGET_HPP__ */
 
 /** @} */

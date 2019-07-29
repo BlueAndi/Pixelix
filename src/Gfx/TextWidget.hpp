@@ -25,21 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  LED matrix
+@brief  Text Widget
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides access to the LED matrix.
+This module provides the a text widget, showing a colored string.
 
 *******************************************************************************/
-/** @defgroup ledmatrix LED matrix
- * This module provides access to the LED matrix.
+/** @defgroup textwidget Text Widget
+ * This module provides the a text widget, showing a colored string.
  *
  * @{
  */
 
-#ifndef __LEDMATRIX_H__
-#define __LEDMATRIX_H__
+#ifndef __TEXTWIDGET_HPP__
+#define __TEXTWIDGET_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -49,13 +49,9 @@ This module provides access to the LED matrix.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <Adafruit_GFX.h>
 
-/** FastLED RMT driver shall use only one channel to avoid wasting time and memory. */
-#define FASTLED_RMT_MAX_CHANNELS    1
-#include <FastLED.h>
-#include <FastLED_NeoMatrix.h>
-
-#include "Board.h"
+#include "Widget.hpp"
 
 /******************************************************************************
  * Macros
@@ -66,48 +62,124 @@ This module provides access to the LED matrix.
  *****************************************************************************/
 
 /**
- * Specific LED matrix.
+ * A text widget, showing a colored string.
  */
-class LedMatrix : public FastLED_NeoMatrix
+class TextWidget : public Widget
 {
 public:
 
     /**
-     * Get LED matrix instance.
-     * 
-     * @return LED matrix
+     * Constructs a text widget with a empty white string.
      */
-    static LedMatrix& getInstance(void)
+    TextWidget() :
+        m_str(),
+        m_textColor(0xFFFF)
     {
-        return m_instance;
+    }
+
+    /**
+     * Constructs a text widget with the given string and its color.
+     * 
+     * @param[in] str   String
+     * @param[in] color Color of the string
+     */
+    TextWidget(const String& str, uint16_t color = 0xFFFF) :
+        m_str(str),
+        m_textColor(color)
+    {
+    }
+
+    /**
+     * Constructs a text widget by copying another one.
+     * 
+     * @param[in] widget Widget, which to copy
+     */
+    TextWidget(const TextWidget& widget) :
+        m_str(widget.m_str),
+        m_textColor(widget.m_textColor)
+    {
+    }
+
+    /**
+     * Assign the content of a text widget.
+     * 
+     * @param[in] widget Widget, which to assign
+     */
+    TextWidget& operator=(const TextWidget& widget)
+    {
+        m_str       = widget.m_str;
+        m_textColor = widget.m_textColor;
+
+        return *this;
+    }
+
+    /**
+     * Update/Draw the text widget.
+     * 
+     * @param[in] gfx Graphics interface
+     */
+    void update(Adafruit_GFX& gfx)
+    {
+        gfx.setCursor(0, 0);
+        gfx.setTextColor(m_textColor);
+        gfx.print(m_str);
+
+        return;
+    }
+
+    /**
+     * Set the text string.
+     * 
+     * @param[in] str String
+     */
+    void setStr(const String& str)
+    {
+        m_str = str;
+        return;
+    }
+
+    /**
+     * Get the text string.
+     * 
+     * @return String
+     */
+    String getStr(void) const
+    {
+        return m_str;
+    }
+
+    /**
+     * Set the text color of the string.
+     * 
+     * @param[in] color Text color
+     */
+    void setTextColor(uint16_t color)
+    {
+        m_textColor = color;
+        return;
+    }
+
+    /**
+     * Get the text color of the string.
+     * 
+     * @return Text color
+     */
+    uint16_t getTextColor(void) const
+    {
+        return m_textColor;
     }
 
 private:
 
-    /** LedMatrix instance */
-    static LedMatrix    m_instance;
+    String      m_str;          /**< String */
+    uint16_t    m_textColor;    /**< Text color of the string */
 
-    /** Pixel representation of the LED matrix */
-    //static CRGB         m_matrixBuffer[Board::LedMatrix::width * Board::LedMatrix::heigth];
-
-    /**
-     * Construct LED matrix.
-     */
-    LedMatrix();
-
-    /**
-     * Destroys LED matrix.
-     */
-    ~LedMatrix();
-
-    LedMatrix(const LedMatrix& matrix);
-    LedMatrix& operator=(const LedMatrix& matrix);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __LEDMATRIX_H__ */
+#endif  /* __TEXTWIDGET_HPP__ */
 
 /** @} */
