@@ -32,7 +32,7 @@
 This module handles the persistent settings.
 
 *******************************************************************************/
-/** @defgroup setings Settings
+/** @defgroup settings Settings
  * The settings are persistent stored key:value pairs.
  *
  * @{
