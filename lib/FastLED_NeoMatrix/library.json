@@ -1,5 +1,4 @@
 {
-    "name": "FastLED_NewMatrix",
-    "version": "0.0.0",
-    "platforms": "esp32doit-devkit-v1"
+    "name": "FastLED_NeoMatrix",
+    "version": "0.0.0"
 }

@@ -1,5 +1,4 @@
 {
     "name": "Framebuffer_GFX",
-    "version": "0.0.0",
-    "platforms": "esp32doit-devkit-v1"
+    "version": "0.0.0"
 }
