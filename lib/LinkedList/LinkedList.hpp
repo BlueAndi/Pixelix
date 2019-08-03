@@ -86,7 +86,7 @@ public:
      * 
      * @return Element
      */
-    T&  getElement(void) const
+    T&  getElement(void)
     {
         return m_element;
     }
