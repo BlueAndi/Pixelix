@@ -38,7 +38,7 @@ This module provides the main test entry point.
  *****************************************************************************/
 #include <unity.h>
 
-#include "../Common/LinkedList.hpp"
+#include <LinkedList.hpp>
 
 /******************************************************************************
  * Macros
