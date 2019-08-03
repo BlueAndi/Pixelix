@@ -171,10 +171,17 @@ public:
      * @param[in] list List, which to copy
      */
     LinkedList(const LinkedList& list) :
-        m_head(list.m_head),
-        m_tail(list.m_tail),
-        m_curr(list.m_curr)
+        m_head(NULL),
+        m_tail(NULL),
+        m_curr(NULL)
     {
+        ListElement<T>* listElement = list.m_head;
+
+        while(NULL != listElement)
+        {
+            append(listElement->getElement());
+            listElement = listElement->getNext();
+        }
     }
 
     /**
@@ -182,6 +189,7 @@ public:
      */
     ~LinkedList()
     {
+        clear();
     }
 
     /**
@@ -192,9 +200,15 @@ public:
      */
     LinkedList& operator=(const LinkedList& list)
     {
-        m_head = list.m_head;
-        m_tail = list.m_tail;
-        m_curr = list.m_curr;
+        ListElement<T>* listElement = list.m_head;
+
+        clear();
+        while(NULL != listElement)
+        {
+            append(listElement->getElement());
+            listElement = listElement->getNext();
+        }
+
         return;
     }
 

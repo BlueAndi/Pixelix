@@ -180,5 +180,44 @@ void testDoublyLinkedList(void)
     TEST_ASSERT_FALSE(list.next());
     TEST_ASSERT_FALSE(list.prev());
 
+    /* Insert elements again */
+    for(index = 1; index <= max; ++index)
+    {
+        list.append(index);
+    }
+
+    /* Copy it via copy constructor */
+    {
+        LinkedList<int> copyOfList = list;
+
+        list.selectFirstElement();
+        for(index = 1; index <= max; ++index)
+        {
+            TEST_ASSERT_NOT_NULL(copyOfList.current());
+            TEST_ASSERT_NOT_NULL(list.current());
+            TEST_ASSERT_NOT_EQUAL(copyOfList.current(), list.current());
+            TEST_ASSERT_EQUAL_INT(*copyOfList.current(), *list.current());
+            copyOfList.next();
+            list.next();
+        }
+    }
+
+    /* Copy it via assignment */
+    {
+        LinkedList<int> copyOfList;
+        copyOfList = list;
+
+        list.selectFirstElement();
+        for(index = 1; index <= max; ++index)
+        {
+            TEST_ASSERT_NOT_NULL(copyOfList.current());
+            TEST_ASSERT_NOT_NULL(list.current());
+            TEST_ASSERT_NOT_EQUAL(copyOfList.current(), list.current());
+            TEST_ASSERT_EQUAL_INT(*copyOfList.current(), *list.current());
+            copyOfList.next();
+            list.next();
+        }
+    }
+
     return;
 }
