@@ -209,7 +209,7 @@ public:
             listElement = listElement->getNext();
         }
 
-        return;
+        return *this;
     }
 
     /**
