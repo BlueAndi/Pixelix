@@ -36,10 +36,9 @@ This module provides the main test entry point.
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
 #include <unity.h>
 
-#include "LinkedList.hpp"
+#include "../Common/LinkedList.hpp"
 
 /******************************************************************************
  * Macros
