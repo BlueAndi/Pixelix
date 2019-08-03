@@ -89,8 +89,93 @@ int main(int argc, char **argv)
 void testDoublyLinkedList(void)
 {
     LinkedList<int> list;
+    int*            element = NULL;
+    int             value   = 1;
+    int             index   = 0;
+    const int       max     = 3;
 
-    /* List is empty */
+    /* List is empty. */
+    TEST_ASSERT_EQUAL_PTR(NULL, list.first());
+    TEST_ASSERT_EQUAL_PTR(NULL, list.last());
+    TEST_ASSERT_EQUAL_PTR(NULL, list.current());
+    TEST_ASSERT_FALSE(list.next());
+    TEST_ASSERT_FALSE(list.prev());
+
+    /* Add one element. */
+    list.append(value);
+
+    TEST_ASSERT_NOT_EQUAL(NULL, list.first());
+    TEST_ASSERT_NOT_EQUAL(NULL, list.last());
+    TEST_ASSERT_NOT_EQUAL(NULL, list.current());
+
+    TEST_ASSERT_EQUAL_INT(value, *list.first());
+    TEST_ASSERT_EQUAL_INT(value, *list.last());
+    TEST_ASSERT_EQUAL_INT(value, *list.current());
+
+    TEST_ASSERT_EQUAL_PTR(list.first(), list.last());
+    TEST_ASSERT_EQUAL_PTR(list.first(), list.current());
+
+    /* Remove element from list. List is now empty. */
+    list.removeSelected();
+
+    TEST_ASSERT_EQUAL_PTR(NULL, list.first());
+    TEST_ASSERT_EQUAL_PTR(NULL, list.last());
+    TEST_ASSERT_EQUAL_PTR(NULL, list.current());
+    TEST_ASSERT_FALSE(list.next());
+    TEST_ASSERT_FALSE(list.prev());
+
+    /* Add more elements */
+    for(index = 1; index <= max; ++index)
+    {
+        list.append(index);
+    }
+
+    TEST_ASSERT_NOT_EQUAL(NULL, list.first());
+    TEST_ASSERT_EQUAL_INT(1, *list.first());
+
+    TEST_ASSERT_NOT_EQUAL(NULL, list.last());
+    TEST_ASSERT_EQUAL_INT(max, *list.last());
+
+    /* Select element for element, from head to tail. */
+    for(index = 1; index <= max; ++index)
+    {
+        TEST_ASSERT_NOT_EQUAL(NULL, list.current());
+        TEST_ASSERT_EQUAL_INT(index, *list.current());
+
+        if (index < max)
+        {
+            TEST_ASSERT_TRUE(list.next());
+        }
+        else
+        {
+            TEST_ASSERT_FALSE(list.next());
+        }
+        
+    }
+
+    /* Select element for element, from tail to head. */
+    for(index = max; index > 0; --index)
+    {
+        TEST_ASSERT_NOT_EQUAL(NULL, list.current());
+        TEST_ASSERT_EQUAL_INT(index, *list.current());
+
+        if (index > 1)
+        {
+            TEST_ASSERT_TRUE(list.prev());
+        }
+        else
+        {
+            TEST_ASSERT_FALSE(list.prev());
+        }
+        
+    }
+
+    /* Remove all elements */
+    for(index = 1; index <= max; ++index)
+    {
+        list.removeSelected();
+    }
+
     TEST_ASSERT_EQUAL_PTR(NULL, list.first());
     TEST_ASSERT_EQUAL_PTR(NULL, list.last());
     TEST_ASSERT_EQUAL_PTR(NULL, list.current());
