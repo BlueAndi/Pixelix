@@ -31,3 +31,4 @@ install:
     - platformio update
 script:
     - platformio run
+    - platformio test
