@@ -273,7 +273,7 @@ public:
      * 
      * @return If element is appended, it will return true otherwise false.
      */
-    bool append(T element)
+    bool append(T& element)
     {
         bool            status      = false;
         ListElement<T>* listElement = new ListElement<T>(element, m_tail, NULL);
@@ -476,7 +476,7 @@ public:
             do
             {
                 if ((NULL != m_curr->getElement()) &&
-                    (element == *m_curr->getElement()))
+                    (element == m_curr->getElement()))
                 {
                     found = true;
                 }
