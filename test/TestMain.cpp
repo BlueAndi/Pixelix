@@ -44,6 +44,9 @@ This module provides the main test entry point.
  * Macros
  *****************************************************************************/
 
+/** Mark not used function parameters */
+#define NOT_USED(__var) (void)(__var)
+
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
@@ -70,6 +73,9 @@ void testDoublyLinkedList(void);
  */
 int main(int argc, char **argv)
 {
+    NOT_USED(argc);
+    NOT_USED(argv);
+
     UNITY_BEGIN();
 
     RUN_TEST(testDoublyLinkedList);
@@ -100,7 +106,7 @@ void testDoublyLinkedList(void)
     TEST_ASSERT_FALSE(list.prev());
 
     /* Add one element. */
-    list.append(value);
+    TEST_ASSERT_TRUE(list.append(value));
 
     TEST_ASSERT_NOT_EQUAL(NULL, list.first());
     TEST_ASSERT_NOT_EQUAL(NULL, list.last());
@@ -125,7 +131,7 @@ void testDoublyLinkedList(void)
     /* Add more elements */
     for(index = 1; index <= max; ++index)
     {
-        list.append(index);
+        TEST_ASSERT_TRUE(list.append(index));
     }
 
     TEST_ASSERT_NOT_EQUAL(NULL, list.first());
@@ -183,14 +189,14 @@ void testDoublyLinkedList(void)
     /* Insert elements again */
     for(index = 1; index <= max; ++index)
     {
-        list.append(index);
+        TEST_ASSERT_TRUE(list.append(index));
     }
 
     /* Copy it via copy constructor */
     {
         LinkedList<int> copyOfList = list;
 
-        list.selectFirstElement();
+        TEST_ASSERT_TRUE(list.selectFirstElement());
         for(index = 1; index <= max; ++index)
         {
             TEST_ASSERT_NOT_NULL(copyOfList.current());
@@ -207,7 +213,7 @@ void testDoublyLinkedList(void)
         LinkedList<int> copyOfList;
         copyOfList = list;
 
-        list.selectFirstElement();
+        TEST_ASSERT_TRUE(list.selectFirstElement());
         for(index = 1; index <= max; ++index)
         {
             TEST_ASSERT_NOT_NULL(copyOfList.current());
@@ -218,6 +224,19 @@ void testDoublyLinkedList(void)
             list.next();
         }
     }
+
+    /* Find not existing element */
+    TEST_ASSERT_TRUE(list.selectFirstElement());
+    TEST_ASSERT_FALSE(list.find(max + 1));
+
+    /* Find existing element */
+    TEST_ASSERT_TRUE(list.selectFirstElement());
+    TEST_ASSERT_TRUE(list.find(*list.first()));
+    TEST_ASSERT_EQUAL(list.first(), list.current());
+
+    TEST_ASSERT_TRUE(list.selectFirstElement());
+    TEST_ASSERT_TRUE(list.find(*list.last()));
+    TEST_ASSERT_EQUAL(list.last(), list.current());
 
     return;
 }

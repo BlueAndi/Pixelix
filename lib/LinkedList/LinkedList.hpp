@@ -270,9 +270,12 @@ public:
      * Append element to the list tail.
      * 
      * @param[in] element New element in the list.
+     * 
+     * @return If element is appended, it will return true otherwise false.
      */
-    void append(T element)
+    bool append(T element)
     {
+        bool            status      = false;
         ListElement<T>* listElement = new ListElement<T>(element, m_tail, NULL);
 
         if (NULL != listElement)
@@ -289,9 +292,11 @@ public:
                 m_tail->setNext(listElement);
                 m_tail = listElement;
             }
+
+            status = true;
         }
 
-        return;
+        return status;
     }
 
     /**
@@ -342,28 +347,38 @@ public:
 
     /**
      * Select first element.
+     * 
+     * @return If list is empty, it will return false otherwise true.
      */
-    void selectFirstElement(void)
+    bool selectFirstElement(void)
     {
+        bool status = false;
+
         if (NULL != m_head)
         {
             m_curr = m_head;
+            status = true;
         }
 
-        return;
+        return status;
     }
 
     /**
      * Select last element.
+     * 
+     * @return If list is empty, it will return false otherwise true.
      */
-    void selectLastElement(void)
+    bool selectLastElement(void)
     {
+        bool status = false;
+
         if (NULL != m_head)
         {
             m_curr = m_tail;
+            status = true;
         }
 
-        return;
+        return status;
     }
 
     /**
@@ -443,6 +458,33 @@ public:
         m_tail = NULL;
 
         return;
+    }
+
+    /**
+     * Search for a specific element in the list and select it.
+     * It starts searching from the current selected element till end of the list.
+     * If element is not found, the last element in the list is selected.
+     * 
+     * @param[in] element   Element to find
+     */
+    bool find(const T& element)
+    {
+        bool found = false;
+
+        if (NULL != m_curr)
+        {
+            do
+            {
+                if ((NULL != m_curr->getElement()) &&
+                    (element == *m_curr->getElement()))
+                {
+                    found = true;
+                }
+            }
+            while((false == found) && (true == next()));
+        }
+
+        return found;
     }
 
 private:
