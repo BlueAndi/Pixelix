@@ -6,6 +6,10 @@ class Adafruit_GFX
 class FastLED_NeoMatrix
 class LedMatrix
 
+interface IGfx
+
+Adafruit_GFX <|-- IGfx
+
 FastLED_NeoMatrix <|-- LedMatrix
 
 class Canvas<maxWidgets: uint8_t> {

@@ -49,7 +49,7 @@ This module provides the basic widget.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Adafruit_GFX.h>
+#include "IGfx.hpp"
 
 /******************************************************************************
  * Macros
@@ -82,7 +82,7 @@ public:
      * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
      * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
     */
-    Widget(uint16_t x, uint16_t y) :
+    Widget(int16_t x, int16_t y) :
         m_posX(x),
         m_posY(y)
     {
@@ -126,7 +126,7 @@ public:
      * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
      * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
      */
-    void move(uint16_t x, uint16_t y)
+    void move(int16_t x, int16_t y)
     {
         m_posX = x;
         m_posY = y;
@@ -139,7 +139,7 @@ public:
      * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
      * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
      */
-    void getPos(uint16_t& x, uint16_t& y) const
+    void getPos(int16_t& x, int16_t& y) const
     {
         x = m_posX;
         y = m_posY;
@@ -152,12 +152,12 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    virtual void update(Adafruit_GFX& gfx) = 0;
+    virtual void update(IGfx& gfx) = 0;
 
 protected:
 
-    uint16_t    m_posX; /**< Upper left corner (x-coordinate) of the widget in a canvas. */
-    uint16_t    m_posY; /**< Upper left corner (y-coordinate) of the widget in a canvas. */
+    int16_t m_posX; /**< Upper left corner (x-coordinate) of the widget in a canvas. */
+    int16_t m_posY; /**< Upper left corner (y-coordinate) of the widget in a canvas. */
 };
 
 /******************************************************************************
