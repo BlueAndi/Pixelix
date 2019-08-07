@@ -125,7 +125,7 @@ public:
      */
     void update(Adafruit_GFX& gfx)
     {
-        gfx.drawRGBBitmap(0, 0, m_buffer, m_width, m_height);
+        gfx.drawRGBBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
         return;
     }
 

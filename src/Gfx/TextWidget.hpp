@@ -120,7 +120,7 @@ public:
      */
     void update(Adafruit_GFX& gfx)
     {
-        gfx.setCursor(0, 0);
+        gfx.setCursor(m_posX, m_posY);
         gfx.setTextColor(m_textColor);
         gfx.print(m_str);
 

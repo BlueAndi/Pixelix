@@ -127,16 +127,14 @@ public:
      */
     void update(Adafruit_GFX& gfx)
     {
-        const uint16_t  x0      = 0u;
-        const uint16_t  y0      = 0u;
-        uint16_t        color   = m_colorOn;
+        uint16_t color = m_colorOn;
 
         if (false == m_isOn)
         {
             color = m_colorOff;
         }
 
-        gfx.fillRect(x0, y0, x0 + WIDTH, y0 + HEIGHT, color);
+        gfx.fillRect(m_posX, m_posY, m_posX + WIDTH, m_posY + HEIGHT, color);
 
         return;
     }
