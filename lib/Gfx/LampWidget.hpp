@@ -51,8 +51,8 @@ Its size is fixed set.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Adafruit_GFX.h>
 
+#include "IGfx.hpp"
 #include "Widget.hpp"
 
 /******************************************************************************
@@ -125,7 +125,7 @@ public:
      * 
      * @param[in] gfx Graphics interface.
      */
-    void update(Adafruit_GFX& gfx)
+    void update(IGfx& gfx)
     {
         uint16_t color = m_colorOn;
 

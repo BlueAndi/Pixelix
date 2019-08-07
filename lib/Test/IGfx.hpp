@@ -108,12 +108,39 @@ public:
     /**
      * Draw a single pixel in the matrix and ensure that the drawing borders
      * are not violated.
+     * Note, method declaration is from Adafruit_GFX.
      * 
      * @param[in] x     x-coordinate
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
      */
     virtual void drawPixel(int16_t x, int16_t y, uint16_t color) = 0;
+
+    /**
+     * Fill a rectangle.
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param[in] x         Upper left corner x-coordinate
+     * @param[in] y         Upper left corner y-coordinate
+     * @param[in] width     Rectangle width in pixel
+     * @param[in] height    Rectangle height in pixel
+     * @param[in] color     Color
+     */
+    void fillRect(int16_t x, int16_t y, int16_t width, int16_t height, uint16_t color)
+    {
+        int16_t relX = 0;
+        int16_t relY = 0;
+
+        for(relY = 0; relY < height; ++relY)
+        {
+            for(relX = 0; relX < width; ++relX)
+            {
+                drawPixel(x + relX, y + relY, color);
+            }
+        }
+
+        return;
+    }
 
 private:
 

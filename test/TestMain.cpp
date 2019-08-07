@@ -42,6 +42,7 @@ This module provides the main test entry point.
 #include <LinkedList.hpp>
 #include <Widget.hpp>
 #include <Canvas.hpp>
+#include <LampWidget.hpp>
 
 /******************************************************************************
  * Macros
@@ -321,6 +322,7 @@ static T min(const T value1, const T value2);
 static void testDoublyLinkedList(void);
 static void testWidget(void);
 static void testCanvas(void);
+static void testLampWidget(void);
 
 /******************************************************************************
  * Variables
@@ -346,6 +348,7 @@ int main(int argc, char **argv)
     RUN_TEST(testDoublyLinkedList);
     RUN_TEST(testWidget);
     RUN_TEST(testCanvas);
+    RUN_TEST(testLampWidget);
 
     return UNITY_END();
 }
@@ -633,6 +636,62 @@ void testCanvas(void)
                     CANVAS_WIDTH / 2, 
                     CANVAS_HEIGHT / 2,
                     WIDGET_COLOR);
+
+    return;
+}
+
+/**
+ * Test lamp widget.
+ */
+static void testLampWidget(void)
+{
+    const uint16_t  COLOR_OFF   = 0x1111;
+    const uint16_t  COLOR_ON    = 0x2222;
+
+    TestGfx         testGfx;
+    LampWidget      lampWidget(false, COLOR_OFF, COLOR_ON);
+    int16_t         posX        = 0;
+    int16_t         posY        = 0;
+
+    /* Draw widget in off state and verify */
+    lampWidget.update(testGfx);
+    lampWidget.getPos(posX, posY);
+    testGfx.verify( posX,
+                    posY,
+                    LampWidget::WIDTH,
+                    LampWidget::HEIGHT,
+                    COLOR_OFF);
+
+    /* Draw widget in on state and verify */
+    lampWidget.setOnState(true);
+    lampWidget.update(testGfx);
+    lampWidget.getPos(posX, posY);
+    testGfx.verify( posX,
+                    posY,
+                    LampWidget::WIDTH,
+                    LampWidget::HEIGHT,
+                    COLOR_ON);
+
+    /* Draw widget in off state and verify */
+    lampWidget.setOnState(false);
+    lampWidget.update(testGfx);
+    lampWidget.getPos(posX, posY);
+    testGfx.verify( posX,
+                    posY,
+                    LampWidget::WIDTH,
+                    LampWidget::HEIGHT,
+                    COLOR_OFF);
+
+    /* Move widget and draw in off state again. */
+    testGfx.fill(0);
+    lampWidget.move(2,2);
+    lampWidget.update(testGfx);
+    lampWidget.getPos(posX, posY);
+    testGfx.verify( posX,
+                    posY,
+                    LampWidget::WIDTH,
+                    LampWidget::HEIGHT,
+                    COLOR_OFF);
 
     return;
 }
