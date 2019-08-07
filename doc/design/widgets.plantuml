@@ -3,20 +3,19 @@
 title ESP-RGB-LED Matrix
 
 class Adafruit_GFX
-class FastLED_NeoMatrix
-class LedMatrix
 
-interface IGfx
+interface IGfx {
+
+    + getWidth : int16_t
+    + getHeight : int16_t
+}
 
 Adafruit_GFX <|-- IGfx
 
-FastLED_NeoMatrix <|-- LedMatrix
-
-class Canvas<maxWidgets: uint8_t> {
-    - m_x : uint16_t
-    - m_y : uint16_t
-    - m_widgets : Widget*[maxWidgets]
-    + Canvas(x : uint16_t, y : uint16_t, width : uint16_t, height : uint16_t, matrix : LedMatrix&)
+class Canvas {
+    - m_gfx : IGfx&
+    - m_widgets : LinkedList<Widget*>
+    + Canvas(width : uint16_t, height : uint16_t, x : uint16_t, y : uint16_t)
     + addWidget(widget : Widget&) : bool
     + removeWidget(widget : Widget&) : bool
     + moveWidget(widget : Widget&, x : uint16_t, y : uint16_t) : void
@@ -24,8 +23,8 @@ class Canvas<maxWidgets: uint8_t> {
     - drawPixel(x : int16_t, y : int16_t, color : uint16_t) : void
 }
 
-Adafruit_GFX <|-- Canvas
-Canvas .l.> LedMatrix: <<uses>>
+IGfx <|-- Canvas
+Widget <|-- Canvas
 Canvas o--> Widget
 
 note right of Canvas
@@ -33,6 +32,9 @@ note right of Canvas
     will update them periodically. It ensures
     that a widget can not draw over the canvas
     borders.
+
+    The canvas itself is a widget too and therefore
+    a canvas can be inside a canvas.
 end note
 
 class Widget {

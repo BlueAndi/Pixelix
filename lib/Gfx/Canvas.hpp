@@ -49,8 +49,9 @@ This module provides a drawing canvas, which can contain several widgets.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Adafruit_GFX.h>
+#include <LinkedList.hpp>
 
+#include "IGfx.hpp"
 #include "Widget.hpp"
 
 /******************************************************************************
@@ -64,36 +65,25 @@ This module provides a drawing canvas, which can contain several widgets.
 /**
  * This class defines a drawing canvas. The canvas can contain several widgets
  * and will update their drawings.
- * 
- * @param[in] maxWidgets Max. widgets on the canvas
  */
-template < uint8_t maxWidgets >
-class Canvas : public Adafruit_GFX
+class Canvas : public IGfx, Widget
 {
 public:
 
     /**
      * Constructs a canvas.
      * 
+     * @param[in] width     Canvas width in pixel.
+     * @param[in] height    Canvas height in pixel.
      * @param[in] x         x-coordinate position in the matrix.
      * @param[in] y         y-coordinate position in the matrix.
-     * @param[in] width     Canvas width in pixel
-     * @param[in] height    Canvas height in pixel
-     * @param[in] matrix    LED matrix, where to draw
      */
-    Canvas(uint16_t x, uint16_t y, uint16_t width, uint16_t height, LedMatrix& matrix) :
-        Adafruit_GFX(width, height),
-        m_x(x),
-        m_y(y),
-        m_matrix(matrix),
+    Canvas(int16_t width, int16_t height, int16_t x, int16_t y) :
+        IGfx(width, height),
+        Widget(x, y),
+        m_gfx(NULL),
         m_widgets()
     {
-        uint8_t index = 0u;
-
-        for(index = 0u; index < maxWidgets; ++index)
-        {
-            m_widgets[index] = NULL;
-        }
     }
 
     /**
@@ -101,6 +91,8 @@ public:
      */
     ~Canvas()
     {
+        /* Remove all widgets */
+        m_widgets.clear();
     }
 
     /**
@@ -112,20 +104,8 @@ public:
      */
     bool addWidget(Widget& widget)
     {
-        uint8_t index   = 0u;
-        bool    isAdded = false;
-
-        for(index = 0u; index < maxWidgets; ++index)
-        {
-            if (NULL != m_widgets[index])
-            {
-                m_widgets[index] = &widget;
-                isAdded = true;
-                break;
-            }
-        }
-
-        return isAdded;
+        Widget* ptr = &widget;
+        return m_widgets.append(ptr);
     }
 
     /**
@@ -135,37 +115,47 @@ public:
      * 
      * @return If successful, it will return true, otherwise false.
      */
-    void removeWidget(Widget& widget)
+    bool removeWidget(const Widget& widget)
     {
-        uint8_t index       = 0u;
-        bool    isRemoved   = false;
+        bool status = false;
 
-        for(index = 0u; index < maxWidgets; ++index)
+        /* Find widget in the list */
+        if (true == m_widgets.selectFirstElement())
         {
-            if (&widget == m_widgets[index])
+            /* Widget found? */
+            if (true == m_widgets.find(&const_cast<Widget&>(widget)))
             {
-                m_widgets[index] = NULL;
-                isRemoved = true;
-                break;
+                /* Remove widget */
+                m_widgets.removeSelected();
+                status = true;
             }
         }
 
-        return isRemoved;
+        return status;
     }
 
     /**
-     * Update the canvas, which update/draw all contained widgets.
+     * Update/Draw the widgets in the canvas with the
+     * given graphics interface.
+     * 
+     * @param[in] gfx   Graphics interface
      */
-    void update(void)
+    void update(IGfx& gfx)
     {
-        uint8_t index = 0u;
-
-        for(index = 0u; index < maxWidgets; ++index)
+        /* Walk through all widgets and draw them in the priority as
+         * they were added.
+         */
+        if (true == m_widgets.selectFirstElement())
         {
-            if (NULL != m_widgets[index])
+            m_gfx = &gfx;
+
+            do
             {
-                m_widgets[index]->update(*this);
+                (*m_widgets.current())->update(*this);
             }
+            while(true == m_widgets.next());
+
+            m_gfx = NULL;
         }
 
         return;
@@ -173,10 +163,8 @@ public:
 
 private:
 
-    uint16_t    m_x;                    /**< x-coordinate of upper left corner in the matrix */
-    uint16_t    m_y;                    /**< y-coordinate of upper left corner in the matrix */
-    LedMatrix&  m_matrix;               /**< LED matrix, where to draw everything */
-    Widget*     m_widgets[maxWidgets];  /**< Widgets in the canvas */
+    IGfx*               m_gfx;      /**< Graphics interface of the underlying layer */
+    LinkedList<Widget*> m_widgets;  /**< Widgets in the canvas */
 
     Canvas(const Canvas& canvas);
     Canvas& operator=(const Canvas& canvas);
@@ -191,12 +179,87 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
+        int16_t absPosX     = m_posX;
+        int16_t absPosY     = m_posX;
+        bool    outOfCanvas = false;
+
+        /* Absolute position in the underlying area is the canvas position and
+         * the pixel coordinates inside the canvas.
+         * Prevent overflow here for x-coordinate.
+         */
         if ((0 <= x) &&
-            (_width > x) &&
-            (0 <= y) &&
-            (_height > y))
+            ((INT16_MAX - x) >= absPosX))
         {
-            m_matrix.drawPixel(m_x + x, m_y + y, color);
+            absPosX += x;
+        }
+        else if ((0 > x) &&
+                ((INT16_MIN - x) <= absPosX))
+        {
+            absPosX += x;
+        }
+        else
+        {
+            outOfCanvas = true;
+        }
+
+        /* Don't draw outside the canvas width. */
+        if (false == outOfCanvas)
+        {
+            if (0 >= getWidth())
+            {
+                outOfCanvas = true;
+            }
+            else if (getWidth() <= absPosX)
+            {
+                outOfCanvas = true;
+            }
+            else
+            {
+                ;
+            }
+        }
+
+        /* Absolute position in the underlying area is the canvas position and
+         * the pixel coordinates inside the canvas.
+         * Prevent overflow here for y-coordinate.
+         */
+        if ((0 <= y) &&
+            ((INT16_MAX - y) >= absPosX))
+        {
+            absPosY += y;
+        }
+        else if ((0 > y) &&
+                ((INT16_MIN - y) <= absPosX))
+        {
+            absPosY += y;
+        }
+        else
+        {
+            outOfCanvas = true;
+        }
+
+        /* Don't draw outside the canvas height. */
+        if (false == outOfCanvas)
+        {
+            if (0 >= getHeight())
+            {
+                outOfCanvas = true;
+            }
+            else if (getHeight() <= absPosY)
+            {
+                outOfCanvas = true;
+            }
+            else
+            {
+                ;
+            }
+        }
+
+        /* Draw inside the canvas? */
+        if ((NULL != m_gfx) &&
+            (false == outOfCanvas))
+        {
+            m_gfx->drawPixel(absPosX, absPosY, color);
         }
 
         return;

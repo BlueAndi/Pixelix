@@ -37,9 +37,11 @@ This module provides the main test entry point.
  * Includes
  *****************************************************************************/
 #include <unity.h>
+#include <stdio.h>
 
 #include <LinkedList.hpp>
 #include <Widget.hpp>
+#include <Canvas.hpp>
 
 /******************************************************************************
  * Macros
@@ -68,7 +70,8 @@ public:
      */
     TestGfx() :
         IGfx(WIDTH, HEIGHT),
-        m_buffer()
+        m_buffer(),
+        m_callCounterDrawPixel(0)
     {
         uint16_t index = 0u;
 
@@ -96,10 +99,14 @@ public:
     void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
         /* Out of bounds check */
-        TEST_ASSERT_LESS_OR_EQUAL(WIDTH, x);
-        TEST_ASSERT_LESS_OR_EQUAL(HEIGHT, y);
+        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
+        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, y);
+        TEST_ASSERT_LESS_OR_EQUAL_INT16(WIDTH, x);
+        TEST_ASSERT_LESS_OR_EQUAL_INT16(HEIGHT, y);
 
-        m_buffer[x * y] = color;
+        m_buffer[x + y * WIDTH] = color;
+
+        ++m_callCounterDrawPixel;
 
         return;
     }
@@ -114,12 +121,114 @@ public:
         return m_buffer;
     }
 
-    static const int16_t    WIDTH   = 32;   /**< Drawing area width in pixel */
-    static const int16_t    HEIGHT  = 8;    /**< Drawing area height in pixel */
+    /**
+     * Get call counter of @drawPixel.
+     * 
+     * @return Call counter
+     */
+    uint32_t getCallCounterDrawPixel(void) const
+    {
+        return m_callCounterDrawPixel;
+    }
+
+    /**
+     * Set call counter of @drawPixel.
+     * 
+     * @param[in] counter New call counter value
+     */
+    void setCallCounterDrawPixel(uint32_t counter)
+    {
+        m_callCounterDrawPixel = counter;
+        return;
+    }
+
+    /**
+     * Dump display buffer to console.
+     */
+    void dump(void) const
+    {
+        uint16_t    x   = 0u;
+        uint16_t    y   = 0u;
+
+        for(y = 0u; y < HEIGHT; ++y)
+        {
+            for(x = 0u; x < WIDTH; ++x)
+            {
+                if (0u < x)
+                {
+                    printf(" ");
+                }
+
+                printf("0x%04X", m_buffer[x + WIDTH * y]);
+            }
+
+            printf("\r\n");
+        }
+
+        return;
+    }
+
+    /**
+     * Verify rectangle at given position. It must be there with the given color.
+     * 
+     * @param[in] posX      Top left x-coordinate
+     * @param[in] posY      Top left y-coordinate
+     * @param[in] width     Width in pixel
+     * @param[in] height    Height in pixel
+     * @param[in] color     Color of widget drawing
+     */
+    void verify(int16_t posX, int16_t posY, uint16_t width, uint16_t height, uint16_t color)
+    {
+        uint16_t    x   = 0u;
+        uint16_t    y   = 0u;
+
+        TEST_ASSERT_LESS_OR_EQUAL(WIDTH, posX + width);
+        TEST_ASSERT_LESS_OR_EQUAL(HEIGHT, posY + height);
+
+        for(y = 0u; y < height; ++y)
+        {
+            for(x = 0u; x < width; ++x)
+            {
+                if (color != m_buffer[posX + x + (posY + y) * WIDTH])
+                {
+                    dump();
+                    printf("x = %d, y = %d\r\n", posX + x, posY + y);
+                }
+                TEST_ASSERT_EQUAL_UINT16(color, m_buffer[posX + x + (posY + y) * WIDTH]);
+            }
+        }
+
+        return;
+    }
+
+    /**
+     * Fill display buffer with given color.
+     * 
+     * @param[in] color Fill color
+     */
+    void fill(uint16_t color)
+    {
+        uint16_t    x   = 0u;
+        uint16_t    y   = 0u;
+
+        for(y = 0u; y < HEIGHT; ++y)
+        {
+            for(x = 0u; x < WIDTH; ++x)
+            {
+                m_buffer[x + y * WIDTH] = color;
+            }
+        }
+
+        return;
+    }
+
+    static const uint16_t   WIDTH   = 32;   /**< Drawing area width in pixel */
+    static const uint16_t   HEIGHT  = 8;    /**< Drawing area height in pixel */
 
 private:
 
-    uint16_t m_buffer[WIDTH * HEIGHT];  /**< Display buffer, containing all pixels. */
+    uint16_t    m_buffer[WIDTH * HEIGHT];   /**< Display buffer, containing all pixels. */
+    uint32_t    m_callCounterDrawPixel;     /**< Call counter for @drawPixel */
 
     TestGfx(const TestGfx& gfx);
     TestGfx& operator=(const TestGfx& gfx);
@@ -161,11 +270,11 @@ public:
         int16_t x = 0;
         int16_t y = 0;
 
-        for(x = 0; x < WIDTH; ++x)
+        for(y = 0; y < HEIGHT; ++y)
         {
-            for(y = 0; y < HEIGHT; ++y)
+            for(x = 0; x < WIDTH; ++x)
             {
-                gfx.drawPixel(x, y, m_color);
+                gfx.drawPixel(m_posX + x, m_posY + y, m_color);
             }
         }
         
@@ -193,8 +302,8 @@ public:
         return;
     }
 
-    static const int16_t    WIDTH   = 10;   /**< Widget width in pixel */
-    static const int16_t    HEIGHT  = 5;    /**< Widget height in pixel */
+    static const uint16_t   WIDTH   = 10u;  /**< Widget width in pixel */
+    static const uint16_t   HEIGHT  = 5u;   /**< Widget height in pixel */
 
 private:
 
@@ -206,9 +315,12 @@ private:
  * Prototypes
  *****************************************************************************/
 
+template < typename T >
+static T min(const T value1, const T value2);
+
 static void testDoublyLinkedList(void);
-static void verifyWidget(TestGfx& gfx, uint16_t posX, uint16_t posY, uint16_t color);
 static void testWidget(void);
+static void testCanvas(void);
 
 /******************************************************************************
  * Variables
@@ -233,6 +345,7 @@ int main(int argc, char **argv)
 
     RUN_TEST(testDoublyLinkedList);
     RUN_TEST(testWidget);
+    RUN_TEST(testCanvas);
 
     return UNITY_END();
 }
@@ -240,6 +353,25 @@ int main(int argc, char **argv)
 /******************************************************************************
  * Local functions
  *****************************************************************************/
+
+/**
+ * Get minimum of two values.
+ * 
+ * @param[in] value1    Value 1
+ * @param[in] value2    Value 2
+ * 
+ * @return Minimum of value 1 and value 2
+ */
+template < typename T >
+static T min(const T value1, const T value2)
+{
+    if (value1 < value2)
+    {
+        return value1;
+    }
+
+    return value2;
+}
 
 /**
  * Doubly linked list tests.
@@ -396,42 +528,15 @@ static void testDoublyLinkedList(void)
 }
 
 /**
- * Verify widget at given position. It must be there with the given color.
- * 
- * @param[in] gfx   Graphics interface, including display buffer.
- * @param[in] posX  Top left x-coordinate
- * @param[in] posY  Top left y-coordinate
- * @param[in] color Color of widget drawing
- */
-static void verifyWidget(TestGfx& gfx, uint16_t posX, uint16_t posY, uint16_t color)
-{
-    uint16_t    x       = 0u;
-    uint16_t    y       = 0u;
-    uint16_t*   buffer  = gfx.getBuffer();
-
-    TEST_ASSERT_NOT_NULL(buffer);
-
-    for(x = 0u; x < TestWidget::WIDTH; ++x)
-    {
-        for(y = 0u; y < TestWidget::HEIGHT; ++y)
-        {
-            TEST_ASSERT_EQUAL_UINT16(color, buffer[x * y]);
-        }
-    }
-
-    return;
-}
-
-/**
  * Widget tests.
  */
 static void testWidget(void)
 {
-    TestGfx     testGfx;
-    TestWidget  testWidget;
-    int16_t     posX        = -1;
-    int16_t     posY        = -1;
-    uint16_t    color       = 0x1234;
+    TestGfx         testGfx;
+    TestWidget      testWidget;
+    int16_t         posX        = -1;
+    int16_t         posY        = -1;
+    const uint16_t  COLOR       = 0x1234;
 
     /* Current position must be (0, 0) */
     testWidget.getPos(posX, posY);
@@ -444,10 +549,90 @@ static void testWidget(void)
     TEST_ASSERT_EQUAL_INT16(10, posX);
     TEST_ASSERT_EQUAL_INT16(20, posY);
 
-    /* Draw widget, the current widget position must not be considered. */
-    testWidget.setPenColor(color);
+    /* For the whole test, set the widget color. */
+    testWidget.setPenColor(COLOR);
+
+    /* Draw widget at position (0, 0) */
+    posX = 0;
+    posY = 0;
+    testWidget.move(posX, posY);
+    testGfx.fill(0);
     testWidget.update(testGfx);
-    verifyWidget(testGfx, 0, 0, color);
+    testGfx.verify( posX,
+                    posY,
+                    min<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
+                    min<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
+                    COLOR);
+
+    /* Draw widget at position (2, 1) and verify widget movement. */
+    posX = 2;
+    posY = 1;
+    testWidget.move(posX, posY);
+    testGfx.fill(0);
+    testWidget.update(testGfx);
+    testGfx.verify( posX,
+                    posY,
+                    min<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
+                    min<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
+                    COLOR);
+
+    return;
+}
+
+/**
+ * Canvas tests.
+ */
+void testCanvas(void)
+{
+    const uint16_t  CANVAS_WIDTH    = 8;
+    const uint16_t  CANVAS_HEIGHT   = 8;
+    const int16_t   WIDGET_POS_X    = 2;
+    const int16_t   WIDGET_POS_Y    = 2;
+    const uint16_t  WIDGET_COLOR    = 0x1234;
+
+    TestGfx     testGfx;
+    Canvas      testCanvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0, 0);
+    TestWidget  testWidget;
+
+    /* Canvas contains no other widget, so nothing should be drawn. */
+    testGfx.setCallCounterDrawPixel(0);
+    testCanvas.update(testGfx);
+    TEST_ASSERT_EQUAL_UINT32(0, testGfx.getCallCounterDrawPixel());
+    testGfx.verify(0, 0, TestWidget::WIDTH, TestWidget::HEIGHT, 0);
+
+    /* Add widget to canvas, move widget and set draw pen */
+    TEST_ASSERT_TRUE(testCanvas.addWidget(testWidget));
+    testWidget.move(WIDGET_POS_X, WIDGET_POS_Y);
+    testWidget.setPenColor(WIDGET_COLOR);
+
+    /* Draw canvas with widget. Expected is a full drawn widget. */
+    testGfx.fill(0);
+    testCanvas.update(testGfx);
+    testGfx.verify( WIDGET_POS_X, 
+                    WIDGET_POS_Y, 
+                    min<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X), 
+                    min<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
+                    WIDGET_COLOR);
+
+    /* Move widget outside canvas and try to draw. Expected is no drawing at all. */
+    testGfx.fill(0);
+    testWidget.move(CANVAS_WIDTH, CANVAS_HEIGHT);
+    testCanvas.update(testGfx);
+    testGfx.verify( 0, 
+                    0, 
+                    CANVAS_WIDTH, 
+                    CANVAS_HEIGHT,
+                    0);
+
+    /* Move widget half outside canvas and draw. Expected is partly drawing. */
+    testGfx.fill(0);
+    testWidget.move(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    testCanvas.update(testGfx);
+    testGfx.verify( CANVAS_WIDTH / 2, 
+                    CANVAS_HEIGHT / 2, 
+                    CANVAS_WIDTH / 2, 
+                    CANVAS_HEIGHT / 2,
+                    WIDGET_COLOR);
 
     return;
 }
