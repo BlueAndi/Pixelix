@@ -42,7 +42,7 @@ class Widget {
     - m_posY : uint16_t
     + move(x : uint16_t, y : uint16_t) : void
     + getPos(x : uint16_t&, y : uint16_t&) const : void
-    + {abstract} update(gfx : Adafruit_GFX&) = 0 : void
+    + {abstract} update(gfx : IGfx&) = 0 : void
 }
 
 note left of Widget
@@ -58,7 +58,7 @@ class TextWidget {
     + getStr() : String
     + setTextColor(color : uint16_t) : void
     + getTextColor() const : uint16_t
-    + update(gfx : Adafruit_GFX&) : void
+    + update(gfx : IGfx&) : void
 }
 
 Widget <|-- TextWidget
@@ -68,7 +68,7 @@ class BitmapWidget {
     - m_width : uint16_t
     - m_height : uint16_t
     + BitmapWidget(buffer : const uint16_t[])
-    + update(gfx : Adafruit_GFX&) : void
+    + update(gfx : IGfx&) : void
 }
 
 Widget <|-- BitmapWidget
@@ -77,7 +77,7 @@ class LampWidget {
     - m_isOn : bool
     - m_colorOff : uint16_t
     - m_colorOn : uint16_t
-    + update(gfx : Adafruit_GFX&) : void
+    + update(gfx : IGfx&) : void
 }
 
 Widget <|-- LampWidget
