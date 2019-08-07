@@ -142,6 +142,33 @@ public:
         return;
     }
 
+    /**
+     * Draw a PROGMEM-resident 16-bit image (RGB 5/6/5) at the specified (x,y) position.
+     * For 16-bit display devices; no color reduction performed.
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param[in] x         Top left corner x-coordinate
+     * @param[in] y         Top left corner y-coordinate
+     * @param[in] bitmap    Byte array with 16-bit color bitmap
+     * @param[in] width     Width of bitmap in pixels
+     * @param[in] height    Height of bitmap in pixels
+     */
+    void drawRGBBitmap(int16_t x, int16_t y, const uint16_t bitmap[], int16_t width, int16_t height)
+    {
+        int16_t relX = 0;
+        int16_t relY = 0;
+
+        for(relY = 0; relY < height; ++relY)
+        {
+            for(relX = 0; relX < width; ++relX)
+            {
+                drawPixel(x + relX, y + relY, bitmap[relX + relY * width]);
+            }
+        }
+
+        return;
+    }
+
 private:
 
     int16_t m_width;    /**< Width in pixel */

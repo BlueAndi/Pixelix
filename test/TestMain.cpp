@@ -43,6 +43,7 @@ This module provides the main test entry point.
 #include <Widget.hpp>
 #include <Canvas.hpp>
 #include <LampWidget.hpp>
+#include <BitmapWidget.hpp>
 
 /******************************************************************************
  * Macros
@@ -323,6 +324,7 @@ static void testDoublyLinkedList(void);
 static void testWidget(void);
 static void testCanvas(void);
 static void testLampWidget(void);
+static void testBitmapWidget(void);
 
 /******************************************************************************
  * Variables
@@ -349,6 +351,7 @@ int main(int argc, char **argv)
     RUN_TEST(testWidget);
     RUN_TEST(testCanvas);
     RUN_TEST(testLampWidget);
+    RUN_TEST(testBitmapWidget);
 
     return UNITY_END();
 }
@@ -692,6 +695,55 @@ static void testLampWidget(void)
                     LampWidget::WIDTH,
                     LampWidget::HEIGHT,
                     COLOR_OFF);
+
+    return;
+}
+
+/**
+ * Test bitmap widget.
+ */
+static void testBitmapWidget(void)
+{
+    const uint8_t BITMAP_WIDTH      = TestGfx::HEIGHT;  /* Use height as width here for a square */
+    const uint8_t BITMAP_HEIGHT     = TestGfx::HEIGHT;
+
+    TestGfx         testGfx;
+    BitmapWidget    bitmapWidget;
+    uint16_t        bitmap[BITMAP_WIDTH * BITMAP_HEIGHT];
+    uint8_t         x               = 0u;
+    uint8_t         y               = 0u;
+    const uint16_t* bitmapPtr       = NULL;
+    uint16_t        width           = 0u;
+    uint16_t        height          = 0u;
+    uint16_t*       displayBuffer   = NULL;
+
+    /* Create bitmap */
+    for(y = 0u; y < BITMAP_HEIGHT; ++y)
+    {
+        for(x = 0u; x < BITMAP_WIDTH; ++x)
+        {
+            bitmap[x + y * BITMAP_WIDTH] = x + y * BITMAP_WIDTH;
+        }
+    }
+
+    /* Set bitmap and read back */
+    bitmapWidget.set(bitmap, BITMAP_WIDTH, BITMAP_HEIGHT);
+    bitmapPtr = bitmapWidget.get(width, height);
+    TEST_ASSERT_EQUAL_PTR(bitmap, bitmapPtr);
+    TEST_ASSERT_EQUAL_UINT16(BITMAP_WIDTH, width);
+    TEST_ASSERT_EQUAL_UINT16(BITMAP_HEIGHT, height);
+
+    /* Draw bitmap and verify */
+    bitmapWidget.update(testGfx);
+    displayBuffer = testGfx.getBuffer();
+
+    for(y = 0u; y < BITMAP_HEIGHT; ++y)
+    {
+        for(x = 0u; x < BITMAP_WIDTH; ++x)
+        {
+            TEST_ASSERT_EQUAL_UINT16(x + y * BITMAP_WIDTH, displayBuffer[x + y * TestGfx::WIDTH]);
+        }
+    }
 
     return;
 }
