@@ -93,7 +93,7 @@ public:
      */
     int16_t getWidth(void) const
     {
-        return _width;
+        return width();
     }
 
     /**
@@ -103,7 +103,7 @@ public:
      */
     int16_t getHeight(void) const
     {
-        return _height;
+        return height();
     }
 
 private:

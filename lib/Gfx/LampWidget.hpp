@@ -75,8 +75,8 @@ public:
      */
     LampWidget() :
         m_isOn(false),
-        m_colorOff(0x0000),
-        m_colorOn(0xFFFF)
+        m_colorOff(0x0000u),
+        m_colorOn(0xFFFFu)
     {
     }
 

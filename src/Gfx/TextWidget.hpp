@@ -69,21 +69,22 @@ class TextWidget : public Widget
 public:
 
     /**
-     * Constructs a text widget with a empty white string.
+     * Constructs a text widget with a empty string in default color.
      */
     TextWidget() :
         m_str(),
-        m_textColor(0xFFFF)
+        m_textColor(DEFAULT_TEXT_COLOR)
     {
     }
 
     /**
      * Constructs a text widget with the given string and its color.
+     * If there is no color given, it will be default color.
      * 
      * @param[in] str   String
      * @param[in] color Color of the string
      */
-    TextWidget(const String& str, uint16_t color = 0xFFFF) :
+    TextWidget(const String& str, uint16_t color = DEFAULT_TEXT_COLOR) :
         m_str(str),
         m_textColor(color)
     {
@@ -168,6 +169,8 @@ public:
     {
         return m_textColor;
     }
+
+    static const uint16_t DEFAULT_TEXT_COLOR = 0xffffu; /**< Default text color */
 
 private:
 
