@@ -475,8 +475,7 @@ public:
         {
             do
             {
-                if ((NULL != m_curr->getElement()) &&
-                    (element == m_curr->getElement()))
+                if (element == m_curr->getElement())
                 {
                     found = true;
                 }
