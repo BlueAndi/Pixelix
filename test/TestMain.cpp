@@ -384,11 +384,11 @@ static T min(const T value1, const T value2)
  */
 static void testDoublyLinkedList(void)
 {
-    LinkedList<int> list;
-    int*            element = NULL;
-    int             value   = 1;
-    int             index   = 0;
-    const int       max     = 3;
+    LinkedList<uint32_t> list;
+    uint32_t*            element = NULL;
+    uint32_t             value   = 1u;
+    uint32_t             index   = 0u;
+    const uint32_t       max     = 3u;
 
     /* List is empty. */
     TEST_ASSERT_NULL(list.first());
@@ -396,9 +396,11 @@ static void testDoublyLinkedList(void)
     TEST_ASSERT_NULL(list.current());
     TEST_ASSERT_FALSE(list.next());
     TEST_ASSERT_FALSE(list.prev());
+    TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
 
     /* Add one element. */
     TEST_ASSERT_TRUE(list.append(value));
+    TEST_ASSERT_EQUAL_UINT32(1u, list.getNumOfElements());
 
     TEST_ASSERT_NOT_NULL(list.first());
     TEST_ASSERT_NOT_NULL(list.last());
@@ -413,6 +415,7 @@ static void testDoublyLinkedList(void)
 
     /* Remove element from list. List is now empty. */
     list.removeSelected();
+    TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
 
     TEST_ASSERT_NULL(list.first());
     TEST_ASSERT_NULL(list.last());
@@ -421,19 +424,20 @@ static void testDoublyLinkedList(void)
     TEST_ASSERT_FALSE(list.prev());
 
     /* Add more elements */
-    for(index = 1; index <= max; ++index)
+    for(index = 1u; index <= max; ++index)
     {
         TEST_ASSERT_TRUE(list.append(index));
+        TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
     }
 
     TEST_ASSERT_NOT_NULL(list.first());
-    TEST_ASSERT_EQUAL_INT(1, *list.first());
+    TEST_ASSERT_EQUAL_INT(1u, *list.first());
 
     TEST_ASSERT_NOT_NULL(list.last());
     TEST_ASSERT_EQUAL_INT(max, *list.last());
 
     /* Select element for element, from head to tail. */
-    for(index = 1; index <= max; ++index)
+    for(index = 1u; index <= max; ++index)
     {
         TEST_ASSERT_NOT_NULL(list.current());
         TEST_ASSERT_EQUAL_INT(index, *list.current());
@@ -450,12 +454,12 @@ static void testDoublyLinkedList(void)
     }
 
     /* Select element for element, from tail to head. */
-    for(index = max; index > 0; --index)
+    for(index = max; index > 0u; --index)
     {
         TEST_ASSERT_NOT_NULL(list.current());
         TEST_ASSERT_EQUAL_INT(index, *list.current());
 
-        if (index > 1)
+        if (index > 1u)
         {
             TEST_ASSERT_TRUE(list.prev());
         }
@@ -470,6 +474,7 @@ static void testDoublyLinkedList(void)
     for(index = 1; index <= max; ++index)
     {
         list.removeSelected();
+        TEST_ASSERT_EQUAL_UINT32(max - index, list.getNumOfElements());
     }
 
     TEST_ASSERT_NULL(list.first());
@@ -479,17 +484,18 @@ static void testDoublyLinkedList(void)
     TEST_ASSERT_FALSE(list.prev());
 
     /* Insert elements again */
-    for(index = 1; index <= max; ++index)
+    for(index = 1u; index <= max; ++index)
     {
         TEST_ASSERT_TRUE(list.append(index));
+        TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
     }
 
     /* Copy it via copy constructor */
     {
-        LinkedList<int> copyOfList = list;
+        LinkedList<uint32_t> copyOfList = list;
 
         TEST_ASSERT_TRUE(list.selectFirstElement());
-        for(index = 1; index <= max; ++index)
+        for(index = 1u; index <= max; ++index)
         {
             TEST_ASSERT_NOT_NULL(copyOfList.current());
             TEST_ASSERT_NOT_NULL(list.current());
@@ -502,7 +508,7 @@ static void testDoublyLinkedList(void)
 
     /* Copy it via assignment */
     {
-        LinkedList<int> copyOfList;
+        LinkedList<uint32_t> copyOfList;
         copyOfList = list;
 
         TEST_ASSERT_TRUE(list.selectFirstElement());

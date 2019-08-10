@@ -161,7 +161,8 @@ public:
     LinkedList() :
         m_head(NULL),
         m_tail(NULL),
-        m_curr(NULL)
+        m_curr(NULL),
+        m_count(0u)
     {
     }
 
@@ -173,7 +174,8 @@ public:
     LinkedList(const LinkedList& list) :
         m_head(NULL),
         m_tail(NULL),
-        m_curr(NULL)
+        m_curr(NULL),
+        m_count(0u)
     {
         ListElement<T>* listElement = list.m_head;
 
@@ -278,7 +280,8 @@ public:
         bool            status      = false;
         ListElement<T>* listElement = new ListElement<T>(element, m_tail, NULL);
 
-        if (NULL != listElement)
+        if ((NULL != listElement) &&
+            (UINT32_MAX > m_count))
         {
             /* Empty list? */
             if (NULL == m_head)
@@ -292,6 +295,8 @@ public:
                 m_tail->setNext(listElement);
                 m_tail = listElement;
             }
+
+            ++m_count;
 
             status = true;
         }
@@ -427,7 +432,13 @@ public:
                 delete m_curr;
                 m_curr = tmp;
             }
+
+            if (0 < m_count)
+            {
+                --m_count;
+            }
         }
+
         return;
     }
 
@@ -454,8 +465,9 @@ public:
             }
         }
 
-        m_head = NULL;
-        m_tail = NULL;
+        m_head  = NULL;
+        m_tail  = NULL;
+        m_count = 0u;
 
         return;
     }
@@ -486,11 +498,22 @@ public:
         return found;
     }
 
+    /**
+     * Get number of elements in the list.
+     * 
+     * @return Number of elements in the list.
+     */
+    uint32_t getNumOfElements(void) const
+    {
+        return m_count;
+    }
+
 private:
 
-    ListElement<T>* m_head; /**< Head of list */
-    ListElement<T>* m_tail; /**< Tail of list */
-    ListElement<T>* m_curr; /**< Current selected list element */
+    ListElement<T>* m_head;     /**< Head of list */
+    ListElement<T>* m_tail;     /**< Tail of list */
+    ListElement<T>* m_curr;     /**< Current selected list element */
+    uint32_t        m_count;    /**< Number of elements in the list */
 
 };
 
