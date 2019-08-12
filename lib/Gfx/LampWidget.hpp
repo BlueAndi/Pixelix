@@ -99,7 +99,7 @@ public:
      */
     LampWidget(const LampWidget& widget) :
         m_isOn(widget.m_isOn),
-        m_colorOff(m_colorOff),
+        m_colorOff(widget.m_colorOff),
         m_colorOn(widget.m_colorOn)
     {
     }
