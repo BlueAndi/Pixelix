@@ -50,9 +50,7 @@ This module provides a drawing canvas, which can contain several widgets.
  *****************************************************************************/
 #include <stdint.h>
 #include <LinkedList.hpp>
-
-#include "IGfx.hpp"
-#include "Widget.hpp"
+#include <Widget.hpp>
 
 /******************************************************************************
  * Macros
@@ -66,7 +64,7 @@ This module provides a drawing canvas, which can contain several widgets.
  * This class defines a drawing canvas. The canvas can contain several widgets
  * and will update their drawings.
  */
-class Canvas : public IGfx, Widget
+class Canvas : public IGfx, public Widget
 {
 public:
 

@@ -49,9 +49,8 @@ This module provides the a text widget, showing a colored string.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-
-#include "IGfx.hpp"
-#include "Widget.hpp"
+#include <WString.h>
+#include <Widget.hpp>
 
 /******************************************************************************
  * Macros

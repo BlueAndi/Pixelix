@@ -51,9 +51,7 @@ Its size is fixed set.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-
-#include "IGfx.hpp"
-#include "Widget.hpp"
+#include <Widget.hpp>
 
 /******************************************************************************
  * Macros
