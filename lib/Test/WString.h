@@ -69,7 +69,7 @@ public:
      * Constructs a string.
      */
     String() :
-        m_buffer(NULL)
+        m_buffer("")
     {
     }
 
@@ -87,6 +87,16 @@ public:
      */
     String(const String& str) :
         m_buffer(str.m_buffer)
+    {
+    }
+
+    /**
+     * Constructs a string by copying another.
+     * 
+     * @param[in] str String to copy
+     */
+    String(const char* str) :
+        m_buffer(str)
     {
     }
 

@@ -762,9 +762,10 @@ static void testBitmapWidget(void)
  */
 static void testTextWidget(void)
 {
-    TestGfx     testGfx;
-    TextWidget  textWidget;
-    String      testStr = "test";
+    TestGfx         testGfx;
+    TextWidget      textWidget;
+    String          testStr     = "test";
+    const uint16_t TEXT_COLOR   = 0x1234;
 
     /* Default string is empty */
     TEST_ASSERT_EQUAL_STRING("", textWidget.getStr().c_str());
@@ -777,8 +778,8 @@ static void testTextWidget(void)
     TEST_ASSERT_EQUAL_UINT16(TextWidget::DEFAULT_TEXT_COLOR, textWidget.getTextColor());
 
     /* Set/Get text color */
-    textWidget.setTextColor(~TextWidget::DEFAULT_TEXT_COLOR);
-    TEST_ASSERT_EQUAL_UINT16(~TextWidget::DEFAULT_TEXT_COLOR, textWidget.getTextColor());
+    textWidget.setTextColor(TEXT_COLOR);
+    TEST_ASSERT_EQUAL_UINT16(TEXT_COLOR, textWidget.getTextColor());
 
     return;
 }
