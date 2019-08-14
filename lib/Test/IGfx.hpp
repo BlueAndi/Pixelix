@@ -49,7 +49,7 @@ This module provides the general graphics interface for testing purposes.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <WString.h>
+#include "String.hpp"
 
 /******************************************************************************
  * Macros
