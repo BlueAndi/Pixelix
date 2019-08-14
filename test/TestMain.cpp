@@ -44,6 +44,7 @@ This module provides the main test entry point.
 #include <Canvas.hpp>
 #include <LampWidget.hpp>
 #include <BitmapWidget.hpp>
+#include <TextWidget.hpp>
 
 /******************************************************************************
  * Macros
@@ -325,6 +326,7 @@ static void testWidget(void);
 static void testCanvas(void);
 static void testLampWidget(void);
 static void testBitmapWidget(void);
+static void testTextWidget(void);
 
 /******************************************************************************
  * Variables
@@ -352,6 +354,7 @@ int main(int argc, char **argv)
     RUN_TEST(testCanvas);
     RUN_TEST(testLampWidget);
     RUN_TEST(testBitmapWidget);
+    RUN_TEST(testTextWidget);
 
     return UNITY_END();
 }
@@ -750,6 +753,32 @@ static void testBitmapWidget(void)
             TEST_ASSERT_EQUAL_UINT16(x + y * BITMAP_WIDTH, displayBuffer[x + y * TestGfx::WIDTH]);
         }
     }
+
+    return;
+}
+
+/**
+ * Test text widget.
+ */
+static void testTextWidget(void)
+{
+    TestGfx     testGfx;
+    TextWidget  textWidget;
+    String      testStr = "test";
+
+    /* Default string is empty */
+    TEST_ASSERT_EQUAL_STRING("", textWidget.getStr().c_str());
+
+    /* Set/Get string */
+    textWidget.setStr(testStr);
+    TEST_ASSERT_EQUAL_STRING(testStr.c_str(), textWidget.getStr().c_str());
+
+    /* Default string color */
+    TEST_ASSERT_EQUAL_UINT16(TextWidget::DEFAULT_TEXT_COLOR, textWidget.getTextColor());
+
+    /* Set/Get text color */
+    textWidget.setTextColor(~TextWidget::DEFAULT_TEXT_COLOR);
+    TEST_ASSERT_EQUAL_UINT16(~TextWidget::DEFAULT_TEXT_COLOR, textWidget.getTextColor());
 
     return;
 }

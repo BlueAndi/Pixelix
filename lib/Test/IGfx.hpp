@@ -49,6 +49,7 @@ This module provides the general graphics interface for testing purposes.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <WString.h>
 
 /******************************************************************************
  * Macros
@@ -74,7 +75,11 @@ public:
      */
     IGfx(int16_t width, int16_t height) :
         m_width(width),
-        m_height(height)
+        m_height(height),
+        m_cursorX(0),
+        m_cursorY(0),
+        m_textColor(0u),
+        m_textBgColor(0u)
     {
     }
 
@@ -169,10 +174,53 @@ public:
         return;
     }
 
+    /**
+     * Set text cursor location.
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param[in] x x-coordinate in pixels.
+     * @param[in] y y-coordinate in pixels.
+     */
+    void setCursor(int16_t x, int16_t y)
+    {
+        m_cursorX = x;
+        m_cursorY = y;
+
+        return;
+    }
+
+    /**
+     * Set text font color with transparant background.
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param color 16-bit 5-6-5 Color to draw text with
+     */
+    void setTextColor(uint16_t color)
+    {
+        m_textColor     = color;
+        m_textBgColor   = color;
+
+        return;
+    }
+
+    /**
+     * Print a string.
+     * Note, method declaration is from Print class.
+     */
+    size_t print(const String &s)
+    {
+        /* Not supported yet. */
+        return 0;
+    }
+
 private:
 
-    int16_t m_width;    /**< Width in pixel */
-    int16_t m_height;   /**< Height in pixel */
+    int16_t     m_width;        /**< Width in pixel */
+    int16_t     m_height;       /**< Height in pixel */
+    int16_t     m_cursorX;      /**< Cursor x-coordinate */
+    int16_t     m_cursorY;      /**< Cursor y-coordinate */
+    uint16_t    m_textColor;    /**< Text color */
+    uint16_t    m_textBgColor;  /**< Text background color */
 
     IGfx(const IGfx& gfx);
     IGfx& operator=(const IGfx& gfx);
