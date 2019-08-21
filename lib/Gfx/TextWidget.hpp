@@ -71,6 +71,7 @@ public:
      * Constructs a text widget with a empty string in default color.
      */
     TextWidget() :
+        Widget(WIDGET_TYPE),
         m_str(),
         m_textColor(DEFAULT_TEXT_COLOR)
     {
@@ -84,6 +85,7 @@ public:
      * @param[in] color Color of the string
      */
     TextWidget(const String& str, uint16_t color = DEFAULT_TEXT_COLOR) :
+        Widget(WIDGET_TYPE),
         m_str(str),
         m_textColor(color)
     {
@@ -95,6 +97,7 @@ public:
      * @param[in] widget Widget, which to copy
      */
     TextWidget(const TextWidget& widget) :
+        Widget(WIDGET_TYPE),
         m_str(widget.m_str),
         m_textColor(widget.m_textColor)
     {
@@ -118,7 +121,7 @@ public:
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(IGfx& gfx)
+    void update(Adafruit_GFX& gfx)
     {
         gfx.setCursor(m_posX, m_posY);
         gfx.setTextColor(m_textColor);
@@ -169,7 +172,11 @@ public:
         return m_textColor;
     }
 
-    static const uint16_t DEFAULT_TEXT_COLOR = 0xffffu; /**< Default text color */
+    /** Default text color */
+    static const uint16_t   DEFAULT_TEXT_COLOR = 0xffffu;
+    
+    /** Widget type string */
+    static const char*      WIDGET_TYPE;
 
 private:
 
@@ -177,6 +184,8 @@ private:
     uint16_t    m_textColor;    /**< Text color of the string */
 
 };
+
+const char* TextWidget::WIDGET_TYPE = "text";
 
 /******************************************************************************
  * Functions

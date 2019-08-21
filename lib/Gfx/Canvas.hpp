@@ -64,7 +64,7 @@ This module provides a drawing canvas, which can contain several widgets.
  * This class defines a drawing canvas. The canvas can contain several widgets
  * and will update their drawings.
  */
-class Canvas : public IGfx, public Widget
+class Canvas : public Adafruit_GFX, public Widget
 {
 public:
 
@@ -77,8 +77,8 @@ public:
      * @param[in] y         y-coordinate position in the matrix.
      */
     Canvas(int16_t width, int16_t height, int16_t x, int16_t y) :
-        IGfx(width, height),
-        Widget(x, y),
+        Adafruit_GFX(width, height),
+        Widget(WIDGET_TYPE, x, y),
         m_gfx(NULL),
         m_widgets()
     {
@@ -133,12 +133,22 @@ public:
     }
 
     /**
+     * Get all widget children.
+     * 
+     * @return Children
+     */
+    const LinkedList<Widget*>& children(void) const
+    {
+        return m_widgets;
+    }
+
+    /**
      * Update/Draw the widgets in the canvas with the
      * given graphics interface.
      * 
      * @param[in] gfx   Graphics interface
      */
-    void update(IGfx& gfx)
+    void update(Adafruit_GFX& gfx)
     {
         /* Walk through all widgets and draw them in the priority as
          * they were added.
@@ -159,9 +169,12 @@ public:
         return;
     }
 
+    /** Widget type string */
+    static const char*      WIDGET_TYPE;
+
 private:
 
-    IGfx*               m_gfx;      /**< Graphics interface of the underlying layer */
+    Adafruit_GFX*       m_gfx;      /**< Graphics interface of the underlying layer */
     LinkedList<Widget*> m_widgets;  /**< Widgets in the canvas */
 
     Canvas(const Canvas& canvas);
@@ -203,11 +216,11 @@ private:
         /* Don't draw outside the canvas width. */
         if (false == outOfCanvas)
         {
-            if (0 >= getWidth())
+            if (0 >= width())
             {
                 outOfCanvas = true;
             }
-            else if (getWidth() <= absPosX)
+            else if (width() <= absPosX)
             {
                 outOfCanvas = true;
             }
@@ -239,11 +252,11 @@ private:
         /* Don't draw outside the canvas height. */
         if (false == outOfCanvas)
         {
-            if (0 >= getHeight())
+            if (0 >= height())
             {
                 outOfCanvas = true;
             }
-            else if (getHeight() <= absPosY)
+            else if (height() <= absPosY)
             {
                 outOfCanvas = true;
             }
@@ -263,6 +276,8 @@ private:
         return;
     }
 };
+
+const char* Canvas::WIDGET_TYPE = "canvas";
 
 /******************************************************************************
  * Functions

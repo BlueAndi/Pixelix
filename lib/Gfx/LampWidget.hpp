@@ -72,6 +72,7 @@ public:
      * Constructs a lamp widget, being black in off state and white in on state.
      */
     LampWidget() :
+        Widget(WIDGET_TYPE),
         m_isOn(false),
         m_colorOff(0x0000u),
         m_colorOn(0xFFFFu)
@@ -86,6 +87,7 @@ public:
      * @param[in] colorOn   Lamp color in on state
      */
     LampWidget(bool isOn, uint16_t colorOff, uint16_t colorOn) :
+        Widget(WIDGET_TYPE),
         m_isOn(isOn),
         m_colorOff(colorOff),
         m_colorOn(colorOn)
@@ -98,6 +100,7 @@ public:
      * @param[in] widget Lamp widget, which to copy
      */
     LampWidget(const LampWidget& widget) :
+        Widget(WIDGET_TYPE),
         m_isOn(widget.m_isOn),
         m_colorOff(widget.m_colorOff),
         m_colorOn(widget.m_colorOn)
@@ -123,7 +126,7 @@ public:
      * 
      * @param[in] gfx Graphics interface.
      */
-    void update(IGfx& gfx)
+    void update(Adafruit_GFX& gfx)
     {
         uint16_t color = m_colorOn;
 
@@ -203,11 +206,14 @@ public:
         return m_colorOn;
     }
 
+    /** Widget type string */
+    static const char*      WIDGET_TYPE;
+
     /** Lamp width in pixel */
-    static const uint16_t WIDTH     = 4u;
+    static const uint16_t   WIDTH   = 4u;
 
     /** Lamp height in pixel */
-    static const uint16_t HEIGHT    = 1u;
+    static const uint16_t   HEIGHT  = 1u;
 
 private:
 
@@ -216,6 +222,8 @@ private:
     uint16_t    m_colorOn;  /**< Lamp color in on state */
 
 };
+
+const char* LampWidget::WIDGET_TYPE = "lamp";
 
 /******************************************************************************
  * Functions

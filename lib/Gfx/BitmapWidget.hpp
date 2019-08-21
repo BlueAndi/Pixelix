@@ -49,9 +49,7 @@ This module provides the a bitmap widget.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-
-#include "IGfx.hpp"
-#include "Widget.hpp"
+#include <Widget.hpp>
 
 /******************************************************************************
  * Macros
@@ -72,6 +70,7 @@ public:
      * Constructs a bitmap widget, which is empty.
      */
     BitmapWidget() :
+        Widget(WIDGET_TYPE),
         m_buffer(NULL),
         m_width(0u),
         m_height(0u)
@@ -86,6 +85,7 @@ public:
      * @param[in] height    Bitmap height in pixel
      */
     BitmapWidget(const uint16_t* bitmap, uint16_t width, uint16_t height) :
+        Widget(WIDGET_TYPE),
         m_buffer(bitmap),
         m_width(width),
         m_height(height)
@@ -98,6 +98,7 @@ public:
      * @param[in] widget Bitmap widge, which to copy
      */
     BitmapWidget(const BitmapWidget& widget) :
+        Widget(WIDGET_TYPE),
         m_buffer(widget.m_buffer),
         m_width(widget.m_width),
         m_height(widget.m_height)
@@ -123,7 +124,7 @@ public:
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(IGfx& gfx)
+    void update(Adafruit_GFX& gfx)
     {
         gfx.drawRGBBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
         return;
@@ -161,6 +162,9 @@ public:
         return m_buffer;
     }
 
+    /** Widget type string */
+    static const char*      WIDGET_TYPE;
+
 private:
 
     const uint16_t* m_buffer;   /**< Ext. bitmap buffer */
@@ -168,6 +172,8 @@ private:
     uint16_t        m_height;   /**< Bitmap height in pixel */
 
 };
+
+const char* BitmapWidget::WIDGET_TYPE = "bitmap";
 
 /******************************************************************************
  * Functions

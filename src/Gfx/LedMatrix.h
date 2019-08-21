@@ -87,9 +87,6 @@ private:
     /** LedMatrix instance */
     static LedMatrix    m_instance;
 
-    /** Pixel representation of the LED matrix */
-    //static CRGB         m_matrixBuffer[Board::LedMatrix::width * Board::LedMatrix::heigth];
-
     /**
      * Construct LED matrix.
      */

@@ -39,6 +39,8 @@ This module provides the main test entry point.
 #include <unity.h>
 #include <stdio.h>
 
+#define ARDUINO (100)
+
 #include <LinkedList.hpp>
 #include <Widget.hpp>
 #include <Canvas.hpp>
@@ -64,7 +66,7 @@ This module provides the main test entry point.
  * Graphics interface for testing purposes.
  * It provides all relevant methods from the Adafruit GFX, which are used.
  */
-class TestGfx : public IGfx
+class TestGfx : public Adafruit_GFX
 {
 public:
 
@@ -72,7 +74,7 @@ public:
      * Constructs a graphic interface for testing purposes.
      */
     TestGfx() :
-        IGfx(WIDTH, HEIGHT),
+        Adafruit_GFX(WIDTH, HEIGHT),
         m_buffer(),
         m_callCounterDrawPixel(0)
     {
@@ -251,7 +253,7 @@ public:
      * The drawing pen color is set to black.
      */
     TestWidget() :
-        Widget(0, 0),
+        Widget(WIDGET_TYPE, 0, 0),
         m_color(0u)
     {
     }
@@ -268,7 +270,7 @@ public:
      * 
      * @param[in] gfx Graphics interface, which to use.
      */
-    void update(IGfx& gfx)
+    void update(Adafruit_GFX& gfx)
     {
         int16_t x = 0;
         int16_t y = 0;
@@ -305,14 +307,17 @@ public:
         return;
     }
 
-    static const uint16_t   WIDTH   = 10u;  /**< Widget width in pixel */
-    static const uint16_t   HEIGHT  = 5u;   /**< Widget height in pixel */
+    static const uint16_t   WIDTH       = 10u;  /**< Widget width in pixel */
+    static const uint16_t   HEIGHT      = 5u;   /**< Widget height in pixel */
+    static const char*      WIDGET_TYPE;        /**< Widget type string */
 
 private:
 
     uint16_t m_color;   /**< Pen color, used to draw the widget. */
 
 };
+
+const char* TestWidget::WIDGET_TYPE = "test";
 
 /******************************************************************************
  * Prototypes
@@ -564,6 +569,9 @@ static void testWidget(void)
     TEST_ASSERT_EQUAL_INT16(10, posX);
     TEST_ASSERT_EQUAL_INT16(20, posY);
 
+    /* Verify widget type name */
+    TEST_ASSERT_EQUAL_STRING(TestWidget::WIDGET_TYPE, testWidget.getType());
+
     /* For the whole test, set the widget color. */
     testWidget.setPenColor(COLOR);
 
@@ -608,6 +616,9 @@ void testCanvas(void)
     TestGfx     testGfx;
     Canvas      testCanvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0, 0);
     TestWidget  testWidget;
+
+    /* Verify widget type name */
+    TEST_ASSERT_EQUAL_STRING(Canvas::WIDGET_TYPE, testCanvas.getType());
 
     /* Canvas contains no other widget, so nothing should be drawn. */
     testGfx.setCallCounterDrawPixel(0);
@@ -664,6 +675,9 @@ static void testLampWidget(void)
     LampWidget      lampWidget(false, COLOR_OFF, COLOR_ON);
     int16_t         posX        = 0;
     int16_t         posY        = 0;
+
+    /* Verify widget type name */
+    TEST_ASSERT_EQUAL_STRING(LampWidget::WIDGET_TYPE, lampWidget.getType());
 
     /* Draw widget in off state and verify */
     lampWidget.update(testGfx);
@@ -726,6 +740,9 @@ static void testBitmapWidget(void)
     uint16_t        height          = 0u;
     uint16_t*       displayBuffer   = NULL;
 
+    /* Verify widget type name */
+    TEST_ASSERT_EQUAL_STRING(BitmapWidget::WIDGET_TYPE, bitmapWidget.getType());
+
     /* Create bitmap */
     for(y = 0u; y < BITMAP_HEIGHT; ++y)
     {
@@ -766,6 +783,9 @@ static void testTextWidget(void)
     TextWidget      textWidget;
     String          testStr     = "test";
     const uint16_t TEXT_COLOR   = 0x1234;
+
+    /* Verify widget type name */
+    TEST_ASSERT_EQUAL_STRING(TextWidget::WIDGET_TYPE, textWidget.getType());
 
     /* Default string is empty */
     TEST_ASSERT_EQUAL_STRING("", textWidget.getStr().c_str());

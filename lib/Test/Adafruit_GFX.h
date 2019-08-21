@@ -38,8 +38,8 @@ This module provides the general graphics interface for testing purposes.
  * @{
  */
 
-#ifndef __IGFX_HPP__
-#define __IGFX_HPP__
+#ifndef __ADAFRUIT_GFX_H__
+#define __ADAFRUIT_GFX_H__
 
 /******************************************************************************
  * Compile Switches
@@ -62,7 +62,7 @@ This module provides the general graphics interface for testing purposes.
 /**
  * Abstract graphics interface for testing purposes.
  */
-class IGfx
+class Adafruit_GFX
 {
 public:
 
@@ -73,7 +73,7 @@ public:
      * @param[in] width     Area width in pixel
      * @param[in] height    Area height in pixel
      */
-    IGfx(int16_t width, int16_t height) :
+    Adafruit_GFX(int16_t width, int16_t height) :
         m_width(width),
         m_height(height),
         m_cursorX(0),
@@ -86,7 +86,7 @@ public:
     /**
      * Destroys the abstract graphics interface.
      */
-    virtual ~IGfx()
+    virtual ~Adafruit_GFX()
     {
     }
 
@@ -95,7 +95,7 @@ public:
      * 
      * @return Width in pixel
      */
-    int16_t getWidth(void) const
+    int16_t width(void) const
     {
         return m_width;
     }
@@ -105,7 +105,7 @@ public:
      * 
      * @return Height in pixel
      */
-    int16_t getHeight(void) const
+    int16_t height(void) const
     {
         return m_height;
     }
@@ -222,14 +222,14 @@ private:
     uint16_t    m_textColor;    /**< Text color */
     uint16_t    m_textBgColor;  /**< Text background color */
 
-    IGfx(const IGfx& gfx);
-    IGfx& operator=(const IGfx& gfx);
+    Adafruit_GFX(const Adafruit_GFX& gfx);
+    Adafruit_GFX& operator=(const Adafruit_GFX& gfx);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __IGFX_HPP__ */
+#endif  /* __ADAFRUIT_GFX_H__ */
 
 /** @} */

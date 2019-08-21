@@ -49,7 +49,7 @@ This module provides the basic widget.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "IGfx.hpp"
+#include <Adafruit_GFX.h>
 
 /******************************************************************************
  * Macros
@@ -69,8 +69,11 @@ public:
 
     /**
      * Constructs a widget at position (0, 0) in the canvas.
+     * 
+     * @param[in] type Widget type name
      */
-    Widget() :
+    Widget(const char* type) :
+        m_type(type),
         m_posX(0),
         m_posY(0)
     {
@@ -79,10 +82,12 @@ public:
     /**
      * Constructs a widget a the given position in the canvas.
      * 
-     * @param[in] x Upper left corner (x-coordinate) of the widget in a canvas.
-     * @param[in] y Upper left corner (y-coordinate) of the widget in a canvas.
+     * @param[in] type  Widget type name
+     * @param[in] x     Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y     Upper left corner (y-coordinate) of the widget in a canvas.
     */
-    Widget(int16_t x, int16_t y) :
+    Widget(const char* type, int16_t x, int16_t y) :
+        m_type(type),
         m_posX(x),
         m_posY(y)
     {
@@ -94,6 +99,7 @@ public:
      * @param[in] widget The widget, which to copy.
     */
     Widget(const Widget& widget) :
+        m_type(widget.m_type),
         m_posX(widget.m_posX),
         m_posY(widget.m_posY)
     {
@@ -115,6 +121,7 @@ public:
     */
     Widget& operator=(const Widget& widget)
     {
+        m_type = widget.m_type;
         m_posX = widget.m_posX;
         m_posY = widget.m_posY;
         return *this;
@@ -152,12 +159,26 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    virtual void update(IGfx& gfx) = 0;
+    virtual void update(Adafruit_GFX& gfx) = 0;
+
+    /**
+     * Get widget type as string.
+     * 
+     * @param Widget type string
+     */
+    const char* getType(void) const
+    {
+        return m_type;
+    }
 
 protected:
 
-    int16_t m_posX; /**< Upper left corner (x-coordinate) of the widget in a canvas. */
-    int16_t m_posY; /**< Upper left corner (y-coordinate) of the widget in a canvas. */
+    const char* m_type; /**< Widget type string */
+    int16_t     m_posX; /**< Upper left corner (x-coordinate) of the widget in a canvas. */
+    int16_t     m_posY; /**< Upper left corner (y-coordinate) of the widget in a canvas. */
+
+    /* Default constructor not allowed. */
+    Widget();
 };
 
 /******************************************************************************
