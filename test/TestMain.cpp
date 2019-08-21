@@ -39,6 +39,7 @@ This module provides the main test entry point.
 #include <unity.h>
 #include <stdio.h>
 
+/* The Adafruit_GFX shall provide the interface for the new arduino versions. */
 #define ARDUINO (100)
 
 #include <LinkedList.hpp>
@@ -324,7 +325,7 @@ const char* TestWidget::WIDGET_TYPE = "test";
  *****************************************************************************/
 
 template < typename T >
-static T min(const T value1, const T value2);
+static T getMin(const T value1, const T value2);
 
 static void testDoublyLinkedList(void);
 static void testWidget(void);
@@ -377,7 +378,7 @@ int main(int argc, char **argv)
  * @return Minimum of value 1 and value 2
  */
 template < typename T >
-static T min(const T value1, const T value2)
+static T getMin(const T value1, const T value2)
 {
     if (value1 < value2)
     {
@@ -583,8 +584,8 @@ static void testWidget(void)
     testWidget.update(testGfx);
     testGfx.verify( posX,
                     posY,
-                    min<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
-                    min<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
+                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
+                    getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
                     COLOR);
 
     /* Draw widget at position (2, 1) and verify widget movement. */
@@ -595,8 +596,8 @@ static void testWidget(void)
     testWidget.update(testGfx);
     testGfx.verify( posX,
                     posY,
-                    min<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
-                    min<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
+                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
+                    getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
                     COLOR);
 
     return;
@@ -636,8 +637,8 @@ void testCanvas(void)
     testCanvas.update(testGfx);
     testGfx.verify( WIDGET_POS_X, 
                     WIDGET_POS_Y, 
-                    min<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X), 
-                    min<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
+                    getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X), 
+                    getMin<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
                     WIDGET_COLOR);
 
     /* Move widget outside canvas and try to draw. Expected is no drawing at all. */
