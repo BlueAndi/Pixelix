@@ -75,7 +75,8 @@ public:
     Widget(const char* type) :
         m_type(type),
         m_posX(0),
-        m_posY(0)
+        m_posY(0),
+        m_name(NULL)
     {
     }
 
@@ -89,19 +90,22 @@ public:
     Widget(const char* type, int16_t x, int16_t y) :
         m_type(type),
         m_posX(x),
-        m_posY(y)
+        m_posY(y),
+        m_name(NULL)
     {
     }
 
     /**
      * Constructs a widget by copying a widget.
+     * Note, its name won't be assigned.
      * 
      * @param[in] widget The widget, which to copy.
     */
     Widget(const Widget& widget) :
         m_type(widget.m_type),
         m_posX(widget.m_posX),
-        m_posY(widget.m_posY)
+        m_posY(widget.m_posY),
+        m_name(NULL)
     {
     }
 
@@ -171,11 +175,42 @@ public:
         return m_type;
     }
 
+    /**
+     * Get widget name.
+     * If no name is set, an empty string will be returned.
+     * 
+     * @return Name
+     */
+    const char* getName(void) const
+    {
+        static char empty[] = "";
+
+        if (NULL == m_name)
+        {
+            return empty;
+        }
+
+        return m_name;
+    }
+
+    /**
+     * Set widget name.
+     * Clear it by assigning NULL.
+     * 
+     * @param[in] name Name to set
+     */
+    void setName(const char* name)
+    {
+        m_name = name;
+        return;
+    }
+
 protected:
 
     const char* m_type; /**< Widget type string */
     int16_t     m_posX; /**< Upper left corner (x-coordinate) of the widget in a canvas. */
     int16_t     m_posY; /**< Upper left corner (y-coordinate) of the widget in a canvas. */
+    const char* m_name; /**< Widget name for identification. */
 
     /* Default constructor not allowed. */
     Widget();

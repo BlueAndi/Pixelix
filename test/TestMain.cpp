@@ -558,6 +558,18 @@ static void testWidget(void)
     int16_t         posX        = -1;
     int16_t         posY        = -1;
     const uint16_t  COLOR       = 0x1234;
+    const char*     testStr     = "myWidget";
+
+    /* No widget name is set, it must be empty. */
+    TEST_ASSERT_EQUAL_STRING("", testWidget.getName());
+
+    /* Set widget name and read back. */
+    testWidget.setName(testStr);
+    TEST_ASSERT_EQUAL_STRING(testStr, testWidget.getName());
+
+    /* Clear name */
+    testWidget.setName(NULL);
+    TEST_ASSERT_EQUAL_STRING("", testWidget.getName());
 
     /* Current position must be (0, 0) */
     testWidget.getPos(posX, posY);
