@@ -25,21 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Abstract graphics interface for test
+@brief  String implementation for test
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the general graphics interface for testing purposes.
+This module provides the string implementation for testing purposes.
 
 *******************************************************************************/
-/** @defgroup igfx Abstract graphics interface for test
- * This module provides the abstract graphics interface for testing purposes.
+/** @defgroup wstring String implementation for test
+ * This module provides the string implementation for testing purposes.
  *
  * @{
  */
 
-#ifndef __STRING_HPP__
-#define __STRING_HPP__
+#ifndef __WSTRING_H__
+#define __WSTRING_H__
 
 /******************************************************************************
  * Compile Switches
@@ -134,6 +134,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __STRING_HPP__ */
+#endif  /* __WSTRING_H__ */
 
 /** @} */

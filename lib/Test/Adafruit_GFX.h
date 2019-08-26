@@ -32,7 +32,7 @@
 This module provides the general graphics interface for testing purposes.
 
 *******************************************************************************/
-/** @defgroup igfx Abstract graphics interface for test
+/** @defgroup adafruitgfx Abstract graphics interface for test
  * This module provides the abstract graphics interface for testing purposes.
  *
  * @{
