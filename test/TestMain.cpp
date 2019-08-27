@@ -39,9 +39,6 @@ This module provides the main test entry point.
 #include <unity.h>
 #include <stdio.h>
 
-/* The Adafruit_GFX shall provide the interface for the new arduino versions. */
-#define ARDUINO (100)
-
 #include <LinkedList.hpp>
 #include <Widget.hpp>
 #include <Canvas.hpp>
