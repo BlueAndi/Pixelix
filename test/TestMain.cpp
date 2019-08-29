@@ -41,7 +41,7 @@ This module provides the main test entry point.
 
 #include <LinkedList.hpp>
 #include <Widget.hpp>
-#include <Canvas.hpp>
+#include <Canvas.h>
 #include <LampWidget.hpp>
 #include <BitmapWidget.hpp>
 #include <TextWidget.hpp>

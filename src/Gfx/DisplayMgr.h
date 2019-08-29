@@ -51,7 +51,7 @@ configured with a specific layout and contains the content to show.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Canvas.hpp>
+#include <Canvas.h>
 
 /******************************************************************************
  * Macros
@@ -134,6 +134,26 @@ public:
      */
     void process(void);
 
+    /**
+     * Start/Stop rotating the slots.
+     * It will always start with slot 0. It is no resume possible.
+     * Stopping means showing only slot 0.
+     * 
+     * @param[in] start Start (true) or stop (false) it
+     */
+    void startRotating(bool start)
+    {
+        m_rotate        = start;
+        m_activeSlotId  = 0;
+
+        if (true == start)
+        {
+            m_timestampOfLastChange = millis();
+        }
+        
+        return;
+    }
+
     /** Maximum number of supported slots. */
     static const uint8_t    MAX_SLOTS      = 4u;
 
@@ -165,6 +185,9 @@ private:
 
     /** Timestamp of the last slot change in ms */
     uint64_t            m_timestampOfLastChange;
+
+    /** Rotate (true) slots or not (false) */
+    bool                m_rotate;
 
     /**
      * Construct LED matrix.
