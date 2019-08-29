@@ -207,14 +207,18 @@ void DisplayMgr::process(void)
     unsigned long   timestampMs = millis();
     uint32_t        deltaTimeS  = static_cast<uint32_t>((timestampMs - m_timestampOfLastChange) / 1000u);
 
-    /* Jump to next slot? */
-    if (m_period <= deltaTimeS)
+    /* Slot rotation enabled? */
+    if (true == m_activeSlotId)
     {
-        /* Set next slot active */
-        m_activeSlotId = nextSlot;
+        /* Jump to next slot? */
+        if (m_period <= deltaTimeS)
+        {
+            /* Set next slot active */
+            m_activeSlotId = nextSlot;
 
-        /* Wait another period */
-        m_timestampOfLastChange = timestampMs;
+            /* Wait another period */
+            m_timestampOfLastChange = timestampMs;
+        }
     }
 
     /* Anything to show? */
@@ -239,7 +243,8 @@ DisplayMgr::DisplayMgr() :
     m_slots(),
     m_period(DEFAULT_PERIOD),
     m_activeSlotId(0u),
-    m_timestampOfLastChange(0ul)
+    m_timestampOfLastChange(0ul),
+    m_rotate(false)
 {
     uint8_t index = 0u;
 

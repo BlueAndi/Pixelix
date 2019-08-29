@@ -41,7 +41,7 @@ This module provides the main test entry point.
 
 #include <LinkedList.hpp>
 #include <Widget.hpp>
-#include <Canvas.hpp>
+#include <Canvas.h>
 #include <LampWidget.hpp>
 #include <BitmapWidget.hpp>
 #include <TextWidget.hpp>
@@ -633,9 +633,9 @@ static void testWidget(void)
 void testCanvas(void)
 {
     const uint16_t  CANVAS_WIDTH        = 8;
-    const uint16_t  CANVAS_HEIGHT   = 8;
+    const uint16_t  CANVAS_HEIGHT       = 8;
     const int16_t   WIDGET_POS_X        = 2;
-    const int16_t   WIDGET_POS_Y            = 2;
+    const int16_t   WIDGET_POS_Y        = 2;
     const uint16_t  WIDGET_COLOR        = 0x1234;
     const char*     CANVAS_NAME         = "canvasWidgetName";
     const char*     TEST_WIDGET_NAME    = "testWidgetName";

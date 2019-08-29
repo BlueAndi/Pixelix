@@ -53,6 +53,8 @@ has the main loop.
 #include "Pages.h"
 #include "RestApi.h"
 
+#include "DisplayMgr.h"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -113,7 +115,9 @@ static WebServer            gWebServer(WebConfig::WEBSERVER_PORT);
  */
 void setup()
 {
-    bool isAPMode = false;
+    bool        isAPMode    = false;
+    DisplayMgr& dispMgr     = DisplayMgr::getInstance();
+    uint8_t     index       = 0u;
 
     /* Initialize hardware */
     Board::init();
@@ -138,6 +142,12 @@ void setup()
 
     /* Start LED matrix */
     LedMatrix::getInstance().begin();
+
+    /* Initialize display layout */
+    for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
+    {
+        dispMgr.setLayout(index, DisplayMgr::LAYOUT_ID_2);
+    }
 
     /* Does the user request for setting up an wifi access point?
      * Because we just initialized the button driver, wait until

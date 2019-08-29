@@ -38,8 +38,8 @@ This module provides a drawing canvas, which can contain several widgets.
  * @{
  */
 
-#ifndef __CANVAS_HPP__
-#define __CANVAS_HPP__
+#ifndef __CANVAS_H__
+#define __CANVAS_H__
 
 /******************************************************************************
  * Compile Switches
@@ -315,12 +315,10 @@ private:
     }
 };
 
-const char* Canvas::WIDGET_TYPE = "canvas";
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __CANVAS_HPP__ */
+#endif  /* __CANVAS_H__ */
 
 /** @} */
