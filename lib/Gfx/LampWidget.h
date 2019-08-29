@@ -40,8 +40,8 @@ Its size is fixed set.
  * @{
  */
 
-#ifndef __LAMPWIDGET_HPP__
-#define __LAMPWIDGET_HPP__
+#ifndef __LAMPWIDGET_H__
+#define __LAMPWIDGET_H__
 
 /******************************************************************************
  * Compile Switches
@@ -210,10 +210,10 @@ public:
     static const char*      WIDGET_TYPE;
 
     /** Lamp width in pixel */
-    static const uint16_t   WIDTH   = 4u;
+    static const uint16_t   WIDTH;
 
     /** Lamp height in pixel */
-    static const uint16_t   HEIGHT  = 1u;
+    static const uint16_t   HEIGHT;
 
 private:
 
@@ -223,12 +223,10 @@ private:
 
 };
 
-const char* LampWidget::WIDGET_TYPE = "lamp";
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __LAMPWIDGET_HPP__ */
+#endif  /* __LAMPWIDGET_H__ */
 
 /** @} */

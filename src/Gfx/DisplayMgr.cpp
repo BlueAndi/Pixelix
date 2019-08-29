@@ -40,9 +40,9 @@
 #include "Board.h"
 #include "LedMatrix.h"
 
-#include <TextWidget.hpp>
-#include <BitmapWidget.hpp>
-#include <LampWidget.hpp>
+#include <TextWidget.h>
+#include <BitmapWidget.h>
+#include <LampWidget.h>
 
 /******************************************************************************
  * Compiler Switches

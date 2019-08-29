@@ -38,8 +38,8 @@ This module provides the a text widget, showing a colored string.
  * @{
  */
 
-#ifndef __TEXTWIDGET_HPP__
-#define __TEXTWIDGET_HPP__
+#ifndef __TEXTWIDGET_H__
+#define __TEXTWIDGET_H__
 
 /******************************************************************************
  * Compile Switches
@@ -73,7 +73,8 @@ public:
     TextWidget() :
         Widget(WIDGET_TYPE),
         m_str(),
-        m_textColor(DEFAULT_TEXT_COLOR)
+        m_textColor(DEFAULT_TEXT_COLOR),
+        m_font(DEFAULT_FONT)
     {
     }
 
@@ -87,7 +88,8 @@ public:
     TextWidget(const String& str, uint16_t color = DEFAULT_TEXT_COLOR) :
         Widget(WIDGET_TYPE),
         m_str(str),
-        m_textColor(color)
+        m_textColor(color),
+        m_font(DEFAULT_FONT)
     {
     }
 
@@ -99,7 +101,8 @@ public:
     TextWidget(const TextWidget& widget) :
         Widget(WIDGET_TYPE),
         m_str(widget.m_str),
-        m_textColor(widget.m_textColor)
+        m_textColor(widget.m_textColor),
+        m_font(widget.m_font)
     {
     }
 
@@ -112,6 +115,7 @@ public:
     {
         m_str       = widget.m_str;
         m_textColor = widget.m_textColor;
+        m_font      = widget.m_font;
 
         return *this;
     }
@@ -125,6 +129,7 @@ public:
     {
         gfx.setCursor(m_posX, m_posY);
         gfx.setTextColor(m_textColor);
+        gfx.setFont(m_font);
         gfx.print(m_str);
 
         return;
@@ -172,25 +177,48 @@ public:
         return m_textColor;
     }
 
+    /**
+     * Set font.
+     * 
+     * @param[in] font  New font to set
+     */
+    void setFont(const GFXfont* font)
+    {
+        m_font = font;
+        return;
+    }
+
+    /**
+     * Get font.
+     * 
+     * @return If a font is set, it will be returned otherwise NULL.
+     */
+    const GFXfont* getFont(void) const
+    {
+        return m_font;
+    }
+
     /** Default text color */
-    static const uint16_t   DEFAULT_TEXT_COLOR = 0xffffu;
+    static const uint16_t   DEFAULT_TEXT_COLOR;
     
     /** Widget type string */
     static const char*      WIDGET_TYPE;
 
+    /** Default font */
+    static const GFXfont*   DEFAULT_FONT;
+
 private:
 
-    String      m_str;          /**< String */
-    uint16_t    m_textColor;    /**< Text color of the string */
+    String          m_str;          /**< String */
+    uint16_t        m_textColor;    /**< Text color of the string */
+    const GFXfont*  m_font;         /**< Current font */
 
 };
-
-const char* TextWidget::WIDGET_TYPE = "text";
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __TEXTWIDGET_HPP__ */
+#endif  /* __TEXTWIDGET_H__ */
 
 /** @} */

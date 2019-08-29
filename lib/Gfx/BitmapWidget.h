@@ -38,8 +38,8 @@ This module provides the a bitmap widget.
  * @{
  */
 
-#ifndef __BITMAPWIDGET_HPP__
-#define __BITMAPWIDGET_HPP__
+#ifndef __BITMAPWIDGET_H__
+#define __BITMAPWIDGET_H__
 
 /******************************************************************************
  * Compile Switches
@@ -163,7 +163,7 @@ public:
     }
 
     /** Widget type string */
-    static const char*      WIDGET_TYPE;
+    static const char* WIDGET_TYPE;
 
 private:
 
@@ -173,12 +173,10 @@ private:
 
 };
 
-const char* BitmapWidget::WIDGET_TYPE = "bitmap";
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __BITMAPWIDGET_HPP__ */
+#endif  /* __BITMAPWIDGET_H__ */
 
 /** @} */

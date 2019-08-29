@@ -50,6 +50,7 @@ This module provides the general graphics interface for testing purposes.
  *****************************************************************************/
 #include <stdint.h>
 #include <WString.h>
+#include <gfxfont.h>
 
 /******************************************************************************
  * Macros
@@ -79,7 +80,8 @@ public:
         m_cursorX(0),
         m_cursorY(0),
         m_textColor(0u),
-        m_textBgColor(0u)
+        m_textBgColor(0u),
+        m_font(NULL)
     {
     }
 
@@ -213,14 +215,37 @@ public:
         return 0;
     }
 
+    /**
+     * Set font.
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param[in] font Font to set
+     */
+    void setFont(const GFXfont* font)
+    {
+        m_font = font;
+        return;
+    }
+
+    /**
+     * Get font.
+     * 
+     * @return Current selected font.
+     */
+    const GFXfont* getFont(void) const
+    {
+        return m_font;
+    }
+
 private:
 
-    int16_t     m_width;        /**< Width in pixel */
-    int16_t     m_height;       /**< Height in pixel */
-    int16_t     m_cursorX;      /**< Cursor x-coordinate */
-    int16_t     m_cursorY;      /**< Cursor y-coordinate */
-    uint16_t    m_textColor;    /**< Text color */
-    uint16_t    m_textBgColor;  /**< Text background color */
+    int16_t         m_width;        /**< Width in pixel */
+    int16_t         m_height;       /**< Height in pixel */
+    int16_t         m_cursorX;      /**< Cursor x-coordinate */
+    int16_t         m_cursorY;      /**< Cursor y-coordinate */
+    uint16_t        m_textColor;    /**< Text color */
+    uint16_t        m_textBgColor;  /**< Text background color */
+    const GFXfont*  m_font;         /**< Current selected font */
 
     Adafruit_GFX(const Adafruit_GFX& gfx);
     Adafruit_GFX& operator=(const Adafruit_GFX& gfx);

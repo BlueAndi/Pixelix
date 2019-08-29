@@ -42,9 +42,9 @@ This module provides the main test entry point.
 #include <LinkedList.hpp>
 #include <Widget.hpp>
 #include <Canvas.h>
-#include <LampWidget.hpp>
-#include <BitmapWidget.hpp>
-#include <TextWidget.hpp>
+#include <LampWidget.h>
+#include <BitmapWidget.h>
+#include <TextWidget.h>
 
 /******************************************************************************
  * Macros
@@ -918,6 +918,15 @@ static void testTextWidget(void)
     /* Set/Get text color */
     textWidget.setTextColor(TEXT_COLOR);
     TEST_ASSERT_EQUAL_UINT16(TEXT_COLOR, textWidget.getTextColor());
+
+    /* Check for default font */
+    TEST_ASSERT_NOT_NULL(textWidget.getFont());
+    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, textWidget.getFont());
+    
+    /* Font shall be used for drawing */
+    textWidget.update(testGfx);
+    TEST_ASSERT_NOT_NULL(testGfx.getFont());
+    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, testGfx.getFont());
 
     return;
 }
