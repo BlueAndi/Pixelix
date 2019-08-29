@@ -70,6 +70,15 @@
 /* Initialize LED matrix instance. */
 DisplayMgr  DisplayMgr::m_instance;
 
+/* Initialize text widget name. */
+const char* DisplayMgr::TEXT_WIDGET_NAME    = "text";
+
+/* Initialize bitmap widget name. */
+const char* DisplayMgr::BMP_WIDGET_NAME     = "bitmap";
+
+/* Initialize lamp widget name. */
+const char* DisplayMgr::LAMP_WIDGET_NAME    = "lamp";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -108,6 +117,68 @@ void DisplayMgr::setLayout(uint8_t slotId, LayoutId layoutId)
     default:
         /* Don't care about it. */
         break;
+    }
+
+    return;
+}
+
+void DisplayMgr::setText(uint8_t slotId, const String& str)
+{
+    Widget* widget = findWidget(slotId, TEXT_WIDGET_NAME);
+
+    if (NULL != widget)
+    {
+        TextWidget* textWidget = NULL;
+
+        if (0 == strcmp(widget->getType(), TextWidget::WIDGET_TYPE))
+        {
+            textWidget = static_cast<TextWidget*>(widget);
+
+            textWidget->setStr(str);
+        }
+    }
+
+    return;
+}
+
+void DisplayMgr::setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t heigth)
+{
+    Widget* widget = findWidget(slotId, BMP_WIDGET_NAME);
+
+    if (NULL != widget)
+    {
+        BitmapWidget* bitmapWidget = NULL;
+
+        if (0 == strcmp(widget->getType(), BitmapWidget::WIDGET_TYPE))
+        {
+            bitmapWidget = static_cast<BitmapWidget*>(widget);
+
+            bitmapWidget->set(bitmap, width, heigth);
+        }
+    }
+
+    return;
+}
+
+void DisplayMgr::setLamp(uint8_t slotId, uint8_t lampId, bool onState)
+{
+    Widget* widget      = NULL;
+    String  widgetName  = LAMP_WIDGET_NAME;
+    
+    widgetName += lampId;
+
+    widget = findWidget(slotId, widgetName.c_str());
+
+    if (NULL != widget)
+    {
+        LampWidget* lampWidget = NULL;
+
+        if (0 == strcmp(widget->getType(), LampWidget::WIDGET_TYPE))
+        {
+            lampWidget = static_cast<LampWidget*>(widget);
+
+            lampWidget->setOnState(onState);
+        }
     }
 
     return;
@@ -229,7 +300,7 @@ bool DisplayMgr::createLayout0(Canvas*& canvas) const
     }
     else
     {
-        textWidget->setName("text");
+        textWidget->setName(TEXT_WIDGET_NAME);
     }
     
     if (false == success)
@@ -288,8 +359,8 @@ bool DisplayMgr::createLayout1(Canvas*& canvas) const
     }
     else
     {
-        bitmapWidget->setName("bitmap");
-        textWidget->setName("text");
+        bitmapWidget->setName(BMP_WIDGET_NAME);
+        textWidget->setName(TEXT_WIDGET_NAME);
     }
 
     if (false == success)
@@ -339,8 +410,8 @@ bool DisplayMgr::createLayout2(Canvas*& canvas) const
     Canvas*         lampCanvas      = new Canvas(LAMP_WIDTH, LAMP_HEIGHT, static_cast<int16_t>(BITMAP_WIDTH), 0);
     LampWidget*     lampWidgets[]   = { NULL, NULL, NULL, NULL };
     uint8_t         index           = 0u;
-    char            lampName[]      = "lampN";
-    uint8_t         lampNameNumPos  = strlen(lampName) - 1;
+    char            lampName[strlen(LAMP_WIDGET_NAME) + 2];
+    uint8_t         lampNameNumPos  = 0;
 
     canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::heigth, 0, 0);
 
@@ -385,8 +456,12 @@ bool DisplayMgr::createLayout2(Canvas*& canvas) const
     }
     else
     {
-        bitmapWidget->setName("bitmap");
-        textWidget->setName("text");
+        bitmapWidget->setName(BMP_WIDGET_NAME);
+        textWidget->setName(TEXT_WIDGET_NAME);
+
+        strncpy(lampName, LAMP_WIDGET_NAME, ARRAY_NUM(lampName) - 1);
+        lampName[ARRAY_NUM(lampName) - 1] = '\0';
+        lampNameNumPos = strlen(lampName);
 
         for(index = 0u; index < ARRAY_NUM(lampWidgets); ++index)
         {
@@ -441,6 +516,55 @@ bool DisplayMgr::createLayout2(Canvas*& canvas) const
     }
 
     return success;
+}
+
+Widget* DisplayMgr::findWidget(Widget* widget, const char* widgetName)
+{
+    Widget* foundWidget = NULL;
+
+    if ((NULL != widget) &&
+        (NULL != widgetName))
+    {
+        /* If the widget is a canvas, its children will be destroyed as well. */
+        if (0 == strcmp(Canvas::WIDGET_TYPE, widget->getType()))
+        {
+            Canvas*             canvas      = static_cast<Canvas*>(widget);
+            LinkedList<Widget*> children    = canvas->children();
+            
+            if (true == children.selectFirstElement())
+            {
+                do
+                {
+                    foundWidget = findWidget(*children.current(), widgetName);
+
+                } while ((NULL != foundWidget) ||
+                         (true == children.next()));
+            }
+        }
+        else if (0 == strcmp(widget->getName(), widgetName))
+        {
+            foundWidget = widget;
+        }
+        else
+        {
+            ;
+        }
+    }
+
+    return foundWidget;
+}
+
+Widget* DisplayMgr::findWidget(uint8_t slotId, const char* widgetName)
+{
+    Widget* foundWidget = NULL;
+
+    if ((MAX_SLOTS > slotId) &&
+        (NULL != widgetName))
+    {
+        foundWidget = findWidget(m_slots[slotId], widgetName);
+    }
+
+    return foundWidget;
 }
 
 /******************************************************************************

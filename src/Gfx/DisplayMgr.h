@@ -100,23 +100,31 @@ public:
     void setLayout(uint8_t slotId, LayoutId layoutId);
 
     /**
-     * Get base canvas of slot.
+     * Set text in the text widget of a slot.
      * 
-     * @param[in] slotdId   Slot id [0; N]
-     * 
-     * @return If successful it returns the canvas, otherwise NULL.
+     * @param[in] slotId    Slot id
+     * @param[in] str       Text
      */
-    Canvas* getSlot(uint8_t slotId)
-    {
-        Canvas* canvas = NULL;
+    void setText(uint8_t slotId, const String& str);
 
-        if (MAX_SLOTS > slotId)
-        {
-            canvas = m_slots[slotId];
-        }
+    /**
+     * Set bitmap in the bitmap widget of a slot.
+     * 
+     * @param[in] slotId    Slot id
+     * @param[in] bitmap    Bitmap buffer
+     * @param[in] width     Bitmap width in pixel
+     * @param[in] heigth    Bitmap heigth in pixel
+     */
+    void setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t heigth);
 
-        return canvas;
-    }
+    /**
+     * Set lamp state in the lamp widget of a slot.
+     * 
+     * @param[in] slotId    Slot id
+     * @param[in] lampId    Lamp id
+     * @param[in] onState   New lamp state on (true) or off (false)
+     */
+    void setLamp(uint8_t slotId, uint8_t lampId, bool onState);
 
     /**
      * Process the slots. This shall be called periodically in
@@ -131,6 +139,15 @@ public:
 
     /** Default period for changing slots in s. */
     static const uint32_t   DEFAULT_PERIOD = 10u;
+
+    /** Text widget name, used for identification. */
+    static const char*      TEXT_WIDGET_NAME;
+
+    /** Bitmap widget name, used for identification. */
+    static const char*      BMP_WIDGET_NAME;
+
+    /** Lamp widget name, used for identification. */
+    static const char*      LAMP_WIDGET_NAME;
 
 private:
 
@@ -208,6 +225,26 @@ private:
      * @return Successful (true) or not (false).
      */
     bool createLayout2(Canvas*& canvas) const;
+
+    /**
+     * Find a widget by its name.
+     * 
+     * @param[in] widget        Start to find it with this widget.
+     * @param[in] widgetName    Find the widget with this name.
+     * 
+     * @return If the widget is found, it will be returned otherwise NULL.
+     */
+    Widget* findWidget(Widget* widget, const char* widgetName);
+
+    /**
+     * Find a widget by its name.
+     * 
+     * @param[in] slotId        Search in this slot.
+     * @param[in] widgetName    Find the widget with this name.
+     * 
+     * @return If the widget is found, it will be returned otherwise NULL.
+     */
+    Widget* findWidget(uint8_t slotId, const char* widgetName);
 };
 
 /******************************************************************************
