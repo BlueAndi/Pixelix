@@ -49,6 +49,7 @@ This module provides the basic widget.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <string.h>
 #include <Adafruit_GFX.h>
 
 /******************************************************************************
@@ -203,6 +204,31 @@ public:
     {
         m_name = name;
         return;
+    }
+
+    /**
+     * Find widget by its name.
+     * Note, it must be overriden by the inherited widget, if it is like a
+     * container of widgets.
+     * 
+     * @param[in] name  Widget name to search for
+     * 
+     * @return If widget is found, it will be returned otherwise NULL.
+     */
+    virtual Widget* find(const char* name)
+    {
+        Widget* widget = NULL;
+
+        if ((NULL != name) &&
+            (NULL != m_name))
+        {
+            if (0 == strcmp(m_name, name))
+            {
+                widget = this;
+            }
+        }
+
+        return widget;
     }
 
 protected:

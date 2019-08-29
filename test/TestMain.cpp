@@ -557,12 +557,27 @@ static void testWidget(void)
     const uint16_t  COLOR       = 0x1234;
     const char*     testStr     = "myWidget";
 
+    /* Verify widget type name */
+    TEST_ASSERT_EQUAL_STRING(TestWidget::WIDGET_TYPE, testWidget.getType());
+
     /* No widget name is set, it must be empty. */
     TEST_ASSERT_EQUAL_STRING("", testWidget.getName());
 
     /* Set widget name and read back. */
     testWidget.setName(testStr);
     TEST_ASSERT_EQUAL_STRING(testStr, testWidget.getName());
+
+    /* Find widget with empty name.
+     * Expected: Not found
+     */
+    TEST_ASSERT_NULL(testWidget.find(NULL));
+    TEST_ASSERT_NULL(testWidget.find(""));
+
+    /* Find widget with its name.
+     * Expected: Widget is found
+     */
+    TEST_ASSERT_NOT_NULL(testWidget.find(testStr));
+    TEST_ASSERT_EQUAL_PTR(&testWidget, testWidget.find(testStr));
 
     /* Clear name */
     testWidget.setName(NULL);
@@ -617,11 +632,13 @@ static void testWidget(void)
  */
 void testCanvas(void)
 {
-    const uint16_t  CANVAS_WIDTH    = 8;
+    const uint16_t  CANVAS_WIDTH        = 8;
     const uint16_t  CANVAS_HEIGHT   = 8;
-    const int16_t   WIDGET_POS_X    = 2;
-    const int16_t   WIDGET_POS_Y    = 2;
-    const uint16_t  WIDGET_COLOR    = 0x1234;
+    const int16_t   WIDGET_POS_X        = 2;
+    const int16_t   WIDGET_POS_Y            = 2;
+    const uint16_t  WIDGET_COLOR        = 0x1234;
+    const char*     CANVAS_NAME         = "canvasWidgetName";
+    const char*     TEST_WIDGET_NAME    = "testWidgetName";
 
     TestGfx     testGfx;
     Canvas      testCanvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0, 0);
@@ -670,6 +687,37 @@ void testCanvas(void)
                     CANVAS_HEIGHT / 2,
                     WIDGET_COLOR);
 
+    /* No widget name is set, it must be empty. */
+    TEST_ASSERT_EQUAL_STRING("", testCanvas.getName());
+
+    /* Set widget name and read back. */
+    testCanvas.setName(CANVAS_NAME);
+    TEST_ASSERT_EQUAL_STRING(CANVAS_NAME, testCanvas.getName());
+
+    /* Find widget with empty name.
+     * Expected: Not found
+     */
+    TEST_ASSERT_NULL(testCanvas.find(NULL));
+    TEST_ASSERT_NULL(testCanvas.find(""));
+
+    /* Find widget with its name.
+     * Expected: Widget is found
+     */
+    TEST_ASSERT_NOT_NULL(testCanvas.find(CANVAS_NAME));
+    TEST_ASSERT_EQUAL_PTR(static_cast<Widget*>(&testCanvas), testCanvas.find(CANVAS_NAME));
+
+    /* Find widget in container, but widget has no name.
+     * Expected: Test widget not found
+     */
+    TEST_ASSERT_NULL(testCanvas.find(TEST_WIDGET_NAME));
+
+    /* Find widget in container.
+     * Expected: Test widget found
+     */
+    testWidget.setName(TEST_WIDGET_NAME);
+    TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
+
     return;
 }
 
@@ -680,6 +728,7 @@ static void testLampWidget(void)
 {
     const uint16_t  COLOR_OFF   = 0x1111;
     const uint16_t  COLOR_ON    = 0x2222;
+    const char*     WIDGET_NAME = "lampWidgetName";
 
     TestGfx         testGfx;
     LampWidget      lampWidget(false, COLOR_OFF, COLOR_ON);
@@ -688,6 +737,25 @@ static void testLampWidget(void)
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(LampWidget::WIDGET_TYPE, lampWidget.getType());
+
+    /* No widget name is set, it must be empty. */
+    TEST_ASSERT_EQUAL_STRING("", lampWidget.getName());
+
+    /* Set widget name and read back. */
+    lampWidget.setName(WIDGET_NAME);
+    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, lampWidget.getName());
+
+    /* Find widget with empty name.
+     * Expected: Not found
+     */
+    TEST_ASSERT_NULL(lampWidget.find(NULL));
+    TEST_ASSERT_NULL(lampWidget.find(""));
+
+    /* Find widget with its name.
+     * Expected: Widget is found
+     */
+    TEST_ASSERT_NOT_NULL(lampWidget.find(WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&lampWidget, lampWidget.find(WIDGET_NAME));
 
     /* Draw widget in off state and verify */
     lampWidget.update(testGfx);
@@ -739,6 +807,7 @@ static void testBitmapWidget(void)
 {
     const uint8_t BITMAP_WIDTH      = TestGfx::HEIGHT;  /* Use height as width here for a square */
     const uint8_t BITMAP_HEIGHT     = TestGfx::HEIGHT;
+    const char*   WIDGET_NAME       = "bmpWidgetName";
 
     TestGfx         testGfx;
     BitmapWidget    bitmapWidget;
@@ -752,6 +821,25 @@ static void testBitmapWidget(void)
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(BitmapWidget::WIDGET_TYPE, bitmapWidget.getType());
+
+    /* No widget name is set, it must be empty. */
+    TEST_ASSERT_EQUAL_STRING("", bitmapWidget.getName());
+
+    /* Set widget name and read back. */
+    bitmapWidget.setName(WIDGET_NAME);
+    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, bitmapWidget.getName());
+
+    /* Find widget with empty name.
+     * Expected: Not found
+     */
+    TEST_ASSERT_NULL(bitmapWidget.find(NULL));
+    TEST_ASSERT_NULL(bitmapWidget.find(""));
+
+    /* Find widget with its name.
+     * Expected: Widget is found
+     */
+    TEST_ASSERT_NOT_NULL(bitmapWidget.find(WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&bitmapWidget, bitmapWidget.find(WIDGET_NAME));
 
     /* Create bitmap */
     for(y = 0u; y < BITMAP_HEIGHT; ++y)
@@ -792,10 +880,30 @@ static void testTextWidget(void)
     TestGfx         testGfx;
     TextWidget      textWidget;
     String          testStr     = "test";
-    const uint16_t TEXT_COLOR   = 0x1234;
+    const uint16_t  TEXT_COLOR  = 0x1234;
+    const char*     WIDGET_NAME = "textWidgetName";
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(TextWidget::WIDGET_TYPE, textWidget.getType());
+
+    /* No widget name is set, it must be empty. */
+    TEST_ASSERT_EQUAL_STRING("", textWidget.getName());
+
+    /* Set widget name and read back. */
+    textWidget.setName(WIDGET_NAME);
+    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, textWidget.getName());
+
+    /* Find widget with empty name.
+     * Expected: Not found
+     */
+    TEST_ASSERT_NULL(textWidget.find(NULL));
+    TEST_ASSERT_NULL(textWidget.find(""));
+
+    /* Find widget with its name.
+     * Expected: Widget is found
+     */
+    TEST_ASSERT_NOT_NULL(textWidget.find(WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&textWidget, textWidget.find(WIDGET_NAME));
 
     /* Default string is empty */
     TEST_ASSERT_EQUAL_STRING("", textWidget.getStr().c_str());

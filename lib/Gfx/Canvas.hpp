@@ -169,6 +169,44 @@ public:
         return;
     }
 
+    /**
+     * Find widget by its name.
+     * 
+     * @param[in] name  Widget name to search for
+     * 
+     * @return If widget is found, it will be returned otherwise NULL.
+     */
+    Widget* find(const char* name)
+    {
+        Widget* widget = NULL;
+
+        if ((NULL != name) &&
+            (NULL != m_name))
+        {
+            /* Is it the canvas itself? */
+            if (0 == strcmp(m_name, name))
+            {
+                widget = this;
+            }
+
+            /* If its not the canvas itself, continue searching in the widget list. */
+            if (NULL == widget)
+            {
+                if (true == m_widgets.selectFirstElement())
+                {
+                    do
+                    {
+                        widget = (*m_widgets.current())->find(name);
+
+                    } while ((NULL != widget) &&
+                            (true == m_widgets.next()));
+                }
+            }
+        }
+
+        return widget;
+    }
+
     /** Widget type string */
     static const char*      WIDGET_TYPE;
 

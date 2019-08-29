@@ -226,25 +226,6 @@ private:
      */
     bool createLayout2(Canvas*& canvas) const;
 
-    /**
-     * Find a widget by its name.
-     * 
-     * @param[in] widget        Start to find it with this widget.
-     * @param[in] widgetName    Find the widget with this name.
-     * 
-     * @return If the widget is found, it will be returned otherwise NULL.
-     */
-    Widget* findWidget(Widget* widget, const char* widgetName);
-
-    /**
-     * Find a widget by its name.
-     * 
-     * @param[in] slotId        Search in this slot.
-     * @param[in] widgetName    Find the widget with this name.
-     * 
-     * @return If the widget is found, it will be returned otherwise NULL.
-     */
-    Widget* findWidget(uint8_t slotId, const char* widgetName);
 };
 
 /******************************************************************************

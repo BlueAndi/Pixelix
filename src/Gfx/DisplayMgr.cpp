@@ -124,7 +124,13 @@ void DisplayMgr::setLayout(uint8_t slotId, LayoutId layoutId)
 
 void DisplayMgr::setText(uint8_t slotId, const String& str)
 {
-    Widget* widget = findWidget(slotId, TEXT_WIDGET_NAME);
+    Widget* widget = NULL;
+
+    if ((MAX_SLOTS > slotId) &&
+        (NULL != m_slots[slotId]))
+    {
+        widget = m_slots[slotId]->find(TEXT_WIDGET_NAME);
+    }
 
     if (NULL != widget)
     {
@@ -143,7 +149,13 @@ void DisplayMgr::setText(uint8_t slotId, const String& str)
 
 void DisplayMgr::setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t heigth)
 {
-    Widget* widget = findWidget(slotId, BMP_WIDGET_NAME);
+    Widget* widget = NULL;
+
+    if ((MAX_SLOTS > slotId) &&
+        (NULL != m_slots[slotId]))
+    {
+        widget = m_slots[slotId]->find(BMP_WIDGET_NAME);
+    }
 
     if (NULL != widget)
     {
@@ -162,12 +174,16 @@ void DisplayMgr::setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t widt
 
 void DisplayMgr::setLamp(uint8_t slotId, uint8_t lampId, bool onState)
 {
-    Widget* widget      = NULL;
+    Widget* widget = NULL;
     String  widgetName  = LAMP_WIDGET_NAME;
     
     widgetName += lampId;
 
-    widget = findWidget(slotId, widgetName.c_str());
+    if ((MAX_SLOTS > slotId) &&
+        (NULL != m_slots[slotId]))
+    {
+        widget = m_slots[slotId]->find(widgetName.c_str());
+    }
 
     if (NULL != widget)
     {
@@ -516,55 +532,6 @@ bool DisplayMgr::createLayout2(Canvas*& canvas) const
     }
 
     return success;
-}
-
-Widget* DisplayMgr::findWidget(Widget* widget, const char* widgetName)
-{
-    Widget* foundWidget = NULL;
-
-    if ((NULL != widget) &&
-        (NULL != widgetName))
-    {
-        /* If the widget is a canvas, its children will be destroyed as well. */
-        if (0 == strcmp(Canvas::WIDGET_TYPE, widget->getType()))
-        {
-            Canvas*             canvas      = static_cast<Canvas*>(widget);
-            LinkedList<Widget*> children    = canvas->children();
-            
-            if (true == children.selectFirstElement())
-            {
-                do
-                {
-                    foundWidget = findWidget(*children.current(), widgetName);
-
-                } while ((NULL != foundWidget) ||
-                         (true == children.next()));
-            }
-        }
-        else if (0 == strcmp(widget->getName(), widgetName))
-        {
-            foundWidget = widget;
-        }
-        else
-        {
-            ;
-        }
-    }
-
-    return foundWidget;
-}
-
-Widget* DisplayMgr::findWidget(uint8_t slotId, const char* widgetName)
-{
-    Widget* foundWidget = NULL;
-
-    if ((MAX_SLOTS > slotId) &&
-        (NULL != widgetName))
-    {
-        foundWidget = findWidget(m_slots[slotId], widgetName);
-    }
-
-    return foundWidget;
 }
 
 /******************************************************************************
