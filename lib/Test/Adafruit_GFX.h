@@ -51,6 +51,7 @@ This module provides the general graphics interface for testing purposes.
 #include <stdint.h>
 #include <WString.h>
 #include <gfxfont.h>
+#include <Arduino.h>
 
 /******************************************************************************
  * Macros
@@ -235,6 +236,37 @@ public:
     const GFXfont* getFont(void) const
     {
         return m_font;
+    }
+
+    /**
+     * Set whether text that is too long for the screen width should
+     * automatically wrap around to the next line (else clip right).
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param[in] wrapIt    true for wrapping, false for clipping.
+     */
+    void setTextWrap(boolean wrapIt)
+    {
+        /* Not supported yet. */
+        return;
+    }
+
+    /**
+     * Helper to determine size of a string with current font/size. Pass string and a cursor position, returns UL corner and W,H.
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param[in] str   The ascii string to measure (as an arduino String() class).
+     * @param[in] x     The current cursor X.
+     * @param[in] y     The current cursor Y.
+     * @param[out] x1   The boundary X coordinate, set by function.
+     * @param[out] y1   The boundary Y coordinate, set by function.
+     * @param[out] w    The boundary width, set by function.
+     * @param[out] h    The boundary height, set by function.
+     */
+    void getTextBounds(const String &str, int16_t x, int16_t y, int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h)
+    {
+        /* Not supported yet. */
+        return;
     }
 
 private:

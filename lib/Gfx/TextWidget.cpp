@@ -69,9 +69,75 @@ const char*     TextWidget::WIDGET_TYPE         = "text";
 /* Initialize default font */
 const GFXfont*  TextWidget::DEFAULT_FONT        = &TomThumb;
 
+/* Initialize default scrolling pause between two characters. */
+const uint32_t  TextWidget::DEFAULT_SCOLL_PAUSE = 200u;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void TextWidget::update(Adafruit_GFX& gfx)
+{
+    const int16_t   CURSOR_X    = 0;
+    const int16_t   CURSOR_Y    = 0;
+
+    /* Set base parameters */
+    gfx.setFont(m_font);
+    gfx.setTextColor(m_textColor);
+    gfx.setCursor(CURSOR_X, CURSOR_Y);
+    gfx.setTextWrap(false); /* If text is too long, don't wrap around. */
+
+    /* Check for scrolling necessary? */
+    if (true == m_checkScrollingNeed)
+    {
+        int16_t     boundaryX       = 0;
+        int16_t     boundaryY       = 0;
+        uint16_t    textWidth       = 0u;
+        uint16_t    textHeigth      = 0u;
+
+        gfx.getTextBounds(m_str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &textWidth, &textHeigth);
+
+        /* Text too long for the display? */
+        if (gfx.width() < textWidth)
+        {
+            m_isScrollingEnabled    = true;
+            m_scrollIndex           = 0u;
+            m_lastTimestamp         = millis() - DEFAULT_SCOLL_PAUSE;   /* Ensure update */
+        }
+        else
+        {
+            m_isScrollingEnabled    = false;
+            m_scrollIndex           = 0u;
+            m_lastTimestamp         = 0u;
+        }
+    }
+
+    /* If text width is lower or equal than the display width, no scrolling is necessary. */
+    if (false == m_isScrollingEnabled)
+    {
+        gfx.print(m_str);
+    }
+    /* Scrolling is necessary */
+    else
+    {
+        uint32_t    deltaMs = millis() - m_lastTimestamp;
+
+        /* Pause between two characters, to give the user a chance to read it. ;-) */
+        if (DEFAULT_SCOLL_PAUSE <= deltaMs)
+        {
+            gfx.print(&m_str.c_str()[m_scrollIndex]);
+            
+            /* Text scrolls completly out, until it starts from the beginning again. */
+            ++m_scrollIndex;
+            if (m_str.length() <= m_scrollIndex)
+            {
+                m_scrollIndex = 0;
+            }
+        }
+    }
+
+    return;
+}
 
 /******************************************************************************
  * Protected Methods

@@ -74,7 +74,11 @@ public:
         Widget(WIDGET_TYPE),
         m_str(),
         m_textColor(DEFAULT_TEXT_COLOR),
-        m_font(DEFAULT_FONT)
+        m_font(DEFAULT_FONT),
+        m_checkScrollingNeed(false),
+        m_isScrollingEnabled(false),
+        m_scrollIndex(0u),
+        m_lastTimestamp(0u)
     {
     }
 
@@ -89,7 +93,11 @@ public:
         Widget(WIDGET_TYPE),
         m_str(str),
         m_textColor(color),
-        m_font(DEFAULT_FONT)
+        m_font(DEFAULT_FONT),
+        m_checkScrollingNeed(false),
+        m_isScrollingEnabled(false),
+        m_scrollIndex(0u),
+        m_lastTimestamp(0u)
     {
     }
 
@@ -102,7 +110,11 @@ public:
         Widget(WIDGET_TYPE),
         m_str(widget.m_str),
         m_textColor(widget.m_textColor),
-        m_font(widget.m_font)
+        m_font(widget.m_font),
+        m_checkScrollingNeed(widget.m_checkScrollingNeed),
+        m_isScrollingEnabled(widget.m_isScrollingEnabled),
+        m_scrollIndex(widget.m_scrollIndex),
+        m_lastTimestamp(widget.m_lastTimestamp)
     {
     }
 
@@ -113,9 +125,13 @@ public:
      */
     TextWidget& operator=(const TextWidget& widget)
     {
-        m_str       = widget.m_str;
-        m_textColor = widget.m_textColor;
-        m_font      = widget.m_font;
+        m_str                   = widget.m_str;
+        m_textColor             = widget.m_textColor;
+        m_font                  = widget.m_font;
+        m_checkScrollingNeed    = widget.m_checkScrollingNeed;
+        m_isScrollingEnabled    = widget.m_isScrollingEnabled;
+        m_scrollIndex           = widget.m_scrollIndex;
+        m_lastTimestamp         = widget.m_lastTimestamp;
 
         return *this;
     }
@@ -125,15 +141,7 @@ public:
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(Adafruit_GFX& gfx)
-    {
-        gfx.setCursor(m_posX, m_posY);
-        gfx.setTextColor(m_textColor);
-        gfx.setFont(m_font);
-        gfx.print(m_str);
-
-        return;
-    }
+    void update(Adafruit_GFX& gfx);
 
     /**
      * Set the text string.
@@ -142,7 +150,8 @@ public:
      */
     void setStr(const String& str)
     {
-        m_str = str;
+        m_str                   = str;
+        m_checkScrollingNeed    = true;
         return;
     }
 
@@ -184,7 +193,8 @@ public:
      */
     void setFont(const GFXfont* font)
     {
-        m_font = font;
+        m_font                  = font;
+        m_checkScrollingNeed    = true;
         return;
     }
 
@@ -207,11 +217,18 @@ public:
     /** Default font */
     static const GFXfont*   DEFAULT_FONT;
 
+    /** Default pause between character scrolling in ms */
+    static const uint32_t   DEFAULT_SCOLL_PAUSE;
+
 private:
 
-    String          m_str;          /**< String */
-    uint16_t        m_textColor;    /**< Text color of the string */
-    const GFXfont*  m_font;         /**< Current font */
+    String          m_str;                  /**< String */
+    uint16_t        m_textColor;            /**< Text color of the string */
+    const GFXfont*  m_font;                 /**< Current font */
+    bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
+    bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
+    uint8_t         m_scrollIndex;          /**< Scroll index of the string */
+    uint32_t        m_lastTimestamp;        /**< Timestamp in ms of last processing. */
 
 };
 

@@ -25,21 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  String implementation for test
+@brief  Arduino stuff for test
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the string implementation for testing purposes.
+This module provides some Arduino implementations for testing purposes.
 
 *******************************************************************************/
-/** @defgroup wstring String implementation for test
- * This module provides the string implementation for testing purposes.
+/** @defgroup arduino Arduino stuff for test
+ * This module provides some Arduino implementations for testing purposes.
  *
  * @{
  */
 
-#ifndef __WSTRING_H__
-#define __WSTRING_H__
+#ifndef __ARDUINO_H__
+#define __ARDUINO_H__
 
 /******************************************************************************
  * Compile Switches
@@ -58,104 +58,19 @@ This module provides the string implementation for testing purposes.
  * Types and Classes
  *****************************************************************************/
 
-/**
- * String class for test purposes only.
- */
-class String
-{
-public:
-
-    /**
-     * Constructs a string.
-     */
-    String() :
-        m_buffer("")
-    {
-    }
-
-    /**
-     * Destroys a string.
-     */
-    ~String()
-    {
-    }
-
-    /**
-     * Constructs a string by copying another.
-     * 
-     * @param[in] str String to copy
-     */
-    String(const String& str) :
-        m_buffer(str.m_buffer)
-    {
-    }
-
-    /**
-     * Constructs a string by copying another.
-     * 
-     * @param[in] str String to copy
-     */
-    String(const char* str) :
-        m_buffer(str)
-    {
-    }
-
-    /**
-     * Assign a string.
-     * 
-     * @param[in] str String, which to assign.
-     *
-     * @return String
-     */
-    String& operator=(const String& str)
-    {
-        m_buffer = str.m_buffer;
-
-        return *this;
-    }
-
-    /**
-     * Get string as char array.
-     * 
-     * @return Char array
-     */
-    const char* c_str(void) const
-    {
-        return m_buffer;
-    }
-
-    /**
-     * Get string length.
-     * 
-     * @return String length
-     */
-    unsigned int length(void) const
-    {
-        unsigned int    length  = 0;
-        const char*     ptr     = m_buffer;
-
-        if (NULL != m_buffer)
-        {
-            while('\0' != *ptr)
-            {
-                ++length;
-                ++ptr;
-            }
-        }
-
-        return length;
-    }
-
-private:
-
-    const char* m_buffer;   /**< String buffer */
-
-};
+/** Arduino boolean */
+typedef bool boolean;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSTRING_H__ */
+static unsigned long millis()
+{
+    /* Not supported yet. */
+    return 0u;
+}
+
+#endif  /* __ARDUINO_H__ */
 
 /** @} */
