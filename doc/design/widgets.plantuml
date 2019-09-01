@@ -2,6 +2,13 @@
 
 title ESP-RGB-LED Matrix
 
+note as N1
+    This diagram shows only the important classes
+    and interfaces. In case of class attributes and
+    methods, it may not be complete compared to
+    sourcecode.
+end note
+
 class Adafruit_GFX
 
 class Canvas {
@@ -10,8 +17,9 @@ class Canvas {
     + Canvas(width : uint16_t, height : uint16_t, x : uint16_t, y : uint16_t)
     + addWidget(widget : Widget&) : bool
     + removeWidget(widget : Widget&) : bool
-    + moveWidget(widget : Widget&, x : uint16_t, y : uint16_t) : void
+    + children() : const LinkedList<Widget*>&
     + update() : void
+    + find(name : const char*) : Widget*
     - drawPixel(x : int16_t, y : int16_t, color : uint16_t) : void
 }
 
@@ -30,11 +38,17 @@ note right of Canvas
 end note
 
 class Widget {
+    - m_type : const char*
     - m_posX : uint16_t
     - m_posY : uint16_t
+    - m_name : const char*
     + move(x : uint16_t, y : uint16_t) : void
     + getPos(x : uint16_t&, y : uint16_t&) const : void
     + {abstract} update(gfx : Adafruit_GFX&) = 0 : void
+    + getType() : const char*
+    + getName() : const char*
+    + setName(name : const char*) : void
+    + find(name : const char*) : Widget*
 }
 
 note left of Widget
@@ -50,6 +64,8 @@ class TextWidget {
     + getStr() : String
     + setTextColor(color : uint16_t) : void
     + getTextColor() const : uint16_t
+    + setFont(font : const GFXfont*) : void
+    + const GFXfont* getFont() : void
     + update(gfx : Adafruit_GFX&) : void
 }
 

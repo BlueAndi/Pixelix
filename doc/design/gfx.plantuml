@@ -3,30 +3,54 @@
 title GFX
 
 package "marcmerlin" {
-    class FastLED_NeoMatrix
-    class Framebuffer_GFX
+    class "FastLED_NeoMatrix" as neoMatrix
+    class "Framebuffer_GFX" as frameBufferGfx
 }
 
 package "Fast_LED" {
-    class CRGB
+    class "CRGB" as crgb
 }
 
-package "Adafruit" {
-    class Adafruit_GFX
+note left of crgb
+    Buffer for the pixel information.
+end note
 
-    note left of Adafruit_GFX
+package "Adafruit" {
+    class "Adafruit_GFX" as adafruitGfx
+
+    note left of adafruitGfx
         Disadvantages:
         * Supports only 16 bit color (RGB565).
         * Needs SPI as header include.
     end note
 }
 
-Adafruit_GFX <|-- Framebuffer_GFX
-Framebuffer_GFX <|-- FastLED_NeoMatrix
-FastLED_NeoMatrix ..> CRGB: <<uses>>
+adafruitGfx <|-- frameBufferGfx
+frameBufferGfx <|-- neoMatrix
+neoMatrix .l.> crgb: <<uses>>
+
+class "LedMatrix" as ledMatrix
+
+neoMatrix <|-- ledMatrix: <<uses>>
+crgb <--* ledMatrix: <<contains>>
+
+note right of ledMatrix
+    Represents the physical LED matrix and
+    provides the GFX interface to draw inside.
+end note
+
+class "DisplayMgr" as displayMgr
+
+ledMatrix <.. displayMgr: <<uses>>
+
+note right of displayMgr
+    Manages the logic layout, containing widgets.
+    It provides a simple interface for the
+    application.
+end note
 
 class "App" as app
 
-app .> FastLED_NeoMatrix: <<uses>>
+displayMgr <.. app: <<uses>>
 
 @enduml
