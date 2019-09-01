@@ -52,6 +52,7 @@ configured with a specific layout and contains the content to show.
  *****************************************************************************/
 #include <stdint.h>
 #include <Canvas.h>
+#include <TextWidget.h>
 
 /******************************************************************************
  * Macros
@@ -127,6 +128,14 @@ public:
     void setLamp(uint8_t slotId, uint8_t lampId, bool onState);
 
     /**
+     * Set all lamp states in the lamp widget of a slot.
+     * 
+     * @param[in] slotId    Slot id
+     * @param[in] onState   New lamp state on (true) or off (false)
+     */
+    void setAllLamps(uint8_t slotId, bool onState);
+
+    /**
      * Process the slots. This shall be called periodically in
      * a higher period than the DEFAULT_PERIOD.
      * 
@@ -141,18 +150,27 @@ public:
      * 
      * @param[in] start Start (true) or stop (false) it
      */
-    void startRotating(bool start)
-    {
-        m_rotate        = start;
-        m_activeSlotId  = 0;
+    void startRotating(bool start);
 
-        if (true == start)
-        {
-            m_timestampOfLastChange = millis();
-        }
-        
-        return;
-    }
+    /**
+     * Enable/Disable showing slots.
+     * 
+     * @param[in] enableIt  Enable (true) or disable (false) it.
+     */
+    void enableSlots(bool enableIt);
+
+    /**
+     * Show a system message on the display.
+     * It will automatically disable the slots.
+     */
+    void showSysMsg(const String& msg);
+
+    /**
+     * Waits the given time and keeps the display updated.
+     * 
+     * @param[in] waitTime  Wait time in ms
+     */
+    void delay(uint32_t waitTime);
 
     /** Maximum number of supported slots. */
     static const uint8_t    MAX_SLOTS      = 4u;
@@ -188,6 +206,12 @@ private:
 
     /** Rotate (true) slots or not (false) */
     bool                m_rotate;
+
+    /** Enable/Disable showing slots */
+    bool                m_slotsEnabled;
+
+    /** System message widget */
+    TextWidget          m_sysMsgWidget;
 
     /**
      * Construct LED matrix.

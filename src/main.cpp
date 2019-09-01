@@ -70,6 +70,7 @@ has the main loop.
  * Prototypes
  *****************************************************************************/
 
+static void showBootInfo(void);
 static void otaOnStart(void);
 static void otaOnEnd(void);
 static void otaOnProgress(unsigned int progress, unsigned int total);
@@ -106,6 +107,15 @@ static bool                 gisUpdateStarted        = false;
 /** Web server */
 static WebServer            gWebServer(WebConfig::WEBSERVER_PORT);
 
+/** Standard wait time for showing a system message in ms */
+static const uint32_t       SYS_MSG_WAIT_TIME_STD   = 2000u;
+
+/** Short wait time for showing a system message in ms */
+static const uint32_t       SYS_MSG_WAIT_TIME_SHORT = 250u;
+
+/** The number of display pixels, showing the current OTA progress. */
+static uint16_t             gOtaProgress            = 0u;
+
 /******************************************************************************
  * External functions
  *****************************************************************************/
@@ -124,24 +134,15 @@ void setup()
 
     /* Setup serial interface */
     Serial.begin(SERIAL_BAUDRATE);
-    
-    /* TODO */
-    Serial.println("Booting ...");
-    
-    Serial.print("SW version: ");
-    Serial.println(SW_VERSION);
-
-    Serial.print("ESP32 chip rev.: ");
-    Serial.println(ESP.getChipRevision());
-
-    Serial.print("ESP32 SDK version: ");
-    Serial.println(ESP.getSdkVersion());
 
     /* Initialize drivers */
     ButtonDrv::getInstance().init();
 
     /* Start LED matrix */
     LedMatrix::getInstance().begin();
+
+    /* Show some interesting boot information */    
+    showBootInfo();
 
     /* Initialize display layout */
     for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
@@ -165,22 +166,21 @@ void setup()
         if (false == WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSPHRASE))
         {
             /* Fatal error */
-            /* TODO */
             gIsFatalError = true;
+
+            Serial.println("Setup wifi access point failed.");
         }
         else
         {
             /* Show SSID on the LED marix */
-            /* TODO */
+            dispMgr.showSysMsg(String("SSID: ") + WIFI_AP_SSID);
 
             /* Show SSID on the serial interface */
-            /* TODO */
             Serial.print("SSID: ");
             Serial.println(WIFI_AP_SSID);
 
             isAPMode = true;
         }
-        
     }
     else
     {
@@ -200,9 +200,11 @@ void setup()
             (0 == wifiPassphrase.length()))
         {
             /* No remote wifi network informations available. */
-            /* TODO Show info on LED matrix. */
-            /* TODO Show info on serial interface. */
             gIsFatalError = true;
+
+            Serial.println("Remote wifi SSID/password missing.");
+            Serial.println("Keep button pressed and reboot. Set SSID/password via webserer.");
+            dispMgr.showSysMsg("Keep button pressed and reboot. Set SSID/password via webserer.");
         }
         else
         {
@@ -211,17 +213,25 @@ void setup()
             /* Remote wifi network informations are available, try to establish a connection. */
             while(WL_CONNECTED != status)
             {
-                /* TODO Show info on LED matrix. */
-                /* TODO Show info on serial interface. */
+                Serial.print("Connecting to ");
+                Serial.println(wifiSSID);
+                dispMgr.showSysMsg(String("Connecting to ") + wifiSSID);
+
                 status = WiFi.begin(wifiSSID.c_str(), wifiPassphrase.c_str());
 
                 if (WL_CONNECTED != status)
                 {
-                    delay(RETRY_DELAY);
+                    Serial.println("Connection failed.");
+                    dispMgr.showSysMsg("Connection failed.");
+
+                    dispMgr.delay(RETRY_DELAY);
                 }
                 
                 /* TODO How to determine whats wrong? SSID or password? */
             }
+
+            /* Enable automatic reconnect in case the connection gets lost. */
+            WiFi.setAutoReconnect(true);
         }
     }
 
@@ -233,7 +243,6 @@ void setup()
         Pages::init(gWebServer);
         RestApi::init(gWebServer);
 
-        /* TODO */
         Serial.print("Hostname: ");
         Serial.println(WiFi.getHostname());
 
@@ -243,10 +252,9 @@ void setup()
             IPAddress ipAddress = WiFi.softAPIP();
 
             /* Show the ip address on the LED matrix */
-            /* TODO */
+            dispMgr.showSysMsg(String(ipAddress));
 
             /* Show the ip address on the debug terminal */
-            /* TODO */
             Serial.print("AP IP address: ");
             Serial.println(ipAddress);
         }
@@ -259,7 +267,6 @@ void setup()
         ArduinoOTA.onProgress(otaOnProgress);
         ArduinoOTA.onError(otaOnError);
 
-        /* TODO Use logger */
         Serial.print("OTA hostname: ");
         Serial.println(ArduinoOTA.getHostname());
         Serial.print("Sketch size: ");
@@ -268,6 +275,10 @@ void setup()
         Serial.print("Free size: ");
         Serial.print(ESP.getFreeSketchSpace());
         Serial.println(" bytes");
+
+        /* Enable slots */
+        dispMgr.enableSlots(true);
+        dispMgr.startRotating(true);
     }
 
     return;
@@ -293,9 +304,9 @@ void loop()
         if (false == gisUpdateStarted)
         {
             gWebServer.handleClient();
-
-            /* TODO Handle unexpected disconnect from wifi network */
         }
+
+        DisplayMgr::getInstance().process();
     }
 
     return;
@@ -306,29 +317,59 @@ void loop()
  *****************************************************************************/
 
 /**
+ * Show boot information on the serial interface.
+ */
+static void showBootInfo(void)
+{
+    /* Show information via serial interface */    
+    Serial.println("Booting ...");
+    
+    Serial.print("SW version: ");
+    Serial.println(SW_VERSION);
+    DisplayMgr::getInstance().showSysMsg(SW_VERSION);
+
+    Serial.print("ESP32 chip rev.: ");
+    Serial.println(ESP.getChipRevision());
+
+    Serial.print("ESP32 SDK version: ");
+    Serial.println(ESP.getSdkVersion());
+
+    /* User shall be able to read it on the display. But it shall be really a short delay. */
+    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_SHORT);
+
+    return;
+}
+
+/**
  * On start of over-the-air update.
  */
 static void otaOnStart(void)
 {
     gisUpdateStarted = true;
-    LedMatrix::getInstance().clear();
 
-    /* TODO */
     Serial.print("Start updating ");
 
     if (U_FLASH == ArduinoOTA.getCommand())
     {
         Serial.println("sketch.");
+        DisplayMgr::getInstance().showSysMsg("Update sketch.");
     }
     else
     {
         Serial.println("filesystem.");
+        DisplayMgr::getInstance().showSysMsg("Update filesystem.");
 
         /* Close filesystem before continue. 
          * Note, this needs a restart after update is finished.
          */
         SPIFFS.end();
     }
+
+    /* Give the user a chance to read it. */
+    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+
+    /* Prepare to show the progress in the next steps. */
+    LedMatrix::getInstance().clear();
 
     return;
 }
@@ -341,11 +382,11 @@ static void otaOnEnd(void)
     gisUpdateStarted = false;
 
     Serial.println("Update successful finished.");
+    DisplayMgr::getInstance().showSysMsg("Update successful.");
 
-    /* Restart after 200 ms to give the serial
-     * output a chance.
-     */
-    delay(200u);
+    /* Give the user a chance to read it. */
+    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+
     ESP.restart();
 
     return;
@@ -359,8 +400,33 @@ static void otaOnEnd(void)
  */
 static void otaOnProgress(unsigned int progress, unsigned int total)
 {
-    /* TODO */
-    Serial.printf("Progress: %u%%\r\n", (progress / (total / 100u)));
+    const uint32_t  PROGRESS_PERCENT    = (progress * 100u) / total;
+    const uint32_t  PIXELS              = Board::LedMatrix::width * Board::LedMatrix::heigth;
+    uint32_t        pixelProgress       = (PIXELS * PROGRESS_PERCENT) / 100u;
+    uint32_t        delta               = pixelProgress - gOtaProgress;
+    int16_t         y                   = gOtaProgress / Board::LedMatrix::width;
+    int16_t         x                   = gOtaProgress % Board::LedMatrix::width;
+    const uint16_t  COLOR               = 0xF800;   /* Red */
+
+    Serial.printf("Progress: %u%%\r\n", PROGRESS_PERCENT);
+
+    while(0u < delta)
+    {
+        LedMatrix::getInstance().writePixel(x, y, COLOR);
+        ++x;
+
+        if (Board::LedMatrix::width <= x)
+        {
+            x = 0;
+            ++y;
+        }
+
+        --delta;
+    }
+
+    LedMatrix::getInstance().show();
+
+    gOtaProgress = pixelProgress;
 
     return;
 }
@@ -375,40 +441,44 @@ static void otaOnError(ota_error_t error)
     gisUpdateStarted    = false;
     gIsFatalError       = true;
 
-    Serial.print("Update failed: ");
-
-    /* TODO Use Logger */
+    Serial.print("Update failed: ");  
+    
     switch(error)
     {
     case OTA_AUTH_ERROR:
         Serial.println("OTA - Authentication error.");
+        DisplayMgr::getInstance().showSysMsg("OTA - Authentication error.");
         break;
 
     case OTA_BEGIN_ERROR:
         Serial.println("OTA - Begin error.");
+        DisplayMgr::getInstance().showSysMsg("OTA - Begin error.");
         break;
 
     case OTA_CONNECT_ERROR:
         Serial.println("OTA - Connect error.");
+        DisplayMgr::getInstance().showSysMsg("OTA - Connect error.");
         break;
 
     case OTA_RECEIVE_ERROR:
         Serial.println("OTA - Receive error.");
+        DisplayMgr::getInstance().showSysMsg("OTA - Receive error.");
         break;
 
     case OTA_END_ERROR:
         Serial.println("OTA - End error.");
+        DisplayMgr::getInstance().showSysMsg("OTA - End error.");
         break;
 
     default:
         Serial.println("OTA - Unknown error.");
+        DisplayMgr::getInstance().showSysMsg("OTA - Unknown error.");
         break;
     }
 
-    /* Restart after 200 ms to give the serial
-     * output a chance.
-     */
-    delay(200u);
+    /* Give the user a chance to read it. */
+    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+
     ESP.restart();
 
     return;

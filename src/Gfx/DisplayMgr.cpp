@@ -174,7 +174,7 @@ void DisplayMgr::setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t widt
 
 void DisplayMgr::setLamp(uint8_t slotId, uint8_t lampId, bool onState)
 {
-    Widget* widget = NULL;
+    Widget* widget      = NULL;
     String  widgetName  = LAMP_WIDGET_NAME;
     
     widgetName += lampId;
@@ -200,33 +200,120 @@ void DisplayMgr::setLamp(uint8_t slotId, uint8_t lampId, bool onState)
     return;
 }
 
+void DisplayMgr::setAllLamps(uint8_t slotId, bool onState)
+{
+    if ((MAX_SLOTS > slotId) &&
+        (NULL != m_slots[slotId]))
+    {
+        Widget* widget      = NULL;
+        String  widgetName;
+        uint8_t lampId      = 0u;
+
+        do
+        {
+            widgetName  = LAMP_WIDGET_NAME;
+            widgetName  += lampId;
+            widget      = m_slots[slotId]->find(widgetName.c_str());
+
+            if (NULL != widget)
+            {
+                LampWidget* lampWidget = NULL;
+
+                if (0 == strcmp(widget->getType(), LampWidget::WIDGET_TYPE))
+                {
+                    lampWidget = static_cast<LampWidget*>(widget);
+
+                    lampWidget->setOnState(onState);
+                }
+            }
+        }
+        while(NULL != widget);
+
+    }
+
+    return;
+}
+
 void DisplayMgr::process(void)
 {
-    uint8_t         nextSlot    = (m_activeSlotId + 1u) % MAX_SLOTS;
-    LedMatrix&      matrix      = LedMatrix::getInstance();
-    unsigned long   timestampMs = millis();
-    uint32_t        deltaTimeS  = static_cast<uint32_t>((timestampMs - m_timestampOfLastChange) / 1000u);
+    LedMatrix& matrix = LedMatrix::getInstance();
 
-    /* Slot rotation enabled? */
-    if (true == m_activeSlotId)
+    matrix.clear();
+
+    if (false == m_slotsEnabled)
     {
-        /* Jump to next slot? */
-        if (m_period <= deltaTimeS)
-        {
-            /* Set next slot active */
-            m_activeSlotId = nextSlot;
+        m_sysMsgWidget.update(matrix);
+    }
+    else
+    {
+        uint8_t         nextSlot    = (m_activeSlotId + 1u) % MAX_SLOTS;
+        unsigned long   timestampMs = millis();
+        uint32_t        deltaTimeS  = static_cast<uint32_t>((timestampMs - m_timestampOfLastChange) / 1000u);
 
-            /* Wait another period */
-            m_timestampOfLastChange = timestampMs;
+        /* Slot rotation enabled? */
+        if (true == m_activeSlotId)
+        {
+            /* Jump to next slot? */
+            if (m_period <= deltaTimeS)
+            {
+                /* Set next slot active */
+                m_activeSlotId = nextSlot;
+
+                /* Wait another period */
+                m_timestampOfLastChange = timestampMs;
+            }
+        }
+
+        /* Anything to show? */
+        if (NULL != m_slots[m_activeSlotId])
+        {
+            m_slots[m_activeSlotId]->update(matrix);
         }
     }
 
-    /* Anything to show? */
-    if (NULL != m_slots[m_activeSlotId])
+    matrix.show();
+
+    return;
+}
+
+void DisplayMgr::startRotating(bool start)
+{
+    m_rotate        = start;
+    m_activeSlotId  = 0;
+
+    if (true == start)
     {
-        matrix.clear();
-        m_slots[m_activeSlotId]->update(matrix);
-        matrix.show();
+        m_timestampOfLastChange = millis();
+    }
+    
+    return;
+}
+
+void DisplayMgr::enableSlots(bool enableIt)
+{
+    m_slotsEnabled = enableIt;
+
+    return;
+}
+
+void DisplayMgr::showSysMsg(const String& msg)
+{
+    m_sysMsgWidget.setStr(msg);
+    enableSlots(false);
+
+    /* Show message instant */
+    process();
+    
+    return;
+}
+
+void DisplayMgr::delay(uint32_t waitTime)
+{
+    uint32_t start = millis();
+
+    while(waitTime > (millis() - start))
+    {
+        process();
     }
 
     return;
@@ -245,7 +332,9 @@ DisplayMgr::DisplayMgr() :
     m_period(DEFAULT_PERIOD),
     m_activeSlotId(0u),
     m_timestampOfLastChange(0ul),
-    m_rotate(false)
+    m_rotate(false),
+    m_slotsEnabled(false),
+    m_sysMsgWidget()
 {
     uint8_t index = 0u;
 
