@@ -13,6 +13,7 @@ package "Fast_LED" {
 
 note left of crgb
     Buffer for the pixel information.
+    Supports 24 bit RGB color.
 end note
 
 package "Adafruit" {
