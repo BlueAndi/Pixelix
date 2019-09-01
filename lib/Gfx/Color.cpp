@@ -25,20 +25,18 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Text Widget
+@brief  Color
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-@see TextWidget.h
+@see Color.h
 
 *******************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "TextWidget.h"
-
-#include <Fonts/TomThumb.h>
+#include "Color.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -60,83 +58,39 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize default text color (white) */
-const Color     TextWidget::DEFAULT_TEXT_COLOR  = 0xffffu;
-
-/* Initialize text widget type. */
-const char*     TextWidget::WIDGET_TYPE         = "text";
-
-/* Initialize default font */
-const GFXfont*  TextWidget::DEFAULT_FONT        = &TomThumb;
-
-/* Initialize default scrolling pause between two characters. */
-const uint32_t  TextWidget::DEFAULT_SCOLL_PAUSE = 200u;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void TextWidget::update(Adafruit_GFX& gfx)
+void Color::turnColorWheel(uint8_t wheelPos)
 {
-    const int16_t   CURSOR_X    = 0;
-    const int16_t   CURSOR_Y    = 0;
+    const uint8_t COL_PARTS = 3u;
+    const uint8_t COL_RANGE = UINT8_MAX / COL_PARTS;
 
-    /* Set base parameters */
-    gfx.setFont(m_font);
-    gfx.setTextColor(m_textColor.get565());
-    gfx.setCursor(CURSOR_X, CURSOR_Y);
-    gfx.setTextWrap(false); /* If text is too long, don't wrap around. */
+    wheelPos = UINT8_MAX - wheelPos;
 
-    /* Check for scrolling necessary? */
-    if (true == m_checkScrollingNeed)
-    {
-        int16_t     boundaryX       = 0;
-        int16_t     boundaryY       = 0;
-        uint16_t    textWidth       = 0u;
-        uint16_t    textHeigth      = 0u;
-
-        gfx.getTextBounds(m_str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &textWidth, &textHeigth);
-
-        /* Text too long for the display? */
-        if (gfx.width() < textWidth)
-        {
-            m_isScrollingEnabled    = true;
-            m_scrollIndex           = 0u;
-            m_lastTimestamp         = millis() - DEFAULT_SCOLL_PAUSE;   /* Ensure update */
-        }
-        else
-        {
-            m_isScrollingEnabled    = false;
-            m_scrollIndex           = 0u;
-            m_lastTimestamp         = 0u;
-        }
+    /* Red + Blue ? */
+    if (wheelPos < COL_RANGE) {
+        m_red   = UINT8_MAX - wheelPos * COL_PARTS;
+        m_green = 0u;
+        m_blue  = COL_PARTS * wheelPos;
     }
-
-    /* If text width is lower or equal than the display width, no scrolling is necessary. */
-    if (false == m_isScrollingEnabled)
-    {
-        gfx.print(m_str);
+    /* Green + Blue ? */
+    else if (wheelPos < (2 * COL_RANGE)) {
+        wheelPos -= COL_RANGE;
+        
+        m_red   = 0u;
+        m_green = COL_PARTS * wheelPos;
+        m_blue  = UINT8_MAX - wheelPos * COL_PARTS;
     }
-    /* Scrolling is necessary */
-    else
-    {
-        uint32_t    deltaMs = millis() - m_lastTimestamp;
-
-        /* Pause between two characters, to give the user a chance to read it. ;-) */
-        if (DEFAULT_SCOLL_PAUSE <= deltaMs)
-        {
-            gfx.print(&m_str.c_str()[m_scrollIndex]);
-            
-            /* Text scrolls completly out, until it starts from the beginning again. */
-            ++m_scrollIndex;
-            if (m_str.length() <= m_scrollIndex)
-            {
-                m_scrollIndex = 0;
-            }
-        }
+    /* Red + Green */
+    else {
+        wheelPos -= ((COL_PARTS - 1u) * COL_RANGE);
+        
+        m_red   = COL_PARTS * wheelPos;
+        m_green = UINT8_MAX - wheelPos * COL_PARTS;
+        m_blue  = 0u;
     }
-
-    return;
 }
 
 /******************************************************************************

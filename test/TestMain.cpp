@@ -45,6 +45,7 @@ This module provides the main test entry point.
 #include <LampWidget.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <Color.h>
 
 /******************************************************************************
  * Macros
@@ -277,7 +278,7 @@ public:
         {
             for(x = 0; x < WIDTH; ++x)
             {
-                gfx.drawPixel(m_posX + x, m_posY + y, m_color);
+                gfx.drawPixel(m_posX + x, m_posY + y, m_color.get565());
             }
         }
         
@@ -289,7 +290,7 @@ public:
      * 
      * @return Pen color
      */
-    uint16_t getPenColor(void) const
+    const Color& getPenColor(void) const
     {
         return m_color;
     }
@@ -299,7 +300,7 @@ public:
      * 
      * @param[in] color Pen color
      */
-    void setPenColor(uint16_t color)
+    void setPenColor(const Color& color)
     {
         m_color = color;
         return;
@@ -311,7 +312,7 @@ public:
 
 private:
 
-    uint16_t m_color;   /**< Pen color, used to draw the widget. */
+    Color m_color;  /**< Pen color, used to draw the widget. */
 
 };
 
@@ -330,6 +331,7 @@ static void testCanvas(void);
 static void testLampWidget(void);
 static void testBitmapWidget(void);
 static void testTextWidget(void);
+static void testColor(void);
 
 /******************************************************************************
  * Variables
@@ -358,6 +360,7 @@ int main(int argc, char **argv)
     RUN_TEST(testLampWidget);
     RUN_TEST(testBitmapWidget);
     RUN_TEST(testTextWidget);
+    RUN_TEST(testColor);
 
     return UNITY_END();
 }
@@ -550,12 +553,12 @@ static void testDoublyLinkedList(void)
  */
 static void testWidget(void)
 {
-    TestGfx         testGfx;
-    TestWidget      testWidget;
-    int16_t         posX        = -1;
-    int16_t         posY        = -1;
-    const uint16_t  COLOR       = 0x1234;
-    const char*     testStr     = "myWidget";
+    TestGfx     testGfx;
+    TestWidget  testWidget;
+    int16_t     posX        = -1;
+    int16_t     posY        = -1;
+    const Color COLOR       = 0x123456;
+    const char* testStr     = "myWidget";
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(TestWidget::WIDGET_TYPE, testWidget.getType());
@@ -610,7 +613,7 @@ static void testWidget(void)
                     posY,
                     getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
                     getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
-                    COLOR);
+                    COLOR.get565());
 
     /* Draw widget at position (2, 1) and verify widget movement. */
     posX = 2;
@@ -622,7 +625,7 @@ static void testWidget(void)
                     posY,
                     getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
                     getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
-                    COLOR);
+                    COLOR.get565());
 
     return;
 }
@@ -636,7 +639,7 @@ void testCanvas(void)
     const uint16_t  CANVAS_HEIGHT       = 8;
     const int16_t   WIDGET_POS_X        = 2;
     const int16_t   WIDGET_POS_Y        = 2;
-    const uint16_t  WIDGET_COLOR        = 0x1234;
+    const Color     WIDGET_COLOR        = 0x123456;
     const char*     CANVAS_NAME         = "canvasWidgetName";
     const char*     TEST_WIDGET_NAME    = "testWidgetName";
 
@@ -665,7 +668,7 @@ void testCanvas(void)
                     WIDGET_POS_Y, 
                     getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X), 
                     getMin<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
-                    WIDGET_COLOR);
+                    WIDGET_COLOR.get565());
 
     /* Move widget outside canvas and try to draw. Expected is no drawing at all. */
     testGfx.fill(0);
@@ -685,7 +688,7 @@ void testCanvas(void)
                     CANVAS_HEIGHT / 2, 
                     CANVAS_WIDTH / 2, 
                     CANVAS_HEIGHT / 2,
-                    WIDGET_COLOR);
+                    WIDGET_COLOR.get565());
 
     /* No widget name is set, it must be empty. */
     TEST_ASSERT_EQUAL_STRING("", testCanvas.getName());
@@ -726,8 +729,8 @@ void testCanvas(void)
  */
 static void testLampWidget(void)
 {
-    const uint16_t  COLOR_OFF   = 0x1111;
-    const uint16_t  COLOR_ON    = 0x2222;
+    const Color     COLOR_OFF   = 0x111111;
+    const Color     COLOR_ON    = 0x222222;
     const char*     WIDGET_NAME = "lampWidgetName";
 
     TestGfx         testGfx;
@@ -764,7 +767,7 @@ static void testLampWidget(void)
                     posY,
                     LampWidget::WIDTH,
                     LampWidget::HEIGHT,
-                    COLOR_OFF);
+                    COLOR_OFF.get565());
 
     /* Draw widget in on state and verify */
     lampWidget.setOnState(true);
@@ -774,7 +777,7 @@ static void testLampWidget(void)
                     posY,
                     LampWidget::WIDTH,
                     LampWidget::HEIGHT,
-                    COLOR_ON);
+                    COLOR_ON.get565());
 
     /* Draw widget in off state and verify */
     lampWidget.setOnState(false);
@@ -784,7 +787,7 @@ static void testLampWidget(void)
                     posY,
                     LampWidget::WIDTH,
                     LampWidget::HEIGHT,
-                    COLOR_OFF);
+                    COLOR_OFF.get565());
 
     /* Move widget and draw in off state again. */
     testGfx.fill(0);
@@ -795,7 +798,7 @@ static void testLampWidget(void)
                     posY,
                     LampWidget::WIDTH,
                     LampWidget::HEIGHT,
-                    COLOR_OFF);
+                    COLOR_OFF.get565());
 
     return;
 }
@@ -877,11 +880,11 @@ static void testBitmapWidget(void)
  */
 static void testTextWidget(void)
 {
-    TestGfx         testGfx;
-    TextWidget      textWidget;
-    String          testStr     = "test";
-    const uint16_t  TEXT_COLOR  = 0x1234;
-    const char*     WIDGET_NAME = "textWidgetName";
+    TestGfx     testGfx;
+    TextWidget  textWidget;
+    String      testStr     = "test";
+    const Color TEXT_COLOR  = 0x123456;
+    const char* WIDGET_NAME = "textWidgetName";
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(TextWidget::WIDGET_TYPE, textWidget.getType());
@@ -913,11 +916,11 @@ static void testTextWidget(void)
     TEST_ASSERT_EQUAL_STRING(testStr.c_str(), textWidget.getStr().c_str());
 
     /* Default string color */
-    TEST_ASSERT_EQUAL_UINT16(TextWidget::DEFAULT_TEXT_COLOR, textWidget.getTextColor());
+    TEST_ASSERT_EQUAL_UINT16(TextWidget::DEFAULT_TEXT_COLOR.get565(), textWidget.getTextColor().get565());
 
     /* Set/Get text color */
     textWidget.setTextColor(TEXT_COLOR);
-    TEST_ASSERT_EQUAL_UINT16(TEXT_COLOR, textWidget.getTextColor());
+    TEST_ASSERT_EQUAL_UINT16(TEXT_COLOR.get565(), textWidget.getTextColor().get565());
 
     /* Check for default font */
     TEST_ASSERT_NOT_NULL(textWidget.getFont());
@@ -927,6 +930,58 @@ static void testTextWidget(void)
     textWidget.update(testGfx);
     TEST_ASSERT_NOT_NULL(testGfx.getFont());
     TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, testGfx.getFont());
+
+    return;
+}
+
+/**
+ * Test color.
+ */
+static void testColor(void)
+{
+    Color myColorA;
+    Color myColorB  = ColorDef::TOMATO;
+    Color myColorC  = myColorB;
+
+    /* Default color is black */
+    TEST_ASSERT_EQUAL_UINT16(0u, myColorA.get565());
+
+    /* Does the color assignment works? */
+    TEST_ASSERT_EQUAL_UINT8(ColorDef::getRed(ColorDef::TOMATO), myColorB.getRed());
+    TEST_ASSERT_EQUAL_UINT8(ColorDef::getGreen(ColorDef::TOMATO), myColorB.getGreen());
+    TEST_ASSERT_EQUAL_UINT8(ColorDef::getBlue(ColorDef::TOMATO), myColorB.getBlue());
+
+    /* Does the color assignment via copy constructor works? */
+    TEST_ASSERT_EQUAL_UINT8(ColorDef::getRed(ColorDef::TOMATO), myColorC.getRed());
+    TEST_ASSERT_EQUAL_UINT8(ColorDef::getGreen(ColorDef::TOMATO), myColorC.getGreen());
+    TEST_ASSERT_EQUAL_UINT8(ColorDef::getBlue(ColorDef::TOMATO), myColorC.getBlue());
+
+    /* Check the 5-6-5 RGB format conversion. */
+    myColorA.set(0x00ffffffu);
+    TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getRed());
+    TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getGreen());
+    TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getBlue());
+    TEST_ASSERT_EQUAL_UINT16(0xffffu, myColorA.get565());
+
+    myColorA.set(0x00080408u);
+    TEST_ASSERT_EQUAL_UINT8(0x08u, myColorA.getRed());
+    TEST_ASSERT_EQUAL_UINT8(0x04u, myColorA.getGreen());
+    TEST_ASSERT_EQUAL_UINT8(0x08u, myColorA.getBlue());
+    TEST_ASSERT_EQUAL_UINT16(0x0821, myColorA.get565());
+
+    /* Does the color assignment via assignment operator works? */
+    myColorA = myColorB;
+    TEST_ASSERT_EQUAL_UINT8(myColorB.getRed(), myColorC.getRed());
+    TEST_ASSERT_EQUAL_UINT8(myColorB.getGreen(), myColorC.getGreen());
+    TEST_ASSERT_EQUAL_UINT8(myColorB.getBlue(), myColorC.getBlue());
+
+    /* Get/Set single colors */
+    myColorA.setRed(0x12u);
+    myColorA.setGreen(0x34u);
+    myColorA.setBlue(0x56u);
+    TEST_ASSERT_EQUAL_UINT8(0x12u, myColorA.getRed());
+    TEST_ASSERT_EQUAL_UINT8(0x34u, myColorA.getGreen());
+    TEST_ASSERT_EQUAL_UINT8(0x56u, myColorA.getBlue());
 
     return;
 }

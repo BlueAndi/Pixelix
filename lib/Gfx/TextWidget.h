@@ -51,6 +51,7 @@ This module provides the a text widget, showing a colored string.
 #include <stdint.h>
 #include <WString.h>
 #include <Widget.hpp>
+#include <Color.h>
 
 /******************************************************************************
  * Macros
@@ -89,7 +90,7 @@ public:
      * @param[in] str   String
      * @param[in] color Color of the string
      */
-    TextWidget(const String& str, uint16_t color = DEFAULT_TEXT_COLOR) :
+    TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR) :
         Widget(WIDGET_TYPE),
         m_str(str),
         m_textColor(color),
@@ -170,7 +171,7 @@ public:
      * 
      * @param[in] color Text color
      */
-    void setTextColor(uint16_t color)
+    void setTextColor(const Color& color)
     {
         m_textColor = color;
         return;
@@ -181,7 +182,7 @@ public:
      * 
      * @return Text color
      */
-    uint16_t getTextColor(void) const
+    const Color& getTextColor(void) const
     {
         return m_textColor;
     }
@@ -209,7 +210,7 @@ public:
     }
 
     /** Default text color */
-    static const uint16_t   DEFAULT_TEXT_COLOR;
+    static const Color      DEFAULT_TEXT_COLOR;
     
     /** Widget type string */
     static const char*      WIDGET_TYPE;
@@ -223,7 +224,7 @@ public:
 private:
 
     String          m_str;                  /**< String */
-    uint16_t        m_textColor;            /**< Text color of the string */
+    Color           m_textColor;            /**< Text color of the string */
     const GFXfont*  m_font;                 /**< Current font */
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
     bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */

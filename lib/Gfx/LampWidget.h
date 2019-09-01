@@ -52,6 +52,7 @@ Its size is fixed set.
  *****************************************************************************/
 #include <stdint.h>
 #include <Widget.hpp>
+#include <Color.h>
 
 /******************************************************************************
  * Macros
@@ -74,8 +75,8 @@ public:
     LampWidget() :
         Widget(WIDGET_TYPE),
         m_isOn(false),
-        m_colorOff(0x0000u),
-        m_colorOn(0xFFFFu)
+        m_colorOff(ColorDef::RED),
+        m_colorOn(ColorDef::WHITE)
     {
     }
 
@@ -86,7 +87,7 @@ public:
      * @param[in] colorOff  Lamp color in off state
      * @param[in] colorOn   Lamp color in on state
      */
-    LampWidget(bool isOn, uint16_t colorOff, uint16_t colorOn) :
+    LampWidget(bool isOn, const Color& colorOff, const Color& colorOn) :
         Widget(WIDGET_TYPE),
         m_isOn(isOn),
         m_colorOff(colorOff),
@@ -128,14 +129,14 @@ public:
      */
     void update(Adafruit_GFX& gfx)
     {
-        uint16_t color = m_colorOn;
+        Color color = m_colorOn;
 
         if (false == m_isOn)
         {
             color = m_colorOff;
         }
 
-        gfx.fillRect(m_posX, m_posY, m_posX + WIDTH, m_posY + HEIGHT, color);
+        gfx.fillRect(m_posX, m_posY, m_posX + WIDTH, m_posY + HEIGHT, color.get565());
 
         return;
     }
@@ -167,7 +168,7 @@ public:
      * 
      * @param[in] color Lamp color in off state
      */
-    void setColorOff(uint16_t color)
+    void setColorOff(const Color& color)
     {
         m_colorOff = color;
 
@@ -179,7 +180,7 @@ public:
      * 
      * @return Color in off state
      */
-    uint16_t getColorOff(void) const
+    const Color& getColorOff(void) const
     {
         return m_colorOff;
     }
@@ -189,7 +190,7 @@ public:
      * 
      * @param[in] color Lamp color in on state
      */
-    void setColorOn(uint16_t color)
+    void setColorOn(const Color& color)
     {
         m_colorOn = color;
 
@@ -201,7 +202,7 @@ public:
      * 
      * @return Color in on state
      */
-    uint16_t getColorOn(void) const
+    const Color& getColorOn(void) const
     {
         return m_colorOn;
     }
@@ -217,9 +218,9 @@ public:
 
 private:
 
-    bool        m_isOn;     /**< Lamp on state */
-    uint16_t    m_colorOff; /**< Lamp color in off state */
-    uint16_t    m_colorOn;  /**< Lamp color in on state */
+    bool    m_isOn;     /**< Lamp on state */
+    Color   m_colorOff; /**< Lamp color in off state */
+    Color   m_colorOn;  /**< Lamp color in on state */
 
 };
 
