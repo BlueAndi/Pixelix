@@ -226,6 +226,7 @@ void DisplayMgr::process(void)
     {
         matrix.clear();
         m_slots[m_activeSlotId]->update(matrix);
+        matrix.show();
     }
 
     return;
