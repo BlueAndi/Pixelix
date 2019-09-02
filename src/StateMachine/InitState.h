@@ -25,22 +25,33 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  Display manager
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+The display manager is responsible for showing stuff in the right time on the
+display. For this several time slots are provided. Each time slot can be
+configured with a specific layout and contains the content to show.
 
 *******************************************************************************/
+/** @defgroup displaymgr Display manager
+ * This module provides the display manager.
+ *
+ * @{
+ */
+
+#ifndef __INITSTATE_H__
+#define __INITSTATE_H__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
+#include <stdint.h>
 #include <StateMachine.hpp>
-#include "InitState.h"
-#include "DisplayMgr.h"
 
 /******************************************************************************
  * Macros
@@ -50,51 +61,87 @@ has the main loop.
  * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
-
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
-
-/******************************************************************************
- * External functions
- *****************************************************************************/
-
 /**
- * Setup the system.
+ * Initialization state:
+ * - Initializes the board.
+ * - Check for user button press during start up.
  */
-void setup()
+class InitState : public AbstractState
 {
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
+public:
+
+    /**
+     * Get state instance.
+     * 
+     * @return State instance
      */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
+    static InitState& getInstance(void)
     {
-        gSysStateMachine.process();
+        return m_instance;
     }
 
-    return;
-}
+    /**
+     * The entry is called once, a state is entered.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void entry(StateMachine& sm);
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
-{
-    /* Process system state machine */
-    gSysStateMachine.process();
+    /**
+     * The process routine is called cyclic, as long as the state is active.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void process(StateMachine& sm);
 
-    /* Update display content */
-    DisplayMgr::getInstance().process();
+    /**
+     * The exit is called once, a state will be left.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void exit(StateMachine& sm);
 
-    return;
-}
+    /** Short wait time for showing a system message in ms */
+    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT;
+
+    /** Serial interface baudrate. */
+    static const uint32_t   SERIAL_BAUDRATE;
+
+    /** Current SW version */
+    static const char*      SW_VERSION;
+
+private:
+
+    /** Initialization state instance */
+    static InitState    m_instance;
+
+    /**
+     * Constructs the state.
+     */
+    InitState()
+    {
+    }
+
+    /**
+     * Destroys the state.
+     */
+    ~InitState()
+    {
+    }
+    
+    InitState(const InitState& state);
+    InitState& operator=(const InitState& state);
+
+    /**
+     * Show boot information.
+     */
+    void showBootInfo(void);
+};
 
 /******************************************************************************
- * Local functions
+ * Functions
  *****************************************************************************/
+
+#endif  /* __INITSTATE_H__ */
+
+/** @} */

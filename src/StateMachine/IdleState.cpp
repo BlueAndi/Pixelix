@@ -25,29 +25,30 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  System state: Idle
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+@see IdleState.h
 
 *******************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
-#include <StateMachine.hpp>
-#include "InitState.h"
+#include "IdleState.h"
 #include "DisplayMgr.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
 
 /******************************************************************************
@@ -55,46 +56,46 @@ has the main loop.
  *****************************************************************************/
 
 /******************************************************************************
- * Variables
+ * Local Variables
  *****************************************************************************/
 
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
+/* Idle state instance */
+IdleState   IdleState::m_instance;
 
 /******************************************************************************
- * External functions
+ * Public Methods
  *****************************************************************************/
 
-/**
- * Setup the system.
- */
-void setup()
+void IdleState::entry(StateMachine& sm)
 {
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
-     */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
-    {
-        gSysStateMachine.process();
-    }
-
+    /* Nothing to do. */
     return;
 }
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
+void IdleState::process(StateMachine& sm)
 {
-    /* Process system state machine */
-    gSysStateMachine.process();
+    /* Nothing to do. */
+    return;
+}
 
-    /* Update display content */
-    DisplayMgr::getInstance().process();
-
+void IdleState::exit(StateMachine& sm)
+{
+    /* Nothing to do. */
     return;
 }
 
 /******************************************************************************
- * Local functions
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
  *****************************************************************************/

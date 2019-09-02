@@ -25,22 +25,32 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  System state: Connected
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+The Connected system state.
 
 *******************************************************************************/
+/** @defgroup connectedstate System state: Connected
+ * The Connected system state.
+ *
+ * @{
+ */
+
+#ifndef __CONNECTEDSTATE_H__
+#define __CONNECTEDSTATE_H__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
+#include <stdint.h>
 #include <StateMachine.hpp>
-#include "InitState.h"
-#include "DisplayMgr.h"
+#include <WString.h>
 
 /******************************************************************************
  * Macros
@@ -50,51 +60,78 @@ has the main loop.
  * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
-
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
-
-/******************************************************************************
- * External functions
- *****************************************************************************/
-
 /**
- * Setup the system.
+ * System state: Connected
  */
-void setup()
+class ConnectedState : public AbstractState
 {
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
+public:
+
+    /**
+     * Get state instance.
+     * 
+     * @return State instance
      */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
+    static ConnectedState& getInstance(void)
     {
-        gSysStateMachine.process();
+        return m_instance;
     }
 
-    return;
-}
+    /**
+     * The entry is called once, a state is entered.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void entry(StateMachine& sm);
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
-{
-    /* Process system state machine */
-    gSysStateMachine.process();
+    /**
+     * The process routine is called cyclic, as long as the state is active.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void process(StateMachine& sm);
 
-    /* Update display content */
-    DisplayMgr::getInstance().process();
+    /**
+     * The exit is called once, a state will be left.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void exit(StateMachine& sm);
 
-    return;
-}
+    /** Standard wait time for showing a system message in ms */
+    static const uint32_t   SYS_MSG_WAIT_TIME_STD   = 2000u;
+
+    /** Short wait time for showing a system message in ms */
+    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250u;
+
+private:
+
+    /** Connected state instance */
+    static ConnectedState  m_instance;
+
+    /**
+     * Constructs the state.
+     */
+    ConnectedState()
+    {
+    }
+
+    /**
+     * Destroys the state.
+     */
+    ~ConnectedState()
+    {
+    }
+
+    ConnectedState(const ConnectedState& state);
+    ConnectedState& operator=(const ConnectedState& state);
+
+};
 
 /******************************************************************************
- * Local functions
+ * Functions
  *****************************************************************************/
+
+#endif  /* __CONNECTEDSTATE_H__ */
+
+/** @} */

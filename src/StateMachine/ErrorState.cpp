@@ -25,29 +25,29 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  System state: Error
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+@see ErrorState.h
 
 *******************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
-#include <StateMachine.hpp>
-#include "InitState.h"
-#include "DisplayMgr.h"
+#include "ErrorState.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
 
 /******************************************************************************
@@ -55,46 +55,46 @@ has the main loop.
  *****************************************************************************/
 
 /******************************************************************************
- * Variables
+ * Local Variables
  *****************************************************************************/
 
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
+/* Error state instance */
+ErrorState  ErrorState::m_instance;
 
 /******************************************************************************
- * External functions
+ * Public Methods
  *****************************************************************************/
 
-/**
- * Setup the system.
- */
-void setup()
+void ErrorState::entry(StateMachine& sm)
 {
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
-     */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
-    {
-        gSysStateMachine.process();
-    }
-
+    /* Nothing to do. */
     return;
 }
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
+void ErrorState::process(StateMachine& sm)
 {
-    /* Process system state machine */
-    gSysStateMachine.process();
+    /* Wait for manual reset. */
+    return;
+}
 
-    /* Update display content */
-    DisplayMgr::getInstance().process();
-
+void ErrorState::exit(StateMachine& sm)
+{
+    /* Nothing to do. */
     return;
 }
 
 /******************************************************************************
- * Local functions
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
  *****************************************************************************/

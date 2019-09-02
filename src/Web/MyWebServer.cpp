@@ -25,29 +25,35 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  Web server
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+@see MyWebserver.h
 
 *******************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
-#include <StateMachine.hpp>
-#include "InitState.h"
-#include "DisplayMgr.h"
+#include "MyWebServer.h"
+#include "WebConfig.h"
+#include "Pages.h"
+#include "RestApi.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
+/** Get number of array elements. */
+#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
+
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
 
 /******************************************************************************
@@ -55,46 +61,43 @@ has the main loop.
  *****************************************************************************/
 
 /******************************************************************************
- * Variables
+ * Local Variables
  *****************************************************************************/
 
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
+/** Web server */
+static WebServer    gWebServer(WebConfig::WEBSERVER_PORT);
 
 /******************************************************************************
- * External functions
+ * Public Methods
  *****************************************************************************/
 
-/**
- * Setup the system.
- */
-void setup()
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+void MyWebServer::init(void)
 {
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
-     */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
-    {
-        gSysStateMachine.process();
-    }
+    /* Start webserver and register all web pages */
+    gWebServer.begin();
+    Pages::init(gWebServer);
+    RestApi::init(gWebServer);
 
     return;
 }
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
+WebServer& MyWebServer::getInstance(void)
 {
-    /* Process system state machine */
-    gSysStateMachine.process();
-
-    /* Update display content */
-    DisplayMgr::getInstance().process();
-
-    return;
+    return gWebServer;
 }
 
 /******************************************************************************
- * Local functions
+ * Local Functions
  *****************************************************************************/

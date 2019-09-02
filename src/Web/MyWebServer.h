@@ -25,22 +25,34 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  Web server
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+This module provides the web server instance.
 
 *******************************************************************************/
+/** @defgroup mywebserver Web server
+ * This module provides the web server instance.
+ *
+ * @{
+ */
+
+#ifndef __MYWEBSERVER_H__
+#define __MYWEBSERVER_H__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
-#include <StateMachine.hpp>
-#include "InitState.h"
-#include "DisplayMgr.h"
+#include <WebServer.h>
+#include <stdint.h>
+
+namespace MyWebServer
+{
 
 /******************************************************************************
  * Macros
@@ -51,50 +63,27 @@ has the main loop.
  *****************************************************************************/
 
 /******************************************************************************
- * Prototypes
+ * Types and Classes
  *****************************************************************************/
 
 /******************************************************************************
- * Variables
- *****************************************************************************/
-
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
-
-/******************************************************************************
- * External functions
+ * Functions
  *****************************************************************************/
 
 /**
- * Setup the system.
+ * Initialize web server.
  */
-void setup()
-{
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
-     */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
-    {
-        gSysStateMachine.process();
-    }
-
-    return;
-}
+void init(void);
 
 /**
- * Main loop, which is called periodically.
+ * Get web server instance.
+ * 
+ * @return Web server instance.
  */
-void loop()
-{
-    /* Process system state machine */
-    gSysStateMachine.process();
+WebServer& getInstance(void);
 
-    /* Update display content */
-    DisplayMgr::getInstance().process();
-
-    return;
 }
 
-/******************************************************************************
- * Local functions
- *****************************************************************************/
+#endif  /* __MYWEBSERVER_H__ */
+
+/** @} */

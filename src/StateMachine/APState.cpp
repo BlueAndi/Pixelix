@@ -25,29 +25,36 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  System state: AP
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+@see APState.h
 
 *******************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include "APState.h"
 #include <Arduino.h>
-#include <StateMachine.hpp>
-#include "InitState.h"
+#include "ErrorState.h"
 #include "DisplayMgr.h"
+#include "MyWebServer.h"
+#include "UpdateMgr.h"
+
+#include <WiFi.h>
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
 
 /******************************************************************************
@@ -55,46 +62,87 @@ has the main loop.
  *****************************************************************************/
 
 /******************************************************************************
- * Variables
+ * Local Variables
  *****************************************************************************/
 
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
+/* Set short wait time for showing a system message in ms */
+const uint32_t  APState::SYS_MSG_WAIT_TIME_SHORT = 250u;
+
+/* Set access point SSID */
+const char*     APState::WIFI_AP_SSID          = "esp32-rgb-led-matrix";
+
+/* Set access point passphrase (min. 8 characters) */
+const char*     APState::WIFI_AP_PASSPHRASE    = "Luke, I am your father.";
+
+/* Access point state instance */
+APState         APState::m_instance;
 
 /******************************************************************************
- * External functions
+ * Public Methods
  *****************************************************************************/
 
-/**
- * Setup the system.
- */
-void setup()
+void APState::entry(StateMachine& sm)
 {
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
-     */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
+    /* Setup wifi access point failed? */
+    if (false == WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSPHRASE))
     {
-        gSysStateMachine.process();
+        String errorStr = "Setup wifi access point failed.";
+
+        /* Fatal error */
+        Serial.println(errorStr);
+        DisplayMgr::getInstance().showSysMsg(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
+    /* Wifi access point successful up. */
+    else
+    {
+        /* Show SSID and ip address  */
+        String infoStr = "SSID: ";
+        infoStr += WIFI_AP_SSID;
+        infoStr += " IP: ";
+        infoStr += WiFi.softAPIP();
+
+        Serial.println(infoStr);
+        DisplayMgr::getInstance().showSysMsg(infoStr);
     }
 
     return;
 }
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
+void APState::process(StateMachine& sm)
 {
-    /* Process system state machine */
-    gSysStateMachine.process();
+    /* Handle update, there may be one in the background. */
+    UpdateMgr::getInstance().process();
 
-    /* Update display content */
-    DisplayMgr::getInstance().process();
+    /* As long as no update is running, do handle all other connections. */
+    if (false == UpdateMgr::getInstance().isUpdateRunning())
+    {
+        /* Handle all clients */
+        MyWebServer::getInstance().handleClient();
+    }
 
     return;
 }
 
+void APState::exit(StateMachine& sm)
+{
+    /* Nothing to do. */
+    return;
+}
+
 /******************************************************************************
- * Local functions
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
  *****************************************************************************/

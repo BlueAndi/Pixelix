@@ -25,22 +25,31 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  System state: AccessPoint
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+The AccessPoint system state.
 
 *******************************************************************************/
+/** @defgroup apstate System state: AccessPoint
+ * The AccessPoint system state.
+ *
+ * @{
+ */
+
+#ifndef __APSTATE_H__
+#define __APSTATE_H__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
+#include <stdint.h>
 #include <StateMachine.hpp>
-#include "InitState.h"
-#include "DisplayMgr.h"
 
 /******************************************************************************
  * Macros
@@ -50,51 +59,81 @@ has the main loop.
  * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
-
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
-
-/******************************************************************************
- * External functions
- *****************************************************************************/
-
 /**
- * Setup the system.
+ * System state: AccessPoint
  */
-void setup()
+class APState : public AbstractState
 {
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
+public:
+
+    /**
+     * Get state instance.
+     * 
+     * @return State instance
      */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
+    static APState& getInstance(void)
     {
-        gSysStateMachine.process();
+        return m_instance;
     }
 
-    return;
-}
+    /**
+     * The entry is called once, a state is entered.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void entry(StateMachine& sm);
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
-{
-    /* Process system state machine */
-    gSysStateMachine.process();
+    /**
+     * The process routine is called cyclic, as long as the state is active.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void process(StateMachine& sm);
 
-    /* Update display content */
-    DisplayMgr::getInstance().process();
+    /**
+     * The exit is called once, a state will be left.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void exit(StateMachine& sm);
 
-    return;
-}
+    /** Short wait time for showing a system message in ms */
+    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT;
+
+    /** Access point SSID */
+    static const char*      WIFI_AP_SSID;
+
+    /** Access point passphrase (min. 8 characters) */
+    static const char*      WIFI_AP_PASSPHRASE;
+
+private:
+
+    /** Access point state instance */
+    static APState    m_instance;
+
+    /**
+     * Constructs the state.
+     */
+    APState()
+    {
+    }
+
+    /**
+     * Destroys the state.
+     */
+    ~APState()
+    {
+    }
+    
+    APState(const APState& state);
+    APState& operator=(const APState& state);
+
+};
 
 /******************************************************************************
- * Local functions
+ * Functions
  *****************************************************************************/
+
+#endif  /* __APSTATE_H__ */
+
+/** @} */

@@ -25,29 +25,36 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
+@brief  System state: Connected
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
+@see ConnectedState.h
 
 *******************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
-#include <StateMachine.hpp>
-#include "InitState.h"
+#include "ConnectedState.h"
 #include "DisplayMgr.h"
+#include "UpdateMgr.h"
+#include "MyWebServer.h"
+#include "ConnectingState.h"
+
+#include <Arduino.h>
+#include <WiFi.h>
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
 
 /******************************************************************************
@@ -55,46 +62,74 @@ has the main loop.
  *****************************************************************************/
 
 /******************************************************************************
- * Variables
+ * Local Variables
  *****************************************************************************/
 
-/** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
+/* Connected state instance */
+ConnectedState  ConnectedState::m_instance;
 
 /******************************************************************************
- * External functions
+ * Public Methods
  *****************************************************************************/
 
-/**
- * Setup the system.
- */
-void setup()
+void ConnectedState::entry(StateMachine& sm)
 {
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
-     */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
+    String infoStr = "Hostname: ";
+    infoStr += WiFi.getHostname();
+
+    Serial.println(infoStr);
+    DisplayMgr::getInstance().showSysMsg(infoStr);
+    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+
+    /* Enable slots */
+    DisplayMgr::getInstance().enableSlots(true);
+    DisplayMgr::getInstance().startRotating(true);
+    
+    return;
+}
+
+void ConnectedState::process(StateMachine& sm)
+{
+    /* Connection lost? */
+    if (false == WiFi.isConnected())
     {
-        gSysStateMachine.process();
+        sm.setState(ConnectingState::getInstance());
+    }
+    /* Connection is still established */
+    else
+    {
+        /* Handle update, there may be one in the background. */
+        UpdateMgr::getInstance().process();
+
+        /* As long as no update is running, do handle all other connections. */
+        if (false == UpdateMgr::getInstance().isUpdateRunning())
+        {
+            /* Handle all clients */
+            MyWebServer::getInstance().handleClient();
+        }
     }
 
     return;
 }
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
+void ConnectedState::exit(StateMachine& sm)
 {
-    /* Process system state machine */
-    gSysStateMachine.process();
-
-    /* Update display content */
-    DisplayMgr::getInstance().process();
-
+    /* Nothing to do. */
     return;
 }
 
 /******************************************************************************
- * Local functions
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
  *****************************************************************************/
