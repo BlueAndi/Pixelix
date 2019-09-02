@@ -169,6 +169,7 @@ void setup()
             gIsFatalError = true;
 
             Serial.println("Setup wifi access point failed.");
+            dispMgr.showSysMsg("Setup wifi access point failed.");
         }
         else
         {
@@ -410,6 +411,9 @@ static void otaOnProgress(unsigned int progress, unsigned int total)
 
     Serial.printf("Progress: %u%%\r\n", PROGRESS_PERCENT);
 
+    /* Fill the whole display.
+     * The number of pixels equals 100% update progress.
+     */
     while(0u < delta)
     {
         LedMatrix::getInstance().writePixel(x, y, COLOR);
