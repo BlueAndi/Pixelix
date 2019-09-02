@@ -25,11 +25,11 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  LED matrix
+@brief  System state: Init
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-@see LedMatrix.h
+@see InitState.h
 
 *******************************************************************************/
 

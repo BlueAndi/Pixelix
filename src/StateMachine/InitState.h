@@ -25,17 +25,15 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Display manager
+@brief  System state: Init
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-The display manager is responsible for showing stuff in the right time on the
-display. For this several time slots are provided. Each time slot can be
-configured with a specific layout and contains the content to show.
+The Init system state.
 
 *******************************************************************************/
-/** @defgroup displaymgr Display manager
- * This module provides the display manager.
+/** @defgroup initstate System state: Init
+ * The Init system state.
  *
  * @{
  */
