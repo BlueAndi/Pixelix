@@ -118,21 +118,18 @@ void InitState::process(StateMachine& sm)
      * Because we just initialized the button driver, wait until
      * the button state has a reliable value.
      */
-    while(false == ButtonDrv::getInstance().isUpdated())
+    if (true == ButtonDrv::getInstance().isUpdated())
     {
-        /* Give other tasks a chance. */
-        DisplayMgr::getInstance().delay(1u);
-    }
-
-    /* Setup a wifi access point? */
-    if (ButtonDrv::STATE_PRESSED == ButtonDrv::getInstance().getState())
-    {
-        sm.setState(APState::getInstance());
-    }
-    /* Connect to a remote wifi network. */
-    else
-    {
-        sm.setState(ConnectingState::getInstance());
+        /* Setup a wifi access point? */
+        if (ButtonDrv::STATE_PRESSED == ButtonDrv::getInstance().getState())
+        {
+            sm.setState(APState::getInstance());
+        }
+        /* Connect to a remote wifi network. */
+        else
+        {
+            sm.setState(ConnectingState::getInstance());
+        }
     }
 
     return;
