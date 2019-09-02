@@ -46,6 +46,7 @@ This module provides the main test entry point.
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <Color.h>
+#include <StateMachine.hpp>
 
 /******************************************************************************
  * Macros
@@ -318,6 +319,106 @@ private:
 
 const char* TestWidget::WIDGET_TYPE = "test";
 
+/**
+ * Test state
+ */
+class TestState : public AbstractState
+{
+public:
+
+    /**
+     * Constructs the test state.
+     */
+    TestState() :
+        m_callCntEntry(0u),
+        m_callCntExit(0u),
+        m_nextState(NULL)
+    {
+    }
+
+    /**
+     * Destroys the test state.
+     */
+    ~TestState()
+    {
+    }
+
+    /**
+     * The entry is called once, a state is entered.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void entry(StateMachine& sm)
+    {
+        ++m_callCntEntry;
+        return;
+    }
+
+    /**
+     * The process routine is called cyclic, as long as the state is active.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+
+    void process(StateMachine& sm)
+    {
+        if (NULL != m_nextState)
+        {
+            sm.setState(*m_nextState);
+        }
+        
+        return;
+    }
+
+    /**
+     * The exit is called once, a state will be left.
+     * 
+     * @param[in] sm    Responsible state machine
+     */
+    void exit(StateMachine& sm)
+    {
+        ++m_callCntExit;
+        return;
+    }
+
+    /**
+     * Set next state.
+     * 
+     * @param[in] nextState Next state to go in process method.
+     */
+    void setState(AbstractState& nextState)
+    {
+        m_nextState = &nextState;
+        return;
+    }
+
+    /**
+     * Get call counter for entry method.
+     * 
+     * @return Call counter for entry method.
+     */
+    uint32_t getCallCntEntry(void) const
+    {
+        return m_callCntEntry;
+    }
+
+    /**
+     * Get call counter for exit method.
+     * 
+     * @return Call counter for exit method.
+     */
+    uint32_t getCallCntExit(void) const
+    {
+        return m_callCntExit;
+    }
+
+private:
+
+    uint32_t        m_callCntEntry; /**< Call counter of entry method */
+    uint32_t        m_callCntExit;  /**< Call counter of exit method */
+    AbstractState*  m_nextState;    /**< Next state */
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -332,6 +433,7 @@ static void testLampWidget(void);
 static void testBitmapWidget(void);
 static void testTextWidget(void);
 static void testColor(void);
+static void testStateMachine(void);
 
 /******************************************************************************
  * Variables
@@ -361,6 +463,7 @@ int main(int argc, char **argv)
     RUN_TEST(testBitmapWidget);
     RUN_TEST(testTextWidget);
     RUN_TEST(testColor);
+    RUN_TEST(testStateMachine);
 
     return UNITY_END();
 }
@@ -982,6 +1085,62 @@ static void testColor(void)
     TEST_ASSERT_EQUAL_UINT8(0x12u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0x34u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0x56u, myColorA.getBlue());
+
+    return;
+}
+
+/**
+ * Test the abstract state machine.
+ */
+static void testStateMachine(void)
+{
+    TestState       stateA;
+    TestState       stateB;
+    StateMachine    sm;
+
+    /* State machine has no state yet. */
+    TEST_ASSERT_NULL(sm.getState());
+
+    /* Add state A, but don't process it. */
+    sm.setState(stateA);
+    TEST_ASSERT_NULL(sm.getState());
+    TEST_ASSERT_EQUAL_UINT32(0u, stateA.getCallCntEntry());
+    TEST_ASSERT_EQUAL_UINT32(0u, stateA.getCallCntExit());
+
+    /* Process it once.
+     * Expectation:
+     * The entry part is called once and the process part.
+     */
+    sm.process();
+    TEST_ASSERT_EQUAL_UINT32(1u, stateA.getCallCntEntry());
+    TEST_ASSERT_EQUAL_UINT32(0u, stateA.getCallCntExit());
+    TEST_ASSERT_EQUAL_PTR(static_cast<AbstractState*>(&stateA), sm.getState());
+
+    /* Process it a 2nd time.
+     * Expectation:
+     * Only the process part is called.
+     */
+    sm.process();
+    TEST_ASSERT_EQUAL_UINT32(1u, stateA.getCallCntEntry());
+    TEST_ASSERT_EQUAL_UINT32(0u, stateA.getCallCntExit());
+
+    /* Transistion from A to B. */
+    stateA.setState(stateB);
+    sm.process();
+    sm.process();
+    TEST_ASSERT_EQUAL_UINT32(1u, stateA.getCallCntEntry());
+    TEST_ASSERT_EQUAL_UINT32(1u, stateA.getCallCntExit());
+    TEST_ASSERT_EQUAL_UINT32(1u, stateB.getCallCntEntry());
+    TEST_ASSERT_EQUAL_UINT32(0u, stateB.getCallCntExit());
+
+    /* Transistion from B to A. */
+    stateB.setState(stateA);
+    sm.process();
+    sm.process();
+    TEST_ASSERT_EQUAL_UINT32(2u, stateA.getCallCntEntry());
+    TEST_ASSERT_EQUAL_UINT32(1u, stateA.getCallCntExit());
+    TEST_ASSERT_EQUAL_UINT32(1u, stateB.getCallCntEntry());
+    TEST_ASSERT_EQUAL_UINT32(1u, stateB.getCallCntExit());
 
     return;
 }
