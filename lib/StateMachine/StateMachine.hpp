@@ -93,7 +93,6 @@ public:
      * 
      * @param[in] sm    Responsible state machine
      */
-
     virtual void process(StateMachine& sm) = 0;
 
     /**
@@ -163,6 +162,7 @@ public:
      */
     void process(void)
     {
+        /* Request for change state available? */
         if (NULL != m_nextState)
         {
             /* Leave current state */
@@ -178,6 +178,7 @@ public:
             /* Enter new state */
             m_currentState->entry(*this);
         }
+        /* Process current state */
         else if (NULL != m_currentState)
         {
             m_currentState->process(*this);
