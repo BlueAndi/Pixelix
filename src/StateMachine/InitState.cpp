@@ -44,6 +44,7 @@
 #include "ButtonDrv.h"
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
+#include "Version.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -73,9 +74,6 @@ const uint32_t  InitState::SYS_MSG_WAIT_TIME_SHORT  = 250u;
 
 /* Set serial interface baudrate. */
 const uint32_t  InitState::SERIAL_BAUDRATE          = 115200u;
-
-/* Set current software version. */
-const char*     InitState::SW_VERSION               = "Trunk";
 
 /* Initialization state instance */
 InitState       InitState::m_instance;
@@ -158,8 +156,8 @@ void InitState::showBootInfo(void)
     Serial.println("Booting ...");
     
     Serial.print("SW version: ");
-    Serial.println(SW_VERSION);
-    DisplayMgr::getInstance().showSysMsg(SW_VERSION);
+    Serial.println(Version::SOFTWARE);
+    DisplayMgr::getInstance().showSysMsg(Version::SOFTWARE);
 
     Serial.print("ESP32 chip rev.: ");
     Serial.println(ESP.getChipRevision());

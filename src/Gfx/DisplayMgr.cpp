@@ -103,11 +103,11 @@ void DisplayMgr::setLayout(uint8_t slotId, LayoutId layoutId)
         break;
 
     case LAYOUT_ID_1:
-        createLayout1(m_slots[slotId]);
+        createLayout1(m_slots[slotId], &m_bitmapBuffer[slotId][0]);
         break;
 
     case LAYOUT_ID_2:
-        createLayout2(m_slots[slotId]);
+        createLayout2(m_slots[slotId], &m_bitmapBuffer[slotId][0]);
         break;
 
     case LAYOUT_ID_COUNT:
@@ -147,7 +147,7 @@ void DisplayMgr::setText(uint8_t slotId, const String& str)
     return;
 }
 
-void DisplayMgr::setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t heigth)
+void DisplayMgr::setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t height)
 {
     Widget* widget = NULL;
 
@@ -165,7 +165,12 @@ void DisplayMgr::setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t widt
         {
             bitmapWidget = static_cast<BitmapWidget*>(widget);
 
-            bitmapWidget->set(bitmap, width, heigth);
+            if ((BMP_WIDTH >= width) &&
+                (BMP_HEIGHT >= height))
+            {
+                memcpy(&m_bitmapBuffer[slotId][0], bitmap, sizeof(uint16_t) * width * height);
+                bitmapWidget->set(&m_bitmapBuffer[slotId][0], width, height);
+            }
         }
     }
 
@@ -398,7 +403,7 @@ bool DisplayMgr::createLayout0(Canvas*& canvas) const
     bool        success     = true;
     TextWidget* textWidget  = new TextWidget();
 
-    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::heigth, 0, 0);
+    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::height, 0, 0);
 
     if ((NULL == canvas) ||
         (NULL == textWidget))
@@ -430,19 +435,17 @@ bool DisplayMgr::createLayout0(Canvas*& canvas) const
     return success;
 }
 
-bool DisplayMgr::createLayout1(Canvas*& canvas) const
+bool DisplayMgr::createLayout1(Canvas*& canvas, uint16_t* bitmapBuffer) const
 {
     bool            success         = true;
-    const uint16_t  BITMAP_WIDTH    = 8u;
-    const uint16_t  BITMAP_HEIGHT   = 8u;
-    const uint16_t  TEXT_WIDTH      = Board::LedMatrix::width - BITMAP_WIDTH - 1u;
-    const uint16_t  TEXT_HEIGHT     = Board::LedMatrix::heigth;
-    Canvas*         bitmapCanvas    = new Canvas(BITMAP_WIDTH, BITMAP_HEIGHT, 0, 0);
+    const uint16_t  TEXT_WIDTH      = Board::LedMatrix::width - BMP_WIDTH - 1u;
+    const uint16_t  TEXT_HEIGHT     = Board::LedMatrix::height;
+    Canvas*         bitmapCanvas    = new Canvas(BMP_WIDTH, BMP_HEIGHT, 0, 0);
     BitmapWidget*   bitmapWidget    = new BitmapWidget();
-    Canvas*         textCanvas      = new Canvas(TEXT_WIDTH, TEXT_HEIGHT, BITMAP_WIDTH, 0);
+    Canvas*         textCanvas      = new Canvas(TEXT_WIDTH, TEXT_HEIGHT, BMP_WIDTH, 0);
     TextWidget*     textWidget      = new TextWidget();
 
-    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::heigth, 0, 0);
+    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::height, 0, 0);
 
     if ((NULL == canvas) ||
         (NULL == bitmapCanvas) ||
@@ -471,6 +474,8 @@ bool DisplayMgr::createLayout1(Canvas*& canvas) const
     else
     {
         bitmapWidget->setName(BMP_WIDGET_NAME);
+        bitmapWidget->set(bitmapBuffer, BMP_WIDTH, BMP_HEIGHT);
+
         textWidget->setName(TEXT_WIDGET_NAME);
     }
 
@@ -505,26 +510,24 @@ bool DisplayMgr::createLayout1(Canvas*& canvas) const
     return success;
 }
 
-bool DisplayMgr::createLayout2(Canvas*& canvas) const
+bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
 {
     bool            success         = true;
-    const uint16_t  BITMAP_WIDTH    = 8u;
-    const uint16_t  BITMAP_HEIGHT   = 8u;
-    const uint16_t  TEXT_WIDTH      = Board::LedMatrix::width - BITMAP_WIDTH - 1u;
+    const uint16_t  TEXT_WIDTH      = Board::LedMatrix::width - BMP_WIDTH - 1u;
     const uint16_t  TEXT_HEIGHT     = 5u;
-    const uint16_t  LAMP_WIDTH      = Board::LedMatrix::width - BITMAP_WIDTH;
+    const uint16_t  LAMP_WIDTH      = Board::LedMatrix::width - BMP_WIDTH;
     const uint16_t  LAMP_HEIGHT     = 1u;
-    Canvas*         bitmapCanvas    = new Canvas(BITMAP_WIDTH, BITMAP_HEIGHT, 0, 0);
+    Canvas*         bitmapCanvas    = new Canvas(BMP_WIDTH, BMP_HEIGHT, 0, 0);
     BitmapWidget*   bitmapWidget    = new BitmapWidget();
-    Canvas*         textCanvas      = new Canvas(TEXT_WIDTH, TEXT_HEIGHT, static_cast<int16_t>(BITMAP_WIDTH) + 1, 1);
+    Canvas*         textCanvas      = new Canvas(TEXT_WIDTH, TEXT_HEIGHT, static_cast<int16_t>(BMP_WIDTH) + 1, 1);
     TextWidget*     textWidget      = new TextWidget();
-    Canvas*         lampCanvas      = new Canvas(LAMP_WIDTH, LAMP_HEIGHT, static_cast<int16_t>(BITMAP_WIDTH), 0);
+    Canvas*         lampCanvas      = new Canvas(LAMP_WIDTH, LAMP_HEIGHT, static_cast<int16_t>(BMP_WIDTH), 0);
     LampWidget*     lampWidgets[]   = { NULL, NULL, NULL, NULL };
     uint8_t         index           = 0u;
     char            lampName[strlen(LAMP_WIDGET_NAME) + 2];
     uint8_t         lampNameNumPos  = 0;
 
-    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::heigth, 0, 0);
+    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::height, 0, 0);
 
     for(index = 0u; index < ARRAY_NUM(lampWidgets); ++index)
     {
@@ -568,6 +571,8 @@ bool DisplayMgr::createLayout2(Canvas*& canvas) const
     else
     {
         bitmapWidget->setName(BMP_WIDGET_NAME);
+        bitmapWidget->set(bitmapBuffer, BMP_WIDTH, BMP_HEIGHT);
+
         textWidget->setName(TEXT_WIDGET_NAME);
 
         strncpy(lampName, LAMP_WIDGET_NAME, ARRAY_NUM(lampName) - 1);

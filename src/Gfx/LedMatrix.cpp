@@ -65,7 +65,7 @@
 LedMatrix LedMatrix::m_instance;
 
 /** Pixel representation of the LED matrix */
-static CRGB gMatrixBuffer[Board::LedMatrix::width * Board::LedMatrix::heigth];
+static CRGB gMatrixBuffer[Board::LedMatrix::width * Board::LedMatrix::height];
 
 /******************************************************************************
  * Public Methods
@@ -82,7 +82,7 @@ static CRGB gMatrixBuffer[Board::LedMatrix::width * Board::LedMatrix::heigth];
 LedMatrix::LedMatrix() :
     FastLED_NeoMatrix(  gMatrixBuffer,
                         Board::LedMatrix::width,
-                        Board::LedMatrix::heigth,
+                        Board::LedMatrix::height,
                         NEO_MATRIX_TOP |
                         NEO_MATRIX_LEFT |
                         NEO_MATRIX_ROWS |

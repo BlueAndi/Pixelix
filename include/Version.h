@@ -25,21 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Init
+@brief  Version
 @author Andreas Merkle <web@blue-andi.de>
 
 @section desc Description
-The Init system state.
+Provides the software version.
 
 *******************************************************************************/
-/** @defgroup initstate System state: Init
- * The Init system state.
+/** @defgroup version Version
+ * Provides the software version.
  *
  * @{
  */
 
-#ifndef __INITSTATE_H__
-#define __INITSTATE_H__
+#ifndef __VERSION_H__
+#define __VERSION_H__
 
 /******************************************************************************
  * Compile Switches
@@ -49,7 +49,9 @@ The Init system state.
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <StateMachine.hpp>
+
+namespace Version
+{
 
 /******************************************************************************
  * Macros
@@ -59,84 +61,15 @@ The Init system state.
  * Types and Classes
  *****************************************************************************/
 
-/**
- * Initialization state:
- * - Initializes the board.
- * - Check for user button press during start up.
- */
-class InitState : public AbstractState
-{
-public:
-
-    /**
-     * Get state instance.
-     * 
-     * @return State instance
-     */
-    static InitState& getInstance(void)
-    {
-        return m_instance;
-    }
-
-    /**
-     * The entry is called once, a state is entered.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void entry(StateMachine& sm);
-
-    /**
-     * The process routine is called cyclic, as long as the state is active.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void process(StateMachine& sm);
-
-    /**
-     * The exit is called once, a state will be left.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void exit(StateMachine& sm);
-
-    /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT;
-
-    /** Serial interface baudrate. */
-    static const uint32_t   SERIAL_BAUDRATE;
-
-private:
-
-    /** Initialization state instance */
-    static InitState    m_instance;
-
-    /**
-     * Constructs the state.
-     */
-    InitState()
-    {
-    }
-
-    /**
-     * Destroys the state.
-     */
-    ~InitState()
-    {
-    }
-    
-    InitState(const InitState& state);
-    InitState& operator=(const InitState& state);
-
-    /**
-     * Show boot information.
-     */
-    void showBootInfo(void);
-};
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __INITSTATE_H__ */
+    /** Software version */
+    static const char* SOFTWARE = "Trunk";
+
+}
+
+#endif  /* __VERSION_H__ */
 
 /** @} */

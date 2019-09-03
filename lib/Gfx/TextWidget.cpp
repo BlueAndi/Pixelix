@@ -93,9 +93,9 @@ void TextWidget::update(Adafruit_GFX& gfx)
         int16_t     boundaryX       = 0;
         int16_t     boundaryY       = 0;
         uint16_t    textWidth       = 0u;
-        uint16_t    textHeigth      = 0u;
+        uint16_t    textHeight      = 0u;
 
-        gfx.getTextBounds(m_str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &textWidth, &textHeigth);
+        gfx.getTextBounds(m_str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &textWidth, &textHeight);
 
         /* Text too long for the display? */
         if (gfx.width() < textWidth)

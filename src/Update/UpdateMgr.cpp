@@ -190,7 +190,7 @@ void UpdateMgr::onEnd(void)
 void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 {
     const uint32_t  PROGRESS_PERCENT    = (progress * 100u) / total;
-    const uint32_t  PIXELS              = Board::LedMatrix::width * Board::LedMatrix::heigth;
+    const uint32_t  PIXELS              = Board::LedMatrix::width * Board::LedMatrix::height;
     uint32_t        pixelProgress       = (PIXELS * PROGRESS_PERCENT) / 100u;
     uint32_t        delta               = pixelProgress - m_instance.m_progress;
     int16_t         y                   = m_instance.m_progress / Board::LedMatrix::width;

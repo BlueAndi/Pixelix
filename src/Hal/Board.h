@@ -99,7 +99,7 @@ namespace LedMatrix
 static const uint8_t    width               = 32u;
 
 /** LED matrix height in pixels */
-static const uint8_t    heigth              = 8u;
+static const uint8_t    height              = 8u;
 
 /** LED matrix supply voltage in volt */
 static const uint8_t    supplyVoltage       = 5u;

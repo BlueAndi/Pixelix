@@ -110,13 +110,15 @@ public:
 
     /**
      * Set bitmap in the bitmap widget of a slot.
+     * Note, a copy of the bitmap will be created. For max. width and size
+     * see @BMP_WIDTH and @BMP_HEIGHT.
      * 
      * @param[in] slotId    Slot id
      * @param[in] bitmap    Bitmap buffer
      * @param[in] width     Bitmap width in pixel
-     * @param[in] heigth    Bitmap heigth in pixel
+     * @param[in] height    Bitmap height in pixel
      */
-    void setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t heigth);
+    void setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t height);
 
     /**
      * Set lamp state in the lamp widget of a slot.
@@ -187,6 +189,12 @@ public:
     /** Lamp widget name, used for identification. */
     static const char*      LAMP_WIDGET_NAME;
 
+    /** Bitmap width in pixel, used for bitmap buffers. */
+    static const uint8_t    BMP_WIDTH       = 8u;
+
+    /** Bitmap height in pixel, used for bitmap buffers. */
+    static const uint8_t    BMP_HEIGHT      = 8u;
+
 private:
 
     /** Display manager instance */
@@ -212,6 +220,9 @@ private:
 
     /** System message widget */
     TextWidget          m_sysMsgWidget;
+
+    /** Static buffer for bitmaps */
+    uint16_t            m_bitmapBuffer[MAX_SLOTS][sizeof(uint16_t) * BMP_WIDTH * BMP_HEIGHT];
 
     /**
      * Construct LED matrix.
@@ -255,11 +266,12 @@ private:
      * - A 8x8 bitmap box left. The bitmap widget name is "bitmap".
      * - Right side as one text box. The text widget name is "text".
      * 
-     * @param[in] canvas    Pointer to layout, based on a canvas.
+     * @param[in] canvas        Pointer to layout, based on a canvas.
+     * @param[in] bitmapBuffer  Static buffer for bitmap. Size defined via BMP_WIDTH and BMP_HEIGHT.
      * 
      * @return Successful (true) or not (false).
      */
-    bool createLayout1(Canvas*& canvas) const;
+    bool createLayout1(Canvas*& canvas, uint16_t* bitmapBuffer) const;
 
     /**
      * Create layout 2:
@@ -268,10 +280,11 @@ private:
      * - Lower right side with signal lamps. The lamp widgets name is "lampN".
      * 
      * @param[in] canvas    Pointer to layout, based on a canvas.
+     * @param[in] bitmapBuffer  Static buffer for bitmap. Size defined via BMP_WIDTH and BMP_HEIGHT.
      * 
      * @return Successful (true) or not (false).
      */
-    bool createLayout2(Canvas*& canvas) const;
+    bool createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const;
 
 };
 

@@ -5,136 +5,161 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 # REST API
 
-The base URI for the REST API v1 access is always ```http://myAddress.domain/api/v1```.
+The base URI (`<base-uri>`) for the REST API access is always ```http://<host>/rest/api/<version>```.
 
-## Status Codes
+## Version
 
-Every request returns a status code whether the request was successful or not.
+The current API version is "v1".
 
-* 0: Request successful.
-* 1: Requested object not found.
+## In general
 
-## General Response Object
-
-### Successful Request
-
-```json
-"status": 0,
-"data": {
-
-}
-```
-
-### Failed Request
+Every response will provide three items:
+* result: The result as string.
+  * "ok": The request was successful executed.
+  * "error": The request failed.
+* resultCode: The result as integer number.
+  * 0: The request was successful executed.
+  * 1: The request failed.
+* data: If request was successful, the data object will contain the requested data otherwise null.
+* error: If request failed, the error object contain some more information about the error itself.
 
 ```json
-"status": 1,
-"error": {
-
-}
-```
-
-### Get Status
-Get status information like wifi SSID and etc.
-
-Endpoint: ```GET /api/v1/status```
-
-Example response:
-```json
-"status": 0,
-"data": {
-    "wifi": {
-        "ssid": "DEATHSTAR"
+{
+    "result": "ok",
+    "resultCode": 0,
+    "data": {
+        "software": {
+            "version": "v0.1.0"
+        }
     }
 }
 ```
 
-## Basic
+## Endpoint `<base-uri>`/status
+Get status information:
+* Software version.
+* Wifi SSID of the network, the display will connect to.
 
-### Clear Display
-Clear the whole display and move the draw pen to origin.
+Detail:
+* Method: GET
+* Arguments: N/A
 
-Endpoint: ```POST /api/v1/display```
-
-Operation: clear
-
-Request:
+Example:
 ```
-POST /api/v1/display?op=clear
+GET <base-uri>/rest/v1/status
 ```
 
-Response:
+Result:
 ```json
-"status": 0,
-"data": {
-}
-```
-
-### Get Fonts
-Get supported fonts.
-
-Endpoint: ```GET /api/v1/fonts```
-
-Response:
-```json
-"status": 0,
-"data": {
-    "fonts": [{
-        "id": 0,
-        "name": "MyFont",
-        "heigth": 6
-    }]
-}
-```
-
-### Get Current Font
-Get current selected font.
-
-Endpoint: ```GET /api/v1/font```
-
-Response:
-```json
-"status": 0,
-"data": {
-    "font": {
-        "id": 0,
-        "name": "MyFont",
-        "heigth": 6
+{
+    "result": "ok",
+    "resultCode": 0,
+    "data": {
+        "software": {
+            "version": "v0.1.0"
+        },
+        "wifi": {
+            "ssid": "Number5Lives"
+        }
     }
 }
 ```
 
-### Select Font
-Select a supported font by id.
+## Endpoint `<base-uri>`/display/slots
+Get the number of supported slots.
 
-Endpoint: ```PUT /api/v1/font/{id}```
+Detail:
+* Method: GET
+* Arguments: N/A
 
-Response:
+Example:
+```
+GET <base-uri>/rest/v1/display/slots
+```
+
+Result:
 ```json
-"status": 0,
-"data": {
+{
+    "result": "ok",
+    "resultCode": 0,
+    "data": {
+        "slots": 4
+    }
 }
 ```
 
-### Show Message
-Show text message with the current selected font. If the message width greater than the display width, it will automatically scroll.
+## Endpoint `<base-uri>`/display/slot/`<slot-id>`/text
+Show text in the specified slot.
 
-Endpoint: ```POST /api/v1/display/message```
+Detail:
+* Method: POST
+* Arguments:
+  * show=`<text>`
 
-Parameter:
-| Name | Type | Optional | Default | Description |
-| --- | --- | --- | --- | --- |
-| msg | string | No | - | Text message. |
-| font | number | Yes | Current selected | Set font for the message. |
+Example:
+```
+POST <base-uri>/rest/v1/display/slot/0/text?show=Test
+```
 
-Response:
+Result:
 ```json
-"status": 0,
-"data": {
+{
+    "result": "ok",
+    "resultCode": 0,
+    "data": null
 }
 ```
 
-## Advanced
+## Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap
+Show bitmap in the specified slot. The bitmap must be BASE64 encoded.
+At the momet only bitmaps in the size of 8 x 8 pixel are supported.
+
+Detail:
+* Method: POST
+* Arguments:
+  * width=`<bitmap-width>`
+  * height=`<bitmap-height>`
+  * data=`<base64-encoded-bitmap>`
+
+Example:
+```
+POST <base-uri>/rest/v1/display/slot/0/bitmap?width=8&height=8&data=XXXXXX
+```
+
+Result:
+```json
+{
+    "result": "ok",
+    "resultCode": 0,
+    "data": null
+}
+```
+
+## Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`/state
+Set the state of a lamp in the specified slot.
+
+Detail:
+* Method: POST
+* Arguments:
+  * set=`<lamp-state>`
+
+Supported lamp states:
+* "off"
+* "on"
+
+Example:
+```
+POST <base-uri>/rest/v1/display/slot/0/lamp/0/state?set=on
+```
+
+Result:
+```json
+{
+    "result": "ok",
+    "resultCode": 0,
+    "data": null
+}
+```
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
