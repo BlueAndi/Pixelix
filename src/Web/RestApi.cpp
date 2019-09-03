@@ -195,9 +195,11 @@ static void status(void)
     else
     {
         String      ssid;
-        JsonObject  dataObj = jsonDoc.createNestedObject("data");
-        JsonObject  swObj   = dataObj.createNestedObject("software");
-        JsonObject  wifiObj = dataObj.createNestedObject("wifi");
+        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
+        JsonObject  hwObj           = dataObj.createNestedObject("hardware");
+        JsonObject  swObj           = dataObj.createNestedObject("software");
+        JsonObject  internalRamObj  = swObj.createNestedObject("internalRam");
+        JsonObject  wifiObj         = dataObj.createNestedObject("wifi");
 
         if (true == Settings::getInstance().open(true))
         {
@@ -206,10 +208,20 @@ static void status(void)
         }
 
         /* Prepare response */
-        jsonDoc["status"]   = STATUS_CODE_OK;
-        swObj["version"]    = Version::SOFTWARE;
-        wifiObj["ssid"]     = ssid;
-        httpStatusCode      = Html::STATUS_CODE_OK;
+        jsonDoc["status"]       = STATUS_CODE_OK;
+
+        hwObj["chipRev"]        = ESP.getChipRevision();
+        hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
+
+        swObj["version"]        = Version::SOFTWARE;
+        swObj["espSdkVersion"]  = ESP.getSdkVersion();
+
+        internalRamObj["heapSize"]      = ESP.getHeapSize();
+        internalRamObj["availableHeap"] = ESP.getFreeHeap();
+
+        wifiObj["ssid"]         = ssid;
+
+        httpStatusCode          = Html::STATUS_CODE_OK;
     }
 
     serializeJsonPretty(jsonDoc, content);

@@ -38,6 +38,10 @@ Every response will provide three items:
 ## Endpoint `<base-uri>`/status
 Get status information:
 * Software version.
+* ESP SDK version.
+* ESP chip revision.
+* ESP cpu frequency in MHz.
+* Internal RAM heap size and available heap.
 * Wifi SSID of the network, the display will connect to.
 
 Detail:
@@ -55,8 +59,17 @@ Result:
     "result": "ok",
     "resultCode": 0,
     "data": {
+        "hardware": {
+            "chipRev": 1,
+            "cpuFreqMhz": 120
+        },
         "software": {
-            "version": "v0.1.0"
+            "version": "v0.1.0",
+            "espSdkVersion": "xx",
+            "internalRam": {
+                "heapSize": 496,
+                "availableHeap": 412
+            }
         },
         "wifi": {
             "ssid": "Number5Lives"
