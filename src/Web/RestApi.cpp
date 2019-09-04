@@ -38,13 +38,14 @@
  *****************************************************************************/
 #include "RestApi.h"
 #include "Html.h"
-#include <ArduinoJson.h>
 #include "Settings.h"
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
 #include "Version.h"
 
 #include <crypto/base64.h>
+#include <WiFi.h>
+#include <ArduinoJson.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -74,6 +75,7 @@ typedef enum
 
 static bool toUInt8(const String& str, uint8_t& value);
 static bool toUInt16(const String& str, uint16_t& value);
+static uint8_t getSignalQuality(int8_t rssi);
 static void status(void);
 static void slots(void);
 static void slotText(void);
@@ -169,6 +171,35 @@ static bool toUInt16(const String& str, uint16_t& value)
 }
 
 /**
+ * Get the wifi signal quality, derrived from the RSSI.
+ * 
+ * @param[in] rssi  RSSI in dBm
+ * 
+ * @return Signal quality in percent
+ */
+static uint8_t getSignalQuality(int8_t rssi)
+{
+    uint8_t signalQuality = 0u;
+    const int8_t    RSSI_HIGH       = -50;  // dBm
+    const int8_t    RSSI_UNUSABLE   = -100; // dBm
+
+    if (RSSI_HIGH <= rssi)
+    {
+        signalQuality = 100u;
+    }
+    else if (RSSI_UNUSABLE >= rssi)
+    {
+        signalQuality = 0u;
+    }
+    else
+    {
+        signalQuality = static_cast<uint8_t>(2 * (rssi + 100));
+    }
+
+    return signalQuality;
+}
+
+/**
  * Get status information.
  * GET /api/v1/status
  */
@@ -195,6 +226,7 @@ static void status(void)
     else
     {
         String      ssid;
+        int8_t      rssi            = WiFi.RSSI();
         JsonObject  dataObj         = jsonDoc.createNestedObject("data");
         JsonObject  hwObj           = dataObj.createNestedObject("hardware");
         JsonObject  swObj           = dataObj.createNestedObject("software");
@@ -220,6 +252,8 @@ static void status(void)
         internalRamObj["availableHeap"] = ESP.getFreeHeap();
 
         wifiObj["ssid"]         = ssid;
+        wifiObj["rssi"]         = rssi;                     // dBm
+        wifiObj["quality"]      = getSignalQuality(rssi);   // percent
 
         httpStatusCode          = Html::STATUS_CODE_OK;
     }

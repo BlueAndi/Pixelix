@@ -43,6 +43,8 @@ Get status information:
 * ESP cpu frequency in MHz.
 * Internal RAM heap size and available heap.
 * Wifi SSID of the network, the display will connect to.
+* Wifi receive signal strength indicator in dBm.
+* Wifi signal quality in percent.
 
 Detail:
 * Method: GET
@@ -72,7 +74,9 @@ Result:
             }
         },
         "wifi": {
-            "ssid": "Number5Lives"
+            "ssid": "Number5Lives",
+            "rssi": -50,
+            "quality": 100
         }
     }
 }
