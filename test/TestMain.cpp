@@ -47,6 +47,7 @@ This module provides the main test entry point.
 #include <TextWidget.h>
 #include <Color.h>
 #include <StateMachine.hpp>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -434,6 +435,7 @@ static void testBitmapWidget(void);
 static void testTextWidget(void);
 static void testColor(void);
 static void testStateMachine(void);
+static void testSimpleTimer(void);
 
 /******************************************************************************
  * Variables
@@ -464,6 +466,7 @@ int main(int argc, char **argv)
     RUN_TEST(testTextWidget);
     RUN_TEST(testColor);
     RUN_TEST(testStateMachine);
+    RUN_TEST(testSimpleTimer);
 
     return UNITY_END();
 }
@@ -1141,6 +1144,36 @@ static void testStateMachine(void)
     TEST_ASSERT_EQUAL_UINT32(1u, stateA.getCallCntExit());
     TEST_ASSERT_EQUAL_UINT32(1u, stateB.getCallCntEntry());
     TEST_ASSERT_EQUAL_UINT32(1u, stateB.getCallCntExit());
+
+    return;
+}
+
+/**
+ * Test simple timer.
+ */
+static void testSimpleTimer(void)
+{
+    SimpleTimer testTimer;
+
+    /* Timer must be stopped */
+    TEST_ASSERT_FALSE(testTimer.isTimerRunning());
+    TEST_ASSERT_FALSE(testTimer.isTimeout());
+
+    /* Start and check */
+    testTimer.start(0u);
+    TEST_ASSERT_TRUE(testTimer.isTimerRunning());
+    TEST_ASSERT_TRUE(testTimer.isTimeout());
+    TEST_ASSERT_TRUE(testTimer.isTimerRunning());
+
+    /* Stop timer and check again */
+    testTimer.stop();
+    TEST_ASSERT_TRUE(testTimer.isTimerRunning());
+    TEST_ASSERT_FALSE(testTimer.isTimeout());
+
+    /* Restart timer */
+    testTimer.restart();
+    TEST_ASSERT_TRUE(testTimer.isTimerRunning());
+    TEST_ASSERT_TRUE(testTimer.isTimeout());
 
     return;
 }
