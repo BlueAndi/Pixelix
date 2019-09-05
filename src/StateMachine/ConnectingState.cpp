@@ -95,8 +95,7 @@ void ConnectingState::entry(StateMachine& sm)
     }
 
     /* Disable retry mechanism. */
-    m_isRetryEnabled    = false;
-    m_lastTimestamp     = 0u;
+    m_retryTimer.stop();
 
     /* Disable automatic reconnect, so we are able to handle the
      * reconnect behaviour by ourself.
@@ -108,7 +107,8 @@ void ConnectingState::entry(StateMachine& sm)
 
 void ConnectingState::process(StateMachine& sm)
 {
-    if (false == m_isRetryEnabled)
+    /* No retry mechanism is running? */
+    if (false == m_retryTimer.isTimerRunning())
     {
         wl_status_t status      = WL_IDLE_STATUS;
         String      infoStr     = "Connecting to ";
@@ -129,28 +129,25 @@ void ConnectingState::process(StateMachine& sm)
             DisplayMgr::getInstance().showSysMsg(errorStr);
 
             /* Wait a little bit, until retry. */
-            m_isRetryEnabled    = true;
-            m_lastTimestamp     = millis();
+            m_retryTimer.start(RETRY_DELAY);
 
             /* TODO How to determine whats wrong? SSID or password? */
         }
         else
         {
             /* Disable retry mechanism. */
-            m_isRetryEnabled    = false;
-            m_lastTimestamp     = 0u;
+            m_retryTimer.stop();
 
             sm.setState(ConnectedState::getInstance());
         }
-        
     }
+    /* Retry mechanism is active. */
     else
     {
         /* Retry delay timeout? */
-        if (RETRY_DELAY <= (millis() - m_lastTimestamp))
+        if (true == m_retryTimer.isTimeout())
         {
-            m_isRetryEnabled    = false;
-            m_lastTimestamp     = 0u;
+            m_retryTimer.stop();
         }
     }
 

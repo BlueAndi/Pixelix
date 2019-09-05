@@ -52,6 +52,7 @@ This module provides the a text widget, showing a colored string.
 #include <WString.h>
 #include <Widget.hpp>
 #include <Color.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -79,7 +80,7 @@ public:
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
         m_scrollIndex(0u),
-        m_lastTimestamp(0u)
+        m_scrollTimer()
     {
     }
 
@@ -98,7 +99,7 @@ public:
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
         m_scrollIndex(0u),
-        m_lastTimestamp(0u)
+        m_scrollTimer()
     {
     }
 
@@ -115,7 +116,7 @@ public:
         m_checkScrollingNeed(widget.m_checkScrollingNeed),
         m_isScrollingEnabled(widget.m_isScrollingEnabled),
         m_scrollIndex(widget.m_scrollIndex),
-        m_lastTimestamp(widget.m_lastTimestamp)
+        m_scrollTimer(widget.m_scrollTimer)
     {
     }
 
@@ -132,7 +133,7 @@ public:
         m_checkScrollingNeed    = widget.m_checkScrollingNeed;
         m_isScrollingEnabled    = widget.m_isScrollingEnabled;
         m_scrollIndex           = widget.m_scrollIndex;
-        m_lastTimestamp         = widget.m_lastTimestamp;
+        m_scrollTimer           = widget.m_scrollTimer;
 
         return *this;
     }
@@ -229,7 +230,7 @@ private:
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
     bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
     uint8_t         m_scrollIndex;          /**< Scroll index of the string */
-    uint32_t        m_lastTimestamp;        /**< Timestamp in ms of last processing. */
+    SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
 
 };
 

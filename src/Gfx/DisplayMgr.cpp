@@ -251,21 +251,19 @@ void DisplayMgr::process(void)
     }
     else
     {
-        uint8_t         nextSlot    = (m_activeSlotId + 1u) % MAX_SLOTS;
-        unsigned long   timestampMs = millis();
-        uint32_t        deltaTimeS  = static_cast<uint32_t>((timestampMs - m_timestampOfLastChange) / 1000u);
+        uint8_t nextSlot = (m_activeSlotId + 1u) % MAX_SLOTS;
 
         /* Slot rotation enabled? */
         if (true == m_activeSlotId)
         {
             /* Jump to next slot? */
-            if (m_period <= deltaTimeS)
+            if (true == m_slotChangeTimer.isTimeout())
             {
                 /* Set next slot active */
                 m_activeSlotId = nextSlot;
 
                 /* Wait another period */
-                m_timestampOfLastChange = timestampMs;
+                m_slotChangeTimer.restart();
             }
         }
 
@@ -286,9 +284,13 @@ void DisplayMgr::startRotating(bool start)
     m_rotate        = start;
     m_activeSlotId  = 0;
 
-    if (true == start)
+    if (false == start)
     {
-        m_timestampOfLastChange = millis();
+        m_slotChangeTimer.stop();
+    }
+    else
+    {
+        m_slotChangeTimer.start(DEFAULT_PERIOD);
     }
     
     return;
@@ -334,9 +336,8 @@ void DisplayMgr::delay(uint32_t waitTime)
 
 DisplayMgr::DisplayMgr() :
     m_slots(),
-    m_period(DEFAULT_PERIOD),
     m_activeSlotId(0u),
-    m_timestampOfLastChange(0ul),
+    m_slotChangeTimer(),
     m_rotate(false),
     m_slotsEnabled(false),
     m_sysMsgWidget()

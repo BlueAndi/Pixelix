@@ -53,6 +53,7 @@ configured with a specific layout and contains the content to show.
 #include <stdint.h>
 #include <Canvas.h>
 #include <TextWidget.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -177,8 +178,8 @@ public:
     /** Maximum number of supported slots. */
     static const uint8_t    MAX_SLOTS      = 4u;
 
-    /** Default period for changing slots in s. */
-    static const uint32_t   DEFAULT_PERIOD = 10u;
+    /** Default period for changing slots in ms. */
+    static const uint32_t   DEFAULT_PERIOD = 10000u;
 
     /** Text widget name, used for identification. */
     static const char*      TEXT_WIDGET_NAME;
@@ -203,14 +204,11 @@ private:
     /** List of all slots. A slot is based on a canvas over the full LED matrix. */
     Canvas*             m_slots[MAX_SLOTS];
 
-    /** Time duration between slots in s. */
-    uint32_t            m_period;
-
     /** Id of the current active slot */
     uint8_t             m_activeSlotId;
 
-    /** Timestamp of the last slot change in ms */
-    uint64_t            m_timestampOfLastChange;
+    /** Timer, used for changing the slot. */
+    SimpleTimer         m_slotChangeTimer;
 
     /** Rotate (true) slots or not (false) */
     bool                m_rotate;

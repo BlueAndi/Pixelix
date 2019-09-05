@@ -102,13 +102,13 @@ void TextWidget::update(Adafruit_GFX& gfx)
         {
             m_isScrollingEnabled    = true;
             m_scrollIndex           = 0u;
-            m_lastTimestamp         = millis() - DEFAULT_SCOLL_PAUSE;   /* Ensure update */
+            m_scrollTimer.start(0u);    /* Ensure immediate update */
         }
         else
         {
             m_isScrollingEnabled    = false;
             m_scrollIndex           = 0u;
-            m_lastTimestamp         = 0u;
+            m_scrollTimer.stop();
         }
     }
 
@@ -117,25 +117,28 @@ void TextWidget::update(Adafruit_GFX& gfx)
     {
         gfx.print(m_str);
     }
-    /* Scrolling is necessary */
+    /* Scrolling is necessary.
+     * Between two characters shall be a short delay, to give the user a chance to read it. ;-)
+     */
+    else if (true == m_scrollTimer.isTimeout())
+    {
+        gfx.print(&m_str.c_str()[m_scrollIndex]);
+        
+        /* Text scrolls completly out, until it starts from the beginning again. */
+        ++m_scrollIndex;
+        if (m_str.length() <= m_scrollIndex)
+        {
+            m_scrollIndex = 0;
+        }
+
+        m_scrollTimer.start(DEFAULT_SCOLL_PAUSE);
+    }
     else
     {
-        uint32_t    deltaMs = millis() - m_lastTimestamp;
-
-        /* Pause between two characters, to give the user a chance to read it. ;-) */
-        if (DEFAULT_SCOLL_PAUSE <= deltaMs)
-        {
-            gfx.print(&m_str.c_str()[m_scrollIndex]);
-            
-            /* Text scrolls completly out, until it starts from the beginning again. */
-            ++m_scrollIndex;
-            if (m_str.length() <= m_scrollIndex)
-            {
-                m_scrollIndex = 0;
-            }
-        }
+        /* Nothing to do. */
+        ;
     }
-
+    
     return;
 }
 

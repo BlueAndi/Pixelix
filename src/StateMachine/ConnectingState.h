@@ -51,6 +51,7 @@ The Connecting system state.
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <WString.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -118,11 +119,8 @@ private:
     /** Remote wifi passphrase */
     String                  m_wifiPassphrase;
 
-    /** Retry mechansim is enabled (true) or disabled (false). */
-    bool                    m_isRetryEnabled;
-
-    /** Last timestamp in ms, used for retry mechanism. */
-    uint32_t                m_lastTimestamp;
+    /** Timer, used for retry mechanism. */
+    SimpleTimer             m_retryTimer;
 
     /**
      * Constructs the state.
@@ -130,8 +128,7 @@ private:
     ConnectingState() :
         m_wifiSSID(),
         m_wifiPassphrase(),
-        m_isRetryEnabled(false),
-        m_lastTimestamp(0u)
+        m_retryTimer()
     {
     }
 
