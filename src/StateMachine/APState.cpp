@@ -53,6 +53,13 @@
  * Macros
  *****************************************************************************/
 
+/** Compile time assert
+ * 
+ * @param[in] condition Condition, which must be true, otherwise an assertion appears.
+ * @param[in] name      Just a name, for unification.
+ */
+#define STATIC_ASSERT( __condition, __name ) typedef char assert_failed_ ## __name [ (__condition) ? 1 : -1 ];
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -66,10 +73,13 @@
  *****************************************************************************/
 
 /* Set access point SSID */
-const char*     APState::WIFI_AP_SSID          = "esp32-rgb-led-matrix";
+const char*     APState::WIFI_AP_SSID                   = "esp32-rgb-led-matrix";
 
 /* Set access point passphrase (min. 8 characters) */
-const char*     APState::WIFI_AP_PASSPHRASE    = "Luke, I am your father.";
+const char*     APState::WIFI_AP_PASSPHRASE             = "Luke, I am your father.";
+
+/* Set a minimum of 8 digits for the passphrase. It shall not be lower than 8 digits! */
+const uint8_t    APState::WIFI_AP_PASSPHRASE_MIN_LEN    = 8u;
 
 /** Set access point local address */
 const IPAddress APState::LOCAL_IP(192u, 168u, 4u, 1u);
@@ -95,6 +105,19 @@ void APState::entry(StateMachine& sm)
     if (false == WiFi.softAPConfig(LOCAL_IP, GATEWAY, SUBNET))
     {
         String errorStr = "Configure wifi access point failed.";
+
+        /* Fatal error */
+        Serial.println(errorStr);
+        DisplayMgr::getInstance().showSysMsg(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
+    /* Passphrase must be greater or equal than 8 digits. */
+    else if (WIFI_AP_PASSPHRASE_MIN_LEN > strlen(WIFI_AP_PASSPHRASE))
+    {
+        String errorStr = "Wifi AP passphrase must have at least ";
+        errorStr += WIFI_AP_PASSPHRASE_MIN_LEN;
+        errorStr += " digits.";
 
         /* Fatal error */
         Serial.println(errorStr);
