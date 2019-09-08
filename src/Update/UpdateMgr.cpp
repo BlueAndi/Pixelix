@@ -182,7 +182,7 @@ void UpdateMgr::onEnd(void)
     /* Give the user a chance to read it. */
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
 
-    ESP.restart();
+    m_instance.restart();
 
     return;
 }
@@ -261,6 +261,26 @@ void UpdateMgr::onError(ota_error_t error)
 
     /* Give the user a chance to read it. */
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+
+    m_instance.restart();
+
+    return;
+}
+
+void UpdateMgr::restart(void)
+{
+    wifi_mode_t wifiMode = WiFi.getMode();
+
+    /* Disconnect first all connections */
+    if (WIFI_MODE_STA == wifiMode)
+    {
+        (void)WiFi.disconnect();
+    }
+    else if ((WIFI_MODE_AP == wifiMode) ||
+             (WIFI_MODE_APSTA == wifiMode))
+    {
+        (void)WiFi.softAPdisconnect();
+    }
 
     ESP.restart();
 

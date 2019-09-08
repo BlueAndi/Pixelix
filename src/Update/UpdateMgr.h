@@ -150,6 +150,11 @@ private:
      * @param[in] error Error information
      */
     static void onError(ota_error_t error);
+
+    /**
+     * Restart.
+     */
+    void restart(void);
 };
 
 /******************************************************************************
