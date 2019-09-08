@@ -1167,7 +1167,7 @@ static void testSimpleTimer(void)
 
     /* Stop timer and check again */
     testTimer.stop();
-    TEST_ASSERT_TRUE(testTimer.isTimerRunning());
+    TEST_ASSERT_FALSE(testTimer.isTimerRunning());
     TEST_ASSERT_FALSE(testTimer.isTimeout());
 
     /* Restart timer */
