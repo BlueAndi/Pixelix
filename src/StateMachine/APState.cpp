@@ -65,9 +65,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Set short wait time for showing a system message in ms */
-const uint32_t  APState::SYS_MSG_WAIT_TIME_SHORT = 250u;
-
 /* Set access point SSID */
 const char*     APState::WIFI_AP_SSID          = "esp32-rgb-led-matrix";
 

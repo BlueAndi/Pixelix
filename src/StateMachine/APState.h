@@ -98,9 +98,6 @@ public:
      */
     void exit(StateMachine& sm);
 
-    /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT;
-
     /** Access point SSID */
     static const char*      WIFI_AP_SSID;
 
