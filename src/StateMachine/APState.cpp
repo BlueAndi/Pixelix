@@ -74,6 +74,15 @@ const char*     APState::WIFI_AP_SSID          = "esp32-rgb-led-matrix";
 /* Set access point passphrase (min. 8 characters) */
 const char*     APState::WIFI_AP_PASSPHRASE    = "Luke, I am your father.";
 
+/** Set access point local address */
+const IPAddress APState::LOCAL_IP(192u, 168u, 4u, 1u);
+
+/* Set access point gateway address */
+const IPAddress APState::GATEWAY(192u, 168u, 4u, 1u);
+
+/* Set access point subnet mask */
+const IPAddress APState::SUBNET(255u, 255u, 255u, 0u);
+
 /* Access point state instance */
 APState         APState::m_instance;
 
@@ -83,8 +92,21 @@ APState         APState::m_instance;
 
 void APState::entry(StateMachine& sm)
 {
+    /* Configure access point.
+     * The DHCP server will automatically be started and uses the range x.x.x.100 - x.x.x.200
+     */
+    if (false == WiFi.softAPConfig(LOCAL_IP, GATEWAY, SUBNET))
+    {
+        String errorStr = "Configure wifi access point failed.";
+
+        /* Fatal error */
+        Serial.println(errorStr);
+        DisplayMgr::getInstance().showSysMsg(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
     /* Setup wifi access point failed? */
-    if (false == WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSPHRASE))
+    else if (false == WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSPHRASE))
     {
         String errorStr = "Setup wifi access point failed.";
 

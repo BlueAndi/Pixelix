@@ -50,6 +50,7 @@ The AccessPoint system state.
  *****************************************************************************/
 #include <stdint.h>
 #include <StateMachine.hpp>
+#include <IPAddress.h>
 
 /******************************************************************************
  * Macros
@@ -105,6 +106,15 @@ public:
 
     /** Access point passphrase (min. 8 characters) */
     static const char*      WIFI_AP_PASSPHRASE;
+
+    /** Access point local address */
+    static const IPAddress  LOCAL_IP;
+
+    /** Access point gateway address */
+    static const IPAddress  GATEWAY;
+
+    /** Access point subnet mask */
+    static const IPAddress  SUBNET;
 
 private:
 
