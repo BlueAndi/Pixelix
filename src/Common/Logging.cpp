@@ -67,13 +67,6 @@ void Logging::init(const LogLevel logLevel, Print* output)
     {
         setLogLevel(logLevel);
         m_logOutput = output;
-
-        if (&Serial == output)
-        {
-            Serial.begin(115200u);
-        }
-
-        /* TODO: Initialize other log sinks */
     }
 }
 
@@ -89,17 +82,17 @@ Logging::LogLevel Logging::getLogLevel() const
 
 void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* format, ...)
 {
-    char buffer[LOG_MESSAGE_BUFFER_SIZE];
+    char buffer[Logging::MESSAGE_BUFFER_SIZE];
 
     va_list args;
 
     va_start(args, format);
-    vsnprintf(buffer, LOG_MESSAGE_BUFFER_SIZE, format, args);
+    vsnprintf(buffer, Logging::MESSAGE_BUFFER_SIZE, format, args);
     va_end(args);
 
     if (isSeverityValid(messageLogLevel))
     {
-        printLogMessage(file, line, buffer);
+        printLogMessage(file, line, messageLogLevel, buffer);
     }
     else
     {
@@ -111,7 +104,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
 {
     if (isSeverityValid(messageLogLevel))
     {
-        printLogMessage(file, line, message);
+        printLogMessage(file, line, messageLogLevel, message);
     }
     else
     {
@@ -149,28 +142,56 @@ const char* Logging::getBaseNameFromPath(const char* path)
     return basename;
 }
 
-void Logging::printLogMessage(const char* file, int line, char* message)
+void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* message)
 {
     m_logOutput->print("|");
     m_logOutput->print(millis());
-    m_logOutput->print("| ");
+    m_logOutput->print("|");
+    m_logOutput->print(logLevelToString(messageLogLevel));
     m_logOutput->print(getBaseNameFromPath(file));
     m_logOutput->print(":");
     m_logOutput->print(line);
-    m_logOutput->print(": ");
+    m_logOutput->print(" ");
     m_logOutput->println(message);
 }
 
-void Logging::printLogMessage(const char* file, int line, String message)
+void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String &message)
 {
     m_logOutput->print("|");
     m_logOutput->print(millis());
-    m_logOutput->print("| ");
+    m_logOutput->print("|");
+    m_logOutput->print(logLevelToString(messageLogLevel));
     m_logOutput->print(getBaseNameFromPath(file));
     m_logOutput->print(":");
     m_logOutput->print(line);
-    m_logOutput->print(": ");
+    m_logOutput->print( " " );
     m_logOutput->println(message);
+}
+
+const String Logging::logLevelToString(const Logging::LogLevel LogLevel)
+{
+    String logLevelString;
+
+    switch (LogLevel)
+    {
+        case Logging::LOGLEVEL_INFO:
+            logLevelString = " INFO: ";
+            break;
+        case Logging::LOGLEVEL_WARNING :
+            logLevelString = " WARNING: ";
+            break;
+        case Logging::LOGLEVEL_ERROR :
+            logLevelString = " ERROR: ";
+        break;
+        case Logging::LOGLEVEL_FATAL :
+            logLevelString = " FATAL: ";
+            break;
+
+        default:
+            break;
+    }
+
+    return logLevelString;
 }
 /******************************************************************************
  * External Functions
