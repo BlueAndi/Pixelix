@@ -26,7 +26,7 @@
 *******************************************************************************/
 /**
 @brief  Logging
-@author Andreas Merkle <web@blue-andi.de>
+@author Yann Le Glaz <yann_le@web.de>
 @section desc Description
 @see Logging.h
 *******************************************************************************/
@@ -82,12 +82,12 @@ Logging::LogLevel Logging::getLogLevel() const
 
 void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* format, ...)
 {
-    char buffer[Logging::MESSAGE_BUFFER_SIZE];
+    char buffer[MESSAGE_BUFFER_SIZE];
 
     va_list args;
 
     va_start(args, format);
-    vsnprintf(buffer, Logging::MESSAGE_BUFFER_SIZE, format, args);
+    vsnprintf(buffer, MESSAGE_BUFFER_SIZE, format, args);
     va_end(args);
 
     if (isSeverityValid(messageLogLevel))
@@ -100,7 +100,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
     }
 }
 
-void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, String message)
+void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message)
 {
     if (isSeverityValid(messageLogLevel))
     {
@@ -123,7 +123,7 @@ bool Logging::isSeverityValid(const Logging::LogLevel logLevel)
     return (logLevel >= m_currentLogLevel);
 }
 
-const char* Logging::getBaseNameFromPath(const char* path)
+const char* Logging::getBaseNameFromPath(const char* path) const
 {
     const char* basename = path;
     const char* p        = path;
@@ -142,7 +142,7 @@ const char* Logging::getBaseNameFromPath(const char* path)
     return basename;
 }
 
-void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* message)
+void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* message) const
 {
     m_logOutput->print("|");
     m_logOutput->print(millis());
@@ -155,7 +155,7 @@ void Logging::printLogMessage(const char* file, int line, const Logging::LogLeve
     m_logOutput->println(message);
 }
 
-void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String &message)
+void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message) const
 {
     m_logOutput->print("|");
     m_logOutput->print(millis());
@@ -164,11 +164,11 @@ void Logging::printLogMessage(const char* file, int line, const Logging::LogLeve
     m_logOutput->print(getBaseNameFromPath(file));
     m_logOutput->print(":");
     m_logOutput->print(line);
-    m_logOutput->print( " " );
+    m_logOutput->print(" ");
     m_logOutput->println(message);
 }
 
-const String Logging::logLevelToString(const Logging::LogLevel LogLevel)
+String Logging::logLevelToString(const Logging::LogLevel LogLevel) const
 {
     String logLevelString;
 
@@ -177,12 +177,15 @@ const String Logging::logLevelToString(const Logging::LogLevel LogLevel)
         case Logging::LOGLEVEL_INFO:
             logLevelString = " INFO: ";
             break;
+
         case Logging::LOGLEVEL_WARNING :
             logLevelString = " WARNING: ";
             break;
+
         case Logging::LOGLEVEL_ERROR :
             logLevelString = " ERROR: ";
         break;
+
         case Logging::LOGLEVEL_FATAL :
             logLevelString = " FATAL: ";
             break;

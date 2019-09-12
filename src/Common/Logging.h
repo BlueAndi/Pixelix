@@ -26,12 +26,12 @@
 *******************************************************************************/
 /**
 @brief  Logging
-@author Andreas Merkle <web@blue-andi.de>
+@author Yann Le Glaz <yann_le@web.de>
 @section desc Description
 This module provides a possibility to log messages
 *******************************************************************************/
-/** @defgroup Logging
- *
+/** @defgroup logging Logging
+ * This module provides a possibility to log messages.
  *
  * @{
  */
@@ -52,16 +52,16 @@ This module provides a possibility to log messages
 /******************************************************************************
  * Macros
  *****************************************************************************/
-/** Severity: InfoLevel */
+/** Severity: InfoLevel. */
 #define LL_INFO (Logging::LOGLEVEL_INFO)
 
-/** Severity: WarningLevel */
+/** Severity: WarningLevel. */
 #define LL_WARNING (Logging::LOGLEVEL_WARNING)
 
-/** Severity: ErrorLevel */
+/** Severity: ErrorLevel. */
 #define LL_ERROR (Logging::LOGLEVEL_ERROR)
 
-/** Severity: IatalLevel */
+/** Severity: IatalLevel. */
 #define LL_FATAL (Logging::LOGLEVEL_FATAL)
 
 /** Macro for Logging with LOGLEVEL_INFO. */
@@ -95,7 +95,7 @@ public:
      */
     enum LogLevel
     {
-        LOGLEVEL_INFO = 0,  /**< Log information interested for the user . */
+        LOGLEVEL_INFO = 0,  /**< Log information interested for the user. */
         LOGLEVEL_WARNING,   /**< Log warning messages to show the user to pay attention. */
         LOGLEVEL_ERROR,     /**< Log error messages in case of a fault with an alternative solution. */
         LOGLEVEL_FATAL      /**< Log fatal messages in case there is no way out. */
@@ -108,27 +108,30 @@ public:
      *
      * @return Logging instance.
      */
-    static Logging&getInstance()
+    static Logging& getInstance()
     {
         return m_instance;
     }
 
     /**
      * Set the initial logLevel and specifies the output of the logging.
-     * @param[in] logLevel the logLevel
-     * @param[in] output the log sink where the output has to be sent to.
+     * 
+     * @param[in] logLevel The logLevel.
+     * @param[in] output The log sink where the output has to be sent to.
      */
     void init(const LogLevel logLevel, Print* output);
 
     /**
-     * Set the logLevel
-     * @param[in] logLevel the new logLevel.
+     * Set the logLevel.
+     * 
+     * @param[in] logLevel The new logLevel.
     */
     void setLogLevel(const LogLevel logLevel);
 
     /**
-     * Get the current logLevel
-     * @return the current logLevel
+     * Get the current logLevel.
+     * 
+     * @return The current logLevel.
     */
     LogLevel getLogLevel() const;
 
@@ -136,11 +139,11 @@ public:
      * Write a formatable logMessage to the current output,
      * if the severity is >= the current logLevel, otherwise the logMessage is discarded.
      *
-     * @param[in] messageLogLevel the logLevel.
-     * @param[in] format the format of the variable arguments.
-     * @param[in] ... the variable arguments.
+     * @param[in] messageLogLevel The logLevel.
+     * @param[in] format The format of the variable arguments.
+     * @param[in] ... Zhe variable arguments.
      *
-     * @note The max size of a logMessage is restricted by Logging::MESSAGE_BUFFER_SIZE
+     * @note The max. size of a logMessage is restricted by MESSAGE_BUFFER_SIZE.
      */
     void processLogMessage(const char* file, int line, const LogLevel messageLogLevel, const char* format, ...);
     
@@ -148,70 +151,71 @@ public:
      * Write a formatable logMessage to the current output,
      * if the severity is >= the current logLevel, otherwise the logMessage is discarded.
      *
-     * @param[in] messageLogLevel the logLevel.
-     * @param[in] format the format of the variable arguments.
-     * @param[in] message the message as string.
+     * @param[in] messageLogLevel The logLevel.
+     * @param[in] format The format of the variable arguments.
+     * @param[in] message The message as string.
      *
-     * @note The max size of a logMessage is restricted by Logging::MESSAGE_BUFFER_SIZE
+     * @note The max. size of a logMessage is restricted by MESSAGE_BUFFER_SIZE.
      */
-    void processLogMessage(const char* file, int line, const LogLevel messageLogLevel, const String message);
+    void processLogMessage(const char* file, int line, const LogLevel messageLogLevel, const String& message);
 
 private:
 
-    /** Logging  instance */
+    /** Logging  instance. */
     static Logging m_instance;
 
-    /** The current logLevel */
+    /** The current logLevel. */
     LogLevel m_currentLogLevel;
 
-    /** The current logOutput */
+    /** The current logOutput. */
     Print* m_logOutput;
 
     /**
      * Checks wether the given severity of a logMessage is valid to be printed.
-     * @param[in] the logLevel that has to be checked.
+     * 
+     * @param[in] logLevel the logLevel that has to be checked.
      *
-     * @return true if the severity is >= the current logLevel, otherwise false
+     * @return True if the severity is >= the current logLevel, otherwise false.
     */
     bool isSeverityValid(const LogLevel logLevel);
 
     /**
      * Extracts the basename of a file from a given path.
      *
-     * @param[in] path the path as retrieved from __FILE__
+     * @param[in] path The path as retrieved from __FILE__.
      *
-     * @return the basename
+     * @return The basename.
     */
-    const char* getBaseNameFromPath(const char* path);
+    const char* getBaseNameFromPath(const char* path) const;
 
     /**
      * Print the logMessage to the current output.
      * 
-     * @param[in] file the filename.
-     * @param[in] line the linenumber in the file.
-     * @param[in] messageLogLevel the logLevel of the current message.
-     * @param[in] message the message as char*.
+     * @param[in] file The filename.
+     * @param[in] line The linenumber in the file.
+     * @param[in] messageLogLevel The logLevel of the current message.
+     * @param[in] message The message as char*.
      */
-    void printLogMessage(const char* file, int line,  const Logging::LogLevel messageLogLevel, const char* message);
+    void printLogMessage(const char* file, int line,  const Logging::LogLevel messageLogLevel, const char* message) const;
     
      /**
      * Print the logMessage to the current output.
      *
-     * @param[in] file the filename.
-     * @param[in] line the linenumber in the file.
-     * @param[in] messageLogLevel the logLevel of the current message .
-     * @param[in] message the message as String.
+     * @param[in] file The filename.
+     * @param[in] line The linenumber in the file.
+     * @param[in] messageLogLevel The logLevel of the current message .
+     * @param[in] message The message as string.
      */
-    void printLogMessage( const char* file, int line, const Logging::LogLevel messageLogLevel, const String &message );
+    void printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message) const;
 
     /**
      * Get a string representation of the given logLevel.
      * 
-     * @param[in] logLevel the logLevel.
+     * @param[in] logLevel The logLevel.
      * 
-     * @return the severity of the given logLevel as string.
+     * @return The severity of the given logLevel as string.
      */
-    const String logLevelToString(const Logging::LogLevel LogLevel);
+    String logLevelToString(const Logging::LogLevel LogLevel) const; 
 
     /**
      * Construct Logging.
