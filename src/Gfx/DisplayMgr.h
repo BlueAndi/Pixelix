@@ -112,7 +112,7 @@ public:
     /**
      * Set bitmap in the bitmap widget of a slot.
      * Note, a copy of the bitmap will be created. For max. width and size
-     * see @BMP_WIDTH and @BMP_HEIGHT.
+     * see @sa BMP_WIDTH and @sa BMP_HEIGHT.
      * 
      * @param[in] slotId    Slot id
      * @param[in] bitmap    Bitmap buffer

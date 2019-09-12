@@ -169,7 +169,7 @@ public:
     /**
      * Get widget type as string.
      * 
-     * @param Widget type string
+     * @return Widget type string
      */
     const char* getType(void) const
     {

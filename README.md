@@ -35,7 +35,7 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 1. Load workspace in VSCode.
 2. Change to PlatformIO toolbar.
 3. _Project Tasks -> Build_ or via hotkey ctrl-alt-b
-4. Running tests with _Project Tasks -> env:native -> Build_
+4. Running tests with _Project Tasks -> env:native -> Test_
 
 ### Used Libraries
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.

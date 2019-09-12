@@ -553,3 +553,5 @@ namespace ColorDef
 }
 
 #endif  /* __COLORDEF_HPP__ */
+
+/** @} */

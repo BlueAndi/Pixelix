@@ -27,8 +27,10 @@
 /**
 @brief  Logging
 @author Yann Le Glaz <yann_le@web.de>
+
 @section desc Description
-This module provides a possibility to log messages
+This module provides a possibility to log messages.
+
 *******************************************************************************/
 /** @defgroup logging Logging
  * This module provides a possibility to log messages.
@@ -139,9 +141,11 @@ public:
      * Write a formatable logMessage to the current output,
      * if the severity is >= the current logLevel, otherwise the logMessage is discarded.
      *
-     * @param[in] messageLogLevel The logLevel.
-     * @param[in] format The format of the variable arguments.
-     * @param[in] ... The variable arguments.
+     * @param[in] file              Name of the file
+     * @param[in] line              Line number in the file
+     * @param[in] messageLogLevel   The logLevel.
+     * @param[in] format            The format of the variable arguments.
+     * @param[in] ...               The variable arguments.
      *
      * @note The max. size of a logMessage is restricted by MESSAGE_BUFFER_SIZE.
      */
@@ -151,9 +155,10 @@ public:
      * Write a formatable logMessage to the current output,
      * if the severity is >= the current logLevel, otherwise the logMessage is discarded.
      *
-     * @param[in] messageLogLevel The logLevel.
-     * @param[in] format The format of the variable arguments.
-     * @param[in] message The message as string.
+     * @param[in] file              Name of the file
+     * @param[in] line              Line number in the file
+     * @param[in] messageLogLevel   The logLevel.
+     * @param[in] message           The message as string.
      *
      * @note The max. size of a logMessage is restricted by MESSAGE_BUFFER_SIZE.
      */
