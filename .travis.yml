@@ -30,10 +30,12 @@ addons:
   apt:
     packages:
       - doxygen
+      - graphviz
 install:
     - pip install -U platformio
     - platformio update
 script:
     - platformio run --environment esp32doit-devkit-v1
     - platformio test --environment native
-    - cd ./doc/doxygen; doxygen Doxyfile
+    - cd ./doc/doxygen;
+    - doxygen Doxyfile
