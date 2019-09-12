@@ -41,9 +41,9 @@ script:
     - doxygen --version
     - doxygen Doxyfile
     - |
-    if [[ -s doxygen_warnings.txt ]]; then
-        echo "Please fix doxygen warnings:"
-        echo ""
-        cat doxygen_warnings.txt
-        exit -1
-    fi
+        if [[ -s doxygen_warnings.txt ]]; then
+            echo "Please fix doxygen warnings:"
+            echo ""
+            cat doxygen_warnings.txt
+            exit -1
+        fi
