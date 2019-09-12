@@ -38,6 +38,7 @@ script:
     - platformio run --environment esp32doit-devkit-v1
     - platformio test --environment native
     - cd ./doc/doxygen;
+    - doxygen --version
     - doxygen Doxyfile
     - |
     if [[ -s doxygen_warnings.txt ]]; then
