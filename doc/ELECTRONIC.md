@@ -52,14 +52,14 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 The following table shows the strapping bit status on the ESP32 DevKitV1 board. See also ESP32 series datasheet chapter 2.4
 
 | Pin | Default | Function 1 | Function 2 |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | Voltage of internal LDO (VDD_SDIO) |
 | Pin | Default | 3.3 V | 1.8 V |
 | GPIO 12 (MTDI) | Low | Low | High |
 Result: 3.3 V
 
 | Pin | Default | Function 1 | Function 2 |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | Booting mode |
 | Pin | Default | SPI Boot | Download Boot |
 | GPIO 0 | High | High | Low |
@@ -67,7 +67,7 @@ Result: 3.3 V
 Result: SPI Boot
 
 | Pin | Default | Function 1 | Function 2 |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- |
 | Enabling/Disabling debugging log print over U0TXD during booting |
 | Pin | Default | U0TXD Toggling | U0TXD Silent |
 | GPIO 15 (MTDO) | High | High | Low |
