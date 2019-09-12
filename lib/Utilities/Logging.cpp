@@ -53,12 +53,14 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
 /* Initialize Logging instance */
 Logging Logging::m_instance;
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
 void Logging::init(const LogLevel logLevel, Print* output)
 {
     if (NULL != output)
@@ -109,6 +111,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
         /* LogMessage is discarded! */
     }
 }
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -116,6 +119,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
 bool Logging::isSeverityValid(const Logging::LogLevel logLevel)
 {
     return (logLevel >= m_currentLogLevel);
@@ -194,6 +198,7 @@ String Logging::logLevelToString(const Logging::LogLevel LogLevel) const
 
     return logLevelString;
 }
+
 /******************************************************************************
  * External Functions
  *****************************************************************************/
