@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Settings
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see Settings.h
-
-*******************************************************************************/
+ * @brief  Settings
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

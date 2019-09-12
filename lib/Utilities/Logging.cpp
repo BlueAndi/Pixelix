@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Logging
-@author Yann Le Glaz <yann_le@web.de>
-
-@section desc Description
-@see Logging.h
-
-*******************************************************************************/
+ * @brief  Logging
+ * @author Yann Le Glaz <yann_le@web.de>
+ */
 
 /******************************************************************************
  * Includes

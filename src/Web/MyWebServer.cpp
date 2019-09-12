@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Web server
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see MyWebserver.h
-
-*******************************************************************************/
+ * @brief  Web server
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

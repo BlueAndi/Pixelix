@@ -25,16 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Board Abstraction
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the hardware board abstraction.
-
-*******************************************************************************/
-/** @defgroup board Board Abstraction
- * The board abstraction is unique for the electronic hardware board and
- * provides its functionality on a lower level interface.
+ * @brief  Board Abstraction
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup hal
  *
  * @{
  */

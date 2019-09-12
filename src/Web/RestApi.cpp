@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  REST API
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see RestApi.h
-
-*******************************************************************************/
+ * @brief  REST pages
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

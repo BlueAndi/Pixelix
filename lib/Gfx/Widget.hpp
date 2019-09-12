@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Base Widget
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the basic widget.
-
-*******************************************************************************/
-/** @defgroup widget Base Widget
- * This module provides the basic widget.
+ * @brief  Base Widget
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */

@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Color
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see Color.h
-
-*******************************************************************************/
+ * @brief  Color
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

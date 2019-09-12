@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Update manager
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module handles the over-the-air update.
-
-*******************************************************************************/
-/** @defgroup updatemgr Update Manager
- * This module handles the over-the-air update.
+ * @brief  Update manager
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup update
  *
  * @{
  */

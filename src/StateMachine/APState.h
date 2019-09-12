@@ -25,16 +25,11 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: AccessPoint
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-The AccessPoint system state.
-
-*******************************************************************************/
-/** @defgroup apstate System state: AccessPoint
- * The AccessPoint system state.
- *
+ * @brief  System state: AP
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup sys_states
+ * 
  * @{
  */
 

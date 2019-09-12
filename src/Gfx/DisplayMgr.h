@@ -25,17 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Display manager
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-The display manager is responsible for showing stuff in the right time on the
-display. For this several time slots are provided. Each time slot can be
-configured with a specific layout and contains the content to show.
-
-*******************************************************************************/
-/** @defgroup displaymgr Display manager
- * This module provides the display manager.
+ * @brief  Display manager
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */

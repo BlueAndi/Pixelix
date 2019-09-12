@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  LED matrix
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides access to the LED matrix.
-
-*******************************************************************************/
-/** @defgroup ledmatrix LED matrix
- * This module provides access to the LED matrix.
+ * @brief  LED matrix
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */

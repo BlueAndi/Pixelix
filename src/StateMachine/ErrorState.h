@@ -25,16 +25,11 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Error
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-The Error system state.
-
-*******************************************************************************/
-/** @defgroup errorstate System state: Error
- * The Error system state.
- *
+ * @brief  System state: Error
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup sys_states
+ * 
  * @{
  */
 

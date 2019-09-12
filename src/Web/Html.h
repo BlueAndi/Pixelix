@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Html
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides HTML5 generation helper functions.
-
-*******************************************************************************/
-/** @defgroup html Html
- * The HTML5 helper functions support easy web page building.
+ * @brief  HTML helper functions
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup web
  *
  * @{
  */
@@ -51,6 +46,7 @@ This module provides HTML5 generation helper functions.
 #include <WString.h>
 #include <stdint.h>
 
+/** HTML helper functions */
 namespace Html
 {
 

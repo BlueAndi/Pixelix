@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  REST API
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the REST API.
-
-*******************************************************************************/
-/** @defgroup restapi REST API
- * This module provides the REST API.
+ * @brief  REST pages
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup web
  *
  * @{
  */
@@ -51,6 +46,7 @@ This module provides the REST API.
 #include <WebServer.h>
 #include <stdint.h>
 
+/** REST pages installer */
 namespace RestApi
 {
 

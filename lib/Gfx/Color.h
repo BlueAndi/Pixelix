@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Color
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides a color representation.
-
-*******************************************************************************/
-/** @defgroup color Color
- * This module provides a color representation.
+ * @brief  Color
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */

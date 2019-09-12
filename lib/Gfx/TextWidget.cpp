@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Text Widget
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see TextWidget.h
-
-*******************************************************************************/
+ * @brief  Text Widget
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

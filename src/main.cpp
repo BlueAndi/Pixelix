@@ -25,14 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main entry point
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the main entry point. It setup the whole system and
-has the main loop.
-
-*******************************************************************************/
+ * @brief  Main entry point
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

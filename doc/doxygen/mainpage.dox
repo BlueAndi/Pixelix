@@ -1,0 +1,43 @@
+/**
+
+@mainpage Manual of esp-rgb-led-matrix
+Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
+<hr>
+
+@defgroup gfx Graphics functions
+The graphics functions containing all kind of widgets and the main display manager,
+as well as the LED matrix controller.
+@{
+@}
+
+@defgroup hal Hardware abstraction
+The hardware abstraction makes it easier to use internal and external peripherals.
+@{
+@}
+
+@defgroup statemachine Statemachine
+Generic state machine.
+@{
+@}
+
+@defgroup sys_states System states
+The system states.
+@{
+@}
+
+@defgroup update Update routines
+The over-the-air update rountes.
+@{
+@}
+
+@defgroup utilities Utility functions
+The utilities are widely common used functions, like a vertical layer.
+@{
+@}
+
+@defgroup web Web functions
+All web related functions.
+@{
+@}
+
+*/

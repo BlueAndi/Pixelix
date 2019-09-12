@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Canvas
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see Canvas.h
-
-*******************************************************************************/
+ * @brief  Canvas
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

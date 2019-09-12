@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Init
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see InitState.h
-
-*******************************************************************************/
+ * @brief  System state: Init
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

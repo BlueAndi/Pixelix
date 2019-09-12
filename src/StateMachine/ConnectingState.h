@@ -25,16 +25,11 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Connecting
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-The Connecting system state.
-
-*******************************************************************************/
-/** @defgroup connectingstate System state: Connecting
- * The Connecting system state.
- *
+ * @brief  System state: Connecting
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup sys_states
+ * 
  * @{
  */
 

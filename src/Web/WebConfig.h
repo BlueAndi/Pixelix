@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  WebConfig
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides web related configurations.
-
-*******************************************************************************/
-/** @defgroup webconfig WebConfig
- * This module provides web related configurations.
+ * @brief  Webserver configuration
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup web
  *
  * @{
  */
@@ -49,6 +44,7 @@ This module provides web related configurations.
  * Includes
  *****************************************************************************/
 
+/** Webserver configuration constants. */
 namespace WebConfig
 {
 

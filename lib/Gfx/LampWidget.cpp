@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Lamp Widget
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see LampWidget.h
-
-*******************************************************************************/
+ * @brief  Lamp Widget
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

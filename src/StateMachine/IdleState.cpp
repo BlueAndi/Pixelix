@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Idle
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see IdleState.h
-
-*******************************************************************************/
+ * @brief  System state: Idle
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

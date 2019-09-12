@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Abstract state machine
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides an abstract state machine.
-
-*******************************************************************************/
-/** @defgroup statemachine Abstract state machine
- * This module provides an abstract state machine.
+ * @brief  Abstract state machine
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup statemachine
  *
  * @{
  */

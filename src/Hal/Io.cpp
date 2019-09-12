@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  I/O abstraction
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see Io.h
-
-*******************************************************************************/
+ * @brief  I/O abstraction
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

@@ -25,16 +25,11 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Idle
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-The idle system state.
-
-*******************************************************************************/
-/** @defgroup idlestate System state: Idle
- * The idle system state.
- *
+ * @brief  System state: Idle
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup sys_states
+ * 
  * @{
  */
 

@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Bitmap Widget
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see BitmapWidget.h
-
-*******************************************************************************/
+ * @brief  Bitmap Widget
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

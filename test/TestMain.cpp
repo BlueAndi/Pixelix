@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Main test entry point
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the main test entry point.
-
-*******************************************************************************/
+ * @brief  Main test entry point
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

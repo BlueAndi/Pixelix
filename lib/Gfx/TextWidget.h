@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Text Widget
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the a text widget, showing a colored string.
-
-*******************************************************************************/
-/** @defgroup textwidget Text Widget
- * This module provides the a text widget, showing a colored string.
+ * @brief  Text Widget
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */

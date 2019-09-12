@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Web server
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the web server instance.
-
-*******************************************************************************/
-/** @defgroup mywebserver Web server
- * This module provides the web server instance.
+ * @brief  Web server
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup web
  *
  * @{
  */
@@ -51,6 +46,7 @@ This module provides the web server instance.
 #include <WebServer.h>
 #include <stdint.h>
 
+/** Web server */
 namespace MyWebServer
 {
 

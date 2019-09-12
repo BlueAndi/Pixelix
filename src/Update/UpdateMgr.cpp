@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Update manager
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see UpdateMgr.h
-
-*******************************************************************************/
+ * @brief  Update manager
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

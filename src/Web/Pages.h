@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Pages
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides all web pages.
-
-*******************************************************************************/
-/** @defgroup pages Pages
- * This module provides all web pages.
+ * @brief  Web pages
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup web
  *
  * @{
  */
@@ -51,6 +46,7 @@ This module provides all web pages.
 #include <WebServer.h>
 #include <stdint.h>
 
+/** Web pages installer */
 namespace Pages
 {
 

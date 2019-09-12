@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Bitmap Widget
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the a bitmap widget.
-
-*******************************************************************************/
-/** @defgroup bitmapwidget Bitmap Widget
- * This module provides the a bitmap widget.
+ * @brief  Bitmap Widget
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */

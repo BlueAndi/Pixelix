@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Logging
-@author Yann Le Glaz <yann_le@web.de>
-
-@section desc Description
-This module provides a possibility to log messages.
-
-*******************************************************************************/
-/** @defgroup logging Logging
- * This module provides a possibility to log messages.
+ * @brief  Logging
+ * @author Yann Le Glaz <yann_le@web.de>
+ * 
+ * @addtogroup utilities
  *
  * @{
  */
@@ -54,6 +49,7 @@ This module provides a possibility to log messages.
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
 /** Severity: InfoLevel. */
 #define LL_INFO (Logging::LOGLEVEL_INFO)
 
@@ -233,8 +229,8 @@ private:
     }
 
     /**
-    * Destroys Logging.
-    */
+     * Destroys Logging.
+     */
     ~Logging()
     {
 

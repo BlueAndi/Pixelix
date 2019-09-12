@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  LED matrix
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see LedMatrix.h
-
-*******************************************************************************/
+ * @brief  LED matrix
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

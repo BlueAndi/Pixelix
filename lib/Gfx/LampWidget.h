@@ -25,17 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Lamp Widget
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the a lamp widget, showing the behaviour like a colored lamp.
-Its size is fixed set.
-
-*******************************************************************************/
-/** @defgroup lampwidget Lamp Widget
- * This module provides the a lamp widget, showing the behaviour like a colored lamp.
- * Its size is fixed set.
+ * @brief  Lamp Widget
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */

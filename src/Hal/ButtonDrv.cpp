@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Board Abstraction
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see Board.h
-
-*******************************************************************************/
+ * @brief  Button driver
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

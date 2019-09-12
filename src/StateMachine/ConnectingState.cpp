@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Connecting
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see ConnectingState.h
-
-*******************************************************************************/
+ * @brief  System state: Connecting
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

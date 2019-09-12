@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Canvas
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides a drawing canvas, which can contain several widgets.
-
-*******************************************************************************/
-/** @defgroup canvas Canvas
- * This module provides a drawing canvas, which can contain several widgets.
+ * @brief  Canvas
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */

@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Settings
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module handles the persistent settings.
-
-*******************************************************************************/
-/** @defgroup settings Settings
- * The settings are persistent stored key:value pairs.
+ * @brief  Settings
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup utilities
  *
  * @{
  */

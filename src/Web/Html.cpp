@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Html
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see Html.h
-
-*******************************************************************************/
+ * @brief  HTML helper function
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

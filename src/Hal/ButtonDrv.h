@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Button Driver
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides a reliable state of the user button.
-
-*******************************************************************************/
-/** @defgroup button_drv Button Driver
- * The button driver handles the debouncing of the user button.
+ * @brief  Button driver
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup hal
  *
  * @{
  */

@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: AP
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see APState.h
-
-*******************************************************************************/
+ * @brief  System state: AP
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

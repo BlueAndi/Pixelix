@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Doubly linked list
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides a double chained list.
-
-*******************************************************************************/
-/** @defgroup linkedlist Doubly linked list
- * This list is a doubly linked list.
+ * @brief  Doubly linked list
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup utilities
  *
  * @{
  */

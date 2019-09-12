@@ -25,13 +25,9 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Error
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-@see ErrorState.h
-
-*******************************************************************************/
+ * @brief  System state: Error
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
 
 /******************************************************************************
  * Includes

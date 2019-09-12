@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Abstract graphics interface for test
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the general graphics interface for testing purposes.
-
-*******************************************************************************/
-/** @defgroup adafruitgfx Abstract graphics interface for test
- * This module provides the abstract graphics interface for testing purposes.
+ * @brief  Abstract graphics interface for test
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup test
  *
  * @{
  */

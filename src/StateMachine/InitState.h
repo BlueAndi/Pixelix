@@ -25,16 +25,11 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  System state: Init
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-The Init system state.
-
-*******************************************************************************/
-/** @defgroup initstate System state: Init
- * The Init system state.
- *
+ * @brief  System state: Init
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup sys_states
+ * 
  * @{
  */
 

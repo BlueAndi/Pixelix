@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  ColorDef
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides several pre-defined color values.
-
-*******************************************************************************/
-/** @defgroup colordef ColorDef
- * This module provides several pre-defined color values.
+ * @brief  Color definitions
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup gfx
  *
  * @{
  */
@@ -54,6 +49,7 @@ This module provides several pre-defined color values.
     CONSTANTS
 *******************************************************************************/
 
+/** Color definitions */
 namespace ColorDef
 {
     /** Color definition for BLACK. */

@@ -25,15 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  Simple timer
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides a simple timer, based on millis().
-
-*******************************************************************************/
-/** @defgroup simpletimer Simple timer
- * This module provides a simple timer, based on millis().
+ * @brief  Simple timer
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup utilities
  *
  * @{
  */

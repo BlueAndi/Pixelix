@@ -25,19 +25,10 @@
     DESCRIPTION
 *******************************************************************************/
 /**
-@brief  I/O abstraction
-@author Andreas Merkle <web@blue-andi.de>
-
-@section desc Description
-This module provides the i/o abstraction.
-
-*******************************************************************************/
-/** @defgroup io I/O abstraction
- * The i/o abstraction provides only classes to be able to define i/o as
- * output, input and etc. at compile time.
- * Advantage is that depended on the pin mode, a dediated interface is provided.
- * This makes it more easy to use and reliable. The base of the abstraction
- * is the Arduino GPIO functions.
+ * @brief  I/O abstraction
+ * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup hal
  *
  * @{
  */
@@ -64,6 +55,7 @@ This module provides the i/o abstraction.
 
 /**
  * Standard i/o pin.
+ * 
  */
 class IoPin
 {
