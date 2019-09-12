@@ -74,7 +74,7 @@ Result: SPI Boot
 Result: U0TXD Toggling
 
 | Pin | Default | Function 1 | Function 2 | Function 3 | Function 4 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- |
 | Timing of SDIO slave |
 | Pin | Default | Falling-edge Sampling | Falling-edge Sampling | Rising-edge Sampling | Rising-edge Sampling |
 | GPIO 15 (MTDO) | High | Low | Low | High | High |
