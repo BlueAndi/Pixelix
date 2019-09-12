@@ -100,7 +100,7 @@ APState         APState::m_instance;
 void APState::entry(StateMachine& sm)
 {
     /* Configure access point.
-     * The DHCP server will automatically be started and uses the range x.x.x.100 - x.x.x.200
+     * The DHCP server will automatically be started and uses the range x.x.x.1 - x.x.x.11
      */
     if (false == WiFi.softAPConfig(LOCAL_IP, GATEWAY, SUBNET))
     {
