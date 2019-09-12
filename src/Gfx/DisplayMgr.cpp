@@ -247,16 +247,15 @@ void DisplayMgr::process(void)
     }
     else
     {
-        uint8_t nextSlot = (m_activeSlotId + 1u) % MAX_SLOTS;
-
         /* Slot rotation enabled? */
-        if (true == m_activeSlotId)
+        if (true == m_slotChangeTimer.isTimerRunning())
         {
             /* Jump to next slot? */
             if (true == m_slotChangeTimer.isTimeout())
             {
                 /* Set next slot active */
-                m_activeSlotId = nextSlot;
+                ++m_activeSlotId;
+                m_activeSlotId %= MAX_SLOTS;
 
                 /* Wait another period */
                 m_slotChangeTimer.restart();
@@ -336,7 +335,8 @@ DisplayMgr::DisplayMgr() :
     m_slotChangeTimer(),
     m_rotate(false),
     m_slotsEnabled(false),
-    m_sysMsgWidget()
+    m_sysMsgWidget(),
+    m_bitmapBuffer()
 {
     uint8_t index = 0u;
 
