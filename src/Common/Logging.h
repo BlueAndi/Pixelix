@@ -141,7 +141,7 @@ public:
      *
      * @param[in] messageLogLevel The logLevel.
      * @param[in] format The format of the variable arguments.
-     * @param[in] ... Zhe variable arguments.
+     * @param[in] ... The variable arguments.
      *
      * @note The max. size of a logMessage is restricted by MESSAGE_BUFFER_SIZE.
      */
