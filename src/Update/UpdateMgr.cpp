@@ -36,6 +36,7 @@
 
 #include <SPIFFS.h>
 #include <DisplayMgr.h>
+#include <Logging.h>
 
 #include "LedMatrix.h"
 
@@ -82,14 +83,9 @@ void UpdateMgr::init(void)
     ArduinoOTA.onProgress(onProgress);
     ArduinoOTA.onError(onError);
 
-    Serial.print("OTA hostname: ");
-    Serial.println(ArduinoOTA.getHostname());
-    Serial.print("Sketch size: ");
-    Serial.print(ESP.getSketchSize());
-    Serial.println(" bytes");
-    Serial.print("Free size: ");
-    Serial.print(ESP.getFreeSketchSpace());
-    Serial.println(" bytes");
+    LOG_INFO(String("OTA hostname: ") + ArduinoOTA.getHostname());
+    LOG_INFO(String("Sketch size: ") + ESP.getSketchSize() + " bytes");
+    LOG_INFO(String("Free size: ") + ESP.getFreeSketchSpace() + " bytes");
 
     m_isInitialized = true;
 
@@ -151,7 +147,7 @@ void UpdateMgr::onStart(void)
         SPIFFS.end();
     }
 
-    Serial.println(infoStr);
+    LOG_INFO(infoStr);
     DisplayMgr::getInstance().showSysMsg(infoStr);
 
     /* Give the user a chance to read it. */
@@ -172,7 +168,7 @@ void UpdateMgr::onEnd(void)
 
     m_instance.m_updateIsRunning = false;
 
-    Serial.println(infoStr);
+    LOG_INFO(infoStr);
     DisplayMgr::getInstance().showSysMsg(infoStr);
 
     /* Give the user a chance to read it. */
@@ -193,7 +189,7 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
     int16_t         x                   = m_instance.m_progress % Board::LedMatrix::width;
     const uint16_t  COLOR               = 0xF800;   /* Red */
 
-    Serial.printf("Progress: %u%%\r\n", PROGRESS_PERCENT);
+    LOG_INFO(String("Progress: ") + PROGRESS_PERCENT + "%");
 
     /* Fill the whole display.
      * The number of pixels equals 100% update progress.
@@ -252,7 +248,7 @@ void UpdateMgr::onError(ota_error_t error)
         break;
     }
 
-    Serial.println(infoStr);
+    LOG_INFO(infoStr);
     DisplayMgr::getInstance().showSysMsg(infoStr);
 
     /* Give the user a chance to read it. */

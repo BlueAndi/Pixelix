@@ -39,6 +39,7 @@
 #include "ConnectedState.h"
 
 #include <WiFi.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -84,7 +85,7 @@ void ConnectingState::entry(StateMachine& sm)
     {
         String infoStr = "Keep button pressed and reboot. Set SSID/password via webserer.";
 
-        Serial.println(infoStr);
+        LOG_INFO(infoStr);
         DisplayMgr::getInstance().showSysMsg(infoStr);
 
         sm.setState(IdleState::getInstance());
@@ -112,7 +113,7 @@ void ConnectingState::process(StateMachine& sm)
 
         infoStr += m_wifiSSID;
 
-        Serial.println(infoStr);
+        LOG_INFO(infoStr);
         DisplayMgr::getInstance().showSysMsg(infoStr);
 
         /* Remote wifi network informations are available, try to establish a connection. */
@@ -121,7 +122,7 @@ void ConnectingState::process(StateMachine& sm)
         /* Connection establishment failed? */
         if (WL_CONNECTED != status)
         {
-            Serial.println(errorStr);
+            LOG_ERROR(errorStr);
             DisplayMgr::getInstance().showSysMsg(errorStr);
 
             /* Wait a little bit, until retry. */

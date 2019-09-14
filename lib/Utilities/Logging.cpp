@@ -61,13 +61,9 @@ Logging Logging::m_instance;
  * Public Methods
  *****************************************************************************/
 
-void Logging::init(const LogLevel logLevel, Print* output)
+void Logging::init(Print* output)
 {
-    if (NULL != output)
-    {
-        setLogLevel(logLevel);
-        m_logOutput = output;
-    }
+    m_logOutput = output;
 }
 
 void Logging::setLogLevel(const LogLevel logLevel)
@@ -146,28 +142,34 @@ const char* Logging::getBaseNameFromPath(const char* path) const
 
 void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* message) const
 {
-    m_logOutput->print("|");
-    m_logOutput->print(millis());
-    m_logOutput->print("|");
-    m_logOutput->print(logLevelToString(messageLogLevel));
-    m_logOutput->print(getBaseNameFromPath(file));
-    m_logOutput->print(":");
-    m_logOutput->print(line);
-    m_logOutput->print(" ");
-    m_logOutput->println(message);
+    if (NULL != m_logOutput)
+    {
+        m_logOutput->print("|");
+        m_logOutput->print(millis());
+        m_logOutput->print("|");
+        m_logOutput->print(logLevelToString(messageLogLevel));
+        m_logOutput->print(getBaseNameFromPath(file));
+        m_logOutput->print(":");
+        m_logOutput->print(line);
+        m_logOutput->print(" ");
+        m_logOutput->println(message);
+    }
 }
 
 void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message) const
 {
-    m_logOutput->print("|");
-    m_logOutput->print(millis());
-    m_logOutput->print("|");
-    m_logOutput->print(logLevelToString(messageLogLevel));
-    m_logOutput->print(getBaseNameFromPath(file));
-    m_logOutput->print(":");
-    m_logOutput->print(line);
-    m_logOutput->print(" ");
-    m_logOutput->println(message);
+    if (NULL != m_logOutput)
+    {
+        m_logOutput->print("|");
+        m_logOutput->print(millis());
+        m_logOutput->print("|");
+        m_logOutput->print(logLevelToString(messageLogLevel));
+        m_logOutput->print(getBaseNameFromPath(file));
+        m_logOutput->print(":");
+        m_logOutput->print(line);
+        m_logOutput->print(" ");
+        m_logOutput->println(message);
+    }
 }
 
 String Logging::logLevelToString(const Logging::LogLevel LogLevel) const

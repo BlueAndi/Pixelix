@@ -60,7 +60,7 @@
 /** Severity: ErrorLevel. */
 #define LL_ERROR (Logging::LOGLEVEL_ERROR)
 
-/** Severity: IatalLevel. */
+/** Severity: FatalLevel. */
 #define LL_FATAL (Logging::LOGLEVEL_FATAL)
 
 /** Macro for Logging with LOGLEVEL_INFO. */
@@ -100,7 +100,7 @@ public:
         LOGLEVEL_FATAL      /**< Log fatal messages in case there is no way out. */
     };
 
-   static const uint16_t MESSAGE_BUFFER_SIZE = 256u;    /**< The maximum size of the logMessage buffer to get the variable arguments. */
+    static const uint16_t MESSAGE_BUFFER_SIZE = 256u;   /**< The maximum size of the logMessage buffer to get the variable arguments. */
 
     /**
      * Get the Logging instance.
@@ -113,12 +113,12 @@ public:
     }
 
     /**
-     * Set the initial logLevel and specifies the output of the logging.
+     * Set the output of the logging.
+     * Use NULL to remove any kind of log output.
      * 
-     * @param[in] logLevel The logLevel.
      * @param[in] output The log sink where the output has to be sent to.
      */
-    void init(const LogLevel logLevel, Print* output);
+    void init(Print* output);
 
     /**
      * Set the logLevel.

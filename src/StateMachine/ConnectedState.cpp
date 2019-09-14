@@ -40,6 +40,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -73,7 +74,7 @@ void ConnectedState::entry(StateMachine& sm)
     String infoStr = "Hostname: ";
     infoStr += WiFi.getHostname();
 
-    Serial.println(infoStr);
+    LOG_INFO(infoStr);
     DisplayMgr::getInstance().showSysMsg(infoStr);
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
 

@@ -45,6 +45,8 @@
 #include "APState.h"
 #include "ConnectingState.h"
 
+#include <Logging.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -85,8 +87,9 @@ void InitState::entry(StateMachine& sm)
     /* Initialize hardware */
     Board::init();
 
-    /* Setup serial interface */
+    /* Setup serial interface and logging */
     Serial.begin(SERIAL_BAUDRATE);
+    Logging::getInstance().init(&Serial);
 
     /* Initialize drivers */
     ButtonDrv::getInstance().init();
@@ -149,17 +152,13 @@ void InitState::exit(StateMachine& sm)
 void InitState::showBootInfo(void)
 {
     /* Show information via serial interface */    
-    Serial.println("Booting ...");
+    LOG_INFO("Booting ...");
     
-    Serial.print("SW version: ");
-    Serial.println(Version::SOFTWARE);
+    LOG_INFO(String("SW version: ") + Version::SOFTWARE);
     DisplayMgr::getInstance().showSysMsg(Version::SOFTWARE);
 
-    Serial.print("ESP32 chip rev.: ");
-    Serial.println(ESP.getChipRevision());
-
-    Serial.print("ESP32 SDK version: ");
-    Serial.println(ESP.getSdkVersion());
+    LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
+    LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
 
     /* User shall be able to read it on the display. But it shall be really a short delay. */
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_SHORT);

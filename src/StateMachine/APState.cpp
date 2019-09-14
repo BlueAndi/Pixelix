@@ -40,6 +40,7 @@
 #include "UpdateMgr.h"
 
 #include <WiFi.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -103,7 +104,7 @@ void APState::entry(StateMachine& sm)
         String errorStr = "Configure wifi access point failed.";
 
         /* Fatal error */
-        Serial.println(errorStr);
+        LOG_FATAL(errorStr);
         DisplayMgr::getInstance().showSysMsg(errorStr);
 
         sm.setState(ErrorState::getInstance());
@@ -116,7 +117,7 @@ void APState::entry(StateMachine& sm)
         errorStr += " digits.";
 
         /* Fatal error */
-        Serial.println(errorStr);
+        LOG_FATAL(errorStr);
         DisplayMgr::getInstance().showSysMsg(errorStr);
 
         sm.setState(ErrorState::getInstance());
@@ -127,7 +128,7 @@ void APState::entry(StateMachine& sm)
         String errorStr = "Setup wifi access point failed.";
 
         /* Fatal error */
-        Serial.println(errorStr);
+        LOG_FATAL(errorStr);
         DisplayMgr::getInstance().showSysMsg(errorStr);
 
         sm.setState(ErrorState::getInstance());
@@ -141,7 +142,7 @@ void APState::entry(StateMachine& sm)
         infoStr += " IP: ";
         infoStr += WiFi.softAPIP();
 
-        Serial.println(infoStr);
+        LOG_INFO(infoStr);
         DisplayMgr::getInstance().showSysMsg(infoStr);
     }
 
