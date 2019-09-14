@@ -102,6 +102,13 @@ public:
     }
 
     /**
+     * Destroys the lamp widget.
+     */
+    ~LampWidget()
+    {
+    }
+
+    /**
      * Assigns the content of another lamp widget.
      * 
      * @param[in] widget Lamp widget, which to assign

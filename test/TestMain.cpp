@@ -44,6 +44,7 @@
 #include <Color.h>
 #include <StateMachine.hpp>
 #include <SimpleTimer.hpp>
+#include <ProgressBar.h>
 
 /******************************************************************************
  * Macros
@@ -178,29 +179,36 @@ public:
      * @param[in] width     Width in pixel
      * @param[in] height    Height in pixel
      * @param[in] color     Color of widget drawing
+     * @return If the verify is successful, it will return true otherwise false.
      */
-    void verify(int16_t posX, int16_t posY, uint16_t width, uint16_t height, uint16_t color)
+    bool verify(int16_t posX, int16_t posY, uint16_t width, uint16_t height, uint16_t color)
     {
-        uint16_t    x   = 0u;
-        uint16_t    y   = 0u;
+        uint16_t    x               = 0u;
+        uint16_t    y               = 0u;
+        bool        isSuccessful    = true;
 
         TEST_ASSERT_LESS_OR_EQUAL(WIDTH, posX + width);
         TEST_ASSERT_LESS_OR_EQUAL(HEIGHT, posY + height);
 
-        for(y = 0u; y < height; ++y)
+        while((height > y) && (true == isSuccessful))
         {
-            for(x = 0u; x < width; ++x)
+            x = 0u;
+            while((width > x) && (true == isSuccessful))
             {
                 if (color != m_buffer[posX + x + (posY + y) * WIDTH])
                 {
                     dump();
                     printf("x = %d, y = %d\r\n", posX + x, posY + y);
+                    isSuccessful = false;
                 }
-                TEST_ASSERT_EQUAL_UINT16(color, m_buffer[posX + x + (posY + y) * WIDTH]);
+
+                ++x;
             }
+
+            ++y;
         }
 
-        return;
+        return isSuccessful;
     }
 
     /**
@@ -432,6 +440,7 @@ static void testTextWidget(void);
 static void testColor(void);
 static void testStateMachine(void);
 static void testSimpleTimer(void);
+static void testProgressBar(void);
 
 /******************************************************************************
  * Variables
@@ -463,6 +472,7 @@ int main(int argc, char **argv)
     RUN_TEST(testColor);
     RUN_TEST(testStateMachine);
     RUN_TEST(testSimpleTimer);
+    RUN_TEST(testProgressBar);
 
     return UNITY_END();
 }
@@ -711,11 +721,11 @@ static void testWidget(void)
     testWidget.move(posX, posY);
     testGfx.fill(0);
     testWidget.update(testGfx);
-    testGfx.verify( posX,
-                    posY,
-                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
-                    getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
-                    COLOR.get565());
+    TEST_ASSERT_TRUE(testGfx.verify(posX,
+                                    posY,
+                                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
+                                    getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
+                                    COLOR.get565()));
 
     /* Draw widget at position (2, 1) and verify widget movement. */
     posX = 2;
@@ -723,11 +733,11 @@ static void testWidget(void)
     testWidget.move(posX, posY);
     testGfx.fill(0);
     testWidget.update(testGfx);
-    testGfx.verify( posX,
-                    posY,
-                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
-                    getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
-                    COLOR.get565());
+    TEST_ASSERT_TRUE(testGfx.verify(posX,
+                                    posY,
+                                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
+                                    getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
+                                    COLOR.get565()));
 
     return;
 }
@@ -756,7 +766,7 @@ void testCanvas(void)
     testGfx.setCallCounterDrawPixel(0);
     testCanvas.update(testGfx);
     TEST_ASSERT_EQUAL_UINT32(0, testGfx.getCallCounterDrawPixel());
-    testGfx.verify(0, 0, TestWidget::WIDTH, TestWidget::HEIGHT, 0);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestWidget::WIDTH, TestWidget::HEIGHT, 0));
 
     /* Add widget to canvas, move widget and set draw pen */
     TEST_ASSERT_TRUE(testCanvas.addWidget(testWidget));
@@ -766,31 +776,31 @@ void testCanvas(void)
     /* Draw canvas with widget. Expected is a full drawn widget. */
     testGfx.fill(0);
     testCanvas.update(testGfx);
-    testGfx.verify( WIDGET_POS_X, 
-                    WIDGET_POS_Y, 
-                    getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X), 
-                    getMin<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
-                    WIDGET_COLOR.get565());
+    TEST_ASSERT_TRUE(testGfx.verify(WIDGET_POS_X, 
+                                    WIDGET_POS_Y, 
+                                    getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X), 
+                                    getMin<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
+                                    WIDGET_COLOR.get565()));
 
     /* Move widget outside canvas and try to draw. Expected is no drawing at all. */
     testGfx.fill(0);
     testWidget.move(CANVAS_WIDTH, CANVAS_HEIGHT);
     testCanvas.update(testGfx);
-    testGfx.verify( 0, 
-                    0, 
-                    CANVAS_WIDTH, 
-                    CANVAS_HEIGHT,
-                    0);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 
+                                    0, 
+                                    CANVAS_WIDTH, 
+                                    CANVAS_HEIGHT,
+                                    0));
 
     /* Move widget half outside canvas and draw. Expected is partly drawing. */
     testGfx.fill(0);
     testWidget.move(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
     testCanvas.update(testGfx);
-    testGfx.verify( CANVAS_WIDTH / 2, 
-                    CANVAS_HEIGHT / 2, 
-                    CANVAS_WIDTH / 2, 
-                    CANVAS_HEIGHT / 2,
-                    WIDGET_COLOR.get565());
+    TEST_ASSERT_TRUE(testGfx.verify(CANVAS_WIDTH / 2, 
+                                    CANVAS_HEIGHT / 2, 
+                                    CANVAS_WIDTH / 2, 
+                                    CANVAS_HEIGHT / 2,
+                                    WIDGET_COLOR.get565()));
 
     /* No widget name is set, it must be empty. */
     TEST_ASSERT_EQUAL_STRING("", testCanvas.getName());
@@ -865,42 +875,42 @@ static void testLampWidget(void)
     /* Draw widget in off state and verify */
     lampWidget.update(testGfx);
     lampWidget.getPos(posX, posY);
-    testGfx.verify( posX,
-                    posY,
-                    LampWidget::WIDTH,
-                    LampWidget::HEIGHT,
-                    COLOR_OFF.get565());
+    TEST_ASSERT_TRUE(testGfx.verify(posX,
+                                    posY,
+                                    LampWidget::WIDTH,
+                                    LampWidget::HEIGHT,
+                                    COLOR_OFF.get565()));
 
     /* Draw widget in on state and verify */
     lampWidget.setOnState(true);
     lampWidget.update(testGfx);
     lampWidget.getPos(posX, posY);
-    testGfx.verify( posX,
-                    posY,
-                    LampWidget::WIDTH,
-                    LampWidget::HEIGHT,
-                    COLOR_ON.get565());
+    TEST_ASSERT_TRUE(testGfx.verify(posX,
+                                    posY,
+                                    LampWidget::WIDTH,
+                                    LampWidget::HEIGHT,
+                                    COLOR_ON.get565()));
 
     /* Draw widget in off state and verify */
     lampWidget.setOnState(false);
     lampWidget.update(testGfx);
     lampWidget.getPos(posX, posY);
-    testGfx.verify( posX,
-                    posY,
-                    LampWidget::WIDTH,
-                    LampWidget::HEIGHT,
-                    COLOR_OFF.get565());
+    TEST_ASSERT_TRUE(testGfx.verify(posX,
+                                    posY,
+                                    LampWidget::WIDTH,
+                                    LampWidget::HEIGHT,
+                                    COLOR_OFF.get565()));
 
     /* Move widget and draw in off state again. */
     testGfx.fill(0);
     lampWidget.move(2,2);
     lampWidget.update(testGfx);
     lampWidget.getPos(posX, posY);
-    testGfx.verify( posX,
-                    posY,
-                    LampWidget::WIDTH,
-                    LampWidget::HEIGHT,
-                    COLOR_OFF.get565());
+    TEST_ASSERT_TRUE(testGfx.verify(posX,
+                                    posY,
+                                    LampWidget::WIDTH,
+                                    LampWidget::HEIGHT,
+                                    COLOR_OFF.get565()));
 
     return;
 }
@@ -1170,6 +1180,55 @@ static void testSimpleTimer(void)
     testTimer.restart();
     TEST_ASSERT_TRUE(testTimer.isTimerRunning());
     TEST_ASSERT_TRUE(testTimer.isTimeout());
+
+    return;
+}
+
+/**
+ * Test progress bar.
+ */
+static void testProgressBar(void)
+{
+    TestGfx     testGfx;
+    ProgressBar progressBar;
+    const char* WIDGET_NAME = "progressBarName";
+
+    /* Verify widget type name */
+    TEST_ASSERT_EQUAL_STRING(ProgressBar::WIDGET_TYPE, progressBar.getType());
+
+    /* No widget name is set, it must be empty. */
+    TEST_ASSERT_EQUAL_STRING("", progressBar.getName());
+
+    /* Set widget name and read back. */
+    progressBar.setName(WIDGET_NAME);
+    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, progressBar.getName());
+
+    /* Find widget with empty name.
+     * Expected: Not found
+     */
+    TEST_ASSERT_NULL(progressBar.find(NULL));
+    TEST_ASSERT_NULL(progressBar.find(""));
+
+    /* Find widget with its name.
+     * Expected: Widget is found
+     */
+    TEST_ASSERT_NOT_NULL(progressBar.find(WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&progressBar, progressBar.find(WIDGET_NAME));
+
+    /* Progress should be now 0% */
+    progressBar.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::get565(ColorDef::BLACK)));
+
+    /* Set progress bar to 50% */
+    progressBar.setProgress(50u);
+    progressBar.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height() / 2u, ColorDef::get565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, testGfx.height() / 2u, testGfx.width(), testGfx.height() / 2u, ColorDef::get565(ColorDef::BLACK)));
+
+    /* Set progress bar to 100% */
+    progressBar.setProgress(100u);
+    progressBar.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::get565(ColorDef::RED)));
 
     return;
 }

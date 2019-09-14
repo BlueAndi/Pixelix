@@ -116,6 +116,13 @@ public:
     }
 
     /**
+     * Destroys the text widget.
+     */
+    ~TextWidget()
+    {
+    }
+
+    /**
      * Assign the content of a text widget.
      * 
      * @param[in] widget Widget, which to assign

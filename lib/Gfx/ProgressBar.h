@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Bitmap Widget
+ * @brief  Progress bar
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BITMAPWIDGET_H__
-#define __BITMAPWIDGET_H__
+#ifndef __PROGRESSBAR_H__
+#define __PROGRESSBAR_H__
 
 /******************************************************************************
  * Compile Switches
@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <Widget.hpp>
+#include <Color.h>
 
 /******************************************************************************
  * Macros
@@ -55,123 +56,98 @@
  *****************************************************************************/
 
 /**
- * Bitmap widget, showing a simple bitmap.
+ * A progress bar widget, showing the progress from 0 to 100%.
  */
-class BitmapWidget : public Widget
+class ProgressBar : public Widget
 {
 public:
 
     /**
-     * Constructs a bitmap widget, which is empty.
+     * Constructs a progress bar widget.
      */
-    BitmapWidget() :
+    ProgressBar() :
         Widget(WIDGET_TYPE),
-        m_buffer(NULL),
-        m_width(0u),
-        m_height(0u)
+        m_progress(0u),
+        m_color(ColorDef::RED)
     {
     }
 
     /**
-     * Constructs a bitmap widget.
+     * Constructs the progress bar, by assigning another.
      * 
-     * @param[in] bitmap    Ext. bitmap buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
+     * @param[in] widget Progress bar, which to assign.
      */
-    BitmapWidget(const uint16_t* bitmap, uint16_t width, uint16_t height) :
+    ProgressBar(const ProgressBar& widget) :
         Widget(WIDGET_TYPE),
-        m_buffer(bitmap),
-        m_width(width),
-        m_height(height)
+        m_progress(widget.m_progress),
+        m_color(widget.m_color)
     {
     }
 
     /**
-     * Constructs a bitmap widget by copying another one.
+     * Destroys the progress bar.
+     */
+    ~ProgressBar()
+    {
+    }
+
+    /**
+     * Assign the content of a progress bar widget.
      * 
-     * @param[in] widget Bitmap widge, which to copy
+     * @param[in] widget Widget, which to assign
      */
-    BitmapWidget(const BitmapWidget& widget) :
-        Widget(WIDGET_TYPE),
-        m_buffer(widget.m_buffer),
-        m_width(widget.m_width),
-        m_height(widget.m_height)
+    ProgressBar& operator=(const ProgressBar& widget)
     {
-    }
-
-    /**
-     * Destroys the bitmap widget.
-     */
-    ~BitmapWidget()
-    {
-    }
-
-    /**
-     * Assigns a existing bitmap widget.
-     * 
-     * @param[in] widget Bitmap widge, which to assign
-     */
-    BitmapWidget& operator=(const BitmapWidget& widget)
-    {
-        m_buffer    = widget.m_buffer;
-        m_width     = widget.m_width;
-        m_height    = widget.m_height;
+        m_progress  = widget.m_progress;
+        m_color     = widget.m_color;
 
         return *this;
     }
 
     /**
-     * Update/Draw the bitmap widget on the canvas.
+     * Update/Draw the progress bar widget.
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(Adafruit_GFX& gfx)
+    void update(Adafruit_GFX& gfx);
+
+    /**
+     * Set progress in % [0; 100].
+     * 
+     * @param[in] progress  Progress as number from 0 to 100.
+     */
+    void setProgress(uint8_t progress)
     {
-        gfx.drawRGBBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
+        if (100 < progress)
+        {
+            m_progress = 100;
+        }
+        else
+        {
+            m_progress = progress;
+        }
+
         return;
     }
 
     /**
-     * Set a new bitmap.
+     * Set progress bar color.
      * 
-     * @param[in] bitmap    Ext. bitmap buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
+     * @param[in] color Progress bar color
      */
-    void set(const uint16_t* bitmap, uint16_t width, uint16_t height)
+    void setColor(const Color& color)
     {
-        m_buffer    = bitmap;
-        m_width     = width;
-        m_height    = height;
-
+        m_color = color;
         return;
-    }
-
-    /**
-     * Get the bitmap.
-     * 
-     * @param[out] width    Bitmap width in pixel
-     * @param[out] height   Bitmap height in pixel
-     * 
-     * @return Bitmap buffer
-     */
-    const uint16_t* get(uint16_t& width, uint16_t& height) const
-    {
-        width   = m_width;
-        height  = m_height;
-
-        return m_buffer;
     }
 
     /** Widget type string */
-    static const char* WIDGET_TYPE;
+    static const char*  WIDGET_TYPE;
 
 private:
 
-    const uint16_t* m_buffer;   /**< Ext. bitmap buffer */
-    uint16_t        m_width;    /**< Bitmap width in pixel */
-    uint16_t        m_height;   /**< Bitmap height in pixel */
+    uint8_t m_progress; /**< Progress in % [0; 100]. */
+    Color   m_color;    /**< Color of the progress bar */
 
 };
 
@@ -179,6 +155,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BITMAPWIDGET_H__ */
+#endif  /* __PROGRESSBAR_H__ */
 
 /** @} */
