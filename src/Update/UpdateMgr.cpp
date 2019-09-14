@@ -110,19 +110,13 @@ void UpdateMgr::process(void)
  * Private Methods
  *****************************************************************************/
 
-/**
- * Constructs the update manager.
- */
 UpdateMgr::UpdateMgr() :
     m_isInitialized(false),
     m_updateIsRunning(false),
-    m_progress(0u)
+    m_progressBar()
 {
 }
 
-/**
- * Destroys the update manager.
- */
 UpdateMgr::~UpdateMgr()
 {
 }
@@ -130,6 +124,7 @@ UpdateMgr::~UpdateMgr()
 void UpdateMgr::onStart(void)
 {
     String  infoStr = "Update ";
+    Canvas* canvas  = NULL;
 
     m_instance.m_updateIsRunning = true;
 
@@ -157,16 +152,38 @@ void UpdateMgr::onStart(void)
     LedMatrix::getInstance().clear();
 
     /* Reset progress */
-    m_instance.m_progress = 0u;
+    m_instance.m_progressBar.setProgress(0u);
+
+    /* Add progress bar to slot canvas */
+    canvas = DisplayMgr::getInstance().getSlot(0u);
+    if (NULL == canvas)
+    {
+        LOG_WARNING("Progress bar could't be added to the slot canvas.");
+    }
+    else
+    {
+        canvas->addWidget(m_instance.m_progressBar);
+    }
 
     return;
 }
 
 void UpdateMgr::onEnd(void)
 {
-    String infoStr = "Update successful finished.";
+    String  infoStr = "Update successful finished.";
+    Canvas* canvas  = DisplayMgr::getInstance().getSlot(0u);
 
     m_instance.m_updateIsRunning = false;
+
+    /* Remove progress bar */
+    if (NULL == canvas)
+    {
+        LOG_WARNING("Couldn't remove progress bar from slot canvas.");
+    }
+    else
+    {
+        canvas->removeWidget(m_instance.m_progressBar);
+    }
 
     LOG_INFO(infoStr);
     DisplayMgr::getInstance().showSysMsg(infoStr);
@@ -182,35 +199,10 @@ void UpdateMgr::onEnd(void)
 void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 {
     const uint32_t  PROGRESS_PERCENT    = (progress * 100u) / total;
-    const uint32_t  PIXELS              = Board::LedMatrix::width * Board::LedMatrix::height;
-    uint32_t        pixelProgress       = (PIXELS * PROGRESS_PERCENT) / 100u;
-    uint32_t        delta               = pixelProgress - m_instance.m_progress;
-    int16_t         y                   = m_instance.m_progress / Board::LedMatrix::width;
-    int16_t         x                   = m_instance.m_progress % Board::LedMatrix::width;
-    const uint16_t  COLOR               = 0xF800;   /* Red */
 
     LOG_INFO(String("Progress: ") + PROGRESS_PERCENT + "%");
 
-    /* Fill the whole display.
-     * The number of pixels equals 100% update progress.
-     */
-    while(0u < delta)
-    {
-        LedMatrix::getInstance().writePixel(x, y, COLOR);
-        ++x;
-
-        if (Board::LedMatrix::width <= x)
-        {
-            x = 0;
-            ++y;
-        }
-
-        --delta;
-    }
-
-    LedMatrix::getInstance().show();
-
-    m_instance.m_progress = pixelProgress;
+    m_instance.m_progressBar.setProgress(static_cast<uint8_t>(PROGRESS_PERCENT));
 
     return;
 }

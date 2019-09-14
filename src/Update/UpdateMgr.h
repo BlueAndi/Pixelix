@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <ArduinoOTA.h>
+#include <ProgressBar.h>
 
 /******************************************************************************
  * Macros
@@ -108,8 +109,8 @@ private:
     /** Is an update in progress? */
     bool                m_updateIsRunning;
 
-    /** The number of display pixels, showing the current OTA progress. */
-    uint16_t            m_progress;
+    /** Progress bar widget */
+    ProgressBar         m_progressBar;
 
     /**
      * Constructs the update manager.

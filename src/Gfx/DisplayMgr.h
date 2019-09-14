@@ -87,6 +87,14 @@ public:
     };
 
     /**
+     * Get slot canvas.
+     * 
+     * @param[in] slotId    Slot id [0; N]
+     * @return Slot canvas
+     */
+    Canvas* getSlot(uint8_t slotId);
+
+    /**
      * Set layout for a slot.
      * 
      * @param[in] slotId    Slot id [0; N]

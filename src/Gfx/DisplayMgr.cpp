@@ -79,6 +79,18 @@ const char* DisplayMgr::LAMP_WIDGET_NAME    = "lamp";
  * Public Methods
  *****************************************************************************/
 
+Canvas* DisplayMgr::getSlot(uint8_t slotId)
+{
+    Canvas* slotCanvas = NULL;
+
+    if (MAX_SLOTS > slotId)
+    {
+        slotCanvas = m_slots[slotId];
+    }
+    
+    return slotCanvas;
+}
+
 void DisplayMgr::setLayout(uint8_t slotId, LayoutId layoutId)
 {
     Widget* widget = NULL;
