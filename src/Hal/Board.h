@@ -45,6 +45,7 @@
  * Compiler Switches
  *****************************************************************************/
 
+/** Electronic board abstraction */
 namespace Board
 {
 
