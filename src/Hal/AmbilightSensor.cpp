@@ -56,27 +56,27 @@
  *****************************************************************************/
 
 /* Set ambient light threshold in ADC digits for moonlit night.
- * Expected voltage is minium 46 mV.
+ * Expected voltage is minium 46 mV for 1 lux.
  */
 const uint16_t  AmbilightSensor::MOONLIT_NIGHT_ADC_THRESHOLD        = (46ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage;
 
 /* Set ambient light threshold in ADC digits for dark room.
- * Expected voltage is minimum 300 mV.
+ * Expected voltage is minimum 300 mV for 10 lux.
  */
 const uint16_t  AmbilightSensor::DARK_ROOM_ADC_THRESHOLD            = (300ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage;
 
 /* Set ambient light threshold in ADC digits for dark overcast day.
- * Expected voltage is minimum 1320 mV.
+ * Expected voltage is minimum 1320 mV for 100 lux.
  */
 const uint16_t  AmbilightSensor::DARK_OVERCAST_DAY_ADC_THRESHOLD    = (1320ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage;
 
 /* Set ambient light threshold in ADC digits for overcast day.
- * Expected voltage is minimum 2538 mV.
+ * Expected voltage is minimum 2538 mV for 1000 lux.
  */
 const uint16_t  AmbilightSensor::OVERCAST_DAY_ADC_THRESHOLD         = (2538ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage;
 
 /* Set ambient light threshold in ADC digits for full daylight.
- * Expected voltage is minimum 3000 mV.
+ * Expected voltage is minimum 3000 mV for 10000 lux.
  */
 const uint16_t  AmbilightSensor::FULL_DAYLIGHT_ADC_THRESHOLD        = (3000ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage;
 
