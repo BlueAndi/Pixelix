@@ -86,6 +86,12 @@ static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 /** Digital output pin: LED matrix data out */
 static const DOutPin<Pin::ledMatrixDataOutPinNo>        ledMatrixDataOut;
 
+/** ADC resolution in digits */
+static const uint16_t   adcResolution   = 4096u;
+
+/** ADC reference voltage in mV */
+static const uint16_t   adcRefVoltage   = 3300u;
+
 /** LED matrix specific values */
 namespace LedMatrix
 {
