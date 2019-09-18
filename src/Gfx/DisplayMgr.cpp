@@ -35,6 +35,7 @@
 #include "DisplayMgr.h"
 #include "Board.h"
 #include "LedMatrix.h"
+#include "AmbientLightSensor.h"
 
 #include <TextWidget.h>
 #include <BitmapWidget.h>
@@ -78,6 +79,46 @@ const char* DisplayMgr::LAMP_WIDGET_NAME    = "lamp";
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void DisplayMgr::init(void)
+{
+    uint16_t brightness = (static_cast<uint16_t>(UINT8_MAX) * BRIGHTNESS_DEFAULT) / 100u;
+
+    /* Set the display brightness here just once.
+     * There is no need to do this in the process() method periodically.
+     */
+    LedMatrix::getInstance().setBrightness(brightness);
+
+    return;
+}
+
+bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
+{
+    bool status = true;
+
+    /* Disable automatic brightness adjustment? */
+    if (false == enable)
+    {
+        m_autoBrightnessTimer.stop();
+    }
+    /* Enable automatic brightness adjustment */
+    else
+    {
+        /* If no ambient light sensor is available, enable it makes no sense. */
+        if (false == AmbientLightSensor::getInstance().isSensorAvailable())
+        {
+            status = false;
+        }
+        /* Ambient light sensor is available */
+        else
+        {
+            /* Display brightness will be automatically adjusted in the process() method. */
+            m_autoBrightnessTimer.start(ALS_AUTO_ADJUST_PERIOD);
+        }
+    }
+
+    return status;
+}
 
 Canvas* DisplayMgr::getSlot(uint8_t slotId)
 {
@@ -253,10 +294,12 @@ void DisplayMgr::process(void)
 
     matrix.clear();
 
+    /* If the slot mechanism is diabled, only system messages are shown. */
     if (false == m_slotsEnabled)
     {
         m_sysMsgWidget.update(matrix);
     }
+    /* Slot mechanism enabled. */
     else
     {
         /* Slot rotation enabled? */
@@ -279,6 +322,19 @@ void DisplayMgr::process(void)
         {
             m_slots[m_activeSlotId]->update(matrix);
         }
+    }
+
+    /* Ambient light sensor available for automatic brightness adjustment? */
+    if (true == m_autoBrightnessTimer.isTimerRunning())
+    {
+        float   lightNormalized         = AmbientLightSensor::getInstance().getNormalizedLight();
+        uint8_t BRIGHTNESS_DYN_RANGE    = UINT8_MAX - BRIGHTNESS_MIN;
+        float   fBrightness             = static_cast<float>(BRIGHTNESS_MIN) + ( static_cast<float>(BRIGHTNESS_DYN_RANGE) * lightNormalized );
+        uint8_t brightness              = static_cast<uint8_t>(fBrightness);
+
+        matrix.setBrightness(brightness);
+
+        m_autoBrightnessTimer.restart();
     }
 
     matrix.show();
@@ -348,7 +404,8 @@ DisplayMgr::DisplayMgr() :
     m_rotate(false),
     m_slotsEnabled(false),
     m_sysMsgWidget(),
-    m_bitmapBuffer()
+    m_bitmapBuffer(),
+    m_autoBrightnessTimer()
 {
     uint8_t index = 0u;
 

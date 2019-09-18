@@ -41,6 +41,7 @@
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
 #include "Version.h"
+#include "AmbientLightSensor.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -87,8 +88,10 @@ void InitState::entry(StateMachine& sm)
     /* Initialize hardware */
     Board::init();
 
-    /* Setup serial interface and logging */
+    /* Setup serial interface */
     Serial.begin(SERIAL_BAUDRATE);
+
+    /* Initialize logging, which uses the serial interface as sink. */
     Logging::getInstance().init(&Serial);
 
     /* Initialize drivers */
@@ -97,13 +100,24 @@ void InitState::entry(StateMachine& sm)
     /* Start LED matrix */
     LedMatrix::getInstance().begin();
 
-    /* Show some interesting boot information */    
-    showBootInfo();
+    /* Initialize display manager */
+    DisplayMgr::getInstance().init();
 
-    /* Initialize display layout */
+    /* Initialize display layouts */
     for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
     {
         DisplayMgr::getInstance().setLayout(index, DisplayMgr::LAYOUT_ID_2);
+    }
+
+    /* Show some interesting boot information */    
+    showBootInfo();
+
+    /* Enable the automatic display brightness adjustment according to the
+     * ambient light.
+     */
+    if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(true))
+    {
+        LOG_WARNING("Failed to enable autom. brigthness adjustment.");
     }
 
     return;
@@ -159,6 +173,8 @@ void InitState::showBootInfo(void)
 
     LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
+
+    LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
 
     /* User shall be able to read it on the display. But it shall be really a short delay. */
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_SHORT);
