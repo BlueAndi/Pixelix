@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Ambilight sensor
+ * @brief  Ambient light sensor
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup hal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __AMBILIGHT_SENSOR_H__
-#define __AMBILIGHT_SENSOR_H__
+#ifndef __AMBIENT_LIGHT_SENSOR_H__
+#define __AMBIENT_LIGHT_SENSOR_H__
 
 /******************************************************************************
  * Compile Switches
@@ -55,33 +55,43 @@
  *****************************************************************************/
 
 /**
- * Ambilight sensor
+ * Ambient light sensor
  */
-class AmbilightSensor
+class AmbientLightSensor
 {
 public:
 
     /**
      * Get ambilight sensor driver instance.
      * 
-     * @return Ambilight sensor driver instance
+     * @return Ambient light sensor driver instance
      */
-    static AmbilightSensor& getInstance(void)
+    static AmbientLightSensor& getInstance(void)
     {
         return m_instance;
     }
 
     /**
+     * Checks whether a sensor is available or not.
+     * 
+     * @return If a sensor is available, it will return true otherwise false.
+     */
+    bool isSensorAvailable(void);
+
+    /**
      * Ambient light level
+     * Source: https://docs.microsoft.com/de-de/windows-hardware/design/whitepapers/integrating-ambient-light-sensors-with-computers-running-windows-10-creators-update
      */
     enum AmbientLightLevel
     {
-        AMBIENT_LIGHT_LEVEL_DARK = 0,       /**< Dark */
-        AMBIENT_LIGHT_LEVEL_MOONLIT_NIGHT,  /**< Moonlit night */
-        AMBIENT_LIGHT_LEVEL_DARK_ROOM,      /**< Dark room */
-        AMBIENT_LIGHT_LEVEL_DARK_OVERCAST,  /**< Dark overcast */
-        AMBIENT_LIGHT_LEVEL_OVERCAST_DAY,   /**< Overcast day */
-        AMBIENT_LIGHT_LEVEL_FULL_DAYLIGHT   /**< Full daylight */
+        AMBIENT_LIGHT_LEVEL_PITCH_BLACK = 0,    /**< Pitch black with 1 Lux */
+        AMBIENT_LIGHT_LEVEL_NIGHT_SKY,          /**< Night sky with 10 Lux */
+        AMBIENT_LIGHT_LEVEL_DARK_ROOM,          /**< Dark room with 50 Lux */
+        AMBIENT_LIGHT_LEVEL_DARK_OVERCAST,      /**< Dark overcast with 500 Lux */
+        AMBIENT_LIGHT_LEVEL_OVERCAST_DAY,       /**< Overcast day with 1000 Lux */
+        AMBIENT_LIGHT_LEVEL_FULL_DAYLIGHT,      /**< Full daylight with 15000 Lux */
+        AMBIENT_LIGHT_LEVEL_FULL_SUNLIGHT,      /**< Full sunlight with more than 15000 Lux */
+        AMBIENT_LIGHT_LEVEL_MAX                 /**< Number of levels */
     };
 
     /**
@@ -92,73 +102,61 @@ public:
     AmbientLightLevel getAmbientLightLevel(void);
 
     /**
-     * Ambient light threshold in ADC digits for moonlit night.
+     * Get illuminance in Lux.
+     * 
+     * @return Illuminance level in Lux.
      */
-    static const uint16_t   MOONLIT_NIGHT_ADC_THRESHOLD;
+    float getIlluminance(void);
 
     /**
-     * Ambient light threshold in ADC digits for dark room.
+     * Get the normalized light value in the range of 0.0f - 1.0f, from
+     * 0 to 100000 Lux.
+     * 
+     * @return Normalized light value
      */
-    static const uint16_t   DARK_ROOM_ADC_THRESHOLD;
+    float getNormalizedLight(void);
 
     /**
-     * Ambient light threshold in ADC digits for dark overcast day.
+     * Threshold to detect a not connected LDR.
      */
-    static const uint16_t   DARK_OVERCAST_DAY_ADC_THRESHOLD;
-
-    /**
-     * Ambient light threshold in ADC digits for overcast day.
-     */
-    static const uint16_t   OVERCAST_DAY_ADC_THRESHOLD;
-
-    /**
-     * Ambient light threshold in ADC digits for full daylight.
-     */
-    static const uint16_t   FULL_DAYLIGHT_ADC_THRESHOLD;
-
-    /**
-     * Hysterese in digits.
-     */
-    static const uint16_t   HYSTERESE_DELTA;
+    static const uint16_t NO_LDR_THRESHOLD;
 
 private:
 
-    static AmbilightSensor  m_instance;     /**< Ambilight sensor instance */
-
-    AmbientLightLevel   m_lastLevel;    /**< Last requested level */
+    static AmbientLightSensor  m_instance;     /**< Ambient light sensor instance */
 
     /* An instance shall not be copied. */
-    AmbilightSensor(const AmbilightSensor& sensor);
-    AmbilightSensor& operator=(const AmbilightSensor& sensor);
+    AmbientLightSensor(const AmbientLightSensor& sensor);
+    AmbientLightSensor& operator=(const AmbientLightSensor& sensor);
 
     /**
      * Constructs an ambilight instance.
      */
-    AmbilightSensor() :
-        m_lastLevel(AMBIENT_LIGHT_LEVEL_DARK)
+    AmbientLightSensor()
     {
     }
 
     /**
      * Destroys the ambilight instance.
      */
-    ~AmbilightSensor()
+    ~AmbientLightSensor()
     {
     }
 
     /**
-     * Get ambient light level, depended on ADC value and don't consider any hysterese.
+     * Calculate the normalized light value in the range of 0.0f - 1.0f, from
+     * 0 to 100000 Lux.
      * 
-     * @param[in] adcValue  Ambient light value in ADC digits
-     * @return Ambient light level
+     * @param[in] illuminance   Illuminance in Lux
+     * @return Normalized light value
      */
-    AmbientLightLevel getAmbientLightLevelNoHysterese(uint16_t adcValue);
+    float calcNormalizedLight(float illuminance);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __AMBILIGHT_SENSOR_H__ */
+#endif  /* __AMBIENT_LIGHT_SENSOR_H__ */
 
 /** @} */

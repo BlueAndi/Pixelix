@@ -76,6 +76,21 @@ public:
     }
 
     /**
+     * Initialize the display manager. Call this once during startup.
+     */
+    void init(void);
+
+    /**
+     * Enable/Disable automatic brightness adjustment.
+     * 
+     * @param[in] enable    Enable (true) or disable (false)
+     * @return Status
+     * @retval true     It was successful enabled/disabled.
+     * @retval false    It failed to enable/disable it.
+     */
+    bool enableAutoBrightnessAdjustment(bool enable);
+
+    /**
      * Layouts to choose.
      */
     enum LayoutId
@@ -177,10 +192,10 @@ public:
     void delay(uint32_t waitTime);
 
     /** Maximum number of supported slots. */
-    static const uint8_t    MAX_SLOTS      = 4u;
+    static const uint8_t    MAX_SLOTS               = 4u;
 
     /** Default period for changing slots in ms. */
-    static const uint32_t   DEFAULT_PERIOD = 10000u;
+    static const uint32_t   DEFAULT_PERIOD          = 10000u;
 
     /** Text widget name, used for identification. */
     static const char*      TEXT_WIDGET_NAME;
@@ -192,10 +207,19 @@ public:
     static const char*      LAMP_WIDGET_NAME;
 
     /** Bitmap width in pixel, used for bitmap buffers. */
-    static const uint8_t    BMP_WIDTH       = 8u;
+    static const uint8_t    BMP_WIDTH               = 8u;
 
     /** Bitmap height in pixel, used for bitmap buffers. */
-    static const uint8_t    BMP_HEIGHT      = 8u;
+    static const uint8_t    BMP_HEIGHT              = 8u;
+
+    /** If no ambient light sensor is available, the default brightness shall be 40%. */
+    static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40u) / 100u;
+
+    /** Minimum brightness of 25% in case of a dark room. Only used during automatic brightness adjustment. */
+    static const uint8_t    BRIGHTNESS_MIN          = (UINT8_MAX * 25u) / 100u;
+
+    /** Default period for automatic brightness adjustment in ms. */
+    static const uint32_t   ALS_AUTO_ADJUST_PERIOD  = 250u;
 
 private:
 
@@ -222,6 +246,9 @@ private:
 
     /** Static buffer for bitmaps */
     uint16_t            m_bitmapBuffer[MAX_SLOTS][sizeof(uint16_t) * BMP_WIDTH * BMP_HEIGHT];
+
+    /** Timer, used for automatic brightness adjustment. */
+    SimpleTimer         m_autoBrightnessTimer;
 
     /**
      * Construct LED matrix.
