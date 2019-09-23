@@ -1028,7 +1028,7 @@ static void testTextWidget(void)
     TEST_ASSERT_EQUAL_STRING(testStr.c_str(), textWidget.getStr().c_str());
 
     /* Default string color */
-    TEST_ASSERT_EQUAL_UINT16(TextWidget::DEFAULT_TEXT_COLOR.get565(), textWidget.getTextColor().get565());
+    TEST_ASSERT_EQUAL_UINT16(ColorDef::get565(TextWidget::DEFAULT_TEXT_COLOR), textWidget.getTextColor().get565());
 
     /* Set/Get text color */
     textWidget.setTextColor(TEXT_COLOR);
