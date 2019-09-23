@@ -213,7 +213,7 @@ public:
     }
 
     /** Default text color */
-    static const uint32_t   DEFAULT_TEXT_COLOR;
+    static const uint32_t   DEFAULT_TEXT_COLOR  = ColorDef::WHITE;
     
     /** Widget type string */
     static const char*      WIDGET_TYPE;
@@ -222,7 +222,7 @@ public:
     static const GFXfont*   DEFAULT_FONT;
 
     /** Default pause between character scrolling in ms */
-    static const uint32_t   DEFAULT_SCOLL_PAUSE;
+    static const uint32_t   DEFAULT_SCOLL_PAUSE = 200u;
 
 private:
 

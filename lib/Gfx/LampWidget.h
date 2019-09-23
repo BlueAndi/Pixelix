@@ -211,10 +211,10 @@ public:
     static const char*      WIDGET_TYPE;
 
     /** Lamp width in pixel */
-    static const uint16_t   WIDTH;
+    static const uint16_t   WIDTH   = 4u;
 
     /** Lamp height in pixel */
-    static const uint16_t   HEIGHT;
+    static const uint16_t   HEIGHT  = 1u;
 
 private:
 

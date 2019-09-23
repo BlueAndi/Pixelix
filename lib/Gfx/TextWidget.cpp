@@ -56,17 +56,11 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize default text color (white) */
-const uint32_t  TextWidget::DEFAULT_TEXT_COLOR  = ColorDef::WHITE;
-
 /* Initialize text widget type. */
-const char*     TextWidget::WIDGET_TYPE         = "text";
+const char*     TextWidget::WIDGET_TYPE     = "text";
 
 /* Initialize default font */
-const GFXfont*  TextWidget::DEFAULT_FONT        = &TomThumb;
-
-/* Initialize default scrolling pause between two characters. */
-const uint32_t  TextWidget::DEFAULT_SCOLL_PAUSE = 200u;
+const GFXfont*  TextWidget::DEFAULT_FONT    = &TomThumb;
 
 /******************************************************************************
  * Public Methods
