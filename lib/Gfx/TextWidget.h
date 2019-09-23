@@ -213,7 +213,7 @@ public:
     }
 
     /** Default text color */
-    static const Color      DEFAULT_TEXT_COLOR;
+    static const uint32_t   DEFAULT_TEXT_COLOR;
     
     /** Widget type string */
     static const char*      WIDGET_TYPE;

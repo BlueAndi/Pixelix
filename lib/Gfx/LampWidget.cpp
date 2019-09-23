@@ -57,10 +57,10 @@
 /* Initialize lamp widget type. */
 const char*     LampWidget::WIDGET_TYPE = "lamp";
 
-/** Initialize lamp width in pixel */
+/* Initialize lamp width in pixel */
 const uint16_t  LampWidget::WIDTH       = 4u;
 
-/** Initialize lamp height in pixel */
+/* Initialize lamp height in pixel */
 const uint16_t  LampWidget::HEIGHT      = 1u;
 
 /******************************************************************************

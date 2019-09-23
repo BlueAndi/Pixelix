@@ -57,7 +57,7 @@
  *****************************************************************************/
 
 /* Initialize default text color (white) */
-const Color     TextWidget::DEFAULT_TEXT_COLOR  = 0xffffu;
+const uint32_t  TextWidget::DEFAULT_TEXT_COLOR  = ColorDef::WHITE;
 
 /* Initialize text widget type. */
 const char*     TextWidget::WIDGET_TYPE         = "text";
