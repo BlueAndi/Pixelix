@@ -140,7 +140,7 @@ void APState::entry(StateMachine& sm)
         String infoStr = "SSID: ";
         infoStr += WIFI_AP_SSID;
         infoStr += " IP: ";
-        infoStr += WiFi.softAPIP();
+        infoStr += WiFi.softAPIP().toString();
 
         LOG_INFO(infoStr);
         DisplayMgr::getInstance().showSysMsg(infoStr);
