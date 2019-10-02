@@ -93,6 +93,7 @@ void InitState::entry(StateMachine& sm)
 
     /* Initialize logging, which uses the serial interface as sink. */
     Logging::getInstance().init(&Serial);
+    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
 
     /* Initialize drivers */
     ButtonDrv::getInstance().init();
