@@ -68,10 +68,11 @@ void setup()
     /* The setup routine shall handle only the initialization state.
      * All other states are handled in the loop routine.
      */
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState())
+    do
     {
         gSysStateMachine.process();
     }
+    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
 
     return;
 }
