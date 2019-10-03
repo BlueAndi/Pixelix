@@ -89,6 +89,8 @@ APState         APState::m_instance;
 
 void APState::entry(StateMachine& sm)
 {
+    LOG_INFO("Setup access point.");
+    
     /* Force AP mode and start low level wifi. */
     if (false == WiFi.mode(WIFI_MODE_AP))
     {

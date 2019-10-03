@@ -63,13 +63,25 @@ static void savedPage(void);
  *****************************************************************************/
 
 /** Web server */
-static WebServer*   gWebServer                  = NULL;
+static WebServer*       gWebServer                  = NULL;
 
 /** Name of the input field for wifi SSID. */
-static const char*  gFormInputNameSsid          = "ssid";
+static const char*      FORM_INPUT_NAME_SSID        = "ssid";
 
 /** Name of the input field for wifi passphrase. */
-static const char*  gFormInputNamePassphrase    = "passphrase";
+static const char*      FORM_INPUT_NAME_PASSPHRASE  = "passphrase";
+
+/** Min. wifi SSID length */
+static const uint8_t    MIN_SSID_LENGTH             = 0u;
+
+/** Max. wifi SSID length */
+static const uint8_t    MAX_SSID_LENGTH             = 32u;
+
+/** Min. wifi passphrase length */
+static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
+
+/** Max. wifi passphrase length */
+static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
 
 /******************************************************************************
  * Public Methods
@@ -180,10 +192,14 @@ static void indexPage(void)
     page += Html::heading(WebConfig::PROJECT_TITLE, 1);
     page += Html::heading("Wifi Settings", 2);
     page += Html::form(
-        String("SSID:") + Html::nextLine() +
-        Html::input(gFormInputNameSsid, Settings::getInstance().getWifiSSID()) + Html::nextLine() +
-        "Passphrase" + Html::nextLine() +
-        Html::input(gFormInputNamePassphrase, Settings::getInstance().getWifiPassphrase()) + Html::nextLine(),
+        String("SSID:") +
+        Html::nextLine() +
+        Html::inputText(FORM_INPUT_NAME_SSID, Settings::getInstance().getWifiSSID(), MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH) +
+        Html::nextLine() +
+        "Passphrase" +
+        Html::nextLine() +
+        Html::inputText(FORM_INPUT_NAME_PASSPHRASE, Settings::getInstance().getWifiPassphrase(), MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH) +
+        Html::nextLine(),
         "#"
     );
     page += Html::htmlTail();
@@ -202,7 +218,8 @@ static void indexPage(void)
 static void savedPage(void)
 {
     String  page;
-    bool    isError = false;
+    bool    isError     = false;
+    String  errorMsg    = "Error: ";
     String  ssid;
     String  passphrase;
 
@@ -212,32 +229,71 @@ static void savedPage(void)
         return;
     }
 
-    if ((false == gWebServer->hasArg(gFormInputNameSsid)) ||
-        (false == gWebServer->hasArg(gFormInputNamePassphrase)))
+    /* Check for the necessary arguments. */
+    if (false == gWebServer->hasArg(FORM_INPUT_NAME_SSID))
     {
         isError = true;
+        errorMsg += "SSID missing.\r\n";
     }
-    else
-    {
-        ssid        = gWebServer->arg(gFormInputNameSsid);
-        passphrase  = gWebServer->arg(gFormInputNamePassphrase);
 
-        Settings::getInstance().open(false);
-        Settings::getInstance().setWifiSSID(ssid);
-        Settings::getInstance().setWifiPassphrase(passphrase);
-        Settings::getInstance().close();
+    if (false == gWebServer->hasArg(FORM_INPUT_NAME_PASSPHRASE))
+    {
+        isError = true;
+        errorMsg += "Passphrase missing.\r\n";
+    }
+
+    /* Arguments are available */
+    if (false == isError)
+    {
+        ssid        = gWebServer->arg(FORM_INPUT_NAME_SSID);
+        passphrase  = gWebServer->arg(FORM_INPUT_NAME_PASSPHRASE);
+
+        /* Check arguments min. and max. lengths */
+        if (MIN_SSID_LENGTH > ssid.length())
+        {
+            isError = true;
+            errorMsg += "SSID too short";
+        }
+        else if (MAX_SSID_LENGTH < ssid.length())
+        {
+            isError = true;
+            errorMsg += "SSID too long";
+        }
+
+        if (MIN_PASSPHRASE_LENGTH > passphrase.length())
+        {
+            isError = true;
+            errorMsg += "Passphrase too short";
+        }
+        else if (MAX_PASSPHRASE_LENGTH < passphrase.length())
+        {
+            isError = true;
+            errorMsg += "Passphrase too long";
+        }
+
+        /* Arguments are valid, store them. */
+        if (false == isError)
+        {
+            Settings::getInstance().open(false);
+            Settings::getInstance().setWifiSSID(ssid);
+            Settings::getInstance().setWifiPassphrase(passphrase);
+            Settings::getInstance().close();
+        }
     }
 
     page  = Html::htmlHead(WebConfig::PROJECT_TITLE);
     page += Html::heading(WebConfig::PROJECT_TITLE, 1);
     if (true == isError)
     {
-        page += Html::paragraph("Autsch!");
+        page += Html::paragraph(errorMsg);
     }
     else
     {
         page += Html::paragraph("Settings saved.");
     }
+    page += Html::paragraph(
+        Html::hyperlink("/", "Back.")
+    );
     page += Html::htmlTail();
 
     gWebServer->send(Html::STATUS_CODE_OK, "text/html", page);

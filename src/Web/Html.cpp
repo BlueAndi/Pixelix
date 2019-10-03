@@ -141,13 +141,19 @@ String Html::paragraph(const String& text)
     return p;
 }
 
-String Html::input(const String& name, const String& value)
+String Html::inputText(const String& name, const String& value, uint8_t size, uint8_t min, uint8_t max)
 {
     String input = "<input name=\"";
 
     input += name;
     input += "\" value=\"";
     input += value;
+    input += "\" size=\"";
+    input += size;
+    input += "\" minlength=\"";
+    input += min;
+    input += "\" maxlength=\"";
+    input += max;
     input += "\" />";
 
     return input;
@@ -168,6 +174,17 @@ String Html::form(const String& content, const String& action)
     form += "</form>";
 
     return form;
+}
+
+String Html::hyperlink(const String& href, const String& text)
+{
+    String hyperlink = "<a href=\"";
+    hyperlink += href;
+    hyperlink += "\">";
+    hyperlink += text;
+    hyperlink += "</a>";
+
+    return hyperlink;
 }
 
 /******************************************************************************
