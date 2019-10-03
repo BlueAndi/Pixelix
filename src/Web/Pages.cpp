@@ -35,6 +35,7 @@
 #include "Pages.h"
 #include "Html.h"
 #include "WebConfig.h"
+#include "Settings.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -55,15 +56,20 @@
 static bool authenticate(WebServer& srv);
 static void errorNotFound(void);
 static void indexPage(void);
+static void savedPage(void);
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
 
-/**
- * Web server
- */
-static WebServer*   gWebServer  = NULL;
+/** Web server */
+static WebServer*   gWebServer                  = NULL;
+
+/** Name of the input field for wifi SSID. */
+static const char*  gFormInputNameSsid          = "ssid";
+
+/** Name of the input field for wifi passphrase. */
+static const char*  gFormInputNamePassphrase    = "passphrase";
 
 /******************************************************************************
  * Public Methods
@@ -87,6 +93,7 @@ void Pages::init(WebServer& srv)
 
     gWebServer->onNotFound(errorNotFound);
     gWebServer->on("/", HTTP_GET, indexPage);
+    gWebServer->on("/", HTTP_POST, savedPage);
 
     return;
 }
@@ -166,10 +173,71 @@ static void indexPage(void)
     {
         return;
     }
+
+    Settings::getInstance().open(true);
     
     page  = Html::htmlHead(WebConfig::PROJECT_TITLE);
     page += Html::heading(WebConfig::PROJECT_TITLE, 1);
-    page += Html::paragraph("Root directory.");
+    page += Html::heading("Wifi Settings", 2);
+    page += Html::form(
+        String("SSID:") + Html::nextLine() +
+        Html::input(gFormInputNameSsid, Settings::getInstance().getWifiSSID()) + Html::nextLine() +
+        "Passphrase" + Html::nextLine() +
+        Html::input(gFormInputNamePassphrase, Settings::getInstance().getWifiPassphrase()) + Html::nextLine(),
+        "#"
+    );
+    page += Html::htmlTail();
+
+    Settings::getInstance().close();
+
+    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page);
+
+    return;
+}
+
+/**
+ * Page on root path ("/"), which is shown if the user submits
+ * settings.
+ */
+static void savedPage(void)
+{
+    String  page;
+    bool    isError = false;
+    String  ssid;
+    String  passphrase;
+
+    /* If authentication fails, a error page is automatically shown. */
+    if (false == authenticate(*gWebServer))
+    {
+        return;
+    }
+
+    if ((false == gWebServer->hasArg(gFormInputNameSsid)) ||
+        (false == gWebServer->hasArg(gFormInputNamePassphrase)))
+    {
+        isError = true;
+    }
+    else
+    {
+        ssid        = gWebServer->arg(gFormInputNameSsid);
+        passphrase  = gWebServer->arg(gFormInputNamePassphrase);
+
+        Settings::getInstance().open(false);
+        Settings::getInstance().setWifiSSID(ssid);
+        Settings::getInstance().setWifiPassphrase(passphrase);
+        Settings::getInstance().close();
+    }
+
+    page  = Html::htmlHead(WebConfig::PROJECT_TITLE);
+    page += Html::heading(WebConfig::PROJECT_TITLE, 1);
+    if (true == isError)
+    {
+        page += Html::paragraph("Autsch!");
+    }
+    else
+    {
+        page += Html::paragraph("Settings saved.");
+    }
     page += Html::htmlTail();
 
     gWebServer->send(Html::STATUS_CODE_OK, "text/html", page);

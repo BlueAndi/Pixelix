@@ -175,7 +175,7 @@ static bool toUInt16(const String& str, uint16_t& value)
  */
 static uint8_t getSignalQuality(int8_t rssi)
 {
-    uint8_t signalQuality = 0u;
+    uint8_t         signalQuality   = 0u;
     const int8_t    RSSI_HIGH       = -50;  // dBm
     const int8_t    RSSI_UNUSABLE   = -100; // dBm
 

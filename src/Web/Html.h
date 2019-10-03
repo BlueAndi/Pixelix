@@ -109,6 +109,33 @@ String heading(const String& title, uint8_t size);
  */
 String paragraph(const String& text);
 
+/**
+ * Generate a HTML5 input field.
+ * 
+ * @param[in] name  Name of the input field.
+ * @param[in] value Value, which shown in the input field.
+ * 
+ * @return HTML5 input
+ */
+String input(const String& name, const String& value);
+
+/**
+ * Generate a HTML5 break.
+ * 
+ * @return HTML5 break
+ */
+String nextLine(void);
+
+/**
+ * Generate a HTML5 form.
+ * 
+ * @param[in] content   Form content, e.g. input fields.
+ * @param[in] action    Form action
+ * 
+ * @return HTML5 form
+ */
+String form(const String& content, const String& action);
+
 }
 
 #endif  /* __HTML_H__ */

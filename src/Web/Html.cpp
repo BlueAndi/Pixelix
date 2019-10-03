@@ -141,6 +141,35 @@ String Html::paragraph(const String& text)
     return p;
 }
 
+String Html::input(const String& name, const String& value)
+{
+    String input = "<input name=\"";
+
+    input += name;
+    input += "\" value=\"";
+    input += value;
+    input += "\" />";
+
+    return input;
+}
+
+String Html::nextLine(void)
+{
+    return "<br />";
+}
+
+String Html::form(const String& content, const String& action)
+{
+    String form = "<form action=\"";
+    form += action;
+    form += "\" method=\"post\">";
+    form += content;
+    form += "<input type=\"submit\" value=\"Save\">";
+    form += "</form>";
+
+    return form;
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
