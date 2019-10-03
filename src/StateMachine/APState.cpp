@@ -50,13 +50,6 @@
  * Macros
  *****************************************************************************/
 
-/** Compile time assert
- * 
- * @param[in] condition Condition, which must be true, otherwise an assertion appears.
- * @param[in] name      Just a name, for unification.
- */
-#define STATIC_ASSERT( __condition, __name ) typedef char assert_failed_ ## __name [ (__condition) ? 1 : -1 ];
-
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -76,7 +69,7 @@ const char*     APState::WIFI_AP_SSID                   = "esp32-rgb-led-matrix"
 const char*     APState::WIFI_AP_PASSPHRASE             = "Luke, I am your father.";
 
 /* Set a minimum of 8 digits for the passphrase. It shall not be lower than 8 digits! */
-const uint8_t    APState::WIFI_AP_PASSPHRASE_MIN_LEN    = 8u;
+const uint8_t   APState::WIFI_AP_PASSPHRASE_MIN_LEN     = 8u;
 
 /** Set access point local address */
 const IPAddress APState::LOCAL_IP(192u, 168u, 4u, 1u);
@@ -136,6 +129,11 @@ void APState::entry(StateMachine& sm)
     /* Wifi access point successful up. */
     else
     {
+        /* Start webserver after the wifi access point is running.
+        * If its done earlier, it will cause an exception.
+        */
+        MyWebServer::begin();
+
         /* Show SSID and ip address  */
         String infoStr = "SSID: ";
         infoStr += WIFI_AP_SSID;

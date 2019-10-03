@@ -74,6 +74,11 @@ void ConnectedState::entry(StateMachine& sm)
     String infoStr = "Hostname: ";
     infoStr += WiFi.getHostname();
 
+    /* Start webserver after a wifi connection is established.
+     * If its done earlier, it will cause an exception.
+     */
+    MyWebServer::begin();
+
     LOG_INFO(infoStr);
     DisplayMgr::getInstance().showSysMsg(infoStr);
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);

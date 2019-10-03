@@ -72,6 +72,11 @@ namespace MyWebServer
 void init(void);
 
 /**
+ * Start web server.
+ */
+void begin(void);
+
+/**
  * Get web server instance.
  * 
  * @return Web server instance.

@@ -42,6 +42,7 @@
 #include "DisplayMgr.h"
 #include "Version.h"
 #include "AmbientLightSensor.h"
+#include "MyWebServer.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -120,6 +121,9 @@ void InitState::entry(StateMachine& sm)
     {
         LOG_WARNING("Failed to enable autom. brigthness adjustment.");
     }
+
+    /* Initialize webserver */
+    MyWebServer::init();
 
     return;
 }
