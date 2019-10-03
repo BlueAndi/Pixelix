@@ -89,10 +89,21 @@ APState         APState::m_instance;
 
 void APState::entry(StateMachine& sm)
 {
+    /* Force AP mode and start low level wifi. */
+    if (false == WiFi.mode(WIFI_MODE_AP))
+    {
+        String errorStr = "Set AP mode failed.";
+
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        DisplayMgr::getInstance().showSysMsg(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
     /* Configure access point.
      * The DHCP server will automatically be started and uses the range x.x.x.1 - x.x.x.11
      */
-    if (false == WiFi.softAPConfig(LOCAL_IP, GATEWAY, SUBNET))
+    else if (false == WiFi.softAPConfig(LOCAL_IP, GATEWAY, SUBNET))
     {
         String errorStr = "Configure wifi access point failed.";
 
@@ -130,8 +141,8 @@ void APState::entry(StateMachine& sm)
     else
     {
         /* Start webserver after the wifi access point is running.
-        * If its done earlier, it will cause an exception.
-        */
+         * If its done earlier, it will cause an exception.
+         */
         MyWebServer::begin();
 
         /* Show SSID and ip address  */

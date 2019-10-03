@@ -35,8 +35,10 @@
 #include "ConnectingState.h"
 #include "Settings.h"
 #include "DisplayMgr.h"
+
 #include "IdleState.h"
 #include "ConnectedState.h"
+#include "ErrorState.h"
 
 #include <WiFi.h>
 #include <Logging.h>
@@ -98,6 +100,18 @@ void ConnectingState::entry(StateMachine& sm)
      * reconnect behaviour by ourself.
      */
     WiFi.setAutoReconnect(false);
+
+    /* Force STA mode and start low level wifi. */
+    if (false == WiFi.mode(WIFI_MODE_STA))
+    {
+        String errorStr = "Set STA mode failed.";
+
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        DisplayMgr::getInstance().showSysMsg(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
 
     return;
 }

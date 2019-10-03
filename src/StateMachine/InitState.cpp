@@ -35,6 +35,7 @@
 #include "InitState.h"
 
 #include <Arduino.h>
+#include <WiFi.h>
 
 #include "Board.h"
 #include "ButtonDrv.h"
@@ -125,6 +126,12 @@ void InitState::entry(StateMachine& sm)
     /* Initialize webserver */
     MyWebServer::init();
 
+    /* Don't store the wifi configuration in the NVS.
+     * This seems to cause a reset after a client connected to the access point.
+     * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
+     */
+    WiFi.persistent(false);
+
     return;
 }
 
@@ -183,6 +190,10 @@ void InitState::showBootInfo(void)
 
     /* User shall be able to read it on the display. But it shall be really a short delay. */
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_SHORT);
+
+    /* Debug information */
+    LOG_INFO(String("AMPDU RX feature: ") + CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED);
+    LOG_INFO(String("AMPDU TX feature: ") + CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED);
 
     return;
 }
