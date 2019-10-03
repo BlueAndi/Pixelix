@@ -58,7 +58,7 @@
 Settings Settings::m_instance;
 
 /* Initialize the settings namespace used for preferences */
-const char* Settings::PREF_NAMESPACE    = "settings";
+const char* Settings::PREF_NAMESPACE        = "settings";
 
 /* Keys */
 const char* Settings::KEY_WIFI_SSID         = "wifi_ssid";
