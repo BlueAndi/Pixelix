@@ -44,9 +44,6 @@
  * Macros
  *****************************************************************************/
 
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
-
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -110,17 +107,23 @@ void Pages::init(WebServer& srv)
  */
 static bool authenticate(WebServer& srv)
 {
-    bool status = false;
+    bool status = true;
 
     /* If there is no authentication with the client, it will be requested. */
     if (false == srv.authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
     {
         const String authFailResponse = "Authentication failed!";
 
-        /* Use encrypted communication for authentication request to avoid
-        * that the credentials can be read by everyone.
-        */
-        srv.requestAuthentication(DIGEST_AUTH, NULL, authFailResponse);
+        /* Use basic authentication, although no secure transport layer (https) is used
+         * right now. This just for simplicity.
+         * 
+         * Digest Authentication communicates credentials in an encrypted form by applying
+         * a hash function to the the username, the password, a server supplied nonce value,
+         * the HTTP method, and the requested URI.
+         * 
+         * TODO Use DIGEST_AUTH
+         */
+        srv.requestAuthentication(BASIC_AUTH, NULL, authFailResponse);
         
         status = false;
     }
