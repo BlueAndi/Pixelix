@@ -202,7 +202,7 @@ static uint8_t getSignalQuality(int8_t rssi)
 static void status(void)
 {
     String                  content;
-    StaticJsonDocument<200> jsonDoc;
+    StaticJsonDocument<256> jsonDoc;
     uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
 
     if (NULL == gWebServer)
@@ -215,7 +215,7 @@ static void status(void)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
     }
@@ -236,7 +236,7 @@ static void status(void)
         }
 
         /* Prepare response */
-        jsonDoc["status"]       = STATUS_CODE_OK;
+        jsonDoc["status"]       = static_cast<uint8_t>(STATUS_CODE_OK);
 
         hwObj["chipRev"]        = ESP.getChipRevision();
         hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
@@ -280,7 +280,7 @@ static void slots(void)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
     }
@@ -291,7 +291,7 @@ static void slots(void)
         dataObj["slots"] = DisplayMgr::getInstance().MAX_SLOTS;
 
         /* Prepare response */
-        jsonDoc["status"]   = STATUS_CODE_OK;
+        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
         httpStatusCode      = Html::STATUS_CODE_OK;
     }
 
@@ -321,7 +321,7 @@ static void slotText(void)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
     }
@@ -336,7 +336,7 @@ static void slotText(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Slot id not supported.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -346,7 +346,7 @@ static void slotText(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Show is missing.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -359,7 +359,7 @@ static void slotText(void)
             (void)jsonDoc.createNestedObject("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_OK;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
             httpStatusCode      = Html::STATUS_CODE_OK;
         }
     }
@@ -390,7 +390,7 @@ static void slotBitmap(void)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
     }
@@ -407,7 +407,7 @@ static void slotBitmap(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Slot id not supported.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -417,7 +417,7 @@ static void slotBitmap(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Width is missing.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -427,7 +427,7 @@ static void slotBitmap(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Height is missing.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -437,7 +437,7 @@ static void slotBitmap(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Data is missing.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -447,7 +447,7 @@ static void slotBitmap(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Invalid width.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -457,7 +457,7 @@ static void slotBitmap(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Invalid height.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -475,7 +475,7 @@ static void slotBitmap(void)
             (void)jsonDoc.createNestedObject("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_OK;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
             httpStatusCode      = Html::STATUS_CODE_OK;
         }
     }
@@ -506,7 +506,7 @@ static void slotLamp(void)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
     }
@@ -522,7 +522,7 @@ static void slotLamp(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Slot id not supported.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -532,7 +532,7 @@ static void slotLamp(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Lamp id not supported.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -543,7 +543,7 @@ static void slotLamp(void)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Command not supported.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
@@ -561,7 +561,7 @@ static void slotLamp(void)
             (void)jsonDoc.createNestedObject("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = STATUS_CODE_OK;
+            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
             httpStatusCode      = Html::STATUS_CODE_OK;
         }
     }
