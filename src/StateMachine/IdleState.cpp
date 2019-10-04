@@ -35,6 +35,8 @@
 #include "IdleState.h"
 #include "DisplayMgr.h"
 
+#include <Logging.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -64,7 +66,8 @@ IdleState   IdleState::m_instance;
 
 void IdleState::entry(StateMachine& sm)
 {
-    /* Nothing to do. */
+    LOG_INFO("Going in idle state.");
+
     return;
 }
 

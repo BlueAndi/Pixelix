@@ -34,6 +34,8 @@
  *****************************************************************************/
 #include "ErrorState.h"
 
+#include <Logging.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -63,7 +65,8 @@ ErrorState  ErrorState::m_instance;
 
 void ErrorState::entry(StateMachine& sm)
 {
-    /* Nothing to do. */
+    LOG_INFO("Going in error state.");
+
     return;
 }
 

@@ -72,6 +72,7 @@ public:
 
     /**
      * Open settings.
+     * If the settings storage doesn't exist, it will be created.
      * 
      * @param[in] readOnly  Open read only or read/write
      * 
@@ -86,7 +87,22 @@ public:
          * RW-mode (second parameter has to be false).
          * Note: Namespace name is limited to 15 chars.
          */
-        return m_preferences.begin(PREF_NAMESPACE, readOnly);
+        bool status = m_preferences.begin(PREF_NAMESPACE, readOnly);
+
+        /* If settings storage doesn't exist, it will be created. */
+        if ((false == status) &&
+            (true == readOnly))
+        {
+            status = m_preferences.begin(PREF_NAMESPACE, false);
+
+            if (true == status)
+            {
+                m_preferences.end();
+                status = m_preferences.begin(PREF_NAMESPACE, readOnly);
+            }
+        }
+
+        return status;
     }
 
     /**

@@ -141,6 +141,52 @@ String Html::paragraph(const String& text)
     return p;
 }
 
+String Html::inputText(const String& name, const String& value, uint8_t size, uint8_t min, uint8_t max)
+{
+    String input = "<input name=\"";
+
+    input += name;
+    input += "\" value=\"";
+    input += value;
+    input += "\" size=\"";
+    input += size;
+    input += "\" minlength=\"";
+    input += min;
+    input += "\" maxlength=\"";
+    input += max;
+    input += "\" />";
+
+    return input;
+}
+
+String Html::nextLine(void)
+{
+    return "<br />";
+}
+
+String Html::form(const String& content, const String& action)
+{
+    String form = "<form action=\"";
+    form += action;
+    form += "\" method=\"post\">";
+    form += content;
+    form += "<input type=\"submit\" value=\"Save\">";
+    form += "</form>";
+
+    return form;
+}
+
+String Html::hyperlink(const String& href, const String& text)
+{
+    String hyperlink = "<a href=\"";
+    hyperlink += href;
+    hyperlink += "\">";
+    hyperlink += text;
+    hyperlink += "</a>";
+
+    return hyperlink;
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/

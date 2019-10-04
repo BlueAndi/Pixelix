@@ -81,10 +81,17 @@ static WebServer    gWebServer(WebConfig::WEBSERVER_PORT);
 
 void MyWebServer::init(void)
 {
-    /* Start webserver and register all web pages */
-    gWebServer.begin();
+    /* Register all web pages */
     Pages::init(gWebServer);
     RestApi::init(gWebServer);
+
+    return;
+}
+
+void MyWebServer::begin(void)
+{
+    /* Start webserver */
+    gWebServer.begin();
 
     return;
 }
