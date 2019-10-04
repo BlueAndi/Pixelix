@@ -72,13 +72,20 @@ ConnectedState  ConnectedState::m_instance;
 void ConnectedState::entry(StateMachine& sm)
 {
     String infoStr = "Hostname: ";
-    infoStr += WiFi.getHostname();
+
+    /* Set hostname */
+    if (false == WiFi.setHostname("pixelix"))
+    {
+        LOG_WARNING("Failed to set hostname.");
+    }
 
     /* Start webserver after a wifi connection is established.
      * If its done earlier, it will cause an exception.
      */
     MyWebServer::begin();
 
+    /* Show hostname and don't believe its the same as set some lines above. */
+    infoStr += WiFi.getHostname();
     LOG_INFO(infoStr);
     DisplayMgr::getInstance().showSysMsg(infoStr);
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);

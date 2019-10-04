@@ -112,11 +112,6 @@ void ConnectingState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
-    /* Set hostname */
-    else if (false == WiFi.setHostname("pixelix"))
-    {
-        LOG_WARNING("Failed to set hostname.");
-    }
 
     return;
 }
