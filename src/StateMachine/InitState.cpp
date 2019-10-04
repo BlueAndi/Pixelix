@@ -188,6 +188,8 @@ void InitState::showBootInfo(void)
 
     LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
 
+    LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
+
     /* User shall be able to read it on the display. But it shall be really a short delay. */
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_SHORT);
 
