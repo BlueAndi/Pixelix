@@ -73,6 +73,8 @@ void ConnectedState::entry(StateMachine& sm)
 {
     String infoStr = "Hostname: ";
 
+    LOG_INFO("Connected");
+
     /* Set hostname */
     if (false == WiFi.setHostname("pixelix"))
     {
@@ -90,6 +92,9 @@ void ConnectedState::entry(StateMachine& sm)
     DisplayMgr::getInstance().showSysMsg(infoStr);
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
 
+    /* Show ip address */
+    LOG_INFO(String("IP: ") + WiFi.localIP().toString());
+
     /* Enable slots */
     DisplayMgr::getInstance().enableSlots(true);
     DisplayMgr::getInstance().startRotating(true);
@@ -102,6 +107,8 @@ void ConnectedState::process(StateMachine& sm)
     /* Connection lost? */
     if (false == WiFi.isConnected())
     {
+        LOG_INFO("Disconnected");
+
         sm.setState(ConnectingState::getInstance());
     }
     /* Connection is still established */
