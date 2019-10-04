@@ -619,7 +619,7 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
         }
     }
 
-    if ((ARRAY_NUM(lampWidgets) <= index) ||
+    if ((ARRAY_NUM(lampWidgets) > index) ||
         (NULL == canvas) ||
         (NULL == bitmapCanvas) ||
         (NULL == bitmapWidget) ||
