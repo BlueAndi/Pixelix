@@ -112,6 +112,11 @@ void ConnectingState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
+    /* Set hostname */
+    else if (false == WiFi.setHostname("pixelix"))
+    {
+        LOG_WARNING("Failed to set hostname.");
+    }
 
     return;
 }
@@ -123,7 +128,6 @@ void ConnectingState::process(StateMachine& sm)
     {
         wl_status_t status      = WL_IDLE_STATUS;
         String      infoStr     = "Connecting to ";
-        String      errorStr    = "Connection failed.";
 
         infoStr += m_wifiSSID;
 
@@ -133,17 +137,13 @@ void ConnectingState::process(StateMachine& sm)
         /* Remote wifi network informations are available, try to establish a connection. */
         status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());
 
-        /* Connection establishment failed? */
+        /* Connection establishment pending? */
         if (WL_CONNECTED != status)
         {
-            LOG_ERROR(errorStr);
-            DisplayMgr::getInstance().showSysMsg(errorStr);
-
             /* Wait a little bit, until retry. */
             m_retryTimer.start(RETRY_DELAY);
-
-            /* TODO How to determine whats wrong? SSID or password? */
         }
+        /* Connected */
         else
         {
             /* Disable retry mechanism. */
@@ -158,7 +158,21 @@ void ConnectingState::process(StateMachine& sm)
         /* Retry delay timeout? */
         if (true == m_retryTimer.isTimeout())
         {
+            /* Disable retry mechanism. */
             m_retryTimer.stop();
+        }
+        /* Connection successful established? */
+        else if (true == WiFi.isConnected())
+        {
+            /* Disable retry mechanism. */
+            m_retryTimer.stop();
+
+            sm.setState(ConnectedState::getInstance());
+        }
+        else
+        {
+            /* Wait ... */
+            ;
         }
     }
 
