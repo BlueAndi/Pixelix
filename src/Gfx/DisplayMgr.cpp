@@ -40,6 +40,7 @@
 #include <TextWidget.h>
 #include <BitmapWidget.h>
 #include <LampWidget.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -148,15 +149,24 @@ void DisplayMgr::setLayout(uint8_t slotId, LayoutId layoutId)
     switch(layoutId)
     {
     case LAYOUT_ID_0:
-        createLayout0(m_slots[slotId]);
+        if (false == createLayout0(m_slots[slotId]))
+        {
+            LOG_WARNING(String("Couldn't create layout 0 for slot ") + slotId);
+        }
         break;
 
     case LAYOUT_ID_1:
-        createLayout1(m_slots[slotId], &m_bitmapBuffer[slotId][0]);
+        if (false == createLayout1(m_slots[slotId], &m_bitmapBuffer[slotId][0]))
+        {
+            LOG_WARNING(String("Couldn't create layout 1 for slot ") + slotId);
+        }
         break;
 
     case LAYOUT_ID_2:
-        createLayout2(m_slots[slotId], &m_bitmapBuffer[slotId][0]);
+        if (false == createLayout2(m_slots[slotId], &m_bitmapBuffer[slotId][0]))
+        {
+            LOG_WARNING(String("Couldn't create layout 2 for slot ") + slotId);
+        }
         break;
 
     case LAYOUT_ID_COUNT:
@@ -294,7 +304,7 @@ void DisplayMgr::process(void)
 
     matrix.clear();
 
-    /* If the slot mechanism is diabled, only system messages are shown. */
+    /* If the slot mechanism is disabled, only system messages are shown. */
     if (false == m_slotsEnabled)
     {
         m_sysMsgWidget.update(matrix);
@@ -311,6 +321,8 @@ void DisplayMgr::process(void)
                 /* Set next slot active */
                 ++m_activeSlotId;
                 m_activeSlotId %= MAX_SLOTS;
+
+                LOG_INFO(String("Next slot: ") + m_activeSlotId);
 
                 /* Wait another period */
                 m_slotChangeTimer.restart();
@@ -487,14 +499,15 @@ bool DisplayMgr::createLayout0(Canvas*& canvas) const
     
     if (false == success)
     {
-        if (NULL != textWidget)
-        {
-            delete textWidget;
-        }
-
         if (NULL != canvas)
         {
             delete canvas;
+            canvas = NULL;
+        }
+
+        if (NULL != textWidget)
+        {
+            delete textWidget;
         }
     }
 
@@ -550,6 +563,7 @@ bool DisplayMgr::createLayout1(Canvas*& canvas, uint16_t* bitmapBuffer) const
         if (NULL != canvas)
         {
             delete canvas;
+            canvas = NULL;
         }
 
         if (NULL != bitmapCanvas)
@@ -666,6 +680,7 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
         if (NULL != canvas)
         {
             delete canvas;
+            canvas = NULL;
         }
         
         if (NULL != bitmapCanvas)
