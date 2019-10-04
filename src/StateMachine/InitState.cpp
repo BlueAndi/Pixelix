@@ -97,6 +97,9 @@ void InitState::entry(StateMachine& sm)
     Logging::getInstance().init(&Serial);
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
 
+    /* Show as soon as possible the user that the system is booting. */
+    LOG_INFO("Booting ...");
+
     /* Initialize drivers */
     ButtonDrv::getInstance().init();
 
@@ -177,9 +180,6 @@ void InitState::exit(StateMachine& sm)
  */
 void InitState::showBootInfo(void)
 {
-    /* Show information via serial interface */    
-    LOG_INFO("Booting ...");
-    
     LOG_INFO(String("SW version: ") + Version::SOFTWARE);
     DisplayMgr::getInstance().showSysMsg(Version::SOFTWARE);
 
