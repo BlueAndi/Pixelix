@@ -72,16 +72,28 @@ ConnectedState  ConnectedState::m_instance;
 void ConnectedState::entry(StateMachine& sm)
 {
     String infoStr = "Hostname: ";
-    infoStr += WiFi.getHostname();
+
+    LOG_INFO("Connected");
+
+    /* Set hostname */
+    if (false == WiFi.setHostname("pixelix"))
+    {
+        LOG_WARNING("Failed to set hostname.");
+    }
 
     /* Start webserver after a wifi connection is established.
      * If its done earlier, it will cause an exception.
      */
     MyWebServer::begin();
 
+    /* Show hostname and don't believe its the same as set some lines above. */
+    infoStr += WiFi.getHostname();
     LOG_INFO(infoStr);
     DisplayMgr::getInstance().showSysMsg(infoStr);
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+
+    /* Show ip address */
+    LOG_INFO(String("IP: ") + WiFi.localIP().toString());
 
     /* Enable slots */
     DisplayMgr::getInstance().enableSlots(true);
@@ -95,6 +107,8 @@ void ConnectedState::process(StateMachine& sm)
     /* Connection lost? */
     if (false == WiFi.isConnected())
     {
+        LOG_INFO("Disconnected");
+
         sm.setState(ConnectingState::getInstance());
     }
     /* Connection is still established */

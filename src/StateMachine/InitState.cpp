@@ -97,6 +97,9 @@ void InitState::entry(StateMachine& sm)
     Logging::getInstance().init(&Serial);
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
 
+    /* Show as soon as possible the user that the system is booting. */
+    LOG_INFO("Booting ...");
+
     /* Initialize drivers */
     ButtonDrv::getInstance().init();
 
@@ -177,9 +180,6 @@ void InitState::exit(StateMachine& sm)
  */
 void InitState::showBootInfo(void)
 {
-    /* Show information via serial interface */    
-    LOG_INFO("Booting ...");
-    
     LOG_INFO(String("SW version: ") + Version::SOFTWARE);
     DisplayMgr::getInstance().showSysMsg(Version::SOFTWARE);
 
@@ -187,6 +187,8 @@ void InitState::showBootInfo(void)
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
 
     LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
+
+    LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
 
     /* User shall be able to read it on the display. But it shall be really a short delay. */
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_SHORT);
