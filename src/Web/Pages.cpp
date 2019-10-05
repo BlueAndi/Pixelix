@@ -36,6 +36,10 @@
 #include "Html.h"
 #include "WebConfig.h"
 #include "Settings.h"
+#include "Version.h"
+
+#include <WiFi.h>
+#include <Esp.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -52,19 +56,29 @@
  * Types and classes
  *****************************************************************************/
 
+/**
+ * One menu item.
+ */
+typedef struct
+{
+    const char* name;   /**< Menu item name */
+    const char* href;   /**< Menu item hyperlink */
+
+} MenuItem;
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
 static bool authenticate(WebServer& srv);
 static String getProjectTitle(void);
-static String getHeader(void);
-static String getTopNav(uint8_t active);
-static String getFooter(void);
+static void addHeader(String& body);
+static void addTopNav(String& body, uint8_t active);
+static void addFooter(String& body);
 static void errorNotFound(void);
 static void indexPage(void);
+static void networkPage(void);
 static void settingsPage(void);
-static void aboutPage(void);
 
 /******************************************************************************
  * Local Variables
@@ -97,6 +111,22 @@ static const char*      WEB_PAGE_STYLE              =
         "color: white;" \
         "background-color: #202020;" \
     "}" \
+    "h2 {" \
+        "color: #ff0000;" \
+    "}" \
+    "h3 {" \
+        "color: #ffff00;" \
+    "}" \
+    "table {" \
+        "border-collapse: collapse;" \
+    "}" \
+    "tr:nth-child(even) {" \
+        "background-color: #333;" \
+    "}" \
+    "td {" \
+        "border: 1px solid white;" \
+        "padding: 2px" \
+    "}" \
     ".header {" \
         "padding: 10px 16px;" \
     "}" \
@@ -128,6 +158,14 @@ static const char*      WEB_PAGE_STYLE              =
         "text-align: center;" \
     "}";
 
+/** Top navigation menu items */
+static MenuItem         gTopNavItems[] =
+{
+    { "Home",       "/"         },
+    { "Network",    "/network"  },
+    { "Settings",   "/settings" }
+};
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -150,9 +188,9 @@ void Pages::init(WebServer& srv)
 
     gWebServer->onNotFound(errorNotFound);
     gWebServer->on("/", HTTP_GET, indexPage);
+    gWebServer->on("/network", HTTP_GET, networkPage);
     gWebServer->on("/settings", HTTP_GET, settingsPage);
     gWebServer->on("/settings", HTTP_POST, settingsPage);
-    gWebServer->on("/about", HTTP_GET, aboutPage);
 
     return;
 }
@@ -239,84 +277,65 @@ static String getProjectTitle(void)
 }
 
 /**
- * Get HTML page header.
+ * Add HTML page header to body.
  * 
- * @return HTML page header
+ * @param[inout] body   Body
  */
-static String getHeader(void)
+static void addHeader(String& body)
 {
-    String header;
+    body += "<div class=\"header\">\r\n";
+    body += "\t<h1>";
+    body += getProjectTitle();
+    body += "</h1>\r\n";
+    body += "</div>\r\n";
 
-    header += "<div class=\"header\">\r\n";
-    header += "\t<h1>";
-    header += getProjectTitle();
-    header += "</h1>\r\n";
-    header += "</div>\r\n";
-
-    return header;
+    return;
 }
 
 /**
- * Get HTML page top navigation.
+ * Add HTML top navigation to body.
  * 
- * @param[in] active Active menu item [0; ...]
- * 
- * @return HTML page top navigation
+ * @param[inout]    body   Body
+ * @param[in]       active Active menu item [0; ...]
  */
-static String getTopNav(uint8_t active)
+static void addTopNav(String& body, uint8_t active)
 {
-    String          topNav;
-    const uint8_t   MENU_ITEM_CNT   = 3;
-    const char*     menuItems[MENU_ITEM_CNT] =
-    {
-        "Home",
-        "Settings",
-        "About"
-    };
-    const char*     menuItemsLink[MENU_ITEM_CNT] =
-    {
-        "/",
-        "/settings",
-        "/about"
-    };
-    uint8_t         index = 0;
+    uint8_t index = 0;
 
-    topNav += "<div class=\"topnav\">\r\n";
+    body += "<div class=\"topnav\">\r\n";
 
-    for(index = 0; index < MENU_ITEM_CNT; ++index)
+    for(index = 0; index < ARRAY_NUM(gTopNavItems); ++index)
     {
-        topNav += "<a class=\"";
+        body += "\t<a class=\"";
         if (active == index)
         {
-            topNav += "active";
+            body += "active";
         }
-        topNav += "\" href=\"";
-        topNav += menuItemsLink[index];
-        topNav += "\">";
-        topNav += menuItems[index];
-        topNav += "</a>\r\n";
+        body += "\" href=\"";
+        body += gTopNavItems[index].href;
+        body += "\">";
+        body += gTopNavItems[index].name;
+        body += "</a>\r\n";
     }
 
-    topNav += "</div>\r\n";
+    body += "</div>\r\n";
 
-    return topNav;
+    return;
 }
 
 /**
- * Get HTML page footer.
+ * Add HTML footer to body.
  * 
- * @return HTML page footer
+ * @param[inout]    body   Body
  */
-static String getFooter(void)
+static void addFooter(String& body)
 {
-    String footer;
+    body += "<div class=\"footer\">\r\n";
+    body += "\t<hr />\r\n";
+    body += "\t(C) 2019 by Andreas Merkle (web@blue-andi.de)\r\n";
+    body += "</div>\r\n";
 
-    footer += "<div class=\"footer\">\r\n";
-    footer += "\t<hr />\r\n";
-    footer += "\t(C) 2019 by Andreas Merkle (web@blue-andi.de)\r\n";
-    footer += "</div>\r\n";
-
-    return footer;
+    return;
 }
 
 /**
@@ -332,10 +351,10 @@ static void errorNotFound(void)
         return;
     }
 
-    body += getHeader();
+    addHeader(body);
     body += Html::heading("Error", 2);
     body += Html::paragraph("Requested path not found.");
-    body += getFooter();
+    addFooter(body);
 
     page.setBody(body);
     page.setStyle(WEB_PAGE_STYLE);
@@ -361,12 +380,132 @@ static void indexPage(void)
         return;
     }
 
-    body += getHeader();
-    body += getTopNav(0);
+    addHeader(body);
+    addTopNav(body, 0);
     body += "<div class=\"main\">\r\n";
-    body += "\t<p>Welcome!</p>";
+    body += "\t<h2>Home</h2>\r\n";
+    body += "\t<p>Welcome!</p>\r\n";
+
+    body += "\t<h3>Software</h3>\r\n";
+    body += "\t<table>";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>Version:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += Version::SOFTWARE;
+    body += "</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>ESP SDK Version:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += ESP.getSdkVersion();
+    body += "</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>Heap size:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += ESP.getHeapSize();
+    body += " byte</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>Available heap size:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += ESP.getFreeHeap();
+    body += " byte</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t</table>";
+
+    body += "\t<h3>Hardware</h3>\r\n";
+    body += "\t<table>";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>ESP chip rev.:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += ESP.getChipRevision();
+    body += "</td>\r\n";
+    body += "\t\t</tr>\r\n";
+    
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>ESP cpu freq.:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += ESP.getCpuFreqMHz();
+    body += " MHz</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t</table>";
     body += "</div>\r\n";
-    body += getFooter();
+    addFooter(body);
+
+    page.setBody(body);
+    page.setStyle(WEB_PAGE_STYLE);
+
+    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
+
+    return;
+}
+
+/**
+ * Network page, shows all information regarding the network.
+ */
+static void networkPage(void)
+{
+    String      body;
+    Html::Page  page(WebConfig::PROJECT_TITLE);
+    String      ssid;
+
+    /* If authentication fails, a error page is automatically shown. */
+    if (false == authenticate(*gWebServer))
+    {
+        return;
+    }
+
+    if (true == Settings::getInstance().open(true))
+    {
+        ssid = Settings::getInstance().getWifiSSID();
+        Settings::getInstance().close();
+    }
+
+    addHeader(body);
+    addTopNav(body, 3);
+    body += "<div class=\"main\">\r\n";
+    body += "\t<h2>Network</h2>\r\n";
+    body += "\t<table>";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>SSID:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += ssid;
+    body += "</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>RSSI:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += WiFi.RSSI();
+    body += " dBm</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>Hostname:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += WiFi.getHostname();
+    body += "</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t\t<tr>\r\n";
+    body += "\t\t\t<td><strong>IPv4:</strong></td>\r\n";
+    body += "\t\t\t<td>";
+    body += WiFi.localIP().toString();
+    body += "</td>\r\n";
+    body += "\t\t</tr>\r\n";
+
+    body += "\t</table>";
+    body += "</div>\r\n";
+    addFooter(body);
 
     page.setBody(body);
     page.setStyle(WEB_PAGE_STYLE);
@@ -384,7 +523,7 @@ static void settingsPage(void)
     String      body;
     Html::Page  page(WebConfig::PROJECT_TITLE);
     bool        isError     = false;
-    String      errorMsg    = "Error: ";
+    String      errorMsg;
     String      ssid;
     String      passphrase;
     const char* style       =
@@ -425,13 +564,13 @@ static void settingsPage(void)
         if (false == gWebServer->hasArg(FORM_INPUT_NAME_SSID))
         {
             isError = true;
-            errorMsg += "SSID missing.\r\n";
+            errorMsg += "<p>SSID missing.</p>\r\n";
         }
 
         if (false == gWebServer->hasArg(FORM_INPUT_NAME_PASSPHRASE))
         {
             isError = true;
-            errorMsg += "Passphrase missing.\r\n";
+            errorMsg += "<p>Passphrase missing.</p>\r\n";
         }
 
         /* Arguments are available */
@@ -444,23 +583,23 @@ static void settingsPage(void)
             if (MIN_SSID_LENGTH > ssid.length())
             {
                 isError = true;
-                errorMsg += "SSID too short.";
+                errorMsg += "<p>SSID too short.</p>";
             }
             else if (MAX_SSID_LENGTH < ssid.length())
             {
                 isError = true;
-                errorMsg += "SSID too long.";
+                errorMsg += "<p>SSID too long.</p>";
             }
 
             if (MIN_PASSPHRASE_LENGTH > passphrase.length())
             {
                 isError = true;
-                errorMsg += "Passphrase too short.";
+                errorMsg += "<p>Passphrase too short.</p>";
             }
             else if (MAX_PASSPHRASE_LENGTH < passphrase.length())
             {
                 isError = true;
-                errorMsg += "Passphrase too long.";
+                errorMsg += "<p>Passphrase too long.</p>";
             }
 
             /* Arguments are valid, store them. */
@@ -479,8 +618,8 @@ static void settingsPage(void)
     passphrase  = Settings::getInstance().getWifiPassphrase();
     Settings::getInstance().close();
 
-    body += getHeader();
-    body += getTopNav(1);
+    addHeader(body);
+    addTopNav(body, 1);
     body += "<div class=\"main\">\r\n";
     body += "\t<h2>Wifi Settings</h2>";
 
@@ -516,42 +655,10 @@ static void settingsPage(void)
     );
 
     body += "</div>\r\n";
-    body += getFooter();
+    addFooter(body);
 
     page.setBody(body);
     page.setStyle(String(WEB_PAGE_STYLE) + style);
-
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
-
-    return;
-}
-
-/**
- * About page.
- */
-static void aboutPage(void)
-{
-    String      body;
-    Html::Page  page(WebConfig::PROJECT_TITLE);
-    String      ssid;
-    String      passphrase;
-
-    /* If authentication fails, a error page is automatically shown. */
-    if (false == authenticate(*gWebServer))
-    {
-        return;
-    }
-
-    body += getHeader();
-    body += getTopNav(3);
-    body += "<div class=\"main\">\r\n";
-    body += "\t<h2>About</h2>\r\n";
-    body += "\t<p>xxxx</p>";
-    body += "</div>\r\n";
-    body += getFooter();
-
-    page.setBody(body);
-    page.setStyle(WEB_PAGE_STYLE);
 
     gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 

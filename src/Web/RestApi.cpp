@@ -42,6 +42,7 @@
 #include <crypto/base64.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
+#include <Esp.h>
 
 /******************************************************************************
  * Compiler Switches
