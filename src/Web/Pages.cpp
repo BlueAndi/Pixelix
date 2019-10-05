@@ -647,7 +647,7 @@ static void settingsPage(void)
         Html::nextLine() +
         Html::inputText(FORM_INPUT_NAME_SSID, ssid, MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH) +
         Html::nextLine() +
-        "Passphrase" +
+        "Passphrase:" +
         Html::nextLine() +
         Html::inputText(FORM_INPUT_NAME_PASSPHRASE, passphrase, MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH) +
         Html::nextLine(),
