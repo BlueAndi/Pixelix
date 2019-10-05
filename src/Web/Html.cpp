@@ -91,16 +91,16 @@ String Html::Page::toString(void) const
     String page;
 
     page  = HEAD_BEGIN;
-    page += "<title>" + m_title + "</title>\r\n";
+    page += "\t<title>" + m_title + "</title>\r\n";
     
     if (false == m_style.isEmpty())
     {
-        page += "<style>\r\n" + m_style + "</style>\r\n";
+        page += "\t<style>" + m_style + "</style>\r\n";
     }
 
     if (false == m_script.isEmpty())
     {
-        page += "<script>\r\n" + m_script + "</script>\r\n";
+        page += "\t<script>" + m_script + "</script>\r\n";
     }
 
     page += HEAD_END;

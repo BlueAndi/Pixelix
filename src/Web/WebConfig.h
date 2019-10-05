@@ -56,7 +56,7 @@ namespace WebConfig
 static const uint32_t   WEBSERVER_PORT          = 80u;
 
 /** Project title, used by the web pages. */
-static const char       PROJECT_TITLE[]         = "esp-rgb-led-matrix";
+static const char       PROJECT_TITLE[]         = "PIXELIX";
 
 /** Web server login user */
 static const char       WEB_LOGIN_USER[]        = "luke";

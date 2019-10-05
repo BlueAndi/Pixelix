@@ -45,6 +45,9 @@
  * Macros
  *****************************************************************************/
 
+/** Get number of array elements. */
+#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -54,9 +57,14 @@
  *****************************************************************************/
 
 static bool authenticate(WebServer& srv);
+static String getProjectTitle(void);
+static String getHeader(void);
+static String getTopNav(uint8_t active);
+static String getFooter(void);
 static void errorNotFound(void);
 static void indexPage(void);
-static void savedPage(void);
+static void settingsPage(void);
+static void aboutPage(void);
 
 /******************************************************************************
  * Local Variables
@@ -83,6 +91,43 @@ static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
 /** Max. wifi passphrase length */
 static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
 
+/** CSS used for every page. */
+static const char*      WEB_PAGE_STYLE              =
+    "body {" \
+        "color: white;" \
+        "background-color: #202020;" \
+    "}" \
+    ".header {" \
+        "padding: 10px 16px;" \
+    "}" \
+    ".topnav {" \
+        "background-color: #333;" \
+        "overflow: hidden;" \
+    "}" \
+    ".topnav a {" \
+        "float: left;" \
+        "color: #f2f2f2;" \
+        "text-align: center;" \
+        "padding: 14px 16px;" \
+        "text-decoration: none;" \
+        "font-size: 17px;" \
+    "}" \
+    ".topnav a:hover {" \
+        "background-color: #ddd;" \
+        "color: black;" \
+    "}" \
+    ".topnav a.active {" \
+        "background-color: #4CAF50;" \
+        "color: white;" \
+    "}" \
+    ".main {" \
+        "padding: 16px;" \
+    "}" \
+    ".footer {" \
+        "padding: 10px 16px;" \
+        "text-align: center;" \
+    "}";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -105,7 +150,9 @@ void Pages::init(WebServer& srv)
 
     gWebServer->onNotFound(errorNotFound);
     gWebServer->on("/", HTTP_GET, indexPage);
-    gWebServer->on("/", HTTP_POST, savedPage);
+    gWebServer->on("/settings", HTTP_GET, settingsPage);
+    gWebServer->on("/settings", HTTP_POST, settingsPage);
+    gWebServer->on("/about", HTTP_GET, aboutPage);
 
     return;
 }
@@ -151,6 +198,128 @@ static bool authenticate(WebServer& srv)
 }
 
 /**
+ * Get project title in color form.
+ * 
+ * @return Project title in color form (HTML).
+ */
+static String getProjectTitle(void)
+{
+    String      title;
+    uint8_t     projectTitleLen = strlen(WebConfig::PROJECT_TITLE);
+    uint8_t     index           = 0;
+    uint8_t     colorIndex  = 0;
+    const char* colors[]    =
+    {
+        "#FF0000",
+        "#FFFF00",
+        "#00FF00",
+        "#00FFFF",
+        "#0000FF",
+        "#FF00FF"
+    };
+
+    title += ".:";
+    for(index = 0; index < projectTitleLen; ++index)
+    {
+        title += "<span style=\"color:";
+        title += colors[colorIndex];
+        title += "\">";
+        title += WebConfig::PROJECT_TITLE[index];
+        title += "</span>";
+
+        ++colorIndex;
+        if (ARRAY_NUM(colors) <= colorIndex)
+        {
+            colorIndex = 0;
+        }
+    }
+    title += ":.";
+
+    return title;
+}
+
+/**
+ * Get HTML page header.
+ * 
+ * @return HTML page header
+ */
+static String getHeader(void)
+{
+    String header;
+
+    header += "<div class=\"header\">\r\n";
+    header += "\t<h1>";
+    header += getProjectTitle();
+    header += "</h1>\r\n";
+    header += "</div>\r\n";
+
+    return header;
+}
+
+/**
+ * Get HTML page top navigation.
+ * 
+ * @param[in] active Active menu item [0; ...]
+ * 
+ * @return HTML page top navigation
+ */
+static String getTopNav(uint8_t active)
+{
+    String          topNav;
+    const uint8_t   MENU_ITEM_CNT   = 3;
+    const char*     menuItems[MENU_ITEM_CNT] =
+    {
+        "Home",
+        "Settings",
+        "About"
+    };
+    const char*     menuItemsLink[MENU_ITEM_CNT] =
+    {
+        "/",
+        "/settings",
+        "/about"
+    };
+    uint8_t         index = 0;
+
+    topNav += "<div class=\"topnav\">\r\n";
+
+    for(index = 0; index < MENU_ITEM_CNT; ++index)
+    {
+        topNav += "<a class=\"";
+        if (active == index)
+        {
+            topNav += "active";
+        }
+        topNav += "\" href=\"";
+        topNav += menuItemsLink[index];
+        topNav += "\">";
+        topNav += menuItems[index];
+        topNav += "</a>\r\n";
+    }
+
+    topNav += "</div>\r\n";
+
+    return topNav;
+}
+
+/**
+ * Get HTML page footer.
+ * 
+ * @return HTML page footer
+ */
+static String getFooter(void)
+{
+    String footer;
+
+    footer += "<div class=\"footer\">\r\n";
+    footer += "\t<hr />\r\n";
+    footer += "\t(C) 2019 by Andreas Merkle (web@blue-andi.de)\r\n";
+    footer += "</div>\r\n";
+
+    return footer;
+}
+
+/**
  * Error web page used in case a requested path was not found.
  */
 static void errorNotFound(void)
@@ -163,11 +332,13 @@ static void errorNotFound(void)
         return;
     }
 
-    body += Html::heading(WebConfig::PROJECT_TITLE, 1);
+    body += getHeader();
     body += Html::heading("Error", 2);
     body += Html::paragraph("Requested path not found.");
+    body += getFooter();
 
     page.setBody(body);
+    page.setStyle(WEB_PAGE_STYLE);
 
     gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/html", page.toString());
 
@@ -190,13 +361,148 @@ static void indexPage(void)
         return;
     }
 
+    body += getHeader();
+    body += getTopNav(0);
+    body += "<div class=\"main\">\r\n";
+    body += "\t<p>Welcome!</p>";
+    body += "</div>\r\n";
+    body += getFooter();
+
+    page.setBody(body);
+    page.setStyle(WEB_PAGE_STYLE);
+
+    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
+
+    return;
+}
+
+/**
+ * Page ("/settings") to show and store settings.
+ */
+static void settingsPage(void)
+{
+    String      body;
+    Html::Page  page(WebConfig::PROJECT_TITLE);
+    bool        isError     = false;
+    String      errorMsg    = "Error: ";
+    String      ssid;
+    String      passphrase;
+    const char* style       =
+    ".error {"                          \
+        "padding: 20px;"                \
+        "background-color: #f44336;"    \
+        "color: white;"                 \
+    "}"                                 \
+    ".success {"                        \
+        "padding: 20px;"                \
+        "background-color: #4CAF50;"    \
+        "color: white;"                 \
+    "}"                                 \
+    ".closebtn {"                       \
+        "margin-left: 15px;"            \
+        "color: white;"                 \
+        "font-weight: bold;"            \
+        "float: right;"                 \
+        "font-size: 22px;"              \
+        "line-height: 20px;"            \
+        "cursor: pointer;"              \
+        "transition: 0.3s;"             \
+    "}"                                 \
+    ".closebtn:hover {"                 \
+        "color: black;"                 \
+    "}";
+
+    /* If authentication fails, a error page is automatically shown. */
+    if (false == authenticate(*gWebServer))
+    {
+        return;
+    }
+
+    /* Store settings? */
+    if (0 < gWebServer->args())
+    {
+        /* Check for the necessary arguments. */
+        if (false == gWebServer->hasArg(FORM_INPUT_NAME_SSID))
+        {
+            isError = true;
+            errorMsg += "SSID missing.\r\n";
+        }
+
+        if (false == gWebServer->hasArg(FORM_INPUT_NAME_PASSPHRASE))
+        {
+            isError = true;
+            errorMsg += "Passphrase missing.\r\n";
+        }
+
+        /* Arguments are available */
+        if (false == isError)
+        {
+            ssid        = gWebServer->arg(FORM_INPUT_NAME_SSID);
+            passphrase  = gWebServer->arg(FORM_INPUT_NAME_PASSPHRASE);
+
+            /* Check arguments min. and max. lengths */
+            if (MIN_SSID_LENGTH > ssid.length())
+            {
+                isError = true;
+                errorMsg += "SSID too short.";
+            }
+            else if (MAX_SSID_LENGTH < ssid.length())
+            {
+                isError = true;
+                errorMsg += "SSID too long.";
+            }
+
+            if (MIN_PASSPHRASE_LENGTH > passphrase.length())
+            {
+                isError = true;
+                errorMsg += "Passphrase too short.";
+            }
+            else if (MAX_PASSPHRASE_LENGTH < passphrase.length())
+            {
+                isError = true;
+                errorMsg += "Passphrase too long.";
+            }
+
+            /* Arguments are valid, store them. */
+            if (false == isError)
+            {
+                Settings::getInstance().open(false);
+                Settings::getInstance().setWifiSSID(ssid);
+                Settings::getInstance().setWifiPassphrase(passphrase);
+                Settings::getInstance().close();
+            }
+        }
+    }
+
     Settings::getInstance().open(true);
     ssid        = Settings::getInstance().getWifiSSID();
     passphrase  = Settings::getInstance().getWifiPassphrase();
     Settings::getInstance().close();
-    
-    body += Html::heading(WebConfig::PROJECT_TITLE, 1);
-    body += Html::heading("Wifi Settings", 2);
+
+    body += getHeader();
+    body += getTopNav(1);
+    body += "<div class=\"main\">\r\n";
+    body += "\t<h2>Wifi Settings</h2>";
+
+    if (0 < gWebServer->args())
+    {
+        if (false == isError)
+        {
+            body += "\t<div class=\"success\">";
+            body += "\t\t<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>";
+            body += "\t\t<strong>Info!</strong> Settings successful stored.";
+            body += "\t</div>";
+        }
+        else
+        {
+            body += "\t<div class=\"error\">";
+            body += "\t\t<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>";
+            body += "\t\t<strong>Error!</strong> ";
+            body += errorMsg;
+            body += "\t</div>";
+        }
+    }
+
     body += Html::form(
         String("SSID:") +
         Html::nextLine() +
@@ -209,7 +515,11 @@ static void indexPage(void)
         "#"
     );
 
+    body += "</div>\r\n";
+    body += getFooter();
+
     page.setBody(body);
+    page.setStyle(String(WEB_PAGE_STYLE) + style);
 
     gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
@@ -217,15 +527,12 @@ static void indexPage(void)
 }
 
 /**
- * Page on root path ("/"), which is shown if the user submits
- * settings.
+ * About page.
  */
-static void savedPage(void)
+static void aboutPage(void)
 {
     String      body;
     Html::Page  page(WebConfig::PROJECT_TITLE);
-    bool        isError     = false;
-    String      errorMsg    = "Error: ";
     String      ssid;
     String      passphrase;
 
@@ -235,72 +542,16 @@ static void savedPage(void)
         return;
     }
 
-    /* Check for the necessary arguments. */
-    if (false == gWebServer->hasArg(FORM_INPUT_NAME_SSID))
-    {
-        isError = true;
-        errorMsg += "SSID missing.\r\n";
-    }
-
-    if (false == gWebServer->hasArg(FORM_INPUT_NAME_PASSPHRASE))
-    {
-        isError = true;
-        errorMsg += "Passphrase missing.\r\n";
-    }
-
-    /* Arguments are available */
-    if (false == isError)
-    {
-        ssid        = gWebServer->arg(FORM_INPUT_NAME_SSID);
-        passphrase  = gWebServer->arg(FORM_INPUT_NAME_PASSPHRASE);
-
-        /* Check arguments min. and max. lengths */
-        if (MIN_SSID_LENGTH > ssid.length())
-        {
-            isError = true;
-            errorMsg += "SSID too short";
-        }
-        else if (MAX_SSID_LENGTH < ssid.length())
-        {
-            isError = true;
-            errorMsg += "SSID too long";
-        }
-
-        if (MIN_PASSPHRASE_LENGTH > passphrase.length())
-        {
-            isError = true;
-            errorMsg += "Passphrase too short";
-        }
-        else if (MAX_PASSPHRASE_LENGTH < passphrase.length())
-        {
-            isError = true;
-            errorMsg += "Passphrase too long";
-        }
-
-        /* Arguments are valid, store them. */
-        if (false == isError)
-        {
-            Settings::getInstance().open(false);
-            Settings::getInstance().setWifiSSID(ssid);
-            Settings::getInstance().setWifiPassphrase(passphrase);
-            Settings::getInstance().close();
-        }
-    }
-
-    body += Html::heading(WebConfig::PROJECT_TITLE, 1);
-    if (true == isError)
-    {
-        body += Html::paragraph(errorMsg);
-    }
-    else
-    {
-        body += Html::paragraph("Settings saved.");
-    }
-    body += Html::paragraph(
-        Html::hyperlink("/", "Back.")
-    );
+    body += getHeader();
+    body += getTopNav(3);
+    body += "<div class=\"main\">\r\n";
+    body += "\t<h2>About</h2>\r\n";
+    body += "\t<p>xxxx</p>";
+    body += "</div>\r\n";
+    body += getFooter();
 
     page.setBody(body);
+    page.setStyle(WEB_PAGE_STYLE);
 
     gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
