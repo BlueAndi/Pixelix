@@ -61,7 +61,7 @@
  * - Using UTF-8 character set
  * - Definition of the standard viewport
  */
-static const char HEAD_BEGIN[] = 
+static const char   HEAD_BEGIN[] = 
     "<!doctype html>\r\n" \
     "<html lang=\"en\">\r\n" \
     "<head>\r\n" \
@@ -71,20 +71,44 @@ static const char HEAD_BEGIN[] =
 /**
  * HTML5 head containing the closing part.
  */
-static const char HEAD_END[] = 
+static const char   HEAD_END[] = 
     "</head>\r\n" \
     "<body>\r\n";
 
 /**
  * HTML5 tail containing the main html framework closing tags.
  */
-static const char TAIL[] =
+static const char   TAIL[] =
     "</body>\r\n" \
     "</html>";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+String Html::Page::toString(void) const
+{
+    String page;
+
+    page  = HEAD_BEGIN;
+    page += "<title>" + m_title + "</title>\r\n";
+    
+    if (false == m_style.isEmpty())
+    {
+        page += "<style>\r\n" + m_style + "</style>\r\n";
+    }
+
+    if (false == m_script.isEmpty())
+    {
+        page += "<script>\r\n" + m_script + "</script>\r\n";
+    }
+
+    page += HEAD_END;
+    page += m_body;
+    page += TAIL;
+
+    return page;
+}
 
 /******************************************************************************
  * Protected Methods
@@ -97,22 +121,6 @@ static const char TAIL[] =
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-String Html::htmlHead(const String& title)
-{
-    String head;
-    
-    head  = HEAD_BEGIN;
-    head += "<title>" + title + "</title>\r\n";
-    head += HEAD_END;
-
-    return head;
-}
-
-String Html::htmlTail(void)
-{
-    return String(TAIL);
-}
 
 String Html::heading(const String& title, uint8_t size)
 {

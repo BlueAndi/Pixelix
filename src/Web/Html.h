@@ -70,25 +70,147 @@ enum StatusCode
     STATUS_CODE_NOT_FOUND       = 404   /**< Not found */
 };
 
+/**
+ * HTML5 page
+ */
+class Page
+{
+public:
+
+    /**
+     * Constructs an empty page.
+     */
+    Page() :
+        m_title(),
+        m_body(),
+        m_style(),
+        m_script()
+    {
+    }
+
+    /**
+     * Constructs an empty page with the given title.
+     * 
+     * @param[in] title Page title
+     */
+    Page(const String& title) :
+        m_title(title),
+        m_body(),
+        m_style(),
+        m_script()
+    {
+    }
+
+    /**
+     * Destroys a page.
+     */
+    ~Page()
+    {
+    }
+
+    /**
+     * Get page title.
+     * 
+     * @return Page title.
+     */
+    String getTitle(void) const
+    {
+        return m_title;
+    }
+
+    /**
+     * Get HTML body.
+     * 
+     * @return HTML body
+     */
+    String getBody(void) const
+    {
+        return m_body;
+    }
+
+    /**
+     * Get CSS style.
+     * 
+     * @return CSS style
+     */
+    String getStyle(void) const
+    {
+        return m_style;
+    }
+
+    /**
+     * Get javascript.
+     * 
+     * @return Javascript
+     */
+    String getScript(void) const
+    {
+        return m_script;
+    }
+
+    /**
+     * Set page title.
+     * 
+     * @param[in] title Page title
+     */
+    void setTitle(const String& title)
+    {
+        m_title = title;
+        return;
+    }
+
+    /**
+     * Set HTML body.
+     * 
+     * @param[in] body HTML body
+     */
+    void setBody(const String& body)
+    {
+        m_body = body;
+        return;
+    }
+
+    /**
+     * Set CSS style.
+     * 
+     * @param[in] style CSS style
+     */
+    void setStyle(const String& style)
+    {
+        m_style = style;
+        return;
+    }
+
+    /**
+     * Set javascript.
+     * 
+     * @param[in] script Javascript
+     */
+    void setScript(const String& script)
+    {
+        m_script = script;
+        return;
+    }
+
+    /**
+     * Generate HTML page to string.
+     * 
+     * @return HTML page as string
+     */
+    String toString(void) const;
+
+private:
+
+    String  m_title;    /**< Page title in the HTML head */
+    String  m_body;     /**< HTML body content */
+    String  m_style;    /**< CSS style */
+    String  m_script;   /**< Javascript */
+
+};
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
-
-/**
- * Generates a HTML5 head, incl. the body start tag.
- * 
- * @param[in] title Page title
- * 
- * @return HTML5 head
- */
-String htmlHead(const String& title);
-
-/**
- * Generate a HTML5 tail, incl. the body end tag.
- * 
- * @return HTML5 tail
- */
-String htmlTail(void);
 
 /**
  * Generate a HTML5 heading line.

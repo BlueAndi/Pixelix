@@ -155,20 +155,21 @@ static bool authenticate(WebServer& srv)
  */
 static void errorNotFound(void)
 {
-    String page;
+    String      body;
+    Html::Page  page(WebConfig::PROJECT_TITLE);
 
     if (NULL == gWebServer)
     {
         return;
     }
 
-    page  = Html::htmlHead(WebConfig::PROJECT_TITLE);
-    page += Html::heading(WebConfig::PROJECT_TITLE, 1);
-    page += Html::heading("Error", 2);
-    page += Html::paragraph("Requested path not found.");
-    page += Html::htmlTail();
+    body += Html::heading(WebConfig::PROJECT_TITLE, 1);
+    body += Html::heading("Error", 2);
+    body += Html::paragraph("Requested path not found.");
 
-    gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/html", page);
+    page.setBody(body);
+
+    gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/html", page.toString());
 
     return;
 }
@@ -178,7 +179,10 @@ static void errorNotFound(void)
  */
 static void indexPage(void)
 {
-    String page;
+    String      body;
+    Html::Page  page(WebConfig::PROJECT_TITLE);
+    String      ssid;
+    String      passphrase;
 
     /* If authentication fails, a error page is automatically shown. */
     if (false == authenticate(*gWebServer))
@@ -187,26 +191,27 @@ static void indexPage(void)
     }
 
     Settings::getInstance().open(true);
+    ssid        = Settings::getInstance().getWifiSSID();
+    passphrase  = Settings::getInstance().getWifiPassphrase();
+    Settings::getInstance().close();
     
-    page  = Html::htmlHead(WebConfig::PROJECT_TITLE);
-    page += Html::heading(WebConfig::PROJECT_TITLE, 1);
-    page += Html::heading("Wifi Settings", 2);
-    page += Html::form(
+    body += Html::heading(WebConfig::PROJECT_TITLE, 1);
+    body += Html::heading("Wifi Settings", 2);
+    body += Html::form(
         String("SSID:") +
         Html::nextLine() +
-        Html::inputText(FORM_INPUT_NAME_SSID, Settings::getInstance().getWifiSSID(), MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH) +
+        Html::inputText(FORM_INPUT_NAME_SSID, ssid, MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH) +
         Html::nextLine() +
         "Passphrase" +
         Html::nextLine() +
-        Html::inputText(FORM_INPUT_NAME_PASSPHRASE, Settings::getInstance().getWifiPassphrase(), MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH) +
+        Html::inputText(FORM_INPUT_NAME_PASSPHRASE, passphrase, MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH) +
         Html::nextLine(),
         "#"
     );
-    page += Html::htmlTail();
 
-    Settings::getInstance().close();
+    page.setBody(body);
 
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page);
+    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
     return;
 }
@@ -217,11 +222,12 @@ static void indexPage(void)
  */
 static void savedPage(void)
 {
-    String  page;
-    bool    isError     = false;
-    String  errorMsg    = "Error: ";
-    String  ssid;
-    String  passphrase;
+    String      body;
+    Html::Page  page(WebConfig::PROJECT_TITLE);
+    bool        isError     = false;
+    String      errorMsg    = "Error: ";
+    String      ssid;
+    String      passphrase;
 
     /* If authentication fails, a error page is automatically shown. */
     if (false == authenticate(*gWebServer))
@@ -281,22 +287,22 @@ static void savedPage(void)
         }
     }
 
-    page  = Html::htmlHead(WebConfig::PROJECT_TITLE);
-    page += Html::heading(WebConfig::PROJECT_TITLE, 1);
+    body += Html::heading(WebConfig::PROJECT_TITLE, 1);
     if (true == isError)
     {
-        page += Html::paragraph(errorMsg);
+        body += Html::paragraph(errorMsg);
     }
     else
     {
-        page += Html::paragraph("Settings saved.");
+        body += Html::paragraph("Settings saved.");
     }
-    page += Html::paragraph(
+    body += Html::paragraph(
         Html::hyperlink("/", "Back.")
     );
-    page += Html::htmlTail();
 
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page);
+    page.setBody(body);
+
+    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
     return;
 }
