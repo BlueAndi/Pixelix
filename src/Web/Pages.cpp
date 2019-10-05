@@ -470,7 +470,7 @@ static void networkPage(void)
     }
 
     addHeader(body);
-    addTopNav(body, 3);
+    addTopNav(body, 1);
     body += "<div class=\"main\">\r\n";
     body += "\t<h2>Network</h2>\r\n";
     body += "\t<table>";
@@ -516,7 +516,7 @@ static void networkPage(void)
 }
 
 /**
- * Page ("/settings") to show and store settings.
+ * Settings page to show and store settings.
  */
 static void settingsPage(void)
 {
@@ -619,7 +619,7 @@ static void settingsPage(void)
     Settings::getInstance().close();
 
     addHeader(body);
-    addTopNav(body, 1);
+    addTopNav(body, 2);
     body += "<div class=\"main\">\r\n";
     body += "\t<h2>Wifi Settings</h2>";
 
