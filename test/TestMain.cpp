@@ -81,7 +81,7 @@ public:
 virtual size_t write(uint8_t data)
 {
 
-    /*TODO... */
+    m_buffer[0] = data;
     return sizeof(data);
 }
 
@@ -532,7 +532,7 @@ int main(int argc, char **argv)
     RUN_TEST(testStateMachine);
     RUN_TEST(testSimpleTimer);
     RUN_TEST(testProgressBar);
-    RUN_TEST( testLogging );
+    RUN_TEST(testLogging);
     return UNITY_END();
 }
 
@@ -1339,6 +1339,5 @@ static void testLogging(void)
     LOG_ERROR(testString);
     snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d TestMessageAsString", (__LINE__ -1));
     printBuffer = myTestLogger.getBuffer();
-    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
-  
+    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer); 
 }
