@@ -45,7 +45,7 @@
 #include <StateMachine.hpp>
 #include <SimpleTimer.hpp>
 #include <ProgressBar.h>
-
+#include <Logging.h>
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -60,6 +60,65 @@
  * Types and Classes
  *****************************************************************************/
 
+class TestLogger : public Print
+{
+public:
+    uint8_t m_data;
+    TestLogger( ):
+    m_callCounterWrite(0),
+    m_buffer(),
+    m_compareCallCounterWrite(0)
+    {
+
+    uint16_t i = 0u;
+
+    for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
+        {
+            m_buffer[i] = 0u;
+        }
+    }
+
+virtual size_t write(uint8_t data)
+{
+
+    /*TODO... */
+    return sizeof(data);
+}
+
+virtual size_t write(const uint8_t* buffer, size_t size)
+{
+uint16_t i =0u;
+   
+   if (m_compareCallCounterWrite == m_callCounterWrite)
+   {
+        for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
+            {
+                m_buffer[i] = buffer[i];
+            }
+   }
+    ++m_callCounterWrite;
+
+    return size;
+}
+
+    uint8_t* getBuffer(void)
+    {
+        return m_buffer;
+    }
+    void setCompareCallCounterWriteAndResetCallCounterWrite(uint8_t callCounter)
+    {
+        m_compareCallCounterWrite = callCounter;
+        m_callCounterWrite= 0;
+    }
+
+~TestLogger( )
+{
+}
+private:
+    uint8_t m_buffer[1024];
+    uint8_t m_callCounterWrite;
+    uint8_t m_compareCallCounterWrite;
+};
 /**
  * Graphics interface for testing purposes.
  * It provides all relevant methods from the Adafruit GFX, which are used.
@@ -441,7 +500,7 @@ static void testColor(void);
 static void testStateMachine(void);
 static void testSimpleTimer(void);
 static void testProgressBar(void);
-
+static void testLogging(void);
 /******************************************************************************
  * Variables
  *****************************************************************************/
@@ -473,7 +532,7 @@ int main(int argc, char **argv)
     RUN_TEST(testStateMachine);
     RUN_TEST(testSimpleTimer);
     RUN_TEST(testProgressBar);
-
+    RUN_TEST( testLogging );
     return UNITY_END();
 }
 
@@ -1231,4 +1290,55 @@ static void testProgressBar(void)
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::get565(ColorDef::RED)));
 
     return;
+}
+
+/**
+ * Test Logging.
+ * 
+ * Note: In order to let these tests pass the formating of the expected logMessage has to stay directly after the LogMessage (__LINE__-1), otherwise the tests will fail
+ */
+static void testLogging(void)
+{
+    TestLogger myTestLogger;
+    uint8_t* printBuffer   = NULL;
+    String testString = "TestMessageAsString";
+    char expectedLogMessage[50];
+    
+    /* Check intial LogLevel. */
+    Logging::getInstance( ).init( &myTestLogger );
+    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::getInstance().LOGLEVEL_ERROR);
+
+    /* Set LogLevelTo LOGLEVEL_INFO. */
+    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
+    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::getInstance().LOGLEVEL_INFO);
+    
+    /* Set LogLevel to LOGLEVEL_ERROR and trigger a LOG_INFO message. */
+    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_ERROR);
+    myTestLogger.setCompareCallCounterWriteAndResetCallCounterWrite(0);
+    LOG_INFO("TestMessage");
+    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "");
+    printBuffer = myTestLogger.getBuffer();
+    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
+
+    /* Set callCounterWrite to the logMessage. */
+    myTestLogger.setCompareCallCounterWriteAndResetCallCounterWrite(0);
+    LOG_ERROR("TestMessage");
+    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d TestMessage", (__LINE__ -1));
+
+    printBuffer = myTestLogger.getBuffer();
+    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
+
+    /* Set callCounterWrite to \r\n after the logMessage. */
+    myTestLogger.setCompareCallCounterWriteAndResetCallCounterWrite(1);
+    LOG_ERROR("TestMessage");
+    printBuffer = myTestLogger.getBuffer();
+    TEST_ASSERT_EQUAL_STRING("\r\n", printBuffer);
+
+    /* Set callCounterWrite to the logMessage given as string. */
+    myTestLogger.setCompareCallCounterWriteAndResetCallCounterWrite(0);
+    LOG_ERROR(testString);
+    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d TestMessageAsString", (__LINE__ -1));
+    printBuffer = myTestLogger.getBuffer();
+    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
+  
 }
