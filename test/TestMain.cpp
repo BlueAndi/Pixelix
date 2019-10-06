@@ -60,65 +60,101 @@
  * Types and Classes
  *****************************************************************************/
 
+/**
+ * Logging interface for testing purposes.
+ * It provides all relevant methods from the Print class, which are used.
+ */
 class TestLogger : public Print
 {
 public:
-    uint8_t m_data;
+
+    /**
+     * Constructs a logging interface for testing purposes.
+     */
     TestLogger( ):
     m_callCounterWrite(0),
     m_buffer(),
-    m_compareCallCounterWrite(0)
+    m_compareCallCounterWrite(0),
+    m_data(0)
     {
+        uint16_t i = 0u;
 
-    uint16_t i = 0u;
-
-    for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
+        for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
         {
             m_buffer[i] = 0u;
         }
     }
 
-virtual size_t write(uint8_t data)
-{
+    /**
+     * Write a single byte.
+     * 
+     * @param[in] data The byte to be written.
+     * 
+     * @return 1.
+     */
+    virtual size_t write(uint8_t data)
+    {
+        m_data = data;
+        return 1;
+    }
 
-    m_buffer[0] = data;
-    return sizeof(data);
-}
-
-virtual size_t write(const uint8_t* buffer, size_t size)
-{
-uint16_t i =0u;
-   
-   if (m_compareCallCounterWrite == m_callCounterWrite)
-   {
-        for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
+    /**
+     * Write a single byte.
+     * 
+     * @param[in] buffer Pointer to the data to be written.
+     * @param[in] size the size of the data to be written.
+     * 
+     * @return The size of the written data.
+     */
+    virtual size_t write(const uint8_t* buffer, size_t size)
+    {
+        uint16_t i =0u;
+        
+        if (m_compareCallCounterWrite == m_callCounterWrite)
+        {
+            for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
             {
                 m_buffer[i] = buffer[i];
             }
-   }
-    ++m_callCounterWrite;
+        }
+            ++m_callCounterWrite;
 
-    return size;
-}
+            return size;
+    }
 
+    /**
+     * Get the Write buffer.
+     * 
+     * @return Write buffer
+     */
     uint8_t* getBuffer(void)
     {
         return m_buffer;
     }
+
+    /**
+     * Set call counter of @write.
+     */
     void setCompareCallCounterWriteAndResetCallCounterWrite(uint8_t callCounter)
     {
         m_compareCallCounterWrite = callCounter;
         m_callCounterWrite= 0;
     }
 
-~TestLogger( )
-{
-}
+   /**
+     * Destroys the logging interface.
+     */
+    ~TestLogger( )
+    {
+    }
+
 private:
-    uint8_t m_buffer[1024];
-    uint8_t m_callCounterWrite;
-    uint8_t m_compareCallCounterWrite;
+    uint8_t m_data;                     /**< Write byte, containing a single byte */
+    uint8_t m_buffer[1024];             /**< Write buffer, containing the logMessage. */
+    uint8_t m_callCounterWrite;         /**< Call counter for @write */
+    uint8_t m_compareCallCounterWrite;  /**< Call counter compare value for @write */
 };
+
 /**
  * Graphics interface for testing purposes.
  * It provides all relevant methods from the Adafruit GFX, which are used.
@@ -1305,10 +1341,10 @@ static void testLogging(void)
     char expectedLogMessage[50];
     
     /* Check intial LogLevel. */
-    Logging::getInstance( ).init( &myTestLogger );
+    Logging::getInstance().init( &myTestLogger );
     TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::getInstance().LOGLEVEL_ERROR);
 
-    /* Set LogLevelTo LOGLEVEL_INFO. */
+    /* Set LogLevel to LOGLEVEL_INFO. */
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
     TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::getInstance().LOGLEVEL_INFO);
     
