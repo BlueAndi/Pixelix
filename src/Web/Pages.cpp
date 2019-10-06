@@ -40,6 +40,7 @@
 
 #include <WiFi.h>
 #include <Esp.h>
+#include <SPIFFS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -105,59 +106,6 @@ static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
 /** Max. wifi passphrase length */
 static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
 
-/** CSS used for every page. */
-static const char*      WEB_PAGE_STYLE              =
-    "body {" \
-        "color: white;" \
-        "background-color: #202020;" \
-    "}" \
-    "h2 {" \
-        "color: #ff0000;" \
-    "}" \
-    "h3 {" \
-        "color: #ffff00;" \
-    "}" \
-    "table {" \
-        "border-collapse: collapse;" \
-    "}" \
-    "tr:nth-child(even) {" \
-        "background-color: #333;" \
-    "}" \
-    "td {" \
-        "border: 1px solid white;" \
-        "padding: 2px" \
-    "}" \
-    ".header {" \
-        "padding: 10px 16px;" \
-    "}" \
-    ".topnav {" \
-        "background-color: #333;" \
-        "overflow: hidden;" \
-    "}" \
-    ".topnav a {" \
-        "float: left;" \
-        "color: #f2f2f2;" \
-        "text-align: center;" \
-        "padding: 14px 16px;" \
-        "text-decoration: none;" \
-        "font-size: 17px;" \
-    "}" \
-    ".topnav a:hover {" \
-        "background-color: #ddd;" \
-        "color: black;" \
-    "}" \
-    ".topnav a.active {" \
-        "background-color: #4CAF50;" \
-        "color: white;" \
-    "}" \
-    ".main {" \
-        "padding: 16px;" \
-    "}" \
-    ".footer {" \
-        "padding: 10px 16px;" \
-        "text-align: center;" \
-    "}";
-
 /** Top navigation menu items */
 static MenuItem         gTopNavItems[] =
 {
@@ -191,6 +139,10 @@ void Pages::init(WebServer& srv)
     gWebServer->on("/network", HTTP_GET, networkPage);
     gWebServer->on("/settings", HTTP_GET, settingsPage);
     gWebServer->on("/settings", HTTP_POST, settingsPage);
+
+    /* Serve files from filesystem */
+    gWebServer->serveStatic("/data/style.css", SPIFFS, "/style.css");
+    gWebServer->serveStatic("/data/util.js", SPIFFS, "/utils.js");
 
     return;
 }
@@ -357,7 +309,6 @@ static void errorNotFound(void)
     addFooter(body);
 
     page.setBody(body);
-    page.setStyle(WEB_PAGE_STYLE);
 
     gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/html", page.toString());
 
@@ -441,7 +392,6 @@ static void indexPage(void)
     addFooter(body);
 
     page.setBody(body);
-    page.setStyle(WEB_PAGE_STYLE);
 
     gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
@@ -508,7 +458,6 @@ static void networkPage(void)
     addFooter(body);
 
     page.setBody(body);
-    page.setStyle(WEB_PAGE_STYLE);
 
     gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
@@ -658,7 +607,7 @@ static void settingsPage(void)
     addFooter(body);
 
     page.setBody(body);
-    page.setStyle(String(WEB_PAGE_STYLE) + style);
+    page.setStyle(style);
 
     gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
