@@ -217,7 +217,7 @@ private:
      * 
      * @return The severity of the given logLevel as string.
      */
-    String logLevelToString(const Logging::LogLevel LogLevel) const; 
+    const char* logLevelToString(const Logging::LogLevel LogLevel) const; 
 
     /**
      * Construct Logging.

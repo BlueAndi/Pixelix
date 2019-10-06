@@ -142,56 +142,46 @@ const char* Logging::getBaseNameFromPath(const char* path) const
 
 void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* message) const
 {
+    char log[512] = {0};
+
     if (NULL != m_logOutput)
     {
-        m_logOutput->print("|");
-        m_logOutput->print(millis());
-        m_logOutput->print("|");
-        m_logOutput->print(logLevelToString(messageLogLevel));
-        m_logOutput->print(getBaseNameFromPath(file));
-        m_logOutput->print(":");
-        m_logOutput->print(line);
-        m_logOutput->print(" ");
-        m_logOutput->println(message);
+        snprintf(log, sizeof(log), "|%ld| %s %s:%d %s", millis(), logLevelToString(messageLogLevel), getBaseNameFromPath(file), line, message);      
+        m_logOutput->println(log);
     }
 }
 
 void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message) const
 {
+    char log[512] = {0};
+
     if (NULL != m_logOutput)
     {
-        m_logOutput->print("|");
-        m_logOutput->print(millis());
-        m_logOutput->print("|");
-        m_logOutput->print(logLevelToString(messageLogLevel));
-        m_logOutput->print(getBaseNameFromPath(file));
-        m_logOutput->print(":");
-        m_logOutput->print(line);
-        m_logOutput->print(" ");
-        m_logOutput->println(message);
+        snprintf(log, sizeof(log), "|%ld| %s %s:%d %s", millis(), logLevelToString(messageLogLevel), getBaseNameFromPath(file), line, message.c_str());      
+        m_logOutput->println(log);
     }
 }
 
-String Logging::logLevelToString(const Logging::LogLevel LogLevel) const
+const char* Logging::logLevelToString(const Logging::LogLevel LogLevel) const
 {
-    String logLevelString;
+    const char* logLevelString;
 
     switch (LogLevel)
     {
         case Logging::LOGLEVEL_INFO:
-            logLevelString = " INFO: ";
+            logLevelString = "INFO:";
             break;
 
         case Logging::LOGLEVEL_WARNING :
-            logLevelString = " WARNING: ";
+            logLevelString = "WARNING:";
             break;
 
         case Logging::LOGLEVEL_ERROR :
-            logLevelString = " ERROR: ";
+            logLevelString = "ERROR:";
         break;
 
         case Logging::LOGLEVEL_FATAL :
-            logLevelString = " FATAL: ";
+            logLevelString = "FATAL:";
             break;
 
         default:
