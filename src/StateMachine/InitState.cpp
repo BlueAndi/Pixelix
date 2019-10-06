@@ -36,6 +36,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <SPIFFS.h>
 
 #include "Board.h"
 #include "ButtonDrv.h"
@@ -113,6 +114,12 @@ void InitState::entry(StateMachine& sm)
     for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
     {
         DisplayMgr::getInstance().setLayout(index, DisplayMgr::LAYOUT_ID_2);
+    }
+
+    /* Mounting the filesystem. */
+    if (false == SPIFFS.begin())
+    {
+        LOG_WARNING("Couldn't mount the filesystem.");
     }
 
     /* Show some interesting boot information */    

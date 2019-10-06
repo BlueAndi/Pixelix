@@ -266,6 +266,10 @@ void UpdateMgr::restart(void)
         (void)WiFi.softAPdisconnect();
     }
 
+    /* Unmount the filesystem. */
+    SPIFFS.end();
+
+    /* Restart now! */
     ESP.restart();
 
     return;
