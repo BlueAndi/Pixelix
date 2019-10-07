@@ -78,16 +78,27 @@ Logging::LogLevel Logging::getLogLevel() const
 
 void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* format, ...)
 {
-    char buffer[MESSAGE_BUFFER_SIZE];
-
-    va_list args;
-
-    va_start(args, format);
-    vsnprintf(buffer, MESSAGE_BUFFER_SIZE, format, args);
-    va_end(args);
-
-    if (isSeverityValid(messageLogLevel))
+    if (true == isSeverityValid(messageLogLevel))
     {
+        char            buffer[MESSAGE_BUFFER_SIZE];
+        int             written             = 0;
+        const char*     STR_CUT_OFF_SEQ     = "...";
+        const uint16_t  STR_CUT_OFF_SEQ_LEN = strlen(STR_CUT_OFF_SEQ);
+        va_list         args;
+
+        va_start(args, format);
+        written = vsnprintf(buffer, MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, format, args);
+        va_end(args);
+
+        /* If buffer was too small or any other error happended, it shall be shown in the
+        * output string message with the STR_CUT_OFF_SEQ.
+        */
+        if ((0 > written) ||
+            ((MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN) <= written))
+        {
+            strcat(buffer, STR_CUT_OFF_SEQ);
+        }
+
         printLogMessage(file, line, messageLogLevel, buffer);
     }
     else
@@ -98,9 +109,9 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
 
 void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message)
 {
-    if (isSeverityValid(messageLogLevel))
+    if (true == isSeverityValid(messageLogLevel))
     {
-        printLogMessage(file, line, messageLogLevel, message);
+        printLogMessage(file, line, messageLogLevel, message.c_str());
     }
     else
     {
@@ -142,23 +153,25 @@ const char* Logging::getBaseNameFromPath(const char* path) const
 
 void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* message) const
 {
-    char log[512] = {0};
-
     if (NULL != m_logOutput)
     {
-        snprintf(log, sizeof(log), "|%ld| %s %s:%d %s", millis(), logLevelToString(messageLogLevel), getBaseNameFromPath(file), line, message);      
-        m_logOutput->println(log);
-    }
-}
+        char            buffer[LOG_MESSAGE_BUFFER_SIZE] = { 0 };
+        int             written                         = 0;
+        const char*     STR_CUT_OFF_SEQ                 = "...";
+        const uint16_t  STR_CUT_OFF_SEQ_LEN             = strlen(STR_CUT_OFF_SEQ);
 
-void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message) const
-{
-    char log[512] = {0};
+        written = snprintf(buffer, LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, "|%ld| %s %s:%d %s", millis(), logLevelToString(messageLogLevel), getBaseNameFromPath(file), line, message);
 
-    if (NULL != m_logOutput)
-    {
-        snprintf(log, sizeof(log), "|%ld| %s %s:%d %s", millis(), logLevelToString(messageLogLevel), getBaseNameFromPath(file), line, message.c_str());      
-        m_logOutput->println(log);
+        /* If buffer was too small or any other error happended, it shall be shown in the
+        * output string message with the STR_CUT_OFF_SEQ.
+        */
+        if ((0 > written) ||
+            ((LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN) <= written))
+        {
+            strcat(buffer, STR_CUT_OFF_SEQ);
+        }
+
+        (void)m_logOutput->println(buffer);
     }
 }
 

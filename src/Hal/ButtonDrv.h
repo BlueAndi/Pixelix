@@ -111,7 +111,7 @@ private:
     SemaphoreHandle_t   m_semaphore;        /**< Semaphore lock */
 
     /** Button task stack size in bytes */
-    static const uint32_t   BUTTON_TASK_STACKE_SIZE = 1024u;
+    static const uint32_t   BUTTON_TASK_STACKE_SIZE = 2048u;
 
     /** MCU core where the button task shall run */
     static const BaseType_t BUTTON_TASK_RUN_CORE    = 0;
