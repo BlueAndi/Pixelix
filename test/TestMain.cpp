@@ -117,9 +117,10 @@ public:
                 m_buffer[i] = buffer[i];
             }
         }
-            ++m_callCounterWrite;
+        
+        ++m_callCounterWrite;
 
-            return size;
+        return size;
     }
 
     /**
@@ -1331,7 +1332,8 @@ static void testProgressBar(void)
 /**
  * Test Logging.
  * 
- * Note: In order to let these tests pass the formating of the expected logMessage has to stay directly after the LogMessage (__LINE__-1), otherwise the tests will fail
+ * Note: In order to let these tests pass the formating of the expected logMessage has to stay directly after the LogMessage (__LINE__-1), 
+ * otherwise the tests will fail.
  */
 static void testLogging(void)
 {
