@@ -102,7 +102,10 @@ void InitState::entry(StateMachine& sm)
     LOG_INFO("Booting ...");
 
     /* Initialize drivers */
-    ButtonDrv::getInstance().init();
+    if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
+    {
+        LOG_WARNING("Couldn't initialize button driver.");
+    }
 
     /* Start LED matrix */
     LedMatrix::getInstance().begin();
@@ -147,22 +150,22 @@ void InitState::entry(StateMachine& sm)
 
 void InitState::process(StateMachine& sm)
 {
-    /* Does the user request for setting up an wifi access point?
-     * Because we just initialized the button driver, wait until
-     * the button state has a reliable value.
-     */
-    if (true == ButtonDrv::getInstance().isUpdated())
+    ButtonDrv::State    buttonState = ButtonDrv::getInstance().getState();
+
+    /* Connect to a remote wifi network? */
+    if (ButtonDrv::STATE_RELEASED == buttonState)
     {
-        /* Setup a wifi access point? */
-        if (ButtonDrv::STATE_PRESSED == ButtonDrv::getInstance().getState())
-        {
-            sm.setState(APState::getInstance());
-        }
-        /* Connect to a remote wifi network. */
-        else
-        {
-            sm.setState(ConnectingState::getInstance());
-        }
+        sm.setState(ConnectingState::getInstance());
+    }
+    /* Does the user request for setting up an wifi access point? */
+    else if (ButtonDrv::STATE_PRESSED == buttonState)
+    {
+        sm.setState(APState::getInstance());
+    }
+    else
+    {
+        /* Don't care. */
+        ;
     }
 
     return;

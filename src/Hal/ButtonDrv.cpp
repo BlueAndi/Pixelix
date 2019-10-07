@@ -35,6 +35,8 @@
 #include "ButtonDrv.h"
 #include "Board.h"
 
+#include <Logging.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -69,10 +71,15 @@ ButtonDrv::Ret ButtonDrv::init()
     Ret         ret     = RET_OK;
     BaseType_t  osRet   = pdFAIL;
 
-    /* Create semaphore for  */
+    /* Create semaphore to protect button state member. */
     m_semaphore = xSemaphoreCreateBinary();
 
     if (NULL == m_semaphore)
+    {
+        ret = RET_ERROR;
+    }
+    /* The semaphore must be given, right after the creation! */
+    else if (pdTRUE != xSemaphoreGive(m_semaphore))
     {
         ret = RET_ERROR;
     }
@@ -102,11 +109,11 @@ ButtonDrv::Ret ButtonDrv::init()
 
 ButtonDrv::State ButtonDrv::getState()
 {
-    State state = STATE_RELEASED;
+    State state = STATE_UNKNOWN;
 
     if (pdTRUE != xSemaphoreTake(m_semaphore, portMAX_DELAY))
     {
-        /* Warning, update of button state not possible. */
+        LOG_WARNING("Update of button state not possible.");
     }
     else
     {
@@ -119,32 +126,11 @@ ButtonDrv::State ButtonDrv::getState()
 
         if (pdTRUE != xSemaphoreGive(m_semaphore))
         {
-            /* Fatal error */
+            LOG_FATAL("Can't give semaphore back.");
         }
     }
 
     return state;
-}
-
-bool ButtonDrv::isUpdated() const
-{
-    bool    isUpdated   = false;
-
-    if (pdTRUE != xSemaphoreTake(m_semaphore, portMAX_DELAY))
-    {
-        /* Warning, update of button state not possible. */
-    }
-    else
-    {
-        isUpdated = m_isUpdated;
-
-        if (pdTRUE != xSemaphoreGive(m_semaphore))
-        {
-            /* Fatal error */
-        }
-    }
-
-    return isUpdated;
 }
 
 /******************************************************************************
@@ -169,6 +155,8 @@ void ButtonDrv::buttonTask(void *parameters)
                         &buttonDrv->m_buttonTaskHandle,
                         CHANGE);
 
+    LOG_INFO("ButtonDrv task is ready.");
+
     /* The main loop scans several times during one debounce period
      * for any pin change. If there is no change, the state is
      * considered as stable.
@@ -186,39 +174,52 @@ void ButtonDrv::buttonTask(void *parameters)
             /* Button state is stable, update it if applicable. */
             if (pdTRUE != xSemaphoreTake(buttonDrv->m_semaphore, portMAX_DELAY))
             {
-                /* Warning, update of button state not possible. */
+                LOG_WARNING("Update of button state not possible.");
             }
             else
             {
+                /* If the button state is unknown, just check and set. */
+                if (STATE_UNKNOWN == buttonDrv->m_state)
+                {
+                    if (HIGH == buttonValue)
+                    {
+                        buttonDrv->m_state = STATE_RELEASED;
+                    }
+                    else
+                    {
+                        buttonDrv->m_state = STATE_PRESSED;
+                    }
+                }
                 /* Overwrite a triggered state is bad, because the application
                  * would miss it.
                  */
-                if (STATE_TRIGGERED != buttonDrv->m_state)
+                else if (STATE_TRIGGERED != buttonDrv->m_state)
                 {
                     /* Button pressed now? */
                     if ((STATE_RELEASED == buttonDrv->m_state) &&
                         (LOW == buttonValue))
                     {
                         buttonDrv->m_state = STATE_PRESSED;
-                        buttonDrv->m_isUpdated = true;
                     }
                     /* Button released now? */
                     else if ((STATE_PRESSED == buttonDrv->m_state) &&
                              (HIGH == buttonValue))
                     {
                         buttonDrv->m_state = STATE_TRIGGERED;
-                        buttonDrv->m_isUpdated = true;
                     }
                     else
                     {
                         ;
                     }
-                    
+                }
+                else
+                {
+                    ;
                 }
 
                 if (pdTRUE != xSemaphoreGive(buttonDrv->m_semaphore))
                 {
-                    /* Fatal error */
+                    LOG_FATAL("Can't give semaphore back.");
                 }
             }
 

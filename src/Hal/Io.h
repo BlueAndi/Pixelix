@@ -157,7 +157,7 @@ public:
      * 
      * @param[in] value Digital output pin value (LOW, HIGH).
      */
-    void write(uint8_t value)
+    void write(uint8_t value) const
     {
         digitalWrite(pinNo, value);
         return;
