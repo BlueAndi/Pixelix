@@ -170,7 +170,7 @@ public:
     TestGfx() :
         Adafruit_GFX(WIDTH, HEIGHT),
         m_buffer(),
-        m_callCounterDrawPixel(0)
+        m_callCounterDrawPixel(0u)
     {
         uint16_t index = 0u;
 
@@ -1337,18 +1337,18 @@ static void testProgressBar(void)
  */
 static void testLogging(void)
 {
-    TestLogger myTestLogger;
-    uint8_t* printBuffer   = NULL;
-    String testString = "TestMessageAsString";
-    char expectedLogMessage[50];
+    TestLogger  myTestLogger;
+    uint8_t*    printBuffer     = NULL;
+    String      testString      = "TestMessageAsString";
+    char        expectedLogMessage[50];
     
     /* Check intial LogLevel. */
-    Logging::getInstance().init( &myTestLogger );
-    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::getInstance().LOGLEVEL_ERROR);
+    Logging::getInstance().init(&myTestLogger);
+    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOGLEVEL_ERROR);
 
     /* Set LogLevel to LOGLEVEL_INFO. */
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
-    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::getInstance().LOGLEVEL_INFO);
+    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOGLEVEL_INFO);
     
     /* Set LogLevel to LOGLEVEL_ERROR and trigger a LOG_INFO message. */
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_ERROR);
