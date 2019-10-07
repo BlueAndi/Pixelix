@@ -51,7 +51,7 @@
  *****************************************************************************/
 
 /** Mark not used function parameters */
-#define NOT_USED(__var) (void)(__var)
+#define NOT_USED(__var)     (void)(__var)
 
 /** Get number of array elements. */
 #define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
@@ -71,11 +71,11 @@ public:
     /**
      * Constructs a logging interface for testing purposes.
      */
-    TestLogger( ):
-    m_callCounterWrite(0),
-    m_buffer(),
-    m_compareCallCounterWrite(0),
-    m_data(0)
+    TestLogger():
+        m_callCounterWrite(0u),
+        m_buffer(),
+        m_compareCallCounterWrite(0u),
+        m_data(0u)
     {
         uint16_t i = 0u;
 
@@ -92,7 +92,7 @@ public:
      * 
      * @return 1.
      */
-    virtual size_t write(uint8_t data)
+    size_t write(uint8_t data)
     {
         m_data = data;
         return 1;
@@ -106,7 +106,7 @@ public:
      * 
      * @return The size of the written data.
      */
-    virtual size_t write(const uint8_t* buffer, size_t size)
+    size_t write(const uint8_t* buffer, size_t size)
     {
         uint16_t i =0u;
         
@@ -1377,5 +1377,7 @@ static void testLogging(void)
     LOG_ERROR(testString);
     snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d TestMessageAsString", (__LINE__ -1));
     printBuffer = myTestLogger.getBuffer();
-    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer); 
+    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
+
+    return;
 }
