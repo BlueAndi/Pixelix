@@ -61,7 +61,7 @@
  *****************************************************************************/
 
 /** Web server */
-static WebServer    gWebServer(WebConfig::WEBSERVER_PORT);
+static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
 
 /******************************************************************************
  * Public Methods
@@ -96,7 +96,7 @@ void MyWebServer::begin(void)
     return;
 }
 
-WebServer& MyWebServer::getInstance(void)
+AsyncWebServer& MyWebServer::getInstance(void)
 {
     return gWebServer;
 }

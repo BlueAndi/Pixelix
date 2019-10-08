@@ -71,22 +71,21 @@ typedef struct
  * Prototypes
  *****************************************************************************/
 
-static bool authenticate(WebServer& srv);
 static String getProjectTitle(void);
 static void addHeader(String& body);
 static void addTopNav(String& body, uint8_t active);
 static void addFooter(String& body);
-static void errorNotFound(void);
-static void indexPage(void);
-static void networkPage(void);
-static void settingsPage(void);
+static void errorNotFound(AsyncWebServerRequest* request);
+static void indexPage(AsyncWebServerRequest* request);
+static void networkPage(AsyncWebServerRequest* request);
+static void settingsPage(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
 
 /** Web server */
-static WebServer*       gWebServer                  = NULL;
+static AsyncWebServer*  gWebServer                  = NULL;
 
 /** Name of the input field for wifi SSID. */
 static const char*      FORM_INPUT_NAME_SSID        = "ssid";
@@ -130,7 +129,7 @@ static MenuItem         gTopNavItems[] =
  * External Functions
  *****************************************************************************/
 
-void Pages::init(WebServer& srv)
+void Pages::init(AsyncWebServer& srv)
 {
     gWebServer = &srv;
 
@@ -150,42 +149,6 @@ void Pages::init(WebServer& srv)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
-
-/**
- * This function will be called to authenticate the client.
- * A web page can request this on demand.
- * 
- * @param[in] srv   Web server
- * 
- * @return Authentication result
- * @retval false    Authentication failed
- * @retval true     Authentication successful
- */
-static bool authenticate(WebServer& srv)
-{
-    bool status = true;
-
-    /* If there is no authentication with the client, it will be requested. */
-    if (false == srv.authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        const String authFailResponse = "Authentication failed!";
-
-        /* Use basic authentication, although no secure transport layer (https) is used
-         * right now. This just for simplicity.
-         * 
-         * Digest Authentication communicates credentials in an encrypted form by applying
-         * a hash function to the the username, the password, a server supplied nonce value,
-         * the HTTP method, and the requested URI.
-         * 
-         * TODO Use DIGEST_AUTH
-         */
-        srv.requestAuthentication(BASIC_AUTH, NULL, authFailResponse);
-        
-        status = false;
-    }
-
-    return status;
-}
 
 /**
  * Get project title in color form.
@@ -292,13 +255,15 @@ static void addFooter(String& body)
 
 /**
  * Error web page used in case a requested path was not found.
+ * 
+ * @param[in] request   HTTP request
  */
-static void errorNotFound(void)
+static void errorNotFound(AsyncWebServerRequest* request)
 {
     String      body;
     Html::Page  page(WebConfig::PROJECT_TITLE);
 
-    if (NULL == gWebServer)
+    if (NULL == request)
     {
         return;
     }
@@ -310,24 +275,33 @@ static void errorNotFound(void)
 
     page.setBody(body);
 
-    gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/html", page.toString());
+    request->send(Html::STATUS_CODE_NOT_FOUND, "text/html", page.toString());
 
     return;
 }
 
 /**
  * Index page on root path ("/").
+ * 
+ * @param[in] request   HTTP request
  */
-static void indexPage(void)
+static void indexPage(AsyncWebServerRequest* request)
 {
     String      body;
     Html::Page  page(WebConfig::PROJECT_TITLE);
     String      ssid;
     String      passphrase;
 
-    /* If authentication fails, a error page is automatically shown. */
-    if (false == authenticate(*gWebServer))
+    if (NULL == request)
     {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
         return;
     }
 
@@ -393,23 +367,32 @@ static void indexPage(void)
 
     page.setBody(body);
 
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
+    request->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
     return;
 }
 
 /**
  * Network page, shows all information regarding the network.
+ * 
+ * @param[in] request   HTTP request
  */
-static void networkPage(void)
+static void networkPage(AsyncWebServerRequest* request)
 {
     String      body;
     Html::Page  page(WebConfig::PROJECT_TITLE);
     String      ssid;
 
-    /* If authentication fails, a error page is automatically shown. */
-    if (false == authenticate(*gWebServer))
+    if (NULL == request)
     {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
         return;
     }
 
@@ -459,15 +442,17 @@ static void networkPage(void)
 
     page.setBody(body);
 
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
+    request->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
     return;
 }
 
 /**
  * Settings page to show and store settings.
+ * 
+ * @param[in] request   HTTP request
  */
-static void settingsPage(void)
+static void settingsPage(AsyncWebServerRequest* request)
 {
     String      body;
     Html::Page  page(WebConfig::PROJECT_TITLE);
@@ -500,23 +485,30 @@ static void settingsPage(void)
         "color: black;"                 \
     "}";
 
-    /* If authentication fails, a error page is automatically shown. */
-    if (false == authenticate(*gWebServer))
+    if (NULL == request)
     {
         return;
     }
 
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
     /* Store settings? */
-    if (0 < gWebServer->args())
+    if (0 < request->args())
     {
         /* Check for the necessary arguments. */
-        if (false == gWebServer->hasArg(FORM_INPUT_NAME_SSID))
+        if (false == request->hasArg(FORM_INPUT_NAME_SSID))
         {
             isError = true;
             errorMsg += "<p>SSID missing.</p>\r\n";
         }
 
-        if (false == gWebServer->hasArg(FORM_INPUT_NAME_PASSPHRASE))
+        if (false == request->hasArg(FORM_INPUT_NAME_PASSPHRASE))
         {
             isError = true;
             errorMsg += "<p>Passphrase missing.</p>\r\n";
@@ -525,8 +517,8 @@ static void settingsPage(void)
         /* Arguments are available */
         if (false == isError)
         {
-            ssid        = gWebServer->arg(FORM_INPUT_NAME_SSID);
-            passphrase  = gWebServer->arg(FORM_INPUT_NAME_PASSPHRASE);
+            ssid        = request->arg(FORM_INPUT_NAME_SSID);
+            passphrase  = request->arg(FORM_INPUT_NAME_PASSPHRASE);
 
             /* Check arguments min. and max. lengths */
             if (MIN_SSID_LENGTH > ssid.length())
@@ -572,7 +564,7 @@ static void settingsPage(void)
     body += "<div class=\"main\">\r\n";
     body += "\t<h2>Wifi Settings</h2>";
 
-    if (0 < gWebServer->args())
+    if (0 < request->args())
     {
         if (false == isError)
         {
@@ -609,7 +601,7 @@ static void settingsPage(void)
     page.setBody(body);
     page.setStyle(style);
 
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
+    request->send(Html::STATUS_CODE_OK, "text/html", page.toString());
 
     return;
 }

@@ -108,7 +108,7 @@ public:
      */
     size_t write(const uint8_t* buffer, size_t size)
     {
-        uint16_t i =0u;
+        uint16_t i = 0u;
         
         if (m_compareCallCounterWrite == m_callCounterWrite)
         {
@@ -139,10 +139,10 @@ public:
     void setCompareCallCounterWriteAndResetCallCounterWrite(uint8_t callCounter)
     {
         m_compareCallCounterWrite = callCounter;
-        m_callCounterWrite= 0;
+        m_callCounterWrite = 0;
     }
 
-   /**
+    /**
      * Destroys the logging interface.
      */
     ~TestLogger( )
@@ -601,11 +601,11 @@ static T getMin(const T value1, const T value2)
  */
 static void testDoublyLinkedList(void)
 {
-    LinkedList<uint32_t> list;
-    uint32_t*            element = NULL;
-    uint32_t             value   = 1u;
-    uint32_t             index   = 0u;
-    const uint32_t       max     = 3u;
+    DLinkedList<uint32_t>   list;
+    uint32_t*               element = NULL;
+    uint32_t                value   = 1u;
+    uint32_t                index   = 0u;
+    const uint32_t          max     = 3u;
 
     /* List is empty. */
     TEST_ASSERT_NULL(list.first());
@@ -709,7 +709,7 @@ static void testDoublyLinkedList(void)
 
     /* Copy it via copy constructor */
     {
-        LinkedList<uint32_t> copyOfList = list;
+        DLinkedList<uint32_t> copyOfList = list;
 
         TEST_ASSERT_TRUE(list.selectFirstElement());
         for(index = 1u; index <= max; ++index)
@@ -725,7 +725,7 @@ static void testDoublyLinkedList(void)
 
     /* Copy it via assignment */
     {
-        LinkedList<uint32_t> copyOfList;
+        DLinkedList<uint32_t> copyOfList;
         copyOfList = list;
 
         TEST_ASSERT_TRUE(list.selectFirstElement());

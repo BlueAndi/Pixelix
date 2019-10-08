@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <WebServer.h>
+#include <ESPAsyncWebServer.h>
 #include <stdint.h>
 
 /** Web pages installer */
@@ -67,7 +67,7 @@ namespace Pages
  * 
  * @param[in] srv   Web server
  */
-void init(WebServer& srv);
+void init(AsyncWebServer& srv);
 
 }
 
