@@ -177,7 +177,7 @@ void Logging::printLogMessage(const char* file, int line, const Logging::LogLeve
 
 const char* Logging::logLevelToString(const Logging::LogLevel LogLevel) const
 {
-    const char* logLevelString;
+    const char* logLevelString = NULL;
 
     switch (LogLevel)
     {
@@ -198,6 +198,7 @@ const char* Logging::logLevelToString(const Logging::LogLevel LogLevel) const
             break;
 
         default:
+            logLevelString = "UNKNOWN:";
             break;
     }
 
