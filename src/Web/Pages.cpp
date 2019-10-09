@@ -141,7 +141,7 @@ void Pages::init(AsyncWebServer& srv)
 
     /* Serve files from filesystem */
     gWebServer->serveStatic("/data/style.css", SPIFFS, "/style.css");
-    gWebServer->serveStatic("/data/util.js", SPIFFS, "/utils.js");
+    gWebServer->serveStatic("/data/util.js", SPIFFS, "/util.js");
 
     return;
 }
