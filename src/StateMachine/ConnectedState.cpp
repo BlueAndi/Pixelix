@@ -104,25 +104,15 @@ void ConnectedState::entry(StateMachine& sm)
 
 void ConnectedState::process(StateMachine& sm)
 {
+    /* Handle update, there may be one in the background. */
+    UpdateMgr::getInstance().process();
+    
     /* Connection lost? */
     if (false == WiFi.isConnected())
     {
         LOG_INFO("Disconnected");
 
         sm.setState(ConnectingState::getInstance());
-    }
-    /* Connection is still established */
-    else
-    {
-        /* Handle update, there may be one in the background. */
-        UpdateMgr::getInstance().process();
-
-        /* As long as no update is running, do handle all other connections. */
-        if (false == UpdateMgr::getInstance().isUpdateRunning())
-        {
-            /* Handle all clients */
-            MyWebServer::getInstance().handleClient();
-        }
     }
 
     return;
