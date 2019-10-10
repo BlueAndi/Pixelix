@@ -81,9 +81,6 @@ static String settingsPageProcessor(const String& var);
  * Local Variables
  *****************************************************************************/
 
-/** Web server */
-static AsyncWebServer*  gWebServer                  = NULL;
-
 /** Name of the input field for wifi SSID. */
 static const char*      FORM_INPUT_NAME_SSID        = "ssid";
 
@@ -129,17 +126,15 @@ static String           gDialogText;
 
 void Pages::init(AsyncWebServer& srv)
 {
-    gWebServer = &srv;
-
-    gWebServer->onNotFound(errorPage);
-    gWebServer->on("/", HTTP_GET, indexPage);
-    gWebServer->on("/network", HTTP_GET, networkPage);
-    gWebServer->on("/settings", HTTP_GET, settingsPage);
-    gWebServer->on("/settings", HTTP_POST, settingsPage);
+    srv.onNotFound(errorPage);
+    srv.on("/", HTTP_GET, indexPage);
+    srv.on("/network", HTTP_GET, networkPage);
+    srv.on("/settings", HTTP_GET, settingsPage);
+    srv.on("/settings", HTTP_POST, settingsPage);
 
     /* Serve files from filesystem */
-    gWebServer->serveStatic("/data/style.css", SPIFFS, "/style.css");
-    gWebServer->serveStatic("/data/util.js", SPIFFS, "/util.js");
+    srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
+    srv.serveStatic("/data/util.js", SPIFFS, "/util.js");
 
     return;
 }
