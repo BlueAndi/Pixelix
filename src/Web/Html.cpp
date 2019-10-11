@@ -92,8 +92,8 @@ String Html::Page::toString(void) const
 
     page  = HEAD_BEGIN;
     page += "\t<title>" + m_title + "</title>\r\n";
-    page += "<link rel=\"stylesheet\" href=\"/data/style.css\"/>\r\n";
-    page += "<script src=\"/data/util.js\"/>\r\n";
+    page += "<link rel=\"stylesheet\" href=\"/data/style.css\"></link>\r\n";
+    page += "<script src=\"/data/util.js\"></script>\r\n";
     
     if (false == m_style.isEmpty())
     {

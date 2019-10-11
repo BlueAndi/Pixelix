@@ -73,20 +73,15 @@ typedef enum
 static bool toUInt8(const String& str, uint8_t& value);
 static bool toUInt16(const String& str, uint16_t& value);
 static uint8_t getSignalQuality(int8_t rssi);
-static void status(void);
-static void slots(void);
-static void slotText(void);
-static void slotBitmap(void);
-static void slotLamp(void);
+static void status(AsyncWebServerRequest* request);
+static void slots(AsyncWebServerRequest* request);
+static void slotText(AsyncWebServerRequest* request);
+static void slotBitmap(AsyncWebServerRequest* request);
+static void slotLamp(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/**
- * Web server
- */
-static WebServer*   gWebServer  = NULL;
 
 /******************************************************************************
  * Public Methods
@@ -104,17 +99,13 @@ static WebServer*   gWebServer  = NULL;
  * External Functions
  *****************************************************************************/
 
-void RestApi::init(WebServer& srv)
+void RestApi::init(AsyncWebServer& srv)
 {
-    String  path;
-
-    gWebServer = &srv;
-
-    gWebServer->on("/rest/api/v1/status", status);
-    gWebServer->on("/rest/api/v1/display/slots", slots);
-    gWebServer->on("/rest/api/v1/display/slot/{}/text", slotText);
-    gWebServer->on("/rest/api/v1/display/slot/{}/bitmap", slotBitmap);
-    gWebServer->on("/rest/api/v1/display/slot/{}/lamp/{}/state", slotLamp);
+    srv.on("/rest/api/v1/status", status);
+    srv.on("/rest/api/v1/display/slots", slots);
+    srv.on("/rest/api/v1/display/slot/{}/text", slotText);
+    srv.on("/rest/api/v1/display/slot/{}/bitmap", slotBitmap);
+    srv.on("/rest/api/v1/display/slot/{}/lamp/{}/state", slotLamp);
     
     return;
 }
@@ -200,18 +191,18 @@ static uint8_t getSignalQuality(int8_t rssi)
  * Get status information.
  * GET /api/v1/status
  */
-static void status(void)
+static void status(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<256> jsonDoc;
     uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
 
-    if (NULL == gWebServer)
+    if (NULL == request)
     {
         return;
     }
 
-    if (HTTP_GET != gWebServer->method())
+    if (HTTP_GET != request->method())
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -256,7 +247,7 @@ static void status(void)
     }
 
     serializeJsonPretty(jsonDoc, content);
-    gWebServer->send(httpStatusCode, "application/json", content);
+    request->send(httpStatusCode, "application/json", content);
 
     return;
 }
@@ -265,18 +256,18 @@ static void status(void)
  * Get number of slots
  * GET /api/v1/display/slots
  */
-static void slots(void)
+static void slots(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
 
-    if (NULL == gWebServer)
+    if (NULL == request)
     {
         return;
     }
 
-    if (HTTP_GET != gWebServer->method())
+    if (HTTP_GET != request->method())
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -297,7 +288,7 @@ static void slots(void)
     }
 
     serializeJsonPretty(jsonDoc, content);
-    gWebServer->send(httpStatusCode, "application/json", content);
+    request->send(httpStatusCode, "application/json", content);
 
     return;
 }
@@ -306,18 +297,18 @@ static void slots(void)
  * Set text of a slot.
  * POST /display/slot/<slot-id>/text?show=<text>
  */
-static void slotText(void)
+static void slotText(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
     
-    if (NULL == gWebServer)
+    if (NULL == request)
     {
         return;
     }
 
-    if (HTTP_POST != gWebServer->method())
+    if (HTTP_POST != request->method())
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -331,7 +322,7 @@ static void slotText(void)
         uint8_t slotId = DisplayMgr::getInstance().MAX_SLOTS;
         
         /* Slot id invalid? */
-        if ((false == toUInt8(gWebServer->pathArg(0), slotId)) ||
+        if ((false == toUInt8(request->arg((size_t)0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -342,7 +333,7 @@ static void slotText(void)
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
         /* "show" argument missing? */
-        else if (false == gWebServer->hasArg("show"))
+        else if (false == request->hasArg("show"))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -353,7 +344,7 @@ static void slotText(void)
         }
         else
         {
-            String text = gWebServer->arg("show");
+            String text = request->arg("show");
 
             DisplayMgr::getInstance().setText(slotId, text);
 
@@ -366,7 +357,7 @@ static void slotText(void)
     }
 
     serializeJsonPretty(jsonDoc, content);
-    gWebServer->send(httpStatusCode, "application/json", content);
+    request->send(httpStatusCode, "application/json", content);
 
     return;
 }
@@ -375,18 +366,18 @@ static void slotText(void)
  * Set bitmap of a slot.
  * POST /display/slot/<slot-id>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>
  */
-static void slotBitmap(void)
+static void slotBitmap(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
 
-    if (NULL == gWebServer)
+    if (NULL == request)
     {
         return;
     }
 
-    if (HTTP_POST != gWebServer->method())
+    if (HTTP_POST != request->method())
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -402,7 +393,7 @@ static void slotBitmap(void)
         uint16_t    height  = 0u;
 
         /* Slot id invalid? */
-        if ((false == toUInt8(gWebServer->pathArg(0), slotId)) ||
+        if ((false == toUInt8(request->arg((size_t)0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -413,7 +404,7 @@ static void slotBitmap(void)
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
         /* "width" argument missing? */
-        else if (false == gWebServer->hasArg("width"))
+        else if (false == request->hasArg("width"))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -423,7 +414,7 @@ static void slotBitmap(void)
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
         /* "height" argument missing? */
-        else if (false == gWebServer->hasArg("height"))
+        else if (false == request->hasArg("height"))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -433,7 +424,7 @@ static void slotBitmap(void)
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
         /* "data" argument missing? */
-        else if (false == gWebServer->hasArg("data"))
+        else if (false == request->hasArg("data"))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -443,7 +434,7 @@ static void slotBitmap(void)
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
         /* Invalid width? */
-        else if (false == toUInt16(gWebServer->arg("width"), width))
+        else if (false == toUInt16(request->arg("width"), width))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -453,7 +444,7 @@ static void slotBitmap(void)
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
         /* Invalid height? */
-        else if (false == toUInt16(gWebServer->arg("height"), width))
+        else if (false == toUInt16(request->arg("height"), width))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -464,7 +455,7 @@ static void slotBitmap(void)
         }
         else
         {
-            String          dataBase64Str       = gWebServer->arg("data");
+            String          dataBase64Str       = request->arg("data");
             size_t          dataBase64ArraySize = dataBase64Str.length();
             const uint8_t*  dataBase64Array     = reinterpret_cast<const uint8_t*>(dataBase64Str.c_str());
             size_t          bitmapSize          = 0;
@@ -482,7 +473,7 @@ static void slotBitmap(void)
     }
 
     serializeJsonPretty(jsonDoc, content);
-    gWebServer->send(httpStatusCode, "application/json", content);
+    request->send(httpStatusCode, "application/json", content);
 
     return;
 }
@@ -491,18 +482,18 @@ static void slotBitmap(void)
  * Set lamp state of a slot.
  * POST /display/slot/<slot-id>/lamp/<lamp-id>/state?set=<on/off>
  */
-static void slotLamp(void)
+static void slotLamp(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
 
-    if (NULL == gWebServer)
+    if (NULL == request)
     {
         return;
     }
 
-    if (HTTP_POST != gWebServer->method())
+    if (HTTP_POST != request->method())
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -517,7 +508,7 @@ static void slotLamp(void)
         uint8_t lampId = 0u;
 
         /* Slot id invalid? */
-        if ((false == toUInt8(gWebServer->pathArg(0u), slotId)) ||
+        if ((false == toUInt8(request->arg((size_t)0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -528,7 +519,7 @@ static void slotLamp(void)
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
         /* Lamp id invalid? */
-        else if (false == toUInt8(gWebServer->pathArg(1u), lampId))
+        else if (false == toUInt8(request->arg(1), lampId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -537,9 +528,9 @@ static void slotLamp(void)
             errorObj["msg"]     = "Lamp id not supported.";
             httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
         }
-        else if ((0 != gWebServer->arg(0).compareTo("set")) ||
-                 ((0 != gWebServer->arg(1).compareTo("off")) &&
-                  (0 != gWebServer->arg(1).compareTo("on"))))
+        else if ((0 != request->arg(static_cast<size_t>(0)).compareTo("set")) ||
+                 ((0 != request->arg(1).compareTo("off")) &&
+                  (0 != request->arg(1).compareTo("on"))))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -552,7 +543,7 @@ static void slotLamp(void)
         {
             bool lampState = false;
 
-            if (0 == gWebServer->arg(1).compareTo("on"))
+            if (0 == request->arg(1).compareTo("on"))
             {
                 lampState = true;
             }
@@ -568,7 +559,7 @@ static void slotLamp(void)
     }
 
     serializeJsonPretty(jsonDoc, content);
-    gWebServer->send(httpStatusCode, "application/json", content);
+    request->send(httpStatusCode, "application/json", content);
 
     return;
 }

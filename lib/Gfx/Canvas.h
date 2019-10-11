@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <string.h>
 #include <LinkedList.hpp>
 #include <Widget.hpp>
 
@@ -132,7 +133,7 @@ public:
      * 
      * @return Children
      */
-    const LinkedList<Widget*>& children(void) const
+    const DLinkedList<Widget*>& children(void) const
     {
         return m_widgets;
     }
@@ -207,8 +208,8 @@ public:
 
 private:
 
-    Adafruit_GFX*       m_gfx;      /**< Graphics interface of the underlying layer */
-    LinkedList<Widget*> m_widgets;  /**< Widgets in the canvas */
+    Adafruit_GFX*           m_gfx;      /**< Graphics interface of the underlying layer */
+    DLinkedList<Widget*>    m_widgets;  /**< Widgets in the canvas */
 
     Canvas(const Canvas& canvas);
     Canvas& operator=(const Canvas& canvas);

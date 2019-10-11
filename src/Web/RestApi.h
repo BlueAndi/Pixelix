@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <WebServer.h>
+#include <ESPAsyncWebServer.h>
 #include <stdint.h>
 
 /** REST pages installer */
@@ -76,7 +76,7 @@ static const char VERSION[] = "v1";
  * 
  * @param[in] srv   Web server
  */
-void init(WebServer& srv);
+void init(AsyncWebServer& srv);
 
 }
 

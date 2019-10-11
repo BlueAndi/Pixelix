@@ -147,14 +147,14 @@ private:
  * @param[in] T Type of element
  */
 template < typename T >
-class LinkedList
+class DLinkedList
 {
 public:
 
     /**
      * Constructs a double chained empty list.
      */
-    LinkedList() :
+    DLinkedList() :
         m_head(NULL),
         m_tail(NULL),
         m_curr(NULL),
@@ -167,7 +167,7 @@ public:
      * 
      * @param[in] list List, which to copy
      */
-    LinkedList(const LinkedList& list) :
+    DLinkedList(const DLinkedList& list) :
         m_head(NULL),
         m_tail(NULL),
         m_curr(NULL),
@@ -185,7 +185,7 @@ public:
     /**
      * Destroys the double chained list.
      */
-    ~LinkedList()
+    ~DLinkedList()
     {
         clear();
     }
@@ -196,7 +196,7 @@ public:
      * 
      * @param[in] list List, which to assign
      */
-    LinkedList& operator=(const LinkedList& list)
+    DLinkedList& operator=(const DLinkedList& list)
     {
         ListElement<T>* listElement = list.m_head;
 

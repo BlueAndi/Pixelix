@@ -57,36 +57,29 @@
  * Types and classes
  *****************************************************************************/
 
-/**
- * One menu item.
- */
-typedef struct
-{
-    const char* name;   /**< Menu item name */
-    const char* href;   /**< Menu item hyperlink */
-
-} MenuItem;
-
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
-static bool authenticate(WebServer& srv);
-static String getProjectTitle(void);
-static void addHeader(String& body);
-static void addTopNav(String& body, uint8_t active);
-static void addFooter(String& body);
-static void errorNotFound(void);
-static void indexPage(void);
-static void networkPage(void);
-static void settingsPage(void);
+static String getColoredText(const String& text);
+
+static String commonPageProcessor(const String& var);
+
+static void errorPage(AsyncWebServerRequest* request);
+static String errorPageProcessor(const String& var);
+
+static void indexPage(AsyncWebServerRequest* request);
+static String indexPageProcessor(const String& var);
+
+static void networkPage(AsyncWebServerRequest* request);
+static String networkPageProcessor(const String& var);
+
+static void settingsPage(AsyncWebServerRequest* request);
+static String settingsPageProcessor(const String& var);
 
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/** Web server */
-static WebServer*       gWebServer                  = NULL;
 
 /** Name of the input field for wifi SSID. */
 static const char*      FORM_INPUT_NAME_SSID        = "ssid";
@@ -106,13 +99,14 @@ static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
 /** Max. wifi passphrase length */
 static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
 
-/** Top navigation menu items */
-static MenuItem         gTopNavItems[] =
-{
-    { "Home",       "/"         },
-    { "Network",    "/network"  },
-    { "Settings",   "/settings" }
-};
+/** Dialog flag, whether the dialog on the settings page shall be shown or not. */
+static bool             gShowDialog = false;
+
+/** Dialog title, used for settings page. */
+static String           gDialogTitle;
+
+/** Dialog text, used for settings page. */
+static String           gDialogText;
 
 /******************************************************************************
  * Public Methods
@@ -130,19 +124,17 @@ static MenuItem         gTopNavItems[] =
  * External Functions
  *****************************************************************************/
 
-void Pages::init(WebServer& srv)
+void Pages::init(AsyncWebServer& srv)
 {
-    gWebServer = &srv;
-
-    gWebServer->onNotFound(errorNotFound);
-    gWebServer->on("/", HTTP_GET, indexPage);
-    gWebServer->on("/network", HTTP_GET, networkPage);
-    gWebServer->on("/settings", HTTP_GET, settingsPage);
-    gWebServer->on("/settings", HTTP_POST, settingsPage);
+    srv.onNotFound(errorPage);
+    srv.on("/", HTTP_GET, indexPage);
+    srv.on("/network", HTTP_GET, networkPage);
+    srv.on("/settings", HTTP_GET, settingsPage);
+    srv.on("/settings", HTTP_POST, settingsPage);
 
     /* Serve files from filesystem */
-    gWebServer->serveStatic("/data/style.css", SPIFFS, "/style.css");
-    gWebServer->serveStatic("/data/util.js", SPIFFS, "/utils.js");
+    srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
+    srv.serveStatic("/data/util.js", SPIFFS, "/util.js");
 
     return;
 }
@@ -152,51 +144,16 @@ void Pages::init(WebServer& srv)
  *****************************************************************************/
 
 /**
- * This function will be called to authenticate the client.
- * A web page can request this on demand.
+ * Get text in color format (HTML).
  * 
- * @param[in] srv   Web server
+ * @param[in] text  Text
  * 
- * @return Authentication result
- * @retval false    Authentication failed
- * @retval true     Authentication successful
+ * @return Text in color format (HTML).
  */
-static bool authenticate(WebServer& srv)
+static String getColoredText(const String& text)
 {
-    bool status = true;
-
-    /* If there is no authentication with the client, it will be requested. */
-    if (false == srv.authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        const String authFailResponse = "Authentication failed!";
-
-        /* Use basic authentication, although no secure transport layer (https) is used
-         * right now. This just for simplicity.
-         * 
-         * Digest Authentication communicates credentials in an encrypted form by applying
-         * a hash function to the the username, the password, a server supplied nonce value,
-         * the HTTP method, and the requested URI.
-         * 
-         * TODO Use DIGEST_AUTH
-         */
-        srv.requestAuthentication(BASIC_AUTH, NULL, authFailResponse);
-        
-        status = false;
-    }
-
-    return status;
-}
-
-/**
- * Get project title in color form.
- * 
- * @return Project title in color form (HTML).
- */
-static String getProjectTitle(void)
-{
-    String      title;
-    uint8_t     projectTitleLen = strlen(WebConfig::PROJECT_TITLE);
-    uint8_t     index           = 0;
+    String      result;
+    uint8_t     index       = 0;
     uint8_t     colorIndex  = 0;
     const char* colors[]    =
     {
@@ -208,14 +165,13 @@ static String getProjectTitle(void)
         "#FF00FF"
     };
 
-    title += ".:";
-    for(index = 0; index < projectTitleLen; ++index)
+    for(index = 0; index < text.length(); ++index)
     {
-        title += "<span style=\"color:";
-        title += colors[colorIndex];
-        title += "\">";
-        title += WebConfig::PROJECT_TITLE[index];
-        title += "</span>";
+        result += "<span style=\"color:";
+        result += colors[colorIndex];
+        result += "\">";
+        result += text[index];
+        result += "</span>";
 
         ++colorIndex;
         if (ARRAY_NUM(colors) <= colorIndex)
@@ -223,332 +179,275 @@ static String getProjectTitle(void)
             colorIndex = 0;
         }
     }
-    title += ":.";
 
-    return title;
+    return result;
 }
 
 /**
- * Add HTML page header to body.
+ * Processor for page template, containing the common part, which is available
+ * in every page. It is responsible for the data binding.
  * 
- * @param[inout] body   Body
+ * @param[in] var   Name of variable in the template
  */
-static void addHeader(String& body)
+static String commonPageProcessor(const String& var)
 {
-    body += "<div class=\"header\">\r\n";
-    body += "\t<h1>";
-    body += getProjectTitle();
-    body += "</h1>\r\n";
-    body += "</div>\r\n";
+    String  result;
 
-    return;
-}
-
-/**
- * Add HTML top navigation to body.
- * 
- * @param[inout]    body   Body
- * @param[in]       active Active menu item [0; ...]
- */
-static void addTopNav(String& body, uint8_t active)
-{
-    uint8_t index = 0;
-
-    body += "<div class=\"topnav\">\r\n";
-
-    for(index = 0; index < ARRAY_NUM(gTopNavItems); ++index)
+    if (var == "PAGE_TITLE")
     {
-        body += "\t<a class=\"";
-        if (active == index)
-        {
-            body += "active";
-        }
-        body += "\" href=\"";
-        body += gTopNavItems[index].href;
-        body += "\">";
-        body += gTopNavItems[index].name;
-        body += "</a>\r\n";
+        result = WebConfig::PROJECT_TITLE;
+    }
+    else if (var == "HEADER")
+    {
+        result += "<h1>";
+        result += ".:";
+        result += getColoredText(WebConfig::PROJECT_TITLE);
+        result += ":.";
+        result += "</h1>\r\n";
+    }
+    else
+    {
+        ;
     }
 
-    body += "</div>\r\n";
-
-    return;
-}
-
-/**
- * Add HTML footer to body.
- * 
- * @param[inout]    body   Body
- */
-static void addFooter(String& body)
-{
-    body += "<div class=\"footer\">\r\n";
-    body += "\t<hr />\r\n";
-    body += "\t(C) 2019 by Andreas Merkle (web@blue-andi.de)\r\n";
-    body += "</div>\r\n";
-
-    return;
+    return result;
 }
 
 /**
  * Error web page used in case a requested path was not found.
+ * 
+ * @param[in] request   HTTP request
  */
-static void errorNotFound(void)
+static void errorPage(AsyncWebServerRequest* request)
 {
-    String      body;
-    Html::Page  page(WebConfig::PROJECT_TITLE);
-
-    if (NULL == gWebServer)
+    if (NULL == request)
     {
         return;
     }
 
-    addHeader(body);
-    body += Html::heading("Error", 2);
-    body += Html::paragraph("Requested path not found.");
-    addFooter(body);
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
 
-    page.setBody(body);
-
-    gWebServer->send(Html::STATUS_CODE_NOT_FOUND, "text/html", page.toString());
+    request->send(SPIFFS, "/error.html", "text/html", false, errorPageProcessor);
 
     return;
+}
+
+/**
+ * Processor for error page template.
+ * It is responsible for the data binding.
+ * 
+ * @param[in] var   Name of variable in the template
+ */
+static String errorPageProcessor(const String& var)
+{
+    return commonPageProcessor(var);
 }
 
 /**
  * Index page on root path ("/").
+ * 
+ * @param[in] request   HTTP request
  */
-static void indexPage(void)
+static void indexPage(AsyncWebServerRequest* request)
 {
-    String      body;
-    Html::Page  page(WebConfig::PROJECT_TITLE);
-    String      ssid;
-    String      passphrase;
-
-    /* If authentication fails, a error page is automatically shown. */
-    if (false == authenticate(*gWebServer))
+    if (NULL == request)
     {
         return;
     }
 
-    addHeader(body);
-    addTopNav(body, 0);
-    body += "<div class=\"main\">\r\n";
-    body += "\t<h2>Home</h2>\r\n";
-    body += "\t<p>Welcome!</p>\r\n";
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
 
-    body += "\t<h3>Software</h3>\r\n";
-    body += "\t<table>";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>Version:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += Version::SOFTWARE;
-    body += "</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>ESP SDK Version:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += ESP.getSdkVersion();
-    body += "</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>Heap size:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += ESP.getHeapSize();
-    body += " byte</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>Available heap size:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += ESP.getFreeHeap();
-    body += " byte</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t</table>";
-
-    body += "\t<h3>Hardware</h3>\r\n";
-    body += "\t<table>";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>ESP chip rev.:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += ESP.getChipRevision();
-    body += "</td>\r\n";
-    body += "\t\t</tr>\r\n";
-    
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>ESP cpu freq.:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += ESP.getCpuFreqMHz();
-    body += " MHz</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t</table>";
-    body += "</div>\r\n";
-    addFooter(body);
-
-    page.setBody(body);
-
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
+    request->send(SPIFFS, "/index.html", "text/html", false, indexPageProcessor);
 
     return;
+}
+
+/**
+ * Processor for index page template.
+ * It is responsible for the data binding.
+ * 
+ * @param[in] var   Name of variable in the template
+ */
+static String indexPageProcessor(const String& var)
+{
+    String  result;
+
+    if (var == "VERSION")
+    {
+        result = Version::SOFTWARE;
+    }
+    else if (var == "ESP_SDK_VERSION")
+    {
+        result = ESP.getSdkVersion();
+    }
+    else if (var == "HEAP_SIZE")
+    {
+        result = ESP.getHeapSize();
+    }
+    else if (var == "AVAILABLE_HEAP_SIZE")
+    {
+        result = ESP.getFreeHeap();
+    }
+    else if (var == "ESP_CHIP_REV")
+    {
+        result = ESP.getChipRevision();
+    }
+    else if (var == "ESP_CPU_FREQ")
+    {
+        result = ESP.getCpuFreqMHz();
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
 }
 
 /**
  * Network page, shows all information regarding the network.
+ * 
+ * @param[in] request   HTTP request
  */
-static void networkPage(void)
+static void networkPage(AsyncWebServerRequest* request)
 {
-    String      body;
-    Html::Page  page(WebConfig::PROJECT_TITLE);
-    String      ssid;
-
-    /* If authentication fails, a error page is automatically shown. */
-    if (false == authenticate(*gWebServer))
+    if (NULL == request)
     {
         return;
     }
 
-    if (true == Settings::getInstance().open(true))
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
     {
-        ssid = Settings::getInstance().getWifiSSID();
-        Settings::getInstance().close();
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
     }
 
-    addHeader(body);
-    addTopNav(body, 1);
-    body += "<div class=\"main\">\r\n";
-    body += "\t<h2>Network</h2>\r\n";
-    body += "\t<table>";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>SSID:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += ssid;
-    body += "</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>RSSI:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += WiFi.RSSI();
-    body += " dBm</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>Hostname:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += WiFi.getHostname();
-    body += "</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t\t<tr>\r\n";
-    body += "\t\t\t<td><strong>IPv4:</strong></td>\r\n";
-    body += "\t\t\t<td>";
-    body += WiFi.localIP().toString();
-    body += "</td>\r\n";
-    body += "\t\t</tr>\r\n";
-
-    body += "\t</table>";
-    body += "</div>\r\n";
-    addFooter(body);
-
-    page.setBody(body);
-
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
+    request->send(SPIFFS, "/network.html", "text/html", false, networkPageProcessor);
 
     return;
 }
 
 /**
- * Settings page to show and store settings.
+ * Processor for network page template.
+ * It is responsible for the data binding.
+ * 
+ * @param[in] var   Name of variable in the template
  */
-static void settingsPage(void)
+static String networkPageProcessor(const String& var)
 {
-    String      body;
-    Html::Page  page(WebConfig::PROJECT_TITLE);
-    bool        isError     = false;
-    String      errorMsg;
-    String      ssid;
-    String      passphrase;
-    const char* style       =
-    ".error {"                          \
-        "padding: 20px;"                \
-        "background-color: #f44336;"    \
-        "color: white;"                 \
-    "}"                                 \
-    ".success {"                        \
-        "padding: 20px;"                \
-        "background-color: #4CAF50;"    \
-        "color: white;"                 \
-    "}"                                 \
-    ".closebtn {"                       \
-        "margin-left: 15px;"            \
-        "color: white;"                 \
-        "font-weight: bold;"            \
-        "float: right;"                 \
-        "font-size: 22px;"              \
-        "line-height: 20px;"            \
-        "cursor: pointer;"              \
-        "transition: 0.3s;"             \
-    "}"                                 \
-    ".closebtn:hover {"                 \
-        "color: black;"                 \
-    "}";
+    String  result;
 
-    /* If authentication fails, a error page is automatically shown. */
-    if (false == authenticate(*gWebServer))
+    if (var == "SSID")
+    {
+        if (true == Settings::getInstance().open(true))
+        {
+            result = Settings::getInstance().getWifiSSID();
+            Settings::getInstance().close();
+        }
+    }
+    else if (var == "RSSI")
+    {
+        result = WiFi.RSSI();
+    }
+    else if (var == "HOSTNAME")
+    {
+        result = WiFi.getHostname();
+    }
+    else if (var == "IPV4")
+    {
+        result = WiFi.localIP().toString();
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
+}
+
+/**
+ * Settings page to show and store settings.
+ * 
+ * @param[in] request   HTTP request
+ */
+static void settingsPage(AsyncWebServerRequest* request)
+{
+    if (NULL == request)
     {
         return;
     }
 
-    /* Store settings? */
-    if (0 < gWebServer->args())
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
     {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    /* Store settings? */
+    if (0 < request->args())
+    {
+        String  ssid;
+        String  passphrase;
+        bool    isError     = false;
+
+        gDialogText = "";
+
         /* Check for the necessary arguments. */
-        if (false == gWebServer->hasArg(FORM_INPUT_NAME_SSID))
+        if (false == request->hasArg(FORM_INPUT_NAME_SSID))
         {
             isError = true;
-            errorMsg += "<p>SSID missing.</p>\r\n";
+            gDialogText += "<p>SSID missing.</p>\r\n";
         }
 
-        if (false == gWebServer->hasArg(FORM_INPUT_NAME_PASSPHRASE))
+        if (false == request->hasArg(FORM_INPUT_NAME_PASSPHRASE))
         {
             isError = true;
-            errorMsg += "<p>Passphrase missing.</p>\r\n";
+            gDialogText += "<p>Passphrase missing.</p>\r\n";
         }
 
         /* Arguments are available */
         if (false == isError)
         {
-            ssid        = gWebServer->arg(FORM_INPUT_NAME_SSID);
-            passphrase  = gWebServer->arg(FORM_INPUT_NAME_PASSPHRASE);
+            ssid        = request->arg(FORM_INPUT_NAME_SSID);
+            passphrase  = request->arg(FORM_INPUT_NAME_PASSPHRASE);
 
             /* Check arguments min. and max. lengths */
             if (MIN_SSID_LENGTH > ssid.length())
             {
                 isError = true;
-                errorMsg += "<p>SSID too short.</p>";
+                gDialogText += "<p>SSID too short.</p>";
             }
             else if (MAX_SSID_LENGTH < ssid.length())
             {
                 isError = true;
-                errorMsg += "<p>SSID too long.</p>";
+                gDialogText += "<p>SSID too long.</p>";
             }
 
             if (MIN_PASSPHRASE_LENGTH > passphrase.length())
             {
                 isError = true;
-                errorMsg += "<p>Passphrase too short.</p>";
+                gDialogText += "<p>Passphrase too short.</p>";
             }
             else if (MAX_PASSPHRASE_LENGTH < passphrase.length())
             {
                 isError = true;
-                errorMsg += "<p>Passphrase too long.</p>";
+                gDialogText += "<p>Passphrase too long.</p>";
             }
 
             /* Arguments are valid, store them. */
@@ -558,58 +457,87 @@ static void settingsPage(void)
                 Settings::getInstance().setWifiSSID(ssid);
                 Settings::getInstance().setWifiPassphrase(passphrase);
                 Settings::getInstance().close();
+
+                gDialogText = "<p>Successful saved.</p>";
             }
         }
-    }
 
-    Settings::getInstance().open(true);
-    ssid        = Settings::getInstance().getWifiSSID();
-    passphrase  = Settings::getInstance().getWifiPassphrase();
-    Settings::getInstance().close();
-
-    addHeader(body);
-    addTopNav(body, 2);
-    body += "<div class=\"main\">\r\n";
-    body += "\t<h2>Wifi Settings</h2>";
-
-    if (0 < gWebServer->args())
-    {
         if (false == isError)
         {
-            body += "\t<div class=\"success\">";
-            body += "\t\t<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>";
-            body += "\t\t<strong>Info!</strong> Settings successful stored.";
-            body += "\t</div>";
+            gDialogTitle = "Info";
         }
         else
         {
-            body += "\t<div class=\"error\">";
-            body += "\t\t<span class=\"closebtn\" onclick=\"this.parentElement.style.display='none';\">&times;</span>";
-            body += "\t\t<strong>Error!</strong> ";
-            body += errorMsg;
-            body += "\t</div>";
+            gDialogTitle = "Error";
         }
+
+        gShowDialog = true;
     }
 
-    body += Html::form(
-        String("SSID:") +
-        Html::nextLine() +
-        Html::inputText(FORM_INPUT_NAME_SSID, ssid, MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH) +
-        Html::nextLine() +
-        "Passphrase:" +
-        Html::nextLine() +
-        Html::inputText(FORM_INPUT_NAME_PASSPHRASE, passphrase, MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH) +
-        Html::nextLine(),
-        "#"
-    );
-
-    body += "</div>\r\n";
-    addFooter(body);
-
-    page.setBody(body);
-    page.setStyle(style);
-
-    gWebServer->send(Html::STATUS_CODE_OK, "text/html", page.toString());
+    request->send(SPIFFS, "/settings.html", "text/html", false, settingsPageProcessor);
 
     return;
+}
+
+/**
+ * Processor for settings page template.
+ * It is responsible for the data binding.
+ * 
+ * @param[in] var   Name of variable in the template
+ */
+static String settingsPageProcessor(const String& var)
+{
+    String  result;
+
+    if (var == "SSID")
+    {
+        if (true == Settings::getInstance().open(true))
+        {
+            result = Settings::getInstance().getWifiSSID();
+            Settings::getInstance().close();
+        }
+    }
+    else if (var == "SETTINGS")
+    {
+        String ssid;
+        String passphrase;
+
+        Settings::getInstance().open(true);
+        ssid        = Settings::getInstance().getWifiSSID();
+        passphrase  = Settings::getInstance().getWifiPassphrase();
+        Settings::getInstance().close();
+
+        result += "<p>SSID:<br />\r\n";
+        result += Html::inputText(FORM_INPUT_NAME_SSID, ssid, MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH);
+        result += "</p><br />\r\n";
+        result += "<p>Passphrase:<br />\r\n";
+        result += Html::inputText(FORM_INPUT_NAME_PASSPHRASE, passphrase, MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH);
+        result += "</p><br />\r\n";
+        result += "<p><input type=\"submit\" value=\"Save\"></p>";
+    }
+    else if (var == "SHOW_DIALOG")
+    {
+        if (false == gShowDialog)
+        {
+            result = "false";
+        }
+        else
+        {
+            result = "true";
+        }
+    }
+    else if (var == "DIALOG_TITLE")
+    {
+        result = gDialogTitle;
+    }
+    else if (var == "DIALOG")
+    {
+        result = gDialogText;
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
 }

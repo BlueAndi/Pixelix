@@ -441,8 +441,8 @@ void DisplayMgr::destroyWidget(Widget*& widget)
         /* If the widget is a canvas, its children will be destroyed as well. */
         if (0 == strcmp(Canvas::WIDGET_TYPE, widget->getType()))
         {
-            Canvas*             canvas      = static_cast<Canvas*>(widget);
-            LinkedList<Widget*> children    = canvas->children();
+            Canvas*                 canvas      = static_cast<Canvas*>(widget);
+            DLinkedList<Widget*>    children    = canvas->children();
             
             if (true == children.selectFirstElement())
             {

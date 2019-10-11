@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <WebServer.h>
+#include <ESPAsyncWebServer.h>
 #include <stdint.h>
 
 /** Web server */
@@ -81,7 +81,7 @@ void begin(void);
  * 
  * @return Web server instance.
  */
-WebServer& getInstance(void);
+AsyncWebServer& getInstance(void);
 
 }
 

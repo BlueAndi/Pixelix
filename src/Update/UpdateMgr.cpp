@@ -37,8 +37,10 @@
 #include <SPIFFS.h>
 #include <DisplayMgr.h>
 #include <Logging.h>
+#include <Esp.h>
 
 #include "LedMatrix.h"
+#include "MyWebServer.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -125,6 +127,9 @@ void UpdateMgr::onStart(void)
 {
     String  infoStr = "Update ";
     Canvas* canvas  = NULL;
+
+    /* Stop webserver */
+    MyWebServer::getInstance().end();
 
     m_instance.m_updateIsRunning = true;
 
