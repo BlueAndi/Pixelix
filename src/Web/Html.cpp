@@ -54,63 +54,9 @@
  * Local Variables
  *****************************************************************************/
 
-/**
- * HTML5 head containing
- * - HTML5 main framework begin
- * - Language set to english
- * - Using UTF-8 character set
- * - Definition of the standard viewport
- */
-static const char   HEAD_BEGIN[] = 
-    "<!doctype html>\r\n" \
-    "<html lang=\"en\">\r\n" \
-    "<head>\r\n" \
-    "    <meta charset=\"utf-8\"/>\r\n" \
-    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n";
-
-/**
- * HTML5 head containing the closing part.
- */
-static const char   HEAD_END[] = 
-    "</head>\r\n" \
-    "<body>\r\n";
-
-/**
- * HTML5 tail containing the main html framework closing tags.
- */
-static const char   TAIL[] =
-    "</body>\r\n" \
-    "</html>";
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
-
-String Html::Page::toString(void) const
-{
-    String page;
-
-    page  = HEAD_BEGIN;
-    page += "\t<title>" + m_title + "</title>\r\n";
-    page += "<link rel=\"stylesheet\" href=\"/data/style.css\"></link>\r\n";
-    page += "<script src=\"/data/util.js\"></script>\r\n";
-    
-    if (false == m_style.isEmpty())
-    {
-        page += "\t<style>" + m_style + "</style>\r\n";
-    }
-
-    if (false == m_script.isEmpty())
-    {
-        page += "\t<script>" + m_script + "</script>\r\n";
-    }
-
-    page += HEAD_END;
-    page += m_body;
-    page += TAIL;
-
-    return page;
-}
 
 /******************************************************************************
  * Protected Methods
@@ -123,33 +69,6 @@ String Html::Page::toString(void) const
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-String Html::heading(const String& title, uint8_t size)
-{
-    String heading;
-
-    if (0 == size)
-    {
-        size = 1;
-    }
-
-    heading  = "<h";
-    heading += size;
-    heading += ">";
-    heading += title;
-    heading += "</h";
-    heading += size;
-    heading += ">";
-
-    return heading;
-}
-
-String Html::paragraph(const String& text)
-{
-    String p = "<p>" + text + "</p>";
-
-    return p;
-}
 
 String Html::inputText(const String& name, const String& value, uint8_t size, uint8_t min, uint8_t max)
 {
@@ -167,34 +86,6 @@ String Html::inputText(const String& name, const String& value, uint8_t size, ui
     input += "\" />";
 
     return input;
-}
-
-String Html::nextLine(void)
-{
-    return "<br />";
-}
-
-String Html::form(const String& content, const String& action)
-{
-    String form = "<form action=\"";
-    form += action;
-    form += "\" method=\"post\">";
-    form += content;
-    form += "<input type=\"submit\" value=\"Save\">";
-    form += "</form>";
-
-    return form;
-}
-
-String Html::hyperlink(const String& href, const String& text)
-{
-    String hyperlink = "<a href=\"";
-    hyperlink += href;
-    hyperlink += "\">";
-    hyperlink += text;
-    hyperlink += "</a>";
-
-    return hyperlink;
 }
 
 /******************************************************************************
