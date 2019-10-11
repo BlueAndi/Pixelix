@@ -83,11 +83,6 @@ static void slotLamp(AsyncWebServerRequest* request);
  * Local Variables
  *****************************************************************************/
 
-/**
- * Web server
- */
-static AsyncWebServer*  gWebServer  = NULL;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -106,15 +101,11 @@ static AsyncWebServer*  gWebServer  = NULL;
 
 void RestApi::init(AsyncWebServer& srv)
 {
-    String  path;
-
-    gWebServer = &srv;
-
-    gWebServer->on("/rest/api/v1/status", status);
-    gWebServer->on("/rest/api/v1/display/slots", slots);
-    gWebServer->on("/rest/api/v1/display/slot/{}/text", slotText);
-    gWebServer->on("/rest/api/v1/display/slot/{}/bitmap", slotBitmap);
-    gWebServer->on("/rest/api/v1/display/slot/{}/lamp/{}/state", slotLamp);
+    srv.on("/rest/api/v1/status", status);
+    srv.on("/rest/api/v1/display/slots", slots);
+    srv.on("/rest/api/v1/display/slot/{}/text", slotText);
+    srv.on("/rest/api/v1/display/slot/{}/bitmap", slotBitmap);
+    srv.on("/rest/api/v1/display/slot/{}/lamp/{}/state", slotLamp);
     
     return;
 }

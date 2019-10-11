@@ -1,0 +1,61 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>%PAGE_TITLE%</title>
+    <link rel="stylesheet" href="/data/style.css"></link>
+    <script src="/data/util.js"></script>
+    <style>
+        input {
+            width: 50%%;
+        }
+        dialog {
+            width: 20%%;
+            background: #e8e8e8;
+            border: 1px solid #dadada;
+            font-family:sans-serif;
+            padding: 5px 10px 20px 20px;
+        }
+    </style>
+    <script>
+        function closeDialog() {
+            document.getElementById('myDialog').close();  
+        }
+
+        window.onload = function() {
+            var showDialog = %SHOW_DIALOG%;
+
+            if (true == showDialog) {
+                document.getElementById("myDialog").showModal();
+            }
+        };
+    </script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div class="topnav">
+    <a href="/">Home</a>
+    <a href="/network">Network</a>
+    <a href="/settings" class="active">Settings</a>
+</div>
+<div class="main">
+    <h2>Settings</h2>
+    <form action="#">
+        %SETTINGS%
+    </form>
+    <dialog id="myDialog">
+        <h3 style="color: #000000">%DIALOG_TITLE%</h3>
+        <p>%DIALOG%</p>
+        <button id="close" onclick="closeDialog()">Close</button>
+    </dialog>
+</div>
+<div class="footer">
+    <hr />
+    <p>(C) 2019 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>

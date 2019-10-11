@@ -1,0 +1,59 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>%PAGE_TITLE%</title>
+    <link rel="stylesheet" href="/data/style.css"></link>
+    <script src="/data/util.js"></script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div class="topnav">
+    <a href="/" class="active">Home</a>
+    <a href="/network">Network</a>
+    <a href="/settings">Settings</a>
+</div>
+<div class="main">
+    <h2>Home</h2>
+    <p>Welcome!</p>
+    <h3>Software</h3>
+    <table>
+        <tr>
+            <td>Version:</td>
+            <td>%VERSION%</td>
+        </tr>
+        <tr>
+            <td>ESP SDK Version:</td>
+            <td>%ESP_SDK_VERSION%</td>
+        </tr>
+        <tr>
+            <td>Heap Size:</td>
+            <td>%HEAP_SIZE% byte</td>
+        </tr>
+        <tr>
+            <td>Available Heap Size:</td>
+            <td>%AVAILABLE_HEAP_SIZE% byte</td>
+        </tr>
+    </table>
+    <h3>Hardware</h3>
+    <table>
+        <tr>
+            <td>ESP Chip Rev.:</td>
+            <td>%ESP_CHIP_REV%</td>
+        </tr>
+        <tr>
+            <td>ESP CPU Freq.:</td>
+            <td>%ESP_CPU_FREQ% MHz</td>
+        </tr>
+    </table>
+</div>
+<div class="footer">
+    <hr />
+    <p>(C) 2019 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>
