@@ -77,6 +77,9 @@ static String networkPageProcessor(const String& var);
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
 
+static void devPage(AsyncWebServerRequest* request);
+static String devPageProcessor(const String& var);
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -128,6 +131,7 @@ void Pages::init(AsyncWebServer& srv)
 {
     srv.onNotFound(errorPage);
     srv.on("/", HTTP_GET, indexPage);
+    srv.on("/dev", HTTP_GET, devPage);
     srv.on("/network", HTTP_GET, networkPage);
     srv.on("/settings", HTTP_GET, settingsPage);
     srv.on("/settings", HTTP_POST, settingsPage);
@@ -365,7 +369,14 @@ static String networkPageProcessor(const String& var)
     }
     else if (var == "HOSTNAME")
     {
-        result = WiFi.getHostname();
+        if (WIFI_MODE_AP == WiFi.getMode())
+        {
+            result = WiFi.softAPgetHostname();
+        }
+        else
+        {
+            result = WiFi.getHostname();
+        }
     }
     else if (var == "IPV4")
     {
@@ -533,6 +544,72 @@ static String settingsPageProcessor(const String& var)
     else if (var == "DIALOG")
     {
         result = gDialogText;
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
+}
+
+/**
+ * Page with stuff for development and debug purposes.
+ * 
+ * @param[in] request   HTTP request
+ */
+static void devPage(AsyncWebServerRequest* request)
+{
+    if (NULL == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/dev.html", "text/html", false, devPageProcessor);
+
+    return;
+}
+
+/**
+ * Processor for dev page template.
+ * It is responsible for the data binding.
+ * 
+ * @param[in] var   Name of variable in the template
+ */
+static String devPageProcessor(const String& var)
+{
+    String  result;
+
+    if (var == "WS_PROTOCOL")
+    {
+        result = WebConfig::WEBSOCKET_PROTOCOL;
+    }
+    else if (var == "WS_HOSTNAME")
+    {
+        if (WIFI_MODE_AP == WiFi.getMode())
+        {
+            result = WiFi.softAPgetHostname();
+        }
+        else
+        {
+            result = WiFi.getHostname();
+        }
+    }
+    else if (var == "WS_PORT")
+    {
+        result = WebConfig::WEBSOCKET_PORT;
+    }
+    else if (var == "WS_ENDPOINT")
+    {
+        result = WebConfig::WEBSOCKET_PATH;
     }
     else
     {

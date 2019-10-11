@@ -64,6 +64,12 @@ static const char       WEB_LOGIN_USER[]        = "luke";
 /** Web server login password */
 static const char       WEB_LOGIN_PASSWORD[]    = "skywalker";
 
+/** Websocket protocol */
+static const char       WEBSOCKET_PROTOCOL[]    = "ws";
+
+/** Websocket port */
+static const uint32_t   WEBSOCKET_PORT          = 80u;
+
 /** Websocket path */
 static const char       WEBSOCKET_PATH[]        = "/ws";
 
