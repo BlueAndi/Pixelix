@@ -25,18 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Web server
+ * @brief  Websocket server
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "MyWebServer.h"
-#include "WebConfig.h"
-#include "Pages.h"
-#include "RestApi.h"
 #include "WebSocket.h"
+#include "WebConfig.h"
+
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -61,12 +60,14 @@
  * Local Variables
  *****************************************************************************/
 
-/** Web server */
-static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
+/** Websocket */
+static AsyncWebSocket   gWebSocket(WebConfig::WEBSOCKET_PATH);
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+static void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len);
 
 /******************************************************************************
  * Protected Methods
@@ -80,31 +81,92 @@ static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
  * External Functions
  *****************************************************************************/
 
-void MyWebServer::init(void)
+void WebSocket::init(AsyncWebServer& srv)
 {
-    /* Register all web pages */
-    Pages::init(gWebServer);
-    RestApi::init(gWebServer);
+    /* Register websocket event handler */
+    gWebSocket.onEvent(onEvent);
 
-    /* Register websocket */
-    WebSocket::init(gWebServer);
+    /* Register websocket on webserver */
+    srv.addHandler(&gWebSocket);
 
     return;
-}
-
-void MyWebServer::begin(void)
-{
-    /* Start webserver */
-    gWebServer.begin();
-
-    return;
-}
-
-AsyncWebServer& MyWebServer::getInstance(void)
-{
-    return gWebServer;
 }
 
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Websocket event handler.
+ * 
+ * @param[in] server    Websocket server
+ * @param[in] client    Weboscket client
+ * @param[in] type      Websocket event type
+ * @param[in] arg       Websocket argument
+ * @param[in] data      Websocket data
+ * @param[in] len       Websocket data length in bytes
+ */
+static void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
+{
+    uint16_t    errorId = 0;
+    const char* msg     = "-";
+
+    if ((NULL == server) ||
+        (NULL == client))
+    {
+        return;
+    }
+
+    switch(type)
+    {
+    /* Client connected */
+    case WS_EVT_CONNECT:
+        LOG_INFO("ws[%s][%u] client connected.", server->url(), client->id());
+        client->ping();
+        break;
+        
+    /* Client disconnected */
+    case WS_EVT_DISCONNECT:
+        LOG_INFO("ws[%s][%u] client disconnected.", server->url(), client->id());
+        break;
+        
+    /* Pong received */
+    case WS_EVT_PONG:
+
+        if ((NULL != data) &&
+            (0 < len))
+        {
+            msg = reinterpret_cast<char*>(data);
+        }
+
+        LOG_INFO("ws[%s][%u] pong: %s", server->url(), client->id(), msg);
+        break;
+        
+    /* Remote error */
+    case WS_EVT_ERROR:
+
+        if (NULL != arg)
+        {
+            errorId = *static_cast<uint16_t*>(arg);
+        }
+
+        if ((NULL != data) &&
+            (0 < len))
+        {
+            msg = reinterpret_cast<char*>(data);
+        }
+
+        LOG_INFO("ws[%s][%u] error %u: %s", server->url(), client->id(), errorId, msg);
+        break;
+        
+    /* Data */
+    case WS_EVT_DATA:
+        /* Not supported yet. */
+        break;
+
+    default:
+        break;
+    }
+
+    return;
+}

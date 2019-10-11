@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Webserver configuration
+ * @brief  Websocket
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup web
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WEBCONFIG_H__
-#define __WEBCONFIG_H__
+#ifndef __WEBSOCKET_H__
+#define __WEBSOCKET_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,29 +43,12 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include <ESPAsyncWebServer.h>
+#include <stdint.h>
 
-/** Webserver configuration constants. */
-namespace WebConfig
+/** Websocket */
+namespace WebSocket
 {
-
-/******************************************************************************
- * Constants
- *****************************************************************************/
-
-/** Web server port */
-static const uint32_t   WEBSERVER_PORT          = 80u;
-
-/** Project title, used by the web pages. */
-static const char       PROJECT_TITLE[]         = "PIXELIX";
-
-/** Web server login user */
-static const char       WEB_LOGIN_USER[]        = "luke";
-
-/** Web server login password */
-static const char       WEB_LOGIN_PASSWORD[]    = "skywalker";
-
-/** Websocket path */
-static const char       WEBSOCKET_PATH[]        = "/ws";
 
 /******************************************************************************
  * Macros
@@ -76,11 +59,22 @@ static const char       WEBSOCKET_PATH[]        = "/ws";
  *****************************************************************************/
 
 /******************************************************************************
+ * Types and Classes
+ *****************************************************************************/
+
+/******************************************************************************
  * Functions
  *****************************************************************************/
 
+/**
+ * Initialize websocket and register it on the web server.
+ * 
+ * @param[in] srv   Web server
+ */
+void init(AsyncWebServer& srv);
+
 }
 
-#endif  /* __WEBCONFIG_H__ */
+#endif  /* __WEBSOCKET_H__ */
 
 /** @} */
