@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "WebSocket.h"
-#include "WebConfig.h"
 
 #include <Logging.h>
 
@@ -60,14 +59,23 @@
  * Local Variables
  *****************************************************************************/
 
-/** Websocket */
-static AsyncWebSocket   gWebSocket(WebConfig::WEBSOCKET_PATH);
+/* Initialize the websocket server instance. */
+WebSocketSrv    WebSocketSrv::m_instance;
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-static void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len);
+void WebSocketSrv::init(AsyncWebServer& srv)
+{
+    /* Register websocket event handler */
+    m_webSocket.onEvent(onEvent);
+
+    /* Register websocket on webserver */
+    srv.addHandler(&m_webSocket);
+
+    return;
+}
 
 /******************************************************************************
  * Protected Methods
@@ -77,36 +85,7 @@ static void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEve
  * Private Methods
  *****************************************************************************/
 
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-void WebSocket::init(AsyncWebServer& srv)
-{
-    /* Register websocket event handler */
-    gWebSocket.onEvent(onEvent);
-
-    /* Register websocket on webserver */
-    srv.addHandler(&gWebSocket);
-
-    return;
-}
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
-
-/**
- * Websocket event handler.
- * 
- * @param[in] server    Websocket server
- * @param[in] client    Weboscket client
- * @param[in] type      Websocket event type
- * @param[in] arg       Websocket argument
- * @param[in] data      Websocket data
- * @param[in] len       Websocket data length in bytes
- */
-static void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
+void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
 {
     uint16_t    errorId = 0;
     const char* msg     = "-";
@@ -170,3 +149,11 @@ static void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEve
 
     return;
 }
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

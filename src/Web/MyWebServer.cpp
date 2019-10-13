@@ -87,7 +87,7 @@ void MyWebServer::init(void)
     RestApi::init(gWebServer);
 
     /* Register websocket */
-    WebSocket::init(gWebServer);
+    WebSocketSrv::getInstance().init(gWebServer);
 
     return;
 }
