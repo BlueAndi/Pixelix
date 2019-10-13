@@ -31,13 +31,7 @@
                     var wsMsg = messageEvent.data;
                     
                     console.log("WebSocket MESSAGE: " + wsMsg);
-                    
-                    if (wsMsg.indexOf("error") > 0) {
-                        console.log("error: " + wsMsg.error);
-                    } else {
-                        console.log("message: " + wsMsg);
-                        document.getElementById("output").value = wsMsg;
-                    }
+                    document.getElementById("output").innerHTML += wsMsg + "<br />\r\n";
                 };
             } catch (exception) {
                 console.error(exception);
