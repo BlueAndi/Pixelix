@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  REST pages
+ * @brief  Websocket
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup web
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __RESTAPI_H__
-#define __RESTAPI_H__
+#ifndef __WEBSOCKET_H__
+#define __WEBSOCKET_H__
 
 /******************************************************************************
  * Compile Switches
@@ -45,10 +45,9 @@
  *****************************************************************************/
 #include <ESPAsyncWebServer.h>
 #include <stdint.h>
+#include <Print.h>
 
-/** REST pages installer */
-namespace RestApi
-{
+#include "WebConfig.h"
 
 /******************************************************************************
  * Macros
@@ -59,23 +58,94 @@ namespace RestApi
  *****************************************************************************/
 
 /**
- * REST API version number.
+ * Websocket server
  */
-static const char VERSION[] = "v1";
+class WebSocketSrv : public Print
+{
+public:
+
+    /**
+     * Get websocket server instance.
+     * 
+     * @return Websocket server instance
+     */
+    static WebSocketSrv& getInstance(void)
+    {
+        return m_instance;
+    }
+
+    /**
+     * Initialize websocket server and register it on the webserver.
+     * 
+     * @param[in] srv   Web server
+     */
+    void init(AsyncWebServer& srv);
+
+private:
+
+    static WebSocketSrv m_instance;     /**< Websocket instance */
+
+    AsyncWebSocket      m_webSocket;    /**< Websocket */
+
+    /**
+     * Constructs the websocket server.
+     */
+    WebSocketSrv() :
+        m_webSocket(WebConfig::WEBSOCKET_PATH)
+    {
+    }
+
+    /**
+     * Destroys the websocket server.
+     */
+    ~WebSocketSrv()
+    {
+    }
+
+    /**
+     * Websocket event handler.
+     * 
+     * @param[in] server    Websocket server
+     * @param[in] client    Weboscket client
+     * @param[in] type      Websocket event type
+     * @param[in] arg       Websocket argument
+     * @param[in] data      Websocket data
+     * @param[in] len       Websocket data length in bytes
+     */
+    static void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len);
+
+    /**
+     * Write single data byte to all clients.
+     * 
+     * @param[in] data  Data byte
+     * 
+     * @return Number of written bytes.
+     */
+    size_t write(uint8_t data)
+    {
+        m_webSocket.textAll(&data, 1);
+        return 1;
+    }
+
+    /**
+     * Write data to all clients.
+     * 
+     * @param[in] buffer    Data buffer
+     * @param[in] size      Data buffer size
+     * 
+     * @return Number of written bytes.
+     */
+    size_t write(const uint8_t *buffer, size_t size)
+    {
+        m_webSocket.textAll(const_cast<uint8_t*>(buffer), size);
+        return size;
+    }
+};
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-/**
- * Initialize REST interface and register it on the web server.
- * 
- * @param[in] srv   Web server
- */
-void init(AsyncWebServer& srv);
-
-}
-
-#endif  /* __RESTAPI_H__ */
+#endif  /* __WEBSOCKET_H__ */
 
 /** @} */

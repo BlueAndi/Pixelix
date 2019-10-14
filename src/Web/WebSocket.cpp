@@ -25,14 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  HTML helper function
+ * @brief  Websocket server
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Html.h"
+#include "WebSocket.h"
+
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -41,6 +43,9 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
+/** Get number of array elements. */
+#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
 /******************************************************************************
  * Types and classes
@@ -54,9 +59,23 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize the websocket server instance. */
+WebSocketSrv    WebSocketSrv::m_instance;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void WebSocketSrv::init(AsyncWebServer& srv)
+{
+    /* Register websocket event handler */
+    m_webSocket.onEvent(onEvent);
+
+    /* Register websocket on webserver */
+    srv.addHandler(&m_webSocket);
+
+    return;
+}
 
 /******************************************************************************
  * Protected Methods
@@ -66,27 +85,74 @@
  * Private Methods
  *****************************************************************************/
 
+void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
+{
+    uint16_t    errorId = 0;
+    const char* msg     = "-";
+
+    if ((NULL == server) ||
+        (NULL == client))
+    {
+        return;
+    }
+
+    switch(type)
+    {
+    /* Client connected */
+    case WS_EVT_CONNECT:
+        LOG_INFO("ws[%s][%u] client connected.", server->url(), client->id());
+        client->ping();
+        break;
+        
+    /* Client disconnected */
+    case WS_EVT_DISCONNECT:
+        LOG_INFO("ws[%s][%u] client disconnected.", server->url(), client->id());
+        break;
+        
+    /* Pong received */
+    case WS_EVT_PONG:
+
+        if ((NULL != data) &&
+            (0 < len))
+        {
+            msg = reinterpret_cast<char*>(data);
+        }
+
+        LOG_INFO("ws[%s][%u] pong: %s", server->url(), client->id(), msg);
+        break;
+        
+    /* Remote error */
+    case WS_EVT_ERROR:
+
+        if (NULL != arg)
+        {
+            errorId = *static_cast<uint16_t*>(arg);
+        }
+
+        if ((NULL != data) &&
+            (0 < len))
+        {
+            msg = reinterpret_cast<char*>(data);
+        }
+
+        LOG_INFO("ws[%s][%u] error %u: %s", server->url(), client->id(), errorId, msg);
+        break;
+        
+    /* Data */
+    case WS_EVT_DATA:
+        /* Not supported yet. */
+        break;
+
+    default:
+        break;
+    }
+
+    return;
+}
+
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-String Html::inputText(const String& name, const String& value, uint8_t size, uint8_t min, uint8_t max)
-{
-    String input = "<input name=\"";
-
-    input += name;
-    input += "\" value=\"";
-    input += value;
-    input += "\" size=\"";
-    input += size;
-    input += "\" minlength=\"";
-    input += min;
-    input += "\" maxlength=\"";
-    input += max;
-    input += "\" />";
-
-    return input;
-}
 
 /******************************************************************************
  * Local Functions

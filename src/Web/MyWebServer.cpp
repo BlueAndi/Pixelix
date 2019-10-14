@@ -36,6 +36,7 @@
 #include "WebConfig.h"
 #include "Pages.h"
 #include "RestApi.h"
+#include "WebSocket.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -84,6 +85,9 @@ void MyWebServer::init(void)
     /* Register all web pages */
     Pages::init(gWebServer);
     RestApi::init(gWebServer);
+
+    /* Register websocket */
+    WebSocketSrv::getInstance().init(gWebServer);
 
     return;
 }

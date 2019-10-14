@@ -160,7 +160,7 @@ void Logging::printLogMessage(const char* file, int line, const Logging::LogLeve
         const char*     STR_CUT_OFF_SEQ                 = "...";
         const uint16_t  STR_CUT_OFF_SEQ_LEN             = strlen(STR_CUT_OFF_SEQ);
 
-        written = snprintf(buffer, LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, "|%ld| %s %s:%d %s", millis(), logLevelToString(messageLogLevel), getBaseNameFromPath(file), line, message);
+        written = snprintf(buffer, LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, "|%ld| %s %s:%d %s\r\n", millis(), logLevelToString(messageLogLevel), getBaseNameFromPath(file), line, message);
 
         /* If buffer was too small or any other error happended, it shall be shown in the
         * output string message with the STR_CUT_OFF_SEQ.
@@ -171,7 +171,7 @@ void Logging::printLogMessage(const char* file, int line, const Logging::LogLeve
             strcat(buffer, STR_CUT_OFF_SEQ);
         }
 
-        (void)m_logOutput->println(buffer);
+        (void)m_logOutput->print(buffer);
     }
 }
 
