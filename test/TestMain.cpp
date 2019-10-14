@@ -72,10 +72,7 @@ public:
      * Constructs a logging interface for testing purposes.
      */
     TestLogger():
-        m_callCounterWrite(0u),
-        m_buffer(),
-        m_compareCallCounterWrite(0u),
-        m_data(0u)
+        m_buffer()
     {
         uint16_t i = 0u;
 
@@ -94,8 +91,13 @@ public:
      */
     size_t write(uint8_t data)
     {
-        m_data = data;
-        return 1;
+        NOT_USED(data);
+
+        /* Method is not used at all, because the write(const uint8_t*, size_t size)
+         * is overwritten, which doesn't use the single byte write method.
+         */
+
+        return 0;
     }
 
     /**
@@ -110,15 +112,10 @@ public:
     {
         uint16_t i = 0u;
         
-        if (m_compareCallCounterWrite == m_callCounterWrite)
+        for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
         {
-            for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
-            {
-                m_buffer[i] = buffer[i];
-            }
+            m_buffer[i] = buffer[i];
         }
-        
-        ++m_callCounterWrite;
 
         return size;
     }
@@ -134,15 +131,6 @@ public:
     }
 
     /**
-     * Set call counter of @write.
-     */
-    void setCompareCallCounterWriteAndResetCallCounterWrite(uint8_t callCounter)
-    {
-        m_compareCallCounterWrite = callCounter;
-        m_callCounterWrite = 0;
-    }
-
-    /**
      * Destroys the logging interface.
      */
     ~TestLogger( )
@@ -150,10 +138,7 @@ public:
     }
 
 private:
-    uint8_t m_data;                     /**< Write byte, containing a single byte */
-    uint8_t m_buffer[1024];             /**< Write buffer, containing the logMessage. */
-    uint8_t m_callCounterWrite;         /**< Call counter for @write */
-    uint8_t m_compareCallCounterWrite;  /**< Call counter compare value for @write */
+    uint8_t m_buffer[1024]; /**< Write buffer, containing the logMessage. */
 };
 
 /**
@@ -1337,10 +1322,11 @@ static void testProgressBar(void)
  */
 static void testLogging(void)
 {
-    TestLogger  myTestLogger;
-    uint8_t*    printBuffer     = NULL;
-    String      testString      = "TestMessageAsString";
-    char        expectedLogMessage[50];
+    TestLogger      myTestLogger;
+    uint8_t*        printBuffer     = NULL;
+    const char*     TEST_STRING_1   = "TestMessage";
+    const String    TEST_STRING_2   = "TestMessageAsString";
+    char            expectedLogMessage[52];
     
     /* Check intial LogLevel. */
     Logging::getInstance().init(&myTestLogger);
@@ -1352,30 +1338,20 @@ static void testLogging(void)
     
     /* Set LogLevel to LOGLEVEL_ERROR and trigger a LOG_INFO message. */
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_ERROR);
-    myTestLogger.setCompareCallCounterWriteAndResetCallCounterWrite(0);
-    LOG_INFO("TestMessage");
+    LOG_INFO(TEST_STRING_1);
     snprintf(expectedLogMessage, sizeof(expectedLogMessage), "");
     printBuffer = myTestLogger.getBuffer();
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
-    /* Set callCounterWrite to the logMessage. */
-    myTestLogger.setCompareCallCounterWriteAndResetCallCounterWrite(0);
-    LOG_ERROR("TestMessage");
-    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d TestMessage", (__LINE__ -1));
-
+    /* Check expected error log output, with type const char* string. */
+    LOG_ERROR(TEST_STRING_1);
+    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d %s\r\n", (__LINE__ - 1), TEST_STRING_1);
     printBuffer = myTestLogger.getBuffer();
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
-    /* Set callCounterWrite to \r\n after the logMessage. */
-    myTestLogger.setCompareCallCounterWriteAndResetCallCounterWrite(1);
-    LOG_ERROR("TestMessage");
-    printBuffer = myTestLogger.getBuffer();
-    TEST_ASSERT_EQUAL_STRING("\r\n", printBuffer);
-
-    /* Set callCounterWrite to the logMessage given as string. */
-    myTestLogger.setCompareCallCounterWriteAndResetCallCounterWrite(0);
-    LOG_ERROR(testString);
-    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d TestMessageAsString", (__LINE__ -1));
+    /* Check expected error log output, with type const String string. */
+    LOG_ERROR(TEST_STRING_2);
+    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d %s\r\n", (__LINE__ - 1), TEST_STRING_2.c_str());
     printBuffer = myTestLogger.getBuffer();
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
