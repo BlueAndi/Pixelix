@@ -45,6 +45,7 @@
 #include "Version.h"
 #include "AmbientLightSensor.h"
 #include "MyWebServer.h"
+#include "UpdateMgr.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -138,6 +139,9 @@ void InitState::entry(StateMachine& sm)
 
     /* Initialize webserver */
     MyWebServer::init();
+
+    /* Initialize over-the-air update server */
+    UpdateMgr::getInstance().init();
 
     /* Don't store the wifi configuration in the NVS.
      * This seems to cause a reset after a client connected to the access point.

@@ -148,10 +148,10 @@ void APState::entry(StateMachine& sm)
          */
         MyWebServer::begin();
 
-        /* Start over-the-air update possibility. */
-        UpdateMgr::getInstance().init();
+        /* Start over-the-air update server. */
+        UpdateMgr::getInstance().begin();
 
-        /* Show SSID and ip address  */
+        /* Show SSID and ip address */
         String infoStr = "SSID: ";
         infoStr += WIFI_AP_SSID;
         infoStr += " IP: ";
@@ -174,7 +174,12 @@ void APState::process(StateMachine& sm)
 
 void APState::exit(StateMachine& sm)
 {
-    /* Nothing to do. */
+    /* Stop webserver */
+    MyWebServer::end();
+
+    /* Stop over-the-air update server */
+    UpdateMgr::getInstance().end();
+    
     return;
 }
 

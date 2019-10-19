@@ -62,7 +62,7 @@ Build and upload the software via _Project Tasks -> Upload_ and the filesystem v
 Set the following in the _platformio.ini_ configuration file:
 * Set _upload_protocol_ to _espota_.
 * Set _upload_port_ to the device ip-address.
-* Set _upload_flags_ to _--port=3232_
+* Set _upload_flags_ to _--port=3232_ and set the password via _--auth=XXX_.
 
 Build and upload the software via _Project Tasks -> Upload_ and the filesystem via _Project Tasks -> Upload File System image_.
 

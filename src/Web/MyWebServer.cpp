@@ -100,6 +100,14 @@ void MyWebServer::begin(void)
     return;
 }
 
+void MyWebServer::end(void)
+{
+    /* Stop webserver */
+    gWebServer.end();
+
+    return;
+}
+
 AsyncWebServer& MyWebServer::getInstance(void)
 {
     return gWebServer;

@@ -86,8 +86,8 @@ void ConnectedState::entry(StateMachine& sm)
      */
     MyWebServer::begin();
 
-    /* Start over-the-air update possibility. */
-    UpdateMgr::getInstance().init();
+    /* Start over-the-air update server. */
+    UpdateMgr::getInstance().begin();
     
     /* Show hostname and don't believe its the same as set some lines above. */
     infoStr += WiFi.getHostname();
@@ -123,7 +123,12 @@ void ConnectedState::process(StateMachine& sm)
 
 void ConnectedState::exit(StateMachine& sm)
 {
-    /* Nothing to do. */
+    /* Stop webserver */
+    MyWebServer::end();
+
+    /* Stop over-the-air update server */
+    UpdateMgr::getInstance().end();
+    
     return;
 }
 

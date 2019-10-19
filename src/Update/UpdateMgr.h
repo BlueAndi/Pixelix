@@ -78,6 +78,16 @@ public:
     void init(void);
 
     /**
+     * Start over-the-air server.
+     */
+    void begin(void);
+
+    /**
+     * Stop over-the-air server.
+     */
+    void end(void);
+
+    /**
      * Is an update in progress?
      * 
      * @return If an update is running it returns true otherwise false.

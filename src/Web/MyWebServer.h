@@ -77,6 +77,11 @@ void init(void);
 void begin(void);
 
 /**
+ * Stop web server.
+ */
+void end(void);
+
+/**
  * Get web server instance.
  * 
  * @return Web server instance.

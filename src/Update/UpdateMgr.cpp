@@ -78,8 +78,7 @@ UpdateMgr       UpdateMgr::m_instance;
 void UpdateMgr::init(void)
 {
     /* Prepare over the air update. */
-    ArduinoOTA.begin();
-    ArduinoOTA.setPassword(OTA_PASSWORD);
+    ArduinoOTA.setPassword(OTA_PASSWORD); /* Note, password must be set before the update server is running! */
     ArduinoOTA.onStart(onStart);
     ArduinoOTA.onEnd(onEnd);
     ArduinoOTA.onProgress(onProgress);
@@ -91,6 +90,20 @@ void UpdateMgr::init(void)
 
     m_isInitialized = true;
 
+    return;
+}
+
+void UpdateMgr::begin(void)
+{
+    /* Start over-the-air server */
+    ArduinoOTA.begin();
+    return;
+}
+
+void UpdateMgr::end(void)
+{
+    /* Stop over-the-air server */
+    ArduinoOTA.end();
     return;
 }
 
@@ -253,12 +266,19 @@ void UpdateMgr::onError(ota_error_t error)
     }
 
     LOG_INFO(infoStr);
-    DisplayMgr::getInstance().showSysMsg(infoStr);
 
-    /* Give the user a chance to read it. */
-    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+    /* Reset only if the error happened during update.
+     * Security note: This avoids a reset in case the authentication failed.
+     */
+    if (true == m_instance.m_updateIsRunning)
+    {
+        DisplayMgr::getInstance().showSysMsg(infoStr);
 
-    m_instance.restart();
+        /* Give the user a chance to read it. */
+        DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+
+        m_instance.restart();
+    }
 
     return;
 }
