@@ -115,7 +115,8 @@ void UpdateMgr::process(void)
 UpdateMgr::UpdateMgr() :
     m_isInitialized(false),
     m_updateIsRunning(false),
-    m_progressBar()
+    m_progressBar(),
+    m_progress(0u)
 {
 }
 
@@ -131,7 +132,8 @@ void UpdateMgr::onStart(void)
     /* Stop webserver */
     MyWebServer::getInstance().end();
 
-    m_instance.m_updateIsRunning = true;
+    m_instance.m_updateIsRunning    = true;
+    m_instance.m_progress           = 0u;
 
     if (U_FLASH == ArduinoOTA.getCommand())
     {
@@ -205,9 +207,14 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 {
     const uint32_t  PROGRESS_PERCENT    = (progress * 100u) / total;
 
-    LOG_INFO(String("Progress: ") + PROGRESS_PERCENT + "%");
+    if (PROGRESS_PERCENT != m_instance.m_progress)
+    {
+        LOG_INFO(String("Progress: ") + PROGRESS_PERCENT + "%");
 
-    m_instance.m_progressBar.setProgress(static_cast<uint8_t>(PROGRESS_PERCENT));
+        m_instance.m_progressBar.setProgress(static_cast<uint8_t>(PROGRESS_PERCENT));
+
+        m_instance.m_progress = PROGRESS_PERCENT;
+    }
 
     return;
 }

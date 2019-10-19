@@ -148,6 +148,9 @@ void APState::entry(StateMachine& sm)
          */
         MyWebServer::begin();
 
+        /* Start over-the-air update possibility. */
+        UpdateMgr::getInstance().init();
+
         /* Show SSID and ip address  */
         String infoStr = "SSID: ";
         infoStr += WIFI_AP_SSID;

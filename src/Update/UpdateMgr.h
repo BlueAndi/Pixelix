@@ -113,6 +113,12 @@ private:
     ProgressBar         m_progressBar;
 
     /**
+     * Current update status in percent. Only used to avoid permanent logging
+     * output during status update.
+     */
+    uint32_t            m_progress;
+
+    /**
      * Constructs the update manager.
      */
     UpdateMgr();

@@ -42,11 +42,22 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
         * mingw32-libmingwex-dll
 2. Place ```c:\mingw\bin``` on path.
 
-### Compiling Project
+### Build Project
 1. Load workspace in VSCode.
 2. Change to PlatformIO toolbar.
 3. _Project Tasks -> Build_ or via hotkey ctrl-alt-b
 4. Running tests with _Project Tasks -> env:native -> Test_
+
+### Over-the-air Update
+1. Add the ip address of the device to _upload_port_ in the _platformio.ini_ configuration file.
+
+#### Update the software
+1. The _--spiffs_ parameter must be disabled in _upload_flags_ in the _platformio.ini_ configuration file.
+2. Build and upload via _Project Tasks -> Verbose Upload_
+
+#### Update only the filesystem (SPIFFS)
+1. The _--spiffs_ parameter must be enabled in _upload_flags_ in the _platformio.ini_ configuration file.
+2. Build and upload via _Project Tasks -> Verbose Upload_
 
 ### Used Libraries
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.

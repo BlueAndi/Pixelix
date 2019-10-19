@@ -86,6 +86,9 @@ void ConnectedState::entry(StateMachine& sm)
      */
     MyWebServer::begin();
 
+    /* Start over-the-air update possibility. */
+    UpdateMgr::getInstance().init();
+    
     /* Show hostname and don't believe its the same as set some lines above. */
     infoStr += WiFi.getHostname();
     LOG_INFO(infoStr);
