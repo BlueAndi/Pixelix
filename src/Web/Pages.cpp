@@ -41,6 +41,8 @@
 #include <WiFi.h>
 #include <Esp.h>
 #include <SPIFFS.h>
+#include <Update.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -79,6 +81,13 @@ static String settingsPageProcessor(const String& var);
 
 static void devPage(AsyncWebServerRequest* request);
 static String devPageProcessor(const String& var);
+
+static void updatePage(AsyncWebServerRequest* request);
+static String updatePageProcessor(const String& var);
+
+static void uploadPage(AsyncWebServerRequest* request);
+static String uploadPageProcessor(const String& var);
+static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 
 /******************************************************************************
  * Local Variables
@@ -135,6 +144,8 @@ void Pages::init(AsyncWebServer& srv)
     srv.on("/network", HTTP_GET, networkPage);
     srv.on("/settings", HTTP_GET, settingsPage);
     srv.on("/settings", HTTP_POST, settingsPage);
+    srv.on("/update", HTTP_GET, updatePage);
+    srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
 
     /* Serve files from filesystem */
     srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
@@ -617,4 +628,174 @@ static String devPageProcessor(const String& var)
     }
 
     return result;
+}
+
+/**
+ * Page for software update.
+ * 
+ * @param[in] request   HTTP request
+ */
+static void updatePage(AsyncWebServerRequest* request)
+{
+    if (NULL == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/update.html", "text/html", false, updatePageProcessor);
+
+    return;
+}
+
+/**
+ * Processor for update page template.
+ * It is responsible for the data binding.
+ * 
+ * @param[in] var   Name of variable in the template
+ */
+static String updatePageProcessor(const String& var)
+{
+    return commonPageProcessor(var);
+}
+
+/**
+ * Page for upload result.
+ * 
+ * @param[in] request   HTTP request
+ */
+static void uploadPage(AsyncWebServerRequest* request)
+{
+    if (NULL == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/upload.html", "text/html", false, uploadPageProcessor);
+
+    return;
+}
+
+/**
+ * Processor for upload page template.
+ * It is responsible for the data binding.
+ * 
+ * @param[in] var   Name of variable in the template
+ */
+static String uploadPageProcessor(const String& var)
+{
+    String  result;
+
+    if (var == "UPLOAD_RESULT")
+    {
+        if (true == Update.hasError())
+        {
+            result = "Upload failed.";
+        }
+        else
+        {
+            result = "Upload successful.";
+        }
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
+}
+
+/**
+ * File upload handler.
+ * 
+ * @param[in] request   HTTP request.
+ * @param[in] filename  Name of the uploaded file.
+ * @param[in] index     Current file offset.
+ * @param[in] data      Next data part of file, starting at offset.
+ * @param[in] len       Data part size in byte.
+ * @param[in] final     Is final packet or not.
+ */
+static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+    bool            isError     = false;
+    static uint32_t progress    = 0u;
+
+    /* Begin of upload? */
+    if (0 == index)
+    {
+        /* Upload firmware or filesystem? */
+        int cmd = (filename == "spiffs.bin") ? U_SPIFFS : U_FLASH;
+
+        LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
+
+        /* TODO request->contentLength() contains 200 bytes more, than which will be written.
+         * How to calculate it correct?
+         */
+        if (false == Update.begin(request->contentLength(), cmd))
+        {
+            LOG_ERROR("Upload failed: %s", Update.errorString());
+            isError = true;
+        }
+
+        progress = 0u;
+    }
+
+    if (true == Update.isRunning())
+    {
+        if(len != Update.write(data, len))
+        {
+            LOG_ERROR("Upload failed: %s", Update.errorString());
+            isError = true;
+        }
+        else
+        {
+            uint32_t progressNext = (Update.progress() * 100) / Update.size();
+
+            /* Don't spam the console and output only if something changed. */
+            if (progress != progressNext)
+            {
+                LOG_INFO("Upload progress %u %%", progressNext);
+                progress = progressNext;
+            }
+        }
+
+        /* Upload finished? */
+        if (true == final)
+        {
+            if (false == Update.end(true))
+            {
+                LOG_ERROR("Upload failed: %s", Update.errorString());
+                isError = true;
+            }
+            else
+            {
+                LOG_INFO("Upload of %s finished.", filename.c_str());
+
+                /* TODO Restart ESP */
+            }
+        }
+    }
+
+    if (true == isError)
+    {
+        Update.abort();
+        request->send(Html::STATUS_CODE_BAD_REQ, "plain/text", "Error");
+    }
+
+    return;
 }
