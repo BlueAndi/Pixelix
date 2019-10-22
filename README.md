@@ -7,6 +7,10 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 ## Motivation
 Having a remote display to show any kind of information, running 24/7 reliable.
+Connected over wifi to the local network, it can be controlled via REST API or websocket.
+
+## Overview
+See [Overview.pdf](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/Overview.pdf).
 
 ## Requirements
 See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/REQUIREMENTS.md).
@@ -84,10 +88,13 @@ Build and upload the software via _Project Tasks -> Upload_ and the filesystem v
 ### Structure
 
 <pre>
++---data            (All filesystem files (SPIFFS))
 +---doc             (Documentation)
     +---datasheets  (Datasheets of electronic parts)
     +---design      (Design related documents)
+    +---doxygen     (Sourcecode documentation)
     +---eagle-libs  (Eagle libraries)
+    +---pcb         (Electronic PCB images)
     \---schematics  (Schematics)
 +---include         (Include files)
 +---lib             (Project specific (private) libraries)
