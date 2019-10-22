@@ -52,8 +52,8 @@
 
                 alert("No file selected.");
 
-            } else if (("firmware.bin" !== file.name) &&
-                       ("spiffs.bin" !== file.name)) {
+            } else if (("%FIRMWARE_FILENAME%" !== file.name) &&
+                       ("%FILESYSTEM_FILENAME%" !== file.name)) {
 
                 alert("Unknown file: " + file.name);
 
@@ -91,7 +91,7 @@
 </div>
 <div class="main">
     <h2>Update</h2>
-    <p>Upload <u>firmware.bin</u> file for software update or <u>spiffs.bin</u> for updating the filesystem.</p>
+    <p>Upload <u>%FIRMWARE_FILENAME%</u> file for software update or <u>%FILESYSTEM_FILENAME%</u> for updating the filesystem.</p>
     <p>
         <input type="file" name="file" id="inputFile" accept=".bin" /><br />
         <input type="button" value="Update" onclick="upload();" />

@@ -25,24 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  System state: Restart
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "ConnectedState.h"
-#include "DisplayMgr.h"
-#include "UpdateMgr.h"
-#include "MyWebServer.h"
-
-#include "ConnectingState.h"
 #include "RestartState.h"
 
-#include <Arduino.h>
-#include <WiFi.h>
 #include <Logging.h>
+#include <SPIFFS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -64,83 +57,34 @@
  * Local Variables
  *****************************************************************************/
 
-/* Connected state instance */
-ConnectedState  ConnectedState::m_instance;
+/* Restart state instance */
+RestartState RestartState::m_instance;
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void ConnectedState::entry(StateMachine& sm)
+void RestartState::entry(StateMachine& sm)
 {
-    String infoStr = "Hostname: ";
+    LOG_INFO("Going in restart state.");
 
-    LOG_INFO("Connected.");
-
-    /* Set hostname */
-    if (false == WiFi.setHostname("pixelix"))
-    {
-        LOG_WARNING("Failed to set hostname.");
-    }
-
-    /* Start webserver after a wifi connection is established.
-     * If its done earlier, it will cause an exception.
-     */
-    MyWebServer::begin();
-
-    /* Start over-the-air update server. */
-    UpdateMgr::getInstance().begin();
-    
-    /* Show hostname and don't believe its the same as set some lines above. */
-    infoStr += WiFi.getHostname();
-    LOG_INFO(infoStr);
-    DisplayMgr::getInstance().showSysMsg(infoStr);
-    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
-
-    /* Show ip address */
-    LOG_INFO(String("IP: ") + WiFi.localIP().toString());
-
-    /* Enable slots */
-    DisplayMgr::getInstance().enableSlots(true);
-    DisplayMgr::getInstance().startRotating(true);
-    
-    return;
-}
-
-void ConnectedState::process(StateMachine& sm)
-{
-    /* Handle update, there may be one in the background. */
-    UpdateMgr::getInstance().process();
-
-    /* Restart requested by update manager? This may happen after a successful received
-     * new firmware or filesystem binary.
-     */
-    if (true == UpdateMgr::getInstance().isRestartRequested())
-    {
-        sm.setState(RestartState::getInstance());
-    }
-    /* Connection lost? */
-    else if (false == WiFi.isConnected())
-    {
-        LOG_INFO("Connection lost.");
-
-        sm.setState(ConnectingState::getInstance());
-    }
+    /* Unmount filesystem */
+    SPIFFS.end();
 
     return;
 }
 
-void ConnectedState::exit(StateMachine& sm)
+void RestartState::process(StateMachine& sm)
 {
-    /* Stop webserver */
-    MyWebServer::end();
-
-    /* Stop over-the-air update server */
-    UpdateMgr::getInstance().end();
+    /* Restart */
+    ESP.restart();
     
-    /* Disconnect all connections */
-    (void)WiFi.disconnect();
+    return;
+}
 
+void RestartState::exit(StateMachine& sm)
+{
+    /* Nothing to do. */
     return;
 }
 

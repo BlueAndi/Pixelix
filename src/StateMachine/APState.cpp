@@ -34,10 +34,12 @@
  *****************************************************************************/
 #include "APState.h"
 #include <Arduino.h>
-#include "ErrorState.h"
 #include "DisplayMgr.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
+
+#include "ErrorState.h"
+#include "RestartState.h"
 
 #include <WiFi.h>
 #include <Logging.h>
@@ -129,7 +131,18 @@ void APState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
-    /* Setup wifi access point failed? */
+    /* Set hostname */
+    else if (false == WiFi.softAPsetHostname("pixelix"))
+    {
+        String errorStr = "Can't set AP hostname.";
+
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        DisplayMgr::getInstance().showSysMsg(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
+    /* Setup wifi access point. */
     else if (false == WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSPHRASE))
     {
         String errorStr = "Setup wifi access point failed.";
@@ -169,6 +182,14 @@ void APState::process(StateMachine& sm)
     /* Handle update, there may be one in the background. */
     UpdateMgr::getInstance().process();
 
+    /* Restart requested by update manager? This may happen after a successful received
+     * new firmware or filesystem binary.
+     */
+    if (true == UpdateMgr::getInstance().isRestartRequested())
+    {
+        sm.setState(RestartState::getInstance());
+    }
+
     return;
 }
 
@@ -179,6 +200,9 @@ void APState::exit(StateMachine& sm)
 
     /* Stop over-the-air update server */
     UpdateMgr::getInstance().end();
+
+    /* Disconnect all connections */
+    (void)WiFi.softAPdisconnect();
     
     return;
 }

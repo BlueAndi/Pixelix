@@ -37,6 +37,7 @@
 #include "WebConfig.h"
 #include "Settings.h"
 #include "Version.h"
+#include "UpdateMgr.h"
 
 #include <WiFi.h>
 #include <Esp.h>
@@ -110,6 +111,12 @@ static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
 
 /** Max. wifi passphrase length */
 static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
+
+/** Firmware binary filename, used for update. */
+static const char*      FIRMWARE_FILENAME           = "firmware.bin";
+
+/** Filesystem binary filename, used for update. */
+static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
 
 /** Dialog flag, whether the dialog on the settings page shall be shown or not. */
 static bool             gShowDialog = false;
@@ -380,18 +387,32 @@ static String networkPageProcessor(const String& var)
     }
     else if (var == "HOSTNAME")
     {
+        const char* hostname = NULL;
+
         if (WIFI_MODE_AP == WiFi.getMode())
         {
-            result = WiFi.softAPgetHostname();
+            hostname = WiFi.softAPgetHostname();
         }
         else
         {
-            result = WiFi.getHostname();
+            hostname = WiFi.getHostname();
+        }
+
+        if (NULL != hostname)
+        {
+            result = hostname;
         }
     }
     else if (var == "IPV4")
     {
-        result = WiFi.localIP().toString();
+        if (WIFI_MODE_AP == WiFi.getMode())
+        {
+            result = WiFi.softAPIP().toString();
+        }
+        else
+        {
+            result = WiFi.localIP().toString();
+        }
     }
     else
     {
@@ -663,7 +684,22 @@ static void updatePage(AsyncWebServerRequest* request)
  */
 static String updatePageProcessor(const String& var)
 {
-    return commonPageProcessor(var);
+    String  result;
+
+    if (var == "FIRMWARE_FILENAME")
+    {
+        result = FIRMWARE_FILENAME;
+    }
+    else if (var == "FILESYSTEM_FILENAME")
+    {
+        result = FILESYSTEM_FILENAME;
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
 }
 
 /**
@@ -739,7 +775,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     if (0 == index)
     {
         /* Upload firmware or filesystem? */
-        int cmd = (filename == "spiffs.bin") ? U_SPIFFS : U_FLASH;
+        int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
 
         LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
 
@@ -769,7 +805,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             /* Don't spam the console and output only if something changed. */
             if (progress != progressNext)
             {
-                LOG_INFO("Upload progress %u %%", progressNext);
+                LOG_INFO("Upload progress: %u %%", progressNext);
                 progress = progressNext;
             }
         }
@@ -786,7 +822,8 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             {
                 LOG_INFO("Upload of %s finished.", filename.c_str());
 
-                /* TODO Restart ESP */
+                /* Request a restart */
+                UpdateMgr::getInstance().reqRestart();
             }
         }
     }

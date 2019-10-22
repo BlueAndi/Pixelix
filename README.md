@@ -58,13 +58,20 @@ Set the following in the _platformio.ini_ configuration file:
 
 Build and upload the software via _Project Tasks -> Upload_ and the filesystem via _Project Tasks -> Upload File System image_.
 
-#### Update via over-the-air
+#### Update over-the-air via espota
 Set the following in the _platformio.ini_ configuration file:
 * Set _upload_protocol_ to _espota_.
 * Set _upload_port_ to the device ip-address.
 * Set _upload_flags_ to _--port=3232_ and set the password via _--auth=XXX_.
 
 Build and upload the software via _Project Tasks -> Upload_ and the filesystem via _Project Tasks -> Upload File System image_.
+
+#### Update via browser
+1. Build and the software via _Project Tasks -> Build_ and the filesystem via _Project Tasks -> Upload File System image_.
+2. Connect to the device.
+3. Open browser add enter ip address of the device.
+4. Jump to Update site.
+5. Select firmware binary (firmware.bin) or filesystem binary (spiffs.bin) and click on upload.
 
 ### Used Libraries
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.

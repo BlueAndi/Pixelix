@@ -98,9 +98,30 @@ public:
     }
 
     /**
+     * Is a restart requested?
+     * This will be requested after a successful received new firmware
+     * or filesystem.
+     * 
+     * @return If restart is requested, it will return true otherwise false.
+     */
+    bool isRestartRequested(void) const
+    {
+        return m_isRestartReq;
+    }
+
+    /**
      * Handle over-the-air update.
      */
     void process(void);
+
+    /**
+     * Request a restart.
+     */
+    void reqRestart(void)
+    {
+        m_isRestartReq = true;
+        return;
+    }
 
     /** Over-the-air update password */
     static const char*      OTA_PASSWORD;
@@ -127,6 +148,9 @@ private:
      * output during status update.
      */
     uint32_t            m_progress;
+
+    /** Restart requested? */
+    bool                m_isRestartReq;
 
     /**
      * Constructs the update manager.
@@ -163,10 +187,6 @@ private:
      */
     static void onError(ota_error_t error);
 
-    /**
-     * Restart.
-     */
-    void restart(void);
 };
 
 /******************************************************************************

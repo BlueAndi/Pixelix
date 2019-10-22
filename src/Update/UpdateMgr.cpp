@@ -83,10 +83,7 @@ void UpdateMgr::init(void)
     ArduinoOTA.onEnd(onEnd);
     ArduinoOTA.onProgress(onProgress);
     ArduinoOTA.onError(onError);
-
-    LOG_INFO(String("OTA hostname: ") + ArduinoOTA.getHostname());
-    LOG_INFO(String("Sketch size: ") + ESP.getSketchSize() + " bytes");
-    LOG_INFO(String("Free size: ") + ESP.getFreeSketchSpace() + " bytes");
+    ArduinoOTA.setHostname("pixelix");
 
     m_isInitialized = true;
 
@@ -97,6 +94,11 @@ void UpdateMgr::begin(void)
 {
     /* Start over-the-air server */
     ArduinoOTA.begin();
+
+    LOG_INFO(String("OTA hostname: ") + ArduinoOTA.getHostname());
+    LOG_INFO(String("Sketch size: ") + ESP.getSketchSize() + " bytes");
+    LOG_INFO(String("Free size: ") + ESP.getFreeSketchSpace() + " bytes");
+
     return;
 }
 
@@ -129,7 +131,8 @@ UpdateMgr::UpdateMgr() :
     m_isInitialized(false),
     m_updateIsRunning(false),
     m_progressBar(),
-    m_progress(0u)
+    m_progress(0u),
+    m_isRestartReq(false)
 {
 }
 
@@ -211,7 +214,8 @@ void UpdateMgr::onEnd(void)
     /* Give the user a chance to read it. */
     DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
 
-    m_instance.restart();
+    /* Request a restart */
+    m_instance.reqRestart();
 
     return;
 }
@@ -222,7 +226,7 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 
     if (PROGRESS_PERCENT != m_instance.m_progress)
     {
-        LOG_INFO(String("Progress: ") + PROGRESS_PERCENT + "%");
+        LOG_INFO(String("Upload progress: ") + PROGRESS_PERCENT + "%");
 
         m_instance.m_progressBar.setProgress(static_cast<uint8_t>(PROGRESS_PERCENT));
 
@@ -277,32 +281,9 @@ void UpdateMgr::onError(ota_error_t error)
         /* Give the user a chance to read it. */
         DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
 
-        m_instance.restart();
+        /* Request a restart */
+        m_instance.reqRestart();
     }
-
-    return;
-}
-
-void UpdateMgr::restart(void)
-{
-    wifi_mode_t wifiMode = WiFi.getMode();
-
-    /* Disconnect first all connections */
-    if (WIFI_MODE_STA == wifiMode)
-    {
-        (void)WiFi.disconnect();
-    }
-    else if ((WIFI_MODE_AP == wifiMode) ||
-             (WIFI_MODE_APSTA == wifiMode))
-    {
-        (void)WiFi.softAPdisconnect();
-    }
-
-    /* Unmount the filesystem. */
-    SPIFFS.end();
-
-    /* Restart now! */
-    ESP.restart();
 
     return;
 }
