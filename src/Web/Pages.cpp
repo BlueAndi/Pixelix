@@ -77,6 +77,7 @@ static String indexPageProcessor(const String& var);
 static void networkPage(AsyncWebServerRequest* request);
 static String networkPageProcessor(const String& var);
 
+static void addSettingsData(String& dst, const char* title, const char* name, const char* value, uint8_t size, uint8_t minLen, uint8_t maxLen);
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
 
@@ -95,10 +96,19 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
  *****************************************************************************/
 
 /** Name of the input field for wifi SSID. */
-static const char*      FORM_INPUT_NAME_SSID        = "ssid";
+static const char*      FORM_INPUT_NAME_WIFI_SSID           = "wifi_ssid";
 
 /** Name of the input field for wifi passphrase. */
-static const char*      FORM_INPUT_NAME_PASSPHRASE  = "passphrase";
+static const char*      FORM_INPUT_NAME_WIFI_PASSPHRASE     = "wifi_passphrase";
+
+/** Name of the input field for wifi access point SSID. */
+static const char*      FORM_INPUT_NAME_WIFI_AP_SSID        = "wifi_ap_ssid";
+
+/** Name of the input field for wifi access point passphrase. */
+static const char*      FORM_INPUT_NAME_WIFI_AP_PASSPHRASE  = "wifi_ap_passphrase";
+
+/** Name of the input field for hostname. */
+static const char*      FORM_INPUT_NAME_HOSTNAME            = "hostname";
 
 /** Min. wifi SSID length */
 static const uint8_t    MIN_SSID_LENGTH             = 0u;
@@ -112,20 +122,17 @@ static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
 /** Max. wifi passphrase length */
 static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
 
+/** Min. hostname length */
+static const uint8_t    MIN_HOSTNAME_LENGTH         = 8u;
+
+/** Max. hostname length */
+static const uint8_t    MAX_HOSTNAME_LENGTH         = 32u;
+
 /** Firmware binary filename, used for update. */
 static const char*      FIRMWARE_FILENAME           = "firmware.bin";
 
 /** Filesystem binary filename, used for update. */
 static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
-
-/** Dialog flag, whether the dialog on the settings page shall be shown or not. */
-static bool             gShowDialog = false;
-
-/** Dialog title, used for settings page. */
-static String           gDialogTitle;
-
-/** Dialog text, used for settings page. */
-static String           gDialogText;
 
 /******************************************************************************
  * Public Methods
@@ -445,80 +452,220 @@ static void settingsPage(AsyncWebServerRequest* request)
     /* Store settings? */
     if (0 < request->args())
     {
-        String  ssid;
-        String  passphrase;
-        bool    isError     = false;
+        bool    isError = false;
+        String  jsonRsp;
 
-        gDialogText = "";
-
-        /* Check for the necessary arguments. */
-        if (false == request->hasArg(FORM_INPUT_NAME_SSID))
+        if (true == request->hasArg(FORM_INPUT_NAME_WIFI_SSID))
         {
-            isError = true;
-            gDialogText += "<p>SSID missing.</p>\r\n";
-        }
-
-        if (false == request->hasArg(FORM_INPUT_NAME_PASSPHRASE))
-        {
-            isError = true;
-            gDialogText += "<p>Passphrase missing.</p>\r\n";
-        }
-
-        /* Arguments are available */
-        if (false == isError)
-        {
-            ssid        = request->arg(FORM_INPUT_NAME_SSID);
-            passphrase  = request->arg(FORM_INPUT_NAME_PASSPHRASE);
+            String  wifiSSID = request->arg(FORM_INPUT_NAME_WIFI_SSID);
 
             /* Check arguments min. and max. lengths */
-            if (MIN_SSID_LENGTH > ssid.length())
+            if (MIN_SSID_LENGTH > wifiSSID.length())
             {
                 isError = true;
-                gDialogText += "<p>SSID too short.</p>";
+                jsonRsp = "{ \"status\": 1, \"error\": \"SSID too short.\" }";
             }
-            else if (MAX_SSID_LENGTH < ssid.length())
+            else if (MAX_SSID_LENGTH < wifiSSID.length())
             {
                 isError = true;
-                gDialogText += "<p>SSID too long.</p>";
+                jsonRsp = "{ \"status\": 1, \"error\": \"SSID too long.\" }";
             }
+            else
+            {
+                if (false == Settings::getInstance().open(false))
+                {
+                    LOG_WARNING("Couldn't open settings.");
 
-            if (MIN_PASSPHRASE_LENGTH > passphrase.length())
-            {
-                isError = true;
-                gDialogText += "<p>Passphrase too short.</p>";
-            }
-            else if (MAX_PASSPHRASE_LENGTH < passphrase.length())
-            {
-                isError = true;
-                gDialogText += "<p>Passphrase too long.</p>";
-            }
-
-            /* Arguments are valid, store them. */
-            if (false == isError)
-            {
-                Settings::getInstance().open(false);
-                Settings::getInstance().setWifiSSID(ssid);
-                Settings::getInstance().setWifiPassphrase(passphrase);
-                Settings::getInstance().close();
-
-                gDialogText = "<p>Successful saved.</p>";
+                    isError = true;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
+                }
+                else
+                {
+                    Settings::getInstance().setWifiSSID(wifiSSID);
+                    Settings::getInstance().close();
+                }
             }
         }
-
-        if (false == isError)
+        else if (true == request->hasArg(FORM_INPUT_NAME_WIFI_PASSPHRASE))
         {
-            gDialogTitle = "Info";
+            String  wifiPassphrase = request->arg(FORM_INPUT_NAME_WIFI_PASSPHRASE);
+
+            /* Check arguments min. and max. lengths */
+            if (MIN_PASSPHRASE_LENGTH > wifiPassphrase.length())
+            {
+                isError = true;
+                jsonRsp = "{ \"status\": 1, \"error\": \"Passphrase too short.\" }";
+            }
+            else if (MAX_PASSPHRASE_LENGTH < wifiPassphrase.length())
+            {
+                isError = true;
+                jsonRsp = "{ \"status\": 1, \"error\": \"Passphrase too long.\" }";
+            }
+            else
+            {
+                if (false == Settings::getInstance().open(false))
+                {
+                    LOG_WARNING("Couldn't open settings.");
+
+                    isError = true;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
+                }
+                else
+                {
+                    Settings::getInstance().setWifiPassphrase(wifiPassphrase);
+                    Settings::getInstance().close();
+                }
+            }
+        }
+        else if (true == request->hasArg(FORM_INPUT_NAME_WIFI_AP_SSID))
+        {
+            String  wifiApSSID = request->arg(FORM_INPUT_NAME_WIFI_AP_SSID);
+
+            /* Check arguments min. and max. lengths */
+            if (MIN_SSID_LENGTH > wifiApSSID.length())
+            {
+                isError = true;
+                jsonRsp = "{ \"status\": 1, \"error\": \"SSID too short.\" }";
+            }
+            else if (MAX_SSID_LENGTH < wifiApSSID.length())
+            {
+                isError = true;
+                jsonRsp = "{ \"status\": 1, \"error\": \"SSID too long.\" }";
+            }
+            else
+            {
+                if (false == Settings::getInstance().open(false))
+                {
+                    LOG_WARNING("Couldn't open settings.");
+
+                    isError = true;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
+                }
+                else
+                {
+                    Settings::getInstance().setWifiApSSID(wifiApSSID);
+                    Settings::getInstance().close();
+                }
+            }
+        }
+        else if (true == request->hasArg(FORM_INPUT_NAME_WIFI_AP_PASSPHRASE))
+        {
+            String  wifiApPassphrase = request->arg(FORM_INPUT_NAME_WIFI_AP_PASSPHRASE);
+
+            /* Check arguments min. and max. lengths */
+            if (MIN_PASSPHRASE_LENGTH > wifiApPassphrase.length())
+            {
+                isError = true;
+                jsonRsp = "{ \"status\": 1, \"error\": \"Passphrase too short.\" }";
+            }
+            else if (MAX_PASSPHRASE_LENGTH < wifiApPassphrase.length())
+            {
+                isError = true;
+                jsonRsp = "{ \"status\": 1, \"error\": \"Passphrase too long.\" }";
+            }
+            else
+            {
+                if (false == Settings::getInstance().open(false))
+                {
+                    LOG_WARNING("Couldn't open settings.");
+
+                    isError = true;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
+                }
+                else
+                {
+                    Settings::getInstance().setWifiApPassphrase(wifiApPassphrase);
+                    Settings::getInstance().close();
+                }
+            }
+        }
+        else if (true == request->hasArg(FORM_INPUT_NAME_HOSTNAME))
+        {
+            String  hostname = request->arg(FORM_INPUT_NAME_HOSTNAME);
+
+            /* Check arguments min. and max. lengths */
+            if (MIN_HOSTNAME_LENGTH > hostname.length())
+            {
+                isError = true;
+                jsonRsp = "{ \"status\": 1, \"error\": \"Hostname too short.\" }";
+            }
+            else if (MAX_HOSTNAME_LENGTH < hostname.length())
+            {
+                isError = true;
+                jsonRsp = "{ \"status\": 1, \"error\": \"Hostname too long.\" }";
+            }
+            else
+            {
+                if (false == Settings::getInstance().open(false))
+                {
+                    LOG_WARNING("Couldn't open settings.");
+
+                    isError = true;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
+                }
+                else
+                {
+                    Settings::getInstance().setHostname(hostname);
+                    Settings::getInstance().close();
+                }
+            }
         }
         else
         {
-            gDialogTitle = "Error";
+            isError = true;
+            jsonRsp = "{ \"status\": 1, \"error\": \"Unknown argument.\" }";
         }
 
-        gShowDialog = true;
+        if (false == isError)
+        {
+            jsonRsp = "{ \"status\": 0, \"info\": \"Successful stored.\" }";
+        }
+
+        request->send(Html::STATUS_CODE_OK, "application/json", jsonRsp);
     }
+    else
+    {
+        request->send(SPIFFS, "/settings.html", "text/html", false, settingsPageProcessor);
+    }
+    
+    return;
+}
 
-    request->send(SPIFFS, "/settings.html", "text/html", false, settingsPageProcessor);
-
+/**
+ * Add settings data to the destination string in JSON format.
+ * The structure depends on the javascript code in settings.html.
+ * 
+ * @param[in] dst       Destination string
+ * @param[in] title     Settings title
+ * @param[in] name      Input field name
+ * @param[in] value     Input field value
+ * @param[in] size      Input field size in characters
+ * @param[in] minLen    Minimum length of input field value
+ * @param[in] maxLen    Maximum length of input field value
+ */
+static void addSettingsData(String& dst, const char* title, const char* name, const char* value, uint8_t size, uint8_t minLen, uint8_t maxLen)
+{
+    dst += "{";
+    dst += "title: \"";
+    dst += title;
+    dst += "\", ";
+    dst += "input: {";
+    dst += "name: \"";
+    dst += name;
+    dst += "\", ";
+    dst += "value: \"";
+    dst += value;
+    dst += "\", ";
+    dst += "size: ";
+    dst += size;
+    dst += ", ";
+    dst += "minlength: ";
+    dst += minLen;
+    dst += ", ";
+    dst += "maxlength: ";
+    dst += maxLen;
+    dst += "} ";
+    dst += "}";
     return;
 }
 
@@ -532,50 +679,31 @@ static String settingsPageProcessor(const String& var)
 {
     String  result;
 
-    if (var == "SSID")
+    if (var == "DATA")
     {
-        if (true == Settings::getInstance().open(true))
-        {
-            result = Settings::getInstance().getWifiSSID();
-            Settings::getInstance().close();
-        }
-    }
-    else if (var == "SETTINGS")
-    {
-        String ssid;
-        String passphrase;
+        String  wifiSSID;
+        String  wifiPassphrase;
+        String  wifiApSSID;
+        String  wifiApPassphrase;
+        String  hostname;
 
         Settings::getInstance().open(true);
-        ssid        = Settings::getInstance().getWifiSSID();
-        passphrase  = Settings::getInstance().getWifiPassphrase();
+        wifiSSID            = Settings::getInstance().getWifiSSID();
+        wifiPassphrase      = Settings::getInstance().getWifiPassphrase();
+        wifiApSSID          = Settings::getInstance().getWifiApSSID();
+        wifiApPassphrase    = Settings::getInstance().getWifiApPassphrase();
+        hostname            = Settings::getInstance().getHostname();
         Settings::getInstance().close();
 
-        result += "<p>SSID:<br />\r\n";
-        result += Html::inputText(FORM_INPUT_NAME_SSID, ssid, MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH);
-        result += "</p><br />\r\n";
-        result += "<p>Passphrase:<br />\r\n";
-        result += Html::inputText(FORM_INPUT_NAME_PASSPHRASE, passphrase, MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH);
-        result += "</p><br />\r\n";
-        result += "<p><input type=\"submit\" value=\"Save\"></p>";
-    }
-    else if (var == "SHOW_DIALOG")
-    {
-        if (false == gShowDialog)
-        {
-            result = "false";
-        }
-        else
-        {
-            result = "true";
-        }
-    }
-    else if (var == "DIALOG_TITLE")
-    {
-        result = gDialogTitle;
-    }
-    else if (var == "DIALOG")
-    {
-        result = gDialogText;
+        addSettingsData(result, "Wifi SSID", FORM_INPUT_NAME_WIFI_SSID, wifiSSID.c_str(), MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH);
+        result += ", ";
+        addSettingsData(result, "Wifi Passphrase", FORM_INPUT_NAME_WIFI_PASSPHRASE, wifiPassphrase.c_str(), MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH);
+        result += ", ";
+        addSettingsData(result, "Wifi AP SSID", FORM_INPUT_NAME_WIFI_AP_SSID, wifiApSSID.c_str(), MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH);
+        result += ", ";
+        addSettingsData(result, "Wifi AP Passphrase", FORM_INPUT_NAME_WIFI_AP_PASSPHRASE, wifiApPassphrase.c_str(), MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH);
+        result += ", ";
+        addSettingsData(result, "Hostname", FORM_INPUT_NAME_HOSTNAME, hostname.c_str(), MAX_HOSTNAME_LENGTH, MIN_HOSTNAME_LENGTH, MAX_HOSTNAME_LENGTH);
     }
     else
     {

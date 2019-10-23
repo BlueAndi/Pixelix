@@ -10,24 +10,60 @@
         input {
             width: 50%%;
         }
-        dialog {
-            width: 20%%;
-            background: #e8e8e8;
-            border: 1px solid #dadada;
-            font-family:sans-serif;
-            padding: 5px 10px 20px 20px;
-        }
     </style>
     <script>
-        function closeDialog() {
-            document.getElementById('myDialog').close();  
+        var data = [%DATA%];
+
+        function store(id) {
+            var formData = new FormData();
+            var xhr = new XMLHttpRequest();
+            var input = document.getElementById(id);
+
+            formData.append(input.getAttribute("name"), input.value);
+
+            xhr.open("POST", "/settings");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+
+                if (0 === jsonRsp.status) {
+                    alert("Info: " + jsonRsp.info);
+                } else {
+                    alert("Error: " + jsonRsp.error);
+                }
+            };
+            xhr.send(formData);
         }
 
         window.onload = function() {
-            var showDialog = %SHOW_DIALOG%;
+            var index       = 0;
+            var keyIndex    = 0;
+            var settings    = document.getElementById("settings");
+            var keys        = null;
+            var title       = null;
+            var inputField  = null;
+            var button      = null;
+            var br          = null;
 
-            if (true == showDialog) {
-                document.getElementById("myDialog").showModal();
+            for(index = 0; index < data.length; ++index) {
+                keys        = Object.keys(data[index].input);
+                title       = document.createTextNode(data[index].title);
+                inputField  = document.createElement("input");
+                button      = document.createElement("button");
+                br          = document.createElement("br");
+
+                settings.appendChild(title);
+                settings.appendChild(br);
+                settings.appendChild(inputField);
+                settings.appendChild(button);
+                settings.appendChild(br.cloneNode(true));
+
+                inputField.setAttribute("id", index);
+                for(keyIndex = 0; keyIndex < keys.length; ++keyIndex) {
+                    inputField.setAttribute(keys[keyIndex], data[index].input[keys[keyIndex]]);
+                }
+
+                button.setAttribute("onclick", "store(" + index + ");");
+                button.innerHTML = "Store";
             }
         };
     </script>
@@ -45,14 +81,8 @@
 </div>
 <div class="main">
     <h2>Settings</h2>
-    <form action="#">
-        %SETTINGS%
-    </form>
-    <dialog id="myDialog">
-        <h3 style="color: #000000">%DIALOG_TITLE%</h3>
-        <p>%DIALOG%</p>
-        <button id="close" onclick="closeDialog()">Close</button>
-    </dialog>
+    <p id="settings">
+    </p>
 </div>
 <div class="footer">
     <hr />
