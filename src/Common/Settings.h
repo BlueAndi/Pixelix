@@ -118,7 +118,7 @@ public:
      * Get remote wifi network SSID.
      * If there is no SSID available, a empty string will be returned.
      * 
-     * @return SSID
+     * @return Wifi network SSID
      */
     String getWifiSSID()
     {
@@ -140,7 +140,7 @@ public:
      * Get remote wifi network passphrase.
      * If there is no passphrase available, a empty string will be returned.
      * 
-     * @return Passphrase
+     * @return Wifi network passphrase
      */
     String getWifiPassphrase()
     {
@@ -158,6 +158,71 @@ public:
         return;
     }
 
+    /**
+     * Get wifi access point network SSID.
+     * 
+     * @return Wifi access point network SSID
+     */
+    String getWifiApSSID()
+    {
+        return m_preferences.getString(KEY_WIFI_AP_SSID, "pixelix");
+    }
+
+    /**
+     * Store a wifi access point network SSID.
+     * 
+     * @param[in] ssid  Wifi access point network SSID
+     */
+    void setWifiApSSID(const String& ssid)
+    {
+        m_preferences.putString(KEY_WIFI_AP_SSID, ssid);
+        return;
+    }
+
+    /**
+     * Get wifi access point network passphrase.
+     * If there is no passphrase available, a empty string will be returned.
+     * 
+     * @return Wifi access point network passphrase
+     */
+    String getWifiApPassphrase()
+    {
+        return m_preferences.getString(KEY_WIFI_AP_PASSPHRASE, "Luke, I am your father.");
+    }
+
+    /**
+     * Store a wifi access point network passphrase.
+     * 
+     * @param[in] passphrase Wifi access point network passphrase
+     */
+    void setWifiApPassphrase(const String& passphrase)
+    {
+        m_preferences.putString(KEY_WIFI_AP_PASSPHRASE, passphrase);
+        return;
+    }
+
+    /**
+     * Get hostname.
+     * Default: "pixelix"
+     * 
+     * @return Hostname
+     */
+    String getHostname()
+    {
+        return m_preferences.getString(KEY_HOSTNAME, "pixelix");
+    }
+
+    /**
+     * Store hostname.
+     * 
+     * @param[in] hostname Hostname
+     */
+    void setHostname(const String& hostname)
+    {
+        m_preferences.putString(KEY_HOSTNAME, hostname);
+        return;
+    }
+
 private:
 
     static Settings     m_instance;     /**< Settings instance */
@@ -166,7 +231,10 @@ private:
 
     static const char*  PREF_NAMESPACE;         /**< Settings namespace used for preferences */
     static const char*  KEY_WIFI_SSID;          /**< Wifi network key */
-    static const char*  KEY_WIFI_PASSPHRASE;    /**< Wifi network passphrase */
+    static const char*  KEY_WIFI_PASSPHRASE;    /**< Wifi network passphrase key */
+    static const char*  KEY_WIFI_AP_SSID;       /**< Wifi access point network key */
+    static const char*  KEY_WIFI_AP_PASSPHRASE; /**< Wifi access point network passphrase key */
+    static const char*  KEY_HOSTNAME;           /**< Hostname key */
 
     /**
      * Constructs the settings instance.
