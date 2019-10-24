@@ -90,7 +90,6 @@ static void updatePage(AsyncWebServerRequest* request);
 static String updatePageProcessor(const String& var);
 
 static void uploadPage(AsyncWebServerRequest* request);
-static String uploadPageProcessor(const String& var);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 
 /******************************************************************************
@@ -919,38 +918,9 @@ static void uploadPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/upload.html", "text/html", false, uploadPageProcessor);
+    request->send(HttpStatus::STATUS_CODE_OK, "text/plain", "Ok");
 
     return;
-}
-
-/**
- * Processor for upload page template.
- * It is responsible for the data binding.
- * 
- * @param[in] var   Name of variable in the template
- */
-static String uploadPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "UPLOAD_RESULT")
-    {
-        if (true == Update.hasError())
-        {
-            result = "Upload failed.";
-        }
-        else
-        {
-            result = "Upload successful.";
-        }
-    }
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
 }
 
 /**
