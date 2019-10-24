@@ -37,6 +37,7 @@
 #include "DisplayMgr.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
+#include "Settings.h"
 
 #include "ErrorState.h"
 #include "RestartState.h"
@@ -65,12 +66,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Set access point SSID */
-const char*     APState::WIFI_AP_SSID                   = "esp32-rgb-led-matrix";
-
-/* Set access point passphrase (min. 8 characters) */
-const char*     APState::WIFI_AP_PASSPHRASE             = "Luke, I am your father.";
-
 /* Set a minimum of 8 digits for the passphrase. It shall not be lower than 8 digits! */
 const uint8_t   APState::WIFI_AP_PASSPHRASE_MIN_LEN     = 8u;
 
@@ -92,8 +87,32 @@ APState         APState::m_instance;
 
 void APState::entry(StateMachine& sm)
 {
+    String hostname;
+    String wifiApSSID;
+    String wifiApPassphrase;
+
     LOG_INFO("Setup access point.");
-    
+
+    /* Get necessary settings. */
+    if (false == Settings::getInstance().open(true))
+    {
+        LOG_WARNING("Use default hostname.");
+        hostname = Settings::HOSTNAME_DEFAULT;
+
+        LOG_WARNING("Use default wifi AP SSID.");
+        wifiApSSID = Settings::WIFI_AP_SSID_DEFAULT;
+
+        LOG_WARNING("Use default wifi AP passphrase.");
+        wifiApPassphrase = Settings::WIFI_AP_SSID_DEFAULT;
+    }
+    else
+    {
+        hostname            = Settings::getInstance().getHostname();
+        wifiApSSID          = Settings::getInstance().getWifiApSSID();
+        wifiApPassphrase    = Settings::getInstance().getWifiApPassphrase();
+        Settings::getInstance().close();
+    }
+
     /* Force AP mode and start low level wifi. */
     if (false == WiFi.mode(WIFI_MODE_AP))
     {
@@ -119,7 +138,7 @@ void APState::entry(StateMachine& sm)
         sm.setState(ErrorState::getInstance());
     }
     /* Passphrase must be greater or equal than 8 digits. */
-    else if (WIFI_AP_PASSPHRASE_MIN_LEN > strlen(WIFI_AP_PASSPHRASE))
+    else if (WIFI_AP_PASSPHRASE_MIN_LEN > wifiApPassphrase.length())
     {
         String errorStr = "Wifi AP passphrase must have at least ";
         errorStr += WIFI_AP_PASSPHRASE_MIN_LEN;
@@ -131,8 +150,10 @@ void APState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
-    /* Set hostname */
-    else if (false == WiFi.softAPsetHostname("pixelix"))
+    /* Set hostname. Note, wifi must be started, which is done
+     * by setting the mode before.
+     */
+    else if (false == WiFi.softAPsetHostname(hostname.c_str()))
     {
         String errorStr = "Can't set AP hostname.";
 
@@ -143,7 +164,7 @@ void APState::entry(StateMachine& sm)
         sm.setState(ErrorState::getInstance());
     }
     /* Setup wifi access point. */
-    else if (false == WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASSPHRASE))
+    else if (false == WiFi.softAP(wifiApSSID.c_str(), wifiApPassphrase.c_str()))
     {
         String errorStr = "Setup wifi access point failed.";
 
@@ -166,7 +187,7 @@ void APState::entry(StateMachine& sm)
 
         /* Show SSID and ip address */
         String infoStr = "SSID: ";
-        infoStr += WIFI_AP_SSID;
+        infoStr += wifiApSSID;
         infoStr += " IP: ";
         infoStr += WiFi.softAPIP().toString();
 

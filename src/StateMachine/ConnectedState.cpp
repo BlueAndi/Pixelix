@@ -36,9 +36,11 @@
 #include "DisplayMgr.h"
 #include "UpdateMgr.h"
 #include "MyWebServer.h"
+#include "Settings.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
+#include "ErrorState.h"
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -74,35 +76,56 @@ ConnectedState  ConnectedState::m_instance;
 void ConnectedState::entry(StateMachine& sm)
 {
     String infoStr = "Hostname: ";
+    String hostname;
 
     LOG_INFO("Connected.");
 
-    /* Set hostname */
-    if (false == WiFi.setHostname("pixelix"))
+    /* Get hostname. */
+    if (false == Settings::getInstance().open(true))
     {
-        LOG_WARNING("Failed to set hostname.");
+        LOG_WARNING("Use default hostname.");
+        hostname = Settings::HOSTNAME_DEFAULT;
+    }
+    else
+    {
+        hostname = Settings::getInstance().getHostname();
+        Settings::getInstance().close();
     }
 
-    /* Start webserver after a wifi connection is established.
-     * If its done earlier, it will cause an exception.
-     */
-    MyWebServer::begin();
+    /* Set hostname. Note, wifi must be connected somehow. */
+    if (false == WiFi.setHostname(hostname.c_str()))
+    {
+        String errorStr = "Can't set AP hostname.";
 
-    /* Start over-the-air update server. */
-    UpdateMgr::getInstance().begin();
-    
-    /* Show hostname and don't believe its the same as set some lines above. */
-    infoStr += WiFi.getHostname();
-    LOG_INFO(infoStr);
-    DisplayMgr::getInstance().showSysMsg(infoStr);
-    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        DisplayMgr::getInstance().showSysMsg(errorStr);
 
-    /* Show ip address */
-    LOG_INFO(String("IP: ") + WiFi.localIP().toString());
+        sm.setState(ErrorState::getInstance());
+    }
+    else
+    {
+        /* Start webserver after a wifi connection is established.
+        * If its done earlier, it will cause an exception.
+        */
+        MyWebServer::begin();
 
-    /* Enable slots */
-    DisplayMgr::getInstance().enableSlots(true);
-    DisplayMgr::getInstance().startRotating(true);
+        /* Start over-the-air update server. */
+        UpdateMgr::getInstance().begin();
+        
+        /* Show hostname and don't believe its the same as set before. */
+        infoStr += WiFi.getHostname();
+        LOG_INFO(infoStr);
+        DisplayMgr::getInstance().showSysMsg(infoStr);
+        DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+
+        /* Show ip address */
+        LOG_INFO(String("IP: ") + WiFi.localIP().toString());
+
+        /* Enable slots */
+        DisplayMgr::getInstance().enableSlots(true);
+        DisplayMgr::getInstance().startRotating(true);
+    }
     
     return;
 }

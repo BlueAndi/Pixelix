@@ -41,6 +41,7 @@
 
 #include "LedMatrix.h"
 #include "MyWebServer.h"
+#include "Settings.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -77,13 +78,30 @@ UpdateMgr       UpdateMgr::m_instance;
 
 void UpdateMgr::init(void)
 {
-    /* Prepare over the air update. */
-    ArduinoOTA.setPassword(OTA_PASSWORD); /* Note, password must be set before the update server is running! */
+    String hostname;
+
+    /* Prepare over the air update. Note, the configuration must be done
+     * before the update server is running.
+     */
+    ArduinoOTA.setPassword(OTA_PASSWORD);
     ArduinoOTA.onStart(onStart);
     ArduinoOTA.onEnd(onEnd);
     ArduinoOTA.onProgress(onProgress);
     ArduinoOTA.onError(onError);
-    ArduinoOTA.setHostname("pixelix");
+
+    /* Get hostname */
+    if (false == Settings::getInstance().open(true))
+    {
+        LOG_WARNING("Use default hostname.");
+        hostname = Settings::HOSTNAME_DEFAULT;
+    }
+    else
+    {
+        hostname = Settings::getInstance().getHostname();
+        Settings::getInstance().close();
+    }
+
+    ArduinoOTA.setHostname(hostname.c_str());
 
     m_isInitialized = true;
 

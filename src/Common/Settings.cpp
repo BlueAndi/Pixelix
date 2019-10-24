@@ -67,6 +67,11 @@ const char* Settings::KEY_WIFI_AP_SSID          = "wifi_ap_ssid";
 const char* Settings::KEY_WIFI_AP_PASSPHRASE    = "wifi_ap_passphrase";
 const char* Settings::KEY_HOSTNAME              = "hostname";
 
+/* Default values */
+const char* Settings::WIFI_AP_SSID_DEFAULT          = "pixelix";
+const char* Settings::WIFI_AP_PASSPHRASE_DEFAULT    = "Luke, I am your father.";
+const char* Settings::HOSTNAME_DEFAULT              = "pixelix";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/

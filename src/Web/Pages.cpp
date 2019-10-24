@@ -64,6 +64,8 @@
  * Prototypes
  *****************************************************************************/
 
+static bool isValidHostname(const String& hostname);
+static bool isValidSSID(const String& ssid);
 static String getColoredText(const String& text);
 
 static String commonPageProcessor(const String& var);
@@ -110,10 +112,10 @@ static const char*      FORM_INPUT_NAME_WIFI_AP_PASSPHRASE  = "wifi_ap_passphras
 /** Name of the input field for hostname. */
 static const char*      FORM_INPUT_NAME_HOSTNAME            = "hostname";
 
-/** Min. wifi SSID length */
+/** Min. wifi SSID length. Section 7.3.2.1 of the 802.11-2007 specification. */
 static const uint8_t    MIN_SSID_LENGTH             = 0u;
 
-/** Max. wifi SSID length */
+/** Max. wifi SSID length. Section 7.3.2.1 of the 802.11-2007 specification. */
 static const uint8_t    MAX_SSID_LENGTH             = 32u;
 
 /** Min. wifi passphrase length */
@@ -122,11 +124,11 @@ static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
 /** Max. wifi passphrase length */
 static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
 
-/** Min. hostname length */
-static const uint8_t    MIN_HOSTNAME_LENGTH         = 8u;
+/** Min. hostname length (RFC1034 1 - 63) */
+static const uint8_t    MIN_HOSTNAME_LENGTH         = 1u;
 
-/** Max. hostname length */
-static const uint8_t    MAX_HOSTNAME_LENGTH         = 32u;
+/** Max. hostname length (RFC1034 1 - 63) */
+static const uint8_t    MAX_HOSTNAME_LENGTH         = 63u;
 
 /** Firmware binary filename, used for update. */
 static const char*      FIRMWARE_FILENAME           = "firmware.bin";
@@ -171,6 +173,91 @@ void Pages::init(AsyncWebServer& srv)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Check the given hostname and returns whether it is valid or not.
+ * Validation is according to RFC952.
+ * 
+ * @param[in] hostname  Hostname which to validate
+ * 
+ * @return Is valid (true) or not (false).
+ */
+static bool isValidHostname(const String& hostname)
+{
+    bool isValid = true;
+
+    if ((MIN_HOSTNAME_LENGTH > hostname.length()) ||
+        (MAX_HOSTNAME_LENGTH < hostname.length()))
+    {
+        isValid = false;
+    }
+    else
+    {
+        uint8_t index = 0;
+
+        while((true == isValid) && (index < hostname.length()))
+        {
+            if (('0' <= hostname[index]) &&
+                ('9' >= hostname[index]))
+            {
+                /* No digit at the begin */
+                if (0 == index)
+                {
+                    isValid = false;
+                }
+            }
+            else if (('A' <= hostname[index]) &&
+                     ('Z' >= hostname[index]))
+            {
+                /* Ok */
+                ;
+            }
+            else if (('a' <= hostname[index]) &&
+                     ('z' >= hostname[index]))
+            {
+                /* Ok */
+                ;
+            }
+            else if ('-' == hostname[index])
+            {
+                /* No - at the begin */
+                if (0 == index)
+                {
+                    isValid = false;
+                }
+            }
+            else
+            {
+                isValid = false;
+            }
+
+            ++index;
+        }
+    }
+
+    return isValid;
+}
+
+/**
+ * Check the given wifi SSID and returns whether it is valid or not.
+ * Validation is according to Section 7.3.2.1 of the 802.11-2007 specification.
+ * 
+ * @param[in] hostname  SSID which to validate
+ * 
+ * @return Is valid (true) or not (false).
+ */
+static bool isValidSSID(const String& ssid)
+{
+    bool isValid = true;
+
+    if ((MIN_SSID_LENGTH > ssid.length()) ||
+        (MAX_SSID_LENGTH < ssid.length()))
+    {
+        isValid = false;
+    }
+
+    return isValid;
+}
 
 /**
  * Get text in color format (HTML).
@@ -459,16 +546,10 @@ static void settingsPage(AsyncWebServerRequest* request)
         {
             String  wifiSSID = request->arg(FORM_INPUT_NAME_WIFI_SSID);
 
-            /* Check arguments min. and max. lengths */
-            if (MIN_SSID_LENGTH > wifiSSID.length())
+            if (false == isValidSSID(wifiSSID))
             {
                 isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"SSID too short.\" }";
-            }
-            else if (MAX_SSID_LENGTH < wifiSSID.length())
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"SSID too long.\" }";
+                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid SSID.\" }";
             }
             else
             {
@@ -521,16 +602,10 @@ static void settingsPage(AsyncWebServerRequest* request)
         {
             String  wifiApSSID = request->arg(FORM_INPUT_NAME_WIFI_AP_SSID);
 
-            /* Check arguments min. and max. lengths */
-            if (MIN_SSID_LENGTH > wifiApSSID.length())
+            if (false == isValidSSID(wifiApSSID))
             {
                 isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"SSID too short.\" }";
-            }
-            else if (MAX_SSID_LENGTH < wifiApSSID.length())
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"SSID too long.\" }";
+                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid SSID.\" }";
             }
             else
             {
@@ -583,16 +658,10 @@ static void settingsPage(AsyncWebServerRequest* request)
         {
             String  hostname = request->arg(FORM_INPUT_NAME_HOSTNAME);
 
-            /* Check arguments min. and max. lengths */
-            if (MIN_HOSTNAME_LENGTH > hostname.length())
+            if (false == isValidHostname(hostname))
             {
                 isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Hostname too short.\" }";
-            }
-            else if (MAX_HOSTNAME_LENGTH < hostname.length())
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Hostname too long.\" }";
+                jsonRsp = "{ \"status\": 1, \"error\": \"Hostname is invalid.\" }";
             }
             else
             {

@@ -165,7 +165,7 @@ public:
      */
     String getWifiApSSID()
     {
-        return m_preferences.getString(KEY_WIFI_AP_SSID, "pixelix");
+        return m_preferences.getString(KEY_WIFI_AP_SSID, WIFI_AP_SSID_DEFAULT);
     }
 
     /**
@@ -187,7 +187,7 @@ public:
      */
     String getWifiApPassphrase()
     {
-        return m_preferences.getString(KEY_WIFI_AP_PASSPHRASE, "Luke, I am your father.");
+        return m_preferences.getString(KEY_WIFI_AP_PASSPHRASE, WIFI_AP_PASSPHRASE_DEFAULT);
     }
 
     /**
@@ -203,13 +203,12 @@ public:
 
     /**
      * Get hostname.
-     * Default: "pixelix"
      * 
      * @return Hostname
      */
     String getHostname()
     {
-        return m_preferences.getString(KEY_HOSTNAME, "pixelix");
+        return m_preferences.getString(KEY_HOSTNAME, HOSTNAME_DEFAULT);
     }
 
     /**
@@ -222,6 +221,10 @@ public:
         m_preferences.putString(KEY_HOSTNAME, hostname);
         return;
     }
+
+    static const char*  WIFI_AP_SSID_DEFAULT;       /**< Default wifi access point SSID */
+    static const char*  WIFI_AP_PASSPHRASE_DEFAULT; /**< Default wifi access point passphrase */
+    static const char*  HOSTNAME_DEFAULT;           /**< Default hostname */
 
 private:
 

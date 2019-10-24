@@ -93,12 +93,6 @@ public:
      */
     void exit(StateMachine& sm);
 
-    /** Access point SSID */
-    static const char*      WIFI_AP_SSID;
-
-    /** Access point passphrase (min. 8 characters) */
-    static const char*      WIFI_AP_PASSPHRASE;
-
     /**
      * Minimum length of the passphrase. Don't change it, because
      * it depends on the lower layer.
