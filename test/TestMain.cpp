@@ -1339,7 +1339,7 @@ static void testLogging(void)
     /* Set LogLevel to LOGLEVEL_ERROR and trigger a LOG_INFO message. */
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_ERROR);
     LOG_INFO(TEST_STRING_1);
-    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "");
+    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "%s", "");
     printBuffer = myTestLogger.getBuffer();
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
