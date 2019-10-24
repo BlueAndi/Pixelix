@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  HTML helper functions
+ * @brief  HTTP status
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup web
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __HTML_H__
-#define __HTML_H__
+#ifndef __HTTP_STATUS__
+#define __HTTP_STATUS__
 
 /******************************************************************************
  * Compile Switches
@@ -46,8 +46,8 @@
 #include <WString.h>
 #include <stdint.h>
 
-/** HTML helper functions */
-namespace Html
+/** HTTP status */
+namespace HttpStatus
 {
 
 /******************************************************************************
@@ -74,21 +74,8 @@ enum StatusCode
  * Functions
  *****************************************************************************/
 
-/**
- * Generate a HTML5 input field.
- * 
- * @param[in] name  Name of the input field.
- * @param[in] value Value, which shown in the input field.
- * @param[in] size  Input field size.
- * @param[in] min   Min. number of characters in the input field.
- * @param[in] max   Max. number of characters in the input field.
- * 
- * @return HTML5 input
- */
-String inputText(const String& name, const String& value, uint8_t size, uint8_t min, uint8_t max);
-
 }
 
-#endif  /* __HTML_H__ */
+#endif  /* __HTTP_STATUS__ */
 
 /** @} */

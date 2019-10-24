@@ -33,7 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "Pages.h"
-#include "Html.h"
+#include "HttpStatus.h"
 #include "WebConfig.h"
 #include "Settings.h"
 #include "Version.h"
@@ -690,7 +690,7 @@ static void settingsPage(AsyncWebServerRequest* request)
             jsonRsp = "{ \"status\": 0, \"info\": \"Successful stored.\" }";
         }
 
-        request->send(Html::STATUS_CODE_OK, "application/json", jsonRsp);
+        request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
     }
     else
     {
@@ -1028,7 +1028,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     if (true == isError)
     {
         Update.abort();
-        request->send(Html::STATUS_CODE_BAD_REQ, "plain/text", "Error");
+        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
     }
 
     return;

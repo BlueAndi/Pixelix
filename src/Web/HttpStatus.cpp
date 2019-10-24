@@ -25,14 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  HTML helper function
+ * @brief  HTTP status
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Html.h"
+#include "HttpStatus.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -69,24 +69,6 @@
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-String Html::inputText(const String& name, const String& value, uint8_t size, uint8_t min, uint8_t max)
-{
-    String input = "<input name=\"";
-
-    input += name;
-    input += "\" value=\"";
-    input += value;
-    input += "\" size=\"";
-    input += size;
-    input += "\" minlength=\"";
-    input += min;
-    input += "\" maxlength=\"";
-    input += max;
-    input += "\" />";
-
-    return input;
-}
 
 /******************************************************************************
  * Local Functions

@@ -33,7 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "RestApi.h"
-#include "Html.h"
+#include "HttpStatus.h"
 #include "Settings.h"
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
@@ -195,7 +195,7 @@ static void status(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<256> jsonDoc;
-    uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (NULL == request)
     {
@@ -209,7 +209,7 @@ static void status(AsyncWebServerRequest* request)
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
@@ -243,7 +243,7 @@ static void status(AsyncWebServerRequest* request)
         wifiObj["rssi"]         = rssi;                     // dBm
         wifiObj["quality"]      = getSignalQuality(rssi);   // percent
 
-        httpStatusCode          = Html::STATUS_CODE_OK;
+        httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
 
     serializeJsonPretty(jsonDoc, content);
@@ -260,7 +260,7 @@ static void slots(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (NULL == request)
     {
@@ -274,7 +274,7 @@ static void slots(AsyncWebServerRequest* request)
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
@@ -284,7 +284,7 @@ static void slots(AsyncWebServerRequest* request)
 
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
-        httpStatusCode      = Html::STATUS_CODE_OK;
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
     serializeJsonPretty(jsonDoc, content);
@@ -301,7 +301,7 @@ static void slotText(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     
     if (NULL == request)
     {
@@ -315,7 +315,7 @@ static void slotText(AsyncWebServerRequest* request)
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
@@ -330,7 +330,7 @@ static void slotText(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Slot id not supported.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* "show" argument missing? */
         else if (false == request->hasArg("show"))
@@ -340,7 +340,7 @@ static void slotText(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Show is missing.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -352,7 +352,7 @@ static void slotText(AsyncWebServerRequest* request)
 
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
-            httpStatusCode      = Html::STATUS_CODE_OK;
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
 
@@ -370,7 +370,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (NULL == request)
     {
@@ -384,7 +384,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
@@ -401,7 +401,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Slot id not supported.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* "width" argument missing? */
         else if (false == request->hasArg("width"))
@@ -411,7 +411,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Width is missing.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* "height" argument missing? */
         else if (false == request->hasArg("height"))
@@ -421,7 +421,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Height is missing.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* "data" argument missing? */
         else if (false == request->hasArg("data"))
@@ -431,7 +431,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Data is missing.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Invalid width? */
         else if (false == toUInt16(request->arg("width"), width))
@@ -441,7 +441,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Invalid width.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Invalid height? */
         else if (false == toUInt16(request->arg("height"), width))
@@ -451,7 +451,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Invalid height.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -468,7 +468,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
 
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
-            httpStatusCode      = Html::STATUS_CODE_OK;
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
 
@@ -486,7 +486,7 @@ static void slotLamp(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = Html::STATUS_CODE_OK;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (NULL == request)
     {
@@ -500,7 +500,7 @@ static void slotLamp(AsyncWebServerRequest* request)
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
@@ -516,7 +516,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Slot id not supported.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Lamp id invalid? */
         else if (false == toUInt8(request->arg(1), lampId))
@@ -526,7 +526,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Lamp id not supported.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else if ((0 != request->arg(static_cast<size_t>(0)).compareTo("set")) ||
                  ((0 != request->arg(1).compareTo("off")) &&
@@ -537,7 +537,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Command not supported.";
-            httpStatusCode      = Html::STATUS_CODE_NOT_FOUND;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -554,7 +554,7 @@ static void slotLamp(AsyncWebServerRequest* request)
 
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
-            httpStatusCode      = Html::STATUS_CODE_OK;
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
 
