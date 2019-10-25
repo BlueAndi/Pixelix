@@ -66,6 +66,7 @@ const char* Settings::KEY_WIFI_PASSPHRASE       = "wifi_passphrase";
 const char* Settings::KEY_WIFI_AP_SSID          = "wifi_ap_ssid";
 const char* Settings::KEY_WIFI_AP_PASSPHRASE    = "wifi_ap_passphrase";
 const char* Settings::KEY_HOSTNAME              = "hostname";
+const char* Settings::KEY_MATRIX_TYPE           = "matrix_type";
 
 /* Default values */
 const char* Settings::WIFI_AP_SSID_DEFAULT          = "pixelix";

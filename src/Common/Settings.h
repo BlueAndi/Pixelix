@@ -222,6 +222,27 @@ public:
         return;
     }
 
+    /**
+     * Get matrix type.
+     * 
+     * @return Matrix type
+     */
+    uint8_t getMatrixType()
+    {
+        return m_preferences.getUChar(KEY_MATRIX_TYPE, 0);
+    }
+
+    /**
+     * Store matrix type.
+     * 
+     * @param[in] matrixType    Matrix type
+     */
+    void setMatrixType(uint8_t matrixType)
+    {
+        m_preferences.putUChar(KEY_MATRIX_TYPE, matrixType);
+        return;
+    }
+
     static const char*  WIFI_AP_SSID_DEFAULT;       /**< Default wifi access point SSID */
     static const char*  WIFI_AP_PASSPHRASE_DEFAULT; /**< Default wifi access point passphrase */
     static const char*  HOSTNAME_DEFAULT;           /**< Default hostname */
@@ -238,6 +259,7 @@ private:
     static const char*  KEY_WIFI_AP_SSID;       /**< Wifi access point network key */
     static const char*  KEY_WIFI_AP_PASSPHRASE; /**< Wifi access point network passphrase key */
     static const char*  KEY_HOSTNAME;           /**< Hostname key */
+    static const char*  KEY_MATRIX_TYPE;        /**< Matrix type key */
 
     /**
      * Constructs the settings instance.
