@@ -77,6 +77,25 @@ public:
         return m_instance;
     }
 
+    /**
+     * Set matrix type, which depends on how the matrix is hard-wired.
+     * 
+     * Use NEO_MATRIX_... macros to build the matrix type.
+     * 
+     * @param[in] matrixType    Matrix type
+     */
+    void setType(uint8_t matrixType)
+    {
+        type = matrixType;
+        return;
+    }
+
+    /** Default matrix type */
+    static const uint8_t MATRIX_TYPE_DEFAULT    = NEO_MATRIX_TOP |
+                                                  NEO_MATRIX_LEFT |
+                                                  NEO_MATRIX_ROWS |
+                                                  NEO_MATRIX_ZIGZAG;
+
 private:
 
     /** LedMatrix instance */

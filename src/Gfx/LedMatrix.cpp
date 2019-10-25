@@ -79,10 +79,7 @@ LedMatrix::LedMatrix() :
     FastLED_NeoMatrix(  gMatrixBuffer,
                         Board::LedMatrix::width,
                         Board::LedMatrix::height,
-                        NEO_MATRIX_TOP |
-                        NEO_MATRIX_LEFT |
-                        NEO_MATRIX_ROWS |
-                        NEO_MATRIX_ZIGZAG)
+                        MATRIX_TYPE_DEFAULT)
 {
     /* Setup LED matrix and limit max. power. */
     FastLED.addLeds<NEOPIXEL, Board::Pin::ledMatrixDataOutPinNo>(gMatrixBuffer, ARRAY_NUM(gMatrixBuffer)).setCorrection(TypicalLEDStrip);
