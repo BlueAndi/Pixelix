@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>%PAGE_TITLE%</title>
+    <link rel="stylesheet" href="/data/style.css"></link>
+    <script src="/data/util.js"></script>
+    <script>
+        var data = %MATRIX_TYPE%;
+
+        function getValue(name) {
+            var element = document.querySelector('input[name="' + name + '"]:checked');
+
+            return parseInt(element.value);
+        }
+
+        function store() {
+            var formData    = new FormData();
+            var xhr         = new XMLHttpRequest();
+            var matrixType  = 0;
+
+            matrixType += getValue("pixel0Pos");
+            matrixType += getValue("orientation");
+            matrixType += getValue("proceed");
+
+            formData.append("matrixType", matrixType);
+
+            xhr.open("POST", "/config");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+
+                if (0 === jsonRsp.status) {
+                    alert("Info: " + jsonRsp.info);
+                } else {
+                    alert("Error: " + jsonRsp.error);
+                }
+            };
+            xhr.send(formData);
+        }
+
+        window.onload = function() {
+            var pixel0Pos   = data & 0x03;
+            var orientation = data & 0x04;
+            var proceed     = data & 0x08;
+
+            document.querySelector('input[name="pixel0Pos"][value="' + pixel0Pos + '"]').checked = true;
+            document.querySelector('input[name="orientation"][value="' + orientation + '"]').checked = true;
+            document.querySelector('input[name="proceed"][value="' + proceed + '"]').checked = true;
+        };
+    </script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div class="topnav">
+    <a href="/">Home</a>
+    <a href="/network">Network</a>
+    <a href="/config" class="active">Configuration</a>
+    <a href="/settings">Settings</a>
+    <a href="/dev">Development</a>
+    <a href="/update">Update</a>
+</div>
+<div class="main">
+    <h2>Configuration</h2>
+    <p>Specify how your display is hard-wired here.</p>
+    <form>
+        <p>Position of pixel 0:<br />
+            <input type="radio" name="pixel0Pos" value="0">Top left<br>
+            <input type="radio" name="pixel0Pos" value="1">Bottom left<br>
+            <input type="radio" name="pixel0Pos" value="2">Top right<br>
+            <input type="radio" name="pixel0Pos" value="3">Bottom right<br>
+        </p>
+        <p>Orientation is:<br />
+            <input type="radio" name="orientation" value="0">Row major (the pixels are arranged in horizontal lines)<br>
+            <input type="radio" name="orientation" value="4">Column major (the pixels are arranged in vertical lines)<br>
+        </p>
+        <p>Continuous ...:<br />
+            <input type="radio" name="proceed" value="0">Progressive (each row/column proceeds in same direction)<br>
+            <input type="radio" name="proceed" value="8">ZigZag (each row/column proceeds in reverse direction)<br>
+        </p>
+        <input type="button" value="Store and apply" onclick="store();" />
+    </form>
+</div>
+<div class="footer">
+    <hr />
+    <p>(C) 2019 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>
