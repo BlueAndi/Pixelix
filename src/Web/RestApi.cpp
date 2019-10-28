@@ -39,10 +39,14 @@
 #include "DisplayMgr.h"
 #include "Version.h"
 
-#include <crypto/base64.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <Esp.h>
+
+extern "C"
+{
+#include <crypto/base64.h>
+}
 
 /******************************************************************************
  * Compiler Switches
@@ -73,6 +77,7 @@ typedef enum
 static bool toUInt8(const String& str, uint8_t& value);
 static bool toUInt16(const String& str, uint16_t& value);
 static uint8_t getSignalQuality(int8_t rssi);
+static void error(AsyncWebServerRequest* request);
 static void status(AsyncWebServerRequest* request);
 static void slots(AsyncWebServerRequest* request);
 static void slotText(AsyncWebServerRequest* request);
@@ -103,10 +108,13 @@ void RestApi::init(AsyncWebServer& srv)
 {
     srv.on("/rest/api/v1/status", status);
     srv.on("/rest/api/v1/display/slots", slots);
-    srv.on("/rest/api/v1/display/slot/{}/text", slotText);
-    srv.on("/rest/api/v1/display/slot/{}/bitmap", slotBitmap);
-    srv.on("/rest/api/v1/display/slot/{}/lamp/{}/state", slotLamp);
+    srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/text$", slotText);
+    srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/bitmap$", slotBitmap);
+    srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/lamp\\/([0-9]+)\\/state$", slotLamp);
     
+    /* Register a page for invalid REST path requests. */
+    srv.on("/rest/*", error);
+
     return;
 }
 
@@ -131,6 +139,7 @@ static bool toUInt8(const String& str, uint8_t& value)
         (UINT8_MAX >= tmp))
     {
         value = static_cast<uint8_t>(tmp);
+        success = true;
     }
 
     return success;
@@ -153,6 +162,7 @@ static bool toUInt16(const String& str, uint16_t& value)
         (UINT16_MAX >= tmp))
     {
         value = static_cast<uint16_t>(tmp);
+        success = true;
     }
 
     return success;
@@ -188,8 +198,38 @@ static uint8_t getSignalQuality(int8_t rssi)
 }
 
 /**
+ * Get error information for invalid rest path requests.
+ * 
+ * @param[in] request   HTTP request
+ */
+static void error(AsyncWebServerRequest* request)
+{
+    String                  content;
+    StaticJsonDocument<256> jsonDoc;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    JsonObject              errorObj        = jsonDoc.createNestedObject("error");
+
+    if (NULL == request)
+    {
+        return;
+    }
+
+    /* Prepare response */
+    jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+    errorObj["msg"]     = "Invalid path requested.";
+    httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    
+    serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
  * Get status information.
  * GET /api/v1/status
+ * 
+ * @param[in] request   HTTP request
  */
 static void status(AsyncWebServerRequest* request)
 {
@@ -255,6 +295,8 @@ static void status(AsyncWebServerRequest* request)
 /**
  * Get number of slots
  * GET /api/v1/display/slots
+ * 
+ * @param[in] request   HTTP request
  */
 static void slots(AsyncWebServerRequest* request)
 {
@@ -296,6 +338,8 @@ static void slots(AsyncWebServerRequest* request)
 /**
  * Set text of a slot.
  * POST /display/slot/<slot-id>/text?show=<text>
+ * 
+ * @param[in] request   HTTP request
  */
 static void slotText(AsyncWebServerRequest* request)
 {
@@ -322,7 +366,7 @@ static void slotText(AsyncWebServerRequest* request)
         uint8_t slotId = DisplayMgr::getInstance().MAX_SLOTS;
         
         /* Slot id invalid? */
-        if ((false == toUInt8(request->arg((size_t)0), slotId)) ||
+        if ((false == toUInt8(request->pathArg(0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -365,6 +409,8 @@ static void slotText(AsyncWebServerRequest* request)
 /**
  * Set bitmap of a slot.
  * POST /display/slot/<slot-id>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>
+ * 
+ * @param[in] request   HTTP request
  */
 static void slotBitmap(AsyncWebServerRequest* request)
 {
@@ -393,7 +439,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
         uint16_t    height  = 0u;
 
         /* Slot id invalid? */
-        if ((false == toUInt8(request->arg((size_t)0), slotId)) ||
+        if ((false == toUInt8(request->pathArg(0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -481,6 +527,8 @@ static void slotBitmap(AsyncWebServerRequest* request)
 /**
  * Set lamp state of a slot.
  * POST /display/slot/<slot-id>/lamp/<lamp-id>/state?set=<on/off>
+ * 
+ * @param[in] request   HTTP request
  */
 static void slotLamp(AsyncWebServerRequest* request)
 {
@@ -508,7 +556,7 @@ static void slotLamp(AsyncWebServerRequest* request)
         uint8_t lampId = 0u;
 
         /* Slot id invalid? */
-        if ((false == toUInt8(request->arg((size_t)0), slotId)) ||
+        if ((false == toUInt8(request->pathArg(0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -519,7 +567,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Lamp id invalid? */
-        else if (false == toUInt8(request->arg(1), lampId))
+        else if (false == toUInt8(request->pathArg(1), lampId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
