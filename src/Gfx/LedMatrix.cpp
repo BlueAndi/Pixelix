@@ -90,6 +90,16 @@ LedMatrix::~LedMatrix()
 {
 }
 
+uint32_t LedMatrix::getColor(int16_t x, int16_t y)
+{
+    CRGB&       pixel   = gMatrixBuffer[XY(x, y)];
+    uint32_t    red     = pixel.red;
+    uint32_t    green   = pixel.green;
+    uint32_t    blue    = pixel.blue;
+
+    return (red << 16) | (green << 8) | (blue << 0);
+}
+
 /******************************************************************************
  * External Functions
  *****************************************************************************/

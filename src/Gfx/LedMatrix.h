@@ -90,6 +90,16 @@ public:
         return;
     }
 
+    /**
+     * Get pixel color at given position.
+     * 
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     * 
+     * @return Color in RGB24 format.
+     */
+    uint32_t getColor(int16_t x, int16_t y);
+
     /** Default matrix type */
     static const uint8_t MATRIX_TYPE_DEFAULT    = NEO_MATRIX_TOP |
                                                   NEO_MATRIX_LEFT |
