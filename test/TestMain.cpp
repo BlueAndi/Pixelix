@@ -839,6 +839,7 @@ void testCanvas(void)
     TestGfx     testGfx;
     Canvas      testCanvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0, 0);
     TestWidget  testWidget;
+    TestWidget  testWidget2;
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(Canvas::WIDGET_TYPE, testCanvas.getType());
@@ -919,6 +920,15 @@ void testCanvas(void)
      */
     testWidget.setName(TEST_WIDGET_NAME);
     testCanvas.setName(NULL);
+    TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
+
+    /* Find widget in container, which contains 2 widgets.
+     * Expected: Test widget found
+     */
+    testWidget.setName(TEST_WIDGET_NAME);
+    testCanvas.setName(NULL);
+    TEST_ASSERT_TRUE(testCanvas.addWidget(testWidget2));
     TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
     TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
 

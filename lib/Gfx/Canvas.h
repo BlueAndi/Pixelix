@@ -196,7 +196,7 @@ public:
                     {
                         widget = (*m_widgets.current())->find(name);
 
-                    } while ((NULL != widget) &&
+                    } while ((NULL == widget) &&
                             (true == m_widgets.next()));
                 }
             }
