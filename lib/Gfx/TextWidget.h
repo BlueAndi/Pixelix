@@ -221,6 +221,9 @@ public:
     /** Default font */
     static const GFXfont*   DEFAULT_FONT;
 
+    /** Font height in pixel. */
+    static const int16_t    DEFAULT_FONT_HEIGHT = 5;
+
     /** Default pause between character scrolling in ms */
     static const uint32_t   DEFAULT_SCOLL_PAUSE = 200u;
 

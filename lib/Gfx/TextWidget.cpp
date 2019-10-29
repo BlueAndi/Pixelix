@@ -68,8 +68,8 @@ const GFXfont*  TextWidget::DEFAULT_FONT    = &TomThumb;
 
 void TextWidget::update(Adafruit_GFX& gfx)
 {
-    const int16_t   CURSOR_X    = 0;
-    const int16_t   CURSOR_Y    = 0;
+    const int16_t   CURSOR_X    = m_posX;
+    const int16_t   CURSOR_Y    = m_posY + DEFAULT_FONT_HEIGHT;
 
     /* Set base parameters */
     gfx.setFont(m_font);
