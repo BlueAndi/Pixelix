@@ -490,7 +490,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Invalid height? */
-        else if (false == toUInt16(request->arg("height"), width))
+        else if (false == toUInt16(request->arg("height"), height))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -576,9 +576,9 @@ static void slotLamp(AsyncWebServerRequest* request)
             errorObj["msg"]     = "Lamp id not supported.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
-        else if ((0 != request->arg(static_cast<size_t>(0)).compareTo("set")) ||
-                 ((0 != request->arg(1).compareTo("off")) &&
-                  (0 != request->arg(1).compareTo("on"))))
+        else if ((false == request->hasArg("set")) ||
+                 ((request->arg("set") != "off") &&
+                  (request->arg("set") != "on")))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -591,7 +591,7 @@ static void slotLamp(AsyncWebServerRequest* request)
         {
             bool lampState = false;
 
-            if (0 == request->arg(1).compareTo("on"))
+            if (request->arg("set") == "on")
             {
                 lampState = true;
             }
