@@ -914,6 +914,14 @@ void testCanvas(void)
     TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
     TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
 
+    /* Find widget in container and container has no name.
+     * Expected: Test widget found
+     */
+    testWidget.setName(TEST_WIDGET_NAME);
+    testCanvas.setName(NULL);
+    TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
+
     return;
 }
 

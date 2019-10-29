@@ -176,13 +176,15 @@ public:
     {
         Widget* widget = NULL;
 
-        if ((NULL != name) &&
-            (NULL != m_name))
+        if (NULL != name)
         {
-            /* Is it the canvas itself? */
-            if (0 == strcmp(m_name, name))
+            if (NULL != m_name)
             {
-                widget = this;
+                /* Is it the canvas itself? */
+                if (0 == strcmp(m_name, name))
+                {
+                    widget = this;
+                }
             }
 
             /* If its not the canvas itself, continue searching in the widget list. */
