@@ -220,7 +220,7 @@ private:
     void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
         int16_t absPosX     = m_posX;
-        int16_t absPosY     = m_posX;
+        int16_t absPosY     = m_posY;
         bool    outOfCanvas = false;
 
         /* Absolute position in the underlying area is the canvas position and
