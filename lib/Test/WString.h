@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdlib.h>
+#include <string.h>
 
 /******************************************************************************
  * Macros
@@ -107,6 +108,25 @@ public:
         m_buffer = str.m_buffer;
 
         return *this;
+    }
+
+    /**
+     * Compare two strings.
+     * 
+     * @param[in] str String, which to compare with.
+     * 
+     * @return If the strings are equal, it will return true otherwise false.
+     */
+    bool operator==(const String& str) const
+    {
+        bool result = false;
+
+        if (0 == strcmp(str.c_str(), m_buffer))
+        {
+            result = true;
+        }
+
+        return result;
     }
 
     /**

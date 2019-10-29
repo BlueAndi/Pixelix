@@ -757,16 +757,15 @@ static void testWidget(void)
     TEST_ASSERT_EQUAL_STRING(TestWidget::WIDGET_TYPE, testWidget.getType());
 
     /* No widget name is set, it must be empty. */
-    TEST_ASSERT_EQUAL_STRING("", testWidget.getName());
+    TEST_ASSERT_EQUAL_STRING("", testWidget.getName().c_str());
 
     /* Set widget name and read back. */
     testWidget.setName(testStr);
-    TEST_ASSERT_EQUAL_STRING(testStr, testWidget.getName());
+    TEST_ASSERT_EQUAL_STRING(testStr, testWidget.getName().c_str());
 
     /* Find widget with empty name.
      * Expected: Not found
      */
-    TEST_ASSERT_NULL(testWidget.find(NULL));
     TEST_ASSERT_NULL(testWidget.find(""));
 
     /* Find widget with its name.
@@ -776,8 +775,8 @@ static void testWidget(void)
     TEST_ASSERT_EQUAL_PTR(&testWidget, testWidget.find(testStr));
 
     /* Clear name */
-    testWidget.setName(NULL);
-    TEST_ASSERT_EQUAL_STRING("", testWidget.getName());
+    testWidget.setName("");
+    TEST_ASSERT_EQUAL_STRING("", testWidget.getName().c_str());
 
     /* Current position must be (0, 0) */
     testWidget.getPos(posX, posY);
@@ -885,17 +884,11 @@ void testCanvas(void)
                                     WIDGET_COLOR.get565()));
 
     /* No widget name is set, it must be empty. */
-    TEST_ASSERT_EQUAL_STRING("", testCanvas.getName());
+    TEST_ASSERT_EQUAL_STRING("", testCanvas.getName().c_str());
 
     /* Set widget name and read back. */
     testCanvas.setName(CANVAS_NAME);
-    TEST_ASSERT_EQUAL_STRING(CANVAS_NAME, testCanvas.getName());
-
-    /* Find widget with empty name.
-     * Expected: Not found
-     */
-    TEST_ASSERT_NULL(testCanvas.find(NULL));
-    TEST_ASSERT_NULL(testCanvas.find(""));
+    TEST_ASSERT_EQUAL_STRING(CANVAS_NAME, testCanvas.getName().c_str());
 
     /* Find widget with its name.
      * Expected: Widget is found
@@ -919,7 +912,7 @@ void testCanvas(void)
      * Expected: Test widget found
      */
     testWidget.setName(TEST_WIDGET_NAME);
-    testCanvas.setName(NULL);
+    testCanvas.setName("");
     TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
     TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
 
@@ -927,7 +920,7 @@ void testCanvas(void)
      * Expected: Test widget found
      */
     testWidget.setName(TEST_WIDGET_NAME);
-    testCanvas.setName(NULL);
+    testCanvas.setName("");
     TEST_ASSERT_TRUE(testCanvas.addWidget(testWidget2));
     TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
     TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
@@ -953,16 +946,15 @@ static void testLampWidget(void)
     TEST_ASSERT_EQUAL_STRING(LampWidget::WIDGET_TYPE, lampWidget.getType());
 
     /* No widget name is set, it must be empty. */
-    TEST_ASSERT_EQUAL_STRING("", lampWidget.getName());
+    TEST_ASSERT_EQUAL_STRING("", lampWidget.getName().c_str());
 
     /* Set widget name and read back. */
     lampWidget.setName(WIDGET_NAME);
-    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, lampWidget.getName());
+    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, lampWidget.getName().c_str());
 
     /* Find widget with empty name.
      * Expected: Not found
      */
-    TEST_ASSERT_NULL(lampWidget.find(NULL));
     TEST_ASSERT_NULL(lampWidget.find(""));
 
     /* Find widget with its name.
@@ -1037,16 +1029,15 @@ static void testBitmapWidget(void)
     TEST_ASSERT_EQUAL_STRING(BitmapWidget::WIDGET_TYPE, bitmapWidget.getType());
 
     /* No widget name is set, it must be empty. */
-    TEST_ASSERT_EQUAL_STRING("", bitmapWidget.getName());
+    TEST_ASSERT_EQUAL_STRING("", bitmapWidget.getName().c_str());
 
     /* Set widget name and read back. */
     bitmapWidget.setName(WIDGET_NAME);
-    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, bitmapWidget.getName());
+    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, bitmapWidget.getName().c_str());
 
     /* Find widget with empty name.
      * Expected: Not found
      */
-    TEST_ASSERT_NULL(bitmapWidget.find(NULL));
     TEST_ASSERT_NULL(bitmapWidget.find(""));
 
     /* Find widget with its name.
@@ -1101,16 +1092,15 @@ static void testTextWidget(void)
     TEST_ASSERT_EQUAL_STRING(TextWidget::WIDGET_TYPE, textWidget.getType());
 
     /* No widget name is set, it must be empty. */
-    TEST_ASSERT_EQUAL_STRING("", textWidget.getName());
+    TEST_ASSERT_EQUAL_STRING("", textWidget.getName().c_str());
 
     /* Set widget name and read back. */
     textWidget.setName(WIDGET_NAME);
-    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, textWidget.getName());
+    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, textWidget.getName().c_str());
 
     /* Find widget with empty name.
      * Expected: Not found
      */
-    TEST_ASSERT_NULL(textWidget.find(NULL));
     TEST_ASSERT_NULL(textWidget.find(""));
 
     /* Find widget with its name.
@@ -1296,16 +1286,15 @@ static void testProgressBar(void)
     TEST_ASSERT_EQUAL_STRING(ProgressBar::WIDGET_TYPE, progressBar.getType());
 
     /* No widget name is set, it must be empty. */
-    TEST_ASSERT_EQUAL_STRING("", progressBar.getName());
+    TEST_ASSERT_EQUAL_STRING("", progressBar.getName().c_str());
 
     /* Set widget name and read back. */
     progressBar.setName(WIDGET_NAME);
-    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, progressBar.getName());
+    TEST_ASSERT_EQUAL_STRING(WIDGET_NAME, progressBar.getName().c_str());
 
     /* Find widget with empty name.
      * Expected: Not found
      */
-    TEST_ASSERT_NULL(progressBar.find(NULL));
     TEST_ASSERT_NULL(progressBar.find(""));
 
     /* Find widget with its name.

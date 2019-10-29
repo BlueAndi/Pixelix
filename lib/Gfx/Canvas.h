@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <string.h>
+#include <WString.h>
 #include <LinkedList.hpp>
 #include <Widget.hpp>
 
@@ -172,33 +172,26 @@ public:
      * 
      * @return If widget is found, it will be returned otherwise NULL.
      */
-    Widget* find(const char* name)
+    Widget* find(const String& name)
     {
         Widget* widget = NULL;
 
-        if (NULL != name)
+        if (name == m_name)
         {
-            if (NULL != m_name)
-            {
-                /* Is it the canvas itself? */
-                if (0 == strcmp(m_name, name))
-                {
-                    widget = this;
-                }
-            }
+            widget = this;
+        }
 
-            /* If its not the canvas itself, continue searching in the widget list. */
-            if (NULL == widget)
+        /* If its not the canvas itself, continue searching in the widget list. */
+        if (NULL == widget)
+        {
+            if (true == m_widgets.selectFirstElement())
             {
-                if (true == m_widgets.selectFirstElement())
+                do
                 {
-                    do
-                    {
-                        widget = (*m_widgets.current())->find(name);
+                    widget = (*m_widgets.current())->find(name);
 
-                    } while ((NULL == widget) &&
-                            (true == m_widgets.next()));
-                }
+                } while ((NULL == widget) &&
+                         (true == m_widgets.next()));
             }
         }
 
