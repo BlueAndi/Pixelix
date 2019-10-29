@@ -219,87 +219,16 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        int16_t absPosX     = m_posX;
-        int16_t absPosY     = m_posY;
-        bool    outOfCanvas = false;
-
-        /* Absolute position in the underlying area is the canvas position and
-         * the pixel coordinates inside the canvas.
-         * Prevent overflow here for x-coordinate.
-         */
-        if ((0 <= x) &&
-            ((INT16_MAX - x) >= absPosX))
+        if (NULL != m_gfx)
         {
-            absPosX += x;
-        }
-        else if ((0 > x) &&
-                ((INT16_MIN - x) <= absPosX))
-        {
-            absPosX += x;
-        }
-        else
-        {
-            outOfCanvas = true;
-        }
-
-        /* Don't draw outside the canvas width. */
-        if (false == outOfCanvas)
-        {
-            if (0 >= width())
+            /* Don't draw outside the canvas. */
+            if ((0 <= x) &&
+                (width() > x) &&
+                (0 <= y) &&
+                (height() > y))
             {
-                outOfCanvas = true;
+                m_gfx->drawPixel(m_posX + x, m_posY + y, color);
             }
-            else if (width() <= absPosX)
-            {
-                outOfCanvas = true;
-            }
-            else
-            {
-                ;
-            }
-        }
-
-        /* Absolute position in the underlying area is the canvas position and
-         * the pixel coordinates inside the canvas.
-         * Prevent overflow here for y-coordinate.
-         */
-        if ((0 <= y) &&
-            ((INT16_MAX - y) >= absPosX))
-        {
-            absPosY += y;
-        }
-        else if ((0 > y) &&
-                ((INT16_MIN - y) <= absPosX))
-        {
-            absPosY += y;
-        }
-        else
-        {
-            outOfCanvas = true;
-        }
-
-        /* Don't draw outside the canvas height. */
-        if (false == outOfCanvas)
-        {
-            if (0 >= height())
-            {
-                outOfCanvas = true;
-            }
-            else if (height() <= absPosY)
-            {
-                outOfCanvas = true;
-            }
-            else
-            {
-                ;
-            }
-        }
-
-        /* Draw inside the canvas? */
-        if ((NULL != m_gfx) &&
-            (false == outOfCanvas))
-        {
-            m_gfx->drawPixel(absPosX, absPosY, color);
         }
 
         return;
