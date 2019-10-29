@@ -683,10 +683,10 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
             else
             {
                 lampName[lampNameNumPos] = '0' + index;
+                lampName[lampNameNumPos + 1] = '\0';
                 lampWidgets[index]->setName(lampName);
                 lampWidgets[index]->move(index * LampWidget::WIDTH + 1 + index, 0);
             }
-            
         }
     }
 
