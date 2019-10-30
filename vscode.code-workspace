@@ -2,11 +2,43 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"name": "esp-rgb-led-matrix",
-			"path": "esp-rgb-led-matrix"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"terminal.integrated.env.windows": {
+			"PATH": "C:\\Users\\amerkle\\.platformio\\penv\\Scripts;C:\\Users\\amerkle\\.platformio\\penv;C:\\Program Files\\AdoptOpenJDK\\jdk-11.0.3.7-hotspot\\bin;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\ProgramData\\Oracle\\Java\\javapath;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Program Files\\Intel\\WiFi\\bin\\;C:\\Program Files\\Common Files\\Intel\\WirelessCommon\\;C:\\Program Files (x86)\\Lenovo\\Access Connections\\;C:\\Program Files\\MiKTeX 2.9\\miktex\\bin\\x64\\;C:\\Program Files\\nodejs\\;C:\\Program Files\\Git\\cmd;C:\\Program Files\\Microsoft VS Code\\bin;C:\\ProgramData\\chocolatey\\bin;C:\\Program Files\\TortoiseGit\\bin;C:\\Program Files\\PuTTY\\;C:\\Users\\amerkle\\AppData\\Local\\Programs\\Python\\Python37-32\\Scripts\\;C:\\Users\\amerkle\\AppData\\Local\\Programs\\Python\\Python37-32\\;C:\\Program Files\\Intel\\WiFi\\bin\\;C:\\Program Files\\Common Files\\Intel\\WirelessCommon\\;C:\\Program Files\\Microsoft VS Code\\bin;C:\\Users\\amerkle\\AppData\\Roaming\\npm;C:\\Projekte\\github\\vscp-framework\\vscp\\test\\rubyinstaller-2.5.1-1-x64\\bin;C:\\Program Files\\AdoptOpenJDK\\jdk-11.0.3.7-hotspot\\bin;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\ProgramData\\Oracle\\Java\\javapath;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Program Files\\Intel\\WiFi\\bin\\;C:\\Program Files\\Common Files\\Intel\\WirelessCommon\\;C:\\Program Files (x86)\\Lenovo\\Access Connections\\;C:\\Program Files\\MiKTeX 2.9\\miktex\\bin\\x64\\;C:\\Program Files\\nodejs\\;C:\\Program Files\\Git\\cmd;C:\\Program Files\\Microsoft VS Code\\bin;C:\\ProgramData\\chocolatey\\bin;C:\\Program Files\\TortoiseGit\\bin;C:\\Program Files\\PuTTY\\;C:\\Users\\amerkle\\AppData\\Local\\Programs\\Python\\Python37-32\\Scripts\\;C:\\Users\\amerkle\\AppData\\Local\\Programs\\Python\\Python37-32\\;C:\\Program Files\\Intel\\WiFi\\bin\\;C:\\Program Files\\Common Files\\Intel\\WirelessCommon\\;C:\\Program Files\\Microsoft VS Code\\bin;C:\\Users\\amerkle\\AppData\\Roaming\\npm;C:\\Projekte\\github\\vscp-framework\\vscp\\test\\rubyinstaller-2.5.1-1-x64\\bin",
+			"PLATFORMIO_CALLER": "vscode"
+		},
+		"files.associations": {
+			"iosfwd": "cpp",
+			"*.tcc": "cpp",
+			"deque": "cpp",
+			"string": "cpp",
+			"unordered_map": "cpp",
+			"unordered_set": "cpp",
+			"vector": "cpp",
+			"functional": "cpp",
+			"fstream": "cpp",
+			"istream": "cpp",
+			"ostream": "cpp",
+			"sstream": "cpp",
+			"streambuf": "cpp",
+			"system_error": "cpp",
+			"tuple": "cpp",
+			"cmath": "cpp",
+			"initializer_list": "cpp",
+			"list": "cpp",
+			"regex": "cpp",
+			"type_traits": "cpp",
+			"xhash": "cpp",
+			"xstring": "cpp",
+			"xutility": "cpp"
+		},
+		"files.exclude": {
+			"**/.classpath": true,
+			"**/.project": true,
+			"**/.settings": true,
+			"**/.factorypath": true
+		}
+	}
 }

@@ -22,8 +22,8 @@ Next available REQ id: 19
 ### Wifi
 
 * REQ-07: The display shall setting up an wifi access point on user demand (via user button) after a power-cycle.
-* REQ-08: The wifi access point shall have the following configuration:
-    * SSID: ESP-RGB-LED-MATRIX
+* REQ-08: The wifi access point shall have the following default configuration:
+    * SSID: pixelix
     * Security: TBD
     * Password: TBD
 * REQ-09: If a remote wifi network is configured, the display shall automatically connect after a power-cycle.

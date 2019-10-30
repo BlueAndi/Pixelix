@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "DisplayMgr.h"
-#include "Board.h"
 #include "LedMatrix.h"
 #include "AmbientLightSensor.h"
 
@@ -301,7 +300,10 @@ void DisplayMgr::setAllLamps(uint8_t slotId, bool onState)
 
 void DisplayMgr::process(void)
 {
-    LedMatrix& matrix = LedMatrix::getInstance();
+    LedMatrix&  matrix  = LedMatrix::getInstance();
+    int16_t     x       = 0;
+    int16_t     y       = 0;
+    size_t      index   = 0;
 
     matrix.clear();
 
@@ -351,6 +353,16 @@ void DisplayMgr::process(void)
     }
 
     matrix.show();
+
+    /* Copy framebuffer after it is completely updated. */
+    for(y = 0; y < matrix.height(); ++y)
+    {
+        for(x = 0; x < matrix.width(); ++x)
+        {
+            m_fbCopy[index] = matrix.getColor(x, y);
+            ++index;
+        }
+    }
 
     return;
 }
@@ -402,6 +414,13 @@ void DisplayMgr::delay(uint32_t waitTime)
     return;
 }
 
+void DisplayMgr::getFBCopy(const uint32_t*& fb, size_t& length)
+{
+    fb      = m_fbCopy;
+    length  = ARRAY_NUM(m_fbCopy);
+    return;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -418,7 +437,8 @@ DisplayMgr::DisplayMgr() :
     m_slotsEnabled(false),
     m_sysMsgWidget(),
     m_bitmapBuffer(),
-    m_autoBrightnessTimer()
+    m_autoBrightnessTimer(),
+    m_fbCopy()
 {
     uint8_t index = 0u;
 

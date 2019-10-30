@@ -82,6 +82,11 @@ Result:
 }
 ```
 
+Example with curl:
+```
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/status
+```
+
 ## Endpoint `<base-uri>`/display/slots
 Get the number of supported slots.
 
@@ -105,6 +110,11 @@ Result:
 }
 ```
 
+Example with curl:
+```
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/slots
+```
+
 ## Endpoint `<base-uri>`/display/slot/`<slot-id>`/text
 Show text in the specified slot.
 
@@ -125,6 +135,11 @@ Result:
     "resultCode": 0,
     "data": null
 }
+```
+
+Example with curl:
+```
+$ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/text
 ```
 
 ## Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap

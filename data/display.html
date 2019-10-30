@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>%PAGE_TITLE%</title>
+    <link rel="stylesheet" href="/data/style.css"></link>
+    <script src="/data/util.js"></script>
+    <script>
+        var matrixWidth     = 32;
+        var matrixHeight    = 8;
+        var ctx             = null;
+        var pixelWidth      = 10;
+        var pixelHeight     = 10;
+        var intervalRef     = null;
+
+        function plot(x, y, color) {
+            if (null !== ctx) {
+                ctx.lineWidth = "1";
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.fillRect(x * pixelWidth + x + 1, y * pixelHeight + y + 1, pixelWidth, pixelHeight);
+            }
+        }
+
+        function animate() {
+            var xhr         = new XMLHttpRequest();
+            var formData    = new FormData();
+
+            formData.append("get", "data");
+
+            xhr.open("POST", "/display");
+
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+                var index   = 0;
+                var x       = 0;
+                var y       = 0;
+                var red     = 0;
+                var green   = 0;
+                var blue    = 0;
+
+                for(y = 0; y < matrixHeight; ++y) {
+                    for(x = 0; x < matrixWidth; ++x) {
+                        if (jsonRsp.data.length > index) {
+                            red     = (jsonRsp.data[index] & 0xff0000) >> 16;
+                            green   = (jsonRsp.data[index] & 0x00ff00) >> 8;
+                            blue    = (jsonRsp.data[index] & 0x0000ff) >> 0;
+                            plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
+                            ++index;
+                        }
+                    }
+                }
+            };
+
+            xhr.send(formData);
+        }
+
+        window.onload = function() {
+            var displayCanvas = document.getElementById("canvas");
+            
+            ctx         = displayCanvas.getContext("2d");
+            intervalRef = window.setInterval(animate, 500);
+        };
+    </script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div class="topnav">
+    <a href="/">Home</a>
+    <a href="/display" class="active">Display</a>
+    <a href="/network">Network</a>
+    <a href="/config">Configuration</a>
+    <a href="/settings">Settings</a>
+    <a href="/dev">Development</a>
+    <a href="/update">Update</a>
+</div>
+<div class="main">
+    <h2>Display</h2>
+    <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
+</div>
+<div class="footer">
+    <hr />
+    <p>(C) 2019 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>
