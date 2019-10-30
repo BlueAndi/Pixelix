@@ -49,6 +49,7 @@
 
 #include "APState.h"
 #include "ConnectingState.h"
+#include "ErrorState.h"
 
 #include <Logging.h>
 
@@ -87,7 +88,7 @@ InitState       InitState::m_instance;
 
 void InitState::entry(StateMachine& sm)
 {
-    uint8_t index = 0u;
+    bool    isError = false;
 
     /* Initialize hardware */
     Board::init();
@@ -102,52 +103,73 @@ void InitState::entry(StateMachine& sm)
     /* Show as soon as possible the user that the system is booting. */
     LOG_INFO("Booting ...");
 
-    /* Initialize drivers */
+    /* Initialize button driver */
     if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
     {
-        LOG_WARNING("Couldn't initialize button driver.");
+        LOG_FATAL("Couldn't initialize button driver.");
+        isError = true;
     }
-
-    /* Start LED matrix */
-    LedMatrix::getInstance().begin();
-
-    /* Initialize display manager */
-    DisplayMgr::getInstance().init();
-
-    /* Initialize display layouts */
-    for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
+    else
     {
-        DisplayMgr::getInstance().setLayout(index, DisplayMgr::LAYOUT_ID_2);
-    }
+        /* Start LED matrix */
+        LedMatrix::getInstance().begin();
 
-    /* Mounting the filesystem. */
-    if (false == SPIFFS.begin())
+        /* Initialize display manager */
+        if (false == DisplayMgr::getInstance().init())
+        {
+            LOG_FATAL("Failed to initialize display manager.");
+            isError = true;
+        }
+        else
+        {
+            uint8_t index   = 0u;
+
+            /* Set display layouts */
+            for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
+            {
+                DisplayMgr::getInstance().setLayout(index, DisplayMgr::LAYOUT_ID_2);
+            }
+        }
+    }
+    
+    if (false == isError)
     {
-        LOG_WARNING("Couldn't mount the filesystem.");
+        /* Mounting the filesystem. */
+        if (false == SPIFFS.begin())
+        {
+            LOG_FATAL("Couldn't mount the filesystem.");
+            isError = true;
+        }
+
+        /* Show some interesting boot information */    
+        showBootInfo();
+
+        /* Enable the automatic display brightness adjustment according to the
+        * ambient light.
+        */
+        if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(true))
+        {
+            LOG_WARNING("Failed to enable autom. brigthness adjustment.");
+        }
+        
+        /* Initialize webserver */
+        MyWebServer::init();
+
+        /* Initialize over-the-air update server */
+        UpdateMgr::getInstance().init();
+
+        /* Don't store the wifi configuration in the NVS.
+        * This seems to cause a reset after a client connected to the access point.
+        * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
+        */
+        WiFi.persistent(false);
     }
 
-    /* Show some interesting boot information */    
-    showBootInfo();
-
-    /* Enable the automatic display brightness adjustment according to the
-     * ambient light.
-     */
-    if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(true))
+    /* Any error happened? */
+    if (true == isError)
     {
-        LOG_WARNING("Failed to enable autom. brigthness adjustment.");
+        sm.setState(ErrorState::getInstance());
     }
-
-    /* Initialize webserver */
-    MyWebServer::init();
-
-    /* Initialize over-the-air update server */
-    UpdateMgr::getInstance().init();
-
-    /* Don't store the wifi configuration in the NVS.
-     * This seems to cause a reset after a client connected to the access point.
-     * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
-     */
-    WiFi.persistent(false);
 
     return;
 }

@@ -77,8 +77,10 @@ public:
 
     /**
      * Initialize the display manager. Call this once during startup.
+     * 
+     * @return If initialization is successful, it will return true otherwise false.
      */
-    void init(void);
+    bool init(void);
 
     /**
      * Enable/Disable automatic brightness adjustment.

@@ -81,16 +81,17 @@ const char* DisplayMgr::LAMP_WIDGET_NAME    = "lamp";
  * Public Methods
  *****************************************************************************/
 
-void DisplayMgr::init(void)
+bool DisplayMgr::init(void)
 {
-    uint16_t brightness = (static_cast<uint16_t>(UINT8_MAX) * BRIGHTNESS_DEFAULT) / 100u;
+    bool        status      = true;
+    uint16_t    brightness  = (static_cast<uint16_t>(UINT8_MAX) * BRIGHTNESS_DEFAULT) / 100u;
 
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.
      */
     LedMatrix::getInstance().setBrightness(brightness);
 
-    return;
+    return status;
 }
 
 bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
