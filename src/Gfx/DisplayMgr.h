@@ -48,6 +48,8 @@
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 
+#include "Board.h"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -193,6 +195,14 @@ public:
      */
     void delay(uint32_t waitTime);
 
+    /**
+     * Get access to copy of framebuffer.
+     * 
+     * @param[out] fb       Pointer to framebuffer copy
+     * @param[out] length   Number of elements in the framebuffer copy
+     */
+    void getFBCopy(const uint32_t*& fb, size_t& length);
+
     /** Maximum number of supported slots. */
     static const uint8_t    MAX_SLOTS               = 4u;
 
@@ -251,6 +261,9 @@ private:
 
     /** Timer, used for automatic brightness adjustment. */
     SimpleTimer         m_autoBrightnessTimer;
+
+    /** Framebuffer copy, used for further applicaton use. */
+    uint32_t            m_fbCopy[Board::LedMatrix::width * Board::LedMatrix::height];
 
     /**
      * Construct LED matrix.

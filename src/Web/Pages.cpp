@@ -39,6 +39,7 @@
 #include "Version.h"
 #include "UpdateMgr.h"
 #include "LedMatrix.h"
+#include "DisplayMgr.h"
 
 #include <WiFi.h>
 #include <Esp.h>
@@ -95,6 +96,9 @@ static String updatePageProcessor(const String& var);
 
 static void uploadPage(AsyncWebServerRequest* request);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
+
+static void displayPage(AsyncWebServerRequest* request);
+static String displayPageProcessor(const String& var);
 
 /******************************************************************************
  * Local Variables
@@ -160,6 +164,7 @@ void Pages::init(AsyncWebServer& srv)
     srv.onNotFound(errorPage);
     srv.on("/", HTTP_GET, indexPage);
     srv.on("/dev", HTTP_GET, devPage);
+    srv.on("/display", HTTP_GET | HTTP_POST, displayPage);
     srv.on("/network", HTTP_GET, networkPage);
     srv.on("/config", HTTP_GET, configPage);
     srv.on("/config", HTTP_POST, configPage);
@@ -1105,4 +1110,81 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     }
 
     return;
+}
+
+/**
+ * Display page, showing current display content.
+ * 
+ * @param[in] request   HTTP request
+ */
+static void displayPage(AsyncWebServerRequest* request)
+{
+    if (NULL == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    /* Store configuration? */
+    if (0 < request->args())
+    {
+        String jsonRsp;
+
+        if (false == request->hasArg("get"))
+        {
+            jsonRsp = "{ \"data\": [] }";
+        }
+        else if (request->arg("get") != "data")
+        {
+            jsonRsp = "{ \"data\": [] }";
+        }
+        else
+        {
+            uint16_t        index   = 0;
+            const uint32_t* fb      = NULL;
+            size_t          fbSize  = 0;
+            
+            DisplayMgr::getInstance().getFBCopy(fb, fbSize);
+
+            jsonRsp = "{ \"data\": [ ";
+
+            for(index = 0; index < fbSize; ++index)
+            {
+                if (0 < index)
+                {
+                    jsonRsp += ", ";
+                }
+
+                jsonRsp += fb[index];
+            }
+
+            jsonRsp += " ] }";
+        }
+
+        request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
+    }
+    else
+    {
+        request->send(SPIFFS, "/display.html", "text/html", false, displayPageProcessor);
+    }
+
+    return;
+}
+
+/**
+ * Processor for display page template.
+ * It is responsible for the data binding.
+ * 
+ * @param[in] var   Name of variable in the template
+ */
+static String displayPageProcessor(const String& var)
+{
+    return commonPageProcessor(var);
 }
