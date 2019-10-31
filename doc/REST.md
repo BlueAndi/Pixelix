@@ -13,11 +13,8 @@ The current API version is "v1".
 
 ## In general
 
-Every response will provide three items:
-* result: The result as string.
-  * "ok": The request was successful executed.
-  * "error": The request failed.
-* resultCode: The result as integer number.
+Every response will provide two items:
+* status: The result as integer number.
   * 0: The request was successful executed.
   * 1: The request failed.
 * data: If request was successful, the data object will contain the requested data otherwise null.
@@ -25,8 +22,7 @@ Every response will provide three items:
 
 ```json
 {
-    "result": "ok",
-    "resultCode": 0,
+    "status": 0,
     "data": {
         "software": {
             "version": "v0.1.0"
@@ -58,8 +54,7 @@ GET <base-uri>/rest/v1/status
 Result:
 ```json
 {
-    "result": "ok",
-    "resultCode": 0,
+    "status": 0,
     "data": {
         "hardware": {
             "chipRev": 1,
@@ -102,8 +97,7 @@ GET <base-uri>/rest/v1/display/slots
 Result:
 ```json
 {
-    "result": "ok",
-    "resultCode": 0,
+    "status": 0,
     "data": {
         "slots": 4
     }
@@ -131,8 +125,7 @@ POST <base-uri>/rest/v1/display/slot/0/text?show=Test
 Result:
 ```json
 {
-    "result": "ok",
-    "resultCode": 0,
+    "status": 0,
     "data": null
 }
 ```
@@ -161,8 +154,7 @@ POST <base-uri>/rest/v1/display/slot/0/bitmap?width=8&height=8&data=XXXXXX
 Result:
 ```json
 {
-    "result": "ok",
-    "resultCode": 0,
+    "status": 0,
     "data": null
 }
 ```
@@ -187,10 +179,14 @@ POST <base-uri>/rest/v1/display/slot/0/lamp/0/state?set=on
 Result:
 ```json
 {
-    "result": "ok",
-    "resultCode": 0,
+    "status": 0,
     "data": null
 }
+```
+
+Example with curl:
+```
+$ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/lamp/0/state
 ```
 
 # Issues, Ideas And Bugs
