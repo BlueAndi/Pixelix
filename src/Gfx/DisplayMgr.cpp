@@ -623,13 +623,13 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
     bool            success         = true;
     const uint16_t  TEXT_WIDTH      = Board::LedMatrix::width - BMP_WIDTH - 1u;
     const uint16_t  TEXT_HEIGHT     = 5u;
-    const uint16_t  LAMP_WIDTH      = Board::LedMatrix::width - BMP_WIDTH;
+    const uint16_t  LAMP_WIDTH      = Board::LedMatrix::width - BMP_WIDTH - 1u;
     const uint16_t  LAMP_HEIGHT     = 1u;
     const int16_t   BMP_POS_X       = 0;
     const int16_t   BMP_POS_Y       = 0;
     const int16_t   TEXT_POS_X      = BMP_POS_X + BMP_WIDTH + 1;
     const int16_t   TEXT_POS_Y      = 1;
-    const int16_t   LAMP_POS_X      = BMP_POS_X + BMP_WIDTH;
+    const int16_t   LAMP_POS_X      = BMP_POS_X + BMP_WIDTH + 1;
     const int16_t   LAMP_POS_Y      = TEXT_POS_Y + TEXT_HEIGHT + 1;
     Canvas*         bitmapCanvas    = new Canvas(BMP_WIDTH, BMP_HEIGHT, BMP_POS_X, BMP_POS_Y);
     BitmapWidget*   bitmapWidget    = new BitmapWidget();
@@ -706,7 +706,7 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
                 lampName[lampNameNumPos] = '0' + index;
                 lampName[lampNameNumPos + 1] = '\0';
                 lampWidgets[index]->setName(lampName);
-                lampWidgets[index]->move(index * LampWidget::WIDTH + 1 + index, 0);
+                lampWidgets[index]->move(index * LampWidget::WIDTH + index * 2, 0);
             }
         }
     }
