@@ -46,6 +46,7 @@
 #include <SimpleTimer.hpp>
 #include <ProgressBar.h>
 #include <Logging.h>
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -523,6 +524,7 @@ static void testStateMachine(void);
 static void testSimpleTimer(void);
 static void testProgressBar(void);
 static void testLogging(void);
+
 /******************************************************************************
  * Variables
  *****************************************************************************/
