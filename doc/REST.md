@@ -137,7 +137,7 @@ $ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/d
 
 ## Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap
 Show bitmap in the specified slot. The bitmap must be BASE64 encoded.
-At the momet only bitmaps in the size of 8 x 8 pixel are supported.
+At the momet only bitmaps in the size of 8 x 8 pixel are supported with RGB565.
 
 Detail:
 * Method: POST
@@ -157,6 +157,10 @@ Result:
     "status": 0,
     "data": null
 }
+```
+
+```
+$ (echo -n 'width=8&height=8&data="'; base64 hacker_rgb565.bin; echo '"}') | curl -d @-  http://192.168.2.166/rest/api/v1/display/slot/0/bitmap
 ```
 
 ## Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`/state
