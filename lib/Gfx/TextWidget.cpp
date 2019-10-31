@@ -100,6 +100,8 @@ void TextWidget::update(Adafruit_GFX& gfx)
             m_scrollIndex           = 0u;
             m_scrollTimer.stop();
         }
+
+        m_checkScrollingNeed = false;
     }
 
     /* If text width is lower or equal than the display width, no scrolling is necessary. */
