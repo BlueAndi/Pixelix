@@ -166,10 +166,8 @@ void Pages::init(AsyncWebServer& srv)
     srv.on("/dev", HTTP_GET, devPage);
     srv.on("/display", HTTP_GET | HTTP_POST, displayPage);
     srv.on("/network", HTTP_GET, networkPage);
-    srv.on("/config", HTTP_GET, configPage);
-    srv.on("/config", HTTP_POST, configPage);
-    srv.on("/settings", HTTP_GET, settingsPage);
-    srv.on("/settings", HTTP_POST, settingsPage);
+    srv.on("/config", HTTP_GET | HTTP_POST, configPage);
+    srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
     srv.on("/update", HTTP_GET, updatePage);
     srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
 
@@ -547,7 +545,8 @@ static void configPage(AsyncWebServerRequest* request)
     }
 
     /* Store configuration? */
-    if (0 < request->args())
+    if ((HTTP_POST == request->method()) &&
+        (0 < request->args()))
     {
         String jsonRsp;
 
@@ -583,9 +582,13 @@ static void configPage(AsyncWebServerRequest* request)
 
         request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
     }
-    else
+    else if (HTTP_GET == request->method())
     {
         request->send(SPIFFS, "/configuration.html", "text/html", false, configPageProcessor);
+    }
+    else
+    {
+        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
     }
 
     return;
@@ -644,7 +647,8 @@ static void settingsPage(AsyncWebServerRequest* request)
     }
 
     /* Store settings? */
-    if (0 < request->args())
+    if ((HTTP_POST == request->method()) &&
+        (0 < request->args()))
     {
         bool    isError = false;
         String  jsonRsp;
@@ -799,9 +803,13 @@ static void settingsPage(AsyncWebServerRequest* request)
 
         request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
     }
-    else
+    else if (HTTP_GET == request->method())
     {
         request->send(SPIFFS, "/settings.html", "text/html", false, settingsPageProcessor);
+    }
+    else
+    {
+        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
     }
     
     return;
@@ -1133,7 +1141,8 @@ static void displayPage(AsyncWebServerRequest* request)
     }
 
     /* Store configuration? */
-    if (0 < request->args())
+    if ((HTTP_POST == request->method()) &&
+        (0 < request->args()))
     {
         String jsonRsp;
 
@@ -1170,9 +1179,13 @@ static void displayPage(AsyncWebServerRequest* request)
 
         request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
     }
-    else
+    else if (HTTP_GET == request->method())
     {
         request->send(SPIFFS, "/display.html", "text/html", false, displayPageProcessor);
+    }
+    else
+    {
+        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
     }
 
     return;
