@@ -447,6 +447,11 @@ DisplayMgr::DisplayMgr() :
     {
         m_slots[index] = NULL;
     }
+
+    /* Move system message text widget a little bit down in y direction,
+     * to get one pixel line space at top. This looks better.
+     */
+    m_sysMsgWidget.move(0, 1);
 }
 
 DisplayMgr::~DisplayMgr()
