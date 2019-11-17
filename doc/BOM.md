@@ -21,10 +21,13 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 | 1 | ESP32-DEVKIT V1 | - | ESP32-DEVKITV1 | [Ebay](https://www.ebay.de/itm/Espressif-ESP32-WLAN-Dev-Kit-Board-Development-Bluetooth-Wifi-v1-WROOM32-NodeMCU/253059783728?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649) |
 | 1 | N-channel mosfet BSS138 | SOT23 | Q1 | [Reichelt](https://www.reichelt.de/mosfet-n-ch-50v-0-22a-0-36w-sot-23-bss-138-smd-p41437.html?), [Farnell](https://de.farnell.com/on-semiconductor/bss138/mosfet-n-kanal-50v-220ma-sot-23/dp/9845330?st=N-channel%20mosfet%20BSS138) |
 | 1 | 32.768 kHz crystal | TC26V | Q2 | [Reichelt](https://www.reichelt.de/standardquarz-grundton-32-768-khz-iqd-lfxtal014219-p245417.html?), [Farnell](https://de.farnell.com/citizen-finedevice/cfs206-32-768kdzb-ub/quarz-uhr-32-768khz-zylinder-6pf/dp/1457085?st=32.768%20kHz)  |
-| 1 | P-channel mosfet TSM2323CX | SOT96P280X 130-3N | U1 | [Reichelt](https://www.reichelt.de/mosfet-p-ch-20v-4-7a-0-039r-sot23-tsm2323cx-p254945.html?), [Farnell](https://de.farnell.com/taiwan-semiconductor/tsm2323cx-rfg/mosfet-p-kanal-20v-4-7a-sot-23/dp/2628138?st=P-channel%20mosfet%20TSM2323CX) |
-| 5 | Wago clamp 2 | W237-102 | X1, X2, X3, X4, X5, X6 | [Reichelt](https://www.reichelt.de/thr-leiterplattenklemme-rm-4-mm-2-pol-sw-wago-2060-1422-p163238.html?), [Farnell](https://de.farnell.com/wago/2060-472-998-404/reihenklemme-wire-to-board-2pos/dp/2916184?st=WAGO%202060-1422) |
+| 1 | P-channel mosfet STD26P3LLH6 | TO252 | U1 | [Reichelt](https://www.reichelt.de/mosfet-p-ch-30v-12a-0-03r-to252-std26p3llh6-p254904.html?), [Farnell](https://de.farnell.com/stmicroelectronics/std26p3llh6/mosfet-p-kanal-30v-12a-to-252/dp/2629747?st=STD26P3LLH6) |
+| 6 | Wago clamp 2 | W237-102 | X1, X2, X3, X4, X5, X6 | [Reichelt](https://www.reichelt.de/thr-leiterplattenklemme-rm-4-mm-2-pol-sw-wago-2060-1422-p163238.html?), [Farnell](https://de.farnell.com/wago/2060-472-998-404/reihenklemme-wire-to-board-2pos/dp/2916184?st=WAGO%202060-1422) |
 | 1 | Wago clamp 1 | W237-103 | X2 | [Reichelt](https://www.reichelt.de/thr-leiterplattenklemme-rm-4-mm-1-pol-sw-wago-2060-1421-p163237.html?&trstct=lsbght_sldr::163234) |
 | 1 | WS2812B 5050 8x32 RGB Flexible LED Panel Matrix | - | - | [Ebay](https://www.ebay.de/itm/WS2812B-5050-8x32-RGB-Flexible-LED-Panel-Matrix-Programmable-Display-Screen-DE/223166536588?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649) |
+| 1 | Power supply 5 V / 5 A (4 A would be enough) | - | - | [Reichelt](https://www.reichelt.de/tischnetzteil-25-w-5-v-5-a-mw-gst40a05-p171043.html?&trstct=pol_1) |
+| 1 | Power cable | - | - | [Reichelt](https://www.reichelt.de/netzkabel-schutzkontaktstecker-gew-1-8-m-schw-c13-nksk-200-sw-p13490.html?r=1) |
+| 1 | Power supply plug | - | - | [Reichelt](https://www.reichelt.de/einbaukupplung-fuer-hohlstecker-aussen-5-6mm-innen-2-1mm-lum-1614-19-p237595.html?&trstct=pol_0) |
 
 Note, X2 is a composition of Wago clamp 1 and 2.
 
