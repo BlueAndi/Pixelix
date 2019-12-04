@@ -78,6 +78,13 @@ public:
     }
 
     /**
+     * Destroy list element.
+     */
+    ~ListElement()
+    {
+    }
+
+    /**
      * Get element.
      * 
      * @return Element
