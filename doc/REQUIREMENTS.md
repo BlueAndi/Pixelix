@@ -4,7 +4,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
 # Requirements
-Next available REQ id: 19
+Next available REQ id: 21
 
 ## General
 * REQ-01: The display shall be able to show bitmaps and text.
@@ -24,13 +24,17 @@ Next available REQ id: 19
 * REQ-07: The display shall setting up an wifi access point on user demand (via user button) after a power-cycle.
 * REQ-08: The wifi access point shall have the following default configuration:
     * SSID: pixelix
-    * Security: TBD
-    * Password: TBD
+    * Security: WPA
+    * Password: "Luke, I am your father."
 * REQ-09: If a remote wifi network is configured, the display shall automatically connect after a power-cycle.
 
 ### REST
 
+* REQ-19: A REST interface shall be provided to control the display or retrieve information.
+
 ### Websocket
+
+* REQ-20: A websocket interface shall be provided to control the display or retrieve information.
 
 ## Firmware update
 * REQ-06: The firmware shall be updated over the air.
