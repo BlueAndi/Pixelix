@@ -12,7 +12,114 @@
         var ctx             = null;
         var pixelWidth      = 10;
         var pixelHeight     = 10;
-        var intervalRef     = null;
+        var intervalId      = 0;
+        var webSocket       = null;
+        
+        function wsOpen(protocol, hostname, port, endpoint, onSuccess, onError, onClosed, onMessage) {
+            var webSocketURL    = protocol + "://" + hostname + ":" + port + endpoint;
+            var ws              = null;
+            
+            try {
+                ws = new WebSocket(webSocketURL);
+                
+                ws.onopen = function(openEvent) {
+                    console.debug("WebSocket OPEN: " + JSON.stringify(openEvent, null, 4));
+                    if ("function" === typeof onSuccess) {
+                        onSuccess();
+                    }
+                };
+                
+                ws.onclose = function(closeEvent) {
+                    console.debug("WebSocket CLOSE: " + JSON.stringify(closeEvent, null, 4));
+                    if ("function" === typeof onClosed) {
+                        onClosed();
+                    }
+                };
+                
+                ws.onerror = function(errorEvent) {
+                    console.debug("WebSocket ERROR: " + JSON.stringify(errorEvent, null, 4));
+                    if ("function" === typeof onError) {
+                        onError();
+                    }
+                };
+                
+                ws.onmessage = function(messageEvent) {
+                    var wsMsg = messageEvent.data;
+                    
+                    console.debug("WebSocket MESSAGE: " + wsMsg);
+
+                    if ("function" === typeof onMessage) {
+                        onMessage(wsMsg);
+                    }
+                };
+            } catch (exception) {
+                console.error(exception);
+
+                if ("function" === typeof onError) {
+                    onError();
+                }
+            }
+
+            return ws;
+        }
+
+        function onSuccess()
+        {
+            console.info("Websocket connected.");
+            intervalId = window.setInterval(requestDisplayContent, 400);
+            return;
+        }
+
+        function onError()
+        {
+            console.info("Websocket error.");
+            return;
+        }
+
+        function onClosed()
+        {
+            console.info("Websocket disconnected.");
+            window.clearInterval(intervalId);
+            return;
+        }
+
+        function onMessage(msg)
+        {
+            var data    = msg.split(";");
+            var status  = data.shift();
+            var x       = 0;
+            var y       = 0;
+            var index   = 0;
+            var color   = 0;
+
+            if ("ACK" === status) {
+                for(y = 0; y < matrixHeight; ++y) {
+                    for(x = 0; x < matrixWidth; ++x) {
+                        if (data.length > index) {
+                            color   = parseInt(data[index]);
+                            red     = (color & 0xff0000) >> 16;
+                            green   = (color & 0x00ff00) >> 8;
+                            blue    = (color & 0x0000ff) >> 0;
+                            plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
+                            ++index;
+                        }
+                    }
+                }
+            } else {
+                console.error("ARGH!");
+            }
+
+            return;
+        }
+
+        function requestDisplayContent()
+        {
+            if (null !== webSocket) {
+                webSocket.send("GETDISP");
+            }
+
+            return;
+        }
 
         function plot(x, y, color) {
             if (null !== ctx) {
@@ -23,44 +130,12 @@
             }
         }
 
-        function animate() {
-            var xhr         = new XMLHttpRequest();
-            var formData    = new FormData();
-
-            formData.append("get", "data");
-
-            xhr.open("POST", "/display");
-
-            xhr.onload = function() {
-                var jsonRsp = JSON.parse(xhr.response);
-                var index   = 0;
-                var x       = 0;
-                var y       = 0;
-                var red     = 0;
-                var green   = 0;
-                var blue    = 0;
-
-                for(y = 0; y < matrixHeight; ++y) {
-                    for(x = 0; x < matrixWidth; ++x) {
-                        if (jsonRsp.data.length > index) {
-                            red     = (jsonRsp.data[index] & 0xff0000) >> 16;
-                            green   = (jsonRsp.data[index] & 0x00ff00) >> 8;
-                            blue    = (jsonRsp.data[index] & 0x0000ff) >> 0;
-                            plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
-                            ++index;
-                        }
-                    }
-                }
-            };
-
-            xhr.send(formData);
-        }
-
         window.onload = function() {
             var displayCanvas = document.getElementById("canvas");
             
-            ctx         = displayCanvas.getContext("2d");
-            intervalRef = window.setInterval(animate, 500);
+            ctx = displayCanvas.getContext("2d");
+
+            webSocket = wsOpen("%WS_PROTOCOL%", "%WS_HOSTNAME%", "%WS_PORT%", "%WS_ENDPOINT%", onSuccess, onError, onClosed, onMessage);
         };
     </script>
 </head>

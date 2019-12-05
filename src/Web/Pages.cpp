@@ -164,7 +164,7 @@ void Pages::init(AsyncWebServer& srv)
     srv.onNotFound(errorPage);
     srv.on("/", HTTP_GET, indexPage);
     srv.on("/dev", HTTP_GET, devPage);
-    srv.on("/display", HTTP_GET | HTTP_POST, displayPage);
+    srv.on("/display", HTTP_GET, displayPage);
     srv.on("/network", HTTP_GET, networkPage);
     srv.on("/config", HTTP_GET | HTTP_POST, configPage);
     srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
@@ -940,11 +940,11 @@ static String devPageProcessor(const String& var)
     {
         if (WIFI_MODE_AP == WiFi.getMode())
         {
-            result = WiFi.softAPgetHostname();
+            result = WiFi.softAPIP().toString();
         }
         else
         {
-            result = WiFi.getHostname();
+            result = WiFi.localIP().toString();
         }
     }
     else if (var == "WS_PORT")
@@ -1140,53 +1140,7 @@ static void displayPage(AsyncWebServerRequest* request)
         return;
     }
 
-    /* Store configuration? */
-    if ((HTTP_POST == request->method()) &&
-        (0 < request->args()))
-    {
-        String jsonRsp;
-
-        if (false == request->hasArg("get"))
-        {
-            jsonRsp = "{ \"data\": [] }";
-        }
-        else if (request->arg("get") != "data")
-        {
-            jsonRsp = "{ \"data\": [] }";
-        }
-        else
-        {
-            uint16_t        index   = 0;
-            const uint32_t* fb      = NULL;
-            size_t          fbSize  = 0;
-            
-            DisplayMgr::getInstance().getFBCopy(fb, fbSize);
-
-            jsonRsp = "{ \"data\": [ ";
-
-            for(index = 0; index < fbSize; ++index)
-            {
-                if (0 < index)
-                {
-                    jsonRsp += ", ";
-                }
-
-                jsonRsp += fb[index];
-            }
-
-            jsonRsp += " ] }";
-        }
-
-        request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
-    }
-    else if (HTTP_GET == request->method())
-    {
-        request->send(SPIFFS, "/display.html", "text/html", false, displayPageProcessor);
-    }
-    else
-    {
-        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
-    }
+    request->send(SPIFFS, "/display.html", "text/html", false, displayPageProcessor);
 
     return;
 }
@@ -1199,5 +1153,35 @@ static void displayPage(AsyncWebServerRequest* request)
  */
 static String displayPageProcessor(const String& var)
 {
-    return commonPageProcessor(var);
+    String  result;
+
+    if (var == "WS_PROTOCOL")
+    {
+        result = WebConfig::WEBSOCKET_PROTOCOL;
+    }
+    else if (var == "WS_HOSTNAME")
+    {
+        if (WIFI_MODE_AP == WiFi.getMode())
+        {
+            result = WiFi.softAPIP().toString();
+        }
+        else
+        {
+            result = WiFi.localIP().toString();
+        }
+    }
+    else if (var == "WS_PORT")
+    {
+        result = WebConfig::WEBSOCKET_PORT;
+    }
+    else if (var == "WS_ENDPOINT")
+    {
+        result = WebConfig::WEBSOCKET_PATH;
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
 }
