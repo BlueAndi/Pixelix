@@ -44,10 +44,6 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-
-/** FastLED RMT driver shall use only one channel to avoid wasting time and memory. */
-#define FASTLED_RMT_MAX_CHANNELS    1
-#include <FastLED.h>
 #include <FastLED_NeoMatrix.h>
 
 #include "Board.h"
