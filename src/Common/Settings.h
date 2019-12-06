@@ -225,11 +225,23 @@ public:
     /**
      * Get matrix type.
      * 
-     * @return Matrix type
+     * @param[out] matrixType   Matrix type
+     * 
+     * @return If a valid matrix type is stored, it will return true otherwise false.
      */
-    uint8_t getMatrixType()
+    bool getMatrixType(uint8_t& matrixType)
     {
-        return m_preferences.getUChar(KEY_MATRIX_TYPE, 0);
+        bool    status  = false;
+        int16_t value   = m_preferences.getShort(KEY_MATRIX_TYPE, -1);
+
+        if ((0 <= value) &&
+            (UINT8_MAX >= value))
+        {
+            matrixType  = static_cast<uint8_t>(value);
+            status      = true;
+        }
+
+        return status;
     }
 
     /**

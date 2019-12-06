@@ -606,17 +606,7 @@ static String configPageProcessor(const String& var)
 
     if (var == "MATRIX_TYPE")
     {
-        if (false == Settings::getInstance().open(true))
-        {
-            result += 0u;
-        }
-        else
-        {
-            uint8_t matrixType = Settings::getInstance().getMatrixType();
-            Settings::getInstance().close();
-
-            result += matrixType;
-        }
+        result += LedMatrix::getInstance().getType();
     }
     else
     {

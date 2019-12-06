@@ -78,6 +78,16 @@ public:
     }
 
     /**
+     * Get matrix type.
+     * 
+     * @return Matrix type
+     */
+    uint8_t getType(void) const
+    {
+        return type;
+    }
+
+    /**
      * Set matrix type, which depends on how the matrix is hard-wired.
      * 
      * Use NEO_MATRIX_... macros to build the matrix type.
