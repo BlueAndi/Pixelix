@@ -75,11 +75,11 @@ public:
     TestLogger():
         m_buffer()
     {
-        uint16_t i = 0u;
+        uint16_t index = 0u;
 
-        for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
+        for(index = 0u; index < ARRAY_NUM(m_buffer); ++index)
         {
-            m_buffer[i] = 0u;
+            m_buffer[index] = 0;
         }
     }
 
@@ -111,11 +111,11 @@ public:
      */
     size_t write(const uint8_t* buffer, size_t size)
     {
-        uint16_t i = 0u;
+        uint16_t index = 0u;
         
-        for(i = 0u; i < ARRAY_NUM(m_buffer); ++i)
+        for(index = 0u; index < ARRAY_NUM(m_buffer); ++index)
         {
-            m_buffer[i] = buffer[i];
+            m_buffer[index] = static_cast<char>(buffer[index]);
         }
 
         return size;
@@ -126,7 +126,7 @@ public:
      * 
      * @return Write buffer
      */
-    uint8_t* getBuffer(void)
+    const char* getBuffer(void)
     {
         return m_buffer;
     }
@@ -139,7 +139,7 @@ public:
     }
 
 private:
-    uint8_t m_buffer[1024]; /**< Write buffer, containing the logMessage. */
+    char m_buffer[1024]; /**< Write buffer, containing the logMessage. */
 };
 
 /**
@@ -1272,6 +1272,13 @@ static void testSimpleTimer(void)
     TEST_ASSERT_TRUE(testTimer.isTimerRunning());
     TEST_ASSERT_TRUE(testTimer.isTimeout());
 
+    /* Start timer and start it again after timeout. */
+    testTimer.start(0u);
+    TEST_ASSERT_TRUE(testTimer.isTimeout());
+    testTimer.start(100u);
+    TEST_ASSERT_FALSE(testTimer.isTimeout());
+    testTimer.stop();
+
     return;
 }
 
@@ -1332,10 +1339,11 @@ static void testProgressBar(void)
 static void testLogging(void)
 {
     TestLogger      myTestLogger;
-    uint8_t*        printBuffer     = NULL;
+    const char*     printBuffer     = NULL;
     const char*     TEST_STRING_1   = "TestMessage";
     const String    TEST_STRING_2   = "TestMessageAsString";
     char            expectedLogMessage[52];
+    int             lineNo          = 0;
     
     /* Check intial LogLevel. */
     Logging::getInstance().init(&myTestLogger);
@@ -1353,15 +1361,39 @@ static void testLogging(void)
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
     /* Check expected error log output, with type const char* string. */
-    LOG_ERROR(TEST_STRING_1);
-    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d %s\r\n", (__LINE__ - 1), TEST_STRING_1);
+    LOG_ERROR(TEST_STRING_1); lineNo = __LINE__;
+    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "ERROR: TestMain.cpp:%d %s\r\n", lineNo, TEST_STRING_1);
     printBuffer = myTestLogger.getBuffer();
+
+    /* Skip timestamp */
+    while(('\0' != *printBuffer) && (' ' != *printBuffer))
+    {
+        ++printBuffer;
+    }
+    
+    if (' ' == *printBuffer)
+    {
+        ++printBuffer;
+    }
+
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
     /* Check expected error log output, with type const String string. */
-    LOG_ERROR(TEST_STRING_2);
-    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "|0| ERROR: TestMain.cpp:%d %s\r\n", (__LINE__ - 1), TEST_STRING_2.c_str());
+    LOG_ERROR(TEST_STRING_2);  lineNo = __LINE__;
+    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "ERROR: TestMain.cpp:%d %s\r\n", lineNo, TEST_STRING_2.c_str());
     printBuffer = myTestLogger.getBuffer();
+
+    /* Skip timestamp */
+    while(('\0' != *printBuffer) && (' ' != *printBuffer))
+    {
+        ++printBuffer;
+    }
+
+    if (' ' == *printBuffer)
+    {
+        ++printBuffer;
+    }
+
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
     return;

@@ -115,6 +115,7 @@ public:
     void start(uint32_t duration)
     {
         m_isRunning = true;
+        m_isTimeout = false;
         m_duration  = duration;
         m_start     = millis();
 
