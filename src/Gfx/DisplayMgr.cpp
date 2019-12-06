@@ -325,8 +325,6 @@ void DisplayMgr::process(void)
                 ++m_activeSlotId;
                 m_activeSlotId %= MAX_SLOTS;
 
-                LOG_INFO(String("Next slot: ") + m_activeSlotId);
-
                 /* Wait another period */
                 m_slotChangeTimer.restart();
             }
