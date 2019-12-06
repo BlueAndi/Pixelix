@@ -241,13 +241,13 @@ public:
             {
                 if (0u < x)
                 {
-                    printf(" ");
+                    ::printf(" ");
                 }
 
-                printf("0x%04X", m_buffer[x + WIDTH * y]);
+                ::printf("0x%04X", m_buffer[x + WIDTH * y]);
             }
 
-            printf("\r\n");
+            ::printf("\r\n");
         }
 
         return;
@@ -1370,7 +1370,7 @@ static void testLogging(void)
     {
         ++printBuffer;
     }
-    
+
     if (' ' == *printBuffer)
     {
         ++printBuffer;
