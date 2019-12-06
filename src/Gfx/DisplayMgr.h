@@ -224,8 +224,8 @@ public:
     /** Bitmap height in pixel, used for bitmap buffers. */
     static const uint8_t    BMP_HEIGHT              = 8u;
 
-    /** If no ambient light sensor is available, the default brightness shall be 40%. */
-    static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40u) / 100u;
+    /** If no ambient light sensor is available, the default brightness shall be 75%. */
+    static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 75u) / 100u;
 
     /** Minimum brightness of 25% in case of a dark room. Only used during automatic brightness adjustment. */
     static const uint8_t    BRIGHTNESS_MIN          = (UINT8_MAX * 25u) / 100u;
