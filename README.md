@@ -110,11 +110,11 @@ Build and upload the software via _Project Tasks -> Upload_ and the filesystem v
 
 ### REST interface
 
-See [REST interface](https://github.com/BlueAndi/esp-rgb-led-matrix/doc/REST.md).
+See [REST interface](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/REST.md).
 
 ### Websocket interface
 
-See [websocket interface](https://github.com/BlueAndi/esp-rgb-led-matrix/doc/WEBSOCKET.md).
+See [websocket interface](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/WEBSOCKET.md).
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

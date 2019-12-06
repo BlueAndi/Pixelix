@@ -7,6 +7,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 ## Get display pixel colors
 Command: ```GETDISP```
+
 Parameter:
 * -
 
