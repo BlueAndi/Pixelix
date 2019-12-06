@@ -125,10 +125,10 @@ void TextWidget::update(Adafruit_GFX& gfx)
 
         m_scrollTimer.start(DEFAULT_SCOLL_PAUSE);
     }
+    /* Scrolling is active, but characters must not be moved now. */
     else
     {
-        /* Nothing to do. */
-        ;
+        gfx.print(&m_str.c_str()[m_scrollIndex]);
     }
     
     return;

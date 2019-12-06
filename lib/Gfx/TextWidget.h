@@ -222,7 +222,7 @@ public:
     static const GFXfont*   DEFAULT_FONT;
 
     /** Default pause between character scrolling in ms */
-    static const uint32_t   DEFAULT_SCOLL_PAUSE = 200u;
+    static const uint32_t   DEFAULT_SCOLL_PAUSE = 400u;
 
 private:
 
