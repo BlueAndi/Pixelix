@@ -103,7 +103,7 @@ public:
     /** Default matrix type */
     static const uint8_t MATRIX_TYPE_DEFAULT    = NEO_MATRIX_TOP |
                                                   NEO_MATRIX_LEFT |
-                                                  NEO_MATRIX_ROWS |
+                                                  NEO_MATRIX_COLUMNS |
                                                   NEO_MATRIX_ZIGZAG;
 
 private:
