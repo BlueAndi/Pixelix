@@ -51,6 +51,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <time.h>
 
 #include "WString.h"
 #include "Print.h"
@@ -72,8 +73,9 @@ typedef bool boolean;
 
 static unsigned long millis()
 {
-    /* Not supported yet. */
-    return 0u;
+    clock_t now = clock();
+
+    return (now * 1000UL) / CLOCKS_PER_SEC;
 }
 
 #endif  /* __ARDUINO_H__ */
