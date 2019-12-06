@@ -68,7 +68,7 @@ const GFXfont*  TextWidget::DEFAULT_FONT    = &TomThumb;
 
 void TextWidget::update(Adafruit_GFX& gfx)
 {
-    const int16_t   CURSOR_X    = m_posX;
+    const int16_t   CURSOR_X    = m_posX - m_scrollOffset;
     const int16_t   CURSOR_Y    = m_posY + m_font->yAdvance - 1; /* Set cursor to baseline */
 
     /* Set base parameters */
@@ -82,55 +82,43 @@ void TextWidget::update(Adafruit_GFX& gfx)
     {
         int16_t     boundaryX       = 0;
         int16_t     boundaryY       = 0;
-        uint16_t    textWidth       = 0u;
         uint16_t    textHeight      = 0u;
 
-        gfx.getTextBounds(m_str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &textWidth, &textHeight);
+        gfx.getTextBounds(m_str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
 
         /* Text too long for the display? */
-        if (gfx.width() < textWidth)
+        if (gfx.width() < m_textWidth)
         {
             m_isScrollingEnabled    = true;
-            m_scrollIndex           = 0u;
+            m_scrollOffset          = 0u;
             m_scrollTimer.start(0u);    /* Ensure immediate update */
         }
         else
         {
             m_isScrollingEnabled    = false;
-            m_scrollIndex           = 0u;
+            m_scrollOffset          = 0u;
             m_scrollTimer.stop();
         }
 
         m_checkScrollingNeed = false;
     }
 
-    /* If text width is lower or equal than the display width, no scrolling is necessary. */
-    if (false == m_isScrollingEnabled)
+    /* Show text */
+    gfx.print(m_str);
+
+    /* Shall we scroll again? */
+    if (true == m_scrollTimer.isTimeout())
     {
-        gfx.print(m_str);
-    }
-    /* Scrolling is necessary.
-     * Between two characters shall be a short delay, to give the user a chance to read it. ;-)
-     */
-    else if (true == m_scrollTimer.isTimeout())
-    {
-        gfx.print(&m_str.c_str()[m_scrollIndex]);
-        
         /* Text scrolls completly out, until it starts from the beginning again. */
-        ++m_scrollIndex;
-        if (m_str.length() <= m_scrollIndex)
+        ++m_scrollOffset;
+        if (m_textWidth < m_scrollOffset)
         {
-            m_scrollIndex = 0;
+            m_scrollOffset = 0;
         }
 
-        m_scrollTimer.start(DEFAULT_SCOLL_PAUSE);
+        m_scrollTimer.start(DEFAULT_SCROLL_PAUSE);
     }
-    /* Scrolling is active, but characters must not be moved now. */
-    else
-    {
-        gfx.print(&m_str.c_str()[m_scrollIndex]);
-    }
-    
+
     return;
 }
 

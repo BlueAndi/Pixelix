@@ -74,7 +74,8 @@ public:
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
-        m_scrollIndex(0u),
+        m_textWidth(0u),
+        m_scrollOffset(0u),
         m_scrollTimer()
     {
     }
@@ -93,7 +94,8 @@ public:
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
-        m_scrollIndex(0u),
+        m_textWidth(0u),
+        m_scrollOffset(0u),
         m_scrollTimer()
     {
     }
@@ -110,7 +112,8 @@ public:
         m_font(widget.m_font),
         m_checkScrollingNeed(widget.m_checkScrollingNeed),
         m_isScrollingEnabled(widget.m_isScrollingEnabled),
-        m_scrollIndex(widget.m_scrollIndex),
+        m_textWidth(widget.m_textWidth),
+        m_scrollOffset(widget.m_scrollOffset),
         m_scrollTimer(widget.m_scrollTimer)
     {
     }
@@ -134,7 +137,8 @@ public:
         m_font                  = widget.m_font;
         m_checkScrollingNeed    = widget.m_checkScrollingNeed;
         m_isScrollingEnabled    = widget.m_isScrollingEnabled;
-        m_scrollIndex           = widget.m_scrollIndex;
+        m_textWidth             = widget.m_textWidth;
+        m_scrollOffset          = widget.m_scrollOffset;
         m_scrollTimer           = widget.m_scrollTimer;
 
         return *this;
@@ -213,7 +217,7 @@ public:
     }
 
     /** Default text color */
-    static const uint32_t   DEFAULT_TEXT_COLOR  = ColorDef::WHITE;
+    static const uint32_t   DEFAULT_TEXT_COLOR      = ColorDef::WHITE;
     
     /** Widget type string */
     static const char*      WIDGET_TYPE;
@@ -222,7 +226,7 @@ public:
     static const GFXfont*   DEFAULT_FONT;
 
     /** Default pause between character scrolling in ms */
-    static const uint32_t   DEFAULT_SCOLL_PAUSE = 400u;
+    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 200u;
 
 private:
 
@@ -231,7 +235,8 @@ private:
     const GFXfont*  m_font;                 /**< Current font */
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
     bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
-    uint8_t         m_scrollIndex;          /**< Scroll index of the string */
+    uint16_t        m_textWidth;            /**< Text width in pixel */
+    uint16_t        m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
 
 };
