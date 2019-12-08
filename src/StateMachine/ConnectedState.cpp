@@ -106,8 +106,8 @@ void ConnectedState::entry(StateMachine& sm)
     else
     {
         /* Start webserver after a wifi connection is established.
-        * If its done earlier, it will cause an exception.
-        */
+         * If its done earlier, it will cause an exception.
+         */
         MyWebServer::begin();
 
         /* Start over-the-air update server. */
