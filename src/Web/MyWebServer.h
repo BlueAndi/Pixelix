@@ -72,21 +72,14 @@ namespace MyWebServer
 void init(void);
 
 /**
- * Start web server.
+ * Start web server, which is running in a separate task.
  */
 void begin(void);
 
 /**
- * Stop web server.
+ * Stop web server and its task.
  */
 void end(void);
-
-/**
- * Get web server instance.
- * 
- * @return Web server instance.
- */
-AsyncWebServer& getInstance(void);
 
 }
 

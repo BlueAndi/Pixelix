@@ -164,7 +164,7 @@ void UpdateMgr::onStart(void)
     Canvas* canvas  = NULL;
 
     /* Stop webserver */
-    MyWebServer::getInstance().end();
+    MyWebServer::end();
 
     m_instance.m_updateIsRunning    = true;
     m_instance.m_progress           = 0u;
