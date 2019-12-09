@@ -4,10 +4,10 @@ title SW Deployment on ESP32
 
 node "ESP32" {
 
-    node "Core 0" {
+    node "Core 0\n(Protocol CPU, PRO_CPU)" as proCpu{
     }
     
-    node "Core 1" {
+    node "Core 1\n(Application CPU, APP_CPU)" as appCpu {
     
         component "Task Button\n(prio 1)" as taskButton
         component "Task Arduino\n(loopTask, prio 1)" as taskArduino
@@ -19,6 +19,15 @@ node "ESP32" {
         taskWebServer <-- os: <<calls>>
     }
 
+    note top of proCpu
+        The CPU 0 controls the WLAN, Bluetooth and
+        other internal peripherals such as SPI,
+        I2C, ADC, etc.
+    end note
+
+    note top of appCpu
+        The CPU 1 is available to our user program.
+    end note
 }
 
 @enduml

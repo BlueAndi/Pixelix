@@ -48,6 +48,9 @@
 /** Get number of array elements. */
 #define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
+/** Use it to mark not used function parameters. */
+#define NOT_USED(__var)     (void)(__var)
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -55,8 +58,6 @@
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
-
-static void handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen);
 
 /******************************************************************************
  * Local Variables
@@ -102,8 +103,6 @@ void WebSocketSrv::init(AsyncWebServer& srv)
 
 void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
 {
-    uint16_t errorId = 0;
-
     if ((NULL == server) ||
         (NULL == client))
     {
@@ -114,88 +113,27 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     {
     /* Client connected */
     case WS_EVT_CONNECT:
-        LOG_INFO("ws[%s][%u] Client connected.", server->url(), client->id());
+        m_instance.onConnect(server, client, reinterpret_cast<AsyncWebServerRequest*>(arg));
         break;
         
     /* Client disconnected */
     case WS_EVT_DISCONNECT:
-        LOG_INFO("ws[%s][%u] Client disconnected.", server->url(), client->id());
+        m_instance.onDisconnect(server, client);
         break;
         
     /* Pong received */
     case WS_EVT_PONG:
-
-        if ((NULL == data) ||
-            (0 == len))
-        {
-            LOG_INFO("ws[%s][%u] Pong: -", server->url(), client->id());
-        }
-        else
-        {
-            LOG_INFO("ws[%s][%u] Pong: %s", server->url(), client->id(), data);
-        }
+        m_instance.onPong(server, client, data, len);
         break;
         
     /* Remote error */
     case WS_EVT_ERROR:
-
-        if (NULL != arg)
-        {
-            errorId = *static_cast<uint16_t*>(arg);
-        }
-
-        if ((NULL == data) ||
-            (0 == len))
-        {
-            LOG_INFO("ws[%s][%u] Error %u: -", server->url(), client->id(), errorId);
-        }
-        else
-        {
-            LOG_INFO("ws[%s][%u] Error %u: %s", server->url(), client->id(), errorId, data);
-        }
+        m_instance.onError(server, client, *reinterpret_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
         break;
         
     /* Data */
     case WS_EVT_DATA:
-        {
-            AwsFrameInfo* info = reinterpret_cast<AwsFrameInfo*>(arg);
-
-            /* Frame info missing? */
-            if (NULL == info)
-            {
-                LOG_ERROR("ws[%s][%u] Frame info is missing.", server->url(), client->id());
-                server->close(client->id(), 0u, "Frame info is missing.");
-            }
-            /* No text frame? */
-            else if (WS_TEXT != info->opcode)
-            {
-                LOG_ERROR("ws[%s][%u] Not supported message type received: %u", server->url(), client->id(), info->opcode);
-                server->close(client->id(), 0u, "Not supported message type.");
-            }
-            /* Is the whole message in a single frame and we got all of it's data? */
-            else if ((0 < info->final) &&
-                     (0 == info->index) &&
-                     (len == info->len ))
-            {
-                /* Empty text message? */
-                if ((NULL == data) ||
-                    (0 == len))
-                {
-                    LOG_WARNING("ws[%s][%u] Message: -", server->url(), client->id());
-                }
-                /* Handle text message */
-                else
-                {
-                    handleMsg(server, client, reinterpret_cast<char*>(data), len);
-                }
-            }
-            /* Message is comprised of multiple frames or the frame is split into multiple packets */
-            else
-            {
-                LOG_ERROR("ws[%s][%u] Fragmented messages not supported.", server->url(), client->id());
-                server->close(client->id(), 0u, "Not supported message type.");
-            }
-        }
+        m_instance.onData(server, client, reinterpret_cast<AwsFrameInfo*>(arg), data, len);
         break;
 
     default:
@@ -205,23 +143,92 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     return;
 }
 
-/******************************************************************************
- * External Functions
- *****************************************************************************/
+void WebSocketSrv::onConnect(AsyncWebSocket* server, AsyncWebSocketClient* client, AsyncWebServerRequest* request)
+{
+    NOT_USED(request);
 
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+    LOG_INFO("ws[%s][%u] Client connected.", server->url(), client->id());
+    return;
+}
 
-/**
- * Handle a websocket message.
- * 
- * @param[in] server    Websocket server
- * @param[in] client    Weboscket client
- * @param[in] msg       Websocket message (not '\0' terminated)
- * @param[in] msgLen    Websocket message length
- */
-static void handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen)
+void WebSocketSrv::onDisconnect(AsyncWebSocket* server, AsyncWebSocketClient* client)
+{
+    LOG_INFO("ws[%s][%u] Client disconnected.", server->url(), client->id());
+    return;
+}
+
+void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, uint8_t* data, size_t len)
+{
+    if ((NULL == data) ||
+        (0 == len))
+    {
+        LOG_INFO("ws[%s][%u] Pong: -", server->url(), client->id());
+    }
+    else
+    {
+        LOG_INFO("ws[%s][%u] Pong: %s", server->url(), client->id(), data);
+    }
+
+    return;
+}
+
+void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client, uint16_t reasonCode, const char* reasonStr, size_t reasonStrLen)
+{
+    if ((NULL == reasonStr) ||
+        (0 == reasonStrLen))
+    {
+        LOG_INFO("ws[%s][%u] Error %u: -", server->url(), client->id(), reasonCode);
+    }
+    else
+    {
+        LOG_INFO("ws[%s][%u] Error %u: %s", server->url(), client->id(), reasonCode, reasonStr);
+    }
+
+    return;
+}
+
+void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsFrameInfo* info, const uint8_t* data, size_t len)
+{
+    /* Frame info missing? */
+    if (NULL == info)
+    {
+        LOG_ERROR("ws[%s][%u] Frame info is missing.", server->url(), client->id());
+        server->close(client->id(), 0u, "Frame info is missing.");
+    }
+    /* No text frame? */
+    else if (WS_TEXT != info->opcode)
+    {
+        LOG_ERROR("ws[%s][%u] Not supported message type received: %u", server->url(), client->id(), info->opcode);
+        server->close(client->id(), 0u, "Not supported message type.");
+    }
+    /* Is the whole message in a single frame and we got all of it's data? */
+    else if ((0 < info->final) &&
+                (0 == info->index) &&
+                (len == info->len ))
+    {
+        /* Empty text message? */
+        if ((NULL == data) ||
+            (0 == len))
+        {
+            LOG_WARNING("ws[%s][%u] Message: -", server->url(), client->id());
+        }
+        /* Handle text message */
+        else
+        {
+            handleMsg(server, client, reinterpret_cast<const char*>(data), len);
+        }
+    }
+    /* Message is comprised of multiple frames or the frame is split into multiple packets */
+    else
+    {
+        LOG_ERROR("ws[%s][%u] Fragmented messages not supported.", server->url(), client->id());
+        server->close(client->id(), 0u, "Not supported message type.");
+    }
+
+    return;
+}
+
+void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen)
 {
     size_t      msgIndex    = 0u;
     uint8_t     index       = 0u;
@@ -305,3 +312,11 @@ static void handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, cons
 
     return;
 }
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
