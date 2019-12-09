@@ -390,7 +390,9 @@ static void slotText(AsyncWebServerRequest* request)
         {
             String text = request->arg("show");
 
+            DisplayMgr::getInstance().lock();
             DisplayMgr::getInstance().setText(slotId, text);
+            DisplayMgr::getInstance().unlock();
 
             (void)jsonDoc.createNestedObject("data");
 
@@ -507,7 +509,10 @@ static void slotBitmap(AsyncWebServerRequest* request)
             size_t          bitmapSize          = 0;
             uint16_t*       bitmap              = reinterpret_cast<uint16_t*>(base64_decode(dataBase64Array, dataBase64ArraySize, &bitmapSize));
 
+            DisplayMgr::getInstance().lock();
             DisplayMgr::getInstance().setBitmap(slotId, bitmap, width, height);
+            DisplayMgr::getInstance().unlock();
+
             delete bitmap;
 
             (void)jsonDoc.createNestedObject("data");
@@ -596,7 +601,9 @@ static void slotLamp(AsyncWebServerRequest* request)
                 lampState = true;
             }
             
+            DisplayMgr::getInstance().lock();
             DisplayMgr::getInstance().setLamp(slotId, lampId, lampState);
+            DisplayMgr::getInstance().unlock();
 
             (void)jsonDoc.createNestedObject("data");
 

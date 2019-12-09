@@ -85,6 +85,17 @@ public:
     bool init(void);
 
     /**
+     * Lock display and prevent the display update, which will be done in a
+     * separate task.
+     */
+    void lock(void);
+
+    /**
+     * Unlock display.
+     */
+    void unlock(void);
+
+    /**
      * Enable/Disable automatic brightness adjustment.
      * 
      * @param[in] enable    Enable (true) or disable (false)
@@ -201,7 +212,7 @@ public:
      * @param[out] fb       Pointer to framebuffer copy
      * @param[out] length   Number of elements in the framebuffer copy
      */
-    void getFBCopy(const uint32_t*& fb, size_t& length);
+    void getFBCopy(uint32_t* fb, size_t length);
 
     /** Maximum number of supported slots. */
     static const uint8_t    MAX_SLOTS               = 4u;
@@ -238,6 +249,9 @@ private:
     /** Display manager instance */
     static DisplayMgr   m_instance;
 
+    /** Mutex to lock/unlock display update. */
+    SemaphoreHandle_t   m_xMutex;
+
     /** List of all slots. A slot is based on a canvas over the full LED matrix. */
     Canvas*             m_slots[MAX_SLOTS];
 
@@ -261,9 +275,6 @@ private:
 
     /** Timer, used for automatic brightness adjustment. */
     SimpleTimer         m_autoBrightnessTimer;
-
-    /** Framebuffer copy, used for further applicaton use. */
-    uint32_t            m_fbCopy[Board::LedMatrix::width * Board::LedMatrix::height];
 
     /**
      * Construct LED matrix.

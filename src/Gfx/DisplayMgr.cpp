@@ -90,7 +90,35 @@ bool DisplayMgr::init(void)
      */
     LedMatrix::getInstance().setBrightness(brightness);
 
+    /* Create mutex to lock/unlock display update */
+    m_xMutex = xSemaphoreCreateMutex();
+
+    if (NULL != m_xMutex)
+    {
+        status = false;
+    }
+
     return status;
+}
+
+void DisplayMgr::lock(void)
+{
+    if (NULL != m_xMutex)
+    {
+        (void)xSemaphoreTake(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void DisplayMgr::unlock(void)
+{
+    if (NULL != m_xMutex)
+    {
+        (void)xSemaphoreGive(m_xMutex);
+    }
+
+    return;
 }
 
 bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
@@ -301,9 +329,21 @@ void DisplayMgr::setAllLamps(uint8_t slotId, bool onState)
 void DisplayMgr::process(void)
 {
     LedMatrix&  matrix  = LedMatrix::getInstance();
-    int16_t     x       = 0;
-    int16_t     y       = 0;
-    size_t      index   = 0;
+
+    /* Ambient light sensor available for automatic brightness adjustment? */
+    if (true == m_autoBrightnessTimer.isTimerRunning())
+    {
+        float   lightNormalized         = AmbientLightSensor::getInstance().getNormalizedLight();
+        uint8_t BRIGHTNESS_DYN_RANGE    = UINT8_MAX - BRIGHTNESS_MIN;
+        float   fBrightness             = static_cast<float>(BRIGHTNESS_MIN) + ( static_cast<float>(BRIGHTNESS_DYN_RANGE) * lightNormalized );
+        uint8_t brightness              = static_cast<uint8_t>(fBrightness);
+
+        matrix.setBrightness(brightness);
+
+        m_autoBrightnessTimer.restart();
+    }
+
+    lock();
 
     matrix.clear();
 
@@ -337,30 +377,9 @@ void DisplayMgr::process(void)
         }
     }
 
-    /* Ambient light sensor available for automatic brightness adjustment? */
-    if (true == m_autoBrightnessTimer.isTimerRunning())
-    {
-        float   lightNormalized         = AmbientLightSensor::getInstance().getNormalizedLight();
-        uint8_t BRIGHTNESS_DYN_RANGE    = UINT8_MAX - BRIGHTNESS_MIN;
-        float   fBrightness             = static_cast<float>(BRIGHTNESS_MIN) + ( static_cast<float>(BRIGHTNESS_DYN_RANGE) * lightNormalized );
-        uint8_t brightness              = static_cast<uint8_t>(fBrightness);
-
-        matrix.setBrightness(brightness);
-
-        m_autoBrightnessTimer.restart();
-    }
-
     matrix.show();
 
-    /* Copy framebuffer after it is completely updated. */
-    for(y = 0; y < matrix.height(); ++y)
-    {
-        for(x = 0; x < matrix.width(); ++x)
-        {
-            m_fbCopy[index] = matrix.getColor(x, y);
-            ++index;
-        }
-    }
+    unlock();
 
     return;
 }
@@ -412,10 +431,32 @@ void DisplayMgr::delay(uint32_t waitTime)
     return;
 }
 
-void DisplayMgr::getFBCopy(const uint32_t*& fb, size_t& length)
+void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
 {
-    fb      = m_fbCopy;
-    length  = ARRAY_NUM(m_fbCopy);
+    LedMatrix&  matrix  = LedMatrix::getInstance();
+    int16_t     x       = 0;
+    int16_t     y       = 0;
+    size_t      index   = 0;
+    
+    if ((NULL != fb) &&
+        (0 < length))
+    {
+        /* Copy framebuffer after it is completely updated. */
+        for(y = 0; y < matrix.height(); ++y)
+        {
+            for(x = 0; x < matrix.width(); ++x)
+            {
+                fb[index] = matrix.getColor(x, y);
+                ++index;
+
+                if (length <= index)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
     return;
 }
 
@@ -428,6 +469,7 @@ void DisplayMgr::getFBCopy(const uint32_t*& fb, size_t& length)
  *****************************************************************************/
 
 DisplayMgr::DisplayMgr() :
+    m_xMutex(NULL),
     m_slots(),
     m_activeSlotId(0u),
     m_slotChangeTimer(),
@@ -435,8 +477,7 @@ DisplayMgr::DisplayMgr() :
     m_slotsEnabled(false),
     m_sysMsgWidget(),
     m_bitmapBuffer(),
-    m_autoBrightnessTimer(),
-    m_fbCopy()
+    m_autoBrightnessTimer()
 {
     uint8_t index = 0u;
 
