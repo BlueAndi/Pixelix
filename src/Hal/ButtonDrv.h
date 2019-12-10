@@ -114,7 +114,7 @@ private:
     static const uint32_t   BUTTON_TASK_STACKE_SIZE = 2048u;
 
     /** MCU core where the button task shall run */
-    static const BaseType_t BUTTON_TASK_RUN_CORE    = 0;
+    static const BaseType_t BUTTON_TASK_RUN_CORE    = -1;
 
     /** Task period in ms */
     static const uint32_t   BUTTON_TASK_PERIOD      = 10u;
