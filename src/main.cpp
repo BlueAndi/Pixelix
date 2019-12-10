@@ -35,7 +35,6 @@
 #include <Arduino.h>
 #include <StateMachine.hpp>
 #include "InitState.h"
-#include "DisplayMgr.h"
 
 /******************************************************************************
  * Macros
@@ -84,9 +83,6 @@ void loop()
 {
     /* Process system state machine */
     gSysStateMachine.process();
-
-    /* Update display content */
-    DisplayMgr::getInstance().process();
 
     return;
 }

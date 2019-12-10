@@ -236,17 +236,15 @@ void InitState::exit(StateMachine& sm)
 void InitState::showBootInfo(void)
 {
     LOG_INFO(String("SW version: ") + Version::SOFTWARE);
-    DisplayMgr::getInstance().showSysMsg(Version::SOFTWARE);
-
     LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
-
     LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
-
     LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
 
-    /* User shall be able to read it on the display. But it shall be really a short delay. */
-    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_SHORT);
+    DisplayMgr::getInstance().lock();
+    DisplayMgr::getInstance().showSysMsg(Version::SOFTWARE);
+    DisplayMgr::getInstance().unlock();
+    delay(SYS_MSG_WAIT_TIME_SHORT);
 
     /* Debug information */
     LOG_INFO(String("AMPDU RX feature: ") + CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED);
