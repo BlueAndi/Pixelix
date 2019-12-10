@@ -203,7 +203,7 @@ public:
     static const uint32_t   UPDATE_TASK_STACKE_SIZE = 4096u;
 
     /** MCU core where the update task shall run */
-    static const BaseType_t UPDATE_TASK_RUN_CORE    = -1;
+    static const BaseType_t UPDATE_TASK_RUN_CORE    = 1;
 
     /** Maximum number of supported slots. */
     static const uint8_t    MAX_SLOTS               = 4u;
