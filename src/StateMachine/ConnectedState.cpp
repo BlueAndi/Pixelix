@@ -116,8 +116,10 @@ void ConnectedState::entry(StateMachine& sm)
         /* Show hostname and don't believe its the same as set before. */
         infoStr += WiFi.getHostname();
         LOG_INFO(infoStr);
+        DisplayMgr::getInstance().lock();
         DisplayMgr::getInstance().showSysMsg(infoStr);
-        DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+        DisplayMgr::getInstance().unlock();
+        delay(SYS_MSG_WAIT_TIME_STD);
 
         /* Show ip address */
         LOG_INFO(String("IP: ") + WiFi.localIP().toString());

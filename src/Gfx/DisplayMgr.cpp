@@ -52,6 +52,9 @@
 /** Get number of array elements. */
 #define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
+/** Use it to mark not used function parameters. */
+#define NOT_USED(__var)     (void)(__var)
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -90,7 +93,56 @@ bool DisplayMgr::init(void)
      */
     LedMatrix::getInstance().setBrightness(brightness);
 
+    /* Create mutex to lock/unlock display update */
+    m_xMutex = xSemaphoreCreateMutex();
+
+    if (NULL == m_xMutex)
+    {
+        status = false;
+    }
+    else
+    {
+        BaseType_t  osRet   = pdFAIL;
+
+        osRet = xTaskCreateUniversal(   updateTask,
+                                        "displayUpdateTask",
+                                        UPDATE_TASK_STACKE_SIZE,
+                                        this,
+                                        4,
+                                        &m_updateTaskHandle,
+                                        UPDATE_TASK_RUN_CORE);
+
+        /* Failed to create task? */
+        if (pdPASS != osRet)
+        {
+            status = false;
+
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = NULL;
+        }
+    }
+
     return status;
+}
+
+void DisplayMgr::lock(void)
+{
+    if (NULL != m_xMutex)
+    {
+        (void)xSemaphoreTake(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void DisplayMgr::unlock(void)
+{
+    if (NULL != m_xMutex)
+    {
+        (void)xSemaphoreGive(m_xMutex);
+    }
+
+    return;
 }
 
 bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
@@ -298,12 +350,125 @@ void DisplayMgr::setAllLamps(uint8_t slotId, bool onState)
     return;
 }
 
-void DisplayMgr::process(void)
+void DisplayMgr::startRotating(bool start)
+{
+    m_rotate        = start;
+    m_activeSlotId  = 0;
+
+    if (false == start)
+    {
+        m_slotChangeTimer.stop();
+    }
+    else
+    {
+        m_slotChangeTimer.start(DEFAULT_PERIOD);
+    }
+    
+    return;
+}
+
+void DisplayMgr::enableSlots(bool enableIt)
+{
+    m_slotsEnabled = enableIt;
+
+    return;
+}
+
+void DisplayMgr::showSysMsg(const String& msg)
+{
+    m_sysMsgWidget.setStr(msg);
+    enableSlots(false);
+    
+    return;
+}
+
+void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
 {
     LedMatrix&  matrix  = LedMatrix::getInstance();
     int16_t     x       = 0;
     int16_t     y       = 0;
     size_t      index   = 0;
+    
+    if ((NULL != fb) &&
+        (0 < length))
+    {
+        /* Copy framebuffer after it is completely updated. */
+        for(y = 0; y < matrix.height(); ++y)
+        {
+            for(x = 0; x < matrix.width(); ++x)
+            {
+                fb[index] = matrix.getColor(x, y);
+                ++index;
+
+                if (length <= index)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    return;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+DisplayMgr::DisplayMgr() :
+    m_xMutex(NULL),
+    m_updateTaskHandle(NULL),
+    m_slots(),
+    m_activeSlotId(0u),
+    m_slotChangeTimer(),
+    m_rotate(false),
+    m_slotsEnabled(false),
+    m_sysMsgWidget(),
+    m_bitmapBuffer(),
+    m_autoBrightnessTimer()
+{
+    uint8_t index = 0u;
+
+    /* Initialize all slots */
+    for(index = 0u; index < MAX_SLOTS; ++index)
+    {
+        m_slots[index] = NULL;
+    }
+
+    /* Move system message text widget a little bit down in y direction,
+     * to get one pixel line space at top. This looks better.
+     */
+    m_sysMsgWidget.move(0, 1);
+}
+
+DisplayMgr::~DisplayMgr()
+{
+    /* Destroy the widgets of all slots */
+    clearSlots();
+}
+
+void DisplayMgr::process(void)
+{
+    LedMatrix&  matrix  = LedMatrix::getInstance();
+
+    /* Ambient light sensor available for automatic brightness adjustment? */
+    if (true == m_autoBrightnessTimer.isTimerRunning())
+    {
+        float   lightNormalized         = AmbientLightSensor::getInstance().getNormalizedLight();
+        uint8_t BRIGHTNESS_DYN_RANGE    = UINT8_MAX - BRIGHTNESS_MIN;
+        float   fBrightness             = static_cast<float>(BRIGHTNESS_MIN) + ( static_cast<float>(BRIGHTNESS_DYN_RANGE) * lightNormalized );
+        uint8_t brightness              = static_cast<uint8_t>(fBrightness);
+
+        matrix.setBrightness(brightness);
+
+        m_autoBrightnessTimer.restart();
+    }
+
+    lock();
 
     matrix.clear();
 
@@ -337,125 +502,26 @@ void DisplayMgr::process(void)
         }
     }
 
-    /* Ambient light sensor available for automatic brightness adjustment? */
-    if (true == m_autoBrightnessTimer.isTimerRunning())
-    {
-        float   lightNormalized         = AmbientLightSensor::getInstance().getNormalizedLight();
-        uint8_t BRIGHTNESS_DYN_RANGE    = UINT8_MAX - BRIGHTNESS_MIN;
-        float   fBrightness             = static_cast<float>(BRIGHTNESS_MIN) + ( static_cast<float>(BRIGHTNESS_DYN_RANGE) * lightNormalized );
-        uint8_t brightness              = static_cast<uint8_t>(fBrightness);
-
-        matrix.setBrightness(brightness);
-
-        m_autoBrightnessTimer.restart();
-    }
-
     matrix.show();
 
-    /* Copy framebuffer after it is completely updated. */
-    for(y = 0; y < matrix.height(); ++y)
+    unlock();
+
+    return;
+}
+
+void DisplayMgr::updateTask(void* parameters)
+{
+    DisplayMgr* displayMgr  = reinterpret_cast<DisplayMgr*>(parameters);
+    uint32_t    taskPeriod  = 10u;  /* 10 ms */
+
+    for(;;)
     {
-        for(x = 0; x < matrix.width(); ++x)
-        {
-            m_fbCopy[index] = matrix.getColor(x, y);
-            ++index;
-        }
+        /* Refresh display content periodically */
+        displayMgr->process();
+        delay(taskPeriod);
     }
 
     return;
-}
-
-void DisplayMgr::startRotating(bool start)
-{
-    m_rotate        = start;
-    m_activeSlotId  = 0;
-
-    if (false == start)
-    {
-        m_slotChangeTimer.stop();
-    }
-    else
-    {
-        m_slotChangeTimer.start(DEFAULT_PERIOD);
-    }
-    
-    return;
-}
-
-void DisplayMgr::enableSlots(bool enableIt)
-{
-    m_slotsEnabled = enableIt;
-
-    return;
-}
-
-void DisplayMgr::showSysMsg(const String& msg)
-{
-    m_sysMsgWidget.setStr(msg);
-    enableSlots(false);
-
-    /* Show message instant */
-    process();
-    
-    return;
-}
-
-void DisplayMgr::delay(uint32_t waitTime)
-{
-    uint32_t start = millis();
-
-    while(waitTime > (millis() - start))
-    {
-        process();
-    }
-
-    return;
-}
-
-void DisplayMgr::getFBCopy(const uint32_t*& fb, size_t& length)
-{
-    fb      = m_fbCopy;
-    length  = ARRAY_NUM(m_fbCopy);
-    return;
-}
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-DisplayMgr::DisplayMgr() :
-    m_slots(),
-    m_activeSlotId(0u),
-    m_slotChangeTimer(),
-    m_rotate(false),
-    m_slotsEnabled(false),
-    m_sysMsgWidget(),
-    m_bitmapBuffer(),
-    m_autoBrightnessTimer(),
-    m_fbCopy()
-{
-    uint8_t index = 0u;
-
-    /* Initialize all slots */
-    for(index = 0u; index < MAX_SLOTS; ++index)
-    {
-        m_slots[index] = NULL;
-    }
-
-    /* Move system message text widget a little bit down in y direction,
-     * to get one pixel line space at top. This looks better.
-     */
-    m_sysMsgWidget.move(0, 1);
-}
-
-DisplayMgr::~DisplayMgr()
-{
-    /* Destroy the widgets of all slots */
-    clearSlots();
 }
 
 void DisplayMgr::destroyWidget(Widget*& widget)

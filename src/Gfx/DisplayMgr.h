@@ -85,6 +85,17 @@ public:
     bool init(void);
 
     /**
+     * Lock display and prevent the display update, which will be done in a
+     * separate task.
+     */
+    void lock(void);
+
+    /**
+     * Unlock display.
+     */
+    void unlock(void);
+
+    /**
      * Enable/Disable automatic brightness adjustment.
      * 
      * @param[in] enable    Enable (true) or disable (false)
@@ -159,14 +170,6 @@ public:
     void setAllLamps(uint8_t slotId, bool onState);
 
     /**
-     * Process the slots. This shall be called periodically in
-     * a higher period than the DEFAULT_PERIOD.
-     * 
-     * It will handle which slot to show on the display.
-     */
-    void process(void);
-
-    /**
      * Start/Stop rotating the slots.
      * It will always start with slot 0. It is no resume possible.
      * Stopping means showing only slot 0.
@@ -189,19 +192,18 @@ public:
     void showSysMsg(const String& msg);
 
     /**
-     * Waits the given time and keeps the display updated.
-     * 
-     * @param[in] waitTime  Wait time in ms
-     */
-    void delay(uint32_t waitTime);
-
-    /**
      * Get access to copy of framebuffer.
      * 
      * @param[out] fb       Pointer to framebuffer copy
      * @param[out] length   Number of elements in the framebuffer copy
      */
-    void getFBCopy(const uint32_t*& fb, size_t& length);
+    void getFBCopy(uint32_t* fb, size_t length);
+
+    /** Update task stack size in bytes */
+    static const uint32_t   UPDATE_TASK_STACKE_SIZE = 4096u;
+
+    /** MCU core where the update task shall run */
+    static const BaseType_t UPDATE_TASK_RUN_CORE    = 1;
 
     /** Maximum number of supported slots. */
     static const uint8_t    MAX_SLOTS               = 4u;
@@ -238,6 +240,12 @@ private:
     /** Display manager instance */
     static DisplayMgr   m_instance;
 
+    /** Mutex to lock/unlock display update. */
+    SemaphoreHandle_t   m_xMutex;
+
+    /** Update task handle */
+    TaskHandle_t        m_updateTaskHandle;
+
     /** List of all slots. A slot is based on a canvas over the full LED matrix. */
     Canvas*             m_slots[MAX_SLOTS];
 
@@ -262,9 +270,6 @@ private:
     /** Timer, used for automatic brightness adjustment. */
     SimpleTimer         m_autoBrightnessTimer;
 
-    /** Framebuffer copy, used for further applicaton use. */
-    uint32_t            m_fbCopy[Board::LedMatrix::width * Board::LedMatrix::height];
-
     /**
      * Construct LED matrix.
      */
@@ -278,6 +283,21 @@ private:
     /* Prevent copying */
     DisplayMgr(const DisplayMgr& mgr);
     DisplayMgr& operator=(const DisplayMgr& mgr);
+
+    /**
+     * Process the slots. This shall be called periodically in
+     * a higher period than the DEFAULT_PERIOD.
+     * 
+     * It will handle which slot to show on the display.
+     */
+    void process(void);
+
+    /**
+     * Display update task is responsible to refresh the display content.
+     * 
+     * @param[in]   parameters  Task pParameters
+     */
+    static void updateTask(void* parameters);
 
     /**
      * Destroy widget and all children.

@@ -44,6 +44,9 @@
  * Macros
  *****************************************************************************/
 
+/** Get number of array elements. */
+#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -75,18 +78,19 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
     else
     {
-        const uint32_t* fb          = NULL;
-        size_t          len         = 0;
-        uint32_t        index       = 0u;
-        String          rsp         = "ACK";
-        const char      DELIMITER   = ';';
+        uint32_t    index       = 0u;
+        String      rsp         = "ACK";
+        const char  DELIMITER   = ';';
+        uint32_t    framebuffer[Board::LedMatrix::width * Board::LedMatrix::height];
 
-        DisplayMgr::getInstance().getFBCopy(fb, len);
+        DisplayMgr::getInstance().lock();
+        DisplayMgr::getInstance().getFBCopy(framebuffer, ARRAY_NUM(framebuffer));
+        DisplayMgr::getInstance().unlock();
 
-        for(index = 0u; index < len; ++index)
+        for(index = 0u; index <  ARRAY_NUM(framebuffer); ++index)
         {
             rsp += DELIMITER;
-            rsp += fb[index];
+            rsp += framebuffer[index];
         }
 
         server->text(client->id(), rsp);
