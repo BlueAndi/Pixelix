@@ -93,7 +93,7 @@ bool DisplayMgr::init(void)
     /* Create mutex to lock/unlock display update */
     m_xMutex = xSemaphoreCreateMutex();
 
-    if (NULL != m_xMutex)
+    if (NULL == m_xMutex)
     {
         status = false;
     }
