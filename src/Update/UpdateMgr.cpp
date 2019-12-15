@@ -184,10 +184,11 @@ void UpdateMgr::onStart(void)
     }
 
     LOG_INFO(infoStr);
-    DisplayMgr::getInstance().showSysMsg(infoStr);
 
-    /* Give the user a chance to read it. */
-    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+    DisplayMgr::getInstance().lock();
+    DisplayMgr::getInstance().showSysMsg(infoStr);
+    DisplayMgr::getInstance().unlock();
+    delay(SYS_MSG_WAIT_TIME_STD);
 
     /* Prepare to show the progress in the next steps. */
     LedMatrix::getInstance().clear();
@@ -227,10 +228,11 @@ void UpdateMgr::onEnd(void)
     }
 
     LOG_INFO(infoStr);
-    DisplayMgr::getInstance().showSysMsg(infoStr);
 
-    /* Give the user a chance to read it. */
-    DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+    DisplayMgr::getInstance().lock();
+    DisplayMgr::getInstance().showSysMsg(infoStr);
+    DisplayMgr::getInstance().unlock();
+    delay(SYS_MSG_WAIT_TIME_STD);
 
     /* Request a restart */
     m_instance.reqRestart();
@@ -294,10 +296,10 @@ void UpdateMgr::onError(ota_error_t error)
      */
     if (true == m_instance.m_updateIsRunning)
     {
+        DisplayMgr::getInstance().lock();
         DisplayMgr::getInstance().showSysMsg(infoStr);
-
-        /* Give the user a chance to read it. */
-        DisplayMgr::getInstance().delay(SYS_MSG_WAIT_TIME_STD);
+        DisplayMgr::getInstance().unlock();
+        delay(SYS_MSG_WAIT_TIME_STD);
 
         /* Request a restart */
         m_instance.reqRestart();
