@@ -105,7 +105,7 @@ bool DisplayMgr::init(void)
         BaseType_t  osRet   = pdFAIL;
 
         osRet = xTaskCreateUniversal(   updateTask,
-                                        "displayUpdateTask",
+                                        "displayTask",
                                         UPDATE_TASK_STACKE_SIZE,
                                         this,
                                         4,
