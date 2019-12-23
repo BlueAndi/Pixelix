@@ -511,15 +511,18 @@ void DisplayMgr::process(void)
 
 void DisplayMgr::updateTask(void* parameters)
 {
-    DisplayMgr* displayMgr  = reinterpret_cast<DisplayMgr*>(parameters);
-    uint32_t    taskPeriod  = 10u;  /* 10 ms */
+    DisplayMgr*     displayMgr  = reinterpret_cast<DisplayMgr*>(parameters);
+    const uint32_t  TASK_PERIOD = 40u;  /* ms */
 
     for(;;)
     {
         /* Refresh display content periodically */
         displayMgr->process();
-        delay(taskPeriod);
+        delay(TASK_PERIOD);
     }
+
+    vTaskDelete(NULL);
+    displayMgr->m_updateTaskHandle = NULL;
 
     return;
 }
