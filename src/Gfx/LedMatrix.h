@@ -157,9 +157,15 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        uint32_t colorRGB888 = ColorDef::convert565To888(color);
+        if ((0 <= x) &&
+            (Board::LedMatrix::width > x) &&
+            (0 <= y) &&
+            (Board::LedMatrix::height > y))
+        {
+            uint32_t colorRGB888 = ColorDef::convert565To888(color);
 
-        m_strip.SetPixelColor(m_topo.Map(x, y), colorRGB888);
+            m_strip.SetPixelColor(m_topo.Map(x, y), colorRGB888);
+        }
 
         return;
     }
