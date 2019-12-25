@@ -1160,7 +1160,7 @@ static void testColor(void)
     TEST_ASSERT_EQUAL_UINT8(ColorDef::getBlue(ColorDef::TOMATO), myColorC.getBlue());
 
     /* Check the 5-6-5 RGB format conversion. */
-    myColorA.set(0x00ffffffu);
+    myColorA.set(ColorDef::WHITE);
     TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getBlue());
@@ -1170,7 +1170,7 @@ static void testColor(void)
     TEST_ASSERT_EQUAL_UINT8(0x08u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0x04u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0x08u, myColorA.getBlue());
-    TEST_ASSERT_EQUAL_UINT16(0x0821, myColorA.to565());
+    TEST_ASSERT_EQUAL_UINT16(0x0821u, myColorA.to565());
 
     /* Does the color assignment via assignment operator works? */
     myColorA = myColorB;
@@ -1185,6 +1185,10 @@ static void testColor(void)
     TEST_ASSERT_EQUAL_UINT8(0x12u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0x34u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0x56u, myColorA.getBlue());
+
+    /* Check conversion routines of ColorDef */
+    TEST_ASSERT_EQUAL_UINT16(0x0821u, ColorDef::convert888To565(0x00080408u));
+    TEST_ASSERT_EQUAL_UINT32(0x00080408u, ColorDef::convert565To888(0x0821u));
 
     return;
 }
