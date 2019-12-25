@@ -112,24 +112,6 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        uint8_t matrixType = 0u;
-
-        /* If a matrix type is stored, it will be loaded and set.
-         * Otherwise the default matrix type is kept.
-         * See LedMatrix::MATRIX_TYPE_DEFAULT
-         */
-        if (true == Settings::getInstance().open(true))
-        {
-            /* Matrix type stored? */
-            if (true == Settings::getInstance().getMatrixType(matrixType))
-            {
-                /* Set matrix type */
-                LedMatrix::getInstance().setType(matrixType);
-            }
-
-            Settings::getInstance().close();
-        }
-
         /* Start LED matrix */
         LedMatrix::getInstance().begin();
 

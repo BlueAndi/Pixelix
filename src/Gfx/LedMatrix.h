@@ -115,30 +115,6 @@ public:
     }
 
     /**
-     * Get matrix type.
-     * 
-     * @return Matrix type
-     */
-    uint8_t getType(void) const
-    {
-        // TODO
-        return 0;
-    }
-
-    /**
-     * Set matrix type, which depends on how the matrix is hard-wired.
-     * 
-     * Use NEO_MATRIX_... macros to build the matrix type.
-     * 
-     * @param[in] matrixType    Matrix type
-     */
-    void setType(uint8_t matrixType)
-    {
-        // TODO
-        return;
-    }
-
-    /**
      * Get pixel color at given position.
      * 
      * @param[in] x x-coordinate

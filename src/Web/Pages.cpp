@@ -81,9 +81,6 @@ static String indexPageProcessor(const String& var);
 static void networkPage(AsyncWebServerRequest* request);
 static String networkPageProcessor(const String& var);
 
-static void configPage(AsyncWebServerRequest* request);
-static String configPageProcessor(const String& var);
-
 static void addSettingsData(String& dst, const char* title, const char* name, const char* value, uint8_t size, uint8_t minLen, uint8_t maxLen);
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
@@ -166,7 +163,6 @@ void Pages::init(AsyncWebServer& srv)
     srv.on("/dev", HTTP_GET, devPage);
     srv.on("/display", HTTP_GET, displayPage);
     srv.on("/network", HTTP_GET, networkPage);
-    srv.on("/config", HTTP_GET | HTTP_POST, configPage);
     srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
     srv.on("/update", HTTP_GET, updatePage);
     srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
@@ -515,98 +511,6 @@ static String networkPageProcessor(const String& var)
         {
             result = WiFi.localIP().toString();
         }
-    }
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
-}
-
-/**
- * Configuration page, where to configure the display.
- * 
- * @param[in] request   HTTP request
- */
-static void configPage(AsyncWebServerRequest* request)
-{
-    if (NULL == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    /* Store configuration? */
-    if ((HTTP_POST == request->method()) &&
-        (0 < request->args()))
-    {
-        String jsonRsp;
-
-        if (false == request->hasArg("matrixType"))
-        {
-            jsonRsp = "{ \"status\": 1, \"error\": \"Matrix type is missing.\" }";
-        }
-        else if (false == Settings::getInstance().open(false))
-        {
-            jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
-        }
-        else
-        {
-            int32_t i32MatrixType = request->arg("matrixType").toInt();
-
-            if ((0 > i32MatrixType) ||
-                (UINT8_MAX < i32MatrixType))
-            {
-                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid matrix type.\" }";
-            }
-            else
-            {
-                uint8_t matrixType = static_cast<uint8_t>(i32MatrixType);
-
-                Settings::getInstance().setMatrixType(matrixType);
-                LedMatrix::getInstance().setType(matrixType);
-
-                jsonRsp = "{ \"status\": 0, \"info\": \"Successful stored and applied.\" }";
-            }
-
-            Settings::getInstance().close();
-        }
-
-        request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
-    }
-    else if (HTTP_GET == request->method())
-    {
-        request->send(SPIFFS, "/configuration.html", "text/html", false, configPageProcessor);
-    }
-    else
-    {
-        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
-    }
-
-    return;
-}
-
-/**
- * Processor for configuration page template.
- * It is responsible for the data binding.
- * 
- * @param[in] var   Name of variable in the template
- */
-static String configPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "MATRIX_TYPE")
-    {
-        result += LedMatrix::getInstance().getType();
     }
     else
     {
