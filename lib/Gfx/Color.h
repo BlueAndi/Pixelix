@@ -247,7 +247,7 @@ public:
      * 
      * @return Color in 5-6-5 RGB format
      */
-    uint16_t get565(void) const
+    uint16_t to565(void) const
     {
         const uint16_t  RED     = m_red;
         const uint16_t  GREEN   = m_green;

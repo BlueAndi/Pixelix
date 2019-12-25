@@ -2,38 +2,36 @@
 
 title GFX
 
-package "marcmerlin" {
-    class "FastLED_NeoMatrix" as neoMatrix
-    class "Framebuffer_GFX" as frameBufferGfx
-}
+package "Makuna" {
+    class "NeoPixelBrightnessBus" as neoPixelBrightnessBus
 
-package "Fast_LED" {
-    class "CRGB" as crgb
-}
+    note top of neoPixelBrightnessBus
+        Using RMT to drive the physical LEDs.
+    end note
 
-note left of crgb
-    Buffer for the pixel information.
-    Supports 24 bit RGB color.
-end note
+    class "NeoTopology" as neoTopology
+
+    note top of neoTopology
+        Maps x,y coordinates to framebuffer index,
+        depended on physical panel layout.
+    end note
+}
 
 package "Adafruit" {
     class "Adafruit_GFX" as adafruitGfx
 
-    note left of adafruitGfx
+    note top of adafruitGfx
         Disadvantages:
         * Supports only 16 bit color (RGB565).
         * Needs SPI as header include.
     end note
 }
 
-adafruitGfx <|-- frameBufferGfx
-frameBufferGfx <|-- neoMatrix
-neoMatrix .l.> crgb: <<uses>>
-
 class "LedMatrix" as ledMatrix
 
-neoMatrix <|-- ledMatrix: <<uses>>
-crgb <--* ledMatrix: <<contains>>
+adafruitGfx <|.. ledMatrix: <<realize>>
+neoPixelBrightnessBus <--* ledMatrix: <<contains>>
+neoTopology <--* ledMatrix:: <<contains>>
 
 note right of ledMatrix
     Represents the physical LED matrix and

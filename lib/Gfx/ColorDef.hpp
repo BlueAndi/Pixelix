@@ -529,13 +529,13 @@ namespace ColorDef
     }
     
     /**
-     * Get color in 5-6-6 RGB format.
+     * Convert color in RGB888 format to RGB565 format.
      * 
-     * @param[in] value 24 bit color value
+     * @param[in] value Color value in RGB888 format
      * 
-     * @return Color in 5-6-5 RGB format.
+     * @return Color in RGB565 format.
      */
-    inline uint16_t get565(uint32_t value)
+    inline uint16_t convert888To565(uint32_t value)
     {
         const uint16_t  RED     = (value >> 16u) & 0xffu;
         const uint16_t  GREEN   = (value >>  8u) & 0xffu;
@@ -545,6 +545,22 @@ namespace ColorDef
         const uint16_t  BLUE5   = static_cast<uint8_t>(BLUE >> 3u);
 
         return ((RED5 & 0x1fu) << 11u) | ((GREEN6 & 0x3fu) << 5u) | ((BLUE5 & 0x1fu) << 0u);
+    }
+
+    /**
+     * Convert color in RGB565 format to RGB888 format.
+     * 
+     * @param[in] value Color value in RGB565 format
+     * 
+     * @return Color in RGB888 format.
+     */
+    inline uint32_t convert565To888(uint16_t value)
+    {
+        const uint32_t  RED     = (value >> 11u) & 0x1fu;
+        const uint32_t  GREEN   = (value >>  5u) & 0x3fu;
+        const uint32_t  BLUE    = (value >>  0u) & 0x1fu;
+
+        return (RED << 16u) | (GREEN << 8u) | (BLUE << 0u);
     }
 }
 

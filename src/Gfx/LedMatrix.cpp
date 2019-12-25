@@ -60,9 +60,6 @@
 /* Initialize LED matrix instance. */
 LedMatrix LedMatrix::m_instance;
 
-/** Pixel representation of the LED matrix */
-static CRGB gMatrixBuffer[Board::LedMatrix::width * Board::LedMatrix::height];
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -76,14 +73,10 @@ static CRGB gMatrixBuffer[Board::LedMatrix::width * Board::LedMatrix::height];
  *****************************************************************************/
 
 LedMatrix::LedMatrix() :
-    FastLED_NeoMatrix(  gMatrixBuffer,
-                        Board::LedMatrix::width,
-                        Board::LedMatrix::height,
-                        MATRIX_TYPE_DEFAULT)
+    Adafruit_GFX(Board::LedMatrix::width, Board::LedMatrix::height),
+    m_strip(Board::LedMatrix::width * Board::LedMatrix::height, Board::Pin::ledMatrixDataOutPinNo),
+    m_topo(Board::LedMatrix::width, Board::LedMatrix::height)
 {
-    /* Setup LED matrix and limit max. power. */
-    FastLED.addLeds<NEOPIXEL, Board::Pin::ledMatrixDataOutPinNo>(gMatrixBuffer, ARRAY_NUM(gMatrixBuffer)).setCorrection(TypicalLEDStrip);
-    FastLED.setMaxPowerInVoltsAndMilliamps(Board::LedMatrix::supplyVoltage, Board::LedMatrix::supplyCurrentMax);
 }
 
 LedMatrix::~LedMatrix()
@@ -92,12 +85,15 @@ LedMatrix::~LedMatrix()
 
 uint32_t LedMatrix::getColor(int16_t x, int16_t y)
 {
-    CRGB&       pixel   = gMatrixBuffer[XY(x, y)];
-    uint32_t    red     = pixel.red;
-    uint32_t    green   = pixel.green;
-    uint32_t    blue    = pixel.blue;
+    RgbColor    colorRGB24  = m_strip.GetPixelColor(m_topo.Map(x, y));
+    uint32_t    colorRGB888 = colorRGB24.R;
 
-    return (red << 16) | (green << 8) | (blue << 0);
+    colorRGB888 <<= 8u;
+    colorRGB888 |= colorRGB24.G;
+    colorRGB888 <<= 8u;
+    colorRGB888 |= colorRGB24.B;
+
+    return ColorDef::convert888To565(colorRGB888);
 }
 
 /******************************************************************************

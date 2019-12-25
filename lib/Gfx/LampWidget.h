@@ -136,7 +136,7 @@ public:
             color = m_colorOff;
         }
 
-        gfx.fillRect(m_posX, m_posY, WIDTH, HEIGHT, color.get565());
+        gfx.fillRect(m_posX, m_posY, WIDTH, HEIGHT, color.to565());
 
         return;
     }

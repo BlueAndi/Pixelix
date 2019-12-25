@@ -366,7 +366,7 @@ public:
         {
             for(x = 0; x < WIDTH; ++x)
             {
-                gfx.drawPixel(m_posX + x, m_posY + y, m_color.get565());
+                gfx.drawPixel(m_posX + x, m_posY + y, m_color.to565());
             }
         }
         
@@ -807,7 +807,7 @@ static void testWidget(void)
                                     posY,
                                     getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
                                     getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
-                                    COLOR.get565()));
+                                    COLOR.to565()));
 
     /* Draw widget at position (2, 1) and verify widget movement. */
     posX = 2;
@@ -819,7 +819,7 @@ static void testWidget(void)
                                     posY,
                                     getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
                                     getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
-                                    COLOR.get565()));
+                                    COLOR.to565()));
 
     return;
 }
@@ -863,7 +863,7 @@ void testCanvas(void)
                                     WIDGET_POS_Y, 
                                     getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X), 
                                     getMin<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
-                                    WIDGET_COLOR.get565()));
+                                    WIDGET_COLOR.to565()));
 
     /* Move widget outside canvas and try to draw. Expected is no drawing at all. */
     testGfx.fill(0);
@@ -883,7 +883,7 @@ void testCanvas(void)
                                     CANVAS_HEIGHT / 2, 
                                     CANVAS_WIDTH / 2, 
                                     CANVAS_HEIGHT / 2,
-                                    WIDGET_COLOR.get565()));
+                                    WIDGET_COLOR.to565()));
 
     /* No widget name is set, it must be empty. */
     TEST_ASSERT_EQUAL_STRING("", testCanvas.getName().c_str());
@@ -972,7 +972,7 @@ static void testLampWidget(void)
                                     posY,
                                     LampWidget::WIDTH,
                                     LampWidget::HEIGHT,
-                                    COLOR_OFF.get565()));
+                                    COLOR_OFF.to565()));
 
     /* Draw widget in on state and verify */
     lampWidget.setOnState(true);
@@ -982,7 +982,7 @@ static void testLampWidget(void)
                                     posY,
                                     LampWidget::WIDTH,
                                     LampWidget::HEIGHT,
-                                    COLOR_ON.get565()));
+                                    COLOR_ON.to565()));
 
     /* Draw widget in off state and verify */
     lampWidget.setOnState(false);
@@ -992,7 +992,7 @@ static void testLampWidget(void)
                                     posY,
                                     LampWidget::WIDTH,
                                     LampWidget::HEIGHT,
-                                    COLOR_OFF.get565()));
+                                    COLOR_OFF.to565()));
 
     /* Move widget and draw in off state again. */
     testGfx.fill(0);
@@ -1003,7 +1003,7 @@ static void testLampWidget(void)
                                     posY,
                                     LampWidget::WIDTH,
                                     LampWidget::HEIGHT,
-                                    COLOR_OFF.get565()));
+                                    COLOR_OFF.to565()));
 
     return;
 }
@@ -1119,11 +1119,11 @@ static void testTextWidget(void)
     TEST_ASSERT_EQUAL_STRING(testStr.c_str(), textWidget.getStr().c_str());
 
     /* Default string color */
-    TEST_ASSERT_EQUAL_UINT16(ColorDef::get565(TextWidget::DEFAULT_TEXT_COLOR), textWidget.getTextColor().get565());
+    TEST_ASSERT_EQUAL_UINT16(ColorDef::convert888To565(TextWidget::DEFAULT_TEXT_COLOR), textWidget.getTextColor().to565());
 
     /* Set/Get text color */
     textWidget.setTextColor(TEXT_COLOR);
-    TEST_ASSERT_EQUAL_UINT16(TEXT_COLOR.get565(), textWidget.getTextColor().get565());
+    TEST_ASSERT_EQUAL_UINT16(TEXT_COLOR.to565(), textWidget.getTextColor().to565());
 
     /* Check for default font */
     TEST_ASSERT_NOT_NULL(textWidget.getFont());
@@ -1147,7 +1147,7 @@ static void testColor(void)
     Color myColorC  = myColorB;
 
     /* Default color is black */
-    TEST_ASSERT_EQUAL_UINT16(0u, myColorA.get565());
+    TEST_ASSERT_EQUAL_UINT16(0u, myColorA.to565());
 
     /* Does the color assignment works? */
     TEST_ASSERT_EQUAL_UINT8(ColorDef::getRed(ColorDef::TOMATO), myColorB.getRed());
@@ -1164,13 +1164,13 @@ static void testColor(void)
     TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getBlue());
-    TEST_ASSERT_EQUAL_UINT16(0xffffu, myColorA.get565());
+    TEST_ASSERT_EQUAL_UINT16(0xffffu, myColorA.to565());
 
     myColorA.set(0x00080408u);
     TEST_ASSERT_EQUAL_UINT8(0x08u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0x04u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0x08u, myColorA.getBlue());
-    TEST_ASSERT_EQUAL_UINT16(0x0821, myColorA.get565());
+    TEST_ASSERT_EQUAL_UINT16(0x0821, myColorA.to565());
 
     /* Does the color assignment via assignment operator works? */
     myColorA = myColorB;
@@ -1314,18 +1314,18 @@ static void testProgressBar(void)
 
     /* Progress should be now 0% */
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::get565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 50% */
     progressBar.setProgress(50u);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height() / 2u, ColorDef::get565(ColorDef::RED)));
-    TEST_ASSERT_TRUE(testGfx.verify(0, testGfx.height() / 2u, testGfx.width(), testGfx.height() / 2u, ColorDef::get565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height() / 2u, ColorDef::convert888To565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, testGfx.height() / 2u, testGfx.width(), testGfx.height() / 2u, ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 100% */
     progressBar.setProgress(100u);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::get565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
 
     return;
 }

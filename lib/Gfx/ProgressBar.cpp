@@ -69,7 +69,7 @@ void ProgressBar::update(Adafruit_GFX& gfx)
 
     while((0 < pixelCount) && (gfx.height() > y))
     {
-        gfx.drawPixel(x, y, m_color.get565());
+        gfx.drawPixel(x, y, m_color.to565());
         
         --pixelCount;
         

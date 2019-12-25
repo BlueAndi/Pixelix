@@ -73,7 +73,7 @@ void TextWidget::update(Adafruit_GFX& gfx)
 
     /* Set base parameters */
     gfx.setFont(m_font);
-    gfx.setTextColor(m_textColor.get565());
+    gfx.setTextColor(m_textColor.to565());
     gfx.setCursor(CURSOR_X, CURSOR_Y);
     gfx.setTextWrap(false); /* If text is too long, don't wrap around. */
 

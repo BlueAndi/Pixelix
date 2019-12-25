@@ -44,7 +44,9 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <FastLED_NeoMatrix.h>
+#include <Adafruit_GFX.h>
+#include <NeoPixelBrightnessBus.h>
+#include <ColorDef.hpp>
 
 #include "Board.h"
 
@@ -59,7 +61,7 @@
 /**
  * Specific LED matrix.
  */
-class LedMatrix : public FastLED_NeoMatrix
+class LedMatrix : public Adafruit_GFX
 {
 public:
 
@@ -74,13 +76,53 @@ public:
     }
 
     /**
+     * Initialize base driver for the LED matrix.
+     */
+    void begin(void)
+    {
+        m_strip.Begin();
+        m_strip.Show();
+        return;
+    }
+
+    /**
+     * Show internal framebuffer on physical LED matrix.
+     */
+    void show(void)
+    {
+        m_strip.Show();
+        return;
+    }
+
+    /**
+     * Set brightness from 0 to 255.
+     *
+     * @param[in] brightness    Brightness value [0; 255]
+     */
+    void setBrightness(uint8_t brightness)
+    {
+        m_strip.SetBrightness(brightness);
+        return;
+    }
+
+    /**
+     * Clear LED matrix.
+     */
+    void clear(void)
+    {
+        m_strip.ClearTo(ColorDef::BLACK);
+        return;
+    }
+
+    /**
      * Get matrix type.
      * 
      * @return Matrix type
      */
     uint8_t getType(void) const
     {
-        return type;
+        // TODO
+        return 0;
     }
 
     /**
@@ -92,7 +134,7 @@ public:
      */
     void setType(uint8_t matrixType)
     {
-        type = matrixType;
+        // TODO
         return;
     }
 
@@ -102,20 +144,20 @@ public:
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
      * 
-     * @return Color in RGB24 format.
+     * @return Color in RGB888 format.
      */
     uint32_t getColor(int16_t x, int16_t y);
-
-    /** Default matrix type */
-    static const uint8_t MATRIX_TYPE_DEFAULT    = NEO_MATRIX_TOP |
-                                                  NEO_MATRIX_LEFT |
-                                                  NEO_MATRIX_COLUMNS |
-                                                  NEO_MATRIX_ZIGZAG;
 
 private:
 
     /** LedMatrix instance */
     static LedMatrix    m_instance;
+
+    /** Pixel representation of the LED matrix */
+    NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod>  m_strip;
+
+    /** Panel topology, used to map coordinates to the framebuffer. */
+    NeoTopology<ColumnMajorAlternatingLayout>               m_topo;
 
     /**
      * Construct LED matrix.
@@ -129,6 +171,22 @@ private:
 
     LedMatrix(const LedMatrix& matrix);
     LedMatrix& operator=(const LedMatrix& matrix);
+
+    /**
+     * Draw a single pixel in the matrix.
+     * 
+     * @param[in] x     x-coordinate
+     * @param[in] y     y-coordinate
+     * @param[in] color Pixel color in RGB565 format
+     */
+    void drawPixel(int16_t x, int16_t y, uint16_t color)
+    {
+        uint32_t colorRGB888 = ColorDef::convert565To888(color);
+
+        m_strip.SetPixelColor(m_topo.Map(x, y), colorRGB888);
+
+        return;
+    }
 };
 
 /******************************************************************************
