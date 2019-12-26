@@ -35,6 +35,7 @@
 #include "TextWidget.h"
 
 #include <Fonts/TomThumb.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -83,8 +84,9 @@ void TextWidget::update(Adafruit_GFX& gfx)
         int16_t     boundaryX       = 0;
         int16_t     boundaryY       = 0;
         uint16_t    textHeight      = 0u;
+        String      str             = removeFormatTags(m_str);
 
-        gfx.getTextBounds(m_str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
+        gfx.getTextBounds(str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
 
         /* Text too long for the display? */
         if (gfx.width() < m_textWidth)
@@ -104,7 +106,7 @@ void TextWidget::update(Adafruit_GFX& gfx)
     }
 
     /* Show text */
-    gfx.print(m_str);
+    show(gfx, m_str);
 
     /* Shall we scroll again? */
     if (true == m_scrollTimer.isTimeout())
@@ -129,6 +131,170 @@ void TextWidget::update(Adafruit_GFX& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+String TextWidget::removeFormatTags(const String& formattedStr)
+{
+    uint32_t    index       = 0u;
+    bool        escapeFound = false;
+    bool        showChar    = false;
+    String      str;
+    uint32_t    length      = formattedStr.length();
+
+    while(length > index)
+    {
+        /* Escape found? */
+        if ('\\' == formattedStr[index])
+        {
+            /* Another escape found? */
+            if (true == escapeFound)
+            {
+                escapeFound = false;
+                showChar    = true;
+            }
+            else
+            {
+                escapeFound = true;
+            }
+        }
+        /* Begin of a color tag? */
+        else if ('#' == formattedStr[index])
+        {
+            /* Escaped? */
+            if (true == escapeFound)
+            {
+                escapeFound = false;
+                showChar    = true;
+            }
+            else if (length <= (index + 6u))
+            {
+                showChar = true;
+            }
+            else
+            {
+                String  redStr      = String("0x") + formattedStr.substring(index + 1, index + 1 + 2);
+                String  greenStr    = String("0x") + formattedStr.substring(index + 1 + 2, index + 1 + 4);
+                String  blueStr     = String("0x") + formattedStr.substring(index + 1 + 4, index + 1 + 6);
+                uint8_t red         = 0u;
+                bool statusRed      = Util::strToUInt8(redStr, red);
+                uint8_t green       = 0u;
+                bool statusGreen    = Util::strToUInt8(greenStr, green);
+                uint8_t blue        = 0u;
+                bool statusBlue     = Util::strToUInt8(blueStr, blue);
+
+                if ((false == statusRed) ||
+                    (false == statusGreen) ||
+                    (false == statusBlue))
+                {
+                    showChar = true;
+                }
+                else
+                {
+                    /* Overstep only color information. The '#' will be overstepped at the end of the loop. */
+                    index += 6u;
+                }
+            }
+        }
+        else
+        {
+            showChar = true;
+        }
+
+        if (true == showChar)
+        {
+            showChar = false;
+
+            str += formattedStr[index];
+        }
+
+        ++index;
+    }
+
+    return str;
+}
+
+void TextWidget::show(Adafruit_GFX& gfx, const String& formattedStr)
+{
+    uint32_t    index       = 0u;
+    bool        escapeFound = false;
+    bool        showChar    = false;
+    uint32_t    length      = formattedStr.length();
+
+    while(length > index)
+    {
+        /* Escape found? */
+        if ('\\' == formattedStr[index])
+        {
+            /* Another escape found? */
+            if (true == escapeFound)
+            {
+                escapeFound = false;
+                showChar    = true;
+            }
+            else
+            {
+                escapeFound = true;
+            }
+        }
+        /* Begin of a color tag? */
+        else if ('#' == formattedStr[index])
+        {
+            /* Escaped? */
+            if (true == escapeFound)
+            {
+                escapeFound = false;
+                showChar    = true;
+            }
+            else if (length <= (index + 6u))
+            {
+                showChar = true;
+            }
+            else
+            {
+                String  redStr      = String("0x") + formattedStr.substring(index + 1, index + 1 + 2);
+                String  greenStr    = String("0x") + formattedStr.substring(index + 1 + 2, index + 1 + 4);
+                String  blueStr     = String("0x") + formattedStr.substring(index + 1 + 4, index + 1 + 6);
+                uint8_t red         = 0u;
+                bool statusRed      = Util::strToUInt8(redStr, red);
+                uint8_t green       = 0u;
+                bool statusGreen    = Util::strToUInt8(greenStr, green);
+                uint8_t blue        = 0u;
+                bool statusBlue     = Util::strToUInt8(blueStr, blue);
+
+                if ((false == statusRed) ||
+                    (false == statusGreen) ||
+                    (false == statusBlue))
+                {
+                    showChar = true;
+                }
+                else
+                {
+                    Color textColor(red, green, blue);
+                    gfx.setTextColor(textColor.to565());
+
+                    /* Overstep only color information. The '#' will be overstepped at the end of the loop. */
+                    index += 6u;
+                }
+            }
+        }
+        else
+        {
+            showChar = true;
+        }
+
+        if (true == showChar)
+        {
+            showChar = false;
+
+            gfx.print(formattedStr[index]);
+        }
+
+        ++index;
+    }
+
+    gfx.setTextColor(m_textColor.to565());
+
+    return;
+}
 
 /******************************************************************************
  * External Functions

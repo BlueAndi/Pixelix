@@ -39,6 +39,7 @@
 #include "DisplayMgr.h"
 #include "Version.h"
 
+#include <Util.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <Esp.h>
@@ -74,8 +75,6 @@ typedef enum
  * Prototypes
  *****************************************************************************/
 
-static bool toUInt8(const String& str, uint8_t& value);
-static bool toUInt16(const String& str, uint16_t& value);
 static uint8_t getSignalQuality(int8_t rssi);
 static void error(AsyncWebServerRequest* request);
 static void status(AsyncWebServerRequest* request);
@@ -121,52 +120,6 @@ void RestApi::init(AsyncWebServer& srv)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
-
-/**
- * Convert a string to uint8_t.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-static bool toUInt8(const String& str, uint8_t& value)
-{
-    bool    success = false;
-    int32_t tmp     = str.toInt();
-
-    if ((0 <= tmp) ||
-        (UINT8_MAX >= tmp))
-    {
-        value = static_cast<uint8_t>(tmp);
-        success = true;
-    }
-
-    return success;
-}
-
-/**
- * Convert a string to uint16_t.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-static bool toUInt16(const String& str, uint16_t& value)
-{
-    bool    success = false;
-    int32_t tmp     = str.toInt();
-
-    if ((0 <= tmp) ||
-        (UINT16_MAX >= tmp))
-    {
-        value = static_cast<uint16_t>(tmp);
-        success = true;
-    }
-
-    return success;
-}
 
 /**
  * Get the wifi signal quality, derrived from the RSSI.
@@ -366,7 +319,7 @@ static void slotText(AsyncWebServerRequest* request)
         uint8_t slotId = DisplayMgr::getInstance().MAX_SLOTS;
         
         /* Slot id invalid? */
-        if ((false == toUInt8(request->pathArg(0), slotId)) ||
+        if ((false == Util::strToUInt8(request->pathArg(0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -441,7 +394,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
         uint16_t    height  = 0u;
 
         /* Slot id invalid? */
-        if ((false == toUInt8(request->pathArg(0), slotId)) ||
+        if ((false == Util::strToUInt8(request->pathArg(0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -482,7 +435,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Invalid width? */
-        else if (false == toUInt16(request->arg("width"), width))
+        else if (false == Util::strToUInt16(request->arg("width"), width))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -492,7 +445,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Invalid height? */
-        else if (false == toUInt16(request->arg("height"), height))
+        else if (false == Util::strToUInt16(request->arg("height"), height))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -561,7 +514,7 @@ static void slotLamp(AsyncWebServerRequest* request)
         uint8_t lampId = 0u;
 
         /* Slot id invalid? */
-        if ((false == toUInt8(request->pathArg(0), slotId)) ||
+        if ((false == Util::strToUInt8(request->pathArg(0), slotId)) ||
             (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -572,7 +525,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Lamp id invalid? */
-        else if (false == toUInt8(request->pathArg(1), lampId))
+        else if (false == Util::strToUInt8(request->pathArg(1), lampId))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 

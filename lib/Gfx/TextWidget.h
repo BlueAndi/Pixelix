@@ -59,6 +59,9 @@
 
 /**
  * A text widget, showing a colored string.
+ * The text has a given color, which can be changed.
+ * To color single characters, it supports the color tag #RRGGBB.
+ * Example: "#FF0000H#FFFFFFello!" contains a red "H" and a white "ello!".
  */
 class TextWidget : public Widget
 {
@@ -152,7 +155,8 @@ public:
     void update(Adafruit_GFX& gfx);
 
     /**
-     * Set the text string.
+     * Set the text string. It can contain format tags like:
+     * - #RRGGBB Color information in RGB888 format
      * 
      * @param[in] str String
      */
@@ -164,7 +168,7 @@ public:
     }
 
     /**
-     * Get the text string.
+     * Get the text string. It may contain format tags!
      * 
      * @return String
      */
@@ -230,7 +234,7 @@ public:
 
 private:
 
-    String          m_str;                  /**< String */
+    String          m_str;                  /**< String, which may contain format tags. */
     Color           m_textColor;            /**< Text color of the string */
     const GFXfont*  m_font;                 /**< Current font */
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
@@ -239,6 +243,24 @@ private:
     uint16_t        m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
 
+    /**
+     * Remove format tags from string.
+     * 
+     * @param[in] formattedStr  String which contains format tags
+     * 
+     * @return String without format tags
+     */
+    String removeFormatTags(const String& formattedStr);
+
+    /**
+     * Show formatted text.
+     * Format tags:
+     * - #RRGGBB Color in HTML form (RGB888)
+     * 
+     * @param[in] gfx           Graphics, used to draw the characters
+     * @param[in] formattedStr  String which contains format tags
+     */
+    void show(Adafruit_GFX& gfx, const String& formattedStr);
 };
 
 /******************************************************************************
