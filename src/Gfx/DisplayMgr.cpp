@@ -85,13 +85,12 @@ const char* DisplayMgr::LAMP_WIDGET_NAME    = "lamp";
 
 bool DisplayMgr::init(void)
 {
-    bool        status      = true;
-    uint16_t    brightness  = (static_cast<uint16_t>(UINT8_MAX) * BRIGHTNESS_DEFAULT) / 100u;
+    bool status = true;
 
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.
      */
-    LedMatrix::getInstance().setBrightness(brightness);
+    LedMatrix::getInstance().setBrightness(BRIGHTNESS_DEFAULT);
 
     /* Create mutex to lock/unlock display update */
     m_xMutex = xSemaphoreCreateMutex();
