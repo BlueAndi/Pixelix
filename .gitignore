@@ -6,3 +6,4 @@
 .vscode/launch.json
 doc/html/
 out
+firmware.map
