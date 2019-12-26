@@ -94,8 +94,8 @@ public:
      */
     void exit(StateMachine& sm);
 
-    /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT;
+    /** Wait time for showing a system message in ms */
+    static const uint32_t   SYS_MSG_WAIT_TIME;
 
     /** Serial interface baudrate. */
     static const uint32_t   SERIAL_BAUDRATE;
@@ -123,9 +123,14 @@ private:
     InitState& operator=(const InitState& state);
 
     /**
-     * Show boot information.
+     * Show startup information on the serial interface.
      */
-    void showBootInfo(void);
+    void showStartupInfoOnSerial(void);
+
+    /**
+     * Show startup information on the display.
+     */
+    void showStartupInfoOnDisplay(void);
 };
 
 /******************************************************************************

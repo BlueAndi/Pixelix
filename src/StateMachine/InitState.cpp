@@ -74,11 +74,11 @@
  * Local Variables
  *****************************************************************************/
 
-/* Set short wait time for showing a system message in ms. */
-const uint32_t  InitState::SYS_MSG_WAIT_TIME_SHORT  = 250u;
+/* Set system message show duration in ms */
+const uint32_t  InitState::SYS_MSG_WAIT_TIME    = 2000u;
 
 /* Set serial interface baudrate. */
-const uint32_t  InitState::SERIAL_BAUDRATE          = 115200u;
+const uint32_t  InitState::SERIAL_BAUDRATE      = 115200u;
 
 /* Initialization state instance */
 InitState       InitState::m_instance;
@@ -101,8 +101,8 @@ void InitState::entry(StateMachine& sm)
     Logging::getInstance().init(&Serial);
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
 
-    /* Show as soon as possible the user that the system is booting. */
-    LOG_INFO("Booting ...");
+    /* Show as soon as possible the user on the serial console that the system is booting. */
+    showStartupInfoOnSerial();
 
     /* Initialize button driver */
     if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
@@ -110,60 +110,59 @@ void InitState::entry(StateMachine& sm)
         LOG_FATAL("Couldn't initialize button driver.");
         isError = true;
     }
+    /* Mounting the filesystem. */
+    else if (false == SPIFFS.begin())
+    {
+        LOG_FATAL("Couldn't mount the filesystem.");
+        isError = true;
+    }
+    /* Start LED matrix */
+    else if (false == LedMatrix::getInstance().begin())
+    {
+        LOG_FATAL("Failed to initialize LED matrix.");
+        isError = true;
+    }
+    /* Initialize display manager */
+    else if (false == DisplayMgr::getInstance().init())
+    {
+        LOG_FATAL("Failed to initialize display manager.");
+        isError = true;
+    }
     else
     {
-        /* Start LED matrix */
-        LedMatrix::getInstance().begin();
+        uint8_t index   = 0u;
 
-        /* Initialize display manager */
-        if (false == DisplayMgr::getInstance().init())
+        /* Set display layouts */
+        for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
         {
-            LOG_FATAL("Failed to initialize display manager.");
-            isError = true;
-        }
-        else
-        {
-            uint8_t index   = 0u;
-
-            /* Set display layouts */
-            for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
-            {
-                DisplayMgr::getInstance().setLayout(index, DisplayMgr::LAYOUT_ID_2);
-            }
+            DisplayMgr::getInstance().setLayout(index, DisplayMgr::LAYOUT_ID_2);
         }
     }
     
     if (false == isError)
     {
-        /* Mounting the filesystem. */
-        if (false == SPIFFS.begin())
-        {
-            LOG_FATAL("Couldn't mount the filesystem.");
-            isError = true;
-        }
-
-        /* Show some interesting boot information */    
-        showBootInfo();
-
         /* Enable the automatic display brightness adjustment according to the
         * ambient light.
         */
-        if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(true))
+        if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(false))
         {
             LOG_WARNING("Failed to enable autom. brigthness adjustment.");
         }
         
-        /* Initialize webserver */
+        /* Initialize webserver. SPIFFS must be mounted before! */
         MyWebServer::init();
 
         /* Initialize over-the-air update server */
         UpdateMgr::getInstance().init();
 
         /* Don't store the wifi configuration in the NVS.
-        * This seems to cause a reset after a client connected to the access point.
-        * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
-        */
+         * This seems to cause a reset after a client connected to the access point.
+         * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
+         */
         WiFi.persistent(false);
+
+        /* Show some informations on the display. */
+        showStartupInfoOnDisplay();
     }
 
     /* Any error happened? */
@@ -212,25 +211,45 @@ void InitState::exit(StateMachine& sm)
  * Private Methods
  *****************************************************************************/
 
-/**
- * Show boot information on the serial interface.
- */
-void InitState::showBootInfo(void)
+void InitState::showStartupInfoOnSerial(void)
 {
+    LOG_INFO("PIXELIX starts up ...");
     LOG_INFO(String("SW version: ") + Version::SOFTWARE);
     LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
     LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
     LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
 
-    DisplayMgr::getInstance().lock();
-    DisplayMgr::getInstance().showSysMsg(Version::SOFTWARE);
-    DisplayMgr::getInstance().unlock();
-    delay(SYS_MSG_WAIT_TIME_SHORT);
+    return;
+}
 
-    /* Debug information */
-    LOG_INFO(String("AMPDU RX feature: ") + CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED);
-    LOG_INFO(String("AMPDU TX feature: ") + CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED);
+void InitState::showStartupInfoOnDisplay(void)
+{
+    DisplayMgr& displayMgr  = DisplayMgr::getInstance();
+
+    /* Show colored PIXELIX */
+    displayMgr.lock();
+    displayMgr.showSysMsg("#FF0000P#0FF000I#00FF00X#000FF0E#0000FFL#F0000FI#FF0000X");
+    displayMgr.unlock();
+    delay(SYS_MSG_WAIT_TIME);
+
+    /* Clear and wait */
+    displayMgr.lock();
+    LedMatrix::getInstance().clear();
+    displayMgr.unlock();
+    delay(SYS_MSG_WAIT_TIME / 2u);
+
+    /* Show sw version */
+    displayMgr.lock();
+    displayMgr.showSysMsg(Version::SOFTWARE);
+    displayMgr.unlock();
+    delay(SYS_MSG_WAIT_TIME);
+
+    /* Clear and wait */
+    displayMgr.lock();
+    LedMatrix::getInstance().clear();
+    displayMgr.unlock();
+    delay(SYS_MSG_WAIT_TIME / 2u);
 
     return;
 }
