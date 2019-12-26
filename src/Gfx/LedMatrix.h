@@ -77,12 +77,15 @@ public:
 
     /**
      * Initialize base driver for the LED matrix.
+     * 
+     * @return If successful, returns true otherwise false.
      */
-    void begin(void)
+    bool begin(void)
     {
         m_strip.Begin();
         m_strip.Show();
-        return;
+
+        return true;
     }
 
     /**
