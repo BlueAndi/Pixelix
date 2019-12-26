@@ -162,7 +162,7 @@ private:
             (0 <= y) &&
             (Board::LedMatrix::height > y))
         {
-            uint32_t colorRGB888 = ColorDef::convert565To888(color);
+            HtmlColor colorRGB888 = ColorDef::convert565To888(color);
 
             m_strip.SetPixelColor(m_topo.Map(x, y), colorRGB888);
         }

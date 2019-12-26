@@ -85,15 +85,9 @@ LedMatrix::~LedMatrix()
 
 uint32_t LedMatrix::getColor(int16_t x, int16_t y)
 {
-    RgbColor    colorRGB24  = m_strip.GetPixelColor(m_topo.Map(x, y));
-    uint32_t    colorRGB888 = colorRGB24.R;
+    HtmlColor   colorRGB888 = m_strip.GetPixelColor(m_topo.Map(x, y));
 
-    colorRGB888 <<= 8u;
-    colorRGB888 |= colorRGB24.G;
-    colorRGB888 <<= 8u;
-    colorRGB888 |= colorRGB24.B;
-
-    return ColorDef::convert888To565(colorRGB888);
+    return colorRGB888.Color;
 }
 
 /******************************************************************************
