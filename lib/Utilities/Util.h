@@ -43,6 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include <stdint.h>
 #include <WString.h>
 #include <cerrno>
 
@@ -89,6 +90,17 @@ extern bool strToUInt8(const String& str, uint8_t& value);
  * @return If conversion fails, it will return false otherwise true.
  */
 extern bool strToUInt16(const String& str, uint16_t& value);
+
+/**
+ * Convert a string to uint32_t. String can contain integer number in decimal
+ * or hexadecimal format.
+ * 
+ * @param[in]   str     String
+ * @param[out]  value   Converted value
+ * 
+ * @return If conversion fails, it will return false otherwise true.
+ */
+extern bool strToUInt32(const String& str, uint32_t& value);
 
 }
 

@@ -72,10 +72,14 @@
 
 extern bool Util::strToUInt8(const String& str, uint8_t& value)
 {
-    bool        success = false;
-    uint32_t    tmp     = strtoul(str.c_str(), NULL, 0);
+    bool            success = false;
+    char*           endPtr  = NULL;
+    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
 
     if ((0 == errno) &&
+        (NULL != endPtr) &&
+        ('\0' == *endPtr) &&
+        (str.c_str() != endPtr) &&
         (0 <= tmp) &&
         (UINT8_MAX >= tmp))
     {
@@ -88,14 +92,40 @@ extern bool Util::strToUInt8(const String& str, uint8_t& value)
 
 extern bool Util::strToUInt16(const String& str, uint16_t& value)
 {
-    bool        success = false;
-    uint32_t    tmp     = strtoul(str.c_str(), NULL, 0);
+    bool            success = false;
+    char*           endPtr  = NULL;
+    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
 
     if ((0 == errno) &&
+        (NULL != endPtr) &&
+        ('\0' == *endPtr) &&
+        (str.c_str() != endPtr) &&
         (0 <= tmp) &&
         (UINT16_MAX >= tmp))
     {
         value = static_cast<uint16_t>(tmp);
+        success = true;
+    }
+
+    return success;
+}
+
+#include <stdio.h>
+
+extern bool Util::strToUInt32(const String& str, uint32_t& value)
+{
+    bool            success = false;
+    char*           endPtr  = NULL;
+    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
+
+    if ((0 == errno) &&
+        (NULL != endPtr) &&
+        ('\0' == *endPtr) &&
+        (str.c_str() != endPtr) &&
+        (0 <= tmp) &&
+        (UINT32_MAX >= tmp))
+    {
+        value = static_cast<uint32_t>(tmp);
         success = true;
     }
 
