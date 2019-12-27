@@ -98,6 +98,16 @@ public:
     }
 
     /**
+     * LED matrix is ready, when the last physical pixel update is finished.
+     * 
+     * @return If ready for another update via show(), it will return true otherwise false.
+     */
+    bool isReady(void) const
+    {
+        return m_strip.CanShow();
+    }
+
+    /**
      * Set brightness from 0 to 255.
      *
      * @param[in] brightness    Brightness value [0; 255]

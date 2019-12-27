@@ -139,6 +139,26 @@ void DisplayMgr::unlock(void)
     return;
 }
 
+void DisplayMgr::suspend(void)
+{
+    if (NULL != m_updateTaskHandle)
+    {
+        vTaskSuspend(m_updateTaskHandle);
+    }
+
+    return;
+}
+
+void DisplayMgr::resume(void)
+{
+    if (NULL != m_updateTaskHandle)
+    {
+        vTaskResume(m_updateTaskHandle);
+    }
+    
+    return;
+}
+
 bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
 {
     bool status = true;

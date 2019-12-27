@@ -33,6 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "RestartState.h"
+#include "DisplayMgr.h"
+#include "LedMatrix.h"
+#include "Board.h"
 
 #include <Logging.h>
 #include <SPIFFS.h>
@@ -71,13 +74,27 @@ void RestartState::entry(StateMachine& sm)
     /* Unmount filesystem */
     SPIFFS.end();
 
+    /* Stop updating the display to avoid strange artifacts. */
+    DisplayMgr::getInstance().suspend();
+
+    /* Clear display */
+    LedMatrix::getInstance().clear();
+    LedMatrix::getInstance().show();
+    
+    /* Wait till all physical pixels are cleared. */
+    while(false == LedMatrix::getInstance().isReady())
+    {
+        /* Just wait ... */
+        ;
+    }
+
     return;
 }
 
 void RestartState::process(StateMachine& sm)
 {
-    /* Restart */
-    ESP.restart();
+    /* Reset */
+    Board::reset();
     
     return;
 }

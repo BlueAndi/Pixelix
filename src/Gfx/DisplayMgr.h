@@ -96,6 +96,16 @@ public:
     void unlock(void);
 
     /**
+     * Suspend display update.
+     */
+    void suspend(void);
+
+    /**
+     * Resume display update.
+     */
+    void resume(void);
+
+    /**
      * Enable/Disable automatic brightness adjustment.
      * 
      * @param[in] enable    Enable (true) or disable (false)
