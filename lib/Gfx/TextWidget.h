@@ -60,7 +60,7 @@
 /**
  * A text widget, showing a colored string.
  * The text has a given color, which can be changed.
- * To color single characters, it supports the color tag #RRGGBB.
+ * To color single characters, it supports the color tag "#RRGGBB".
  * Example: "#FF0000H#FFFFFFello!" contains a red "H" and a white "ello!".
  */
 class TextWidget : public Widget
@@ -156,9 +156,9 @@ public:
 
     /**
      * Set the text string. It can contain format tags like:
-     * - #RRGGBB Color information in RGB888 format
+     * - "#RRGGBB" Color information in RGB888 format
      * 
-     * @param[in] str String, which may contain format tags
+     * @param[in] formatStr String, which may contain format tags
      */
     void setFormatStr(const String& formatStr)
     {
