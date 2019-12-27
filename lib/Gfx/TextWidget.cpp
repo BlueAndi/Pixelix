@@ -92,13 +92,13 @@ void TextWidget::update(Adafruit_GFX& gfx)
         if (gfx.width() < m_textWidth)
         {
             m_isScrollingEnabled    = true;
-            m_scrollOffset          = 0u;
-            m_scrollTimer.start(0u);    /* Ensure immediate update */
+            m_scrollOffset          = ((-1) * gfx.width()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
+            m_scrollTimer.start(0u);                            /* Ensure immediate update */
         }
         else
         {
             m_isScrollingEnabled    = false;
-            m_scrollOffset          = 0u;
+            m_scrollOffset          = 0;
             m_scrollTimer.stop();
         }
 
@@ -115,7 +115,7 @@ void TextWidget::update(Adafruit_GFX& gfx)
         ++m_scrollOffset;
         if (m_textWidth < m_scrollOffset)
         {
-            m_scrollOffset = 0;
+            m_scrollOffset = ((-1) * gfx.width()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
         }
 
         m_scrollTimer.start(DEFAULT_SCROLL_PAUSE);

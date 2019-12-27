@@ -78,7 +78,7 @@ public:
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
         m_textWidth(0u),
-        m_scrollOffset(0u),
+        m_scrollOffset(0),
         m_scrollTimer()
     {
     }
@@ -98,7 +98,7 @@ public:
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
         m_textWidth(0u),
-        m_scrollOffset(0u),
+        m_scrollOffset(0),
         m_scrollTimer()
     {
     }
@@ -242,7 +242,7 @@ public:
     static const GFXfont*   DEFAULT_FONT;
 
     /** Default pause between character scrolling in ms */
-    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 200u;
+    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 100u;
 
 private:
 
@@ -252,7 +252,7 @@ private:
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
     bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
     uint16_t        m_textWidth;            /**< Text width in pixel */
-    uint16_t        m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
+    int16_t         m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
 
     /**
