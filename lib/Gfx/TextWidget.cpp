@@ -84,7 +84,7 @@ void TextWidget::update(Adafruit_GFX& gfx)
         int16_t     boundaryX       = 0;
         int16_t     boundaryY       = 0;
         uint16_t    textHeight      = 0u;
-        String      str             = removeFormatTags(m_str);
+        String      str             = removeFormatTags(m_formatStr);
 
         gfx.getTextBounds(str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
 
@@ -106,7 +106,7 @@ void TextWidget::update(Adafruit_GFX& gfx)
     }
 
     /* Show text */
-    show(gfx, m_str);
+    show(gfx, m_formatStr);
 
     /* Shall we scroll again? */
     if (true == m_scrollTimer.isTimeout())
@@ -132,18 +132,18 @@ void TextWidget::update(Adafruit_GFX& gfx)
  * Private Methods
  *****************************************************************************/
 
-String TextWidget::removeFormatTags(const String& formattedStr)
+String TextWidget::removeFormatTags(const String& formatStr) const
 {
     uint32_t    index       = 0u;
     bool        escapeFound = false;
     bool        showChar    = false;
     String      str;
-    uint32_t    length      = formattedStr.length();
+    uint32_t    length      = formatStr.length();
 
     while(length > index)
     {
         /* Escape found? */
-        if ('\\' == formattedStr[index])
+        if ('\\' == formatStr[index])
         {
             /* Another escape found? */
             if (true == escapeFound)
@@ -157,7 +157,7 @@ String TextWidget::removeFormatTags(const String& formattedStr)
             }
         }
         /* Begin of a color tag? */
-        else if ('#' == formattedStr[index])
+        else if ('#' == formatStr[index])
         {
             /* Escaped? */
             if (true == escapeFound)
@@ -171,19 +171,11 @@ String TextWidget::removeFormatTags(const String& formattedStr)
             }
             else
             {
-                String  redStr      = String("0x") + formattedStr.substring(index + 1, index + 1 + 2);
-                String  greenStr    = String("0x") + formattedStr.substring(index + 1 + 2, index + 1 + 4);
-                String  blueStr     = String("0x") + formattedStr.substring(index + 1 + 4, index + 1 + 6);
-                uint8_t red         = 0u;
-                bool statusRed      = Util::strToUInt8(redStr, red);
-                uint8_t green       = 0u;
-                bool statusGreen    = Util::strToUInt8(greenStr, green);
-                uint8_t blue        = 0u;
-                bool statusBlue     = Util::strToUInt8(blueStr, blue);
+                String      colorStr    = String("0x") + formatStr.substring(index + 1, index + 1 + 6);
+                uint32_t    colorRGB888;
+                bool        convStatus  = Util::strToUInt32(colorStr, colorRGB888);
 
-                if ((false == statusRed) ||
-                    (false == statusGreen) ||
-                    (false == statusBlue))
+                if (false == convStatus)
                 {
                     showChar = true;
                 }
@@ -203,7 +195,7 @@ String TextWidget::removeFormatTags(const String& formattedStr)
         {
             showChar = false;
 
-            str += formattedStr[index];
+            str += formatStr[index];
         }
 
         ++index;
@@ -212,17 +204,17 @@ String TextWidget::removeFormatTags(const String& formattedStr)
     return str;
 }
 
-void TextWidget::show(Adafruit_GFX& gfx, const String& formattedStr)
+void TextWidget::show(Adafruit_GFX& gfx, const String& formatStr) const
 {
     uint32_t    index       = 0u;
     bool        escapeFound = false;
     bool        showChar    = false;
-    uint32_t    length      = formattedStr.length();
+    uint32_t    length      = formatStr.length();
 
     while(length > index)
     {
         /* Escape found? */
-        if ('\\' == formattedStr[index])
+        if ('\\' == formatStr[index])
         {
             /* Another escape found? */
             if (true == escapeFound)
@@ -236,7 +228,7 @@ void TextWidget::show(Adafruit_GFX& gfx, const String& formattedStr)
             }
         }
         /* Begin of a color tag? */
-        else if ('#' == formattedStr[index])
+        else if ('#' == formatStr[index])
         {
             /* Escaped? */
             if (true == escapeFound)
@@ -250,25 +242,17 @@ void TextWidget::show(Adafruit_GFX& gfx, const String& formattedStr)
             }
             else
             {
-                String  redStr      = String("0x") + formattedStr.substring(index + 1, index + 1 + 2);
-                String  greenStr    = String("0x") + formattedStr.substring(index + 1 + 2, index + 1 + 4);
-                String  blueStr     = String("0x") + formattedStr.substring(index + 1 + 4, index + 1 + 6);
-                uint8_t red         = 0u;
-                bool statusRed      = Util::strToUInt8(redStr, red);
-                uint8_t green       = 0u;
-                bool statusGreen    = Util::strToUInt8(greenStr, green);
-                uint8_t blue        = 0u;
-                bool statusBlue     = Util::strToUInt8(blueStr, blue);
+                String      colorStr    = String("0x") + formatStr.substring(index + 1, index + 1 + 6);
+                uint32_t    colorRGB888;
+                bool        convStatus  = Util::strToUInt32(colorStr, colorRGB888);
 
-                if ((false == statusRed) ||
-                    (false == statusGreen) ||
-                    (false == statusBlue))
+                if (false == convStatus)
                 {
                     showChar = true;
                 }
                 else
                 {
-                    Color textColor(red, green, blue);
+                    Color textColor(colorRGB888);
                     gfx.setTextColor(textColor.to565());
 
                     /* Overstep only color information. The '#' will be overstepped at the end of the loop. */
@@ -285,7 +269,7 @@ void TextWidget::show(Adafruit_GFX& gfx, const String& formattedStr)
         {
             showChar = false;
 
-            gfx.print(formattedStr[index]);
+            gfx.print(formatStr[index]);
         }
 
         ++index;

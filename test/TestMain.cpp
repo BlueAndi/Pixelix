@@ -1115,7 +1115,7 @@ static void testTextWidget(void)
     TEST_ASSERT_EQUAL_STRING("", textWidget.getStr().c_str());
 
     /* Set/Get string */
-    textWidget.setStr(testStr);
+    textWidget.setFormatStr(testStr);
     TEST_ASSERT_EQUAL_STRING(testStr.c_str(), textWidget.getStr().c_str());
 
     /* Default string color */
@@ -1133,6 +1133,22 @@ static void testTextWidget(void)
     textWidget.update(testGfx);
     TEST_ASSERT_NOT_NULL(testGfx.getFont());
     TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, testGfx.getFont());
+
+    /* Set text with format tag and get text without format tag back. */
+    textWidget.setFormatStr("#FF00FFHello World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
+
+    /* Set text with escaped format tag and get text back, which must contain it. */
+    textWidget.setFormatStr("\\#FF00FFHello World!");
+    TEST_ASSERT_EQUAL_STRING("#FF00FFHello World!", textWidget.getStr().c_str());
+
+    /* Set text with invalid format tag and get text back, which must contain it. */
+    textWidget.setFormatStr("#ZZ00FFHello World!");
+    TEST_ASSERT_EQUAL_STRING("#ZZ00FFHello World!", textWidget.getStr().c_str());
+
+    /* Set text with invalid format tag and get text back, which must contain it. */
+    textWidget.setFormatStr("#FF00FYeah!");
+    TEST_ASSERT_EQUAL_STRING("#FF00FYeah!", textWidget.getStr().c_str());
 
     return;
 }

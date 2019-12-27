@@ -72,7 +72,7 @@ public:
      */
     TextWidget() :
         Widget(WIDGET_TYPE),
-        m_str(),
+        m_formatStr(),
         m_textColor(DEFAULT_TEXT_COLOR),
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
@@ -87,12 +87,12 @@ public:
      * Constructs a text widget with the given string and its color.
      * If there is no color given, it will be default color.
      * 
-     * @param[in] str   String
+     * @param[in] str   String, which may contain format tags.
      * @param[in] color Color of the string
      */
     TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR) :
         Widget(WIDGET_TYPE),
-        m_str(str),
+        m_formatStr(str),
         m_textColor(color),
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
@@ -110,7 +110,7 @@ public:
      */
     TextWidget(const TextWidget& widget) :
         Widget(WIDGET_TYPE),
-        m_str(widget.m_str),
+        m_formatStr(widget.m_formatStr),
         m_textColor(widget.m_textColor),
         m_font(widget.m_font),
         m_checkScrollingNeed(widget.m_checkScrollingNeed),
@@ -135,7 +135,7 @@ public:
      */
     TextWidget& operator=(const TextWidget& widget)
     {
-        m_str                   = widget.m_str;
+        m_formatStr             = widget.m_formatStr;
         m_textColor             = widget.m_textColor;
         m_font                  = widget.m_font;
         m_checkScrollingNeed    = widget.m_checkScrollingNeed;
@@ -158,23 +158,34 @@ public:
      * Set the text string. It can contain format tags like:
      * - #RRGGBB Color information in RGB888 format
      * 
-     * @param[in] str String
+     * @param[in] str String, which may contain format tags
      */
-    void setStr(const String& str)
+    void setFormatStr(const String& formatStr)
     {
-        m_str                   = str;
+        m_formatStr             = formatStr;
         m_checkScrollingNeed    = true;
+        
         return;
     }
 
     /**
-     * Get the text string. It may contain format tags!
+     * Get the text string, which may contain format tags.
+     * 
+     * @return String, which may contain format tags.
+     */
+    String getFormatStr(void) const
+    {
+        return m_formatStr;
+    }
+
+    /**
+     * Get the text string, without format tags.
      * 
      * @return String
      */
     String getStr(void) const
     {
-        return m_str;
+        return removeFormatTags(m_formatStr);
     }
 
     /**
@@ -207,6 +218,7 @@ public:
     {
         m_font                  = font;
         m_checkScrollingNeed    = true;
+
         return;
     }
 
@@ -234,7 +246,7 @@ public:
 
 private:
 
-    String          m_str;                  /**< String, which may contain format tags. */
+    String          m_formatStr;            /**< String, which contains format tags. */
     Color           m_textColor;            /**< Text color of the string */
     const GFXfont*  m_font;                 /**< Current font */
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
@@ -246,21 +258,21 @@ private:
     /**
      * Remove format tags from string.
      * 
-     * @param[in] formattedStr  String which contains format tags
+     * @param[in] formatStr String which contains format tags
      * 
      * @return String without format tags
      */
-    String removeFormatTags(const String& formattedStr);
+    String removeFormatTags(const String& formatStr) const;
 
     /**
      * Show formatted text.
      * Format tags:
      * - #RRGGBB Color in HTML form (RGB888)
      * 
-     * @param[in] gfx           Graphics, used to draw the characters
-     * @param[in] formattedStr  String which contains format tags
+     * @param[in] gfx       Graphics, used to draw the characters
+     * @param[in] formatStr String which contains format tags
      */
-    void show(Adafruit_GFX& gfx, const String& formattedStr);
+    void show(Adafruit_GFX& gfx, const String& formatStr) const;
 };
 
 /******************************************************************************

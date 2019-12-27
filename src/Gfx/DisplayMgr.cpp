@@ -250,7 +250,7 @@ void DisplayMgr::setText(uint8_t slotId, const String& str)
         {
             textWidget = static_cast<TextWidget*>(widget);
 
-            textWidget->setStr(str);
+            textWidget->setFormatStr(str);
         }
     }
 
@@ -375,7 +375,7 @@ void DisplayMgr::enableSlots(bool enableIt)
 
 void DisplayMgr::showSysMsg(const String& msg)
 {
-    m_sysMsgWidget.setStr(msg);
+    m_sysMsgWidget.setFormatStr(msg);
     enableSlots(false);
     
     return;
