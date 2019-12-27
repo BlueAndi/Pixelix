@@ -35,6 +35,8 @@
 #include "Board.h"
 
 #include <Util.h>
+#include <esp_int_wdt.h>
+#include <esp_task_wdt.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -94,6 +96,20 @@ extern void Board::init()
         {
             ioPinList[index]->init();
         }
+    }
+
+    return;
+}
+
+extern void Board::reset()
+{
+    esp_task_wdt_init(1, true);
+    esp_task_wdt_add(NULL);
+    
+    for(;;)
+    {
+        /* Wait for reset. */
+        ;
     }
 
     return;

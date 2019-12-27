@@ -119,6 +119,11 @@ static const uint32_t   supplyCurrentMax    = 3500u;
  */
 extern void init();
 
+/**
+ * Execute a hard reset!
+ */
+extern void reset();
+
 };
 
 #endif  /* __BOARD_H__ */
