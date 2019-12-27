@@ -46,16 +46,11 @@
 #include <SimpleTimer.hpp>
 #include <ProgressBar.h>
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Mark not used function parameters */
-#define NOT_USED(__var)     (void)(__var)
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
 /******************************************************************************
  * Types and Classes
@@ -77,7 +72,7 @@ public:
     {
         uint16_t index = 0u;
 
-        for(index = 0u; index < ARRAY_NUM(m_buffer); ++index)
+        for(index = 0u; index < UTIL_ARRAY_NUM(m_buffer); ++index)
         {
             m_buffer[index] = 0;
         }
@@ -92,7 +87,7 @@ public:
      */
     size_t write(uint8_t data)
     {
-        NOT_USED(data);
+        UTIL_NOT_USED(data);
 
         /* Method is not used at all, because the write(const uint8_t*, size_t size)
          * is overwritten, which doesn't use the single byte write method.
@@ -113,7 +108,7 @@ public:
     {
         uint16_t index = 0u;
         
-        for(index = 0u; index < ARRAY_NUM(m_buffer); ++index)
+        for(index = 0u; index < UTIL_ARRAY_NUM(m_buffer); ++index)
         {
             m_buffer[index] = static_cast<char>(buffer[index]);
         }
@@ -160,7 +155,7 @@ public:
     {
         uint16_t index = 0u;
 
-        for(index = 0u; index < ARRAY_NUM(m_buffer); ++index)
+        for(index = 0u; index < UTIL_ARRAY_NUM(m_buffer); ++index)
         {
             m_buffer[index] = 0u;
         }
@@ -541,8 +536,8 @@ static void testLogging(void);
  */
 int main(int argc, char **argv)
 {
-    NOT_USED(argc);
-    NOT_USED(argv);
+    UTIL_NOT_USED(argc);
+    UTIL_NOT_USED(argv);
 
     UNITY_BEGIN();
 

@@ -34,6 +34,8 @@
  *****************************************************************************/
 #include "Board.h"
 
+#include <Util.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -43,9 +45,6 @@ using namespace Board;
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
 /******************************************************************************
  * Types and classes
@@ -89,7 +88,7 @@ extern void Board::init()
     uint8_t index = 0u;
 
     /* Initialize all i/o pins */
-    for(index = 0u; index < ARRAY_NUM(ioPinList); ++index)
+    for(index = 0u; index < UTIL_ARRAY_NUM(ioPinList); ++index)
     {
         if (NULL != ioPinList[index])
         {

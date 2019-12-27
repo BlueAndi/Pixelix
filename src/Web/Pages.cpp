@@ -46,6 +46,7 @@
 #include <SPIFFS.h>
 #include <Update.h>
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -54,9 +55,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
 /******************************************************************************
  * Types and classes
@@ -294,7 +292,7 @@ static String getColoredText(const String& text)
         result += "</span>";
 
         ++colorIndex;
-        if (ARRAY_NUM(colors) <= colorIndex)
+        if (UTIL_ARRAY_NUM(colors) <= colorIndex)
         {
             colorIndex = 0;
         }

@@ -40,6 +40,7 @@
 #include <BitmapWidget.h>
 #include <LampWidget.h>
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -48,12 +49,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
-
-/** Use it to mark not used function parameters. */
-#define NOT_USED(__var)     (void)(__var)
 
 /******************************************************************************
  * Types and classes
@@ -559,7 +554,7 @@ void DisplayMgr::clearSlots(void)
 {
     uint8_t index = 0u;
 
-    for(index = 0u; index < ARRAY_NUM(m_slots); ++index)
+    for(index = 0u; index < UTIL_ARRAY_NUM(m_slots); ++index)
     {
         Widget* widget = m_slots[index];
         destroyWidget(widget);
@@ -714,7 +709,7 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
 
     canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::height, 0, 0);
 
-    for(index = 0u; index < ARRAY_NUM(lampWidgets); ++index)
+    for(index = 0u; index < UTIL_ARRAY_NUM(lampWidgets); ++index)
     {
         lampWidgets[index] = new LampWidget();
 
@@ -724,7 +719,7 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
         }
     }
 
-    if ((ARRAY_NUM(lampWidgets) > index) ||
+    if ((UTIL_ARRAY_NUM(lampWidgets) > index) ||
         (NULL == canvas) ||
         (NULL == bitmapCanvas) ||
         (NULL == bitmapWidget) ||
@@ -761,11 +756,11 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
 
         textWidget->setName(TEXT_WIDGET_NAME);
 
-        strncpy(lampName, LAMP_WIDGET_NAME, ARRAY_NUM(lampName) - 1);
-        lampName[ARRAY_NUM(lampName) - 1] = '\0';
+        strncpy(lampName, LAMP_WIDGET_NAME, UTIL_ARRAY_NUM(lampName) - 1);
+        lampName[UTIL_ARRAY_NUM(lampName) - 1] = '\0';
         lampNameNumPos = strlen(lampName);
 
-        for(index = 0u; index < ARRAY_NUM(lampWidgets); ++index)
+        for(index = 0u; index < UTIL_ARRAY_NUM(lampWidgets); ++index)
         {
             if (false == lampCanvas->addWidget(*lampWidgets[index]))
             {
@@ -810,7 +805,7 @@ bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
             delete textWidget;
         }
 
-        for(index = 0u; index < ARRAY_NUM(lampWidgets); ++index)
+        for(index = 0u; index < UTIL_ARRAY_NUM(lampWidgets); ++index)
         {
             if (NULL != lampWidgets[index])
             {

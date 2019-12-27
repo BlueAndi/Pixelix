@@ -47,23 +47,23 @@
 #include <WString.h>
 #include <cerrno>
 
-/** Utilitiy functions */
-namespace Util
-{
-
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
+#define UTIL_ARRAY_NUM(__arr)   (sizeof(__arr) / sizeof((__arr)[0]))
 
 /** Use it to mark not used function parameters. */
-#define NOT_USED(__var)     (void)(__var)
+#define UTIL_NOT_USED(__var)    (void)(__var)
 
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+
+/** Utilitiy functions */
+namespace Util
+{
 
 /******************************************************************************
  * Functions

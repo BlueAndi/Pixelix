@@ -36,6 +36,7 @@
 #include "WsCmdGetDisp.h"
 
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -44,12 +45,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
-
-/** Use it to mark not used function parameters. */
-#define NOT_USED(__var)     (void)(__var)
 
 /******************************************************************************
  * Types and classes
@@ -145,7 +140,7 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
 
 void WebSocketSrv::onConnect(AsyncWebSocket* server, AsyncWebSocketClient* client, AsyncWebServerRequest* request)
 {
-    NOT_USED(request);
+    UTIL_NOT_USED(request);
 
     LOG_INFO("ws[%s][%u] Client connected.", server->url(), client->id());
     return;
@@ -263,7 +258,7 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
     {
         /* Find command object */
         index = 0u;
-        while((NULL == wsCmd) && (index < ARRAY_NUM(gWsCommands)))
+        while((NULL == wsCmd) && (index < UTIL_ARRAY_NUM(gWsCommands)))
         {
             if (cmd == gWsCommands[index]->getCmd())
             {
