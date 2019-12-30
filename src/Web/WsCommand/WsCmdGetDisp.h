@@ -82,14 +82,14 @@ public:
      * @param[in] server    Websocket server
      * @param[in] client    Websocket client
      */
-    void execute(AsyncWebSocket* server, AsyncWebSocketClient* client);
+    void execute(AsyncWebSocket* server, AsyncWebSocketClient* client) override;
 
     /**
      * Set command parameter. Call this for each parameter, until executing it.
      * 
      * @param[in] par   Parameter string
      */
-    void setPar(const char* par);
+    void setPar(const char* par) override;
 
 private:
 

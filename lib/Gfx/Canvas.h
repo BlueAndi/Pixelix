@@ -172,7 +172,7 @@ public:
      * 
      * @return If widget is found, it will be returned otherwise NULL.
      */
-    Widget* find(const String& name)
+    Widget* find(const String& name) override
     {
         Widget* widget = NULL;
 
