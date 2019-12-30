@@ -146,6 +146,19 @@ public:
     }
 
     /**
+     * Fill whole screen with the given color.
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param[in] color Color
+     */
+    void fillScreen(uint16_t color)
+    {
+        fillRect(0, 0, m_width, m_height, color);
+
+        return;
+    }
+
+    /**
      * Draw a PROGMEM-resident 16-bit image (RGB 5/6/5) at the specified (x,y) position.
      * For 16-bit display devices; no color reduction performed.
      * Note, method declaration is from Adafruit_GFX.

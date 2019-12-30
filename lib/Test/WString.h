@@ -183,25 +183,28 @@ public:
      */
     String& operator=(const String& str)
     {
-        if (NULL != m_buffer)
+        if (this != &str)
         {
-            delete[] m_buffer;
-            m_buffer = NULL;
-        }
-
-        m_size = str.m_size;
-
-        if (0u < m_size)
-        {
-            m_buffer = new char[m_size];
-
-            if (NULL == m_buffer)
+            if (NULL != m_buffer)
             {
-                m_size = 0u;
+                delete[] m_buffer;
+                m_buffer = NULL;
             }
-            else
+
+            m_size = str.m_size;
+
+            if (0u < m_size)
             {
-                memcpy(m_buffer, str.m_buffer, m_size);
+                m_buffer = new char[m_size];
+
+                if (NULL == m_buffer)
+                {
+                    m_size = 0u;
+                }
+                else
+                {
+                    memcpy(m_buffer, str.m_buffer, m_size);
+                }
             }
         }
 
@@ -225,6 +228,18 @@ public:
         }
 
         return result;
+    }
+
+    /**
+     * Compare two strings.
+     * 
+     * @param[in] str String, which to compare with.
+     * 
+     * @return If the strings are equal, it will return true otherwise false.
+     */
+    bool operator!=(const String& str) const
+    {
+        return (*this == str) ? false : true;
     }
 
     /**
