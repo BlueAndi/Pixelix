@@ -109,7 +109,7 @@ public:
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(Adafruit_GFX& gfx);
+    void update(Adafruit_GFX& gfx) override;
 
     /**
      * Set progress in % [0; 100].

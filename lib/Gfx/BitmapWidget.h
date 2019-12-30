@@ -126,7 +126,7 @@ public:
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(Adafruit_GFX& gfx)
+    void update(Adafruit_GFX& gfx) override
     {
         if (NULL != m_buffer)
         {

@@ -144,7 +144,7 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    void update(Adafruit_GFX& gfx)
+    void update(Adafruit_GFX& gfx) override
     {
         /* Walk through all widgets and draw them in the priority as
          * they were added.
