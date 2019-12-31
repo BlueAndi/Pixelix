@@ -4,14 +4,18 @@ title Plugin Service
 
 interface "Plugin" as plugin {
 
+    + m_isEnabled : bool
+    + m_slotId : uint8_t
     + getSlotId(): uint8_t
     + setSlotId(slotId : uint8_t) : void
     + {abstract} registerWebInterface(srv : AsyncWebServer&) : void
     + {abstract} unregisterWebInterface(srv : AsyncWebServer&) : void
     + {abstract} getName() = 0 : const char*
+    + {abstract} getDuration() : uint32_t
     + enable() : void
     + disable() : void
-    + {abstract} start(duration: uint32_t) : void
+    + isEnabled() : bool
+    + {abstract} start() : void
     + {abstract} stop() : void
     + {abstract} update(gfx: Adafruit_Gfx&) = 0 : bool
 }
@@ -25,7 +29,6 @@ note left of plugin
     ** Call stop() once.
 end note
 
-class "PluginFab" as pluginFab
 class "PluginMgr" as pluginMgr
 class "DisplayMgr" as displayMgr
 class "MyWebserver" as myWebserver
@@ -33,25 +36,17 @@ class "App" as app
 class "ConcretePlugin" as concretePlugin
 class "Settings" as settings
 
-app ..> pluginFab: Create/Destroy specific plugin
-app .l.> pluginMgr: Install/Uninstall plugin
+app ..> pluginMgr: Install/Uninstall plugin
 
 note right of app
-    The application creates a plugin and
-    installs it via the plugin manager.
+    The application installs or uninstall plugins via
+    the plugin manager.
     
-    This can be requested by the user via
-    REST API or webinterface.
+    This can be requested by the user via REST API or
+    web page.
 
-    Or some plugins are necessary for internal
-    use and therefore installed during startup.
-end note
-
-pluginFab ..> concretePlugin: <<depends>>
-
-note right of pluginFab
-    Plugin factory is responsible to create
-    and destroy plugins.
+    Some plugins may be necessary for internal use and
+    therefore installed during startup.
 end note
 
 plugin <|.. concretePlugin: <<realize>>
@@ -66,8 +61,13 @@ end note
 displayMgr ..> plugin: Start/Stop/Update plugin
 
 note right of displayMgr
-    The display manager schedules the
-    installed plugins.
+    The display manager provides slots for the plugins,
+    where they can be plugged in.
+
+    The application can request to immediate activate
+    a specific slot and its plugged in plugin.
+
+    Or request to rotate from slot to slot.
 end note
 
 pluginMgr ..> displayMgr: Install/Uninstall\nplugin
@@ -76,14 +76,14 @@ pluginMgr .u.> myWebserver: Register/Unregister\nplugin web pages
 pluginMgr .u.> settings: Load/Save\nplugin configuration
 
 note left of pluginMgr
-    The plugin manager installs a plugin in a
-    display slot and register its web pages.
+    The plugin manager creates and installs a plugin in a display
+    slot and register its web pages.
     
-    Or uninstalls a plugin and unregister its
+    Or uninstalls and destroys a plugin and remove its registered
     web pages.
     
-    It saves the configuration of which plugin
-    is in which slot in persistent memory.
+    It saves the configuration of which plugin is in which slot
+    in persistent memory.
     
     It loads the configuration at startup.
 end note
