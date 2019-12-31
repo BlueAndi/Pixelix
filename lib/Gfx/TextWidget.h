@@ -162,8 +162,12 @@ public:
      */
     void setFormatStr(const String& formatStr)
     {
-        m_formatStr             = formatStr;
-        m_checkScrollingNeed    = true;
+        /* Avoid upate if not necessary. */
+        if (m_formatStr != formatStr)
+        {
+            m_formatStr             = formatStr;
+            m_checkScrollingNeed    = true;
+        }
         
         return;
     }
