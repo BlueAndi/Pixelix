@@ -1,0 +1,91 @@
+@startuml
+
+title Plugin Service
+
+interface "Plugin" as plugin {
+
+    + getSlotId(): uint8_t
+    + setSlotId(slotId : uint8_t) : void
+    + {abstract} registerWebInterface(srv : AsyncWebServer&) : void
+    + {abstract} unregisterWebInterface(srv : AsyncWebServer&) : void
+    + {abstract} getName() = 0 : const char*
+    + enable() : void
+    + disable() : void
+    + {abstract} start(duration: uint32_t) : void
+    + {abstract} stop() : void
+    + {abstract} update(gfx: Adafruit_Gfx&) = 0 : bool
+}
+
+note left of plugin
+    * Plugins which are installed and enabled are scheduled.
+    * Schedule procedure:
+    ** Call start() once. It will return the minimum run duration.
+    ** Call update() cyclic, as long as necessary.
+        The update() routine may extend the run duration.
+    ** Call stop() once.
+end note
+
+class "PluginFab" as pluginFab
+class "PluginMgr" as pluginMgr
+class "DisplayMgr" as displayMgr
+class "MyWebserver" as myWebserver
+class "App" as app
+class "ConcretePlugin" as concretePlugin
+class "Settings" as settings
+
+app ..> pluginFab: Create/Destroy specific plugin
+app .l.> pluginMgr: Install/Uninstall plugin
+
+note right of app
+    The application creates a plugin and
+    installs it via the plugin manager.
+    
+    This can be requested by the user via
+    REST API or webinterface.
+
+    Or some plugins are necessary for internal
+    use and therefore installed during startup.
+end note
+
+pluginFab ..> concretePlugin: <<depends>>
+
+note right of pluginFab
+    Plugin factory is responsible to create
+    and destroy plugins.
+end note
+
+plugin <|.. concretePlugin: <<realize>>
+
+note right of concretePlugin
+    Each plugin represents its own
+    functionality. If a plugin is scheduled
+    by the display manager, it can draw on the
+    display.
+end note
+
+displayMgr ..> plugin: Start/Stop/Update plugin
+
+note right of displayMgr
+    The display manager schedules the
+    installed plugins.
+end note
+
+pluginMgr ..> displayMgr: Install/Uninstall\nplugin
+pluginMgr o--> "0..*" plugin: Register/Unregister\nweb pages
+pluginMgr .u.> myWebserver: Register/Unregister\nplugin web pages
+pluginMgr .u.> settings: Load/Save\nplugin configuration
+
+note left of pluginMgr
+    The plugin manager installs a plugin in a
+    display slot and register its web pages.
+    
+    Or uninstalls a plugin and unregister its
+    web pages.
+    
+    It saves the configuration of which plugin
+    is in which slot in persistent memory.
+    
+    It loads the configuration at startup.
+end note
+
+@enduml
