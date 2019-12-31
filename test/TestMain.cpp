@@ -584,7 +584,6 @@ static T getMin(const T value1, const T value2)
 static void testDoublyLinkedList(void)
 {
     DLinkedList<uint32_t>   list;
-    uint32_t*               element = NULL;
     uint32_t                value   = 1u;
     uint32_t                index   = 0u;
     const uint32_t          max     = 3u;
