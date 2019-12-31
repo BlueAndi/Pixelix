@@ -69,16 +69,15 @@ const GFXfont*  TextWidget::DEFAULT_FONT    = &TomThumb;
 
 void TextWidget::update(Adafruit_GFX& gfx)
 {
-    const int16_t   CURSOR_X    = m_posX - m_scrollOffset;
-    const int16_t   CURSOR_Y    = m_posY + m_font->yAdvance - 1; /* Set cursor to baseline */
+    int16_t cursorX = m_posX;
+    int16_t cursorY = m_posY + m_font->yAdvance - 1; /* Set cursor to baseline */
 
     /* Set base parameters */
     gfx.setFont(m_font);
     gfx.setTextColor(m_textColor.to565());
-    gfx.setCursor(CURSOR_X, CURSOR_Y);
     gfx.setTextWrap(false); /* If text is too long, don't wrap around. */
 
-    /* Check for scrolling necessary? */
+    /* Text changed, check whether scrolling is necessary? */
     if (true == m_checkScrollingNeed)
     {
         int16_t     boundaryX       = 0;
@@ -86,7 +85,7 @@ void TextWidget::update(Adafruit_GFX& gfx)
         uint16_t    textHeight      = 0u;
         String      str             = removeFormatTags(m_formatStr);
 
-        gfx.getTextBounds(str, CURSOR_X, CURSOR_Y, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
+        gfx.getTextBounds(str, cursorX, cursorY, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
 
         /* Text too long for the display? */
         if (gfx.width() < m_textWidth)
@@ -104,6 +103,10 @@ void TextWidget::update(Adafruit_GFX& gfx)
 
         m_checkScrollingNeed = false;
     }
+
+    /* Move cursor to right position */
+    cursorX -= m_scrollOffset;
+    gfx.setCursor(cursorX, cursorY);
 
     /* Show text */
     show(gfx, m_formatStr);
