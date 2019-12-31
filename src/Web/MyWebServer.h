@@ -81,6 +81,13 @@ void begin(void);
  */
 void end(void);
 
+/**
+ * Get webserver instance.
+ * 
+ * @return Webserver instance.
+ */
+AsyncWebServer& getInstance(void);
+
 }
 
 #endif  /* __MYWEBSERVER_H__ */

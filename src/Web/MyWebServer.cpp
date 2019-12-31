@@ -105,6 +105,11 @@ void MyWebServer::end(void)
     return;
 }
 
+AsyncWebServer& MyWebServer::getInstance(void)
+{
+    return gWebServer;
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
