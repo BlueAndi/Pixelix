@@ -80,7 +80,6 @@ extern bool Util::strToUInt8(const String& str, uint8_t& value)
         (NULL != endPtr) &&
         ('\0' == *endPtr) &&
         (str.c_str() != endPtr) &&
-        (0 <= tmp) &&
         (UINT8_MAX >= tmp))
     {
         value = static_cast<uint8_t>(tmp);
@@ -100,7 +99,6 @@ extern bool Util::strToUInt16(const String& str, uint16_t& value)
         (NULL != endPtr) &&
         ('\0' == *endPtr) &&
         (str.c_str() != endPtr) &&
-        (0 <= tmp) &&
         (UINT16_MAX >= tmp))
     {
         value = static_cast<uint16_t>(tmp);
@@ -122,7 +120,6 @@ extern bool Util::strToUInt32(const String& str, uint32_t& value)
         (NULL != endPtr) &&
         ('\0' == *endPtr) &&
         (str.c_str() != endPtr) &&
-        (0 <= tmp) &&
         (UINT32_MAX >= tmp))
     {
         value = static_cast<uint32_t>(tmp);
