@@ -393,6 +393,7 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
     else
     {
         ++slotId;
+        slotId %= MAX_SLOTS;
     }
 
     /* Set next slot active, precondition is a installed plugin which is enabled.  */
@@ -425,8 +426,8 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
 
 void DisplayMgr::process(void)
 {
-    LedMatrix&  matrix      = LedMatrix::getInstance();
-    uint8_t     index       = 0u;
+    LedMatrix&  matrix  = LedMatrix::getInstance();
+    uint8_t     index   = 0u;
 
     /* Ambient light sensor available for automatic brightness adjustment? */
     if (true == m_autoBrightnessTimer.isTimerRunning())
@@ -452,6 +453,7 @@ void DisplayMgr::process(void)
             LOG_WARNING("Requested plugin %s in slot %u is disabled.", m_requestedPlugin->getName(), m_requestedPlugin->getSlotId());
             m_requestedPlugin = NULL;
         }
+        /* Plugin selected? */
         else if (NULL != m_selectedPlugin)
         {
             /* Remove selected plugin, which forces to select the requested one. */
@@ -476,6 +478,34 @@ void DisplayMgr::process(void)
             m_selectedPlugin->inactive();
             m_selectedPlugin = NULL;
             m_slotTimer.stop();
+        }
+        /* Plugin run duration timeout? */
+        else if ((true == m_slotTimer.isTimerRunning()) &&
+                 (true == m_slotTimer.isTimeout()))
+        {
+            uint8_t slotId = nextSlot(m_selectedSlot);
+
+            /* If the next slot is the same as the current slot,
+             * just restart the plugin duration timer.
+             */
+            if (m_selectedSlot == slotId)
+            {
+                if (true == m_slotTimer.isTimerRunning())
+                {
+                    m_slotTimer.restart();
+                }
+            }
+            else
+            {
+                m_selectedPlugin->inactive();
+                m_selectedPlugin = NULL;
+                m_slotTimer.stop();
+            }
+        }
+        else
+        {
+            /* Nothing to do. */
+            ;
         }
     }
 
@@ -533,17 +563,6 @@ void DisplayMgr::process(void)
     }
 
     matrix.show();
-
-    /* Plugin run duration timeout? */
-    if ((true == m_slotTimer.isTimerRunning()) &&
-        (true == m_slotTimer.isTimeout()))
-    {
-        m_selectedPlugin->inactive();
-        m_selectedPlugin = NULL;
-        m_slotTimer.stop();
-
-        /* In the next cycle, the next slot will be determined automatically. */
-    }
 
     unlock();
 
