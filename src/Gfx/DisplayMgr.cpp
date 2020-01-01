@@ -452,10 +452,16 @@ void DisplayMgr::process(void)
             LOG_WARNING("Requested plugin %s in slot %u is disabled.", m_requestedPlugin->getName(), m_requestedPlugin->getSlotId());
             m_requestedPlugin = NULL;
         }
-        else
+        else if (NULL != m_selectedPlugin)
         {
             /* Remove selected plugin, which forces to select the requested one. */
+            m_selectedPlugin->inactive();
             m_selectedPlugin = NULL;
+        }
+        else
+        {
+            /* Nothing to do. */
+            ;
         }
     }
         
@@ -467,8 +473,9 @@ void DisplayMgr::process(void)
         /* Plugin disabled in the meantime? */
         if (false == m_selectedPlugin->isEnabled())
         {
-            m_slotTimer.stop();
+            m_selectedPlugin->inactive();
             m_selectedPlugin = NULL;
+            m_slotTimer.stop();
         }
     }
 
@@ -500,6 +507,7 @@ void DisplayMgr::process(void)
                 m_slotTimer.start(duration);
             }
 
+            m_selectedPlugin->active();
             LOG_INFO("Slot %u (%s) now active.", m_selectedSlot, m_selectedPlugin->getName());
         }
     }
@@ -530,8 +538,9 @@ void DisplayMgr::process(void)
     if ((true == m_slotTimer.isTimerRunning()) &&
         (true == m_slotTimer.isTimeout()))
     {
-        m_slotTimer.stop();
+        m_selectedPlugin->inactive();
         m_selectedPlugin = NULL;
+        m_slotTimer.stop();
 
         /* In the next cycle, the next slot will be determined automatically. */
     }

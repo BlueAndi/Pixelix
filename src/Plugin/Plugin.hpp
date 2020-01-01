@@ -205,6 +205,26 @@ public:
     }
 
     /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     * Overwrite it if your plugin needs to know this.
+     */
+    virtual void active(void)
+    {
+        return;
+    }
+
+    /**
+     * This method will be called in case the plugin is set inactive, which means
+     * it won't be shown on the display anymore.
+     * Overwrite it if your plugin needs to know this.
+     */
+    virtual void inactive(void)
+    {
+        return;
+    }
+
+    /**
      * Update the display.
      * If the plugin is in active slot, this function will be called cyclic
      * as long as the slot is active.

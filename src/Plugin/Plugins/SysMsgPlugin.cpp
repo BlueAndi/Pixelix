@@ -58,14 +58,28 @@
  * Public Methods
  *****************************************************************************/
 
-bool SysMsgPlugin::update(Adafruit_GFX& gfx)
+void SysMsgPlugin::active(void)
 {
-    bool isRunExtended = (0 == m_duration) ? true : false;
+    return;
+}
 
+void SysMsgPlugin::inactive(void)
+{
+    /* If duration is not infinite, disable plugin now. */
+    if (DURATION_INFINITE != m_duration)
+    {
+        disable();
+    }
+
+    return;
+}
+
+void SysMsgPlugin::update(Adafruit_GFX& gfx)
+{
     m_textWidget.move(0, 1);
     m_textWidget.update(gfx);
 
-    return isRunExtended;
+    return;
 }
 
 void SysMsgPlugin::show(const String& msg, uint32_t duration)

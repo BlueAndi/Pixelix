@@ -104,6 +104,18 @@ public:
     }
 
     /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     */
+    void active(void);
+
+    /**
+     * This method will be called in case the plugin is set inactive, which means
+     * it won't be shown on the display anymore.
+     */
+    void inactive(void);
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      * 

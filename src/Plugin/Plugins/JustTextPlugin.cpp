@@ -69,13 +69,12 @@ void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
     return;
 }
 
-bool JustTextPlugin::update(Adafruit_GFX& gfx)
+void JustTextPlugin::update(Adafruit_GFX& gfx)
 {
     m_textWidget.move(0, 1);
     m_textWidget.update(gfx);
 
-    /* Don't extend the default minimum duration. */
-    return false;
+    return;
 }
 
 /******************************************************************************
