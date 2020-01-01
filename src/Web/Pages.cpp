@@ -943,8 +943,7 @@ static void uploadPage(AsyncWebServerRequest* request)
  */
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-    bool            isError     = false;
-    static uint32_t progress    = 0u;
+    bool    isError = false;
 
     /* Begin of upload? */
     if (0 == index)
@@ -954,6 +953,15 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 
         LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
 
+        /* Update filesystem? */
+        if (U_SPIFFS == cmd)
+        {
+            /* Close filesystem before continue. 
+             * Note, this needs a restart after update is finished.
+             */
+            SPIFFS.end();
+        }
+
         /* TODO request->contentLength() contains 200 bytes more, than which will be written.
          * How to calculate it correct?
          */
@@ -962,8 +970,14 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             LOG_ERROR("Upload failed: %s", Update.errorString());
             isError = true;
         }
-
-        progress = 0u;
+        else
+        {
+            /* Use UpdateMgr to show the user the update status.
+             * Note, the display manager will be completey stopped during this,
+             * to avoid artifacts on the display, because of long writes to flash.
+             */
+            UpdateMgr::getInstance().beginProgress();
+        }
     }
 
     if (true == Update.isRunning())
@@ -975,27 +989,28 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         }
         else
         {
-            uint32_t progressNext = (Update.progress() * 100) / Update.size();
+            uint32_t progress = (Update.progress() * 100) / Update.size();
 
-            /* Don't spam the console and output only if something changed. */
-            if (progress != progressNext)
-            {
-                LOG_INFO("Upload progress: %u %%", progressNext);
-                progress = progressNext;
-            }
+            UpdateMgr::getInstance().updateProgress(progress);
         }
 
         /* Upload finished? */
         if (true == final)
         {
+            /* Finish update now. */
             if (false == Update.end(true))
             {
                 LOG_ERROR("Upload failed: %s", Update.errorString());
                 isError = true;
             }
+            /* Update was successful! */
             else
             {
                 LOG_INFO("Upload of %s finished.", filename.c_str());
+
+                /* Ensure that the user see 100% update status on the display. */
+                UpdateMgr::getInstance().updateProgress(100u);
+                UpdateMgr::getInstance().endProgress();
 
                 /* Request a restart */
                 UpdateMgr::getInstance().reqRestart();
@@ -1005,6 +1020,8 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 
     if (true == isError)
     {
+        UpdateMgr::getInstance().endProgress();
+        
         Update.abort();
         request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
     }

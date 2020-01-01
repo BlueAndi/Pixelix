@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  Plugin manager
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup sys_states
- * 
+ * @addtogroup plugin
+ *
  * @{
  */
 
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
+#ifndef __PLUGINMGR_H__
+#define __PLUGINMGR_H__
 
 /******************************************************************************
  * Compile Switches
@@ -44,8 +44,11 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <StateMachine.hpp>
-#include <WString.h>
+#include "Plugin.hpp"
+#include "SysMsgPlugin.h"
+#include "JustTextPlugin.h"
+
+#include <LinkedList.hpp>
 
 /******************************************************************************
  * Macros
@@ -56,71 +59,95 @@
  *****************************************************************************/
 
 /**
- * System state: Connected
+ * The plugin manager installs a plugin in a display slot and register its web pages.
+ * Or uninstalls a plugin and unregister its web pages.
  */
-class ConnectedState : public AbstractState
+class PluginMgr
 {
 public:
 
     /**
-     * Get state instance.
-     * 
-     * @return State instance
+     * Get instance of plugin manager.
+     *
+     * @return Plugin manager instance
      */
-    static ConnectedState& getInstance(void)
+    static PluginMgr& getInstance(void)
     {
         return m_instance;
     }
 
     /**
-     * The entry is called once, a state is entered.
+     * Install SysMsgPlugin plugin.
      * 
-     * @param[in] sm    Responsible state machine
+     * @return If successful installed, it will return true otherwise false.
      */
-    void entry(StateMachine& sm);
+    SysMsgPlugin* installSysMsgPlugin(void);
 
     /**
-     * The process routine is called cyclic, as long as the state is active.
+     * Install JustText plugin.
+     *
+     * @param[in] plugin    Plugin, which to install
      * 
-     * @param[in] sm    Responsible state machine
+     * @return If successful installed, it will return true otherwise false.
      */
-    void process(StateMachine& sm);
+    JustTextPlugin* installJustTextPlugin(void);
 
     /**
-     * The exit is called once, a state will be left.
-     * 
-     * @param[in] sm    Responsible state machine
+     * Uninstall plugin.
+     *
+     * @param[in] plugin    Plugin, which to remove
      */
-    void exit(StateMachine& sm);
+    void uninstall(Plugin* plugin);
 
 private:
 
-    /** Connected state instance */
-    static ConnectedState  m_instance;
+    static PluginMgr        m_instance; /**< Plugin manager instance */
+
+    DLinkedList<Plugin*>    m_plugins;  /**< List with all installed plugins */
 
     /**
-     * Constructs the state.
+     * Constructs the plugin manager.
      */
-    ConnectedState()
+    PluginMgr() :
+        m_plugins()
     {
     }
 
     /**
-     * Destroys the state.
+     * Destroys the plugin manager.
      */
-    ~ConnectedState()
+    ~PluginMgr()
     {
+        /* Will never be called. */
     }
 
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
+    PluginMgr(const PluginMgr& fab);
+    PluginMgr& operator=(const PluginMgr& fab);
 
+    /**
+     * Install plugin to any available display slot.
+     *
+     * @param[in] plugin    Plugin, which to install
+     * 
+     * @return If successful installed, it will return true otherwise false.
+     */
+    bool install(Plugin* plugin);
+
+    /**
+     * Install plugin to a specific display slot.
+     *
+     * @param[in] plugin    Plugin, which to install
+     * @param[in] slotId    Id of the slot, where to install the plugin
+     * 
+     * @return If successful installed, it will return true otherwise false.
+     */
+    bool installToSlot(Plugin* plugin, uint8_t slotId);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+#endif  /* __PLUGINMGR_H__ */
 
 /** @} */

@@ -42,17 +42,22 @@
 #include "ButtonDrv.h"
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
+#include "SysMsg.h"
 #include "Version.h"
 #include "AmbientLightSensor.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "Settings.h"
+#include "PluginMgr.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
 #include "ErrorState.h"
 
 #include <Logging.h>
+
+// TODO Remove
+#include "JustTextPlugin.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -123,23 +128,24 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Initialize display manager */
-    else if (false == DisplayMgr::getInstance().init())
+    else if (false == DisplayMgr::getInstance().begin())
     {
         LOG_FATAL("Failed to initialize display manager.");
         isError = true;
     }
-    else
+    /* Initialize system message handler */
+    else if (false == SysMsg::getInstance().init())
     {
-        uint8_t index   = 0u;
-
-        /* Set display layouts */
-        for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
-        {
-            DisplayMgr::getInstance().setLayout(index, DisplayMgr::LAYOUT_ID_2);
-        }
+        LOG_FATAL("Failed to initialize system message handler.");
+        isError = true;
     }
-    
-    if (false == isError)
+    /* Initialize over-the-air update server */
+    else if (false == UpdateMgr::getInstance().init())
+    {
+        LOG_FATAL("Failed to initialize Arduino OTA.");
+        isError = true;
+    }
+    else
     {
         /* Enable the automatic display brightness adjustment according to the
         * ambient light.
@@ -152,9 +158,6 @@ void InitState::entry(StateMachine& sm)
         /* Initialize webserver. SPIFFS must be mounted before! */
         MyWebServer::init();
 
-        /* Initialize over-the-air update server */
-        UpdateMgr::getInstance().init();
-
         /* Don't store the wifi configuration in the NVS.
          * This seems to cause a reset after a client connected to the access point.
          * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
@@ -163,6 +166,21 @@ void InitState::entry(StateMachine& sm)
 
         /* Show some informations on the display. */
         showStartupInfoOnDisplay();
+
+        /* TODO Load slot configuration from persistent memory and install the plugins here. */
+        {
+            /* As example, install the JustTextPlugin for development purposes. */
+            JustTextPlugin* justTextPlugin = PluginMgr::getInstance().installJustTextPlugin();
+
+            if (NULL == justTextPlugin)
+            {
+                LOG_WARNING("Failed to install JustTextPlugin.");
+            }
+            else
+            {
+                justTextPlugin->enable();
+            }
+        }
     }
 
     /* Any error happened? */
@@ -225,31 +243,22 @@ void InitState::showStartupInfoOnSerial(void)
 
 void InitState::showStartupInfoOnDisplay(void)
 {
-    DisplayMgr& displayMgr  = DisplayMgr::getInstance();
+    SysMsg& sysMsg = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    displayMgr.lock();
-    displayMgr.showSysMsg("#FF0000P#0FF000I#00FF00X#000FF0E#0000FFL#F0000FI#FF0000X");
-    displayMgr.unlock();
+    sysMsg.show("#FF0000P#0FF000I#00FF00X#000FF0E#0000FFL#F0000FI#FF0000X");
     delay(SYS_MSG_WAIT_TIME);
 
     /* Clear and wait */
-    displayMgr.lock();
-    LedMatrix::getInstance().clear();
-    displayMgr.unlock();
+    sysMsg.show("");
     delay(SYS_MSG_WAIT_TIME / 2u);
 
     /* Show sw version */
-    displayMgr.lock();
-    displayMgr.showSysMsg(Version::SOFTWARE);
-    displayMgr.unlock();
+    sysMsg.show(Version::SOFTWARE);
     delay(SYS_MSG_WAIT_TIME);
 
     /* Clear and wait */
-    displayMgr.lock();
-    LedMatrix::getInstance().clear();
-    displayMgr.unlock();
-    delay(SYS_MSG_WAIT_TIME / 2u);
+    sysMsg.show("", SYS_MSG_WAIT_TIME / 2u);
 
     return;
 }

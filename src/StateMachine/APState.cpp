@@ -34,7 +34,7 @@
  *****************************************************************************/
 #include "APState.h"
 #include <Arduino.h>
-#include "DisplayMgr.h"
+#include "SysMsg.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "Settings.h"
@@ -120,7 +120,7 @@ void APState::entry(StateMachine& sm)
 
         /* Fatal error */
         LOG_FATAL(errorStr);
-        DisplayMgr::getInstance().showSysMsg(errorStr);
+        SysMsg::getInstance().show(errorStr);
 
         sm.setState(ErrorState::getInstance());
     }
@@ -133,7 +133,7 @@ void APState::entry(StateMachine& sm)
 
         /* Fatal error */
         LOG_FATAL(errorStr);
-        DisplayMgr::getInstance().showSysMsg(errorStr);
+        SysMsg::getInstance().show(errorStr);
 
         sm.setState(ErrorState::getInstance());
     }
@@ -146,7 +146,7 @@ void APState::entry(StateMachine& sm)
 
         /* Fatal error */
         LOG_FATAL(errorStr);
-        DisplayMgr::getInstance().showSysMsg(errorStr);
+        SysMsg::getInstance().show(errorStr);
 
         sm.setState(ErrorState::getInstance());
     }
@@ -159,7 +159,7 @@ void APState::entry(StateMachine& sm)
 
         /* Fatal error */
         LOG_FATAL(errorStr);
-        DisplayMgr::getInstance().showSysMsg(errorStr);
+        SysMsg::getInstance().show(errorStr);
 
         sm.setState(ErrorState::getInstance());
     }
@@ -170,7 +170,7 @@ void APState::entry(StateMachine& sm)
 
         /* Fatal error */
         LOG_FATAL(errorStr);
-        DisplayMgr::getInstance().showSysMsg(errorStr);
+        SysMsg::getInstance().show(errorStr);
 
         sm.setState(ErrorState::getInstance());
     }
@@ -192,7 +192,7 @@ void APState::entry(StateMachine& sm)
         infoStr += WiFi.softAPIP().toString();
 
         LOG_INFO(infoStr);
-        DisplayMgr::getInstance().showSysMsg(infoStr);
+        SysMsg::getInstance().show(infoStr, infoStr.length() * 600u);
     }
 
     return;

@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  System message
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup sys_states
- * 
+ * @addtogroup common
+ *
  * @{
  */
 
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
+#ifndef __SYSMSG_HPP__
+#define __SYSMSG_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <StateMachine.hpp>
+#include <SysMsgPlugin.h>
 #include <WString.h>
 
 /******************************************************************************
@@ -56,64 +56,62 @@
  *****************************************************************************/
 
 /**
- * System state: Connected
+ * System message handler.
  */
-class ConnectedState : public AbstractState
+class SysMsg
 {
 public:
 
     /**
-     * Get state instance.
+     * Get system message handler instance.
      * 
-     * @return State instance
+     * @return System message handler instance
      */
-    static ConnectedState& getInstance(void)
+    static SysMsg& getInstance(void)
     {
         return m_instance;
     }
 
     /**
-     * The entry is called once, a state is entered.
+     * Initialize system message handler.
+     * It will hook into the display manager.
      * 
-     * @param[in] sm    Responsible state machine
+     * @return If initialization is successful, it will return true otherwise false.
      */
-    void entry(StateMachine& sm);
+    bool init(void);
 
     /**
-     * The process routine is called cyclic, as long as the state is active.
+     * Show message with the given duration. If the duration is Plugin::DURATION_INFINITE, it will be shown infinite.
      * 
-     * @param[in] sm    Responsible state machine
+     * @param[in] msg       Message to show
+     * @param[in] duration  Duration in ms, how long the message shall be shown.
      */
-    void process(StateMachine& sm);
-
-    /**
-     * The exit is called once, a state will be left.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void exit(StateMachine& sm);
+    void show(const String& msg, uint32_t duration = Plugin::DURATION_INFINITE);
 
 private:
 
-    /** Connected state instance */
-    static ConnectedState  m_instance;
+    static SysMsg   m_instance; /**< System message handler instance */
+
+    SysMsgPlugin*   m_plugin;   /**< Plugin, used to show system messages */
 
     /**
-     * Constructs the state.
+     * Constructs the system message handler.
      */
-    ConnectedState()
+    SysMsg() :
+        m_plugin(NULL)
     {
     }
 
     /**
-     * Destroys the state.
+     * Destroys the system message handler.
      */
-    ~ConnectedState()
+    ~SysMsg()
     {
+        /* Will never be called. */
     }
 
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
+    SysMsg(const SysMsg& sysMsg);
+    SysMsg& operator=(const SysMsg& sysMsg);
 
 };
 
@@ -121,6 +119,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+#endif  /* __SYSMSG_HPP__ */
 
 /** @} */

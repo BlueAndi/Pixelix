@@ -12,25 +12,25 @@ note over app,webServer
     Install plugin
 end note
 
-app -> pluginMgr: install concrete plugin
-pluginMgr -> pluginMgr: create concrete plugin
-pluginMgr -> displayMgr: install plugin
+app -> pluginMgr: Install concrete plugin.
+pluginMgr -> pluginMgr: Create concrete plugin.
+pluginMgr -> displayMgr: Install plugin in display slot.
 
 alt Empty slot available
-    displayMgr -> displayMgr: add plugin to available slot
-    displayMgr -> plugin: set slot id
+    displayMgr -> displayMgr: Add plugin to available slot.
+    displayMgr -> plugin: Set slot id.
     plugin --> displayMgr
-    displayMgr -> plugin: start
+    displayMgr -> plugin: Start plugin.
     plugin --> displayMgr
     displayMgr --> pluginMgr: slot id
-    pluginMgr -> plugin: register web interface
-    plugin -> webServer: register web interface
+    pluginMgr -> plugin: Register web interface.
+    plugin -> webServer: Register web interface.
     webServer --> plugin
     plugin --> pluginMgr
     pluginMgr --> app: concrete plugin
 
     alt Depends on application
-        app -> plugin: enable
+        app -> plugin: Enable plugin.
         plugin --> app
     end alt
 else No slot available
@@ -42,74 +42,78 @@ note over app,webServer
     Uninstall plugin
 end note
 
-app -> pluginMgr: uninstall concrete plugin
-pluginMgr -> displayMgr: uninstall plugin
-displayMgr -> plugin: get slot id
+app -> pluginMgr: Uninstall concrete plugin.
+pluginMgr -> displayMgr: Uninstall plugin.
+displayMgr -> plugin: Get slot id.
 plugin --> displayMgr: slot id
-displayMgr -> plugin: unregister web interface
-plugin -> webServer: unregister web interface
+displayMgr -> plugin: Unregister web interface.
+plugin -> webServer: Unregister web interface.
 webServer --> plugin
 plugin --> displayMgr
-displayMgr -> plugin: stop
+displayMgr -> plugin: Stop plugin.
 plugin --> displayMgr
-displayMgr -> displayMgr: remove plugin from slot
-displayMgr -> displayMgr: mark slot as inactive
-displayMgr -> plugin: set invalid slot id
+displayMgr -> displayMgr: Remove plugin from slot.
+displayMgr -> plugin: Set invalid slot id.
 plugin --> displayMgr
 displayMgr --> pluginMgr
-pluginMgr -> pluginMgr: destroy concrete plugin
+pluginMgr -> pluginMgr: Destroy concrete plugin.
 pluginMgr --> app
 
 note over app,webServer
     Plugin scheduler
 end note
 
-alt Active slot available
+alt Plugin selected to show?
 
-    alt Plugin disabled in the meantime?
-        displayMgr -> displayMgr: mark slot as inactive
+    displayMgr -> displayMgr: Set selected slot, retrieved from selected plugin.
+
+    alt Selected plugin disabled in the meantime?
+        displayMgr -> displayMgr: Stop plugin duration timer.
+        displayMgr -> displayMgr: Clear selected plugin.
     end alt
 
 end alt
 
-alt if no slot is active
+alt No plugin selected?
 
-    displayMgr -> displayMgr: stop plugin run duration timer
-    displayMgr -> displayMgr: find slot with installed and enabled plugin
+    displayMgr -> displayMgr: Find next slot with installed and enabled plugin.
 
-    alt installed and enabled plugin found
-        displayMgr -> displayMgr: mark slot as active
-        displayMgr -> plugin: get how long slot shall be active
+    alt Installed and enabled plugin found?
+        displayMgr -> displayMgr: Select plugin.
+        displayMgr -> plugin: Get how long slot shall be active.
         plugin --> displayMgr: duration
 
-        alt if duration is not infinite
-            displayMgr -> displayMgr: start plugin duration timer
+        alt Is duration not infinite?
+            displayMgr -> displayMgr: Start plugin duration timer.
         end alt
     end alt
 
 end alt
 
-displayMgr -> displayMgr: clear display
+loop For all installed plugins
 
-loop for all installed plugins
+    alt Is plugin is enabled?
 
-    alt if plugin is enabled
-
-        displayMgr -> plugin: process
+        displayMgr -> plugin: Process plugin.
         plugin --> displayMgr
-
-        alt if slot is active
-            displayMgr -> plugin: update display
-            plugin --> displayMgr
-        end alt
 
     end alt
 
 end loop
 
-alt Is duration timer active?
-    alt Is duration timer timeout?
-        displayMgr -> displayMgr: mark slot as inactive
+displayMgr -> displayMgr: Clear display
+
+alt Is a plugin selected?
+    displayMgr -> plugin: Call selected plugin to update framebuffer.
+    plugin --> displayMgr
+end alt
+
+displayMgr -> displayMgr: Update display with framebuffer.
+
+alt Is plugin duration timer active?
+    alt Is plugin duration timer timeout?
+        displayMgr -> displayMgr: Stop plugin run duration timer.
+        displayMgr -> displayMgr: Clear selected plugin.
     end alt
 end alt
 

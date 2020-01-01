@@ -36,11 +36,7 @@
 #include "LedMatrix.h"
 #include "AmbientLightSensor.h"
 
-#include <TextWidget.h>
-#include <BitmapWidget.h>
-#include <LampWidget.h>
 #include <Logging.h>
-#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -65,58 +61,97 @@
 /* Initialize LED matrix instance. */
 DisplayMgr  DisplayMgr::m_instance;
 
-/* Initialize text widget name. */
-const char* DisplayMgr::TEXT_WIDGET_NAME    = "text";
-
-/* Initialize bitmap widget name. */
-const char* DisplayMgr::BMP_WIDGET_NAME     = "bitmap";
-
-/* Initialize lamp widget name. */
-const char* DisplayMgr::LAMP_WIDGET_NAME    = "lamp";
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-bool DisplayMgr::init(void)
+bool DisplayMgr::begin(void)
 {
-    bool status = true;
+    bool status = false;
 
-    /* Set the display brightness here just once.
-     * There is no need to do this in the process() method periodically.
-     */
-    LedMatrix::getInstance().setBrightness(BRIGHTNESS_DEFAULT);
-
-    /* Create mutex to lock/unlock display update */
-    m_xMutex = xSemaphoreCreateMutex();
-
-    if (NULL == m_xMutex)
+    /* Not started yet? */
+    if (NULL == m_taskHandle)
     {
-        status = false;
-    }
-    else
-    {
-        BaseType_t  osRet   = pdFAIL;
+        /* Set the display brightness here just once.
+        * There is no need to do this in the process() method periodically.
+        */
+        LedMatrix::getInstance().setBrightness(BRIGHTNESS_DEFAULT);
 
-        osRet = xTaskCreateUniversal(   updateTask,
-                                        "displayTask",
-                                        UPDATE_TASK_STACKE_SIZE,
-                                        this,
-                                        4,
-                                        &m_updateTaskHandle,
-                                        UPDATE_TASK_RUN_CORE);
+        /* Create mutex to lock/unlock display update */
+        m_xMutex = xSemaphoreCreateMutex();
 
-        /* Failed to create task? */
-        if (pdPASS != osRet)
+        /* Create binary semaphore to signal task exit. */
+        m_xSemaphore = xSemaphoreCreateBinary();
+
+        if ((NULL != m_xMutex) &&
+            (NULL != m_xSemaphore))
         {
-            status = false;
+            BaseType_t  osRet   = pdFAIL;
 
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = NULL;
+            /* Task shall run */
+            m_taskExit = false;
+
+            osRet = xTaskCreateUniversal(   updateTask,
+                                            "displayTask",
+                                            UPDATE_TASK_STACKE_SIZE,
+                                            this,
+                                            4,
+                                            &m_taskHandle,
+                                            UPDATE_TASK_RUN_CORE);
+
+            /* Task successful created? */
+            if (pdPASS == osRet)
+            {
+                (void)xSemaphoreGive(m_xSemaphore);
+                status = true;
+            }
         }
     }
 
+    /* Any error happened? */
+    if (false == status)
+    {
+        if (NULL != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = NULL;
+        }
+
+        if (NULL != m_xSemaphore)
+        {
+            vSemaphoreDelete(m_xSemaphore);
+            m_xSemaphore = NULL;
+        }
+    }
+    else
+    {
+        LOG_INFO("DisplayMgr is up.");
+    }
+
     return status;
+}
+
+void DisplayMgr::end(void)
+{
+    /* Already running? */
+    if (NULL != m_taskHandle)
+    {
+        m_taskExit = true;
+
+        /* Join */
+        (void)xSemaphoreTake(m_xSemaphore, portMAX_DELAY);
+        m_taskHandle = NULL;
+
+        LOG_INFO("DisplayMgr is down.");
+
+        vSemaphoreDelete(m_xSemaphore);
+        m_xSemaphore = NULL;
+
+        vSemaphoreDelete(m_xMutex);
+        m_xMutex = NULL;
+    }
+
+    return;
 }
 
 void DisplayMgr::lock(void)
@@ -136,26 +171,6 @@ void DisplayMgr::unlock(void)
         (void)xSemaphoreGive(m_xMutex);
     }
 
-    return;
-}
-
-void DisplayMgr::suspend(void)
-{
-    if (NULL != m_updateTaskHandle)
-    {
-        vTaskSuspend(m_updateTaskHandle);
-    }
-
-    return;
-}
-
-void DisplayMgr::resume(void)
-{
-    if (NULL != m_updateTaskHandle)
-    {
-        vTaskResume(m_updateTaskHandle);
-    }
-    
     return;
 }
 
@@ -187,225 +202,133 @@ bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
     return status;
 }
 
-Canvas* DisplayMgr::getSlot(uint8_t slotId)
+uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
 {
-    Canvas* slotCanvas = NULL;
+    bool status = false;
 
-    if (MAX_SLOTS > slotId)
+    if (NULL != plugin)
     {
-        slotCanvas = m_slots[slotId];
-    }
-    
-    return slotCanvas;
-}
-
-void DisplayMgr::setLayout(uint8_t slotId, LayoutId layoutId)
-{
-    Widget* widget = NULL;
-
-    if ((MAX_SLOTS <= slotId) ||
-        (LAYOUT_ID_COUNT <= layoutId))
-    {
-        return;
-    }
-
-    widget = m_slots[slotId];
-    destroyWidget(widget);
-
-    switch(layoutId)
-    {
-    case LAYOUT_ID_0:
-        if (false == createLayout0(m_slots[slotId]))
+        /* Install to any available slot? */
+        if (SLOT_ID_INVALID == slotId)
         {
-            LOG_WARNING(String("Couldn't create layout 0 for slot ") + slotId);
-        }
-        break;
+            lock();
 
-    case LAYOUT_ID_1:
-        if (false == createLayout1(m_slots[slotId], &m_bitmapBuffer[slotId][0]))
-        {
-            LOG_WARNING(String("Couldn't create layout 1 for slot ") + slotId);
-        }
-        break;
-
-    case LAYOUT_ID_2:
-        if (false == createLayout2(m_slots[slotId], &m_bitmapBuffer[slotId][0]))
-        {
-            LOG_WARNING(String("Couldn't create layout 2 for slot ") + slotId);
-        }
-        break;
-
-    case LAYOUT_ID_COUNT:
-        /* Don't care about it. */
-        break;
-
-    default:
-        /* Don't care about it. */
-        break;
-    }
-
-    return;
-}
-
-void DisplayMgr::setText(uint8_t slotId, const String& str)
-{
-    Widget* widget = NULL;
-
-    if ((MAX_SLOTS > slotId) &&
-        (NULL != m_slots[slotId]))
-    {
-        widget = m_slots[slotId]->find(TEXT_WIDGET_NAME);
-    }
-
-    if (NULL != widget)
-    {
-        TextWidget* textWidget = NULL;
-
-        if (0 == strcmp(widget->getType(), TextWidget::WIDGET_TYPE))
-        {
-            textWidget = static_cast<TextWidget*>(widget);
-
-            textWidget->setFormatStr(str);
-        }
-    }
-
-    return;
-}
-
-void DisplayMgr::setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t height)
-{
-    Widget* widget = NULL;
-
-    if ((MAX_SLOTS > slotId) &&
-        (NULL != m_slots[slotId]))
-    {
-        widget = m_slots[slotId]->find(BMP_WIDGET_NAME);
-    }
-
-    if (NULL != widget)
-    {
-        BitmapWidget* bitmapWidget = NULL;
-
-        if (0 == strcmp(widget->getType(), BitmapWidget::WIDGET_TYPE))
-        {
-            bitmapWidget = static_cast<BitmapWidget*>(widget);
-
-            if ((BMP_WIDTH >= width) &&
-                (BMP_HEIGHT >= height))
+            slotId = 0u;
+            while((MAX_SLOTS > slotId) && (NULL != m_slots[slotId]))
             {
-                memcpy(&m_bitmapBuffer[slotId][0], bitmap, sizeof(uint16_t) * width * height);
-                bitmapWidget->set(&m_bitmapBuffer[slotId][0], width, height);
+                ++slotId;
+            }
+
+            if (MAX_SLOTS > slotId)
+            {
+                m_slots[slotId] = plugin;
+
+                plugin->setSlotId(slotId);
+                plugin->start();
+            }
+
+            unlock();
+
+            status = true;
+        }
+        /* Install to specific slot? */
+        else if ((MAX_SLOTS > slotId) &&
+                 (NULL == m_slots[slotId]))
+        {
+            lock();
+
+            m_slots[slotId] = plugin;
+
+            plugin->setSlotId(slotId);
+            plugin->start();
+
+            unlock();
+
+            status = true;
+        }
+        else
+        {
+            ;
+        }
+        
+        if (true == status)
+        {
+            LOG_INFO("Plugin %s installed in slot %u.", plugin->getName(), slotId);
+        }
+    }
+
+    return status;
+}
+
+void DisplayMgr::uninstallPlugin(Plugin* plugin)
+{
+    if (NULL != plugin)
+    {
+        if (MAX_SLOTS <= plugin->getSlotId())
+        {
+            LOG_WARNING("Plugin %s has invalid slot id %u.", plugin->getName(), plugin->getSlotId());
+        }
+        else
+        {
+            uint8_t slotId = plugin->getSlotId();
+
+            lock();
+
+            /* Is this plugin selected at the moment? */
+            if (m_selectedPlugin == plugin)
+            {
+                /* Remove selection */
+                m_selectedPlugin = NULL;
+            }
+
+            plugin->stop();
+            m_slots[slotId] = NULL;
+            plugin->setSlotId(SLOT_ID_INVALID);
+
+            unlock();
+
+            LOG_INFO("Plugin %s removed from slot %u.", plugin->getName(), slotId);
+        }
+    }
+
+    return;
+}
+
+void DisplayMgr::activatePlugin(Plugin* plugin)
+{
+    if (NULL != plugin)
+    {
+        lock();
+
+        if (MAX_SLOTS > plugin->getSlotId())
+        {
+            if (plugin != m_slots[plugin->getSlotId()])
+            {
+                LOG_WARNING("Plugin %s should be in slot %u, but isn't!", plugin->getName(), plugin->getSlotId());
+            }
+            else
+            {
+                LOG_INFO("Plugin %s in slot %u requested.", plugin->getName(), plugin->getSlotId());
+                m_requestedPlugin = plugin;
             }
         }
+
+        unlock();
     }
 
-    return;
-}
-
-void DisplayMgr::setLamp(uint8_t slotId, uint8_t lampId, bool onState)
-{
-    Widget* widget      = NULL;
-    String  widgetName  = LAMP_WIDGET_NAME;
-    
-    widgetName += lampId;
-
-    if ((MAX_SLOTS > slotId) &&
-        (NULL != m_slots[slotId]))
-    {
-        widget = m_slots[slotId]->find(widgetName.c_str());
-    }
-
-    if (NULL != widget)
-    {
-        LampWidget* lampWidget = NULL;
-
-        if (0 == strcmp(widget->getType(), LampWidget::WIDGET_TYPE))
-        {
-            lampWidget = static_cast<LampWidget*>(widget);
-
-            lampWidget->setOnState(onState);
-        }
-    }
-
-    return;
-}
-
-void DisplayMgr::setAllLamps(uint8_t slotId, bool onState)
-{
-    if ((MAX_SLOTS > slotId) &&
-        (NULL != m_slots[slotId]))
-    {
-        Widget* widget      = NULL;
-        String  widgetName;
-        uint8_t lampId      = 0u;
-
-        do
-        {
-            widgetName  = LAMP_WIDGET_NAME;
-            widgetName  += lampId;
-            widget      = m_slots[slotId]->find(widgetName.c_str());
-
-            if (NULL != widget)
-            {
-                LampWidget* lampWidget = NULL;
-
-                if (0 == strcmp(widget->getType(), LampWidget::WIDGET_TYPE))
-                {
-                    lampWidget = static_cast<LampWidget*>(widget);
-
-                    lampWidget->setOnState(onState);
-                }
-            }
-        }
-        while(NULL != widget);
-
-    }
-
-    return;
-}
-
-void DisplayMgr::startRotating(bool start)
-{
-    m_rotate        = start;
-    m_activeSlotId  = 0;
-
-    if (false == start)
-    {
-        m_slotChangeTimer.stop();
-    }
-    else
-    {
-        m_slotChangeTimer.start(DEFAULT_PERIOD);
-    }
-    
-    return;
-}
-
-void DisplayMgr::enableSlots(bool enableIt)
-{
-    m_slotsEnabled = enableIt;
-
-    return;
-}
-
-void DisplayMgr::showSysMsg(const String& msg)
-{
-    m_sysMsgWidget.setFormatStr(msg);
-    enableSlots(false);
-    
     return;
 }
 
 void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
-{
-    LedMatrix&  matrix  = LedMatrix::getInstance();
-    int16_t     x       = 0;
-    int16_t     y       = 0;
-    size_t      index   = 0;
-    
+{    
     if ((NULL != fb) &&
         (0 < length))
     {
+        LedMatrix&  matrix  = LedMatrix::getInstance();
+        int16_t     x       = 0;
+        int16_t     y       = 0;
+        size_t      index   = 0;
+
         /* Copy framebuffer after it is completely updated. */
         for(y = 0; y < matrix.height(); ++y)
         {
@@ -435,14 +358,14 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
 
 DisplayMgr::DisplayMgr() :
     m_xMutex(NULL),
-    m_updateTaskHandle(NULL),
+    m_taskHandle(NULL),
+    m_taskExit(false),
+    m_xSemaphore(NULL),
     m_slots(),
-    m_activeSlotId(0u),
-    m_slotChangeTimer(),
-    m_rotate(false),
-    m_slotsEnabled(false),
-    m_sysMsgWidget(),
-    m_bitmapBuffer(),
+    m_selectedSlot(SLOT_ID_INVALID),
+    m_selectedPlugin(NULL),
+    m_requestedPlugin(NULL),
+    m_slotTimer(),
     m_autoBrightnessTimer()
 {
     uint8_t index = 0u;
@@ -452,22 +375,58 @@ DisplayMgr::DisplayMgr() :
     {
         m_slots[index] = NULL;
     }
-
-    /* Move system message text widget a little bit down in y direction,
-     * to get one pixel line space at top. This looks better.
-     */
-    m_sysMsgWidget.move(0, 1);
 }
 
 DisplayMgr::~DisplayMgr()
 {
-    /* Destroy the widgets of all slots */
-    clearSlots();
+    /* Will never be called. */
+}
+
+uint8_t DisplayMgr::nextSlot(uint8_t slotId)
+{
+    uint8_t count = 0u;
+
+    if (MAX_SLOTS <= slotId)
+    {
+        slotId = 0u;
+    }
+    else
+    {
+        ++slotId;
+    }
+
+    /* Set next slot active, precondition is a installed plugin which is enabled.  */
+    do
+    {
+        /* Plugin installed? */
+        if (NULL != m_slots[slotId])
+        {
+            /* Plugin enabled? */
+            if (true == m_slots[slotId]->isEnabled())
+            {
+                break;
+            }
+        }
+        
+        ++slotId;
+        slotId %= MAX_SLOTS;
+
+        ++count;
+    }
+    while (MAX_SLOTS > count);
+
+    if (MAX_SLOTS <= count)
+    {
+        slotId = SLOT_ID_INVALID;
+    }
+
+    return slotId;
 }
 
 void DisplayMgr::process(void)
 {
-    LedMatrix&  matrix  = LedMatrix::getInstance();
+    LedMatrix&  matrix      = LedMatrix::getInstance();
+    uint8_t     index       = 0u;
 
     /* Ambient light sensor available for automatic brightness adjustment? */
     if (true == m_autoBrightnessTimer.isTimerRunning())
@@ -484,39 +443,98 @@ void DisplayMgr::process(void)
 
     lock();
 
+    /* Plugin requested to choose? */
+    if (NULL != m_requestedPlugin)
+    {
+        /* Plugin must be enabled. */
+        if (false == m_requestedPlugin->isEnabled())
+        {
+            LOG_WARNING("Requested plugin %s in slot %u is disabled.", m_requestedPlugin->getName(), m_requestedPlugin->getSlotId());
+            m_requestedPlugin = NULL;
+        }
+        else
+        {
+            /* Remove selected plugin, which forces to select the requested one. */
+            m_selectedPlugin = NULL;
+        }
+    }
+        
+    /* Plugin selected? */
+    if (NULL != m_selectedPlugin)
+    {
+        m_selectedSlot = m_selectedPlugin->getSlotId();
+
+        /* Plugin disabled in the meantime? */
+        if (false == m_selectedPlugin->isEnabled())
+        {
+            m_slotTimer.stop();
+            m_selectedPlugin = NULL;
+        }
+    }
+
+    /* No plugin selected? */
+    if (NULL == m_selectedPlugin)
+    {
+        /* Plugin requested to choose? */
+        if (NULL != m_requestedPlugin)
+        {
+            m_selectedSlot      = m_requestedPlugin->getSlotId();
+            m_requestedPlugin   = NULL;
+        }
+        /* Select next slot, which contains a enabled plugin. */
+        else
+        {
+            m_selectedSlot = nextSlot(m_selectedSlot);
+        }
+
+        /* Next enabled plugin found? */
+        if (MAX_SLOTS > m_selectedSlot)
+        {
+            uint32_t duration = 0u;
+
+            m_selectedPlugin    = m_slots[m_selectedSlot];
+            duration            = m_selectedPlugin->getDuration();
+
+            if (Plugin::DURATION_INFINITE != duration)
+            {
+                m_slotTimer.start(duration);
+            }
+
+            LOG_INFO("Slot %u (%s) now active.", m_selectedSlot, m_selectedPlugin->getName());
+        }
+    }
+
+    /* Process all installed plugins. */
+    for(index = 0u; index < MAX_SLOTS; ++index)
+    {
+        Plugin* plugin = m_slots[index];
+
+        if (NULL != plugin)
+        {
+            plugin->process();
+        }
+    }
+
+    /* Clear display */
     matrix.clear();
 
-    /* If the slot mechanism is disabled, only system messages are shown. */
-    if (false == m_slotsEnabled)
+    /* Update display */
+    if (NULL != m_selectedPlugin)
     {
-        m_sysMsgWidget.update(matrix);
-    }
-    /* Slot mechanism enabled. */
-    else
-    {
-        /* Slot rotation enabled? */
-        if (true == m_slotChangeTimer.isTimerRunning())
-        {
-            /* Jump to next slot? */
-            if (true == m_slotChangeTimer.isTimeout())
-            {
-                /* Set next slot active */
-                ++m_activeSlotId;
-                m_activeSlotId %= MAX_SLOTS;
-
-                /* Wait another period */
-                m_slotChangeTimer.restart();
-            }
-        }
-
-        /* Anything to show? */
-        if (NULL != m_slots[m_activeSlotId])
-        {
-            m_slots[m_activeSlotId]->update(matrix);
-        }
+        m_selectedPlugin->update(matrix);
     }
 
     matrix.show();
+
+    /* Plugin run duration timeout? */
+    if ((true == m_slotTimer.isTimerRunning()) &&
+        (true == m_slotTimer.isTimeout()))
+    {
+        m_slotTimer.stop();
+        m_selectedPlugin = NULL;
+
+        /* In the next cycle, the next slot will be determined automatically. */
+    }
 
     unlock();
 
@@ -528,313 +546,24 @@ void DisplayMgr::updateTask(void* parameters)
     DisplayMgr*     displayMgr  = reinterpret_cast<DisplayMgr*>(parameters);
     const uint32_t  TASK_PERIOD = 40u;  /* ms */
 
-    for(;;)
+    if ((NULL != displayMgr) &&
+        (NULL != displayMgr->m_xSemaphore))
     {
-        /* Refresh display content periodically */
-        displayMgr->process();
-        delay(TASK_PERIOD);
+        (void)xSemaphoreTake(displayMgr->m_xSemaphore, portMAX_DELAY);
+
+        while(false == displayMgr->m_taskExit)
+        {
+            /* Refresh display content periodically */
+            displayMgr->process();
+            delay(TASK_PERIOD);
+        }
+
+        (void)xSemaphoreGive(displayMgr->m_xSemaphore);
     }
 
     vTaskDelete(NULL);
-    displayMgr->m_updateTaskHandle = NULL;
 
     return;
-}
-
-void DisplayMgr::destroyWidget(Widget*& widget)
-{
-    if (NULL != widget)
-    {
-        /* If the widget is a canvas, its children will be destroyed as well. */
-        if (0 == strcmp(Canvas::WIDGET_TYPE, widget->getType()))
-        {
-            Canvas*                 canvas      = static_cast<Canvas*>(widget);
-            DLinkedList<Widget*>    children    = canvas->children();
-            
-            if (true == children.selectFirstElement())
-            {
-                do
-                {
-                    destroyWidget(*children.current());
-
-                } while (true == children.next());
-            }
-        }
-        else
-        {
-            delete widget;
-            widget = NULL;
-        }
-    }
-
-    return;
-}
-
-void DisplayMgr::clearSlots(void)
-{
-    uint8_t index = 0u;
-
-    for(index = 0u; index < UTIL_ARRAY_NUM(m_slots); ++index)
-    {
-        Widget* widget = m_slots[index];
-        destroyWidget(widget);
-    }
-
-    return;
-}
-
-bool DisplayMgr::createLayout0(Canvas*& canvas) const
-{
-    bool            success     = true;
-    const int16_t   TEXT_POS_X  = 0;
-    const int16_t   TEXT_POS_Y  = 1;
-    TextWidget*     textWidget  = new TextWidget();
-
-    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::height, 0, 0);
-
-    if ((NULL == canvas) ||
-        (NULL == textWidget))
-    {
-        success = false;
-    }
-    else if (false == canvas->addWidget(*textWidget))
-    {
-        success = false;
-    }
-    else
-    {
-        textWidget->setName(TEXT_WIDGET_NAME);
-        textWidget->move(TEXT_POS_X, TEXT_POS_Y);
-    }
-    
-    if (false == success)
-    {
-        if (NULL != canvas)
-        {
-            delete canvas;
-            canvas = NULL;
-        }
-
-        if (NULL != textWidget)
-        {
-            delete textWidget;
-        }
-    }
-
-    return success;
-}
-
-bool DisplayMgr::createLayout1(Canvas*& canvas, uint16_t* bitmapBuffer) const
-{
-    bool            success         = true;
-    const uint16_t  TEXT_WIDTH      = Board::LedMatrix::width - BMP_WIDTH - 1u;
-    const uint16_t  TEXT_HEIGHT     = Board::LedMatrix::height - 2u;
-    const int16_t   BMP_POS_X       = 0;
-    const int16_t   BMP_POS_Y       = 0;
-    const int16_t   TEXT_POS_X      = BMP_POS_X + BMP_WIDTH + 1;
-    const int16_t   TEXT_POS_Y      = 1;
-    Canvas*         bitmapCanvas    = new Canvas(BMP_WIDTH, BMP_HEIGHT, BMP_POS_X, BMP_POS_Y);
-    BitmapWidget*   bitmapWidget    = new BitmapWidget();
-    Canvas*         textCanvas      = new Canvas(TEXT_WIDTH, TEXT_HEIGHT, TEXT_POS_X, TEXT_POS_Y);
-    TextWidget*     textWidget      = new TextWidget();
-
-    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::height, 0, 0);
-
-    if ((NULL == canvas) ||
-        (NULL == bitmapCanvas) ||
-        (NULL == bitmapWidget) ||
-        (NULL == textCanvas) ||
-        (NULL == textWidget))
-    {
-        success = false;
-    }
-    else if (false == canvas->addWidget(*bitmapCanvas))
-    {
-        success = false;
-    }
-    else if (false == canvas->addWidget(*textCanvas))
-    {
-        success = false;
-    }
-    else if (false == bitmapCanvas->addWidget(*bitmapWidget))
-    {
-        success = false;
-    }
-    else if (false == textCanvas->addWidget(*textWidget))
-    {
-        success = false;
-    }
-    else
-    {
-        bitmapWidget->setName(BMP_WIDGET_NAME);
-        bitmapWidget->set(bitmapBuffer, BMP_WIDTH, BMP_HEIGHT);
-
-        textWidget->setName(TEXT_WIDGET_NAME);
-    }
-
-    if (false == success)
-    {
-        if (NULL != canvas)
-        {
-            delete canvas;
-            canvas = NULL;
-        }
-
-        if (NULL != bitmapCanvas)
-        {
-            delete bitmapCanvas;
-        }
-
-        if (NULL != bitmapWidget)
-        {
-            delete bitmapWidget;
-        }
-
-        if (NULL != textCanvas)
-        {
-            delete textCanvas;
-        }
-
-        if (NULL != textWidget)
-        {
-            delete textWidget;
-        }
-    }
-
-    return success;
-}
-
-bool DisplayMgr::createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const
-{
-    bool            success         = true;
-    const uint16_t  TEXT_WIDTH      = Board::LedMatrix::width - BMP_WIDTH - 1u;
-    const uint16_t  TEXT_HEIGHT     = 5u;
-    const uint16_t  LAMP_WIDTH      = Board::LedMatrix::width - BMP_WIDTH - 1u;
-    const uint16_t  LAMP_HEIGHT     = 1u;
-    const int16_t   BMP_POS_X       = 0;
-    const int16_t   BMP_POS_Y       = 0;
-    const int16_t   TEXT_POS_X      = BMP_POS_X + BMP_WIDTH + 1;
-    const int16_t   TEXT_POS_Y      = 1;
-    const int16_t   LAMP_POS_X      = BMP_POS_X + BMP_WIDTH + 1;
-    const int16_t   LAMP_POS_Y      = TEXT_POS_Y + TEXT_HEIGHT + 1;
-    Canvas*         bitmapCanvas    = new Canvas(BMP_WIDTH, BMP_HEIGHT, BMP_POS_X, BMP_POS_Y);
-    BitmapWidget*   bitmapWidget    = new BitmapWidget();
-    Canvas*         textCanvas      = new Canvas(TEXT_WIDTH, TEXT_HEIGHT, TEXT_POS_X, TEXT_POS_Y);
-    TextWidget*     textWidget      = new TextWidget();
-    Canvas*         lampCanvas      = new Canvas(LAMP_WIDTH, LAMP_HEIGHT, LAMP_POS_X, LAMP_POS_Y);
-    LampWidget*     lampWidgets[]   = { NULL, NULL, NULL, NULL };
-    uint8_t         index           = 0u;
-    char            lampName[strlen(LAMP_WIDGET_NAME) + 2];
-    uint8_t         lampNameNumPos  = 0;
-
-    canvas = new Canvas(Board::LedMatrix::width, Board::LedMatrix::height, 0, 0);
-
-    for(index = 0u; index < UTIL_ARRAY_NUM(lampWidgets); ++index)
-    {
-        lampWidgets[index] = new LampWidget();
-
-        if (NULL == lampWidgets[index])
-        {
-            break;
-        }
-    }
-
-    if ((UTIL_ARRAY_NUM(lampWidgets) > index) ||
-        (NULL == canvas) ||
-        (NULL == bitmapCanvas) ||
-        (NULL == bitmapWidget) ||
-        (NULL == textCanvas) ||
-        (NULL == textWidget) ||
-        (NULL == lampCanvas))
-    {
-        success = false;
-    }
-    else if (false == canvas->addWidget(*bitmapCanvas))
-    {
-        success = false;
-    }
-    else if (false == canvas->addWidget(*textCanvas))
-    {
-        success = false;
-    }
-    else if (false == canvas->addWidget(*lampCanvas))
-    {
-        success = false;
-    }
-    else if (false == bitmapCanvas->addWidget(*bitmapWidget))
-    {
-        success = false;
-    }
-    else if (false == textCanvas->addWidget(*textWidget))
-    {
-        success = false;
-    }
-    else
-    {
-        bitmapWidget->setName(BMP_WIDGET_NAME);
-        bitmapWidget->set(bitmapBuffer, BMP_WIDTH, BMP_HEIGHT);
-
-        textWidget->setName(TEXT_WIDGET_NAME);
-
-        strncpy(lampName, LAMP_WIDGET_NAME, UTIL_ARRAY_NUM(lampName) - 1);
-        lampName[UTIL_ARRAY_NUM(lampName) - 1] = '\0';
-        lampNameNumPos = strlen(lampName);
-
-        for(index = 0u; index < UTIL_ARRAY_NUM(lampWidgets); ++index)
-        {
-            if (false == lampCanvas->addWidget(*lampWidgets[index]))
-            {
-                success = false;
-                break;
-            }
-            else
-            {
-                lampName[lampNameNumPos] = '0' + index;
-                lampName[lampNameNumPos + 1] = '\0';
-                lampWidgets[index]->setName(lampName);
-                lampWidgets[index]->move(index * LampWidget::WIDTH + index * 2, 0);
-            }
-        }
-    }
-
-    if (false == success)
-    {
-        if (NULL != canvas)
-        {
-            delete canvas;
-            canvas = NULL;
-        }
-        
-        if (NULL != bitmapCanvas)
-        {
-            delete bitmapCanvas;
-        }
-
-        if (NULL != bitmapWidget)
-        {
-            delete bitmapWidget;
-        }
-
-        if (NULL != textCanvas)
-        {
-            delete textCanvas;
-        }
-
-        if (NULL != textWidget)
-        {
-            delete textWidget;
-        }
-
-        for(index = 0u; index < UTIL_ARRAY_NUM(lampWidgets); ++index)
-        {
-            if (NULL != lampWidgets[index])
-            {
-                delete lampWidgets[index];
-            }
-        }
-    }
-
-    return success;
 }
 
 /******************************************************************************

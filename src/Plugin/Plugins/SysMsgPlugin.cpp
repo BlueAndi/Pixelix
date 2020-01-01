@@ -25,102 +25,69 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  System message plugin
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup sys_states
- * 
- * @{
  */
-
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
-
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include <StateMachine.hpp>
-#include <WString.h>
+#include "SysMsgPlugin.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
-
-/**
- * System state: Connected
- */
-class ConnectedState : public AbstractState
-{
-public:
-
-    /**
-     * Get state instance.
-     * 
-     * @return State instance
-     */
-    static ConnectedState& getInstance(void)
-    {
-        return m_instance;
-    }
-
-    /**
-     * The entry is called once, a state is entered.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void entry(StateMachine& sm);
-
-    /**
-     * The process routine is called cyclic, as long as the state is active.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void process(StateMachine& sm);
-
-    /**
-     * The exit is called once, a state will be left.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void exit(StateMachine& sm);
-
-private:
-
-    /** Connected state instance */
-    static ConnectedState  m_instance;
-
-    /**
-     * Constructs the state.
-     */
-    ConnectedState()
-    {
-    }
-
-    /**
-     * Destroys the state.
-     */
-    ~ConnectedState()
-    {
-    }
-
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
-
-};
 
 /******************************************************************************
- * Functions
+ * Prototypes
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
 
-/** @} */
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+bool SysMsgPlugin::update(Adafruit_GFX& gfx)
+{
+    bool isRunExtended = (0 == m_duration) ? true : false;
+
+    m_textWidget.move(0, 1);
+    m_textWidget.update(gfx);
+
+    return isRunExtended;
+}
+
+void SysMsgPlugin::show(const String& msg, uint32_t duration)
+{
+    m_textWidget.setFormatStr(msg);
+    m_duration = duration;
+
+    return;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

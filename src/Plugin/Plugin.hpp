@@ -70,7 +70,7 @@ public:
      */
     Plugin() :
         m_slotId(UINT8_MAX),
-        m_isEnabled(true)
+        m_isEnabled(false)
     {
     }
 
@@ -134,6 +134,18 @@ public:
     virtual const char* getName(void) const = 0;
 
     /**
+     * Get duration how long the plugin shall be active.
+     * If the plugin want to be displayed infinite, it will
+     * return DURATION_INFINITE.
+     * 
+     * @return Duration in ms
+     */
+    virtual uint32_t getDuration(void)
+    {
+        return DURATION_DEFAULT;
+    }
+
+    /**
      * Is plugin enabled or not?
      * 
      * @return If plugin is enabled, it will return true otherwise false.
@@ -166,23 +178,16 @@ public:
 
     /**
      * Start the plugin.
-     * If the plugin is scheduled the first time, this method will be called.
-     * Overwrite this method, in case you want to do something special at the begin.
-     * 
-     * @param[out] duration Minimum duration in ms how long the plugin want to show something at least.
-     *                      The update() method may extend this time, but can not shorten it.
+     * Overwrite it if your plugin needs to know that it was installed.
      */
-    virtual void start(uint32_t& duration)
+    virtual void start()
     {
-        duration = 30000u; /* 30 s */
-
         return;
     }
 
     /**
      * Stop the plugin.
-     * If the plugin is removed from scheduler, this method will be called.
-     * Overwrite this method, in case you want to do something special at the end.
+     * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     virtual void stop(void)
     {
@@ -190,16 +195,29 @@ public:
     }
 
     /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    virtual void process(void)
+    {
+        return;
+    }
+
+    /**
      * Update the display.
-     * The scheduler will call this method periodically.
+     * If the plugin is in active slot, this function will be called cyclic
+     * as long as the slot is active.
      * 
      * @param[in] gfx   Display graphics interface
-     * 
-     * @return  As long as the plugin want to show something, it will return true otherwise false.
-     *          If a minimum duration is given (see start() method), it will run this time at least.
-     *          To extend it, the plugin may return true.
      */
-    virtual bool update(Adafruit_GFX& gfx) = 0;
+    virtual void update(Adafruit_GFX& gfx) = 0;
+
+    /** Infinite duration */
+    static const uint32_t DURATION_INFINITE = 0u;
+
+    /** Default duration in ms */
+    static const uint32_t DURATION_DEFAULT  = 30000u;
 
 private:
 

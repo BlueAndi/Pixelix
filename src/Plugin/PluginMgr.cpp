@@ -25,25 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  Plugin manager
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "ConnectedState.h"
-#include "SysMsg.h"
-#include "UpdateMgr.h"
+#include "PluginMgr.h"
+#include "DisplayMgr.h"
 #include "MyWebServer.h"
-#include "Settings.h"
 
-#include "ConnectingState.h"
-#include "RestartState.h"
-#include "ErrorState.h"
-
-#include <Arduino.h>
-#include <WiFi.h>
 #include <Logging.h>
 
 /******************************************************************************
@@ -66,98 +58,62 @@
  * Local Variables
  *****************************************************************************/
 
-/* Connected state instance */
-ConnectedState  ConnectedState::m_instance;
+/* Initialize plugin manager */
+PluginMgr   PluginMgr::m_instance;
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void ConnectedState::entry(StateMachine& sm)
+SysMsgPlugin* PluginMgr::installSysMsgPlugin(void)
 {
-    String infoStr = "Hostname: ";
-    String hostname;
+    SysMsgPlugin*   plugin = new SysMsgPlugin();
 
-    LOG_INFO("Connected.");
-
-    /* Get hostname. */
-    if (false == Settings::getInstance().open(true))
+    if (NULL != plugin)
     {
-        LOG_WARNING("Use default hostname.");
-        hostname = Settings::HOSTNAME_DEFAULT;
-    }
-    else
-    {
-        hostname = Settings::getInstance().getHostname();
-        Settings::getInstance().close();
+        if (false == install(plugin))
+        {
+            delete plugin;
+            plugin = NULL;
+        }
     }
 
-    /* Set hostname. Note, wifi must be connected somehow. */
-    if (false == WiFi.setHostname(hostname.c_str()))
+    return  plugin;
+}
+
+JustTextPlugin* PluginMgr::installJustTextPlugin(void)
+{
+    JustTextPlugin* plugin = new JustTextPlugin();
+
+    if (NULL != plugin)
     {
-        String errorStr = "Can't set AP hostname.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
+        if (false == install(plugin))
+        {
+            delete plugin;
+            plugin = NULL;
+        }
     }
-    else
-    {
-        /* Start webserver after a wifi connection is established.
-        * If its done earlier, it will cause an exception.
-        */
-        MyWebServer::begin();
 
-        /* Start over-the-air update server. */
-        UpdateMgr::getInstance().begin();
+    return  plugin;
+}
+
+void PluginMgr::uninstall(Plugin* plugin)
+{
+    if (NULL != plugin)
+    {
+        if (false == m_plugins.find(plugin))
+        {
+            LOG_WARNING("Plugin 0x%X (%s) not found in list.", plugin, plugin->getName());
+        }
+        else
+        {
+            plugin->unregisterWebInterface(MyWebServer::getInstance());
+            DisplayMgr::getInstance().uninstallPlugin(plugin);
+
+            m_plugins.removeSelected();
+        }
         
-        /* Show hostname and don't believe its the same as set before. */
-        infoStr += WiFi.getHostname();
-        LOG_INFO(infoStr);
-        SysMsg::getInstance().show(infoStr, infoStr.length() * 600u);
-
-        /* Show ip address */
-        LOG_INFO(String("IP: ") + WiFi.localIP().toString());
     }
-    
-    return;
-}
-
-void ConnectedState::process(StateMachine& sm)
-{
-    /* Handle update, there may be one in the background. */
-    UpdateMgr::getInstance().process();
-
-    /* Restart requested by update manager? This may happen after a successful received
-     * new firmware or filesystem binary.
-     */
-    if (true == UpdateMgr::getInstance().isRestartRequested())
-    {
-        sm.setState(RestartState::getInstance());
-    }
-    /* Connection lost? */
-    else if (false == WiFi.isConnected())
-    {
-        LOG_INFO("Connection lost.");
-
-        sm.setState(ConnectingState::getInstance());
-    }
-
-    return;
-}
-
-void ConnectedState::exit(StateMachine& sm)
-{
-    /* Stop webserver */
-    MyWebServer::end();
-
-    /* Stop over-the-air update server */
-    UpdateMgr::getInstance().end();
-    
-    /* Disconnect all connections */
-    (void)WiFi.disconnect();
 
     return;
 }
@@ -169,6 +125,66 @@ void ConnectedState::exit(StateMachine& sm)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+bool PluginMgr::install(Plugin* plugin)
+{
+    bool status = false;
+
+    if (NULL != plugin)
+    {
+        if (DisplayMgr::SLOT_ID_INVALID == DisplayMgr::getInstance().installPlugin(plugin))
+        {
+            LOG_ERROR("Couldn't install plugin %s.", plugin->getName());
+        }
+        else
+        {
+            if (false == m_plugins.append(plugin))
+            {
+                LOG_ERROR("Couldn't append plugin %s.", plugin->getName());
+
+                DisplayMgr::getInstance().uninstallPlugin(plugin);
+            }
+            else
+            {
+                plugin->registerWebInterface(MyWebServer::getInstance());
+
+                status = true;
+            }
+        }
+    }
+
+    return status;
+}
+
+bool PluginMgr::installToSlot(Plugin* plugin, uint8_t slotId)
+{
+    bool status = false;
+
+    if (NULL != plugin)
+    {
+        if (DisplayMgr::SLOT_ID_INVALID == DisplayMgr::getInstance().installPlugin(plugin, slotId))
+        {
+            LOG_ERROR("Couldn't install plugin %s to slot %u.", plugin->getName(), slotId);
+        }
+        else
+        {
+            if (false == m_plugins.append(plugin))
+            {
+                LOG_ERROR("Couldn't append plugin %s.", plugin->getName());
+                
+                DisplayMgr::getInstance().uninstallPlugin(plugin);
+            }
+            else
+            {
+                plugin->registerWebInterface(MyWebServer::getInstance());
+
+                status = true;
+            }
+        }
+    }
+
+    return status;
+}
 
 /******************************************************************************
  * External Functions

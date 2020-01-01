@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <ArduinoOTA.h>
+#include <TextWidget.h>
 #include <ProgressBar.h>
 
 /******************************************************************************
@@ -74,8 +75,10 @@ public:
 
     /**
      * Initialize update manager, to be able to receive updates over-the-air.
+     * 
+     * @return If initialization is successful, it will return true otherwise false.
      */
-    void init(void);
+    bool init(void);
 
     /**
      * Start over-the-air server.
@@ -123,11 +126,30 @@ public:
         return;
     }
 
-    /** Over-the-air update password */
-    static const char*      OTA_PASSWORD;
+    /**
+     * Show the user that the update starts.
+     */
+    void beginProgress(void);
 
-    /** Standard wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_STD;
+    /**
+     * Show the user the current update progress.
+     * 
+     * @param[in] progress  Progress in [0; 100] %
+     */
+    void updateProgress(uint8_t progress);
+
+    /**
+     * Show the user that the update is finished.
+     */
+    void endProgress(void);
+
+    /** Over-the-air update password */
+    static const char*  OTA_PASSWORD;
+
+    /**
+     * Fixed slot, which to use in the display manager.
+     */
+    static const uint8_t SLOT_ID = 1u;
 
 private:
 
@@ -140,9 +162,6 @@ private:
     /** Is an update in progress? */
     bool                m_updateIsRunning;
 
-    /** Progress bar widget */
-    ProgressBar         m_progressBar;
-
     /**
      * Current update status in percent. Only used to avoid permanent logging
      * output during status update.
@@ -151,6 +170,12 @@ private:
 
     /** Restart requested? */
     bool                m_isRestartReq;
+
+    /** During the update the user shall be informed about whats going on. */
+    TextWidget          m_textWidget;
+
+    /** During the update the user shall be informed about the update progress. */
+    ProgressBar         m_progressBar;
 
     /**
      * Constructs the update manager.

@@ -74,8 +74,8 @@ void RestartState::entry(StateMachine& sm)
     /* Unmount filesystem */
     SPIFFS.end();
 
-    /* Stop updating the display to avoid strange artifacts. */
-    DisplayMgr::getInstance().suspend();
+    /* Stop display manager */
+    DisplayMgr::getInstance().end();
 
     /* Clear display */
     LedMatrix::getInstance().clear();

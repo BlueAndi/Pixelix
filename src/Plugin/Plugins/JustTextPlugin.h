@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  JustText plugin
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup sys_states
- * 
+ * @addtogroup plugin
+ *
  * @{
  */
 
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
+#ifndef __JUSTTEXTPLUGIN_H__
+#define __JUSTTEXTPLUGIN_H__
 
 /******************************************************************************
  * Compile Switches
@@ -44,8 +44,9 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <StateMachine.hpp>
-#include <WString.h>
+#include "Plugin.hpp"
+
+#include <TextWidget.h>
 
 /******************************************************************************
  * Macros
@@ -56,64 +57,64 @@
  *****************************************************************************/
 
 /**
- * System state: Connected
+ * Shows text over the whole display.
+ * If the text is too long for the display width, it automatically scrolls.
  */
-class ConnectedState : public AbstractState
+class JustTextPlugin : public Plugin
 {
 public:
 
     /**
-     * Get state instance.
-     * 
-     * @return State instance
+     * Constructs the plugin.
      */
-    static ConnectedState& getInstance(void)
+    JustTextPlugin() :
+        Plugin(),
+        m_textWidget()
     {
-        return m_instance;
     }
 
     /**
-     * The entry is called once, a state is entered.
-     * 
-     * @param[in] sm    Responsible state machine
+     * Destroys the plugin.
      */
-    void entry(StateMachine& sm);
+    ~JustTextPlugin()
+    {
+    }
 
     /**
-     * The process routine is called cyclic, as long as the state is active.
-     * 
-     * @param[in] sm    Responsible state machine
+     * Get the plugin name.
+     *
+     * @return Name of the plugin.
      */
-    void process(StateMachine& sm);
+    const char* getName(void) const
+    {
+        return "JustTextPlugin";
+    }
 
     /**
-     * The exit is called once, a state will be left.
+     * Register web interface, e.g. REST API functionality.
      * 
-     * @param[in] sm    Responsible state machine
+     * @param[in] srv   Webserver
      */
-    void exit(StateMachine& sm);
+    void registerWebInterface(AsyncWebServer& srv);
+
+    /**
+     * Unregister web interface.
+     * 
+     * @param[in] srv   Webserver
+     */
+    void unregisterWebInterface(AsyncWebServer& srv);
+
+    /**
+     * Update the display.
+     * The scheduler will call this method periodically.
+     * 
+     * @param[in] gfx   Display graphics interface
+     */
+    void update(Adafruit_GFX& gfx);
 
 private:
 
-    /** Connected state instance */
-    static ConnectedState  m_instance;
-
-    /**
-     * Constructs the state.
-     */
-    ConnectedState()
-    {
-    }
-
-    /**
-     * Destroys the state.
-     */
-    ~ConnectedState()
-    {
-    }
-
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
+    TextWidget  m_textWidget;   /**< Text widget, used for showing the text. */
 
 };
 
@@ -121,6 +122,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+#endif  /* __JUSTTEXTPLUGIN_H__ */
 
 /** @} */

@@ -17,16 +17,11 @@ interface "Plugin" as plugin {
     + isEnabled() : bool
     + {abstract} start() : void
     + {abstract} stop() : void
-    + {abstract} update(gfx: Adafruit_Gfx&) = 0 : bool
+    + {abstract} update(gfx: Adafruit_Gfx&) = 0 : void
 }
 
-note left of plugin
-    * Plugins which are installed and enabled are scheduled.
-    * Schedule procedure:
-    ** Call start() once. It will return the minimum run duration.
-    ** Call update() cyclic, as long as necessary.
-        The update() routine may extend the run duration.
-    ** Call stop() once.
+note right of plugin
+    Plugins which are installed and enabled are scheduled.
 end note
 
 class "PluginMgr" as pluginMgr

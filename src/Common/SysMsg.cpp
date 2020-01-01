@@ -25,102 +25,86 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  System message
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup sys_states
- * 
- * @{
  */
-
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
-
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include <StateMachine.hpp>
-#include <WString.h>
+#include "SysMsg.h"
+#include "DisplayMgr.h"
+#include "PluginMgr.h"
+
+#include <Logging.h>
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
-
-/**
- * System state: Connected
- */
-class ConnectedState : public AbstractState
-{
-public:
-
-    /**
-     * Get state instance.
-     * 
-     * @return State instance
-     */
-    static ConnectedState& getInstance(void)
-    {
-        return m_instance;
-    }
-
-    /**
-     * The entry is called once, a state is entered.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void entry(StateMachine& sm);
-
-    /**
-     * The process routine is called cyclic, as long as the state is active.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void process(StateMachine& sm);
-
-    /**
-     * The exit is called once, a state will be left.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void exit(StateMachine& sm);
-
-private:
-
-    /** Connected state instance */
-    static ConnectedState  m_instance;
-
-    /**
-     * Constructs the state.
-     */
-    ConnectedState()
-    {
-    }
-
-    /**
-     * Destroys the state.
-     */
-    ~ConnectedState()
-    {
-    }
-
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
-
-};
 
 /******************************************************************************
- * Functions
+ * Prototypes
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
 
-/** @} */
+ /* Initialize system message handler instance */
+SysMsg  SysMsg::m_instance;
+
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+bool SysMsg::init(void)
+{
+    bool status = false;
+
+    m_plugin = PluginMgr::getInstance().installSysMsgPlugin();
+
+    if (NULL != m_plugin)
+    {
+        status = true;
+    }
+
+    return status;
+}
+
+void SysMsg::show(const String& msg, uint32_t duration)
+{
+    if (NULL != m_plugin)
+    {
+        m_plugin->enable();
+        m_plugin->show(msg, duration);
+
+        /* Schedule plugin immediately */
+        DisplayMgr::getInstance().activatePlugin(m_plugin);
+    }
+
+    return;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

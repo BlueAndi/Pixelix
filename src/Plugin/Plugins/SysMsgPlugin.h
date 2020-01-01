@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  System message plugin
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup sys_states
- * 
+ * @addtogroup plugin
+ *
  * @{
  */
 
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
+#ifndef __SYSMSGPLUGIN_H__
+#define __SYSMSGPLUGIN_H__
 
 /******************************************************************************
  * Compile Switches
@@ -44,8 +44,9 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <StateMachine.hpp>
-#include <WString.h>
+#include "Plugin.hpp"
+
+#include <TextWidget.h>
 
 /******************************************************************************
  * Macros
@@ -56,64 +57,72 @@
  *****************************************************************************/
 
 /**
- * System state: Connected
+ * Shows system message over the whole display.
+ * If the text is too long for the display width, it automatically scrolls.
  */
-class ConnectedState : public AbstractState
+class SysMsgPlugin : public Plugin
 {
 public:
 
     /**
-     * Get state instance.
-     * 
-     * @return State instance
+     * Constructs the plugin.
      */
-    static ConnectedState& getInstance(void)
+    SysMsgPlugin() :
+        Plugin(),
+        m_textWidget(),
+        m_duration(0u)
     {
-        return m_instance;
     }
 
     /**
-     * The entry is called once, a state is entered.
-     * 
-     * @param[in] sm    Responsible state machine
+     * Destroys the plugin.
      */
-    void entry(StateMachine& sm);
+    ~SysMsgPlugin()
+    {
+    }
 
     /**
-     * The process routine is called cyclic, as long as the state is active.
-     * 
-     * @param[in] sm    Responsible state machine
+     * Get the plugin name.
+     *
+     * @return Name of the plugin.
      */
-    void process(StateMachine& sm);
+    const char* getName(void) const
+    {
+        return "SysMsgPlugin";
+    }
 
     /**
-     * The exit is called once, a state will be left.
+     * Get duration how long the plugin shall be active.
+     * If the plugin want to be displayed infinite, it will
+     * return DURATION_INFINITE.
      * 
-     * @param[in] sm    Responsible state machine
+     * @return Duration in ms
      */
-    void exit(StateMachine& sm);
+    uint32_t getDuration(void)
+    {
+        return m_duration;
+    }
+
+    /**
+     * Update the display.
+     * The scheduler will call this method periodically.
+     * 
+     * @param[in] gfx   Display graphics interface
+     */
+    void update(Adafruit_GFX& gfx);
+
+    /**
+     * Show message with the given duration. If the duration is 0, it will be shown infinite.
+     * 
+     * @param[in] msg       Message to show
+     * @param[in] duration  Duration in ms, how long the message shall be shown. Note, a 0 means infinite.
+     */
+    void show(const String& msg, uint32_t duration = DURATION_INFINITE);
 
 private:
 
-    /** Connected state instance */
-    static ConnectedState  m_instance;
-
-    /**
-     * Constructs the state.
-     */
-    ConnectedState()
-    {
-    }
-
-    /**
-     * Destroys the state.
-     */
-    ~ConnectedState()
-    {
-    }
-
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
+    TextWidget  m_textWidget;   /**< Text widget, used for showing the text. */
+    uint32_t    m_duration;     /**< Duration how long the message shall be shown. */
 
 };
 
@@ -121,6 +130,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+#endif  /* __SYSMSGPLUGIN_H__ */
 
 /** @} */

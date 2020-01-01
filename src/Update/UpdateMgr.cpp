@@ -35,13 +35,18 @@
 #include "UpdateMgr.h"
 
 #include <SPIFFS.h>
-#include <DisplayMgr.h>
 #include <Logging.h>
 #include <Esp.h>
 
 #include "LedMatrix.h"
 #include "MyWebServer.h"
 #include "Settings.h"
+#include "DisplayMgr.h"
+#include "SysMsg.h"
+#include "PluginMgr.h"
+
+#include "TextWidget.h"
+#include "ProgressBar.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -64,21 +69,18 @@
  *****************************************************************************/
 
 /* Set over-the-air update password */
-const char*     UpdateMgr::OTA_PASSWORD             = "maytheforcebewithyou";
-
-/* Set standard wait time for showing a system message in ms */
-const uint32_t  UpdateMgr::SYS_MSG_WAIT_TIME_STD    = 2000u;
+const char* UpdateMgr::OTA_PASSWORD = "maytheforcebewithyou";
 
 /* Instance of the update manager. */
-UpdateMgr       UpdateMgr::m_instance;
+UpdateMgr   UpdateMgr::m_instance;
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void UpdateMgr::init(void)
+bool UpdateMgr::init(void)
 {
-    String hostname;
+    String  hostname;
 
     /* Prepare over the air update. Note, the configuration must be done
      * before the update server is running.
@@ -103,9 +105,10 @@ void UpdateMgr::init(void)
 
     ArduinoOTA.setHostname(hostname.c_str());
 
+    /* Initialization successful */
     m_isInitialized = true;
 
-    return;
+    return m_isInitialized;
 }
 
 void UpdateMgr::begin(void)
@@ -137,6 +140,62 @@ void UpdateMgr::process(void)
     return;
 }
 
+void UpdateMgr::beginProgress(void)
+{
+    /* Stop display manager */
+    DisplayMgr::getInstance().end();
+
+    m_updateIsRunning   = true;
+    m_progress          = UINT8_MAX; // Force update
+    m_textWidget.setFormatStr("Update");
+
+    /* Show user update status */
+    updateProgress(0u);
+
+    return;
+}
+
+void UpdateMgr::updateProgress(uint8_t progress)
+{
+    if (m_progress != progress)
+    {
+        m_progress = progress;
+
+        LOG_INFO(String("Update progress: ") + m_progress + "%");
+        m_progressBar.setProgress(m_progress);
+
+        /* Update display manually. Note, that this must be done to avoid
+         * artifacts on the display, caused by long flash write cycles.
+         */
+        LedMatrix::getInstance().clear();
+        m_progressBar.update(LedMatrix::getInstance()); // Draw the progress bar in the background
+        m_textWidget.update(LedMatrix::getInstance());  // Overlay with the text
+        LedMatrix::getInstance().show();
+
+        /* Wait until the LED matrix is updated to avoid artifacts on the
+         * display.
+         */
+        while(false == LedMatrix::getInstance().isReady())
+        {
+            /* Just wait. */
+            ;
+        }
+    }
+
+    return;
+}
+
+void UpdateMgr::endProgress(void)
+{
+    /* Start display manager */
+    if (false == DisplayMgr::getInstance().begin())
+    {
+        LOG_WARNING("Couldn't initialize display manager again.");
+    }
+
+    return;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -148,9 +207,10 @@ void UpdateMgr::process(void)
 UpdateMgr::UpdateMgr() :
     m_isInitialized(false),
     m_updateIsRunning(false),
-    m_progressBar(),
     m_progress(0u),
-    m_isRestartReq(false)
+    m_isRestartReq(false),
+    m_textWidget(),
+    m_progressBar()
 {
 }
 
@@ -160,19 +220,17 @@ UpdateMgr::~UpdateMgr()
 
 void UpdateMgr::onStart(void)
 {
-    String  infoStr = "Update ";
-    Canvas* canvas  = NULL;
+    String infoStr = "Update ";
 
-    /* Stop webserver */
+    /* Stop webserver, before SPIFFS may be unmounted. */
     MyWebServer::end();
 
-    m_instance.m_updateIsRunning    = true;
-    m_instance.m_progress           = 0u;
-
+    /* Shall the firmware be updated? */
     if (U_FLASH == ArduinoOTA.getCommand())
     {
         infoStr += "sketch.";
     }
+    /* The filesystem will be updated. */
     else
     {
         infoStr += "filesystem.";
@@ -185,27 +243,7 @@ void UpdateMgr::onStart(void)
 
     LOG_INFO(infoStr);
 
-    DisplayMgr::getInstance().lock();
-    DisplayMgr::getInstance().showSysMsg(infoStr);
-    DisplayMgr::getInstance().unlock();
-    delay(SYS_MSG_WAIT_TIME_STD);
-
-    /* Prepare to show the progress in the next steps. */
-    LedMatrix::getInstance().clear();
-
-    /* Reset progress */
-    m_instance.m_progressBar.setProgress(0u);
-
-    /* Add progress bar to slot canvas */
-    canvas = DisplayMgr::getInstance().getSlot(0u);
-    if (NULL == canvas)
-    {
-        LOG_WARNING("Progress bar could't be added to the slot canvas.");
-    }
-    else
-    {
-        canvas->addWidget(m_instance.m_progressBar);
-    }
+    m_instance.beginProgress();
 
     return;
 }
@@ -213,28 +251,16 @@ void UpdateMgr::onStart(void)
 void UpdateMgr::onEnd(void)
 {
     String  infoStr = "Update successful finished.";
-    Canvas* canvas  = DisplayMgr::getInstance().getSlot(0u);
 
     m_instance.m_updateIsRunning = false;
 
-    /* Remove progress bar */
-    if (NULL == canvas)
-    {
-        LOG_WARNING("Couldn't remove progress bar from slot canvas.");
-    }
-    else
-    {
-        canvas->removeWidget(m_instance.m_progressBar);
-    }
-
     LOG_INFO(infoStr);
 
-    DisplayMgr::getInstance().lock();
-    DisplayMgr::getInstance().showSysMsg(infoStr);
-    DisplayMgr::getInstance().unlock();
-    delay(SYS_MSG_WAIT_TIME_STD);
+    m_instance.endProgress();
 
-    /* Request a restart */
+    /* Note, there is no need here to start the webserver or the display
+     * manager again, because we request a restart of the system now.
+     */
     m_instance.reqRestart();
 
     return;
@@ -244,14 +270,7 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 {
     const uint32_t  PROGRESS_PERCENT    = (progress * 100u) / total;
 
-    if (PROGRESS_PERCENT != m_instance.m_progress)
-    {
-        LOG_INFO(String("Upload progress: ") + PROGRESS_PERCENT + "%");
-
-        m_instance.m_progressBar.setProgress(static_cast<uint8_t>(PROGRESS_PERCENT));
-
-        m_instance.m_progress = PROGRESS_PERCENT;
-    }
+    m_instance.updateProgress(PROGRESS_PERCENT);
 
     return;
 }
@@ -291,15 +310,15 @@ void UpdateMgr::onError(ota_error_t error)
 
     LOG_INFO(infoStr);
 
+    m_instance.endProgress();
+
     /* Reset only if the error happened during update.
      * Security note: This avoids a reset in case the authentication failed.
      */
     if (true == m_instance.m_updateIsRunning)
     {
-        DisplayMgr::getInstance().lock();
-        DisplayMgr::getInstance().showSysMsg(infoStr);
-        DisplayMgr::getInstance().unlock();
-        delay(SYS_MSG_WAIT_TIME_STD);
+        SysMsg::getInstance().show(infoStr);
+        delay(infoStr.length() * 600u);
 
         /* Request a restart */
         m_instance.reqRestart();
