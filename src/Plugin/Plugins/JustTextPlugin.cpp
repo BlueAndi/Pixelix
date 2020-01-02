@@ -60,7 +60,6 @@
 
 void JustTextPlugin::registerWebInterface(AsyncWebServer& srv)
 {
-    m_textWidget.setFormatStr("Test");
     return;
 }
 
@@ -74,6 +73,12 @@ void JustTextPlugin::update(Adafruit_GFX& gfx)
     m_textWidget.move(0, 1);
     m_textWidget.update(gfx);
 
+    return;
+}
+
+void JustTextPlugin::setText(const String& formatText)
+{
+    m_textWidget.setFormatStr(formatText);
     return;
 }
 

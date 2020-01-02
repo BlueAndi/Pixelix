@@ -112,6 +112,13 @@ public:
      */
     void update(Adafruit_GFX& gfx);
 
+    /**
+     * Set text, which may contain format tags.
+     * 
+     * @param[in] formatText    Text, which may contain format tags.
+     */
+    void setText(const String& formatText);
+
 private:
 
     TextWidget  m_textWidget;   /**< Text widget, used for showing the text. */

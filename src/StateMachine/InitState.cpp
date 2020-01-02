@@ -178,6 +178,7 @@ void InitState::entry(StateMachine& sm)
             }
             else
             {
+                justTextPlugin->setText("Test");
                 justTextPlugin->enable();
             }
         }
