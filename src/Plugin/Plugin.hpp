@@ -180,7 +180,7 @@ public:
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
      */
-    virtual void start()
+    virtual void start(void)
     {
         return;
     }
