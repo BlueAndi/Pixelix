@@ -85,8 +85,6 @@ public:
 
     /**
      * Install JustText plugin.
-     *
-     * @param[in] plugin    Plugin, which to install
      * 
      * @return If successful installed, it will return true otherwise false.
      */
