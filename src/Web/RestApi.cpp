@@ -105,14 +105,14 @@ static void slotLamp(AsyncWebServerRequest* request);
 
 void RestApi::init(AsyncWebServer& srv)
 {
-    srv.on("/rest/api/v1/status", status);
-    srv.on("/rest/api/v1/display/slots", slots);
-    srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/text$", slotText);
-    srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/bitmap$", slotBitmap);
-    srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/lamp\\/([0-9]+)\\/state$", slotLamp);
+    (void)srv.on("/rest/api/v1/status", status);
+    (void)srv.on("/rest/api/v1/display/slots", slots);
+    (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/text$", slotText);
+    (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/bitmap$", slotBitmap);
+    (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/lamp\\/([0-9]+)\\/state$", slotLamp);
     
     /* Register a page for invalid REST path requests. */
-    srv.on("/rest/*", error);
+    (void)srv.on("/rest/*", error);
 
     return;
 }

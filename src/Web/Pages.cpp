@@ -157,17 +157,17 @@ static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
 void Pages::init(AsyncWebServer& srv)
 {
     srv.onNotFound(errorPage);
-    srv.on("/", HTTP_GET, indexPage);
-    srv.on("/dev", HTTP_GET, devPage);
-    srv.on("/display", HTTP_GET, displayPage);
-    srv.on("/network", HTTP_GET, networkPage);
-    srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
-    srv.on("/update", HTTP_GET, updatePage);
-    srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
+    (void)srv.on("/", HTTP_GET, indexPage);
+    (void)srv.on("/dev", HTTP_GET, devPage);
+    (void)srv.on("/display", HTTP_GET, displayPage);
+    (void)srv.on("/network", HTTP_GET, networkPage);
+    (void)srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
+    (void)srv.on("/update", HTTP_GET, updatePage);
+    (void)srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
 
     /* Serve files from filesystem */
-    srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
-    srv.serveStatic("/data/util.js", SPIFFS, "/util.js");
+    (void)srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
+    (void)srv.serveStatic("/data/util.js", SPIFFS, "/util.js");
 
     return;
 }
