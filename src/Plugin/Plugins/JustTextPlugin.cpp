@@ -70,7 +70,6 @@ void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void JustTextPlugin::update(Adafruit_GFX& gfx)
 {
-    m_textWidget.move(0, 1);
     m_textWidget.update(gfx);
 
     return;

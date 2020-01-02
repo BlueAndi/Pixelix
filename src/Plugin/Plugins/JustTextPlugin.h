@@ -71,6 +71,8 @@ public:
         Plugin(),
         m_textWidget()
     {
+        /* Move the text widget one line lower for better look. */
+        m_textWidget.move(0, 1);
     }
 
     /**

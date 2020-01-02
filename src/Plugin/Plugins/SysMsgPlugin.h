@@ -72,6 +72,8 @@ public:
         m_textWidget(),
         m_duration(0u)
     {
+        /* Move the text widget one line lower for better look. */
+        m_textWidget.move(0, 1);
     }
 
     /**
