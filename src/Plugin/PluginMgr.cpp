@@ -35,6 +35,7 @@
 #include "PluginMgr.h"
 #include "DisplayMgr.h"
 #include "MyWebServer.h"
+#include "RestApi.h"
 
 #include <Logging.h>
 
@@ -118,6 +119,20 @@ void PluginMgr::uninstall(Plugin* plugin)
     return;
 }
 
+String PluginMgr::getRestApiBaseUri(uint8_t slotId)
+{
+    String  baseUri = RestApi::BASE_URI;
+    baseUri += "/display";
+
+    if (DisplayMgr::MAX_SLOTS > slotId)
+    {
+        baseUri += "/slot/";
+        baseUri += slotId;
+    }
+
+    return baseUri;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -146,7 +161,9 @@ bool PluginMgr::install(Plugin* plugin)
             }
             else
             {
-                plugin->registerWebInterface(MyWebServer::getInstance());
+                String baseUri = getRestApiBaseUri(plugin->getSlotId());
+
+                plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
 
                 status = true;
             }
@@ -176,7 +193,9 @@ bool PluginMgr::installToSlot(Plugin* plugin, uint8_t slotId)
             }
             else
             {
-                plugin->registerWebInterface(MyWebServer::getInstance());
+                String baseUri = getRestApiBaseUri(plugin->getSlotId());
+
+                plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
 
                 status = true;
             }

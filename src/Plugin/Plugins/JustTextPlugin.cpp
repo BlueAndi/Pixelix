@@ -33,6 +33,10 @@
  * Includes
  *****************************************************************************/
 #include "JustTextPlugin.h"
+#include "RestApi.h"
+
+#include <Logging.h>
+#include <ArduinoJson.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -54,17 +58,47 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize the list of instances. */
+DLinkedList<JustTextPlugin*>    JustTextPlugin::m_instances;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void JustTextPlugin::registerWebInterface(AsyncWebServer& srv)
+void JustTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
 {
+    JustTextPlugin* plugin = this;
+
+    m_url = baseUri + "/text";
+
+    m_callbackWebHandler = &srv.on(m_url.c_str(), staticWebReqHandler);
+    m_instances.append(plugin);
+
+    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
+
     return;
 }
 
 void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 {
+    LOG_INFO("[%s] Unregister: %s", m_url);
+
+    if (false == m_instances.find(this))
+    {
+        LOG_WARNING("Couldn't find %s in own list.", this->getName());
+    }
+    else
+    {
+        m_instances.removeSelected();
+    }
+
+    if (false == srv.removeHandler(m_callbackWebHandler))
+    {
+        LOG_WARNING("Couldn't remove %s handler.", this->getName());
+    }
+
+    m_callbackWebHandler = NULL;
+
     return;
 }
 
@@ -88,6 +122,96 @@ void JustTextPlugin::setText(const String& formatText)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void JustTextPlugin::staticWebReqHandler(AsyncWebServerRequest *request)
+{
+    if (false == m_instances.selectFirstElement())
+    {
+        LOG_WARNING("Couldn't handle web req. for %s.", request->url().c_str());
+    }
+    else
+    {
+        JustTextPlugin**    elem    = m_instances.current();
+        JustTextPlugin*     plugin  = NULL;
+
+        while((NULL != elem) && (NULL == plugin))
+        {
+            if ((*elem)->m_url == request->url())
+            {
+                plugin = *elem;
+            }
+            else
+            {
+                if (false == m_instances.next())
+                {
+                    elem = NULL;
+                }
+                else
+                {
+                    elem = m_instances.current();
+                }
+            }
+        }
+
+        if (NULL != plugin)
+        {
+            plugin->webReqHandler(request);
+        }
+    }
+
+    return;
+}
+
+void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
+{
+    String                  content;
+    StaticJsonDocument<200> jsonDoc;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    
+    if (NULL == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        /* "show" argument missing? */
+        if (false == request->hasArg("show"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+            errorObj["msg"]     = "Show is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            String text = request->arg("show");
+
+            setText(text);
+
+            /* Prepare response */
+            (void)jsonDoc.createNestedObject("data");
+            jsonDoc["status"]   = RestApi::STATUS_CODE_OK;
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        }
+    }
+
+    serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
 
 /******************************************************************************
  * External Functions

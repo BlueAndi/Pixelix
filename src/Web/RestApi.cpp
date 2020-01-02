@@ -61,25 +61,13 @@ extern "C"
  * Types and classes
  *****************************************************************************/
 
-/**
- * REST request status code.
- */
-typedef enum
-{
-    STATUS_CODE_OK = 0,     /**< Successful */
-    STATUS_CODE_NOT_FOUND   /**< Requested URI not found. */
-
-} StatusCode;
-
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
 static uint8_t getSignalQuality(int8_t rssi);
-static void error(AsyncWebServerRequest* request);
 static void status(AsyncWebServerRequest* request);
 static void slots(AsyncWebServerRequest* request);
-static void slotText(AsyncWebServerRequest* request);
 static void slotBitmap(AsyncWebServerRequest* request);
 static void slotLamp(AsyncWebServerRequest* request);
 
@@ -107,12 +95,36 @@ void RestApi::init(AsyncWebServer& srv)
 {
     (void)srv.on("/rest/api/v1/status", status);
     (void)srv.on("/rest/api/v1/display/slots", slots);
-    (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/text$", slotText);
     (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/bitmap$", slotBitmap);
     (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/lamp\\/([0-9]+)\\/state$", slotLamp);
     
-    /* Register a page for invalid REST path requests. */
-    (void)srv.on("/rest/*", error);
+    return;
+}
+
+/**
+ * Handle invalid rest path request.
+ * 
+ * @param[in] request   HTTP request
+ */
+void RestApi::error(AsyncWebServerRequest* request)
+{
+    String                  content;
+    StaticJsonDocument<256> jsonDoc;
+    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    JsonObject              errorObj        = jsonDoc.createNestedObject("error");
+
+    if (NULL == request)
+    {
+        return;
+    }
+
+    /* Prepare response */
+    jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+    errorObj["msg"]     = "Invalid path requested.";
+    httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    
+    serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
 
     return;
 }
@@ -151,34 +163,6 @@ static uint8_t getSignalQuality(int8_t rssi)
 }
 
 /**
- * Get error information for invalid rest path requests.
- * 
- * @param[in] request   HTTP request
- */
-static void error(AsyncWebServerRequest* request)
-{
-    String                  content;
-    StaticJsonDocument<256> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    JsonObject              errorObj        = jsonDoc.createNestedObject("error");
-
-    if (NULL == request)
-    {
-        return;
-    }
-
-    /* Prepare response */
-    jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
-    errorObj["msg"]     = "Invalid path requested.";
-    httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    
-    serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
-
-/**
  * Get status information.
  * GET /api/v1/status
  * 
@@ -200,7 +184,7 @@ static void status(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -221,7 +205,7 @@ static void status(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        jsonDoc["status"]       = static_cast<uint8_t>(STATUS_CODE_OK);
+        jsonDoc["status"]       = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
 
         hwObj["chipRev"]        = ESP.getChipRevision();
         hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
@@ -267,7 +251,7 @@ static void slots(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -278,81 +262,8 @@ static void slots(AsyncWebServerRequest* request)
         dataObj["slots"] = DisplayMgr::getInstance().MAX_SLOTS;
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-
-    serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
-
-/**
- * Set text of a slot.
- * POST /display/slot/<slot-id>/text?show=<text>
- * 
- * @param[in] request   HTTP request
- */
-static void slotText(AsyncWebServerRequest* request)
-{
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    
-    if (NULL == request)
-    {
-        return;
-    }
-
-    if (HTTP_POST != request->method())
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    else
-    {
-        uint8_t slotId = DisplayMgr::getInstance().MAX_SLOTS;
-        
-        /* Slot id invalid? */
-        if ((false == Util::strToUInt8(request->pathArg(0), slotId)) ||
-            (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Slot id not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* "show" argument missing? */
-        else if (false == request->hasArg("show"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Show is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String text = request->arg("show");
-
-            DisplayMgr::getInstance().lock();
-            //DisplayMgr::getInstance().setText(slotId, text);
-            DisplayMgr::getInstance().unlock();
-
-            (void)jsonDoc.createNestedObject("data");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
     }
 
     serializeJsonPretty(jsonDoc, content);
@@ -383,7 +294,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -400,7 +311,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Slot id not supported.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -410,7 +321,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Width is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -420,7 +331,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Height is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -430,7 +341,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Data is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -440,7 +351,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Invalid width.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -450,7 +361,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Invalid height.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -471,7 +382,7 @@ static void slotBitmap(AsyncWebServerRequest* request)
             (void)jsonDoc.createNestedObject("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
@@ -504,7 +415,7 @@ static void slotLamp(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -520,7 +431,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Slot id not supported.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -530,7 +441,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Lamp id not supported.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -541,7 +452,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Command not supported.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -561,7 +472,7 @@ static void slotLamp(AsyncWebServerRequest* request)
             (void)jsonDoc.createNestedObject("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(STATUS_CODE_OK);
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }

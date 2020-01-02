@@ -54,6 +54,8 @@
  * Prototypes
  *****************************************************************************/
 
+static void error(AsyncWebServerRequest* request);
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -82,6 +84,8 @@ void MyWebServer::init(void)
     /* Register all web pages */
     Pages::init(gWebServer);
     RestApi::init(gWebServer);
+
+    gWebServer.onNotFound(error);
 
     /* Register websocket */
     WebSocketSrv::getInstance().init(gWebServer);
@@ -113,3 +117,28 @@ AsyncWebServer& MyWebServer::getInstance(void)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Common error handler used in case a requested path was not found.
+ * 
+ * @param[in] request   Web request
+ */
+static void error(AsyncWebServerRequest* request)
+{
+    if (NULL == request)
+    {
+        return;
+    }
+
+    /* REST request? */
+    if (request->url().startsWith(RestApi::BASE_URI))
+    {
+        RestApi::error(request);
+    }
+    else
+    {
+        Pages::error(request);
+    }
+
+    return;
+}

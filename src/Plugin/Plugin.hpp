@@ -106,11 +106,13 @@ public:
      * Register web interface, e.g. REST API functionality.
      * Overwrite it, if your plugin provides a web interface.
      * 
-     * @param[in] srv   Webserver
+     * @param[in] srv       Webserver
+     * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
-    virtual void registerWebInterface(AsyncWebServer& srv)
+    virtual void registerWebInterface(AsyncWebServer& srv, const String& baseUri)
     {
         UTIL_NOT_USED(srv);
+        UTIL_NOT_USED(baseUri);
         return;
     }
 

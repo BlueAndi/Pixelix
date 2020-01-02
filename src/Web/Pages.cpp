@@ -40,6 +40,7 @@
 #include "UpdateMgr.h"
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
+#include "RestApi.h"
 
 #include <WiFi.h>
 #include <Esp.h>
@@ -70,7 +71,6 @@ static String getColoredText(const String& text);
 
 static String commonPageProcessor(const String& var);
 
-static void errorPage(AsyncWebServerRequest* request);
 static String errorPageProcessor(const String& var);
 
 static void indexPage(AsyncWebServerRequest* request);
@@ -156,7 +156,6 @@ static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
 
 void Pages::init(AsyncWebServer& srv)
 {
-    srv.onNotFound(errorPage);
     (void)srv.on("/", HTTP_GET, indexPage);
     (void)srv.on("/dev", HTTP_GET, devPage);
     (void)srv.on("/display", HTTP_GET, displayPage);
@@ -168,6 +167,31 @@ void Pages::init(AsyncWebServer& srv)
     /* Serve files from filesystem */
     (void)srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
     (void)srv.serveStatic("/data/util.js", SPIFFS, "/util.js");
+
+    return;
+}
+
+/**
+ * Error web page used in case a requested path was not found.
+ * 
+ * @param[in] request   HTTP request
+ */
+void Pages::error(AsyncWebServerRequest* request)
+{
+    if (NULL == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/error.html", "text/html", false, errorPageProcessor);
 
     return;
 }
@@ -329,31 +353,6 @@ static String commonPageProcessor(const String& var)
     }
 
     return result;
-}
-
-/**
- * Error web page used in case a requested path was not found.
- * 
- * @param[in] request   HTTP request
- */
-static void errorPage(AsyncWebServerRequest* request)
-{
-    if (NULL == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    request->send(SPIFFS, "/error.html", "text/html", false, errorPageProcessor);
-
-    return;
 }
 
 /**

@@ -97,6 +97,15 @@ public:
      */
     void uninstall(Plugin* plugin);
 
+    /**
+     * Get plugin REST base URI.
+     * 
+     * @param[in] slotId    Slot id of installed plugin.
+     * 
+     * @return Plugin REST API base URI
+     */
+    String getRestApiBaseUri(uint8_t slotId);
+
 private:
 
     static PluginMgr        m_instance; /**< Plugin manager instance */
