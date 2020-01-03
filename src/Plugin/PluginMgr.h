@@ -48,6 +48,7 @@
 #include "SysMsgPlugin.h"
 #include "JustTextPlugin.h"
 #include "FirePlugin.h"
+#include "IconTextPlugin.h"
 
 #include <LinkedList.hpp>
 
@@ -97,6 +98,13 @@ public:
      * @return If successful installed, it will return true otherwise false.
      */
     FirePlugin* installFirePlugin(void);
+
+    /**
+     * Install IconTextPlugin plugin.
+     * 
+     * @return If successful installed, it will return true otherwise false.
+     */
+    IconTextPlugin* installIconTextPlugin(void);
 
     /**
      * Uninstall plugin.

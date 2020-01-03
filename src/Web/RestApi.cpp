@@ -44,11 +44,6 @@
 #include <ArduinoJson.h>
 #include <Esp.h>
 
-extern "C"
-{
-#include <crypto/base64.h>
-}
-
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -68,7 +63,6 @@ extern "C"
 static uint8_t getSignalQuality(int8_t rssi);
 static void status(AsyncWebServerRequest* request);
 static void slots(AsyncWebServerRequest* request);
-static void slotBitmap(AsyncWebServerRequest* request);
 static void slotLamp(AsyncWebServerRequest* request);
 
 /******************************************************************************
@@ -95,7 +89,6 @@ void RestApi::init(AsyncWebServer& srv)
 {
     (void)srv.on("/rest/api/v1/status", status);
     (void)srv.on("/rest/api/v1/display/slots", slots);
-    (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/bitmap$", slotBitmap);
     (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/lamp\\/([0-9]+)\\/state$", slotLamp);
     
     return;
@@ -264,127 +257,6 @@ static void slots(AsyncWebServerRequest* request)
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-
-    serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
-
-/**
- * Set bitmap of a slot.
- * POST /display/slot/<slot-id>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>
- * 
- * @param[in] request   HTTP request
- */
-static void slotBitmap(AsyncWebServerRequest* request)
-{
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (NULL == request)
-    {
-        return;
-    }
-
-    if (HTTP_POST != request->method())
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    else
-    {
-        uint8_t     slotId  = DisplayMgr::getInstance().MAX_SLOTS;
-        uint16_t    width   = 0u;
-        uint16_t    height  = 0u;
-
-        /* Slot id invalid? */
-        if ((false == Util::strToUInt8(request->pathArg(0), slotId)) ||
-            (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Slot id not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* "width" argument missing? */
-        else if (false == request->hasArg("width"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Width is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* "height" argument missing? */
-        else if (false == request->hasArg("height"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Height is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* "data" argument missing? */
-        else if (false == request->hasArg("data"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Data is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* Invalid width? */
-        else if (false == Util::strToUInt16(request->arg("width"), width))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Invalid width.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* Invalid height? */
-        else if (false == Util::strToUInt16(request->arg("height"), height))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Invalid height.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String          dataBase64Str       = request->arg("data");
-            size_t          dataBase64ArraySize = dataBase64Str.length();
-            const uint8_t*  dataBase64Array     = reinterpret_cast<const uint8_t*>(dataBase64Str.c_str());
-            size_t          bitmapSize          = 0;
-            uint16_t*       bitmap              = reinterpret_cast<uint16_t*>(base64_decode(dataBase64Array, dataBase64ArraySize, &bitmapSize));
-
-            DisplayMgr::getInstance().lock();
-            //DisplayMgr::getInstance().setBitmap(slotId, bitmap, width, height);
-            DisplayMgr::getInstance().unlock();
-
-            delete bitmap;
-
-            (void)jsonDoc.createNestedObject("data");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
     }
 
     serializeJsonPretty(jsonDoc, content);

@@ -114,6 +114,22 @@ FirePlugin* PluginMgr::installFirePlugin(void)
     return  plugin;
 }
 
+IconTextPlugin* PluginMgr::installIconTextPlugin(void)
+{
+    IconTextPlugin* plugin = new IconTextPlugin();
+
+    if (NULL != plugin)
+    {
+        if (false == install(plugin))
+        {
+            delete plugin;
+            plugin = NULL;
+        }
+    }
+
+    return  plugin;
+}
+
 void PluginMgr::uninstall(Plugin* plugin)
 {
     if (NULL != plugin)
