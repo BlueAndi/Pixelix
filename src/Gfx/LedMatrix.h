@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Adafruit_GFX.h>
+#include <IGfx.hpp>
 #include <NeoPixelBrightnessBus.h>
 #include <ColorDef.hpp>
 
@@ -61,7 +61,7 @@
 /**
  * Specific LED matrix.
  */
-class LedMatrix : public Adafruit_GFX
+class LedMatrix : public IGfx
 {
 public:
 
@@ -135,7 +135,7 @@ public:
      * 
      * @return Color in RGB888 format.
      */
-    uint32_t getColor(int16_t x, int16_t y);
+    uint16_t getColor(int16_t x, int16_t y);
 
 private:
 

@@ -444,6 +444,9 @@ void DisplayMgr::process(void)
 
     lock();
 
+    /* Clear display */
+    matrix.clear();
+
     /* Plugin requested to choose? */
     if (NULL != m_requestedPlugin)
     {
@@ -537,7 +540,7 @@ void DisplayMgr::process(void)
                 m_slotTimer.start(duration);
             }
 
-            m_selectedPlugin->active();
+            m_selectedPlugin->active(matrix);
             LOG_INFO("Slot %u (%s) now active.", m_selectedSlot, m_selectedPlugin->getName());
         }
     }
@@ -552,9 +555,6 @@ void DisplayMgr::process(void)
             plugin->process();
         }
     }
-
-    /* Clear display */
-    matrix.clear();
 
     /* Update display */
     if (NULL != m_selectedPlugin)

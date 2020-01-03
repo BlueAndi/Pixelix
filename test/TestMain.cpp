@@ -141,7 +141,7 @@ private:
  * Graphics interface for testing purposes.
  * It provides all relevant methods from the Adafruit GFX, which are used.
  */
-class TestGfx : public Adafruit_GFX
+class TestGfx : public IGfx
 {
 public:
 
@@ -149,7 +149,7 @@ public:
      * Constructs a graphic interface for testing purposes.
      */
     TestGfx() :
-        Adafruit_GFX(WIDTH, HEIGHT),
+        IGfx(WIDTH, HEIGHT),
         m_buffer(),
         m_callCounterDrawPixel(0u)
     {
@@ -189,6 +189,25 @@ public:
         ++m_callCounterDrawPixel;
 
         return;
+    }
+
+    /**
+     * Get pixel color at given position.
+     * 
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     * 
+     * @return Color in RGB565 format.
+     */
+    uint16_t getColor(int16_t x, int16_t y)
+    {
+        /* Out of bounds check */
+        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
+        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, y);
+        TEST_ASSERT_LESS_OR_EQUAL_INT16(WIDTH, x);
+        TEST_ASSERT_LESS_OR_EQUAL_INT16(HEIGHT, y);
+
+        return m_buffer[x + y * WIDTH];
     }
 
     /**
@@ -352,7 +371,7 @@ public:
      * 
      * @param[in] gfx Graphics interface, which to use.
      */
-    void update(Adafruit_GFX& gfx)
+    void update(IGfx& gfx)
     {
         int16_t x = 0;
         int16_t y = 0;

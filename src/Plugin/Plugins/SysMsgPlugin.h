@@ -123,7 +123,7 @@ public:
      * 
      * @param[in] gfx   Display graphics interface
      */
-    void update(Adafruit_GFX& gfx);
+    void update(IGfx& gfx);
 
     /**
      * Show message with the given duration. If the duration is 0, it will be shown infinite.

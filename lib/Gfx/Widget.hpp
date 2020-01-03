@@ -45,7 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <WString.h>
-#include <Adafruit_GFX.h>
+#include <IGfx.hpp>
 
 /******************************************************************************
  * Macros
@@ -162,7 +162,7 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    virtual void update(Adafruit_GFX& gfx) = 0;
+    virtual void update(IGfx& gfx) = 0;
 
     /**
      * Get widget type as string.

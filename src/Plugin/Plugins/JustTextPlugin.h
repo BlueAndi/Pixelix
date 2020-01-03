@@ -116,7 +116,7 @@ public:
      * 
      * @param[in] gfx   Display graphics interface
      */
-    void update(Adafruit_GFX& gfx);
+    void update(IGfx& gfx);
 
     /**
      * Set text, which may contain format tags.

@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Adafruit_GFX.h>
+#include <IGfx.hpp>
 #include <HttpStatus.h>
 #include <ESPAsyncWebServer.h>
 #include <Util.h>
@@ -210,9 +210,12 @@ public:
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      * Overwrite it if your plugin needs to know this.
+     * 
+     * @param[in] gfx   Display graphics interface
      */
-    virtual void active(void)
+    virtual void active(IGfx& gfx)
     {
+        UTIL_NOT_USED(gfx);
         return;
     }
 
@@ -233,7 +236,7 @@ public:
      * 
      * @param[in] gfx   Display graphics interface
      */
-    virtual void update(Adafruit_GFX& gfx) = 0;
+    virtual void update(IGfx& gfx) = 0;
 
     /** Infinite duration */
     static const uint32_t DURATION_INFINITE = 0u;

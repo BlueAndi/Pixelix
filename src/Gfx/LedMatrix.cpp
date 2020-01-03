@@ -72,7 +72,7 @@ LedMatrix LedMatrix::m_instance;
  *****************************************************************************/
 
 LedMatrix::LedMatrix() :
-    Adafruit_GFX(Board::LedMatrix::width, Board::LedMatrix::height),
+    IGfx(Board::LedMatrix::width, Board::LedMatrix::height),
     m_strip(Board::LedMatrix::width * Board::LedMatrix::height, Board::Pin::ledMatrixDataOutPinNo),
     m_topo(Board::LedMatrix::width, Board::LedMatrix::height)
 {
@@ -82,11 +82,11 @@ LedMatrix::~LedMatrix()
 {
 }
 
-uint32_t LedMatrix::getColor(int16_t x, int16_t y)
+uint16_t LedMatrix::getColor(int16_t x, int16_t y)
 {
     HtmlColor   colorRGB888 = m_strip.GetPixelColor(m_topo.Map(x, y));
 
-    return colorRGB888.Color;
+    return ColorDef::convert888To565(colorRGB888.Color);
 }
 
 /******************************************************************************

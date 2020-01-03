@@ -61,7 +61,7 @@ const char*     ProgressBar::WIDGET_TYPE = "progressBar";
  * Public Methods
  *****************************************************************************/
 
-void ProgressBar::update(Adafruit_GFX& gfx)
+void ProgressBar::update(IGfx& gfx)
 {
     int16_t pixelCount  = gfx.width() * gfx.height() * m_progress / 100u;
     int16_t x           = 0;

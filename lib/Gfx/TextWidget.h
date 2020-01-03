@@ -152,7 +152,7 @@ public:
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(Adafruit_GFX& gfx) override;
+    void update(IGfx& gfx) override;
 
     /**
      * Set the text string. It can contain format tags like:
@@ -276,7 +276,7 @@ private:
      * @param[in] gfx       Graphics, used to draw the characters
      * @param[in] formatStr String which contains format tags
      */
-    void show(Adafruit_GFX& gfx, const String& formatStr) const;
+    void show(IGfx& gfx, const String& formatStr) const;
 };
 
 /******************************************************************************

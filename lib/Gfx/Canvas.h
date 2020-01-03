@@ -60,7 +60,7 @@
  * This class defines a drawing canvas. The canvas can contain several widgets
  * and will update their drawings.
  */
-class Canvas : public Adafruit_GFX, public Widget
+class Canvas : public IGfx, public Widget
 {
 public:
 
@@ -73,7 +73,7 @@ public:
      * @param[in] y         y-coordinate position in the matrix.
      */
     Canvas(int16_t width, int16_t height, int16_t x, int16_t y) :
-        Adafruit_GFX(width, height),
+        IGfx(width, height),
         Widget(WIDGET_TYPE, x, y),
         m_gfx(NULL),
         m_widgets()
@@ -144,7 +144,7 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    void update(Adafruit_GFX& gfx) override
+    void update(IGfx& gfx) override
     {
         /* Walk through all widgets and draw them in the priority as
          * they were added.
@@ -163,6 +163,30 @@ public:
         }
 
         return;
+    }
+
+    /**
+     * Get pixel color at given position.
+     * 
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     * 
+     * @return Color in RGB565 format.
+     */
+    uint16_t getColor(int16_t x, int16_t y) override
+    {
+        uint16_t color565 = 0u;
+
+        if ((0 <= x) &&
+            (0 <= y) &&
+            (width() > x) &&
+            (height() > y) &&
+            (NULL != m_gfx))
+        {
+            color565 = m_gfx->getColor(x, y);
+        }
+
+        return color565;
     }
 
     /**
@@ -203,7 +227,7 @@ public:
 
 private:
 
-    Adafruit_GFX*           m_gfx;      /**< Graphics interface of the underlying layer */
+    IGfx*                   m_gfx;      /**< Graphics interface of the underlying layer */
     DLinkedList<Widget*>    m_widgets;  /**< Widgets in the canvas */
 
     Canvas(const Canvas& canvas);

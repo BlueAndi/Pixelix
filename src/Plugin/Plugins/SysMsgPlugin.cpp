@@ -74,7 +74,7 @@ void SysMsgPlugin::inactive(void)
     return;
 }
 
-void SysMsgPlugin::update(Adafruit_GFX& gfx)
+void SysMsgPlugin::update(IGfx& gfx)
 {
     m_textWidget.update(gfx);
 

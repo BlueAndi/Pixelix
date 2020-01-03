@@ -127,7 +127,7 @@ public:
      * 
      * @param[in] gfx Graphics interface.
      */
-    void update(Adafruit_GFX& gfx) override
+    void update(IGfx& gfx) override
     {
         Color color = m_colorOn;
 

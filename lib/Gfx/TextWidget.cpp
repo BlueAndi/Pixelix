@@ -67,7 +67,7 @@ const GFXfont*  TextWidget::DEFAULT_FONT    = &TomThumb;
  * Public Methods
  *****************************************************************************/
 
-void TextWidget::update(Adafruit_GFX& gfx)
+void TextWidget::update(IGfx& gfx)
 {
     int16_t cursorX = m_posX;
     int16_t cursorY = m_posY + m_font->yAdvance - 1; /* Set cursor to baseline */
@@ -207,7 +207,7 @@ String TextWidget::removeFormatTags(const String& formatStr) const
     return str;
 }
 
-void TextWidget::show(Adafruit_GFX& gfx, const String& formatStr) const
+void TextWidget::show(IGfx& gfx, const String& formatStr) const
 {
     uint32_t    index       = 0u;
     bool        escapeFound = false;
