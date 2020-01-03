@@ -58,8 +58,9 @@
  * Public Methods
  *****************************************************************************/
 
-void SysMsgPlugin::active(void)
+void SysMsgPlugin::active(IGfx& gfx)
 {
+    UTIL_NOT_USED(gfx);
     return;
 }
 

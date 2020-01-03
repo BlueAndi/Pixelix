@@ -108,8 +108,10 @@ public:
     /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
+     * 
+     * @param[in] gfx   Display graphics interface
      */
-    void active(void);
+    void active(IGfx& gfx);
 
     /**
      * This method will be called in case the plugin is set inactive, which means
