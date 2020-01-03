@@ -93,11 +93,11 @@ bool DisplayMgr::begin(void)
 
             osRet = xTaskCreateUniversal(   updateTask,
                                             "displayTask",
-                                            UPDATE_TASK_STACKE_SIZE,
+                                            TASK_STACKE_SIZE,
                                             this,
                                             4,
                                             &m_taskHandle,
-                                            UPDATE_TASK_RUN_CORE);
+                                            TASK_RUN_CORE);
 
             /* Task successful created? */
             if (pdPASS == osRet)
@@ -571,7 +571,6 @@ void DisplayMgr::process(void)
 void DisplayMgr::updateTask(void* parameters)
 {
     DisplayMgr* displayMgr = reinterpret_cast<DisplayMgr*>(parameters);
-    const uint32_t  TASK_PERIOD = 40u;  /* ms */
 
     if ((NULL != displayMgr) &&
         (NULL != displayMgr->m_xSemaphore))

@@ -150,11 +150,14 @@ public:
     /** Invalid slot id. */
     static const uint8_t    SLOT_ID_INVALID         = UINT8_MAX;
 
-    /** Update task stack size in bytes */
-    static const uint32_t   UPDATE_TASK_STACKE_SIZE = 4096u;
+    /** Task stack size in bytes */
+    static const uint32_t   TASK_STACKE_SIZE        = 4096u;
 
-    /** MCU core where the update task shall run */
-    static const BaseType_t UPDATE_TASK_RUN_CORE    = 1;
+    /** Task period in ms */
+    static const uint32_t   TASK_PERIOD             = 20u;
+
+    /** MCU core where the task shall run */
+    static const BaseType_t TASK_RUN_CORE           = 1;
 
     /** Maximum number of supported slots. */
     static const uint8_t    MAX_SLOTS               = 4u;
