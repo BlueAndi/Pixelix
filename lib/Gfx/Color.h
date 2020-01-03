@@ -132,6 +132,21 @@ public:
     }
     
     /**
+     * Convert to RGB888 uint32_t value.
+     */
+    operator uint32_t()
+    {
+        uint32_t color888 = m_red;
+
+        color888 <<= 8;
+        color888 |= m_green;
+        color888 <<= 8;
+        color888 |= m_blue;
+
+        return color888;
+    }
+
+    /**
      * Get base color information.
      * 
      * @param[out] red      Red value

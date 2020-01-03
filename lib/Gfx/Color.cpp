@@ -66,13 +66,15 @@ void Color::turnColorWheel(uint8_t wheelPos)
     wheelPos = UINT8_MAX - wheelPos;
 
     /* Red + Blue ? */
-    if (wheelPos < COL_RANGE) {
+    if (wheelPos < COL_RANGE)
+    {
         m_red   = UINT8_MAX - wheelPos * COL_PARTS;
         m_green = 0u;
         m_blue  = COL_PARTS * wheelPos;
     }
     /* Green + Blue ? */
-    else if (wheelPos < (2 * COL_RANGE)) {
+    else if (wheelPos < (2 * COL_RANGE))
+    {
         wheelPos -= COL_RANGE;
         
         m_red   = 0u;
@@ -80,13 +82,16 @@ void Color::turnColorWheel(uint8_t wheelPos)
         m_blue  = UINT8_MAX - wheelPos * COL_PARTS;
     }
     /* Red + Green */
-    else {
+    else
+    {
         wheelPos -= ((COL_PARTS - 1u) * COL_RANGE);
         
         m_red   = COL_PARTS * wheelPos;
         m_green = UINT8_MAX - wheelPos * COL_PARTS;
         m_blue  = 0u;
     }
+
+    return;
 }
 
 /******************************************************************************
