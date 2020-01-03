@@ -47,6 +47,7 @@
 #include "Plugin.hpp"
 #include "SysMsgPlugin.h"
 #include "JustTextPlugin.h"
+#include "FirePlugin.h"
 
 #include <LinkedList.hpp>
 
@@ -84,11 +85,18 @@ public:
     SysMsgPlugin* installSysMsgPlugin(void);
 
     /**
-     * Install JustText plugin.
+     * Install JustTextPlugin plugin.
      * 
      * @return If successful installed, it will return true otherwise false.
      */
     JustTextPlugin* installJustTextPlugin(void);
+
+    /**
+     * Install FirePlugin plugin.
+     * 
+     * @return If successful installed, it will return true otherwise false.
+     */
+    FirePlugin* installFirePlugin(void);
 
     /**
      * Uninstall plugin.

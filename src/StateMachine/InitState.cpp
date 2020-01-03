@@ -58,6 +58,7 @@
 
 // TODO Remove
 #include "JustTextPlugin.h"
+#include "FirePlugin.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -168,6 +169,7 @@ void InitState::entry(StateMachine& sm)
         showStartupInfoOnDisplay();
 
         /* TODO Load slot configuration from persistent memory and install the plugins here. */
+        #if 0
         {
             /* As example, install the JustTextPlugin for development purposes. */
             JustTextPlugin* justTextPlugin = PluginMgr::getInstance().installJustTextPlugin();
@@ -180,6 +182,20 @@ void InitState::entry(StateMachine& sm)
             {
                 justTextPlugin->setText("Test");
                 justTextPlugin->enable();
+            }
+        }
+        #endif
+        {
+            /* As example, install the FirePlugin for development purposes. */
+            FirePlugin* firePlugin = PluginMgr::getInstance().installFirePlugin();
+
+            if (NULL == firePlugin)
+            {
+                LOG_WARNING("Failed to install FirePlugin.");
+            }
+            else
+            {
+                firePlugin->enable();
             }
         }
     }

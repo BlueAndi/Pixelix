@@ -98,6 +98,22 @@ JustTextPlugin* PluginMgr::installJustTextPlugin(void)
     return  plugin;
 }
 
+FirePlugin* PluginMgr::installFirePlugin(void)
+{
+    FirePlugin* plugin = new FirePlugin();
+
+    if (NULL != plugin)
+    {
+        if (false == install(plugin))
+        {
+            delete plugin;
+            plugin = NULL;
+        }
+    }
+
+    return  plugin;
+}
+
 void PluginMgr::uninstall(Plugin* plugin)
 {
     if (NULL != plugin)
