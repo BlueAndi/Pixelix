@@ -308,7 +308,6 @@ void DisplayMgr::activatePlugin(Plugin* plugin)
             }
             else
             {
-                LOG_INFO("Plugin %s in slot %u requested.", plugin->getName(), plugin->getSlotId());
                 m_requestedPlugin = plugin;
             }
         }
@@ -334,7 +333,7 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
         {
             for(x = 0; x < matrix.width(); ++x)
             {
-                fb[index] = matrix.getColor(x, y);
+                fb[index] = ColorDef::convert565To888(matrix.getColor(x, y));
                 ++index;
 
                 if (length <= index)
@@ -571,7 +570,7 @@ void DisplayMgr::process(void)
 
 void DisplayMgr::updateTask(void* parameters)
 {
-    DisplayMgr*     displayMgr  = reinterpret_cast<DisplayMgr*>(parameters);
+    DisplayMgr* displayMgr = reinterpret_cast<DisplayMgr*>(parameters);
     const uint32_t  TASK_PERIOD = 40u;  /* ms */
 
     if ((NULL != displayMgr) &&
