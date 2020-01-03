@@ -443,9 +443,6 @@ void DisplayMgr::process(void)
 
     lock();
 
-    /* Clear display */
-    matrix.clear();
-
     /* Plugin requested to choose? */
     if (NULL != m_requestedPlugin)
     {

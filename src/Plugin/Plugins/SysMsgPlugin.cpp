@@ -76,6 +76,7 @@ void SysMsgPlugin::inactive(void)
 
 void SysMsgPlugin::update(IGfx& gfx)
 {
+    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
     m_textWidget.update(gfx);
 
     return;
