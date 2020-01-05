@@ -56,10 +56,6 @@
 
 #include <Logging.h>
 
-// TODO Remove
-#include "JustTextPlugin.h"
-#include "FirePlugin.h"
-
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -149,8 +145,8 @@ void InitState::entry(StateMachine& sm)
     else
     {
         /* Enable the automatic display brightness adjustment according to the
-        * ambient light.
-        */
+         * ambient light.
+         */
         if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(false))
         {
             LOG_WARNING("Failed to enable autom. brigthness adjustment.");
@@ -168,52 +164,8 @@ void InitState::entry(StateMachine& sm)
         /* Show some informations on the display. */
         showStartupInfoOnDisplay();
 
-        /* TODO Load slot configuration from persistent memory and install the plugins here. */
-        #if 0
-        {
-            /* As example, install the JustTextPlugin for development purposes. */
-            JustTextPlugin* justTextPlugin = PluginMgr::getInstance().installJustTextPlugin();
-
-            if (NULL == justTextPlugin)
-            {
-                LOG_WARNING("Failed to install JustTextPlugin.");
-            }
-            else
-            {
-                justTextPlugin->setText("Test");
-                justTextPlugin->enable();
-            }
-        }
-        #endif
-        #if 0
-        {
-            /* As example, install the FirePlugin for development purposes. */
-            FirePlugin* firePlugin = PluginMgr::getInstance().installFirePlugin();
-
-            if (NULL == firePlugin)
-            {
-                LOG_WARNING("Failed to install FirePlugin.");
-            }
-            else
-            {
-                firePlugin->enable();
-            }
-        }
-        #endif
-        {
-            /* As example, install the JustTextPlugin for development purposes. */
-            IconTextLampPlugin* iconTextLampPlugin = PluginMgr::getInstance().installIconTextLampPlugin();
-
-            if (NULL == iconTextLampPlugin)
-            {
-                LOG_WARNING("Failed to install IconTextLampPlugin.");
-            }
-            else
-            {
-                iconTextLampPlugin->setText("Test");
-                iconTextLampPlugin->enable();
-            }
-        }
+        /* Install default plugin. */
+        (void*)PluginMgr::getInstance().installIconTextLampPlugin();
     }
 
     /* Any error happened? */
