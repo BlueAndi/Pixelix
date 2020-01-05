@@ -31,7 +31,10 @@ Every response will provide two items:
 }
 ```
 
-## Endpoint `<base-uri>`/status
+## Common
+The common API, which is always there.
+
+### Endpoint `<base-uri>`/status
 Get status information:
 * Software version.
 * ESP SDK version.
@@ -82,7 +85,7 @@ Example with curl:
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/status
 ```
 
-## Endpoint `<base-uri>`/display/slots
+### Endpoint `<base-uri>`/display/slots
 Get the number of supported slots.
 
 Detail:
@@ -109,7 +112,10 @@ Example with curl:
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/slots
 ```
 
-## Endpoint `<base-uri>`/display/slot/`<slot-id>`/text
+## Plugin depended
+The plugin depended API.
+
+### Endpoint `<base-uri>`/display/slot/`<slot-id>`/text
 Show text in the specified slot.
 
 Detail:
@@ -135,7 +141,7 @@ Example with curl:
 $ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/text
 ```
 
-## Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap
+### Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap
 Show bitmap in the specified slot. The bitmap must be BASE64 encoded.
 At the momet only bitmaps in the size of 8 x 8 pixel are supported with RGB565.
 
@@ -163,7 +169,7 @@ Result:
 $ (echo -n 'width=8&height=8&data="'; base64 hacker_rgb565.bin; echo '"}') | curl -d @-  http://192.168.2.166/rest/api/v1/display/slot/0/bitmap
 ```
 
-## Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`/state
+### Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`
 Set the state of a lamp in the specified slot.
 
 Detail:
@@ -177,7 +183,7 @@ Supported lamp states:
 
 Example:
 ```
-POST <base-uri>/rest/v1/display/slot/0/lamp/0/state?set=on
+POST <base-uri>/rest/v1/display/slot/0/lamp/0?set=on
 ```
 
 Result:
@@ -190,7 +196,7 @@ Result:
 
 Example with curl:
 ```
-$ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/lamp/0/state
+$ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/lamp/0
 ```
 
 # Issues, Ideas And Bugs

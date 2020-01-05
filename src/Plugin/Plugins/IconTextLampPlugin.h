@@ -64,6 +64,11 @@
  * Shows a icon (bitmap) on the left side in 8 x 8, text on the right side and
  * under the text a bar with lamps.
  * If the text is too long for the display width, it automatically scrolls.
+ * 
+ * Change icon, text or lamps via REST API:
+ * Icon: POST <base-uri>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>
+ * Text: POST <base-uri>/text?show=<text>
+ * Lamp: POST <base-uri>/lamp/<lamp-id>?set=<on/off>
  */
 class IconTextLampPlugin : public Plugin
 {

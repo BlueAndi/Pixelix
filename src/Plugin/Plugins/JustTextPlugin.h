@@ -60,6 +60,9 @@
 /**
  * Shows text over the whole display.
  * If the text is too long for the display width, it automatically scrolls.
+ * 
+ * Change text via REST API:
+ * Text: POST <base-uri>/text?show=<text>
  */
 class JustTextPlugin : public Plugin
 {
