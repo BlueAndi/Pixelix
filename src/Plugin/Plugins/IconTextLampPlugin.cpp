@@ -137,7 +137,7 @@ void IconTextLampPlugin::registerWebInterface(AsyncWebServer& srv, const String&
     m_urlLamp = baseUri + "/lamp/*";
     m_callbackWebHandlerLamp = &srv.on(m_urlLamp.c_str(), staticWebReqHandler);
 
-    LOG_INFO("[%s] Register: %s", getName(), m_urlText.c_str());
+    LOG_INFO("[%s] Register: %s", getName(), m_urlLamp.c_str());
 
     m_instances.append(plugin);
 
