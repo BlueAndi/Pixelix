@@ -111,13 +111,13 @@ public:
      * 
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx);
+    void active(IGfx& gfx) override;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
      * it won't be shown on the display anymore.
      */
-    void inactive(void);
+    void inactive(void) override;
 
     /**
      * Update the display.

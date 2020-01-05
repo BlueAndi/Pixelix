@@ -104,14 +104,14 @@ public:
      * @param[in] srv       Webserver
      * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri);
+    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override;
 
     /**
      * Unregister web interface.
      * 
      * @param[in] srv   Webserver
      */
-    void unregisterWebInterface(AsyncWebServer& srv);
+    void unregisterWebInterface(AsyncWebServer& srv) override;
 
     /**
      * Update the display.
