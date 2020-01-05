@@ -148,14 +148,14 @@ void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
 {
     if (false == m_instances.find(this))
     {
-        LOG_WARNING("Couldn't find %s in own list.", this->getName());
+        LOG_WARNING("Couldn't find %s in own list.", getName());
     }
     else
     {
         m_instances.removeSelected();
     }
 
-    LOG_INFO("[%s] Unregister: %s", m_urlIcon);
+    LOG_INFO("[%s] Unregister: %s", getName(), m_urlIcon.c_str());
 
     if (false == srv.removeHandler(m_callbackWebHandlerIcon))
     {
@@ -164,7 +164,7 @@ void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
     m_callbackWebHandlerIcon = NULL;
 
-    LOG_INFO("[%s] Unregister: %s", m_urlText);
+    LOG_INFO("[%s] Unregister: %s", getName(), m_urlText.c_str());
 
     if (false == srv.removeHandler(m_callbackWebHandlerText))
     {
@@ -173,7 +173,7 @@ void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
     m_callbackWebHandlerText = NULL;
 
-    LOG_INFO("[%s] Unregister: %s", m_urlLamp);
+    LOG_INFO("[%s] Unregister: %s", getName(), m_urlLamp.c_str());
 
     if (false == srv.removeHandler(m_callbackWebHandlerLamp))
     {

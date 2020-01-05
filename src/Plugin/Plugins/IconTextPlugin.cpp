@@ -127,27 +127,27 @@ void IconTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 {
     if (false == m_instances.find(this))
     {
-        LOG_WARNING("Couldn't find %s in own list.", this->getName());
+        LOG_WARNING("Couldn't find %s in own list.", getName());
     }
     else
     {
         m_instances.removeSelected();
     }
 
-    LOG_INFO("[%s] Unregister: %s", m_urlIcon);
+    LOG_INFO("[%s] Unregister: %s", getName(), m_urlIcon.c_str());
 
     if (false == srv.removeHandler(m_callbackWebHandlerIcon))
     {
-        LOG_WARNING("Couldn't remove %s handler.", this->getName());
+        LOG_WARNING("Couldn't remove %s handler.", getName());
     }
 
     m_callbackWebHandlerIcon = NULL;
 
-    LOG_INFO("[%s] Unregister: %s", m_urlText);
+    LOG_INFO("[%s] Unregister: %s", getName(), m_urlText.c_str());
 
     if (false == srv.removeHandler(m_callbackWebHandlerText))
     {
-        LOG_WARNING("Couldn't remove %s handler.", this->getName());
+        LOG_WARNING("Couldn't remove %s handler.", getName());
     }
 
     m_callbackWebHandlerText = NULL;

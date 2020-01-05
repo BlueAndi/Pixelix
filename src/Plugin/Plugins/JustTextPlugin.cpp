@@ -81,11 +81,11 @@ void JustTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& bas
 
 void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 {
-    LOG_INFO("[%s] Unregister: %s", m_url);
+    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
 
     if (false == m_instances.find(this))
     {
-        LOG_WARNING("Couldn't find %s in own list.", this->getName());
+        LOG_WARNING("Couldn't find %s in own list.", getName());
     }
     else
     {
@@ -94,7 +94,7 @@ void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
     if (false == srv.removeHandler(m_callbackWebHandler))
     {
-        LOG_WARNING("Couldn't remove %s handler.", this->getName());
+        LOG_WARNING("Couldn't remove %s handler.", getName());
     }
 
     m_callbackWebHandler = NULL;
