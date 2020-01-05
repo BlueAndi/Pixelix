@@ -64,8 +64,8 @@
  * If the text is too long for the display width, it automatically scrolls.
  * 
  * Change icon or text via REST API:
- * Icon: POST <base-uri>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>
- * Text: POST <base-uri>/text?show=<text>
+ * Icon: POST \c "<base-uri>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>"
+ * Text: POST \c "<base-uri>/text?show=<text>"
  */
 class IconTextPlugin : public Plugin
 {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,9 +66,9 @@
  * If the text is too long for the display width, it automatically scrolls.
  * 
  * Change icon, text or lamps via REST API:
- * Icon: POST <base-uri>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>
- * Text: POST <base-uri>/text?show=<text>
- * Lamp: POST <base-uri>/lamp/<lamp-id>?set=<on/off>
+ * Icon: POST \c "<base-uri>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>"
+ * Text: POST \c "<base-uri>/text?show=<text>"
+ * Lamp: POST \c "<base-uri>/lamp/<lamp-id>?set=<on/off>"
  */
 class IconTextLampPlugin : public Plugin
 {
