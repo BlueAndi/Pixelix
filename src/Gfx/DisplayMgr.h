@@ -169,7 +169,7 @@ public:
     static const BaseType_t TASK_RUN_CORE           = 1;
 
     /** Maximum number of supported slots. */
-    static const uint8_t    MAX_SLOTS               = 4u;
+    static const uint8_t    MAX_SLOTS               = 5u;
 
     /** If no ambient light sensor is available, the default brightness shall be 40%. */
     static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40u) / 100u;
