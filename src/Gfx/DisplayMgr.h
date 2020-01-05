@@ -183,7 +183,7 @@ private:
     TaskHandle_t        m_taskHandle;
 
     /** Flag to signal the task to exit. */
-    uint8_t             m_taskExit;
+    bool                m_taskExit;
 
     /** Binary semaphore used to signal the task exit. */
     SemaphoreHandle_t   m_xSemaphore;
