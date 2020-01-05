@@ -91,6 +91,12 @@ bool UpdateMgr::init(void)
     ArduinoOTA.onProgress(onProgress);
     ArduinoOTA.onError(onError);
 
+    /* Don't reboot on success, this will be done in the RESTART state later.
+     * Note, currently the ArduinoOTA only uses ESP.restart(), which doesn't
+     * reset the peripherals.
+     */
+    ArduinoOTA.setRebootOnSuccess(false);
+
     /* Get hostname */
     if (false == Settings::getInstance().open(true))
     {
@@ -317,6 +323,12 @@ void UpdateMgr::onError(ota_error_t error)
      */
     if (true == m_instance.m_updateIsRunning)
     {
+        /* Start display manager */
+        if (false == DisplayMgr::getInstance().begin())
+        {
+            LOG_WARNING("Couldn't initialize display manager again.");
+        }
+
         SysMsg::getInstance().show(infoStr);
         delay(infoStr.length() * 600u);
 
