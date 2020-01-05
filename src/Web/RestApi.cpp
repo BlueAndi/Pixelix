@@ -63,7 +63,6 @@
 static uint8_t getSignalQuality(int8_t rssi);
 static void status(AsyncWebServerRequest* request);
 static void slots(AsyncWebServerRequest* request);
-static void slotLamp(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
@@ -89,7 +88,6 @@ void RestApi::init(AsyncWebServer& srv)
 {
     (void)srv.on("/rest/api/v1/status", status);
     (void)srv.on("/rest/api/v1/display/slots", slots);
-    (void)srv.on("^\\/rest\\/api\\/v1\\/display\\/slot\\/([0-9]+)\\/lamp\\/([0-9]+)\\/state$", slotLamp);
     
     return;
 }
@@ -257,96 +255,6 @@ static void slots(AsyncWebServerRequest* request)
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-
-    serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
-
-/**
- * Set lamp state of a slot.
- * POST /display/slot/<slot-id>/lamp/<lamp-id>/state?set=<on/off>
- * 
- * @param[in] request   HTTP request
- */
-static void slotLamp(AsyncWebServerRequest* request)
-{
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (NULL == request)
-    {
-        return;
-    }
-
-    if (HTTP_POST != request->method())
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    else
-    {
-        uint8_t slotId = DisplayMgr::getInstance().MAX_SLOTS;
-        uint8_t lampId = 0u;
-
-        /* Slot id invalid? */
-        if ((false == Util::strToUInt8(request->pathArg(0), slotId)) ||
-            (DisplayMgr::getInstance().MAX_SLOTS <= slotId))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Slot id not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* Lamp id invalid? */
-        else if (false == Util::strToUInt8(request->pathArg(1), lampId))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Lamp id not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else if ((false == request->hasArg("set")) ||
-                 ((request->arg("set") != "off") &&
-                  (request->arg("set") != "on")))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Command not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            bool lampState = false;
-
-            if (request->arg("set") == "on")
-            {
-                lampState = true;
-            }
-            
-            DisplayMgr::getInstance().lock();
-            //DisplayMgr::getInstance().setLamp(slotId, lampId, lampState);
-            DisplayMgr::getInstance().unlock();
-
-            (void)jsonDoc.createNestedObject("data");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
     }
 
     serializeJsonPretty(jsonDoc, content);

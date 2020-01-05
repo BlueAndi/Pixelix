@@ -49,6 +49,7 @@
 #include "JustTextPlugin.h"
 #include "FirePlugin.h"
 #include "IconTextPlugin.h"
+#include "IconTextLampPlugin.h"
 
 #include <LinkedList.hpp>
 
@@ -105,6 +106,13 @@ public:
      * @return If successful installed, it will return true otherwise false.
      */
     IconTextPlugin* installIconTextPlugin(void);
+
+    /**
+     * Install IconTextLampPlugin plugin.
+     * 
+     * @return If successful installed, it will return true otherwise false.
+     */
+    IconTextLampPlugin* installIconTextLampPlugin(void);
 
     /**
      * Uninstall plugin.

@@ -130,6 +130,22 @@ IconTextPlugin* PluginMgr::installIconTextPlugin(void)
     return  plugin;
 }
 
+IconTextLampPlugin* PluginMgr::installIconTextLampPlugin(void)
+{
+    IconTextLampPlugin* plugin = new IconTextLampPlugin();
+
+    if (NULL != plugin)
+    {
+        if (false == install(plugin))
+        {
+            delete plugin;
+            plugin = NULL;
+        }
+    }
+
+    return  plugin;
+}
+
 void PluginMgr::uninstall(Plugin* plugin)
 {
     if (NULL != plugin)

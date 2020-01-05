@@ -185,6 +185,7 @@ void InitState::entry(StateMachine& sm)
             }
         }
         #endif
+        #if 0
         {
             /* As example, install the FirePlugin for development purposes. */
             FirePlugin* firePlugin = PluginMgr::getInstance().installFirePlugin();
@@ -196,6 +197,21 @@ void InitState::entry(StateMachine& sm)
             else
             {
                 firePlugin->enable();
+            }
+        }
+        #endif
+        {
+            /* As example, install the JustTextPlugin for development purposes. */
+            IconTextLampPlugin* iconTextLampPlugin = PluginMgr::getInstance().installIconTextLampPlugin();
+
+            if (NULL == iconTextLampPlugin)
+            {
+                LOG_WARNING("Failed to install IconTextLampPlugin.");
+            }
+            else
+            {
+                iconTextLampPlugin->setText("Test");
+                iconTextLampPlugin->enable();
             }
         }
     }
