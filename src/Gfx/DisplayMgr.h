@@ -133,6 +133,15 @@ public:
     void uninstallPlugin(Plugin* plugin);
 
     /**
+     * Get plugin from slot.
+     * 
+     * @param[in] slotId    Slot id, where to get plugin.
+     * 
+     * @return Plugin which is installed in given slot.
+     */
+    Plugin* getPluginInSlot(uint8_t slotId);
+
+    /**
      * Activate a specific plugin immediately.
      * 
      * @param[in] plugin    Plugin which to activate

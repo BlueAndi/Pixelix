@@ -32,7 +32,8 @@
 			"type_traits": "cpp",
 			"xhash": "cpp",
 			"xstring": "cpp",
-			"xutility": "cpp"
+			"xutility": "cpp",
+			"array": "cpp"
 		},
 		"files.exclude": {
 			"**/.classpath": true,

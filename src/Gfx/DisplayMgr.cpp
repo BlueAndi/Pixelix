@@ -294,6 +294,22 @@ void DisplayMgr::uninstallPlugin(Plugin* plugin)
     return;
 }
 
+Plugin* DisplayMgr::getPluginInSlot(uint8_t slotId)
+{
+    Plugin* plugin = NULL;
+
+    if (MAX_SLOTS > slotId)
+    {
+        lock();
+
+        plugin = m_slots[slotId];
+
+        unlock();
+    }
+
+    return plugin;
+}
+
 void DisplayMgr::activatePlugin(Plugin* plugin)
 {
     if (NULL != plugin)

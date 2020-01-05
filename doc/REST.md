@@ -112,6 +112,40 @@ Example with curl:
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/slots
 ```
 
+### Endpoint `<base-uri>`/display
+Install/Uninstall plugins to display slots.
+
+Detail:
+* Method: POST
+* Install a plugin:
+  * Arguments:
+    * install=`<plugin-name>`
+* Uninstall a plugin:
+  * Arguments:
+    * uninstall=`<plugin-name>`
+    * slotId=`<slot-id>`
+
+Example:
+```
+POST <base-uri>/rest/v1/display?install=JustTextPlugin
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "slotId": 1
+    }
+}
+```
+
+Example with curl:
+```
+$ curl -u luke:skywalker -d "install=JustTextPlugin" -X POST http://192.168.2.166/rest/api/v1/display
+$ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://192.168.2.166/rest/api/v1/display
+```
+
 ## Plugin depended
 The plugin depended API.
 
