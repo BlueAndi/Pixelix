@@ -179,7 +179,7 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -191,7 +191,7 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Show is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -203,7 +203,7 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
 
             /* Prepare response */
             (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = RestApi::STATUS_CODE_OK;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }

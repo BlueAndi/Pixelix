@@ -72,7 +72,7 @@ DLinkedList<IconTextPlugin*>    IconTextPlugin::m_instances;
 
 void IconTextPlugin::active(IGfx& gfx)
 {    
-    if (NULL != m_iconCanvas)
+    if (NULL == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
         
@@ -82,7 +82,7 @@ void IconTextPlugin::active(IGfx& gfx)
         }
     }
 
-    if (NULL != m_textCanvas)
+    if (NULL == m_textCanvas)
     {
         m_textCanvas = new Canvas(gfx.width() - ICON_WIDTH, gfx.height(), ICON_WIDTH, 0);
 
@@ -288,7 +288,7 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -300,7 +300,7 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Show is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -312,7 +312,7 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
 
             /* Prepare response */
             (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = RestApi::STATUS_CODE_OK;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
@@ -339,7 +339,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -354,7 +354,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Width is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -364,7 +364,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Height is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -374,7 +374,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Data is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -384,7 +384,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Invalid width.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -394,7 +394,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = RestApi::STATUS_CODE_NOT_FOUND;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = "Invalid height.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
@@ -413,7 +413,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
             (void)jsonDoc.createNestedObject("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = RestApi::STATUS_CODE_OK;
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
