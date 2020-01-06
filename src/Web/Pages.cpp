@@ -138,6 +138,9 @@ static const char*      FIRMWARE_FILENAME           = "firmware.bin";
 /** Filesystem binary filename, used for update. */
 static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
 
+/** Flag used to signal any kind of file upload error. */
+static bool             gIsUploadError               = false;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -925,7 +928,14 @@ static void uploadPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(HttpStatus::STATUS_CODE_OK, "text/plain", "Ok");
+    if (true == gIsUploadError)
+    {
+        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "text/plain", "Error");
+    }
+    else
+    {
+        request->send(HttpStatus::STATUS_CODE_OK, "text/plain", "Ok");
+    }
 
     return;
 }
@@ -942,8 +952,6 @@ static void uploadPage(AsyncWebServerRequest* request)
  */
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-    bool    isError = false;
-
     /* Begin of upload? */
     if (0 == index)
     {
@@ -951,6 +959,8 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
 
         LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
+
+        gIsUploadError = false;
 
         /* Update filesystem? */
         if (U_SPIFFS == cmd)
@@ -967,8 +977,9 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         if (false == Update.begin(request->contentLength(), cmd))
         {
             LOG_ERROR("Upload failed: %s", Update.errorString());
-            isError = true;
+            gIsUploadError = true;
         }
+        /* Update is now running. */
         else
         {
             /* Use UpdateMgr to show the user the update status.
@@ -981,48 +992,49 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 
     if (true == Update.isRunning())
     {
-        if(len != Update.write(data, len))
+        if (false == gIsUploadError)
         {
-            LOG_ERROR("Upload failed: %s", Update.errorString());
-            isError = true;
+            if(len != Update.write(data, len))
+            {
+                LOG_ERROR("Upload failed: %s", Update.errorString());
+                gIsUploadError = true;
+            }
+            else
+            {
+                uint32_t progress = (Update.progress() * 100) / Update.size();
+
+                UpdateMgr::getInstance().updateProgress(progress);
+            }
+
+            /* Upload finished? */
+            if (true == final)
+            {
+                /* Finish update now. */
+                if (false == Update.end(true))
+                {
+                    LOG_ERROR("Upload failed: %s", Update.errorString());
+                    gIsUploadError = true;
+                }
+                /* Update was successful! */
+                else
+                {
+                    LOG_INFO("Upload of %s finished.", filename.c_str());
+
+                    /* Ensure that the user see 100% update status on the display. */
+                    UpdateMgr::getInstance().updateProgress(100u);
+                    UpdateMgr::getInstance().endProgress();
+
+                    /* Request a restart */
+                    UpdateMgr::getInstance().reqRestart();
+                }
+            }
         }
         else
         {
-            uint32_t progress = (Update.progress() * 100) / Update.size();
-
-            UpdateMgr::getInstance().updateProgress(progress);
+            /* Abort update */
+            Update.abort();
+            UpdateMgr::getInstance().endProgress();
         }
-
-        /* Upload finished? */
-        if (true == final)
-        {
-            /* Finish update now. */
-            if (false == Update.end(true))
-            {
-                LOG_ERROR("Upload failed: %s", Update.errorString());
-                isError = true;
-            }
-            /* Update was successful! */
-            else
-            {
-                LOG_INFO("Upload of %s finished.", filename.c_str());
-
-                /* Ensure that the user see 100% update status on the display. */
-                UpdateMgr::getInstance().updateProgress(100u);
-                UpdateMgr::getInstance().endProgress();
-
-                /* Request a restart */
-                UpdateMgr::getInstance().reqRestart();
-            }
-        }
-    }
-
-    if (true == isError)
-    {
-        UpdateMgr::getInstance().endProgress();
-        
-        Update.abort();
-        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
     }
 
     return;
