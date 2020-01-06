@@ -34,6 +34,15 @@
  *****************************************************************************/
 #include "BitmapWidget.h"
 
+#ifndef NATIVE
+
+#include <SPIFFS.h>
+#include <NeoPixelBus.h>
+#include <Color.h>
+#include <Logging.h>
+
+#endif  /* NATIVE */
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -60,6 +69,129 @@ const char* BitmapWidget::WIDGET_TYPE = "bitmap";
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
+{
+    if (&widget != this)
+    {
+        m_bufferSize    = widget.m_bufferSize;
+        m_width         = widget.m_width;
+        m_height        = widget.m_height;
+
+        if (NULL != m_buffer)
+        {
+            delete[] m_buffer;
+            m_buffer = NULL;
+        }
+
+        if (NULL != widget.m_buffer)
+        {
+            m_buffer = new uint16_t[m_bufferSize];
+
+            if (NULL == m_buffer)
+            {
+                m_bufferSize = 0u;
+            }
+            else
+            {
+                memcpy(m_buffer, widget.m_buffer, m_bufferSize * sizeof(uint16_t));
+            }
+        }
+    }
+
+    return *this;
+}
+
+void BitmapWidget::set(const uint16_t* bitmap, uint16_t width, uint16_t height)
+{
+    if (NULL != bitmap)
+    {
+        if (NULL != m_buffer)
+        {
+            delete[] m_buffer;
+            m_buffer = NULL;
+        }
+
+        m_bufferSize    = width * height;
+        m_width         = width;
+        m_height        = height;
+
+        m_buffer = new uint16_t[m_bufferSize];
+
+        if (NULL == m_buffer)
+        {
+            m_bufferSize = 0u;
+        }
+        else
+        {
+            memcpy(m_buffer, bitmap, m_bufferSize * sizeof(uint16_t));
+        }
+    }
+
+    return;
+}
+
+#ifndef NATIVE
+
+bool BitmapWidget::load(const String& filename)
+{
+    bool                                status  = false;
+    File                                fd;
+    NeoBitmapFile<NeoGrbFeature, File>  neoFile;
+
+    fd = SPIFFS.open(filename, "r");
+
+    if (false == fd)
+    {
+        LOG_ERROR("File %s doesn't exists.", filename.c_str());
+    }
+    else
+    {
+        if (false == neoFile.Begin(fd))
+        {
+            LOG_ERROR("Incompatible bitmap file format.");
+        }
+        else
+        {
+            m_width         = neoFile.Width();
+            m_height        = neoFile.Height();
+            m_bufferSize    = m_width * m_height;
+
+            if (NULL != m_buffer)
+            {
+                delete[] m_buffer;
+                m_buffer = NULL;
+            }
+
+            m_buffer = new uint16_t[m_bufferSize];
+
+            if (NULL != m_buffer)
+            {
+                uint16_t x = 0u;
+                uint16_t y = 0u;
+
+                for(y = 0u; y < m_height; ++y)
+                {
+                    for(x = 0u; x < m_width; ++x)
+                    {
+                        RgbColor    rgbColor = neoFile.GetPixelColor(x, y);
+                        Color       color888(rgbColor.R, rgbColor.G, rgbColor.B);
+
+                        m_buffer[x + y * m_width] = color888.to565();
+                    }
+                }
+
+                status = true;
+            }
+        }
+
+        fd.close();
+    }
+
+    return status;
+}
+
+#endif  /* NATIVE */
 
 /******************************************************************************
  * Protected Methods

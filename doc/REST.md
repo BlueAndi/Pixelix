@@ -176,19 +176,25 @@ $ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/d
 ```
 
 ### Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap
-Show bitmap in the specified slot. The bitmap must be BASE64 encoded.
-At the momet only bitmaps in the size of 8 x 8 pixel are supported with RGB565.
+Show bitmap in the specified slot. Supported are bitmap files (.bmp) with:
+* 24 or 32 bits per pixel.
+* 1 plane.
+* No compression.
+
+Note, if you are using _gimp_ to create bitmap files, please configure like:
+* Compatibility options:
+  * Don't write color informations.
+* Extended options:
+  * Select 24 bit per pixel.
 
 Detail:
 * Method: POST
 * Arguments:
-  * width=`<bitmap-width>`
-  * height=`<bitmap-height>`
-  * data=`<base64-encoded-bitmap>`
+    * -
 
 Example:
 ```
-POST <base-uri>/rest/v1/display/slot/0/bitmap?width=8&height=8&data=XXXXXX
+POST <base-uri>/rest/v1/display/slot/0/bitmap
 ```
 
 Result:
@@ -200,7 +206,7 @@ Result:
 ```
 
 ```
-$ (echo -n 'width=8&height=8&data="'; base64 hacker_rgb565.bin; echo '"}') | curl -d @-  http://192.168.2.166/rest/api/v1/display/slot/0/bitmap
+$ curl -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://192.168.2.166/rest/api/v1/display/slot/0/bitmap
 ```
 
 ### Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`

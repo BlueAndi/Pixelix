@@ -51,6 +51,7 @@
 #include <TextWidget.h>
 #include <LampWidget.h>
 #include <LinkedList.hpp>
+#include <SPIFFS.h>
 
 /******************************************************************************
  * Macros
@@ -66,7 +67,7 @@
  * If the text is too long for the display width, it automatically scrolls.
  * 
  * Change icon, text or lamps via REST API:
- * Icon: POST \c "<base-uri>/bitmap?width=<width-in-pixel>&height=<height-in-pixel>&data=<data-uint16_t>"
+ * Icon: POST \c "<base-uri>/bitmap" with multipart/form-data file upload.
  * Text: POST \c "<base-uri>/text?show=<text>"
  * Lamp: POST \c "<base-uri>/lamp/<lamp-id>?set=<on/off>"
  */
@@ -90,7 +91,9 @@ public:
         m_urlLamp(),
         m_callbackWebHandlerIcon(NULL),
         m_callbackWebHandlerText(NULL),
-        m_callbackWebHandlerLamp(NULL)
+        m_callbackWebHandlerLamp(NULL),
+        m_fd(),
+        m_isUploadError(false)
     {
     }
 
@@ -216,6 +219,11 @@ private:
      */
     static const uint8_t MAX_LAMPS      = 4u;
 
+    /**
+     * Image upload path.
+     */
+    static const char*  UPLOAD_PATH;
+
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_lampCanvas;               /**< Canvas used for the lamp widget. */
@@ -228,6 +236,8 @@ private:
     AsyncCallbackWebHandler*    m_callbackWebHandlerIcon;   /**< Callback web handler for updating the icon */
     AsyncCallbackWebHandler*    m_callbackWebHandlerText;   /**< Callback web handler for updating the text */
     AsyncCallbackWebHandler*    m_callbackWebHandlerLamp;   /**< Callback web handler for updating the lamps */
+    File                        m_fd;                       /**< File descriptor, used for bitmap file upload. */
+    bool                        m_isUploadError;            /**< Flag to signal a upload error. */
 
     /** List of all instances and used to find the web request related instance later. */
     static DLinkedList<IconTextLampPlugin*> m_instances;
@@ -240,6 +250,18 @@ private:
      * @param[in] request   Web request
      */
     static void staticWebReqHandler(AsyncWebServerRequest *request);
+
+    /**
+     * File upload handler.
+     * 
+     * @param[in] request   HTTP request.
+     * @param[in] filename  Name of the uploaded file.
+     * @param[in] index     Current file offset.
+     * @param[in] data      Next data part of file, starting at offset.
+     * @param[in] len       Data part size in byte.
+     * @param[in] final     Is final packet or not.
+     */
+    static void staticUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 
     /**
      * Instance specific web request handler, called by the static web request
@@ -265,6 +287,24 @@ private:
      */
     void webReqHandlerLamp(AsyncWebServerRequest *request);
 
+    /**
+     * File upload handler.
+     * 
+     * @param[in] request   HTTP request.
+     * @param[in] filename  Name of the uploaded file.
+     * @param[in] index     Current file offset.
+     * @param[in] data      Next data part of file, starting at offset.
+     * @param[in] len       Data part size in byte.
+     * @param[in] final     Is final packet or not.
+     */
+    void iconUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
+
+    /**
+     * Get image filename with path.
+     * 
+     * @return Image filename with path.
+     */
+    String getFileName(void);
 };
 
 /******************************************************************************

@@ -37,11 +37,7 @@
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-
-extern "C"
-{
-#include <crypto/base64.h>
-}
+#include <SPIFFS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -65,6 +61,9 @@ extern "C"
 
 /* Initialize the list of instances. */
 DLinkedList<IconTextPlugin*>    IconTextPlugin::m_instances;
+
+/* Initialize upload path. */
+const char*                     IconTextPlugin::UPLOAD_PATH = "/tmp";
 
 /******************************************************************************
  * Public Methods
@@ -109,7 +108,7 @@ void IconTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& bas
     IconTextPlugin* plugin = this;
 
     m_urlIcon = baseUri + "/bitmap";
-    m_callbackWebHandlerIcon = &srv.on(m_urlIcon.c_str(), staticWebReqHandler);
+    m_callbackWebHandlerIcon = &srv.on(m_urlIcon.c_str(), HTTP_ANY, staticWebReqHandler, staticUploadHandler);
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlIcon.c_str());
     
@@ -272,6 +271,53 @@ void IconTextPlugin::staticWebReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
+void IconTextPlugin::staticUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+    if (false == m_instances.selectFirstElement())
+    {
+        LOG_WARNING("Couldn't handle upload req. for %s.", request->url().c_str());
+    }
+    else
+    {
+        IconTextPlugin**    elem    = m_instances.current();
+        IconTextPlugin*     plugin  = NULL;
+
+        while((NULL != elem) && (NULL == plugin))
+        {
+            if ((*elem)->m_urlIcon == request->url())
+            {
+                plugin = *elem;
+            }
+            else
+            {
+                if (false == m_instances.next())
+                {
+                    elem = NULL;
+                }
+                else
+                {
+                    elem = m_instances.current();
+                }
+            }
+        }
+
+        if (NULL != plugin)
+        {
+            if (plugin->m_urlIcon == request->url())
+            {
+                plugin->iconUploadHandler(request, filename, index, data, len, final);
+            }
+            else
+            {
+                /* Should never happen. */
+                ;
+            }
+        }
+    }
+
+    return;
+}
+
 void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
 {
     String                  content;
@@ -343,85 +389,115 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
+    /* Upload failed? */
+    else if (true == m_isUploadError)
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "Upload failed.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    /* Load bitmap file. */
+    else if (false == m_bitmapWidget.load(getFileName()))
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "Incompatible file format.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
     else
     {
-        uint16_t    width   = 0u;
-        uint16_t    height  = 0u;
-
-        /* "width" argument missing? */
-        if (false == request->hasArg("width"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Width is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* "height" argument missing? */
-        else if (false == request->hasArg("height"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Height is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* "data" argument missing? */
-        else if (false == request->hasArg("data"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Data is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* Invalid width? */
-        else if (false == Util::strToUInt16(request->arg("width"), width))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Invalid width.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* Invalid height? */
-        else if (false == Util::strToUInt16(request->arg("height"), height))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Invalid height.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String          dataBase64Str       = request->arg("data");
-            size_t          dataBase64ArraySize = dataBase64Str.length();
-            const uint8_t*  dataBase64Array     = reinterpret_cast<const uint8_t*>(dataBase64Str.c_str());
-            size_t          bitmapSize          = 0;
-            uint16_t*       bitmap              = reinterpret_cast<uint16_t*>(base64_decode(dataBase64Array, dataBase64ArraySize, &bitmapSize));
-
-            setBitmap(bitmap, width, height);
-
-            delete bitmap;
-
-            (void)jsonDoc.createNestedObject("data");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
+        /* Prepare response */
+        (void)jsonDoc.createNestedObject("data");
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
     serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
     return;
+}
+
+void IconTextPlugin::iconUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+    UTIL_NOT_USED(filename);
+
+    /* Begin of upload? */
+    if (0 == index)
+    {
+        LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
+        m_isUploadError = false;
+
+        if (false == filename.endsWith(".bmp"))
+        {
+            LOG_ERROR("File is not a bitmap file.");
+            m_isUploadError = true;
+        }
+        else
+        {
+            /* All uploaded bitmaps shall be in a dedicated folder.
+             * This folder may not be created yet.
+             */
+            if (false == SPIFFS.exists(UPLOAD_PATH))
+            {
+                if (false == SPIFFS.mkdir(UPLOAD_PATH))
+                {
+                    LOG_ERROR("Couldn't create directory: %s", UPLOAD_PATH);
+                    m_isUploadError = true;
+                }
+            }
+
+            /* Create a new file and overwrite a existing one. */
+            m_fd = SPIFFS.open(getFileName(), "w");
+
+            if (false == m_fd)
+            {
+                LOG_ERROR("Couldn't create file: %s", getFileName().c_str());
+                m_isUploadError = true;
+            }
+        }
+    }
+
+    if (false == m_isUploadError)
+    {
+        /* If file is open, write data to it. */
+        if (true == m_fd)
+        {
+            if (len != m_fd.write(data, len))
+            {
+                LOG_ERROR("Less data written, upload aborted.");
+                m_isUploadError = true;
+
+                m_fd.close();
+            }
+        }
+
+        /* Upload finished? */
+        if (true == final)
+        {
+            LOG_INFO("Upload of %s finished.", filename.c_str());
+
+            m_fd.close();
+        }
+    }
+
+    return;
+}
+
+String IconTextPlugin::getFileName(void)
+{
+    String filename = UPLOAD_PATH;
+
+    filename += "/";
+    filename += getSlotId();
+    filename += ".bmp";
+
+    return filename;
 }
 
 /******************************************************************************

@@ -1073,7 +1073,6 @@ static void testBitmapWidget(void)
     /* Set bitmap and read back */
     bitmapWidget.set(bitmap, BITMAP_WIDTH, BITMAP_HEIGHT);
     bitmapPtr = bitmapWidget.get(width, height);
-    TEST_ASSERT_EQUAL_PTR(bitmap, bitmapPtr);
     TEST_ASSERT_EQUAL_UINT16(BITMAP_WIDTH, width);
     TEST_ASSERT_EQUAL_UINT16(BITMAP_HEIGHT, height);
 
