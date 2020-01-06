@@ -218,6 +218,8 @@ UpdateMgr::UpdateMgr() :
     m_textWidget(),
     m_progressBar()
 {
+    /* Move text for a better look. */
+    m_textWidget.move(1, 1);
 }
 
 UpdateMgr::~UpdateMgr()
