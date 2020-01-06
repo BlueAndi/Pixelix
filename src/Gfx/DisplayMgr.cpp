@@ -594,6 +594,16 @@ void DisplayMgr::updateTask(void* parameters)
         {
             /* Refresh display content periodically */
             displayMgr->process();
+            
+            /* Wait until the physical update is ready to avoid flickering
+             * and artifacts on the display, because of e.g. webserver flash
+             * access.
+             */
+            while(false == LedMatrix::getInstance().isReady())
+            {
+                ;
+            }
+
             delay(TASK_PERIOD);
         }
 
