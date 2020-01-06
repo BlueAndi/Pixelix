@@ -112,7 +112,7 @@ Example with curl:
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/slots
 ```
 
-### Endpoint `<base-uri>`/display
+### Endpoint `<base-uri>`/plugin
 Install/Uninstall plugins to display slots.
 
 Detail:

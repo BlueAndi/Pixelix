@@ -64,7 +64,7 @@
 static uint8_t getSignalQuality(int8_t rssi);
 static void status(AsyncWebServerRequest* request);
 static void slots(AsyncWebServerRequest* request);
-static void display(AsyncWebServerRequest* request);
+static void plugin(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
@@ -90,7 +90,7 @@ void RestApi::init(AsyncWebServer& srv)
 {
     (void)srv.on("/rest/api/v1/status", status);
     (void)srv.on("/rest/api/v1/display/slots", slots);
-    (void)srv.on("/rest/api/v1/display", display);
+    (void)srv.on("/rest/api/v1/plugin", plugin);
     
     return;
 }
@@ -268,12 +268,12 @@ static void slots(AsyncWebServerRequest* request)
 
 /**
  * Install/Uninstall plugins
- * Install plugin:   POST \c "/api/v1/display?install=<plugin-name>"
- * Uninstall plugin: POST \c "/api/v1/display?uninstall=<plugin-name>&slotId=<slot-id>"
+ * Install plugin:   POST \c "/api/v1/plugin?install=<plugin-name>"
+ * Uninstall plugin: POST \c "/api/v1/plugin?uninstall=<plugin-name>&slotId=<slot-id>"
  * 
  * @param[in] request   HTTP request
  */
-static void display(AsyncWebServerRequest* request)
+static void plugin(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
