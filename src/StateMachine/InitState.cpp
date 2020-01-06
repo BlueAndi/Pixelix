@@ -144,6 +144,8 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
+        IconTextLampPlugin* plugin = NULL;
+
         /* Enable the automatic display brightness adjustment according to the
          * ambient light.
          */
@@ -165,7 +167,12 @@ void InitState::entry(StateMachine& sm)
         showStartupInfoOnDisplay();
 
         /* Install default plugin. */
-        (void*)PluginMgr::getInstance().installIconTextLampPlugin();
+        plugin = PluginMgr::getInstance().installIconTextLampPlugin();
+        
+        if (NULL != plugin)
+        {
+            plugin->enable();
+        }
     }
 
     /* Any error happened? */
