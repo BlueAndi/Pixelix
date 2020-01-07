@@ -37,6 +37,7 @@
 
 #include <Logging.h>
 #include <ArduinoJson.h>
+#include <functional>
 
 /******************************************************************************
  * Compiler Switches
@@ -58,21 +59,19 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize the list of instances. */
-DLinkedList<JustTextPlugin*>    JustTextPlugin::m_instances;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
 void JustTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
 {
-    JustTextPlugin* plugin = this;
-
     m_url = baseUri + "/text";
 
-    m_callbackWebHandler = &srv.on(m_url.c_str(), staticWebReqHandler);
-    m_instances.append(plugin);
+    m_callbackWebHandler = &srv.on( m_url.c_str(),
+                                    [this](AsyncWebServerRequest *request)
+                                    {
+                                        this->webReqHandler(request);
+                                    });
 
     LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
 
@@ -82,15 +81,6 @@ void JustTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& bas
 void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 {
     LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
-
-    if (false == m_instances.find(this))
-    {
-        LOG_WARNING("Couldn't find %s in own list.", getName());
-    }
-    else
-    {
-        m_instances.removeSelected();
-    }
 
     if (false == srv.removeHandler(m_callbackWebHandler))
     {
@@ -123,45 +113,6 @@ void JustTextPlugin::setText(const String& formatText)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void JustTextPlugin::staticWebReqHandler(AsyncWebServerRequest *request)
-{
-    if (false == m_instances.selectFirstElement())
-    {
-        LOG_WARNING("Couldn't handle web req. for %s.", request->url().c_str());
-    }
-    else
-    {
-        JustTextPlugin**    elem    = m_instances.current();
-        JustTextPlugin*     plugin  = NULL;
-
-        while((NULL != elem) && (NULL == plugin))
-        {
-            if ((*elem)->m_url == request->url())
-            {
-                plugin = *elem;
-            }
-            else
-            {
-                if (false == m_instances.next())
-                {
-                    elem = NULL;
-                }
-                else
-                {
-                    elem = m_instances.current();
-                }
-            }
-        }
-
-        if (NULL != plugin)
-        {
-            plugin->webReqHandler(request);
-        }
-    }
-
-    return;
-}
 
 void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
 {

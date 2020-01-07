@@ -49,7 +49,6 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
-#include <LinkedList.hpp>
 #include <SPIFFS.h>
 
 /******************************************************************************
@@ -208,30 +207,6 @@ private:
     AsyncCallbackWebHandler*    m_callbackWebHandlerText;   /**< Callback web handler for updating the text */
     File                        m_fd;                       /**< File descriptor, used for bitmap file upload. */
     bool                        m_isUploadError;            /**< Flag to signal a upload error. */
-
-    /** List of all instances and used to find the web request related instance later. */
-    static DLinkedList<IconTextPlugin*> m_instances;
-
-    /**
-     * Static web request handler, used to register by the webserver.
-     * It will find the request related instance and call the specific
-     * request handler.
-     * 
-     * @param[in] request   Web request
-     */
-    static void staticWebReqHandler(AsyncWebServerRequest *request);
-
-    /**
-     * File upload handler.
-     * 
-     * @param[in] request   HTTP request.
-     * @param[in] filename  Name of the uploaded file.
-     * @param[in] index     Current file offset.
-     * @param[in] data      Next data part of file, starting at offset.
-     * @param[in] len       Data part size in byte.
-     * @param[in] final     Is final packet or not.
-     */
-    static void staticUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 
     /**
      * Instance specific web request handler, called by the static web request

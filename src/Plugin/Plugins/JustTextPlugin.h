@@ -47,7 +47,6 @@
 #include "Plugin.hpp"
 
 #include <TextWidget.h>
-#include <LinkedList.hpp>
 
 /******************************************************************************
  * Macros
@@ -133,18 +132,6 @@ private:
     TextWidget                  m_textWidget;           /**< Text widget, used for showing the text. */
     String                      m_url;                  /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;   /**< Callback web handler */
-
-    /** List of all instances and used to find the web request related instance later. */
-    static DLinkedList<JustTextPlugin*> m_instances;
-
-    /**
-     * Static web request handler, used to register by the webserver.
-     * It will find the request related instance and call the specific
-     * request handler.
-     * 
-     * @param[in] request   Web request
-     */
-    static void staticWebReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Instance specific web request handler, called by the static web request

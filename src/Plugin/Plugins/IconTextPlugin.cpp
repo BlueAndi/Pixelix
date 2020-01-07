@@ -59,11 +59,8 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize the list of instances. */
-DLinkedList<IconTextPlugin*>    IconTextPlugin::m_instances;
-
 /* Initialize upload path. */
-const char*                     IconTextPlugin::UPLOAD_PATH = "/tmp";
+const char* IconTextPlugin::UPLOAD_PATH = "/tmp";
 
 /******************************************************************************
  * Public Methods
@@ -105,34 +102,34 @@ void IconTextPlugin::inactive(void)
 
 void IconTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
 {
-    IconTextPlugin* plugin = this;
-
     m_urlIcon = baseUri + "/bitmap";
-    m_callbackWebHandlerIcon = &srv.on(m_urlIcon.c_str(), HTTP_ANY, staticWebReqHandler, staticUploadHandler);
+    m_callbackWebHandlerIcon = &srv.on( m_urlIcon.c_str(), 
+                                        HTTP_ANY, 
+                                        [this](AsyncWebServerRequest *request)
+                                        {
+                                            this->webReqHandlerIcon(request);
+                                        },
+                                        [this](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+                                        {
+                                            this->iconUploadHandler(request, filename, index, data, len, final);
+                                        });
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlIcon.c_str());
     
     m_urlText = baseUri + "/text";
-    m_callbackWebHandlerText = &srv.on(m_urlText.c_str(), staticWebReqHandler);
+    m_callbackWebHandlerText = &srv.on( m_urlText.c_str(), 
+                                        [this](AsyncWebServerRequest *request)
+                                        {
+                                            this->webReqHandlerText(request);
+                                        });
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlText.c_str());
-
-    m_instances.append(plugin);
 
     return;
 }
 
 void IconTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 {
-    if (false == m_instances.find(this))
-    {
-        LOG_WARNING("Couldn't find %s in own list.", getName());
-    }
-    else
-    {
-        m_instances.removeSelected();
-    }
-
     LOG_INFO("[%s] Unregister: %s", getName(), m_urlIcon.c_str());
 
     if (false == srv.removeHandler(m_callbackWebHandlerIcon))
@@ -218,105 +215,6 @@ void IconTextPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t 
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void IconTextPlugin::staticWebReqHandler(AsyncWebServerRequest *request)
-{
-    if (false == m_instances.selectFirstElement())
-    {
-        LOG_WARNING("Couldn't handle web req. for %s.", request->url().c_str());
-    }
-    else
-    {
-        IconTextPlugin**    elem    = m_instances.current();
-        IconTextPlugin*     plugin  = NULL;
-
-        while((NULL != elem) && (NULL == plugin))
-        {
-            if (((*elem)->m_urlIcon == request->url()) ||
-                ((*elem)->m_urlText == request->url()))
-            {
-                plugin = *elem;
-            }
-            else
-            {
-                if (false == m_instances.next())
-                {
-                    elem = NULL;
-                }
-                else
-                {
-                    elem = m_instances.current();
-                }
-            }
-        }
-
-        if (NULL != plugin)
-        {
-            if (plugin->m_urlIcon == request->url())
-            {
-                plugin->webReqHandlerIcon(request);
-            }
-            else if (plugin->m_urlText == request->url())
-            {
-                plugin->webReqHandlerText(request);
-            }
-            else
-            {
-                /* Should never happen. */
-                ;
-            }
-        }
-    }
-
-    return;
-}
-
-void IconTextPlugin::staticUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
-{
-    if (false == m_instances.selectFirstElement())
-    {
-        LOG_WARNING("Couldn't handle upload req. for %s.", request->url().c_str());
-    }
-    else
-    {
-        IconTextPlugin**    elem    = m_instances.current();
-        IconTextPlugin*     plugin  = NULL;
-
-        while((NULL != elem) && (NULL == plugin))
-        {
-            if ((*elem)->m_urlIcon == request->url())
-            {
-                plugin = *elem;
-            }
-            else
-            {
-                if (false == m_instances.next())
-                {
-                    elem = NULL;
-                }
-                else
-                {
-                    elem = m_instances.current();
-                }
-            }
-        }
-
-        if (NULL != plugin)
-        {
-            if (plugin->m_urlIcon == request->url())
-            {
-                plugin->iconUploadHandler(request, filename, index, data, len, final);
-            }
-            else
-            {
-                /* Should never happen. */
-                ;
-            }
-        }
-    }
-
-    return;
-}
 
 void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
 {

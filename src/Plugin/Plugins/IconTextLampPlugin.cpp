@@ -59,11 +59,8 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize the list of instances. */
-DLinkedList<IconTextLampPlugin*>    IconTextLampPlugin::m_instances;
-
 /* Initialize upload path. */
-const char*                         IconTextLampPlugin::UPLOAD_PATH = "/tmp";
+const char* IconTextLampPlugin::UPLOAD_PATH = "/tmp";
 
 /******************************************************************************
  * Public Methods
@@ -121,39 +118,43 @@ void IconTextLampPlugin::inactive(void)
 
 void IconTextLampPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
 {
-    IconTextLampPlugin* plugin = this;
-
     m_urlIcon = baseUri + "/bitmap";
-    m_callbackWebHandlerIcon = &srv.on(m_urlIcon.c_str(), HTTP_ANY, staticWebReqHandler, staticUploadHandler);
+    m_callbackWebHandlerIcon = &srv.on( m_urlIcon.c_str(), 
+                                        HTTP_ANY, 
+                                        [this](AsyncWebServerRequest *request)
+                                        {
+                                            this->webReqHandlerIcon(request);
+                                        },
+                                        [this](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+                                        {
+                                            this->iconUploadHandler(request, filename, index, data, len, final);
+                                        });
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlIcon.c_str());
     
     m_urlText = baseUri + "/text";
-    m_callbackWebHandlerText = &srv.on(m_urlText.c_str(), staticWebReqHandler);
+    m_callbackWebHandlerText = &srv.on( m_urlText.c_str(), 
+                                        [this](AsyncWebServerRequest *request)
+                                        {
+                                            this->webReqHandlerText(request);
+                                        });
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlText.c_str());
 
     m_urlLamp = baseUri + "/lamp/*";
-    m_callbackWebHandlerLamp = &srv.on(m_urlLamp.c_str(), staticWebReqHandler);
+    m_callbackWebHandlerLamp = &srv.on( m_urlLamp.c_str(),
+                                        [this](AsyncWebServerRequest *request)
+                                        {
+                                            this->webReqHandlerLamp(request);
+                                        });
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlLamp.c_str());
-
-    m_instances.append(plugin);
 
     return;
 }
 
 void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
 {
-    if (false == m_instances.find(this))
-    {
-        LOG_WARNING("Couldn't find %s in own list.", getName());
-    }
-    else
-    {
-        m_instances.removeSelected();
-    }
-
     LOG_INFO("[%s] Unregister: %s", getName(), m_urlIcon.c_str());
 
     if (false == srv.removeHandler(m_callbackWebHandlerIcon))
@@ -263,113 +264,6 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void IconTextLampPlugin::staticWebReqHandler(AsyncWebServerRequest *request)
-{
-    if (false == m_instances.selectFirstElement())
-    {
-        LOG_WARNING("Couldn't handle web req. for %s.", request->url().c_str());
-    }
-    else
-    {
-        IconTextLampPlugin**    elem    = m_instances.current();
-        IconTextLampPlugin*     plugin  = NULL;
-        String                  urlLamp;
-
-        while((NULL != elem) && (NULL == plugin))
-        {
-            urlLamp = (*elem)->m_urlLamp.substring(0, (*elem)->m_urlLamp.length() - 2); // Remove the '*' at the end
-
-            if (((*elem)->m_urlIcon == request->url()) ||
-                ((*elem)->m_urlText == request->url()) ||
-                (true == request->url().startsWith(urlLamp)))
-            {
-                plugin = *elem;
-            }
-            else
-            {
-                if (false == m_instances.next())
-                {
-                    elem = NULL;
-                }
-                else
-                {
-                    elem = m_instances.current();
-                }
-            }
-        }
-
-        if (NULL != plugin)
-        {
-            if (plugin->m_urlIcon == request->url())
-            {
-                plugin->webReqHandlerIcon(request);
-            }
-            else if (plugin->m_urlText == request->url())
-            {
-                plugin->webReqHandlerText(request);
-            }
-            else if (true == request->url().startsWith(urlLamp))
-            {
-                plugin->webReqHandlerLamp(request);
-            }
-            else
-            {
-                /* Should never happen. */
-                ;
-            }
-        }
-    }
-
-    return;
-}
-
-void IconTextLampPlugin::staticUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
-{
-    if (false == m_instances.selectFirstElement())
-    {
-        LOG_WARNING("Couldn't handle upload req. for %s.", request->url().c_str());
-    }
-    else
-    {
-        IconTextLampPlugin**    elem    = m_instances.current();
-        IconTextLampPlugin*     plugin  = NULL;
-
-        while((NULL != elem) && (NULL == plugin))
-        {
-            if ((*elem)->m_urlIcon == request->url())
-            {
-                plugin = *elem;
-            }
-            else
-            {
-                if (false == m_instances.next())
-                {
-                    elem = NULL;
-                }
-                else
-                {
-                    elem = m_instances.current();
-                }
-            }
-        }
-
-        if (NULL != plugin)
-        {
-            if (plugin->m_urlIcon == request->url())
-            {
-                plugin->iconUploadHandler(request, filename, index, data, len, final);
-            }
-            else
-            {
-                /* Should never happen. */
-                ;
-            }
-        }
-    }
-
-    return;
-}
 
 void IconTextLampPlugin::webReqHandlerText(AsyncWebServerRequest *request)
 {
