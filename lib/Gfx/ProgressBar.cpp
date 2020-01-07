@@ -55,13 +55,45 @@
  *****************************************************************************/
 
 /* Initialize text widget type. */
-const char*     ProgressBar::WIDGET_TYPE = "progressBar";
+const char* ProgressBar::WIDGET_TYPE = "progressBar";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
 void ProgressBar::update(IGfx& gfx)
+{
+    switch(m_algorithm)
+    {
+    case ALGORITHM_PIXEL_WISE:
+        showProgressPixel(gfx);
+        break;
+
+    case ALGORITHM_PROGRESS_BAR:
+        showProgressBar(gfx);
+        break;
+
+    case ALGORITHM_MAX:
+        /* Should never happen. */
+        break;
+
+    default:
+        /* Should never happen. */
+        break;
+    }
+
+    return;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void ProgressBar::showProgressPixel(IGfx& gfx)
 {
     int16_t pixelCount  = gfx.width() * gfx.height() * m_progress / 100u;
     int16_t x           = 0;
@@ -84,13 +116,31 @@ void ProgressBar::update(IGfx& gfx)
     return;
 }
 
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
+void ProgressBar::showProgressBar(IGfx& gfx)
+{
+    int16_t index = 0u;
 
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
+    if (gfx.width() > gfx.height())
+    {
+        int16_t maxX = (gfx.width() * m_progress) / 100;
+
+        for(index = 0; index < maxX; ++index)
+        {
+            gfx.drawLine(index, 0, index, gfx.height() - 1, m_color.to565());
+        }
+    }
+    else
+    {
+        int16_t maxY = (gfx.width() * m_progress) / 100;
+
+        for(index = 0; index < maxY; ++index)
+        {
+            gfx.drawLine(0, index, gfx.width() - 1, index, m_color.to565());
+        }
+    }
+
+    return;
+}
 
 /******************************************************************************
  * External Functions

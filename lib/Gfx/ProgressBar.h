@@ -63,12 +63,23 @@ class ProgressBar : public Widget
 public:
 
     /**
+     * Progress bar algorithm.
+     */
+    enum Algorithm
+    {
+        ALGORITHM_PROGRESS_BAR = 0, /**< Show progress bar always over the longer dimension. */
+        ALGORITHM_PIXEL_WISE,       /**< Show progress pixel wise over the display. */
+        ALGORITHM_MAX               /**< Number of algorithms */
+    };
+
+    /**
      * Constructs a progress bar widget.
      */
     ProgressBar() :
         Widget(WIDGET_TYPE),
         m_progress(0u),
-        m_color(ColorDef::RED)
+        m_color(ColorDef::RED),
+        m_algorithm(ALGORITHM_PROGRESS_BAR)
     {
     }
 
@@ -80,7 +91,8 @@ public:
     ProgressBar(const ProgressBar& widget) :
         Widget(WIDGET_TYPE),
         m_progress(widget.m_progress),
-        m_color(widget.m_color)
+        m_color(widget.m_color),
+        m_algorithm(widget.m_algorithm)
     {
     }
 
@@ -100,6 +112,7 @@ public:
     {
         m_progress  = widget.m_progress;
         m_color     = widget.m_color;
+        m_algorithm = widget.m_algorithm;
 
         return *this;
     }
@@ -141,14 +154,43 @@ public:
         return;
     }
 
+    /**
+     * Set algorithm how to show progress on the display.
+     * 
+     * @param[in] algorithm Algorithm
+     */
+    void setAlgo(Algorithm algorithm)
+    {
+        if (ALGORITHM_MAX > algorithm)
+        {
+            m_algorithm = algorithm;
+        }
+
+        return;
+    }
+
     /** Widget type string */
     static const char*  WIDGET_TYPE;
 
 private:
 
-    uint8_t m_progress; /**< Progress in % [0; 100]. */
-    Color   m_color;    /**< Color of the progress bar */
+    uint8_t     m_progress;     /**< Progress in % [0; 100]. */
+    Color       m_color;        /**< Color of the progress bar */
+    Algorithm   m_algorithm;    /**< Choosen algorithm */
 
+    /**
+     * Fill the display pixel wise depended on current progress.
+     * 
+     * @param[in] gfx Graphics interface
+     */
+    void showProgressPixel(IGfx& gfx);
+
+    /**
+     * Show current progress as bar over the longer dimension.
+     * 
+     * @param[in] gfx Graphics interface
+     */
+    void showProgressBar(IGfx& gfx);
 };
 
 /******************************************************************************

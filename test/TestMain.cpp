@@ -1344,6 +1344,13 @@ static void testProgressBar(void)
     TEST_ASSERT_NOT_NULL(progressBar.find(WIDGET_NAME));
     TEST_ASSERT_EQUAL_PTR(&progressBar, progressBar.find(WIDGET_NAME));
 
+    /* Default algorithm: progress bar */
+
+    //TODO Test
+
+    /* Test algorithm: progress pixel wise */
+    progressBar.setAlgo(ProgressBar::ALGORITHM_PIXEL_WISE);
+
     /* Progress should be now 0% */
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
