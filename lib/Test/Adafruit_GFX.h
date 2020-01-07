@@ -277,6 +277,75 @@ public:
         return;
     }
 
+    /**
+     * Draw a line.
+     * Not, method declaratio is from Adafruit_GFX.
+     * 
+     * @param[in] x0    Start point x coordinate
+     * @param[in] y0    Start point y coordinate
+     * @param[in] x1    End point x coordinate
+     * @param[in] y1    End point y coordinate
+     * @param[in] color 16-bit 5-6-5 Color to draw with
+     */
+    void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
+    {
+        int16_t steep = abs(y1 - y0) > abs(x1 - x0);
+
+        if (steep) {
+            int16_t tmp = x0;
+            x0 = y0;
+            y0 = tmp;
+            tmp = x1;
+            x1 = y1;
+            y1 = tmp;
+        }
+
+        if (x0 > x1) {
+            int16_t tmp = x0;
+            x0 = x1;
+            x1 = tmp;
+            tmp = y0;
+            y0 = y1;
+            y1 = tmp;
+        }
+
+        int16_t dx, dy;
+        dx = x1 - x0;
+        dy = abs(y1 - y0);
+
+        int16_t err = dx / 2;
+        int16_t ystep;
+
+        if (y0 < y1)
+        {
+            ystep = 1;
+        }
+        else
+        {
+            ystep = -1;
+        }
+
+        for (; x0<=x1; x0++)
+        {
+            if (steep)
+            {
+                drawPixel(y0, x0, color);
+            }
+            else
+            {
+                drawPixel(x0, y0, color);
+            }
+            err -= dy;
+            if (err < 0)
+            {
+                y0 += ystep;
+                err += dx;
+            }
+        }
+
+        return;
+    }
+
 private:
 
     int16_t         m_width;        /**< Width in pixel */
