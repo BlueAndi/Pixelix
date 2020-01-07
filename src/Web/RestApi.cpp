@@ -224,7 +224,7 @@ static void status(AsyncWebServerRequest* request)
 }
 
 /**
- * Get number of slots
+ * Get number of slots and which plugin is installed.
  * GET \c "/api/v1/display/slots"
  * 
  * @param[in] request   HTTP request
@@ -251,9 +251,27 @@ static void slots(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonObject  dataObj = jsonDoc.createNestedObject("data");
+        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+        JsonArray   slotArray   = dataObj.createNestedArray("slot");
+        uint8_t     index       = 0u;
 
+        /* Add max. number of slots */
         dataObj["slots"] = DisplayMgr::getInstance().MAX_SLOTS;
+
+        /* Add which plugin's are installed. */
+        for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
+        {
+            Plugin* plugin = DisplayMgr::getInstance().getPluginInSlot(index);
+
+            if (NULL == plugin)
+            {
+                slotArray.add("empty");
+            }
+            else
+            {
+                slotArray.add(plugin->getName());
+            }
+        }
 
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
