@@ -1346,7 +1346,20 @@ static void testProgressBar(void)
 
     /* Default algorithm: progress bar */
 
-    //TODO Test
+    /* Progress should be now 0% */
+    progressBar.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
+
+    /* Set progress bar to 50% */
+    progressBar.setProgress(50u);
+    progressBar.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width() / 2u, testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(testGfx.width() / 2u, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
+
+    /* Set progress bar to 100% */
+    progressBar.setProgress(100u);
+    progressBar.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
 
     /* Test algorithm: progress pixel wise */
     progressBar.setAlgo(ProgressBar::ALGORITHM_PIXEL_WISE);
