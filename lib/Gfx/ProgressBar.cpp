@@ -122,13 +122,13 @@ void ProgressBar::showProgressBar(IGfx& gfx)
     {
         int16_t width = (gfx.width() * m_progress) / 100;
 
-        gfx.fillRect(0, 0, width, gfx.height(), m_color);
+        gfx.fillRect(0, 0, width, gfx.height(), m_color.to565());
     }
     else
     {
         int16_t height = (gfx.width() * m_progress) / 100;
 
-        gfx.fillRect(0, 0, gfx.width(), height, m_color);
+        gfx.fillRect(0, 0, gfx.width(), height, m_color.to565());
     }
 
     return;
