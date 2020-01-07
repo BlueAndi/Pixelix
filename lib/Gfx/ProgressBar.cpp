@@ -118,25 +118,17 @@ void ProgressBar::showProgressPixel(IGfx& gfx)
 
 void ProgressBar::showProgressBar(IGfx& gfx)
 {
-    int16_t index = 0u;
-
     if (gfx.width() > gfx.height())
     {
-        int16_t maxX = (gfx.width() * m_progress) / 100;
+        int16_t maxX = ((gfx.width() * m_progress) / 100) - 1;
 
-        for(index = 0; index < maxX; ++index)
-        {
-            gfx.drawLine(index, 0, index, gfx.height() - 1, m_color.to565());
-        }
+        gfx.fillRect(0, 0, maxX, gfx.height() - 1, m_color);
     }
     else
     {
-        int16_t maxY = (gfx.width() * m_progress) / 100;
+        int16_t maxY = ((gfx.width() * m_progress) / 100) - 1;
 
-        for(index = 0; index < maxY; ++index)
-        {
-            gfx.drawLine(0, index, gfx.width() - 1, index, m_color.to565());
-        }
+        gfx.fillRect(0, 0, gfx.width() - 1, maxY, m_color);
     }
 
     return;
