@@ -62,9 +62,9 @@
  *****************************************************************************/
 
 static uint8_t getSignalQuality(int8_t rssi);
-static void status(AsyncWebServerRequest* request);
-static void slots(AsyncWebServerRequest* request);
-static void plugin(AsyncWebServerRequest* request);
+static void handleStatus(AsyncWebServerRequest* request);
+static void handleSlots(AsyncWebServerRequest* request);
+static void handlePlugin(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
@@ -88,9 +88,9 @@ static void plugin(AsyncWebServerRequest* request);
 
 void RestApi::init(AsyncWebServer& srv)
 {
-    (void)srv.on("/rest/api/v1/status", status);
-    (void)srv.on("/rest/api/v1/display/slots", slots);
-    (void)srv.on("/rest/api/v1/plugin", plugin);
+    (void)srv.on("/rest/api/v1/status", handleStatus);
+    (void)srv.on("/rest/api/v1/display/slots", handleSlots);
+    (void)srv.on("/rest/api/v1/plugin", handlePlugin);
     
     return;
 }
@@ -162,7 +162,7 @@ static uint8_t getSignalQuality(int8_t rssi)
  * 
  * @param[in] request   HTTP request
  */
-static void status(AsyncWebServerRequest* request)
+static void handleStatus(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<256> jsonDoc;
@@ -229,7 +229,7 @@ static void status(AsyncWebServerRequest* request)
  * 
  * @param[in] request   HTTP request
  */
-static void slots(AsyncWebServerRequest* request)
+static void handleSlots(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
@@ -291,7 +291,7 @@ static void slots(AsyncWebServerRequest* request)
  * 
  * @param[in] request   HTTP request
  */
-static void plugin(AsyncWebServerRequest* request)
+static void handlePlugin(AsyncWebServerRequest* request)
 {
     String                  content;
     StaticJsonDocument<200> jsonDoc;
