@@ -58,26 +58,26 @@
 static const uint16_t   ambientLightLevels[AmbientLightSensor::AMBIENT_LIGHT_LEVEL_MAX] =
 {
     /* Pitch black with 1 Lux => 65 mV */
-    ( 65ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
+    ( 65UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Night sky with 10 Lux => 300 mV */
-    ( 300ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
+    ( 300UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Dark room with 50 Lux => 778 mV */
-    ( 778ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
+    ( 778UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Dark overcast with 500 Lux => 2004 mV */
-    (2004ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
+    (2004UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Overcast day with 1000 Lux => 2360 mV */
-    (2360ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
+    (2360UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Full daylight with 15000 Lux => 3114 mV */
-    (3114ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
+    (3114UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Full sunlight with more than 15000 Lux */
-    4095u
+    4095U
 };
 
 /* Set threshold to detect that no LDR is connected.
  * Expected voltage is lower or equal than 3 mV.
  * This corresponds to the absolute dark resistance of the LDR with 1 MOhm.
  */
-const uint16_t  AmbientLightSensor::NO_LDR_THRESHOLD    = (3ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage;
+const uint16_t  AmbientLightSensor::NO_LDR_THRESHOLD    = (3UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage;
 
 /* Initialize ambient light sensor */
 AmbientLightSensor AmbientLightSensor::m_instance;
@@ -126,7 +126,7 @@ AmbientLightSensor::AmbientLightLevel AmbientLightSensor::getAmbientLightLevel()
 float AmbientLightSensor::getIlluminance()
 {
     const uint16_t  ADC_UINT16  = Board::ldrIn.read();
-    float           illuminance = 0.0f;
+    float           illuminance = 0.0F;
 
     if (NO_LDR_THRESHOLD < ADC_UINT16)
     {
@@ -167,8 +167,8 @@ float AmbientLightSensor::getIlluminance()
         * I = [ 10 ^ ( 4.7 / 0.7 ) ] * R_LDR ^ ( -1 / 0.7 )
         * I = 5179474.6792312 * R_LDR ^ -1.42857142857143 Lux
         */
-        const float MULTIPLICATOR   = 5179474.6792312f;     /* 10 ^ ( b / gamma gradient ) */
-        const float EXPONENT        = -1.42857142857143f;   /* -1 / gamma gradient */
+        const float MULTIPLICATOR   = 5179474.6792312F;     /* 10 ^ ( b / gamma gradient ) */
+        const float EXPONENT        = -1.42857142857143F;   /* -1 / gamma gradient */
 
         /* Calculation of R_LDR from the ADC value:
         * The schematic contains a voltage divider with R = 1 kOhm connected to GND.
@@ -195,7 +195,7 @@ float AmbientLightSensor::getIlluminance()
         * I = 5179474.6792312 * [ ( ADC_max * R - ADC * R ) / ADC ] ^ -1.42857142857143
         */
         const float ADC_MAX         = static_cast<float>(Board::adcResolution - 1U);
-        const float R               = 1000.0f;  /* Resistor in the voltage divider, connected to GND. */
+        const float R               = 1000.0F;  /* Resistor in the voltage divider, connected to GND. */
         const float ADC_FLOAT       = static_cast<float>(ADC_UINT16);
 
         illuminance = MULTIPLICATOR * powf( ( ADC_MAX * R - ADC_FLOAT * R ) / ADC_FLOAT, EXPONENT );
@@ -221,11 +221,11 @@ float AmbientLightSensor::getNormalizedLight()
 
 float AmbientLightSensor::calcNormalizedLight(float illuminance)
 {
-    const float LIMIT_LOW       = 1.0f;         /* [Lux] */
-    const float LIMIT_HIGH      = 100000.0f;    /* [Lux] */
-    const float LIGHT_NORM_MIN  = 0.0f;
-    const float LIGHT_NORM_MAX  = 1.0f;
-    float       lightNormalized = 0.0f;         /* Range: 0.0f - 1.0f */
+    const float LIMIT_LOW       = 1.0F;         /* [Lux] */
+    const float LIMIT_HIGH      = 100000.0F;    /* [Lux] */
+    const float LIGHT_NORM_MIN  = 0.0F;
+    const float LIGHT_NORM_MAX  = 1.0F;
+    float       lightNormalized = 0.0F;         /* Range: 0.0f - 1.0f */
 
     if (LIMIT_LOW > illuminance)
     {
@@ -240,7 +240,7 @@ float AmbientLightSensor::calcNormalizedLight(float illuminance)
         /* Map lux values to human perception, according to
          * https://docs.microsoft.com/en-us/windows/win32/sensorsapi/understanding-and-interpreting-lux-values
          */
-        lightNormalized = log10f(illuminance) / 5.0f;
+        lightNormalized = log10f(illuminance) / 5.0F;
     }
 
     return lightNormalized;

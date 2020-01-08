@@ -188,22 +188,22 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
     if (nullptr == info)
     {
         LOG_ERROR("ws[%s][%u] Frame info is missing.", server->url(), client->id());
-        server->close(client->id(), 0u, "Frame info is missing.");
+        server->close(client->id(), 0U, "Frame info is missing.");
     }
     /* No text frame? */
     else if (WS_TEXT != info->opcode)
     {
         LOG_ERROR("ws[%s][%u] Not supported message type received: %u", server->url(), client->id(), info->opcode);
-        server->close(client->id(), 0u, "Not supported message type.");
+        server->close(client->id(), 0U, "Not supported message type.");
     }
     /* Is the whole message in a single frame and we got all of it's data? */
-    else if ((0 < info->final) &&
-                (0 == info->index) &&
+    else if ((0U < info->final) &&
+                (0U == info->index) &&
                 (len == info->len ))
     {
         /* Empty text message? */
         if ((nullptr == data) ||
-            (0 == len))
+            (0U == len))
         {
             LOG_WARNING("ws[%s][%u] Message: -", server->url(), client->id());
         }
@@ -217,7 +217,7 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
     else
     {
         LOG_ERROR("ws[%s][%u] Fragmented messages not supported.", server->url(), client->id());
-        server->close(client->id(), 0u, "Not supported message type.");
+        server->close(client->id(), 0U, "Not supported message type.");
     }
 
     return;

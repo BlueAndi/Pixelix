@@ -70,13 +70,13 @@
 const uint8_t   APState::WIFI_AP_PASSPHRASE_MIN_LEN     = 8U;
 
 /** Set access point local address */
-const IPAddress APState::LOCAL_IP(192u, 168u, 4u, 1U);
+const IPAddress APState::LOCAL_IP(192U, 168U, 4U, 1U);
 
 /* Set access point gateway address */
-const IPAddress APState::GATEWAY(192u, 168u, 4u, 1U);
+const IPAddress APState::GATEWAY(192U, 168U, 4U, 1U);
 
 /* Set access point subnet mask */
-const IPAddress APState::SUBNET(255u, 255u, 255u, 0U);
+const IPAddress APState::SUBNET(255U, 255U, 255U, 0U);
 
 /* Access point state instance */
 APState         APState::m_instance;
@@ -217,7 +217,7 @@ void APState::process(StateMachine& sm)
 void APState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
-    
+
     /* Stop webserver */
     MyWebServer::end();
 

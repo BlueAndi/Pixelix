@@ -164,7 +164,7 @@ void ButtonDrv::buttonTask(void *parameters)
     for(;;)
     {
         /* Is button pin value unstable? */
-        if (0u < ulTaskNotifyTake(pdTRUE, 0U))
+        if (0U < ulTaskNotifyTake(pdTRUE, 0U))
         {
             cycleCnt = 0U;
         }
