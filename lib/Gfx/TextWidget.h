@@ -294,7 +294,28 @@ private:
      */
     void show(IGfx& gfx, const String& formatStr) const;
 
+    /**
+     * Handles the keyword for color changes.
+     * 
+     * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
+     * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
+     * @param[in] formatStr String which may contain keywords.
+     * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
+     * 
+     * @return If keyword is handled successful, it returns true otherwise false.
+     */
     bool handleColor(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
+
+    /**
+     * Handles the keyword for alignment changes.
+     * 
+     * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
+     * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
+     * @param[in] formatStr String which may contain keywords.
+     * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
+     * 
+     * @return If keyword is handled successful, it returns true otherwise false.
+     */
     bool handleAlignment(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
 };
 
