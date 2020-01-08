@@ -125,7 +125,7 @@ AsyncWebServer& MyWebServer::getInstance()
  */
 static void error(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }

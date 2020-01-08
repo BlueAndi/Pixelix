@@ -75,7 +75,7 @@ public:
     Canvas(int16_t width, int16_t height, int16_t x, int16_t y) :
         IGfx(width, height),
         Widget(WIDGET_TYPE, x, y),
-        m_gfx(NULL),
+        m_gfx(nullptr),
         m_widgets()
     {
     }
@@ -159,7 +159,7 @@ public:
             }
             while(true == m_widgets.next());
 
-            m_gfx = NULL;
+            m_gfx = nullptr;
         }
 
         return;
@@ -181,7 +181,7 @@ public:
             (0 <= y) &&
             (width() > x) &&
             (height() > y) &&
-            (NULL != m_gfx))
+            (nullptr != m_gfx))
         {
             color565 = m_gfx->getColor(x, y);
         }
@@ -194,11 +194,11 @@ public:
      * 
      * @param[in] name  Widget name to search for
      * 
-     * @return If widget is found, it will be returned otherwise NULL.
+     * @return If widget is found, it will be returned otherwise nullptr.
      */
     Widget* find(const String& name) override
     {
-        Widget* widget = NULL;
+        Widget* widget = nullptr;
 
         if (name == m_name)
         {
@@ -206,7 +206,7 @@ public:
         }
 
         /* If its not the canvas itself, continue searching in the widget list. */
-        if (NULL == widget)
+        if (nullptr == widget)
         {
             if (true == m_widgets.selectFirstElement())
             {
@@ -214,7 +214,7 @@ public:
                 {
                     widget = (*m_widgets.current())->find(name);
 
-                } while ((NULL == widget) &&
+                } while ((nullptr == widget) &&
                          (true == m_widgets.next()));
             }
         }
@@ -243,7 +243,7 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        if (NULL != m_gfx)
+        if (nullptr != m_gfx)
         {
             /* Don't draw outside the canvas. */
             if ((0 <= x) &&

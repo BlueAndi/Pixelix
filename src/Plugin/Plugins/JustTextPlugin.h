@@ -74,7 +74,7 @@ public:
         Plugin(),
         m_textWidget(),
         m_url(),
-        m_callbackWebHandler(NULL)
+        m_callbackWebHandler(nullptr)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);

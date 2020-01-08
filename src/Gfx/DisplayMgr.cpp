@@ -70,7 +70,7 @@ bool DisplayMgr::begin()
     bool status = false;
 
     /* Not started yet? */
-    if (NULL == m_taskHandle)
+    if (nullptr == m_taskHandle)
     {
         /* Set the display brightness here just once.
         * There is no need to do this in the process() method periodically.
@@ -83,8 +83,8 @@ bool DisplayMgr::begin()
         /* Create binary semaphore to signal task exit. */
         m_xSemaphore = xSemaphoreCreateBinary();
 
-        if ((NULL != m_xMutex) &&
-            (NULL != m_xSemaphore))
+        if ((nullptr != m_xMutex) &&
+            (nullptr != m_xSemaphore))
         {
             BaseType_t  osRet   = pdFAIL;
 
@@ -111,16 +111,16 @@ bool DisplayMgr::begin()
     /* Any error happened? */
     if (false == status)
     {
-        if (NULL != m_xMutex)
+        if (nullptr != m_xMutex)
         {
             vSemaphoreDelete(m_xMutex);
-            m_xMutex = NULL;
+            m_xMutex = nullptr;
         }
 
-        if (NULL != m_xSemaphore)
+        if (nullptr != m_xSemaphore)
         {
             vSemaphoreDelete(m_xSemaphore);
-            m_xSemaphore = NULL;
+            m_xSemaphore = nullptr;
         }
     }
     else
@@ -134,21 +134,21 @@ bool DisplayMgr::begin()
 void DisplayMgr::end()
 {
     /* Already running? */
-    if (NULL != m_taskHandle)
+    if (nullptr != m_taskHandle)
     {
         m_taskExit = true;
 
         /* Join */
         (void)xSemaphoreTake(m_xSemaphore, portMAX_DELAY);
-        m_taskHandle = NULL;
+        m_taskHandle = nullptr;
 
         LOG_INFO("DisplayMgr is down.");
 
         vSemaphoreDelete(m_xSemaphore);
-        m_xSemaphore = NULL;
+        m_xSemaphore = nullptr;
 
         vSemaphoreDelete(m_xMutex);
-        m_xMutex = NULL;
+        m_xMutex = nullptr;
     }
 
     return;
@@ -156,7 +156,7 @@ void DisplayMgr::end()
 
 void DisplayMgr::lock()
 {
-    if (NULL != m_xMutex)
+    if (nullptr != m_xMutex)
     {
         (void)xSemaphoreTake(m_xMutex, portMAX_DELAY);
     }
@@ -166,7 +166,7 @@ void DisplayMgr::lock()
 
 void DisplayMgr::unlock()
 {
-    if (NULL != m_xMutex)
+    if (nullptr != m_xMutex)
     {
         (void)xSemaphoreGive(m_xMutex);
     }
@@ -206,7 +206,7 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
 {
     bool status = false;
 
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         /* Install to any available slot? */
         if (SLOT_ID_INVALID == slotId)
@@ -214,7 +214,7 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
             lock();
 
             slotId = 0U;
-            while((MAX_SLOTS > slotId) && (NULL != m_slots[slotId]))
+            while((MAX_SLOTS > slotId) && (nullptr != m_slots[slotId]))
             {
                 ++slotId;
             }
@@ -233,7 +233,7 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
         }
         /* Install to specific slot? */
         else if ((MAX_SLOTS > slotId) &&
-                 (NULL == m_slots[slotId]))
+                 (nullptr == m_slots[slotId]))
         {
             lock();
 
@@ -262,7 +262,7 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
 
 void DisplayMgr::uninstallPlugin(Plugin* plugin)
 {
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (MAX_SLOTS <= plugin->getSlotId())
         {
@@ -278,11 +278,11 @@ void DisplayMgr::uninstallPlugin(Plugin* plugin)
             if (m_selectedPlugin == plugin)
             {
                 /* Remove selection */
-                m_selectedPlugin = NULL;
+                m_selectedPlugin = nullptr;
             }
 
             plugin->stop();
-            m_slots[slotId] = NULL;
+            m_slots[slotId] = nullptr;
             plugin->setSlotId(SLOT_ID_INVALID);
 
             unlock();
@@ -296,7 +296,7 @@ void DisplayMgr::uninstallPlugin(Plugin* plugin)
 
 Plugin* DisplayMgr::getPluginInSlot(uint8_t slotId)
 {
-    Plugin* plugin = NULL;
+    Plugin* plugin = nullptr;
 
     if (MAX_SLOTS > slotId)
     {
@@ -312,7 +312,7 @@ Plugin* DisplayMgr::getPluginInSlot(uint8_t slotId)
 
 void DisplayMgr::activatePlugin(Plugin* plugin)
 {
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         lock();
 
@@ -336,7 +336,7 @@ void DisplayMgr::activatePlugin(Plugin* plugin)
 
 void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
 {    
-    if ((NULL != fb) &&
+    if ((nullptr != fb) &&
         (0 < length))
     {
         LedMatrix&  matrix  = LedMatrix::getInstance();
@@ -372,14 +372,14 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
  *****************************************************************************/
 
 DisplayMgr::DisplayMgr() :
-    m_xMutex(NULL),
-    m_taskHandle(NULL),
+    m_xMutex(nullptr),
+    m_taskHandle(nullptr),
     m_taskExit(false),
-    m_xSemaphore(NULL),
+    m_xSemaphore(nullptr),
     m_slots(),
     m_selectedSlot(SLOT_ID_INVALID),
-    m_selectedPlugin(NULL),
-    m_requestedPlugin(NULL),
+    m_selectedPlugin(nullptr),
+    m_requestedPlugin(nullptr),
     m_slotTimer(),
     m_autoBrightnessTimer()
 {
@@ -388,7 +388,7 @@ DisplayMgr::DisplayMgr() :
     /* Initialize all slots */
     for(index = 0U; index < MAX_SLOTS; ++index)
     {
-        m_slots[index] = NULL;
+        m_slots[index] = nullptr;
     }
 }
 
@@ -415,7 +415,7 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
     do
     {
         /* Plugin installed? */
-        if (NULL != m_slots[slotId])
+        if (nullptr != m_slots[slotId])
         {
             /* Plugin enabled? */
             if (true == m_slots[slotId]->isEnabled())
@@ -460,20 +460,20 @@ void DisplayMgr::process()
     lock();
 
     /* Plugin requested to choose? */
-    if (NULL != m_requestedPlugin)
+    if (nullptr != m_requestedPlugin)
     {
         /* Plugin must be enabled. */
         if (false == m_requestedPlugin->isEnabled())
         {
             LOG_WARNING("Requested plugin %s in slot %u is disabled.", m_requestedPlugin->getName(), m_requestedPlugin->getSlotId());
-            m_requestedPlugin = NULL;
+            m_requestedPlugin = nullptr;
         }
         /* Plugin selected? */
-        else if (NULL != m_selectedPlugin)
+        else if (nullptr != m_selectedPlugin)
         {
             /* Remove selected plugin, which forces to select the requested one. */
             m_selectedPlugin->inactive();
-            m_selectedPlugin = NULL;
+            m_selectedPlugin = nullptr;
         }
         else
         {
@@ -483,7 +483,7 @@ void DisplayMgr::process()
     }
         
     /* Plugin selected? */
-    if (NULL != m_selectedPlugin)
+    if (nullptr != m_selectedPlugin)
     {
         m_selectedSlot = m_selectedPlugin->getSlotId();
 
@@ -491,7 +491,7 @@ void DisplayMgr::process()
         if (false == m_selectedPlugin->isEnabled())
         {
             m_selectedPlugin->inactive();
-            m_selectedPlugin = NULL;
+            m_selectedPlugin = nullptr;
             m_slotTimer.stop();
         }
         /* Plugin run duration timeout? */
@@ -513,7 +513,7 @@ void DisplayMgr::process()
             else
             {
                 m_selectedPlugin->inactive();
-                m_selectedPlugin = NULL;
+                m_selectedPlugin = nullptr;
                 m_slotTimer.stop();
             }
         }
@@ -525,13 +525,13 @@ void DisplayMgr::process()
     }
 
     /* No plugin selected? */
-    if (NULL == m_selectedPlugin)
+    if (nullptr == m_selectedPlugin)
     {
         /* Plugin requested to choose? */
-        if (NULL != m_requestedPlugin)
+        if (nullptr != m_requestedPlugin)
         {
             m_selectedSlot      = m_requestedPlugin->getSlotId();
-            m_requestedPlugin   = NULL;
+            m_requestedPlugin   = nullptr;
         }
         /* Select next slot, which contains a enabled plugin. */
         else
@@ -562,14 +562,14 @@ void DisplayMgr::process()
     {
         Plugin* plugin = m_slots[index];
 
-        if (NULL != plugin)
+        if (nullptr != plugin)
         {
             plugin->process();
         }
     }
 
     /* Update display */
-    if (NULL != m_selectedPlugin)
+    if (nullptr != m_selectedPlugin)
     {
         m_selectedPlugin->update(matrix);
     }
@@ -585,8 +585,8 @@ void DisplayMgr::updateTask(void* parameters)
 {
     DisplayMgr* displayMgr = reinterpret_cast<DisplayMgr*>(parameters);
 
-    if ((NULL != displayMgr) &&
-        (NULL != displayMgr->m_xSemaphore))
+    if ((nullptr != displayMgr) &&
+        (nullptr != displayMgr->m_xSemaphore))
     {
         (void)xSemaphoreTake(displayMgr->m_xSemaphore, portMAX_DELAY);
 
@@ -610,7 +610,7 @@ void DisplayMgr::updateTask(void* parameters)
         (void)xSemaphoreGive(displayMgr->m_xSemaphore);
     }
 
-    vTaskDelete(NULL);
+    vTaskDelete(nullptr);
 
     return;
 }

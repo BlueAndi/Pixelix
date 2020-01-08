@@ -74,7 +74,7 @@ ButtonDrv::Ret ButtonDrv::init()
     /* Create semaphore to protect button state member. */
     m_semaphore = xSemaphoreCreateBinary();
 
-    if (NULL == m_semaphore)
+    if (nullptr == m_semaphore)
     {
         ret = RET_ERROR;
     }
@@ -100,7 +100,7 @@ ButtonDrv::Ret ButtonDrv::init()
             ret = RET_ERROR;
 
             vSemaphoreDelete(m_semaphore);
-            m_semaphore = NULL;
+            m_semaphore = nullptr;
         }
     }
 
@@ -254,9 +254,9 @@ static void IRAM_ATTR isrButton(void* arg)
 {
     TaskHandle_t* taskHandle = reinterpret_cast<TaskHandle_t*>(arg);
 
-    if (NULL != taskHandle)
+    if (nullptr != taskHandle)
     {
-        vTaskNotifyGiveFromISR(*taskHandle, NULL);
+        vTaskNotifyGiveFromISR(*taskHandle, nullptr);
     }
 
     return;

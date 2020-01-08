@@ -63,8 +63,8 @@
 
 void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 {
-    if ((NULL == server) ||
-        (NULL == client))
+    if ((nullptr == server) ||
+        (nullptr == client))
     {
         return;
     }
@@ -102,7 +102,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 void WsCmdGetDisp::setPar(const char* par)
 {
     UTIL_NOT_USED(par);
-    
+
     m_isError = true;
 
     return;

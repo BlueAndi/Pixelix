@@ -61,12 +61,12 @@
 void FirePlugin::active(IGfx& gfx)
 {
     /* Defered constructor */
-    if (NULL == m_heat)
+    if (nullptr == m_heat)
     {
         m_heatSize = gfx.width() * gfx.height();
         m_heat = new uint8_t[m_heatSize];
 
-        if (NULL == m_heat)
+        if (nullptr == m_heat)
         {
             m_heatSize = 0U;
         }
@@ -89,7 +89,7 @@ void FirePlugin::update(IGfx& gfx)
     int16_t x       = 0;
     int16_t y       = 0;
 
-    if (NULL == m_heat)
+    if (nullptr == m_heat)
     {
         return;
     }

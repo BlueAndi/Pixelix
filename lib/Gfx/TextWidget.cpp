@@ -177,7 +177,7 @@ String TextWidget::removeFormatTags(const String& formatStr) const
             {
                 KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
                 uint8_t         overstep    = 0U;
-                bool            status      = (this->*handler)(NULL, false, formatStr.substring(index), overstep);
+                bool            status      = (this->*handler)(nullptr, false, formatStr.substring(index), overstep);
 
                 if (true == status)
                 {
@@ -291,7 +291,7 @@ bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, 
         if (true == convStatus)
         {
             if ((false == noAction) &&
-                (NULL != gfx))
+                (nullptr != gfx))
             {
                 Color textColor(colorRGB888);
                 gfx->setTextColor(textColor.to565());
@@ -326,7 +326,7 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
         uint16_t    textHeight  = 0U;
 
         if ((false == noAction) &&
-            (NULL != gfx))
+            (nullptr != gfx))
         {
             gfx->getTextBounds(text, 0, 0, &boundaryX, &boundaryY, &textWidth, &textHeight);
             gfx->setCursor(gfx->width() - textWidth, gfx->getCursorY());
@@ -345,7 +345,7 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
         uint16_t    textHeight  = 0U;
 
         if ((false == noAction) &&
-            (NULL != gfx))
+            (nullptr != gfx))
         {
             gfx->getTextBounds(text, 0, 0, &boundaryX, &boundaryY, &textWidth, &textHeight);
             gfx->setCursor(gfx->getCursorX() + (gfx->width() - gfx->getCursorX() - textWidth) / 2, gfx->getCursorY());

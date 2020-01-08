@@ -77,7 +77,7 @@ public:
         m_cursorY(0),
         m_textColor(0U),
         m_textBgColor(0U),
-        m_font(NULL)
+        m_font(nullptr)
     {
     }
 

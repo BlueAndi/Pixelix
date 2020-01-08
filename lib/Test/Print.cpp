@@ -71,7 +71,7 @@ size_t Print::write(const uint8_t *buffer, size_t size)
 
 size_t Print::write(const char *str)
 {
-    if(str == NULL) {
+    if(str == nullptr) {
         return 0;
     }
     return write((const uint8_t *) str, strlen(str));

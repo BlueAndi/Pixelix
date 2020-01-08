@@ -68,7 +68,7 @@ public:
         m_size(1U),
         m_buffer(new char[m_size])
     {
-        if (NULL == m_buffer)
+        if (nullptr == m_buffer)
         {
             m_size = 0U;
         }
@@ -83,10 +83,10 @@ public:
      */
     ~String()
     {
-        if (NULL != m_buffer)
+        if (nullptr != m_buffer)
         {
             delete[] m_buffer;
-            m_buffer = NULL;
+            m_buffer = nullptr;
             m_size = 0U;
         }
     }
@@ -98,14 +98,14 @@ public:
      */
     String(const String& str) :
         m_size(str.m_size),
-        m_buffer(NULL)
+        m_buffer(nullptr)
     {
         if ((0 == str.m_size) ||
-            (NULL == str.m_buffer))
+            (nullptr == str.m_buffer))
         {
             m_buffer = new char[1u];
             
-            if (NULL == m_buffer)
+            if (nullptr == m_buffer)
             {
                 m_size = 0U;
             }
@@ -119,7 +119,7 @@ public:
         {
             m_buffer = new char[str.m_size];
 
-            if (NULL == m_buffer)
+            if (nullptr == m_buffer)
             {
                 m_size = 0U;
             }
@@ -137,14 +137,14 @@ public:
      * @param[in] str String to copy
      */
     String(const char* str) :
-        m_size((NULL == str) ? 1u : (strlen(str) + 1U)),
+        m_size((nullptr == str) ? 1u : (strlen(str) + 1U)),
         m_buffer(new char[m_size])
     {
-        if (NULL == m_buffer)
+        if (nullptr == m_buffer)
         {
             m_size = 0U;
         }
-        else if (NULL == str)
+        else if (nullptr == str)
         {
             m_buffer[0u] = '\0';
         }
@@ -163,7 +163,7 @@ public:
         m_size(2U),
         m_buffer(new char[m_size])
     {
-        if (NULL == m_buffer)
+        if (nullptr == m_buffer)
         {
             m_size = 0U;
         }
@@ -185,10 +185,10 @@ public:
     {
         if (this != &str)
         {
-            if (NULL != m_buffer)
+            if (nullptr != m_buffer)
             {
                 delete[] m_buffer;
-                m_buffer = NULL;
+                m_buffer = nullptr;
             }
 
             m_size = str.m_size;
@@ -197,7 +197,7 @@ public:
             {
                 m_buffer = new char[m_size];
 
-                if (NULL == m_buffer)
+                if (nullptr == m_buffer)
                 {
                     m_size = 0U;
                 }
@@ -264,11 +264,11 @@ public:
 
     String& operator +=(const String& str)
     {
-        if (NULL != str.m_buffer)
+        if (nullptr != str.m_buffer)
         {
             char* tmp = new char[m_size + str.m_size];
 
-            if (NULL != tmp)
+            if (nullptr != tmp)
             {
                 strcpy(tmp, m_buffer);
                 strcat(tmp, str.m_buffer);
@@ -286,7 +286,7 @@ public:
     {
         char* tmp = new char[m_size + 1];
 
-        if (NULL != tmp)
+        if (nullptr != tmp)
         {
             char cBuff[2] = { c, '\0'};
 
@@ -319,7 +319,7 @@ public:
         static const char*  emptyStr    = "";
         const char*         buffer      = m_buffer;
 
-        if (NULL == buffer)
+        if (nullptr == buffer)
         {
             buffer = emptyStr;
         }
@@ -337,7 +337,7 @@ public:
         unsigned int    length  = 0;
         const char*     ptr     = m_buffer;
 
-        if (NULL != m_buffer)
+        if (nullptr != m_buffer)
         {
             while('\0' != *ptr)
             {
@@ -427,8 +427,8 @@ public:
     unsigned char startsWith(const String &s2, unsigned int offset) const
     {
         if((offset > static_cast<unsigned int>(length() - s2.length())) ||
-           (NULL == m_buffer) ||
-           (NULL == s2.m_buffer))
+           (nullptr == m_buffer) ||
+           (nullptr == s2.m_buffer))
         {
             return 0;
         }

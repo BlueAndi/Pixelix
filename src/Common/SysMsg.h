@@ -98,7 +98,7 @@ private:
      * Constructs the system message handler.
      */
     SysMsg() :
-        m_plugin(NULL)
+        m_plugin(nullptr)
     {
     }
 

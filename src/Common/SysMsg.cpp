@@ -71,7 +71,7 @@ bool SysMsg::init()
 
     m_plugin = PluginMgr::getInstance().installSysMsgPlugin();
 
-    if (NULL != m_plugin)
+    if (nullptr != m_plugin)
     {
         status = true;
     }
@@ -81,7 +81,7 @@ bool SysMsg::init()
 
 void SysMsg::show(const String& msg, uint32_t duration)
 {
-    if (NULL != m_plugin)
+    if (nullptr != m_plugin)
     {
         m_plugin->enable();
         m_plugin->show(msg, duration);

@@ -240,7 +240,7 @@ public:
     /**
      * Get font.
      * 
-     * @return If a font is set, it will be returned otherwise NULL.
+     * @return If a font is set, it will be returned otherwise nullptr.
      */
     const GFXfont* getFont() const
     {

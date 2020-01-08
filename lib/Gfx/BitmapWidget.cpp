@@ -78,17 +78,17 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
         m_width         = widget.m_width;
         m_height        = widget.m_height;
 
-        if (NULL != m_buffer)
+        if (nullptr != m_buffer)
         {
             delete[] m_buffer;
-            m_buffer = NULL;
+            m_buffer = nullptr;
         }
 
-        if (NULL != widget.m_buffer)
+        if (nullptr != widget.m_buffer)
         {
             m_buffer = new uint16_t[m_bufferSize];
 
-            if (NULL == m_buffer)
+            if (nullptr == m_buffer)
             {
                 m_bufferSize = 0U;
             }
@@ -104,12 +104,12 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 
 void BitmapWidget::set(const uint16_t* bitmap, uint16_t width, uint16_t height)
 {
-    if (NULL != bitmap)
+    if (nullptr != bitmap)
     {
-        if (NULL != m_buffer)
+        if (nullptr != m_buffer)
         {
             delete[] m_buffer;
-            m_buffer = NULL;
+            m_buffer = nullptr;
         }
 
         m_bufferSize    = width * height;
@@ -118,7 +118,7 @@ void BitmapWidget::set(const uint16_t* bitmap, uint16_t width, uint16_t height)
 
         m_buffer = new uint16_t[m_bufferSize];
 
-        if (NULL == m_buffer)
+        if (nullptr == m_buffer)
         {
             m_bufferSize = 0U;
         }
@@ -157,15 +157,15 @@ bool BitmapWidget::load(const String& filename)
             m_height        = neoFile.Height();
             m_bufferSize    = m_width * m_height;
 
-            if (NULL != m_buffer)
+            if (nullptr != m_buffer)
             {
                 delete[] m_buffer;
-                m_buffer = NULL;
+                m_buffer = nullptr;
             }
 
             m_buffer = new uint16_t[m_bufferSize];
 
-            if (NULL != m_buffer)
+            if (nullptr != m_buffer)
             {
                 uint16_t x = 0U;
                 uint16_t y = 0U;

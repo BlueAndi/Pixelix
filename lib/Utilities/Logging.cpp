@@ -137,7 +137,7 @@ const char* Logging::getBaseNameFromPath(const char* path) const
     const char* basename = path;
     const char* p        = path;
 
-    if (NULL != path)
+    if (nullptr != path)
     {
         for (p = path; *p != '\0'; p++)
         {
@@ -153,7 +153,7 @@ const char* Logging::getBaseNameFromPath(const char* path) const
 
 void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* message) const
 {
-    if (NULL != m_logOutput)
+    if (nullptr != m_logOutput)
     {
         char            buffer[LOG_MESSAGE_BUFFER_SIZE] = { 0 };
         int             written                         = 0;
@@ -177,7 +177,7 @@ void Logging::printLogMessage(const char* file, int line, const Logging::LogLeve
 
 const char* Logging::logLevelToString(const Logging::LogLevel LogLevel) const
 {
-    const char* logLevelString = NULL;
+    const char* logLevelString = nullptr;
 
     switch (LogLevel)
     {

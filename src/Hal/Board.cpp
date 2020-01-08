@@ -92,7 +92,7 @@ extern void Board::init()
     /* Initialize all i/o pins */
     for(index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
     {
-        if (NULL != ioPinList[index])
+        if (nullptr != ioPinList[index])
         {
             ioPinList[index]->init();
         }
@@ -104,7 +104,7 @@ extern void Board::init()
 extern void Board::reset()
 {
     esp_task_wdt_init(1, true);
-    esp_task_wdt_add(NULL);
+    esp_task_wdt_add(nullptr);
     
     for(;;)
     {

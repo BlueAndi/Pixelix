@@ -70,12 +70,12 @@ SysMsgPlugin* PluginMgr::installSysMsgPlugin()
 {
     SysMsgPlugin*   plugin = new SysMsgPlugin();
 
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (false == install(plugin))
         {
             delete plugin;
-            plugin = NULL;
+            plugin = nullptr;
         }
     }
 
@@ -86,12 +86,12 @@ JustTextPlugin* PluginMgr::installJustTextPlugin()
 {
     JustTextPlugin* plugin = new JustTextPlugin();
 
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (false == install(plugin))
         {
             delete plugin;
-            plugin = NULL;
+            plugin = nullptr;
         }
     }
 
@@ -102,12 +102,12 @@ FirePlugin* PluginMgr::installFirePlugin()
 {
     FirePlugin* plugin = new FirePlugin();
 
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (false == install(plugin))
         {
             delete plugin;
-            plugin = NULL;
+            plugin = nullptr;
         }
     }
 
@@ -118,12 +118,12 @@ IconTextPlugin* PluginMgr::installIconTextPlugin()
 {
     IconTextPlugin* plugin = new IconTextPlugin();
 
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (false == install(plugin))
         {
             delete plugin;
-            plugin = NULL;
+            plugin = nullptr;
         }
     }
 
@@ -134,12 +134,12 @@ IconTextLampPlugin* PluginMgr::installIconTextLampPlugin()
 {
     IconTextLampPlugin* plugin = new IconTextLampPlugin();
 
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (false == install(plugin))
         {
             delete plugin;
-            plugin = NULL;
+            plugin = nullptr;
         }
     }
 
@@ -148,7 +148,7 @@ IconTextLampPlugin* PluginMgr::installIconTextLampPlugin()
 
 void PluginMgr::uninstall(Plugin* plugin)
 {
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (false == m_plugins.find(plugin))
         {
@@ -193,7 +193,7 @@ bool PluginMgr::install(Plugin* plugin)
 {
     bool status = false;
 
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (DisplayMgr::SLOT_ID_INVALID == DisplayMgr::getInstance().installPlugin(plugin))
         {
@@ -225,7 +225,7 @@ bool PluginMgr::installToSlot(Plugin* plugin, uint8_t slotId)
 {
     bool status = false;
 
-    if (NULL != plugin)
+    if (nullptr != plugin)
     {
         if (DisplayMgr::SLOT_ID_INVALID == DisplayMgr::getInstance().installPlugin(plugin, slotId))
         {

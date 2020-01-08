@@ -79,18 +79,18 @@ public:
      */
     IconTextLampPlugin() :
         Plugin(),
-        m_iconCanvas(NULL),
-        m_textCanvas(NULL),
-        m_lampCanvas(NULL),
+        m_iconCanvas(nullptr),
+        m_textCanvas(nullptr),
+        m_lampCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget(),
         m_lampWidgets(),
         m_urlIcon(),
         m_urlText(),
         m_urlLamp(),
-        m_callbackWebHandlerIcon(NULL),
-        m_callbackWebHandlerText(NULL),
-        m_callbackWebHandlerLamp(NULL),
+        m_callbackWebHandlerIcon(nullptr),
+        m_callbackWebHandlerText(nullptr),
+        m_callbackWebHandlerLamp(nullptr),
         m_fd(),
         m_isUploadError(false)
     {
@@ -105,28 +105,28 @@ public:
         uint16_t        bitmapHeight    = 0U;
         const uint16_t* bitmapBuffer    = m_bitmapWidget.get(bitmapWidth, bitmapHeight);
 
-        if (NULL != m_iconCanvas)
+        if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
-            m_iconCanvas = NULL;
+            m_iconCanvas = nullptr;
         }
 
-        if (NULL != m_textCanvas)
+        if (nullptr != m_textCanvas)
         {
             delete m_textCanvas;
-            m_textCanvas = NULL;
+            m_textCanvas = nullptr;
         }
 
-        if (NULL != m_lampCanvas)
+        if (nullptr != m_lampCanvas)
         {
             delete m_lampCanvas;
-            m_lampCanvas = NULL;
+            m_lampCanvas = nullptr;
         }
 
-        if (NULL != bitmapBuffer)
+        if (nullptr != bitmapBuffer)
         {
             delete[] bitmapBuffer;
-            bitmapBuffer = NULL;
+            bitmapBuffer = nullptr;
         }
     }
 

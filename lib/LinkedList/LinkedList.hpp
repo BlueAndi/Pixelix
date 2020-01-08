@@ -162,9 +162,9 @@ public:
      * Constructs a double chained empty list.
      */
     DLinkedList() :
-        m_head(NULL),
-        m_tail(NULL),
-        m_curr(NULL),
+        m_head(nullptr),
+        m_tail(nullptr),
+        m_curr(nullptr),
         m_count(0U)
     {
     }
@@ -175,14 +175,14 @@ public:
      * @param[in] list List, which to copy
      */
     DLinkedList(const DLinkedList& list) :
-        m_head(NULL),
-        m_tail(NULL),
-        m_curr(NULL),
+        m_head(nullptr),
+        m_tail(nullptr),
+        m_curr(nullptr),
         m_count(0U)
     {
         ListElement<T>* listElement = list.m_head;
 
-        while(NULL != listElement)
+        while(nullptr != listElement)
         {
             append(listElement->getElement());
             listElement = listElement->getNext();
@@ -208,7 +208,7 @@ public:
         ListElement<T>* listElement = list.m_head;
 
         clear();
-        while(NULL != listElement)
+        while(nullptr != listElement)
         {
             append(listElement->getElement());
             listElement = listElement->getNext();
@@ -219,15 +219,15 @@ public:
 
     /**
      * Get first element in the list.
-     * If the list is empty, NULL will be returned.
+     * If the list is empty, nullptr will be returned.
      * 
      * @return First element.
      */
     T* first() const
     {
-        T*  element = NULL;
+        T*  element = nullptr;
 
-        if (NULL != m_head)
+        if (nullptr != m_head)
         {
             element = &m_head->getElement();
         }
@@ -237,15 +237,15 @@ public:
 
     /**
      * Get last element in the list.
-     * If the list is empty, NULL will be returned.
+     * If the list is empty, nullptr will be returned.
      * 
      * @return Last element.
      */
     T* last() const
     {
-        T*  element = NULL;
+        T*  element = nullptr;
 
-        if (NULL != m_tail)
+        if (nullptr != m_tail)
         {
             element = &m_tail->getElement();
         }
@@ -255,15 +255,15 @@ public:
 
     /**
      * Get current selected element in the list.
-     * If the list is empty, NULL will be returned.
+     * If the list is empty, nullptr will be returned.
      * 
      * @return Current element.
      */
     T* current() const
     {
-        T*  element = NULL;
+        T*  element = nullptr;
 
-        if (NULL != m_curr)
+        if (nullptr != m_curr)
         {
             element = &m_curr->getElement();
         }
@@ -281,13 +281,13 @@ public:
     bool append(T& element)
     {
         bool            status      = false;
-        ListElement<T>* listElement = new ListElement<T>(element, m_tail, NULL);
+        ListElement<T>* listElement = new ListElement<T>(element, m_tail, nullptr);
 
-        if ((NULL != listElement) &&
+        if ((nullptr != listElement) &&
             (UINT32_MAX > m_count))
         {
             /* Empty list? */
-            if (NULL == m_head)
+            if (nullptr == m_head)
             {
                 m_head = listElement;
                 m_tail = listElement;
@@ -318,9 +318,9 @@ public:
     {
         bool status = false;
 
-        if (NULL != m_curr)
+        if (nullptr != m_curr)
         {
-            if (NULL != m_curr->getNext())
+            if (nullptr != m_curr->getNext())
             {
                 m_curr = m_curr->getNext();
                 status = true;
@@ -341,9 +341,9 @@ public:
     {
         bool status = false;
 
-        if (NULL != m_curr)
+        if (nullptr != m_curr)
         {
-            if (NULL != m_curr->getPrev())
+            if (nullptr != m_curr->getPrev())
             {
                 m_curr = m_curr->getPrev();
                 status = true;
@@ -362,7 +362,7 @@ public:
     {
         bool status = false;
 
-        if (NULL != m_head)
+        if (nullptr != m_head)
         {
             m_curr = m_head;
             status = true;
@@ -380,7 +380,7 @@ public:
     {
         bool status = false;
 
-        if (NULL != m_head)
+        if (nullptr != m_head)
         {
             m_curr = m_tail;
             status = true;
@@ -394,24 +394,24 @@ public:
      */
     void removeSelected()
     {
-        if (NULL != m_curr)
+        if (nullptr != m_curr)
         {
             /* Is head selected? */
             if (m_head == m_curr)
             {
                 /* Last element in the list */
-                if (NULL == m_curr->getNext())
+                if (nullptr == m_curr->getNext())
                 {
                     delete m_curr;
-                    m_head = NULL;
-                    m_tail = NULL;
-                    m_curr = NULL;
+                    m_head = nullptr;
+                    m_tail = nullptr;
+                    m_curr = nullptr;
                 }
                 /* Not the last element in the list */
                 else
                 {
                     m_head = m_curr->getNext();
-                    m_head->setPrev(NULL);
+                    m_head->setPrev(nullptr);
                     delete m_curr;
                     m_curr = m_head;
                 }
@@ -421,7 +421,7 @@ public:
             {
                 /* Here it is sure, that the list contains more than 1 element. */
                 m_tail = m_curr->getPrev();
-                m_tail->setNext(NULL);
+                m_tail->setNext(nullptr);
                 delete m_curr;
                 m_curr = m_tail;
             }
@@ -452,24 +452,24 @@ public:
     {
         m_curr = m_head;
 
-        while(NULL != m_curr)
+        while(nullptr != m_curr)
         {
             /* Last element in the list? */
-            if (NULL == m_curr->getNext())
+            if (nullptr == m_curr->getNext())
             {
                 delete m_curr;
-                m_curr = NULL;
+                m_curr = nullptr;
             }
             else
             {
                 m_curr = m_curr->getNext();
                 delete m_curr->getPrev();
-                m_curr->setPrev(NULL);
+                m_curr->setPrev(nullptr);
             }
         }
 
-        m_head  = NULL;
-        m_tail  = NULL;
+        m_head  = nullptr;
+        m_tail  = nullptr;
         m_count = 0U;
 
         return;
@@ -486,7 +486,7 @@ public:
     {
         bool found = false;
 
-        if (NULL != m_curr)
+        if (nullptr != m_curr)
         {
             do
             {

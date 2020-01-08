@@ -126,9 +126,9 @@ private:
      * Constructs the button driver instance.
      */
     ButtonDrv() :
-        m_buttonTaskHandle(NULL),
+        m_buttonTaskHandle(nullptr),
         m_state(STATE_UNKNOWN),
-        m_semaphore(NULL)
+        m_semaphore(nullptr)
     {
     }
 

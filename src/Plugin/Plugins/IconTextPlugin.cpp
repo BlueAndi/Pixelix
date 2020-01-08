@@ -68,21 +68,21 @@ const char* IconTextPlugin::UPLOAD_PATH = "/tmp";
 
 void IconTextPlugin::active(IGfx& gfx)
 {    
-    if (NULL == m_iconCanvas)
+    if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
         
-        if (NULL != m_iconCanvas)
+        if (nullptr != m_iconCanvas)
         {
             m_iconCanvas->addWidget(m_bitmapWidget);
         }
     }
 
-    if (NULL == m_textCanvas)
+    if (nullptr == m_textCanvas)
     {
         m_textCanvas = new Canvas(gfx.width() - ICON_WIDTH, gfx.height(), ICON_WIDTH, 0);
 
-        if (NULL != m_textCanvas)
+        if (nullptr != m_textCanvas)
         {
             m_textCanvas->addWidget(m_textWidget);
             
@@ -137,7 +137,7 @@ void IconTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
         LOG_WARNING("Couldn't remove %s handler.", getName());
     }
 
-    m_callbackWebHandlerIcon = NULL;
+    m_callbackWebHandlerIcon = nullptr;
 
     LOG_INFO("[%s] Unregister: %s", getName(), m_urlText.c_str());
 
@@ -146,7 +146,7 @@ void IconTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
         LOG_WARNING("Couldn't remove %s handler.", getName());
     }
 
-    m_callbackWebHandlerText = NULL;
+    m_callbackWebHandlerText = nullptr;
 
     return;
 }
@@ -155,12 +155,12 @@ void IconTextPlugin::update(IGfx& gfx)
 {
     gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
     
-    if (NULL != m_iconCanvas)
+    if (nullptr != m_iconCanvas)
     {
         m_iconCanvas->update(gfx);
     }
     
-    if (NULL != m_textCanvas)
+    if (nullptr != m_textCanvas)
     {
         m_textCanvas->update(gfx);
     }
@@ -176,12 +176,12 @@ void IconTextPlugin::setText(const String& formatText)
 
 void IconTextPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t height)
 {
-    uint16_t*       buffer      = NULL;
-    const uint16_t* oldBuffer   = NULL;
+    uint16_t*       buffer      = nullptr;
+    const uint16_t* oldBuffer   = nullptr;
     uint16_t        oldWidth    = 0U;
     uint16_t        oldHeight   = 0U;
 
-    if ((NULL == bitmap) ||
+    if ((nullptr == bitmap) ||
         (ICON_WIDTH < width) ||
         (ICON_HEIGHT < height))
     {
@@ -194,7 +194,7 @@ void IconTextPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t 
     /* Get new bitmap buffer */
     buffer = new uint16_t[width * height];
 
-    if (NULL != buffer)
+    if (nullptr != buffer)
     {
         /* Release old bitmap buffer */
         delete[] oldBuffer;
@@ -222,7 +222,7 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -273,7 +273,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }

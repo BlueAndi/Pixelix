@@ -66,7 +66,7 @@ public:
      */
     BitmapWidget() :
         Widget(WIDGET_TYPE),
-        m_buffer(NULL),
+        m_buffer(nullptr),
         m_bufferSize(0U),
         m_width(0U),
         m_height(0U)
@@ -80,16 +80,16 @@ public:
      */
     BitmapWidget(const BitmapWidget& widget) :
         Widget(WIDGET_TYPE),
-        m_buffer(NULL),
+        m_buffer(nullptr),
         m_bufferSize(widget.m_bufferSize),
         m_width(widget.m_width),
         m_height(widget.m_height)
     {
-        if (NULL != widget.m_buffer)
+        if (nullptr != widget.m_buffer)
         {
             m_buffer = new uint16_t[m_bufferSize];
 
-            if (NULL == m_buffer)
+            if (nullptr == m_buffer)
             {
                 m_bufferSize = 0U;
             }
@@ -105,10 +105,10 @@ public:
      */
     ~BitmapWidget()
     {
-        if (NULL != m_buffer)
+        if (nullptr != m_buffer)
         {
             delete[] m_buffer;
-            m_buffer = NULL;
+            m_buffer = nullptr;
             m_bufferSize = 0U;
         }
     }
@@ -127,7 +127,7 @@ public:
      */
     void update(IGfx& gfx) override
     {
-        if (NULL != m_buffer)
+        if (nullptr != m_buffer)
         {
             gfx.drawRGBBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
         }

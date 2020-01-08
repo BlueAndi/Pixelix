@@ -432,7 +432,7 @@ public:
     TestState() :
         m_callCntEntry(0U),
         m_callCntExit(0U),
-        m_nextState(NULL)
+        m_nextState(nullptr)
     {
     }
 
@@ -462,7 +462,7 @@ public:
 
     void process(StateMachine& sm)
     {
-        if (NULL != m_nextState)
+        if (nullptr != m_nextState)
         {
             sm.setState(*m_nextState);
         }
@@ -1034,10 +1034,10 @@ static void testBitmapWidget()
     uint16_t        bitmap[BITMAP_WIDTH * BITMAP_HEIGHT];
     uint8_t         x               = 0U;
     uint8_t         y               = 0U;
-    const uint16_t* bitmapPtr       = NULL;
+    const uint16_t* bitmapPtr       = nullptr;
     uint16_t        width           = 0U;
     uint16_t        height          = 0U;
-    uint16_t*       displayBuffer   = NULL;
+    uint16_t*       displayBuffer   = nullptr;
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(BitmapWidget::WIDGET_TYPE, bitmapWidget.getType());
@@ -1394,7 +1394,7 @@ static void testProgressBar()
 static void testLogging()
 {
     TestLogger      myTestLogger;
-    const char*     printBuffer     = NULL;
+    const char*     printBuffer     = nullptr;
     const char*     TEST_STRING_1   = "TestMessage";
     const String    TEST_STRING_2   = "TestMessageAsString";
     char            expectedLogMessage[52];

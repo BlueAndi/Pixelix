@@ -82,7 +82,7 @@ public:
      */
     FirePlugin() :
         Plugin(),
-        m_heat(NULL),
+        m_heat(nullptr),
         m_heatSize(0U)
     {
     }
@@ -92,10 +92,10 @@ public:
      */
     ~FirePlugin()
     {
-        if (NULL != m_heat)
+        if (nullptr != m_heat)
         {
             delete[] m_heat;
-            m_heat = NULL;
+            m_heat = nullptr;
         }
     }
 

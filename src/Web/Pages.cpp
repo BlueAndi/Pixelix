@@ -181,7 +181,7 @@ void Pages::init(AsyncWebServer& srv)
  */
 void Pages::error(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -376,7 +376,7 @@ static String errorPageProcessor(const String& var)
  */
 static void indexPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -443,7 +443,7 @@ static String indexPageProcessor(const String& var)
  */
 static void networkPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -485,7 +485,7 @@ static String networkPageProcessor(const String& var)
     }
     else if (var == "HOSTNAME")
     {
-        const char* hostname = NULL;
+        const char* hostname = nullptr;
 
         if (WIFI_MODE_AP == WiFi.getMode())
         {
@@ -496,7 +496,7 @@ static String networkPageProcessor(const String& var)
             hostname = WiFi.getHostname();
         }
 
-        if (NULL != hostname)
+        if (nullptr != hostname)
         {
             result = hostname;
         }
@@ -527,7 +527,7 @@ static String networkPageProcessor(const String& var)
  */
 static void settingsPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -798,7 +798,7 @@ static String settingsPageProcessor(const String& var)
  */
 static void devPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -864,7 +864,7 @@ static String devPageProcessor(const String& var)
  */
 static void updatePage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -915,7 +915,7 @@ static String updatePageProcessor(const String& var)
  */
 static void uploadPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -1047,7 +1047,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
  */
 static void displayPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }

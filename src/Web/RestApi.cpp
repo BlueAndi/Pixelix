@@ -107,7 +107,7 @@ void RestApi::error(AsyncWebServerRequest* request)
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     JsonObject              errorObj        = jsonDoc.createNestedObject("error");
 
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -168,7 +168,7 @@ static void status(AsyncWebServerRequest* request)
     StaticJsonDocument<256> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -235,7 +235,7 @@ static void slots(AsyncWebServerRequest* request)
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -263,7 +263,7 @@ static void slots(AsyncWebServerRequest* request)
         {
             Plugin* plugin = DisplayMgr::getInstance().getPluginInSlot(index);
 
-            if (NULL == plugin)
+            if (nullptr == plugin)
             {
                 slotArray.add("empty");
             }
@@ -297,7 +297,7 @@ static void plugin(AsyncWebServerRequest* request)
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -315,7 +315,7 @@ static void plugin(AsyncWebServerRequest* request)
     else if (true == request->hasArg("install"))
     {
         String  pluginName  = request->arg("install");
-        Plugin* plugin      = NULL;
+        Plugin* plugin      = nullptr;
 
         if (0 == pluginName.compareTo("JustTextPlugin"))
         {
@@ -339,7 +339,7 @@ static void plugin(AsyncWebServerRequest* request)
         }
 
         /* Plugin not found? */
-        if (NULL == plugin)
+        if (nullptr == plugin)
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -393,7 +393,7 @@ static void plugin(AsyncWebServerRequest* request)
                 String  pluginName  = request->arg("uninstall");
                 Plugin* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
-                if (NULL == plugin)
+                if (nullptr == plugin)
                 {
                     JsonObject errorObj = jsonDoc.createNestedObject("error");
 

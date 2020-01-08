@@ -114,8 +114,8 @@ public:
      * Constructs a state machine.
      */
     StateMachine() :
-        m_currentState(NULL),
-        m_nextState(NULL)
+        m_currentState(nullptr),
+        m_nextState(nullptr)
     {
     }
 
@@ -125,7 +125,7 @@ public:
      * @param[in] state Starting state
      */
     explicit StateMachine(AbstractState& state) :
-        m_currentState(NULL),
+        m_currentState(nullptr),
         m_nextState(&state)
     {
     }
@@ -158,23 +158,23 @@ public:
     void process()
     {
         /* Request for change state available? */
-        if (NULL != m_nextState)
+        if (nullptr != m_nextState)
         {
             /* Leave current state */
-            if (NULL != m_currentState)
+            if (nullptr != m_currentState)
             {
                 m_currentState->exit(*this);
             }
 
             /* Change state */
             m_currentState  = m_nextState;
-            m_nextState     = NULL;
+            m_nextState     = nullptr;
 
             /* Enter new state */
             m_currentState->entry(*this);
         }
         /* Process current state */
-        else if (NULL != m_currentState)
+        else if (nullptr != m_currentState)
         {
             m_currentState->process(*this);
         }

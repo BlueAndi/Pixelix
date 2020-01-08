@@ -203,11 +203,11 @@ public:
      * 
      * @param[in] name  Widget name to search for
      * 
-     * @return If widget is found, it will be returned otherwise NULL.
+     * @return If widget is found, it will be returned otherwise nullptr.
      */
     virtual Widget* find(const String& name)
     {
-        Widget* widget = NULL;
+        Widget* widget = nullptr;
 
         if (name == m_name)
         {

@@ -87,7 +87,7 @@ void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
         LOG_WARNING("Couldn't remove %s handler.", getName());
     }
 
-    m_callbackWebHandler = NULL;
+    m_callbackWebHandler = nullptr;
 
     return;
 }
@@ -120,7 +120,7 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }

@@ -118,7 +118,7 @@ public:
 
     /**
      * Set the output of the logging.
-     * Use NULL to remove any kind of log output.
+     * Use nullptr to remove any kind of log output.
      * 
      * @param[in] output The log sink where the output has to be sent to.
      */
@@ -228,7 +228,7 @@ private:
      */
     Logging() :
         m_currentLogLevel(LOGLEVEL_ERROR),
-        m_logOutput(NULL)
+        m_logOutput(nullptr)
     {
 
     }

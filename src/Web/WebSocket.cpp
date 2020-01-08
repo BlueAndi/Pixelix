@@ -98,8 +98,8 @@ void WebSocketSrv::init(AsyncWebServer& srv)
 
 void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
 {
-    if ((NULL == server) ||
-        (NULL == client))
+    if ((nullptr == server) ||
+        (nullptr == client))
     {
         return;
     }
@@ -154,7 +154,7 @@ void WebSocketSrv::onDisconnect(AsyncWebSocket* server, AsyncWebSocketClient* cl
 
 void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, uint8_t* data, size_t len)
 {
-    if ((NULL == data) ||
+    if ((nullptr == data) ||
         (0 == len))
     {
         LOG_INFO("ws[%s][%u] Pong: -", server->url(), client->id());
@@ -169,7 +169,7 @@ void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, 
 
 void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client, uint16_t reasonCode, const char* reasonStr, size_t reasonStrLen)
 {
-    if ((NULL == reasonStr) ||
+    if ((nullptr == reasonStr) ||
         (0 == reasonStrLen))
     {
         LOG_INFO("ws[%s][%u] Error %u: -", server->url(), client->id(), reasonCode);
@@ -185,7 +185,7 @@ void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client,
 void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsFrameInfo* info, const uint8_t* data, size_t len)
 {
     /* Frame info missing? */
-    if (NULL == info)
+    if (nullptr == info)
     {
         LOG_ERROR("ws[%s][%u] Frame info is missing.", server->url(), client->id());
         server->close(client->id(), 0u, "Frame info is missing.");
@@ -202,7 +202,7 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
                 (len == info->len ))
     {
         /* Empty text message? */
-        if ((NULL == data) ||
+        if ((nullptr == data) ||
             (0 == len))
         {
             LOG_WARNING("ws[%s][%u] Message: -", server->url(), client->id());
@@ -229,12 +229,12 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
     uint8_t     index       = 0U;
     String      cmd;
     String      par;
-    WsCmd*      wsCmd       = NULL;
+    WsCmd*      wsCmd       = nullptr;
     const char  DELIMITER   = ';';
 
-    if ((NULL == server) ||
-        (NULL == client) ||
-        (NULL == msg) ||
+    if ((nullptr == server) ||
+        (nullptr == client) ||
+        (nullptr == msg) ||
         (0 == msgLen))
     {
         return;
@@ -258,7 +258,7 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
     {
         /* Find command object */
         index = 0U;
-        while((NULL == wsCmd) && (index < UTIL_ARRAY_NUM(gWsCommands)))
+        while((nullptr == wsCmd) && (index < UTIL_ARRAY_NUM(gWsCommands)))
         {
             if (cmd == gWsCommands[index]->getCmd())
             {
@@ -269,7 +269,7 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
         }
 
         /* Command not found? */
-        if (NULL == wsCmd)
+        if (nullptr == wsCmd)
         {
             client->text("NACK;\"Command unknown.\"");
         }
