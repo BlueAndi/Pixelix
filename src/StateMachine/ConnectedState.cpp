@@ -150,6 +150,8 @@ void ConnectedState::process(StateMachine& sm)
 
 void ConnectedState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+    
     /* Stop webserver */
     MyWebServer::end();
 

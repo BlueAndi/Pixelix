@@ -178,6 +178,8 @@ void ConnectingState::process(StateMachine& sm)
 
 void ConnectingState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+    
     /* Nothing to do. */
     return;
 }

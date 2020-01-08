@@ -216,6 +216,8 @@ void APState::process(StateMachine& sm)
 
 void APState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+    
     /* Stop webserver */
     MyWebServer::end();
 

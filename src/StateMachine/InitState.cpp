@@ -55,6 +55,7 @@
 #include "ErrorState.h"
 
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -209,6 +210,8 @@ void InitState::process(StateMachine& sm)
 
 void InitState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Nothing to do. */
     return;
 }

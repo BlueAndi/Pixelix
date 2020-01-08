@@ -38,6 +38,7 @@
 #include "Board.h"
 
 #include <Logging.h>
+#include <Util.h>
 #include <SPIFFS.h>
 
 /******************************************************************************
@@ -69,6 +70,8 @@ RestartState RestartState::m_instance;
 
 void RestartState::entry(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     LOG_INFO("Going in restart state.");
 
     /* Unmount filesystem */
@@ -93,6 +96,8 @@ void RestartState::entry(StateMachine& sm)
 
 void RestartState::process(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Reset */
     Board::reset();
     
@@ -101,6 +106,8 @@ void RestartState::process(StateMachine& sm)
 
 void RestartState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Nothing to do. */
     return;
 }

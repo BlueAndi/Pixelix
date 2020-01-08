@@ -101,6 +101,8 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
 void WsCmdGetDisp::setPar(const char* par)
 {
+    UTIL_NOT_USED(par);
+    
     m_isError = true;
 
     return;
