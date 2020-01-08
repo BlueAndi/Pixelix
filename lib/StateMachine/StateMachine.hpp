@@ -124,7 +124,7 @@ public:
      * 
      * @param[in] state Starting state
      */
-    StateMachine(AbstractState& state) :
+    explicit StateMachine(AbstractState& state) :
         m_currentState(NULL),
         m_nextState(&state)
     {
