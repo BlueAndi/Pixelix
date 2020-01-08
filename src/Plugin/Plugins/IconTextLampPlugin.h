@@ -194,6 +194,15 @@ public:
     void setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t height);
 
     /**
+     * Load bitmap from filesystem.
+     * 
+     * @param[in] filename  Bitmap filename
+     * 
+     * @return If successul, it will return true otherwise false.
+     */
+    bool loadBitmap(const String& filename);
+
+    /**
      * Set lamp state.
      * 
      * @param[in] lampId    Lamp id

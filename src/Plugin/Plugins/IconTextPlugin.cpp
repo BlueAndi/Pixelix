@@ -208,6 +208,11 @@ void IconTextPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t 
     return;
 }
 
+bool IconTextPlugin::loadBitmap(const String& filename)
+{
+    return m_bitmapWidget.load(filename);
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

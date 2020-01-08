@@ -247,6 +247,11 @@ void IconTextLampPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint1
     return;
 }
 
+bool IconTextLampPlugin::loadBitmap(const String& filename)
+{
+    return m_bitmapWidget.load(filename);
+}
+
 void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
