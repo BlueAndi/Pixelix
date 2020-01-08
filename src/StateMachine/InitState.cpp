@@ -173,6 +173,7 @@ void InitState::entry(StateMachine& sm)
         if (nullptr != plugin)
         {
             (void)plugin->loadBitmap("/images/smiley.bmp");
+            (void)plugin->setText("Hello World!");
             plugin->enable();
         }
     }
