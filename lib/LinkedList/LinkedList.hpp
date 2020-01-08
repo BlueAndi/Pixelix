@@ -89,7 +89,7 @@ public:
      * 
      * @return Element
      */
-    T&  getElement(void)
+    T&  getElement()
     {
         return m_element;
     }
@@ -99,7 +99,7 @@ public:
      * 
      * @return Previous list element.
      */
-    ListElement* getPrev(void)
+    ListElement* getPrev()
     {
         return m_prev;
     }
@@ -120,7 +120,7 @@ public:
      * 
      * @return Next list element.
      */
-    ListElement* getNext(void)
+    ListElement* getNext()
     {
         return m_next;
     }
@@ -223,7 +223,7 @@ public:
      * 
      * @return First element.
      */
-    T* first(void) const
+    T* first() const
     {
         T*  element = NULL;
 
@@ -241,7 +241,7 @@ public:
      * 
      * @return Last element.
      */
-    T* last(void) const
+    T* last() const
     {
         T*  element = NULL;
 
@@ -259,7 +259,7 @@ public:
      * 
      * @return Current element.
      */
-    T* current(void) const
+    T* current() const
     {
         T*  element = NULL;
 
@@ -314,7 +314,7 @@ public:
      * 
      * @return If the current selected element is the last element, it will return false otherwise true.
      */
-    bool next(void)
+    bool next()
     {
         bool status = false;
 
@@ -337,7 +337,7 @@ public:
      * 
      * @return If the current selected element is the first element, it will return false otherwise true.
      */
-    bool prev(void)
+    bool prev()
     {
         bool status = false;
 
@@ -358,7 +358,7 @@ public:
      * 
      * @return If list is empty, it will return false otherwise true.
      */
-    bool selectFirstElement(void)
+    bool selectFirstElement()
     {
         bool status = false;
 
@@ -376,7 +376,7 @@ public:
      * 
      * @return If list is empty, it will return false otherwise true.
      */
-    bool selectLastElement(void)
+    bool selectLastElement()
     {
         bool status = false;
 
@@ -392,7 +392,7 @@ public:
     /**
      * Remove selected element from list.
      */
-    void removeSelected(void)
+    void removeSelected()
     {
         if (NULL != m_curr)
         {
@@ -448,7 +448,7 @@ public:
     /**
      * Clear list.
      */
-    void clear(void)
+    void clear()
     {
         m_curr = m_head;
 
@@ -506,7 +506,7 @@ public:
      * 
      * @return Number of elements in the list.
      */
-    uint32_t getNumOfElements(void) const
+    uint32_t getNumOfElements() const
     {
         return m_count;
     }

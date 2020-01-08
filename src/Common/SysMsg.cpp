@@ -65,7 +65,7 @@ SysMsg  SysMsg::m_instance;
  * Public Methods
  *****************************************************************************/
 
-bool SysMsg::init(void)
+bool SysMsg::init()
 {
     bool status = false;
 

@@ -92,7 +92,7 @@ public:
      *
      * @return Name of the plugin.
      */
-    const char* getName(void) const
+    const char* getName() const
     {
         return "JustTextPlugin";
     }

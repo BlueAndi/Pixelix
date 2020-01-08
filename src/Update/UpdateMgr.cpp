@@ -78,7 +78,7 @@ UpdateMgr   UpdateMgr::m_instance;
  * Public Methods
  *****************************************************************************/
 
-bool UpdateMgr::init(void)
+bool UpdateMgr::init()
 {
     String  hostname;
 
@@ -117,7 +117,7 @@ bool UpdateMgr::init(void)
     return m_isInitialized;
 }
 
-void UpdateMgr::begin(void)
+void UpdateMgr::begin()
 {
     /* Start over-the-air server */
     ArduinoOTA.begin();
@@ -129,14 +129,14 @@ void UpdateMgr::begin(void)
     return;
 }
 
-void UpdateMgr::end(void)
+void UpdateMgr::end()
 {
     /* Stop over-the-air server */
     ArduinoOTA.end();
     return;
 }
 
-void UpdateMgr::process(void)
+void UpdateMgr::process()
 {
     if (true == m_isInitialized)
     {
@@ -146,7 +146,7 @@ void UpdateMgr::process(void)
     return;
 }
 
-void UpdateMgr::beginProgress(void)
+void UpdateMgr::beginProgress()
 {
     /* Stop display manager */
     DisplayMgr::getInstance().end();
@@ -191,7 +191,7 @@ void UpdateMgr::updateProgress(uint8_t progress)
     return;
 }
 
-void UpdateMgr::endProgress(void)
+void UpdateMgr::endProgress()
 {
     /* Start display manager */
     if (false == DisplayMgr::getInstance().begin())
@@ -226,7 +226,7 @@ UpdateMgr::~UpdateMgr()
 {
 }
 
-void UpdateMgr::onStart(void)
+void UpdateMgr::onStart()
 {
     String infoStr = "Update ";
 
@@ -256,7 +256,7 @@ void UpdateMgr::onStart(void)
     return;
 }
 
-void UpdateMgr::onEnd(void)
+void UpdateMgr::onEnd()
 {
     String  infoStr = "Update successful finished.";
 

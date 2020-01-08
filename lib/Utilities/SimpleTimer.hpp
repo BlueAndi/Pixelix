@@ -125,7 +125,7 @@ public:
     /**
      * Stop timer.
      */
-    void stop(void)
+    void stop()
     {
         m_isRunning = false;
         m_isTimeout = false;
@@ -136,7 +136,7 @@ public:
     /**
      * Restart timer with the previous specified duration.
      */
-    void restart(void)
+    void restart()
     {
         m_isRunning = true;
         m_isTimeout = false;
@@ -150,7 +150,7 @@ public:
      * 
      * @return If timer is running, it will return true otherwise false.
      */
-    bool isTimerRunning(void) const
+    bool isTimerRunning() const
     {
         return m_isRunning;
     }
@@ -161,7 +161,7 @@ public:
      * 
      * @return If timeout it will return true, otherwise false.
      */
-    bool isTimeout(void)
+    bool isTimeout()
     {
         bool isTimeout = false;
 

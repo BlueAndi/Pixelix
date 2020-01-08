@@ -169,7 +169,7 @@ public:
      * 
      * @return Widget type string
      */
-    const char* getType(void) const
+    const char* getType() const
     {
         return m_type;
     }
@@ -180,7 +180,7 @@ public:
      * 
      * @return Name
      */
-    const String& getName(void) const
+    const String& getName() const
     {
         return m_name;
     }

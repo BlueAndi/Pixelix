@@ -158,7 +158,7 @@ public:
      * 
      * @return On state
      */
-    bool getOnState(void) const
+    bool getOnState() const
     {
         return m_isOn;
     }
@@ -180,7 +180,7 @@ public:
      * 
      * @return Color in off state
      */
-    const Color& getColorOff(void) const
+    const Color& getColorOff() const
     {
         return m_colorOff;
     }
@@ -202,7 +202,7 @@ public:
      * 
      * @return Color in on state
      */
-    const Color& getColorOn(void) const
+    const Color& getColorOn() const
     {
         return m_colorOn;
     }

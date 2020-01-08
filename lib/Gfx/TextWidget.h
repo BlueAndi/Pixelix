@@ -188,7 +188,7 @@ public:
      * 
      * @return String, which may contain format tags.
      */
-    String getFormatStr(void) const
+    String getFormatStr() const
     {
         return m_formatStr;
     }
@@ -198,7 +198,7 @@ public:
      * 
      * @return String
      */
-    String getStr(void) const
+    String getStr() const
     {
         return removeFormatTags(m_formatStr);
     }
@@ -219,7 +219,7 @@ public:
      * 
      * @return Text color
      */
-    const Color& getTextColor(void) const
+    const Color& getTextColor() const
     {
         return m_textColor;
     }
@@ -242,7 +242,7 @@ public:
      * 
      * @return If a font is set, it will be returned otherwise NULL.
      */
-    const GFXfont* getFont(void) const
+    const GFXfont* getFont() const
     {
         return m_font;
     }

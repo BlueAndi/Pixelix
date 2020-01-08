@@ -68,7 +68,7 @@ public:
      * 
      * @return Update manager
      */
-    static UpdateMgr& getInstance(void)
+    static UpdateMgr& getInstance()
     {
         return m_instance;
     }
@@ -95,7 +95,7 @@ public:
      * 
      * @return If an update is running it returns true otherwise false.
      */
-    bool isUpdateRunning(void) const
+    bool isUpdateRunning() const
     {
         return m_updateIsRunning;
     }
@@ -107,7 +107,7 @@ public:
      * 
      * @return If restart is requested, it will return true otherwise false.
      */
-    bool isRestartRequested(void) const
+    bool isRestartRequested() const
     {
         return m_isRestartReq;
     }
@@ -120,7 +120,7 @@ public:
     /**
      * Request a restart.
      */
-    void reqRestart(void)
+    void reqRestart()
     {
         m_isRestartReq = true;
         return;

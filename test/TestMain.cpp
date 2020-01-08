@@ -121,7 +121,7 @@ public:
      * 
      * @return Write buffer
      */
-    const char* getBuffer(void)
+    const char* getBuffer()
     {
         return m_buffer;
     }
@@ -215,7 +215,7 @@ public:
      * 
      * @return Display buffer
      */
-    uint16_t* getBuffer(void)
+    uint16_t* getBuffer()
     {
         return m_buffer;
     }
@@ -225,7 +225,7 @@ public:
      * 
      * @return Call counter
      */
-    uint32_t getCallCounterDrawPixel(void) const
+    uint32_t getCallCounterDrawPixel() const
     {
         return m_callCounterDrawPixel;
     }
@@ -244,7 +244,7 @@ public:
     /**
      * Dump display buffer to console.
      */
-    void dump(void) const
+    void dump() const
     {
         uint16_t    x   = 0u;
         uint16_t    y   = 0u;
@@ -391,7 +391,7 @@ public:
      * 
      * @return Pen color
      */
-    const Color& getPenColor(void) const
+    const Color& getPenColor() const
     {
         return m_color;
     }
@@ -497,7 +497,7 @@ public:
      * 
      * @return Call counter for entry method.
      */
-    uint32_t getCallCntEntry(void) const
+    uint32_t getCallCntEntry() const
     {
         return m_callCntEntry;
     }
@@ -507,7 +507,7 @@ public:
      * 
      * @return Call counter for exit method.
      */
-    uint32_t getCallCntExit(void) const
+    uint32_t getCallCntExit() const
     {
         return m_callCntExit;
     }
@@ -599,7 +599,7 @@ static T getMin(const T value1, const T value2)
 /**
  * Doubly linked list tests.
  */
-static void testDoublyLinkedList(void)
+static void testDoublyLinkedList()
 {
     DLinkedList<uint32_t>   list;
     uint32_t                value   = 1u;
@@ -758,7 +758,7 @@ static void testDoublyLinkedList(void)
 /**
  * Widget tests.
  */
-static void testWidget(void)
+static void testWidget()
 {
     TestGfx     testGfx;
     TestWidget  testWidget;
@@ -839,7 +839,7 @@ static void testWidget(void)
 /**
  * Canvas tests.
  */
-void testCanvas(void)
+void testCanvas()
 {
     const uint16_t  CANVAS_WIDTH        = 8;
     const uint16_t  CANVAS_HEIGHT       = 8;
@@ -945,7 +945,7 @@ void testCanvas(void)
 /**
  * Test lamp widget.
  */
-static void testLampWidget(void)
+static void testLampWidget()
 {
     const Color     COLOR_OFF   = 0x111111;
     const Color     COLOR_ON    = 0x222222;
@@ -1023,7 +1023,7 @@ static void testLampWidget(void)
 /**
  * Test bitmap widget.
  */
-static void testBitmapWidget(void)
+static void testBitmapWidget()
 {
     const uint8_t BITMAP_WIDTH      = TestGfx::HEIGHT;  /* Use height as width here for a square */
     const uint8_t BITMAP_HEIGHT     = TestGfx::HEIGHT;
@@ -1093,7 +1093,7 @@ static void testBitmapWidget(void)
 /**
  * Test text widget.
  */
-static void testTextWidget(void)
+static void testTextWidget()
 {
     TestGfx     testGfx;
     TextWidget  textWidget;
@@ -1167,7 +1167,7 @@ static void testTextWidget(void)
 /**
  * Test color.
  */
-static void testColor(void)
+static void testColor()
 {
     Color myColorA;
     Color myColorB  = ColorDef::TOMATO;
@@ -1223,7 +1223,7 @@ static void testColor(void)
 /**
  * Test the abstract state machine.
  */
-static void testStateMachine(void)
+static void testStateMachine()
 {
     TestState       stateA;
     TestState       stateB;
@@ -1279,7 +1279,7 @@ static void testStateMachine(void)
 /**
  * Test simple timer.
  */
-static void testSimpleTimer(void)
+static void testSimpleTimer()
 {
     SimpleTimer testTimer;
 
@@ -1316,7 +1316,7 @@ static void testSimpleTimer(void)
 /**
  * Test progress bar.
  */
-static void testProgressBar(void)
+static void testProgressBar()
 {
     TestGfx     testGfx;
     ProgressBar progressBar;
@@ -1391,7 +1391,7 @@ static void testProgressBar(void)
  * Note: In order to let these tests pass the formating of the expected logMessage has to stay directly after the LogMessage (__LINE__-1), 
  * otherwise the tests will fail.
  */
-static void testLogging(void)
+static void testLogging()
 {
     TestLogger      myTestLogger;
     const char*     printBuffer     = NULL;

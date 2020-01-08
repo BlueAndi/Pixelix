@@ -67,7 +67,7 @@ public:
      * 
      * @return State instance
      */
-    static APState& getInstance(void)
+    static APState& getInstance()
     {
         return m_instance;
     }

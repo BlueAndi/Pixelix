@@ -196,7 +196,7 @@ public:
      * 
      * @return Red value
      */
-    uint8_t getRed(void) const
+    uint8_t getRed() const
     {
         return m_red;
     }
@@ -206,7 +206,7 @@ public:
      * 
      * @return Green value
      */
-    uint8_t getGreen(void) const
+    uint8_t getGreen() const
     {
         return m_green;
     }
@@ -216,7 +216,7 @@ public:
      * 
      * @return Blue value
      */
-    uint8_t getBlue(void) const
+    uint8_t getBlue() const
     {
         return m_blue;
     }
@@ -262,7 +262,7 @@ public:
      * 
      * @return Color in 5-6-5 RGB format
      */
-    uint16_t to565(void) const
+    uint16_t to565() const
     {
         const uint16_t  RED     = m_red;
         const uint16_t  GREEN   = m_green;

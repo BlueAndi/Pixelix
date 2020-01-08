@@ -108,7 +108,7 @@ size_t Print::print(long n, int base)
     }
 }
 
-size_t Print::println(void)
+size_t Print::println()
 {
     return print("\r\n");
 }

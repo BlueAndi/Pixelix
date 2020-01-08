@@ -64,7 +64,7 @@ void SysMsgPlugin::active(IGfx& gfx)
     return;
 }
 
-void SysMsgPlugin::inactive(void)
+void SysMsgPlugin::inactive()
 {
     /* If duration is not infinite, disable plugin now. */
     if (DURATION_INFINITE != m_duration)

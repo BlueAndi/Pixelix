@@ -66,7 +66,7 @@ public:
      * 
      * @return State instance
      */
-    static IdleState& getInstance(void)
+    static IdleState& getInstance()
     {
         return m_instance;
     }

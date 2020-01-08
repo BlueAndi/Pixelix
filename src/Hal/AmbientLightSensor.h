@@ -66,7 +66,7 @@ public:
      * 
      * @return Ambient light sensor driver instance
      */
-    static AmbientLightSensor& getInstance(void)
+    static AmbientLightSensor& getInstance()
     {
         return m_instance;
     }

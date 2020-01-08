@@ -66,7 +66,7 @@ PluginMgr   PluginMgr::m_instance;
  * Public Methods
  *****************************************************************************/
 
-SysMsgPlugin* PluginMgr::installSysMsgPlugin(void)
+SysMsgPlugin* PluginMgr::installSysMsgPlugin()
 {
     SysMsgPlugin*   plugin = new SysMsgPlugin();
 
@@ -82,7 +82,7 @@ SysMsgPlugin* PluginMgr::installSysMsgPlugin(void)
     return  plugin;
 }
 
-JustTextPlugin* PluginMgr::installJustTextPlugin(void)
+JustTextPlugin* PluginMgr::installJustTextPlugin()
 {
     JustTextPlugin* plugin = new JustTextPlugin();
 
@@ -98,7 +98,7 @@ JustTextPlugin* PluginMgr::installJustTextPlugin(void)
     return  plugin;
 }
 
-FirePlugin* PluginMgr::installFirePlugin(void)
+FirePlugin* PluginMgr::installFirePlugin()
 {
     FirePlugin* plugin = new FirePlugin();
 
@@ -114,7 +114,7 @@ FirePlugin* PluginMgr::installFirePlugin(void)
     return  plugin;
 }
 
-IconTextPlugin* PluginMgr::installIconTextPlugin(void)
+IconTextPlugin* PluginMgr::installIconTextPlugin()
 {
     IconTextPlugin* plugin = new IconTextPlugin();
 
@@ -130,7 +130,7 @@ IconTextPlugin* PluginMgr::installIconTextPlugin(void)
     return  plugin;
 }
 
-IconTextLampPlugin* PluginMgr::installIconTextLampPlugin(void)
+IconTextLampPlugin* PluginMgr::installIconTextLampPlugin()
 {
     IconTextLampPlugin* plugin = new IconTextLampPlugin();
 

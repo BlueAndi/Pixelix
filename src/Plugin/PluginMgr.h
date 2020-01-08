@@ -74,7 +74,7 @@ public:
      *
      * @return Plugin manager instance
      */
-    static PluginMgr& getInstance(void)
+    static PluginMgr& getInstance()
     {
         return m_instance;
     }

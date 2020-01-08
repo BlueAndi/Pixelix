@@ -88,7 +88,7 @@ public:
      *
      * @return Name of the plugin.
      */
-    const char* getName(void) const
+    const char* getName() const
     {
         return "SysMsgPlugin";
     }
@@ -100,7 +100,7 @@ public:
      * 
      * @return Duration in ms
      */
-    uint32_t getDuration(void)
+    uint32_t getDuration()
     {
         return m_duration;
     }
@@ -117,7 +117,7 @@ public:
      * This method will be called in case the plugin is set inactive, which means
      * it won't be shown on the display anymore.
      */
-    void inactive(void) override;
+    void inactive() override;
 
     /**
      * Update the display.

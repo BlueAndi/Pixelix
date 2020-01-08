@@ -78,7 +78,7 @@ void FirePlugin::active(IGfx& gfx)
     return;
 }
 
-void FirePlugin::inactive(void)
+void FirePlugin::inactive()
 {
     /* Nothing to do. */
     return;

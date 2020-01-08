@@ -135,7 +135,7 @@ public:
      * 
      * @return Current state
      */
-    AbstractState* getState(void)
+    AbstractState* getState()
     {
         return m_currentState;
     }
@@ -155,7 +155,7 @@ public:
      * Process the state machine.
      * It handles all state activities.
      */
-    void process(void)
+    void process()
     {
         /* Request for change state available? */
         if (NULL != m_nextState)

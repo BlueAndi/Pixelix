@@ -93,7 +93,7 @@ public:
      * 
      * @return Width in pixel
      */
-    int16_t width(void) const
+    int16_t width() const
     {
         return m_width;
     }
@@ -103,7 +103,7 @@ public:
      * 
      * @return Height in pixel
      */
-    int16_t height(void) const
+    int16_t height() const
     {
         return m_height;
     }
@@ -261,7 +261,7 @@ public:
      * 
      * @return Current selected font.
      */
-    const GFXfont* getFont(void) const
+    const GFXfont* getFont() const
     {
         return m_font;
     }

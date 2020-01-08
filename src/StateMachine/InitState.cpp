@@ -221,7 +221,7 @@ void InitState::exit(StateMachine& sm)
  * Private Methods
  *****************************************************************************/
 
-void InitState::showStartupInfoOnSerial(void)
+void InitState::showStartupInfoOnSerial()
 {
     LOG_INFO("PIXELIX starts up ...");
     LOG_INFO(String("SW version: ") + Version::SOFTWARE);
@@ -233,7 +233,7 @@ void InitState::showStartupInfoOnSerial(void)
     return;
 }
 
-void InitState::showStartupInfoOnDisplay(void)
+void InitState::showStartupInfoOnDisplay()
 {
     SysMsg& sysMsg = SysMsg::getInstance();
 

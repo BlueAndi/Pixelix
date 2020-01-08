@@ -66,7 +66,7 @@ public:
      * 
      * @return State instance
      */
-    static ErrorState& getInstance(void)
+    static ErrorState& getInstance()
     {
         return m_instance;
     }

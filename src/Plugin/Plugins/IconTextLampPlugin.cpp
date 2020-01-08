@@ -110,7 +110,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
     return;
 }
 
-void IconTextLampPlugin::inactive(void)
+void IconTextLampPlugin::inactive()
 {
     /* Nothing to do. */
     return;
@@ -510,7 +510,7 @@ void IconTextLampPlugin::webReqHandlerLamp(AsyncWebServerRequest *request)
     return;
 }
 
-String IconTextLampPlugin::getFileName(void)
+String IconTextLampPlugin::getFileName()
 {
     String filename = UPLOAD_PATH;
 

@@ -67,7 +67,7 @@ public:
      * 
      * @return State instance
      */
-    static ConnectedState& getInstance(void)
+    static ConnectedState& getInstance()
     {
         return m_instance;
     }

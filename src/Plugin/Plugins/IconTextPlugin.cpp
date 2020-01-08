@@ -94,7 +94,7 @@ void IconTextPlugin::active(IGfx& gfx)
     return;
 }
 
-void IconTextPlugin::inactive(void)
+void IconTextPlugin::inactive()
 {
     /* Nothing to do. */
     return;
@@ -387,7 +387,7 @@ void IconTextPlugin::iconUploadHandler(AsyncWebServerRequest *request, const Str
     return;
 }
 
-String IconTextPlugin::getFileName(void)
+String IconTextPlugin::getFileName()
 {
     String filename = UPLOAD_PATH;
 

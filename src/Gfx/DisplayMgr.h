@@ -73,7 +73,7 @@ public:
      * 
      * @return LED matrix
      */
-    static DisplayMgr& getInstance(void)
+    static DisplayMgr& getInstance()
     {
         return m_instance;
     }

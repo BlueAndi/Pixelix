@@ -97,7 +97,7 @@ public:
      * 
      * @return Slot id
      */
-    uint8_t getSlotId(void) const
+    uint8_t getSlotId() const
     {
         return m_slotId;
     }
@@ -133,7 +133,7 @@ public:
      *
      * @return Name of the plugin.
      */
-    virtual const char* getName(void) const = 0;
+    virtual const char* getName() const = 0;
 
     /**
      * Get duration how long the plugin shall be active.
@@ -142,7 +142,7 @@ public:
      * 
      * @return Duration in ms
      */
-    virtual uint32_t getDuration(void)
+    virtual uint32_t getDuration()
     {
         return DURATION_DEFAULT;
     }
@@ -152,7 +152,7 @@ public:
      * 
      * @return If plugin is enabled, it will return true otherwise false.
      */
-    bool isEnabled(void) const
+    bool isEnabled() const
     {
         return m_isEnabled;
     }
@@ -161,7 +161,7 @@ public:
      * Enable plugin.
      * Only a enabled plugin will be scheduled.
      */
-    void enable(void)
+    void enable()
     {
         m_isEnabled = true;
         return;
@@ -172,7 +172,7 @@ public:
      * A disabled plugin won't be scheduled in the next cycle.
      * Note, calling this doesn't abort a active phase.
      */
-    void disable(void)
+    void disable()
     {
         m_isEnabled = false;
         return;
@@ -182,7 +182,7 @@ public:
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
      */
-    virtual void start(void)
+    virtual void start()
     {
         return;
     }
@@ -191,7 +191,7 @@ public:
      * Stop the plugin.
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
-    virtual void stop(void)
+    virtual void stop()
     {
         return;
     }
@@ -201,7 +201,7 @@ public:
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
      */
-    virtual void process(void)
+    virtual void process()
     {
         return;
     }
@@ -224,7 +224,7 @@ public:
      * it won't be shown on the display anymore.
      * Overwrite it if your plugin needs to know this.
      */
-    virtual void inactive(void)
+    virtual void inactive()
     {
         return;
     }

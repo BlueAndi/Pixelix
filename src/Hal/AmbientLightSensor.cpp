@@ -86,7 +86,7 @@ AmbientLightSensor AmbientLightSensor::m_instance;
  * Public Methods
  *****************************************************************************/
 
-bool AmbientLightSensor::isSensorAvailable(void)
+bool AmbientLightSensor::isSensorAvailable()
 {
     const uint16_t  ADC_UINT16  = Board::ldrIn.read();
     bool            isAvailable = false;
@@ -99,7 +99,7 @@ bool AmbientLightSensor::isSensorAvailable(void)
     return isAvailable;
 }
 
-AmbientLightSensor::AmbientLightLevel AmbientLightSensor::getAmbientLightLevel(void)
+AmbientLightSensor::AmbientLightLevel AmbientLightSensor::getAmbientLightLevel()
 {
     uint16_t            adcValue    = Board::ldrIn.read();
     uint8_t             levelIndex  = 0u;
@@ -123,7 +123,7 @@ AmbientLightSensor::AmbientLightLevel AmbientLightSensor::getAmbientLightLevel(v
     return level;
 }
 
-float AmbientLightSensor::getIlluminance(void)
+float AmbientLightSensor::getIlluminance()
 {
     const uint16_t  ADC_UINT16  = Board::ldrIn.read();
     float           illuminance = 0.0f;
@@ -204,7 +204,7 @@ float AmbientLightSensor::getIlluminance(void)
     return illuminance;
 }
 
-float AmbientLightSensor::getNormalizedLight(void)
+float AmbientLightSensor::getNormalizedLight()
 {
     float illuminance = getIlluminance();
 

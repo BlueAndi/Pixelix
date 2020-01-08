@@ -79,7 +79,7 @@ static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
  * External Functions
  *****************************************************************************/
 
-void MyWebServer::init(void)
+void MyWebServer::init()
 {
     /* Register all web pages */
     Pages::init(gWebServer);
@@ -93,7 +93,7 @@ void MyWebServer::init(void)
     return;
 }
 
-void MyWebServer::begin(void)
+void MyWebServer::begin()
 {
     /* Start webserver */
     gWebServer.begin();
@@ -101,7 +101,7 @@ void MyWebServer::begin(void)
     return;
 }
 
-void MyWebServer::end(void)
+void MyWebServer::end()
 {
     /* Stop webserver */
     gWebServer.end();
@@ -109,7 +109,7 @@ void MyWebServer::end(void)
     return;
 }
 
-AsyncWebServer& MyWebServer::getInstance(void)
+AsyncWebServer& MyWebServer::getInstance()
 {
     return gWebServer;
 }

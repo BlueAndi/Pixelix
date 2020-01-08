@@ -67,7 +67,7 @@ public:
      * 
      * @return System message handler instance
      */
-    static SysMsg& getInstance(void)
+    static SysMsg& getInstance()
     {
         return m_instance;
     }

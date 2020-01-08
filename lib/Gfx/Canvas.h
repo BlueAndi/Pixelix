@@ -133,7 +133,7 @@ public:
      * 
      * @return Children
      */
-    const DLinkedList<Widget*>& children(void) const
+    const DLinkedList<Widget*>& children() const
     {
         return m_widgets;
     }

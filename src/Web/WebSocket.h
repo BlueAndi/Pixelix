@@ -69,7 +69,7 @@ public:
      * 
      * @return Websocket server instance
      */
-    static WebSocketSrv& getInstance(void)
+    static WebSocketSrv& getInstance()
     {
         return m_instance;
     }

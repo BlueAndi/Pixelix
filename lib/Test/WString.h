@@ -314,7 +314,7 @@ public:
      * 
      * @return Char array
      */
-    const char* c_str(void) const
+    const char* c_str() const
     {
         static const char*  emptyStr    = "";
         const char*         buffer      = m_buffer;
@@ -332,7 +332,7 @@ public:
      * 
      * @return String length
      */
-    unsigned int length(void) const
+    unsigned int length() const
     {
         unsigned int    length  = 0;
         const char*     ptr     = m_buffer;

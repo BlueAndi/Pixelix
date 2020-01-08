@@ -65,7 +65,7 @@ DisplayMgr  DisplayMgr::m_instance;
  * Public Methods
  *****************************************************************************/
 
-bool DisplayMgr::begin(void)
+bool DisplayMgr::begin()
 {
     bool status = false;
 
@@ -131,7 +131,7 @@ bool DisplayMgr::begin(void)
     return status;
 }
 
-void DisplayMgr::end(void)
+void DisplayMgr::end()
 {
     /* Already running? */
     if (NULL != m_taskHandle)
@@ -154,7 +154,7 @@ void DisplayMgr::end(void)
     return;
 }
 
-void DisplayMgr::lock(void)
+void DisplayMgr::lock()
 {
     if (NULL != m_xMutex)
     {
@@ -164,7 +164,7 @@ void DisplayMgr::lock(void)
     return;
 }
 
-void DisplayMgr::unlock(void)
+void DisplayMgr::unlock()
 {
     if (NULL != m_xMutex)
     {
@@ -439,7 +439,7 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
     return slotId;
 }
 
-void DisplayMgr::process(void)
+void DisplayMgr::process()
 {
     LedMatrix&  matrix  = LedMatrix::getInstance();
     uint8_t     index   = 0u;

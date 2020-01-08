@@ -70,7 +70,7 @@ public:
      * 
      * @return LED matrix
      */
-    static LedMatrix& getInstance(void)
+    static LedMatrix& getInstance()
     {
         return m_instance;
     }
@@ -80,7 +80,7 @@ public:
      * 
      * @return If successful, returns true otherwise false.
      */
-    bool begin(void)
+    bool begin()
     {
         m_strip.Begin();
         m_strip.Show();
@@ -91,7 +91,7 @@ public:
     /**
      * Show internal framebuffer on physical LED matrix.
      */
-    void show(void)
+    void show()
     {
         m_strip.Show();
         return;
@@ -102,7 +102,7 @@ public:
      * 
      * @return If ready for another update via show(), it will return true otherwise false.
      */
-    bool isReady(void) const
+    bool isReady() const
     {
         return m_strip.CanShow();
     }
@@ -121,7 +121,7 @@ public:
     /**
      * Clear LED matrix.
      */
-    void clear(void)
+    void clear()
     {
         m_strip.ClearTo(ColorDef::BLACK);
         return;
