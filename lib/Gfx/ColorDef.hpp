@@ -490,6 +490,9 @@ namespace ColorDef
     FUNCTIONS
 *******************************************************************************/
 
+/**
+ * Color definitions
+ */
 namespace ColorDef
 {    
     /**
