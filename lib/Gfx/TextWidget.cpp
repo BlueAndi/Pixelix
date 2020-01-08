@@ -37,6 +37,8 @@
 #include <Fonts/TomThumb.h>
 #include <Util.h>
 
+#include <Logging.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -58,10 +60,17 @@
  *****************************************************************************/
 
 /* Initialize text widget type. */
-const char*     TextWidget::WIDGET_TYPE     = "text";
+const char*                 TextWidget::WIDGET_TYPE     = "text";
 
 /* Initialize default font */
-const GFXfont*  TextWidget::DEFAULT_FONT    = &TomThumb;
+const GFXfont*              TextWidget::DEFAULT_FONT    = &TomThumb;
+
+/* Initialize keyword list */
+TextWidget::KeywordHandler  TextWidget::m_keywordHandlers[]    =
+{
+    &TextWidget::handleColor,
+    &TextWidget::handleAlignment
+};
 
 /******************************************************************************
  * Public Methods
@@ -85,7 +94,7 @@ void TextWidget::update(IGfx& gfx)
         uint16_t    textHeight      = 0u;
         String      str             = removeFormatTags(m_formatStr);
 
-        gfx.getTextBounds(str, cursorX, cursorY, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
+        gfx.getTextBounds(str, 0, 0, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
 
         /* Text too long for the display? */
         if (gfx.width() < m_textWidth)
@@ -139,7 +148,7 @@ String TextWidget::removeFormatTags(const String& formatStr) const
 {
     uint32_t    index       = 0u;
     bool        escapeFound = false;
-    bool        showChar    = false;
+    bool        useChar     = false;
     String      str;
     uint32_t    length      = formatStr.length();
 
@@ -152,56 +161,49 @@ String TextWidget::removeFormatTags(const String& formatStr) const
             if (true == escapeFound)
             {
                 escapeFound = false;
-                showChar    = true;
+                useChar     = true;
             }
             else
             {
                 escapeFound = true;
+                ++index;
             }
         }
-        /* Begin of a color tag? */
-        else if ('#' == formatStr[index])
+        else if (true == escapeFound)
         {
-            /* Escaped? */
-            if (true == escapeFound)
-            {
-                escapeFound = false;
-                showChar    = true;
-            }
-            else if (length <= (index + 6u))
-            {
-                showChar = true;
-            }
-            else
-            {
-                String      colorStr    = String("0x") + formatStr.substring(index + 1, index + 1 + 6);
-                uint32_t    colorRGB888;
-                bool        convStatus  = Util::strToUInt32(colorStr, colorRGB888);
+            uint8_t keywordIndex = 0u;
 
-                if (false == convStatus)
+            for(keywordIndex = 0u; keywordIndex < UTIL_ARRAY_NUM(m_keywordHandlers); ++keywordIndex)
+            {
+                KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
+                uint8_t         overstep    = 0u;
+                bool            status      = (this->*handler)(NULL, false, formatStr.substring(index), overstep);
+
+                if (true == status)
                 {
-                    showChar = true;
-                }
-                else
-                {
-                    /* Overstep only color information. The '#' will be overstepped at the end of the loop. */
-                    index += 6u;
+                    index += overstep;
+                    break;
                 }
             }
+
+            if (UTIL_ARRAY_NUM(m_keywordHandlers) <= keywordIndex)
+            {
+                useChar = true;
+            }
+
+            escapeFound = false;
         }
         else
         {
-            showChar = true;
+            useChar = true;
         }
 
-        if (true == showChar)
+        if (true == useChar)
         {
-            showChar = false;
-
+            useChar = false;
             str += formatStr[index];
+            ++index;
         }
-
-        ++index;
     }
 
     return str;
@@ -211,7 +213,7 @@ void TextWidget::show(IGfx& gfx, const String& formatStr) const
 {
     uint32_t    index       = 0u;
     bool        escapeFound = false;
-    bool        showChar    = false;
+    bool        useChar     = false;
     uint32_t    length      = formatStr.length();
 
     while(length > index)
@@ -223,64 +225,141 @@ void TextWidget::show(IGfx& gfx, const String& formatStr) const
             if (true == escapeFound)
             {
                 escapeFound = false;
-                showChar    = true;
+                useChar     = true;
             }
             else
             {
                 escapeFound = true;
+                ++index;
             }
         }
-        /* Begin of a color tag? */
-        else if ('#' == formatStr[index])
+        else if (true == escapeFound)
         {
-            /* Escaped? */
-            if (true == escapeFound)
-            {
-                escapeFound = false;
-                showChar    = true;
-            }
-            else if (length <= (index + 6u))
-            {
-                showChar = true;
-            }
-            else
-            {
-                String      colorStr    = String("0x") + formatStr.substring(index + 1, index + 1 + 6);
-                uint32_t    colorRGB888;
-                bool        convStatus  = Util::strToUInt32(colorStr, colorRGB888);
+            uint8_t keywordIndex = 0u;
 
-                if (false == convStatus)
-                {
-                    showChar = true;
-                }
-                else
-                {
-                    Color textColor(colorRGB888);
-                    gfx.setTextColor(textColor.to565());
+            for(keywordIndex = 0u; keywordIndex < UTIL_ARRAY_NUM(m_keywordHandlers); ++keywordIndex)
+            {
+                KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
+                uint8_t         overstep    = 0u;
+                bool            status      = (this->*handler)(&gfx, false, formatStr.substring(index), overstep);
 
-                    /* Overstep only color information. The '#' will be overstepped at the end of the loop. */
-                    index += 6u;
+                if (true == status)
+                {
+                    index += overstep;
+                    break;
                 }
             }
+
+            if (UTIL_ARRAY_NUM(m_keywordHandlers) <= keywordIndex)
+            {
+                useChar = true;
+            }
+
+            escapeFound = false;
         }
         else
         {
-            showChar = true;
+            useChar = true;
         }
 
-        if (true == showChar)
+        if (true == useChar)
         {
-            showChar = false;
+            useChar = false;
 
             gfx.print(formatStr[index]);
+            ++index;
         }
-
-        ++index;
     }
 
+    /* Text color might be changed, restore original. */
     gfx.setTextColor(m_textColor.to565());
 
     return;
+}
+
+bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const
+{
+    bool status = false;
+
+    if ('#' == formatStr[0])
+    {
+        const uint8_t   RGB_HEX_LEN = 6u;
+        String          colorStr    = String("0x") + formatStr.substring(1, 1 + RGB_HEX_LEN);
+        uint32_t        colorRGB888;
+        bool            convStatus  = Util::strToUInt32(colorStr, colorRGB888);
+
+        if (true == convStatus)
+        {
+            if ((false == noAction) &&
+                (NULL != gfx))
+            {
+                Color textColor(colorRGB888);
+                gfx->setTextColor(textColor.to565());
+            }
+
+            overstep    = 1u + RGB_HEX_LEN;
+            status      = true;
+        }
+    }
+
+    return status;
+}
+
+bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const
+{
+    bool status                 = false;
+    const uint8_t   KEYWORD_LEN = 6u;
+
+    /* Alignment left? */
+    if (true == formatStr.startsWith("lalign"))
+    {
+        overstep    = KEYWORD_LEN;
+        status      = true;
+    }
+    /* Alignment right? */
+    else if (true == formatStr.startsWith("ralign"))
+    {
+        String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
+        int16_t     boundaryX   = 0;
+        int16_t     boundaryY   = 0;
+        uint16_t    textWidth   = 0u;
+        uint16_t    textHeight  = 0u;
+
+        if ((false == noAction) &&
+            (NULL != gfx))
+        {
+            gfx->getTextBounds(text, 0, 0, &boundaryX, &boundaryY, &textWidth, &textHeight);
+            gfx->setCursor(gfx->width() - textWidth, gfx->getCursorY());
+        }
+
+        overstep    = KEYWORD_LEN;
+        status      = true;
+    }
+    /* Alignment center? */
+    else if (true == formatStr.startsWith("calign"))
+    {
+        String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
+        int16_t     boundaryX   = 0;
+        int16_t     boundaryY   = 0;
+        uint16_t    textWidth   = 0u;
+        uint16_t    textHeight  = 0u;
+
+        if ((false == noAction) &&
+            (NULL != gfx))
+        {
+            gfx->getTextBounds(text, 0, 0, &boundaryX, &boundaryY, &textWidth, &textHeight);
+            gfx->setCursor(gfx->getCursorX() + (gfx->width() - gfx->getCursorX() - textWidth) / 2, gfx->getCursorY());
+        }
+
+        overstep    = KEYWORD_LEN;
+        status      = true;
+    }
+    else
+    {
+        ;
+    }
+
+    return status;
 }
 
 /******************************************************************************

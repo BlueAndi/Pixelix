@@ -238,7 +238,7 @@ void InitState::showStartupInfoOnDisplay(void)
     SysMsg& sysMsg = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("#FF0000P#0FF000I#00FF00X#000FF0E#0000FFL#F0000FI#FF0000X");
+    sysMsg.show("\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X");
     delay(SYS_MSG_WAIT_TIME);
 
     /* Clear and wait */

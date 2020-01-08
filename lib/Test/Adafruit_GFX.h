@@ -201,6 +201,26 @@ public:
     }
 
     /**
+     * Get cursor x-coordinate.
+     * 
+     * @return Cursor x-coordinate
+     */
+    int16_t getCursorX() const
+    {
+        return m_cursorX;
+    }
+
+    /**
+     * Get cursor y-coordinate.
+     * 
+     * @return Cursor y-coordinate
+     */
+    int16_t getCursorY() const
+    {
+        return m_cursorY;
+    }
+    
+    /**
      * Set text font color with transparant background.
      * Note, method declaration is from Adafruit_GFX.
      * 

@@ -60,8 +60,16 @@
 /**
  * A text widget, showing a colored string.
  * The text has a given color, which can be changed.
- * To color single characters, it supports the color tag "#RRGGBB".
- * Example: "#FF0000H#FFFFFFello!" contains a red "H" and a white "ello!".
+ * 
+ * Different keywords in the string are supported, e.g. for coloring or alignment.
+ * Each keyword starts with a '\\', otherwise its treated as just text.
+ * Example: "\\#FF0000H#FFFFFFello!" contains a red "H" and a white "ello!".
+ * 
+ * Keywords:
+ * - "\\#RRGGBB": Change text color; RRGGBB in hex
+ * - "\\lalign" : Alignment left
+ * - "\\ralign" : Alignment right
+ * - "\\calign" : Alignment center
  */
 class TextWidget : public Widget
 {
@@ -135,14 +143,17 @@ public:
      */
     TextWidget& operator=(const TextWidget& widget)
     {
-        m_formatStr             = widget.m_formatStr;
-        m_textColor             = widget.m_textColor;
-        m_font                  = widget.m_font;
-        m_checkScrollingNeed    = widget.m_checkScrollingNeed;
-        m_isScrollingEnabled    = widget.m_isScrollingEnabled;
-        m_textWidth             = widget.m_textWidth;
-        m_scrollOffset          = widget.m_scrollOffset;
-        m_scrollTimer           = widget.m_scrollTimer;
+        if (&widget != this)
+        {
+            m_formatStr             = widget.m_formatStr;
+            m_textColor             = widget.m_textColor;
+            m_font                  = widget.m_font;
+            m_checkScrollingNeed    = widget.m_checkScrollingNeed;
+            m_isScrollingEnabled    = widget.m_isScrollingEnabled;
+            m_textWidth             = widget.m_textWidth;
+            m_scrollOffset          = widget.m_scrollOffset;
+            m_scrollTimer           = widget.m_scrollTimer;
+        }
 
         return *this;
     }
@@ -250,6 +261,9 @@ public:
 
 private:
 
+    /** Keyword handler method. */
+    typedef bool (TextWidget::*KeywordHandler)(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
+
     String          m_formatStr;            /**< String, which contains format tags. */
     Color           m_textColor;            /**< Text color of the string */
     const GFXfont*  m_font;                 /**< Current font */
@@ -259,6 +273,8 @@ private:
     int16_t         m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
 
+    static KeywordHandler   m_keywordHandlers[];    /**< List of all supported keyword handlers. */
+
     /**
      * Remove format tags from string.
      * 
@@ -267,7 +283,7 @@ private:
      * @return String without format tags
      */
     String removeFormatTags(const String& formatStr) const;
-
+ 
     /**
      * Show formatted text.
      * Format tags:
@@ -277,6 +293,9 @@ private:
      * @param[in] formatStr String which contains format tags
      */
     void show(IGfx& gfx, const String& formatStr) const;
+
+    bool handleColor(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    bool handleAlignment(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
 };
 
 /******************************************************************************

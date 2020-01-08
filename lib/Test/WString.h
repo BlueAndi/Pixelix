@@ -350,6 +350,18 @@ public:
     }
 
     /**
+     * Return the substring from index to the end.
+     * 
+     * @param[in] index Index.
+     * 
+     * @return Substring
+     */
+    String substring(unsigned int index) const
+    {
+        return substring(index, length());
+    }
+
+    /**
      * Return the substring between left and right index.
      * 
      * @param[in] left  Index left
@@ -385,6 +397,43 @@ public:
         }
 
         return out;
+    }
+
+    /**
+     * Starts string with given pattern?
+     * 
+     * @param[in] s2    Pattern
+     * 
+     * @return If string starts with pattern, it will return true otherwise false.
+     */
+    unsigned char startsWith(const String &s2) const
+    {
+        if(length() < s2.length())
+        {
+            return 0u;
+        }
+
+        return startsWith(s2, 0);
+    }
+
+    /**
+     * Starts string with given pattern from offset?
+     * 
+     * @param[in] s2        Pattern
+     * @param[in] offset    Offset
+     * 
+     * @return If string starts with pattern, it will return true otherwise false.
+     */
+    unsigned char startsWith(const String &s2, unsigned int offset) const
+    {
+        if((offset > static_cast<unsigned int>(length() - s2.length())) ||
+           (NULL == m_buffer) ||
+           (NULL == s2.m_buffer))
+        {
+            return 0;
+        }
+
+        return 0 == strncmp(&m_buffer[offset], s2.m_buffer, s2.length());
     }
 
 private:
