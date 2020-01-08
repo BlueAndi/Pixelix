@@ -180,20 +180,20 @@ Color FirePlugin::heatColor(uint8_t temperature)
     uint8_t t192        = static_cast<uint32_t>(temperature) * 191u / 255U;
 
     /* Calculate a value that ramps up from zero to 255 in each 'third' of the scale. */
-    uint8_t heatRamp    = t192 & 0x3F; /* 0..63 */
+    uint8_t heatRamp    = t192 & 0x3fU; /* 0..63 */
 
     /* Scale up to 0..252 */
     heatRamp <<= 2;
 
     /* Now figure out which third of the spectrum we're in. */
-    if (t192 & 0x80)
+    if (t192 & 0x80U)
     {
         /* We're in the hottest third */
         heatColor.setRed(255U);         /* Full red */
         heatColor.setGreen(255U);       /* Full green */
         heatColor.setBlue(heatRamp);    /* Ramp up blue */
     }
-    else if (t192 & 0x40)
+    else if (t192 & 0x40U)
     {
         /* We're in the middle third */
         heatColor.setRed(255U);         /* Full red */
