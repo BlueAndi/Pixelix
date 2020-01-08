@@ -108,6 +108,9 @@ static const uint8_t    supplyVoltage       = 5U;
 /** LED matrix max. supply current in mA */
 static const uint32_t   supplyCurrentMax    = 3500U;
 
+/** Max. current in mA per LED */
+static const uint32_t   maxCurrentPerLed    = 60U;
+
 };
 
 /******************************************************************************

@@ -114,7 +114,14 @@ public:
      */
     void setBrightness(uint8_t brightness)
     {
-        m_strip.SetBrightness(brightness);
+        /* To protect the the electronic parts, the brigntness will be scaled down
+         * according to the max. supply current.
+         */
+        const uint8_t SAFE_BRIGHTNESS =
+            (Board::LedMatrix::supplyCurrentMax * brightness) /
+            (Board::LedMatrix::maxCurrentPerLed * Board::LedMatrix::width *Board::LedMatrix::height);
+
+        m_strip.SetBrightness(SAFE_BRIGHTNESS);
         return;
     }
 
