@@ -36,7 +36,7 @@ install:
     - platformio update
 script:
     - platformio run --environment esp32doit-devkit-v1
-    - platformio check --environment esp32doit-devkit-v1 --severity=high  --fail-on-defect --pattern "include" --pattern "src" --pattern "lib/Gfx" --pattern "lib/LinkedList" --pattern "lib/StateMachine" --pattern "lib/Utilities" --flags="--std=c++11"
+    - platformio check --environment esp32doit-devkit-v1 --severity=high  --fail-on-defect=high --pattern "include" --pattern "src" --pattern "lib/Gfx" --pattern "lib/LinkedList" --pattern "lib/StateMachine" --pattern "lib/Utilities" --flags="--std=c++11"
     - platformio test --environment native
     - cd ./doc/doxygen;
     - doxygen --version
