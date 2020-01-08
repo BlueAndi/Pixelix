@@ -53,7 +53,7 @@ namespace WebConfig
  *****************************************************************************/
 
 /** Web server port */
-static const uint32_t   WEBSERVER_PORT          = 80u;
+static const uint32_t   WEBSERVER_PORT          = 80U;
 
 /** Project title, used by the web pages. */
 static const char       PROJECT_TITLE[]         = "PIXELIX";
@@ -68,7 +68,7 @@ static const char       WEB_LOGIN_PASSWORD[]    = "skywalker";
 static const char       WEBSOCKET_PROTOCOL[]    = "ws";
 
 /** Websocket port */
-static const uint32_t   WEBSOCKET_PORT          = 80u;
+static const uint32_t   WEBSOCKET_PORT          = 80U;
 
 /** Websocket path */
 static const char       WEBSOCKET_PATH[]        = "/ws";

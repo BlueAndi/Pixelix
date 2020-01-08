@@ -70,9 +70,9 @@ public:
     TestLogger():
         m_buffer()
     {
-        uint16_t index = 0u;
+        uint16_t index = 0U;
 
-        for(index = 0u; index < UTIL_ARRAY_NUM(m_buffer); ++index)
+        for(index = 0U; index < UTIL_ARRAY_NUM(m_buffer); ++index)
         {
             m_buffer[index] = 0;
         }
@@ -106,9 +106,9 @@ public:
      */
     size_t write(const uint8_t* buffer, size_t size)
     {
-        uint16_t index = 0u;
+        uint16_t index = 0U;
         
-        for(index = 0u; index < UTIL_ARRAY_NUM(m_buffer); ++index)
+        for(index = 0U; index < UTIL_ARRAY_NUM(m_buffer); ++index)
         {
             m_buffer[index] = static_cast<char>(buffer[index]);
         }
@@ -151,13 +151,13 @@ public:
     TestGfx() :
         IGfx(WIDTH, HEIGHT),
         m_buffer(),
-        m_callCounterDrawPixel(0u)
+        m_callCounterDrawPixel(0U)
     {
-        uint16_t index = 0u;
+        uint16_t index = 0U;
 
-        for(index = 0u; index < UTIL_ARRAY_NUM(m_buffer); ++index)
+        for(index = 0U; index < UTIL_ARRAY_NUM(m_buffer); ++index)
         {
-            m_buffer[index] = 0u;
+            m_buffer[index] = 0U;
         }
     }
 
@@ -246,12 +246,12 @@ public:
      */
     void dump() const
     {
-        uint16_t    x   = 0u;
-        uint16_t    y   = 0u;
+        uint16_t    x   = 0U;
+        uint16_t    y   = 0U;
 
-        for(y = 0u; y < HEIGHT; ++y)
+        for(y = 0U; y < HEIGHT; ++y)
         {
-            for(x = 0u; x < WIDTH; ++x)
+            for(x = 0U; x < WIDTH; ++x)
             {
                 if (0u < x)
                 {
@@ -279,8 +279,8 @@ public:
      */
     bool verify(int16_t posX, int16_t posY, uint16_t width, uint16_t height, uint16_t color)
     {
-        uint16_t    x               = 0u;
-        uint16_t    y               = 0u;
+        uint16_t    x               = 0U;
+        uint16_t    y               = 0U;
         bool        isSuccessful    = true;
 
         TEST_ASSERT_LESS_OR_EQUAL(WIDTH, posX + width);
@@ -288,7 +288,7 @@ public:
 
         while((height > y) && (true == isSuccessful))
         {
-            x = 0u;
+            x = 0U;
             while((width > x) && (true == isSuccessful))
             {
                 if (color != m_buffer[posX + x + (posY + y) * WIDTH])
@@ -314,12 +314,12 @@ public:
      */
     void fill(uint16_t color)
     {
-        uint16_t    x   = 0u;
-        uint16_t    y   = 0u;
+        uint16_t    x   = 0U;
+        uint16_t    y   = 0U;
 
-        for(y = 0u; y < HEIGHT; ++y)
+        for(y = 0U; y < HEIGHT; ++y)
         {
-            for(x = 0u; x < WIDTH; ++x)
+            for(x = 0U; x < WIDTH; ++x)
             {
                 m_buffer[x + y * WIDTH] = color;
             }
@@ -354,7 +354,7 @@ public:
      */
     TestWidget() :
         Widget(WIDGET_TYPE, 0, 0),
-        m_color(0u)
+        m_color(0U)
     {
     }
 
@@ -407,8 +407,8 @@ public:
         return;
     }
 
-    static const uint16_t   WIDTH       = 10u;  /**< Widget width in pixel */
-    static const uint16_t   HEIGHT      = 5u;   /**< Widget height in pixel */
+    static const uint16_t   WIDTH       = 10U;  /**< Widget width in pixel */
+    static const uint16_t   HEIGHT      = 5U;   /**< Widget height in pixel */
     static const char*      WIDGET_TYPE;        /**< Widget type string */
 
 private:
@@ -430,8 +430,8 @@ public:
      * Constructs the test state.
      */
     TestState() :
-        m_callCntEntry(0u),
-        m_callCntExit(0u),
+        m_callCntEntry(0U),
+        m_callCntExit(0U),
         m_nextState(NULL)
     {
     }
@@ -602,9 +602,9 @@ static T getMin(const T value1, const T value2)
 static void testDoublyLinkedList()
 {
     DLinkedList<uint32_t>   list;
-    uint32_t                value   = 1u;
-    uint32_t                index   = 0u;
-    const uint32_t          max     = 3u;
+    uint32_t                value   = 1U;
+    uint32_t                index   = 0U;
+    const uint32_t          max     = 3U;
 
     /* List is empty. */
     TEST_ASSERT_NULL(list.first());
@@ -640,7 +640,7 @@ static void testDoublyLinkedList()
     TEST_ASSERT_FALSE(list.prev());
 
     /* Add more elements */
-    for(index = 1u; index <= max; ++index)
+    for(index = 1U; index <= max; ++index)
     {
         TEST_ASSERT_TRUE(list.append(index));
         TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
@@ -653,7 +653,7 @@ static void testDoublyLinkedList()
     TEST_ASSERT_EQUAL_INT(max, *list.last());
 
     /* Select element for element, from head to tail. */
-    for(index = 1u; index <= max; ++index)
+    for(index = 1U; index <= max; ++index)
     {
         TEST_ASSERT_NOT_NULL(list.current());
         TEST_ASSERT_EQUAL_INT(index, *list.current());
@@ -670,12 +670,12 @@ static void testDoublyLinkedList()
     }
 
     /* Select element for element, from tail to head. */
-    for(index = max; index > 0u; --index)
+    for(index = max; index > 0U; --index)
     {
         TEST_ASSERT_NOT_NULL(list.current());
         TEST_ASSERT_EQUAL_INT(index, *list.current());
 
-        if (index > 1u)
+        if (index > 1U)
         {
             TEST_ASSERT_TRUE(list.prev());
         }
@@ -700,7 +700,7 @@ static void testDoublyLinkedList()
     TEST_ASSERT_FALSE(list.prev());
 
     /* Insert elements again */
-    for(index = 1u; index <= max; ++index)
+    for(index = 1U; index <= max; ++index)
     {
         TEST_ASSERT_TRUE(list.append(index));
         TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
@@ -711,7 +711,7 @@ static void testDoublyLinkedList()
         DLinkedList<uint32_t> copyOfList = list;
 
         TEST_ASSERT_TRUE(list.selectFirstElement());
-        for(index = 1u; index <= max; ++index)
+        for(index = 1U; index <= max; ++index)
         {
             TEST_ASSERT_NOT_NULL(copyOfList.current());
             TEST_ASSERT_NOT_NULL(list.current());
@@ -1032,11 +1032,11 @@ static void testBitmapWidget()
     TestGfx         testGfx;
     BitmapWidget    bitmapWidget;
     uint16_t        bitmap[BITMAP_WIDTH * BITMAP_HEIGHT];
-    uint8_t         x               = 0u;
-    uint8_t         y               = 0u;
+    uint8_t         x               = 0U;
+    uint8_t         y               = 0U;
     const uint16_t* bitmapPtr       = NULL;
-    uint16_t        width           = 0u;
-    uint16_t        height          = 0u;
+    uint16_t        width           = 0U;
+    uint16_t        height          = 0U;
     uint16_t*       displayBuffer   = NULL;
 
     /* Verify widget type name */
@@ -1061,9 +1061,9 @@ static void testBitmapWidget()
     TEST_ASSERT_EQUAL_PTR(&bitmapWidget, bitmapWidget.find(WIDGET_NAME));
 
     /* Create bitmap */
-    for(y = 0u; y < BITMAP_HEIGHT; ++y)
+    for(y = 0U; y < BITMAP_HEIGHT; ++y)
     {
-        for(x = 0u; x < BITMAP_WIDTH; ++x)
+        for(x = 0U; x < BITMAP_WIDTH; ++x)
         {
             bitmap[x + y * BITMAP_WIDTH] = x + y * BITMAP_WIDTH;
         }
@@ -1079,9 +1079,9 @@ static void testBitmapWidget()
     bitmapWidget.update(testGfx);
     displayBuffer = testGfx.getBuffer();
 
-    for(y = 0u; y < BITMAP_HEIGHT; ++y)
+    for(y = 0U; y < BITMAP_HEIGHT; ++y)
     {
-        for(x = 0u; x < BITMAP_WIDTH; ++x)
+        for(x = 0U; x < BITMAP_WIDTH; ++x)
         {
             TEST_ASSERT_EQUAL_UINT16(x + y * BITMAP_WIDTH, displayBuffer[x + y * TestGfx::WIDTH]);
         }
@@ -1193,7 +1193,7 @@ static void testColor()
     TEST_ASSERT_EQUAL_UINT8(0xffu, myColorA.getBlue());
     TEST_ASSERT_EQUAL_UINT16(0xffffu, myColorA.to565());
 
-    myColorA.set(0x00080408u);
+    myColorA.set(0x00080408U);
     TEST_ASSERT_EQUAL_UINT8(0x08u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0x04u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0x08u, myColorA.getBlue());
@@ -1206,16 +1206,16 @@ static void testColor()
     TEST_ASSERT_EQUAL_UINT8(myColorB.getBlue(), myColorC.getBlue());
 
     /* Get/Set single colors */
-    myColorA.setRed(0x12u);
-    myColorA.setGreen(0x34u);
-    myColorA.setBlue(0x56u);
+    myColorA.setRed(0x12U);
+    myColorA.setGreen(0x34U);
+    myColorA.setBlue(0x56U);
     TEST_ASSERT_EQUAL_UINT8(0x12u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0x34u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0x56u, myColorA.getBlue());
 
     /* Check conversion routines of ColorDef */
-    TEST_ASSERT_EQUAL_UINT16(0x0821u, ColorDef::convert888To565(0x00080408u));
-    TEST_ASSERT_EQUAL_UINT32(0x00080408u, ColorDef::convert565To888(0x0821u));
+    TEST_ASSERT_EQUAL_UINT16(0x0821u, ColorDef::convert888To565(0x00080408U));
+    TEST_ASSERT_EQUAL_UINT32(0x00080408u, ColorDef::convert565To888(0x0821U));
 
     return;
 }
@@ -1288,7 +1288,7 @@ static void testSimpleTimer()
     TEST_ASSERT_FALSE(testTimer.isTimeout());
 
     /* Start and check */
-    testTimer.start(0u);
+    testTimer.start(0U);
     TEST_ASSERT_TRUE(testTimer.isTimerRunning());
     TEST_ASSERT_TRUE(testTimer.isTimeout());
     TEST_ASSERT_TRUE(testTimer.isTimerRunning());
@@ -1304,9 +1304,9 @@ static void testSimpleTimer()
     TEST_ASSERT_TRUE(testTimer.isTimeout());
 
     /* Start timer and start it again after timeout. */
-    testTimer.start(0u);
+    testTimer.start(0U);
     TEST_ASSERT_TRUE(testTimer.isTimeout());
-    testTimer.start(100u);
+    testTimer.start(100U);
     TEST_ASSERT_FALSE(testTimer.isTimeout());
     testTimer.stop();
 
@@ -1350,13 +1350,13 @@ static void testProgressBar()
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 50% */
-    progressBar.setProgress(50u);
+    progressBar.setProgress(50U);
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width() / 2u, testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
     TEST_ASSERT_TRUE(testGfx.verify(testGfx.width() / 2u, 0, testGfx.width() / 2u, testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 100% */
-    progressBar.setProgress(100u);
+    progressBar.setProgress(100U);
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
 
@@ -1367,18 +1367,18 @@ static void testProgressBar()
     testGfx.fill(ColorDef::convert888To565(ColorDef::BLACK));
 
     /* Set progress bar to 0% */
-    progressBar.setProgress(0u);
+    progressBar.setProgress(0U);
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 50% */
-    progressBar.setProgress(50u);
+    progressBar.setProgress(50U);
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height() / 2u, ColorDef::convert888To565(ColorDef::RED)));
     TEST_ASSERT_TRUE(testGfx.verify(0, testGfx.height() / 2u, testGfx.width(), testGfx.height() / 2u, ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 100% */
-    progressBar.setProgress(100u);
+    progressBar.setProgress(100U);
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
 

@@ -67,9 +67,9 @@ public:
     BitmapWidget() :
         Widget(WIDGET_TYPE),
         m_buffer(NULL),
-        m_bufferSize(0u),
-        m_width(0u),
-        m_height(0u)
+        m_bufferSize(0U),
+        m_width(0U),
+        m_height(0U)
     {
     }
 
@@ -91,7 +91,7 @@ public:
 
             if (NULL == m_buffer)
             {
-                m_bufferSize = 0u;
+                m_bufferSize = 0U;
             }
             else
             {
@@ -109,7 +109,7 @@ public:
         {
             delete[] m_buffer;
             m_buffer = NULL;
-            m_bufferSize = 0u;
+            m_bufferSize = 0U;
         }
     }
 

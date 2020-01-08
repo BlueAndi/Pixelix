@@ -144,7 +144,7 @@ ButtonDrv::State ButtonDrv::getState()
 void ButtonDrv::buttonTask(void *parameters)
 {
     ButtonDrv*  buttonDrv   = reinterpret_cast<ButtonDrv*>(parameters);
-    uint32_t    cycleCnt    = 0u;
+    uint32_t    cycleCnt    = 0U;
     uint8_t     buttonValue = Board::userButtonIn.read();
 
     /* The ISR shall notify about on change to determine whether the
@@ -164,9 +164,9 @@ void ButtonDrv::buttonTask(void *parameters)
     for(;;)
     {
         /* Is button pin value unstable? */
-        if (0u < ulTaskNotifyTake(pdTRUE, 0u))
+        if (0u < ulTaskNotifyTake(pdTRUE, 0U))
         {
-            cycleCnt = 0u;
+            cycleCnt = 0U;
         }
         /* Button didn't trigger during a complete debounce time period? */
         else if ((BUTTON_DEBOUNCE_TIME / BUTTON_TASK_PERIOD) <= cycleCnt)
@@ -223,7 +223,7 @@ void ButtonDrv::buttonTask(void *parameters)
                 }
             }
 
-            cycleCnt = 0u;
+            cycleCnt = 0U;
         }
         else
         {

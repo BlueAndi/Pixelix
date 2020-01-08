@@ -239,10 +239,10 @@ public:
     virtual void update(IGfx& gfx) = 0;
 
     /** Infinite duration */
-    static const uint32_t DURATION_INFINITE = 0u;
+    static const uint32_t DURATION_INFINITE = 0U;
 
     /** Default duration in ms */
-    static const uint32_t DURATION_DEFAULT  = 30000u;
+    static const uint32_t DURATION_DEFAULT  = 30000U;
 
 private:
 

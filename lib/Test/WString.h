@@ -65,12 +65,12 @@ public:
      * Constructs a string.
      */
     String() :
-        m_size(1u),
+        m_size(1U),
         m_buffer(new char[m_size])
     {
         if (NULL == m_buffer)
         {
-            m_size = 0u;
+            m_size = 0U;
         }
         else
         {
@@ -87,7 +87,7 @@ public:
         {
             delete[] m_buffer;
             m_buffer = NULL;
-            m_size = 0u;
+            m_size = 0U;
         }
     }
 
@@ -107,11 +107,11 @@ public:
             
             if (NULL == m_buffer)
             {
-                m_size = 0u;
+                m_size = 0U;
             }
             else
             {
-                m_size = 1u;
+                m_size = 1U;
                 m_buffer[0u] = '\0';
             }
         }
@@ -121,7 +121,7 @@ public:
 
             if (NULL == m_buffer)
             {
-                m_size = 0u;
+                m_size = 0U;
             }
             else
             {
@@ -137,12 +137,12 @@ public:
      * @param[in] str String to copy
      */
     String(const char* str) :
-        m_size((NULL == str) ? 1u : (strlen(str) + 1u)),
+        m_size((NULL == str) ? 1u : (strlen(str) + 1U)),
         m_buffer(new char[m_size])
     {
         if (NULL == m_buffer)
         {
-            m_size = 0u;
+            m_size = 0U;
         }
         else if (NULL == str)
         {
@@ -160,12 +160,12 @@ public:
      * @param[in] c Single character
      */
     String(char c) :
-        m_size(2u),
+        m_size(2U),
         m_buffer(new char[m_size])
     {
         if (NULL == m_buffer)
         {
-            m_size = 0u;
+            m_size = 0U;
         }
         else
         {
@@ -199,7 +199,7 @@ public:
 
                 if (NULL == m_buffer)
                 {
-                    m_size = 0u;
+                    m_size = 0U;
                 }
                 else
                 {
@@ -410,7 +410,7 @@ public:
     {
         if(length() < s2.length())
         {
-            return 0u;
+            return 0U;
         }
 
         return startsWith(s2, 0);

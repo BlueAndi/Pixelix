@@ -94,9 +94,9 @@ void IconTextLampPlugin::active(IGfx& gfx)
         
         if (NULL != m_lampCanvas)
         {
-            uint8_t index = 0u;
+            uint8_t index = 0U;
 
-            for(index = 0u; index < MAX_LAMPS; ++index)
+            for(index = 0U; index < MAX_LAMPS; ++index)
             {
                 /* One space at the begin, two spaces between the lamps. */
                 int16_t x = (LampWidget::WIDTH + 2) * index + 1;
@@ -217,8 +217,8 @@ void IconTextLampPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint1
 {
     uint16_t*       buffer      = NULL;
     const uint16_t* oldBuffer   = NULL;
-    uint16_t        oldWidth    = 0u;
-    uint16_t        oldHeight   = 0u;
+    uint16_t        oldWidth    = 0U;
+    uint16_t        oldHeight   = 0U;
 
     if ((NULL == bitmap) ||
         (ICON_WIDTH < width) ||

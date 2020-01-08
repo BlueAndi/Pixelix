@@ -165,7 +165,7 @@ public:
         m_head(NULL),
         m_tail(NULL),
         m_curr(NULL),
-        m_count(0u)
+        m_count(0U)
     {
     }
 
@@ -178,7 +178,7 @@ public:
         m_head(NULL),
         m_tail(NULL),
         m_curr(NULL),
-        m_count(0u)
+        m_count(0U)
     {
         ListElement<T>* listElement = list.m_head;
 
@@ -470,7 +470,7 @@ public:
 
         m_head  = NULL;
         m_tail  = NULL;
-        m_count = 0u;
+        m_count = 0U;
 
         return;
     }

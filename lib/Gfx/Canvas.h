@@ -175,7 +175,7 @@ public:
      */
     uint16_t getColor(int16_t x, int16_t y) override
     {
-        uint16_t color565 = 0u;
+        uint16_t color565 = 0U;
 
         if ((0 <= x) &&
             (0 <= y) &&

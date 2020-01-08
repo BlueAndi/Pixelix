@@ -75,8 +75,8 @@ public:
         m_height(height),
         m_cursorX(0),
         m_cursorY(0),
-        m_textColor(0u),
-        m_textBgColor(0u),
+        m_textColor(0U),
+        m_textBgColor(0U),
         m_font(NULL)
     {
     }

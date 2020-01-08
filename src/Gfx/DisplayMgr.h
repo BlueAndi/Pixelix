@@ -160,25 +160,25 @@ public:
     static const uint8_t    SLOT_ID_INVALID         = UINT8_MAX;
 
     /** Task stack size in bytes */
-    static const uint32_t   TASK_STACKE_SIZE        = 4096u;
+    static const uint32_t   TASK_STACKE_SIZE        = 4096U;
 
     /** Task period in ms */
-    static const uint32_t   TASK_PERIOD             = 20u;
+    static const uint32_t   TASK_PERIOD             = 20U;
 
     /** MCU core where the task shall run */
     static const BaseType_t TASK_RUN_CORE           = 1;
 
     /** Maximum number of supported slots. */
-    static const uint8_t    MAX_SLOTS               = 5u;
+    static const uint8_t    MAX_SLOTS               = 5U;
 
     /** If no ambient light sensor is available, the default brightness shall be 40%. */
-    static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40u) / 100u;
+    static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40U) / 100U;
 
     /** Minimum brightness of 10% in case of a dark room. Only used during automatic brightness adjustment. */
-    static const uint8_t    BRIGHTNESS_MIN          = (UINT8_MAX * 10u) / 100u;
+    static const uint8_t    BRIGHTNESS_MIN          = (UINT8_MAX * 10U) / 100U;
 
     /** Default period for automatic brightness adjustment in ms. */
-    static const uint32_t   ALS_AUTO_ADJUST_PERIOD  = 250u;
+    static const uint32_t   ALS_AUTO_ADJUST_PERIOD  = 250U;
 
 private:
 

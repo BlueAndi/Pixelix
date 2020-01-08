@@ -70,7 +70,7 @@ public:
     SysMsgPlugin() :
         Plugin(),
         m_textWidget(),
-        m_duration(0u)
+        m_duration(0U)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);

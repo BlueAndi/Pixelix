@@ -87,10 +87,10 @@ static const IoPin* ioPinList[] =
 
 extern void Board::init()
 {
-    uint8_t index = 0u;
+    uint8_t index = 0U;
 
     /* Initialize all i/o pins */
-    for(index = 0u; index < UTIL_ARRAY_NUM(ioPinList); ++index)
+    for(index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
     {
         if (NULL != ioPinList[index])
         {

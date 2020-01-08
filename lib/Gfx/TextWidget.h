@@ -85,7 +85,7 @@ public:
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
-        m_textWidth(0u),
+        m_textWidth(0U),
         m_scrollOffset(0),
         m_scrollTimer()
     {
@@ -105,7 +105,7 @@ public:
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
-        m_textWidth(0u),
+        m_textWidth(0U),
         m_scrollOffset(0),
         m_scrollTimer()
     {
@@ -257,7 +257,7 @@ public:
     static const GFXfont*   DEFAULT_FONT;
 
     /** Default pause between character scrolling in ms */
-    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 100u;
+    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 100U;
 
 private:
 

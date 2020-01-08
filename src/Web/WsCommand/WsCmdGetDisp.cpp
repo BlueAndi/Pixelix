@@ -76,7 +76,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
     else
     {
-        uint32_t    index       = 0u;
+        uint32_t    index       = 0U;
         String      rsp         = "ACK";
         const char  DELIMITER   = ';';
         uint32_t    framebuffer[Board::LedMatrix::width * Board::LedMatrix::height];
@@ -85,7 +85,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         DisplayMgr::getInstance().getFBCopy(framebuffer, UTIL_ARRAY_NUM(framebuffer));
         DisplayMgr::getInstance().unlock();
 
-        for(index = 0u; index <  UTIL_ARRAY_NUM(framebuffer); ++index)
+        for(index = 0U; index <  UTIL_ARRAY_NUM(framebuffer); ++index)
         {
             rsp += DELIMITER;
             rsp += framebuffer[index];

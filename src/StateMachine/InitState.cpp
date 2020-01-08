@@ -77,10 +77,10 @@
  *****************************************************************************/
 
 /* Set system message show duration in ms */
-const uint32_t  InitState::SYS_MSG_WAIT_TIME    = 2000u;
+const uint32_t  InitState::SYS_MSG_WAIT_TIME    = 2000U;
 
 /* Set serial interface baudrate. */
-const uint32_t  InitState::SERIAL_BAUDRATE      = 115200u;
+const uint32_t  InitState::SERIAL_BAUDRATE      = 115200U;
 
 /* Initialization state instance */
 InitState       InitState::m_instance;
@@ -243,14 +243,14 @@ void InitState::showStartupInfoOnDisplay()
 
     /* Clear and wait */
     sysMsg.show("");
-    delay(SYS_MSG_WAIT_TIME / 2u);
+    delay(SYS_MSG_WAIT_TIME / 2U);
 
     /* Show sw version */
     sysMsg.show(Version::SOFTWARE);
     delay(SYS_MSG_WAIT_TIME);
 
     /* Clear and wait */
-    sysMsg.show("", SYS_MSG_WAIT_TIME / 2u);
+    sysMsg.show("", SYS_MSG_WAIT_TIME / 2U);
 
     return;
 }

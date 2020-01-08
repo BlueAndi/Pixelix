@@ -156,7 +156,7 @@ void UpdateMgr::beginProgress()
     m_textWidget.setFormatStr("Update");
 
     /* Show user update status */
-    updateProgress(0u);
+    updateProgress(0U);
 
     return;
 }
@@ -213,7 +213,7 @@ void UpdateMgr::endProgress()
 UpdateMgr::UpdateMgr() :
     m_isInitialized(false),
     m_updateIsRunning(false),
-    m_progress(0u),
+    m_progress(0U),
     m_isRestartReq(false),
     m_textWidget(),
     m_progressBar()
@@ -276,7 +276,7 @@ void UpdateMgr::onEnd()
 
 void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 {
-    const uint32_t  PROGRESS_PERCENT    = (progress * 100u) / total;
+    const uint32_t  PROGRESS_PERCENT    = (progress * 100U) / total;
 
     m_instance.updateProgress(PROGRESS_PERCENT);
 
@@ -332,7 +332,7 @@ void UpdateMgr::onError(ota_error_t error)
         }
 
         SysMsg::getInstance().show(infoStr);
-        delay(infoStr.length() * 600u);
+        delay(infoStr.length() * 600U);
 
         /* Request a restart */
         m_instance.reqRestart();

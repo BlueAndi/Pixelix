@@ -267,11 +267,11 @@ public:
         const uint16_t  RED     = m_red;
         const uint16_t  GREEN   = m_green;
         const uint16_t  BLUE    = m_blue;
-        const uint16_t  RED5    = RED >> 3u;
-        const uint16_t  GREEN6  = GREEN >> 2u;
-        const uint16_t  BLUE5   = BLUE >> 3u;
+        const uint16_t  RED5    = RED >> 3U;
+        const uint16_t  GREEN6  = GREEN >> 2U;
+        const uint16_t  BLUE5   = BLUE >> 3U;
 
-        return ((RED5 & 0x1fu) << 11u) | ((GREEN6 & 0x3fu) << 5u) | ((BLUE5 & 0x1fu) << 0u);
+        return ((RED5 & 0x1fU) << 11U) | ((GREEN6 & 0x3fU) << 5U) | ((BLUE5 & 0x1fU) << 0U);
     }
     
     /**

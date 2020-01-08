@@ -94,8 +94,8 @@ public:
      */
     ~IconTextPlugin()
     {
-        uint16_t        bitmapWidth     = 0u;
-        uint16_t        bitmapHeight    = 0u;
+        uint16_t        bitmapWidth     = 0U;
+        uint16_t        bitmapHeight    = 0U;
         const uint16_t* bitmapBuffer    = m_bitmapWidget.get(bitmapWidth, bitmapHeight);
 
         if (NULL != m_iconCanvas)

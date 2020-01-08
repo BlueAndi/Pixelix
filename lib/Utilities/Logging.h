@@ -101,7 +101,7 @@ public:
     };
 
     /** The maximum size of the logMessage buffer to get the variable arguments. */
-    static const uint16_t MESSAGE_BUFFER_SIZE       = 80u;
+    static const uint16_t MESSAGE_BUFFER_SIZE       = 80U;
 
     /** The maximum size of the whole log message. */
     static const uint16_t LOG_MESSAGE_BUFFER_SIZE   = MESSAGE_BUFFER_SIZE  + 10u /* timestamp */ + 8u /* log level */ + 20u /* filename */ + 5u /* line */ + 6u /* others */;

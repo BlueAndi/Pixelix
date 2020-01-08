@@ -91,7 +91,7 @@ void TextWidget::update(IGfx& gfx)
     {
         int16_t     boundaryX       = 0;
         int16_t     boundaryY       = 0;
-        uint16_t    textHeight      = 0u;
+        uint16_t    textHeight      = 0U;
         String      str             = removeFormatTags(m_formatStr);
 
         gfx.getTextBounds(str, 0, 0, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
@@ -101,7 +101,7 @@ void TextWidget::update(IGfx& gfx)
         {
             m_isScrollingEnabled    = true;
             m_scrollOffset          = ((-1) * gfx.width()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
-            m_scrollTimer.start(0u);                            /* Ensure immediate update */
+            m_scrollTimer.start(0U);                            /* Ensure immediate update */
         }
         else
         {
@@ -146,7 +146,7 @@ void TextWidget::update(IGfx& gfx)
 
 String TextWidget::removeFormatTags(const String& formatStr) const
 {
-    uint32_t    index       = 0u;
+    uint32_t    index       = 0U;
     bool        escapeFound = false;
     bool        useChar     = false;
     String      str;
@@ -171,12 +171,12 @@ String TextWidget::removeFormatTags(const String& formatStr) const
         }
         else if (true == escapeFound)
         {
-            uint8_t keywordIndex = 0u;
+            uint32_t keywordIndex = 0U;
 
-            for(keywordIndex = 0u; keywordIndex < UTIL_ARRAY_NUM(m_keywordHandlers); ++keywordIndex)
+            for(keywordIndex = 0U; keywordIndex < UTIL_ARRAY_NUM(m_keywordHandlers); ++keywordIndex)
             {
                 KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
-                uint8_t         overstep    = 0u;
+                uint8_t         overstep    = 0U;
                 bool            status      = (this->*handler)(NULL, false, formatStr.substring(index), overstep);
 
                 if (true == status)
@@ -211,7 +211,7 @@ String TextWidget::removeFormatTags(const String& formatStr) const
 
 void TextWidget::show(IGfx& gfx, const String& formatStr) const
 {
-    uint32_t    index       = 0u;
+    uint32_t    index       = 0U;
     bool        escapeFound = false;
     bool        useChar     = false;
     uint32_t    length      = formatStr.length();
@@ -235,12 +235,12 @@ void TextWidget::show(IGfx& gfx, const String& formatStr) const
         }
         else if (true == escapeFound)
         {
-            uint8_t keywordIndex = 0u;
+            uint32_t keywordIndex = 0U;
 
-            for(keywordIndex = 0u; keywordIndex < UTIL_ARRAY_NUM(m_keywordHandlers); ++keywordIndex)
+            for(keywordIndex = 0U; keywordIndex < UTIL_ARRAY_NUM(m_keywordHandlers); ++keywordIndex)
             {
                 KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
-                uint8_t         overstep    = 0u;
+                uint8_t         overstep    = 0U;
                 bool            status      = (this->*handler)(&gfx, false, formatStr.substring(index), overstep);
 
                 if (true == status)
@@ -283,7 +283,7 @@ bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, 
 
     if ('#' == formatStr[0])
     {
-        const uint8_t   RGB_HEX_LEN = 6u;
+        const uint8_t   RGB_HEX_LEN = 6U;
         String          colorStr    = String("0x") + formatStr.substring(1, 1 + RGB_HEX_LEN);
         uint32_t        colorRGB888;
         bool            convStatus  = Util::strToUInt32(colorStr, colorRGB888);
@@ -297,7 +297,7 @@ bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, 
                 gfx->setTextColor(textColor.to565());
             }
 
-            overstep    = 1u + RGB_HEX_LEN;
+            overstep    = 1U + RGB_HEX_LEN;
             status      = true;
         }
     }
@@ -308,7 +308,7 @@ bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, 
 bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const
 {
     bool status                 = false;
-    const uint8_t   KEYWORD_LEN = 6u;
+    const uint8_t   KEYWORD_LEN = 6U;
 
     /* Alignment left? */
     if (true == formatStr.startsWith("lalign"))
@@ -322,8 +322,8 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
         String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
         int16_t     boundaryX   = 0;
         int16_t     boundaryY   = 0;
-        uint16_t    textWidth   = 0u;
-        uint16_t    textHeight  = 0u;
+        uint16_t    textWidth   = 0U;
+        uint16_t    textHeight  = 0U;
 
         if ((false == noAction) &&
             (NULL != gfx))
@@ -341,8 +341,8 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
         String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
         int16_t     boundaryX   = 0;
         int16_t     boundaryY   = 0;
-        uint16_t    textWidth   = 0u;
-        uint16_t    textHeight  = 0u;
+        uint16_t    textWidth   = 0U;
+        uint16_t    textHeight  = 0U;
 
         if ((false == noAction) &&
             (NULL != gfx))

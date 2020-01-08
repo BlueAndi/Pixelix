@@ -60,7 +60,7 @@
 
 void Color::turnColorWheel(uint8_t wheelPos)
 {
-    const uint8_t COL_PARTS = 3u;
+    const uint8_t COL_PARTS = 3U;
     const uint8_t COL_RANGE = UINT8_MAX / COL_PARTS;
 
     wheelPos = UINT8_MAX - wheelPos;
@@ -69,7 +69,7 @@ void Color::turnColorWheel(uint8_t wheelPos)
     if (wheelPos < COL_RANGE)
     {
         m_red   = UINT8_MAX - wheelPos * COL_PARTS;
-        m_green = 0u;
+        m_green = 0U;
         m_blue  = COL_PARTS * wheelPos;
     }
     /* Green + Blue ? */
@@ -77,18 +77,18 @@ void Color::turnColorWheel(uint8_t wheelPos)
     {
         wheelPos -= COL_RANGE;
         
-        m_red   = 0u;
+        m_red   = 0U;
         m_green = COL_PARTS * wheelPos;
         m_blue  = UINT8_MAX - wheelPos * COL_PARTS;
     }
     /* Red + Green */
     else
     {
-        wheelPos -= ((COL_PARTS - 1u) * COL_RANGE);
+        wheelPos -= ((COL_PARTS - 1U) * COL_RANGE);
         
         m_red   = COL_PARTS * wheelPos;
         m_green = UINT8_MAX - wheelPos * COL_PARTS;
-        m_blue  = 0u;
+        m_blue  = 0U;
     }
 
     return;

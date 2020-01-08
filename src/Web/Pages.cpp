@@ -115,22 +115,22 @@ static const char*      FORM_INPUT_NAME_WIFI_AP_PASSPHRASE  = "wifi_ap_passphras
 static const char*      FORM_INPUT_NAME_HOSTNAME            = "hostname";
 
 /** Min. wifi SSID length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const uint8_t    MIN_SSID_LENGTH             = 0u;
+static const uint8_t    MIN_SSID_LENGTH             = 0U;
 
 /** Max. wifi SSID length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const uint8_t    MAX_SSID_LENGTH             = 32u;
+static const uint8_t    MAX_SSID_LENGTH             = 32U;
 
 /** Min. wifi passphrase length */
-static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
+static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8U;
 
 /** Max. wifi passphrase length */
-static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
+static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64U;
 
 /** Min. hostname length (RFC1034 1 - 63) */
-static const uint8_t    MIN_HOSTNAME_LENGTH         = 1u;
+static const uint8_t    MIN_HOSTNAME_LENGTH         = 1U;
 
 /** Max. hostname length (RFC1034 1 - 63) */
-static const uint8_t    MAX_HOSTNAME_LENGTH         = 63u;
+static const uint8_t    MAX_HOSTNAME_LENGTH         = 63U;
 
 /** Firmware binary filename, used for update. */
 static const char*      FIRMWARE_FILENAME           = "firmware.bin";
@@ -1021,7 +1021,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
                     LOG_INFO("Upload of %s finished.", filename.c_str());
 
                     /* Ensure that the user see 100% update status on the display. */
-                    UpdateMgr::getInstance().updateProgress(100u);
+                    UpdateMgr::getInstance().updateProgress(100U);
                     UpdateMgr::getInstance().endProgress();
 
                     /* Request a restart */

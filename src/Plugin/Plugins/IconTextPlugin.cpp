@@ -178,8 +178,8 @@ void IconTextPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t 
 {
     uint16_t*       buffer      = NULL;
     const uint16_t* oldBuffer   = NULL;
-    uint16_t        oldWidth    = 0u;
-    uint16_t        oldHeight   = 0u;
+    uint16_t        oldWidth    = 0U;
+    uint16_t        oldHeight   = 0U;
 
     if ((NULL == bitmap) ||
         (ICON_WIDTH < width) ||

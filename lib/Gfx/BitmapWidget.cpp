@@ -90,7 +90,7 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 
             if (NULL == m_buffer)
             {
-                m_bufferSize = 0u;
+                m_bufferSize = 0U;
             }
             else
             {
@@ -120,7 +120,7 @@ void BitmapWidget::set(const uint16_t* bitmap, uint16_t width, uint16_t height)
 
         if (NULL == m_buffer)
         {
-            m_bufferSize = 0u;
+            m_bufferSize = 0U;
         }
         else
         {
@@ -167,12 +167,12 @@ bool BitmapWidget::load(const String& filename)
 
             if (NULL != m_buffer)
             {
-                uint16_t x = 0u;
-                uint16_t y = 0u;
+                uint16_t x = 0U;
+                uint16_t y = 0U;
 
-                for(y = 0u; y < m_height; ++y)
+                for(y = 0U; y < m_height; ++y)
                 {
-                    for(x = 0u; x < m_width; ++x)
+                    for(x = 0U; x < m_width; ++x)
                     {
                         RgbColor    rgbColor = neoFile.GetPixelColor(x, y);
                         Color       color888(rgbColor.R, rgbColor.G, rgbColor.B);

@@ -149,7 +149,7 @@ public:
     /**
      * Fixed slot, which to use in the display manager.
      */
-    static const uint8_t SLOT_ID = 1u;
+    static const uint8_t SLOT_ID = 1U;
 
 private:
 

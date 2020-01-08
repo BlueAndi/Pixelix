@@ -67,8 +67,8 @@ public:
     SimpleTimer() :
         m_isRunning(false),
         m_isTimeout(false),
-        m_duration(0u),
-        m_start(0u)
+        m_duration(0U),
+        m_start(0U)
     {
     }
 

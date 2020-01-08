@@ -136,17 +136,17 @@ void RestApi::error(AsyncWebServerRequest* request)
  */
 static uint8_t getSignalQuality(int8_t rssi)
 {
-    uint8_t         signalQuality   = 0u;
+    uint8_t         signalQuality   = 0U;
     const int8_t    RSSI_HIGH       = -50;  // dBm
     const int8_t    RSSI_UNUSABLE   = -100; // dBm
 
     if (RSSI_HIGH <= rssi)
     {
-        signalQuality = 100u;
+        signalQuality = 100U;
     }
     else if (RSSI_UNUSABLE >= rssi)
     {
-        signalQuality = 0u;
+        signalQuality = 0U;
     }
     else
     {
@@ -253,13 +253,13 @@ static void slots(AsyncWebServerRequest* request)
     {
         JsonObject  dataObj     = jsonDoc.createNestedObject("data");
         JsonArray   slotArray   = dataObj.createNestedArray("slot");
-        uint8_t     index       = 0u;
+        uint8_t     index       = 0U;
 
         /* Add max. number of slots */
         dataObj["slots"] = DisplayMgr::getInstance().MAX_SLOTS;
 
         /* Add which plugin's are installed. */
-        for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
+        for(index = 0U; index < DisplayMgr::MAX_SLOTS; ++index)
         {
             Plugin* plugin = DisplayMgr::getInstance().getPluginInSlot(index);
 

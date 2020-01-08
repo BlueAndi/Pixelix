@@ -68,7 +68,7 @@ void FirePlugin::active(IGfx& gfx)
 
         if (NULL == m_heat)
         {
-            m_heatSize = 0u;
+            m_heatSize = 0U;
         }
     }
     
@@ -99,12 +99,12 @@ void FirePlugin::update(IGfx& gfx)
         /* Step 1) Cool down every cell a little bit */
         for(y = 0; y < gfx.height(); ++y)
         {
-            uint8_t     coolDownTemperature = random(0, ((COOLING * 10u) / gfx.height()) + 2u);
+            uint8_t     coolDownTemperature = random(0, ((COOLING * 10U) / gfx.height()) + 2U);
             uint32_t    heatPos             = x + y * gfx.width();
 
             if (coolDownTemperature >= m_heat[heatPos])
             {
-                m_heat[heatPos] = 0u;
+                m_heat[heatPos] = 0U;
             }
             else
             {
@@ -115,21 +115,21 @@ void FirePlugin::update(IGfx& gfx)
         /* Step 2) Heat from each cell drifts 'up' and diffuses a little bit */
         for(y = 0; y < (gfx.height() - 1); ++y)
         {
-            uint16_t    diffusHeat  = 0u;
+            uint16_t    diffusHeat  = 0U;
             
             if ((gfx.height() - 2) > y)
             {
                 diffusHeat += m_heat[x + (y + 1) * gfx.width()];
                 diffusHeat += m_heat[x + (y + 1) * gfx.width()];
                 diffusHeat += m_heat[x + (y + 2) * gfx.width()];
-                diffusHeat /= 3u;
+                diffusHeat /= 3U;
             }
             else
             {
                 diffusHeat += m_heat[x + (y + 0) * gfx.width()];
                 diffusHeat += m_heat[x + (y + 0) * gfx.width()];
                 diffusHeat += m_heat[x + (y + 1) * gfx.width()];
-                diffusHeat /= 3u;
+                diffusHeat /= 3U;
             }
 
             m_heat[x + y * gfx.width()] = diffusHeat;
@@ -144,7 +144,7 @@ void FirePlugin::update(IGfx& gfx)
 
             if (UINT8_MAX < heat)
             {
-                m_heat[heatPos] = 255u;
+                m_heat[heatPos] = 255U;
             }
             else
             {
@@ -177,7 +177,7 @@ Color FirePlugin::heatColor(uint8_t temperature)
     /* Scale 'heat' down from 0-255 to 0-191, which can then be easily divided
      * into three equal 'thirds' of 64 units each.
      */
-    uint8_t t192        = static_cast<uint32_t>(temperature) * 191u / 255u;
+    uint8_t t192        = static_cast<uint32_t>(temperature) * 191u / 255U;
 
     /* Calculate a value that ramps up from zero to 255 in each 'third' of the scale. */
     uint8_t heatRamp    = t192 & 0x3F; /* 0..63 */
@@ -189,23 +189,23 @@ Color FirePlugin::heatColor(uint8_t temperature)
     if (t192 & 0x80)
     {
         /* We're in the hottest third */
-        heatColor.setRed(255u);         /* Full red */
-        heatColor.setGreen(255u);       /* Full green */
+        heatColor.setRed(255U);         /* Full red */
+        heatColor.setGreen(255U);       /* Full green */
         heatColor.setBlue(heatRamp);    /* Ramp up blue */
     }
     else if (t192 & 0x40)
     {
         /* We're in the middle third */
-        heatColor.setRed(255u);         /* Full red */
+        heatColor.setRed(255U);         /* Full red */
         heatColor.setGreen(heatRamp);   /* Ramp up green */
-        heatColor.setBlue(0u);          /* No blue */
+        heatColor.setBlue(0U);          /* No blue */
     }
     else
     {
         /* We're in the coolest third */
         heatColor.setRed(heatRamp); /* Ramp up red */
-        heatColor.setGreen(0u);     /* No green */
-        heatColor.setBlue(0u);      /* No blue */
+        heatColor.setGreen(0U);     /* No green */
+        heatColor.setBlue(0U);      /* No blue */
     }
 
     return heatColor;

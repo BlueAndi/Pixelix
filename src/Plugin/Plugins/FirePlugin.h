@@ -83,7 +83,7 @@ public:
     FirePlugin() :
         Plugin(),
         m_heat(NULL),
-        m_heatSize(0u)
+        m_heatSize(0U)
     {
     }
 
@@ -141,13 +141,13 @@ private:
      * Less cooling => taller flames.
      * More cooling => shorter flames.
      */
-    static const uint8_t    COOLING     = 60u;
+    static const uint8_t    COOLING     = 60U;
 
     /**
      * Sparking: What chance (out of 255) is there that a new spark will be lit?
      * Higher chance = more roaring fire.  Lower chance = more flickery fire.
      */
-    static const uint8_t    SPARKING    = 120u;
+    static const uint8_t    SPARKING    = 120U;
 
     /**
      * Approximates a 'black body radiation' spectrum for a given 'heat' level.

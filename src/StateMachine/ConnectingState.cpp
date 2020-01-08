@@ -128,8 +128,8 @@ void ConnectingState::process(StateMachine& sm)
 
         LOG_INFO(infoStr);
         SysMsg::getInstance().show(infoStr);
-        delay(infoStr.length() * 600u);
-        SysMsg::getInstance().show("", 500u);
+        delay(infoStr.length() * 600U);
+        SysMsg::getInstance().show("", 500U);
 
         /* Remote wifi network informations are available, try to establish a connection. */
         status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());

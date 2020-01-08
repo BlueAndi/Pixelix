@@ -504,7 +504,7 @@ namespace ColorDef
      */
     inline uint8_t getRed(uint32_t value)
     {
-        return static_cast<uint8_t>((value >> 16u) & 0xffu);
+        return static_cast<uint8_t>((value >> 16U) & 0xffU);
     }
     
     /**
@@ -516,7 +516,7 @@ namespace ColorDef
      */
     inline uint8_t getGreen(uint32_t value)
     {
-        return static_cast<uint8_t>((value >> 8u) & 0xffu);
+        return static_cast<uint8_t>((value >> 8U) & 0xffU);
     }
     
     /**
@@ -528,7 +528,7 @@ namespace ColorDef
      */
     inline uint8_t getBlue(uint32_t value)
     {
-        return static_cast<uint8_t>((value >> 0u) & 0xffu);
+        return static_cast<uint8_t>((value >> 0U) & 0xffU);
     }
     
     /**
@@ -540,14 +540,14 @@ namespace ColorDef
      */
     inline uint16_t convert888To565(uint32_t value)
     {
-        const uint16_t  RED     = (value >> 16u) & 0xffu;
-        const uint16_t  GREEN   = (value >>  8u) & 0xffu;
-        const uint16_t  BLUE    = (value >>  0u) & 0xffu;
-        const uint16_t  RED5    = RED >> 3u;
-        const uint16_t  GREEN6  = GREEN >> 2u;
-        const uint16_t  BLUE5   = BLUE >> 3u;
+        const uint16_t  RED     = (value >> 16U) & 0xffU;
+        const uint16_t  GREEN   = (value >>  8U) & 0xffU;
+        const uint16_t  BLUE    = (value >>  0U) & 0xffU;
+        const uint16_t  RED5    = RED >> 3U;
+        const uint16_t  GREEN6  = GREEN >> 2U;
+        const uint16_t  BLUE5   = BLUE >> 3U;
 
-        return ((RED5 & 0x1fu) << 11u) | ((GREEN6 & 0x3fu) << 5u) | ((BLUE5 & 0x1fu) << 0u);
+        return ((RED5 & 0x1fU) << 11U) | ((GREEN6 & 0x3fU) << 5U) | ((BLUE5 & 0x1fU) << 0U);
     }
 
     /**
@@ -559,14 +559,14 @@ namespace ColorDef
      */
     inline uint32_t convert565To888(uint16_t value)
     {
-        const uint32_t  RED5    = (value >> 11u) & 0x1fu;
-        const uint32_t  GREEN6  = (value >>  5u) & 0x3fu;
-        const uint32_t  BLUE5   = (value >>  0u) & 0x1fu;
-        const uint32_t  RED     = RED5 << 3u;
-        const uint32_t  GREEN   = GREEN6 << 2u;
-        const uint32_t  BLUE    = BLUE5 << 3u;
+        const uint32_t  RED5    = (value >> 11U) & 0x1fU;
+        const uint32_t  GREEN6  = (value >>  5U) & 0x3fU;
+        const uint32_t  BLUE5   = (value >>  0U) & 0x1fU;
+        const uint32_t  RED     = RED5 << 3U;
+        const uint32_t  GREEN   = GREEN6 << 2U;
+        const uint32_t  BLUE    = BLUE5 << 3U;
 
-        return (RED << 16u) | (GREEN << 8u) | (BLUE << 0u);
+        return (RED << 16U) | (GREEN << 8U) | (BLUE << 0U);
     }
 }
 

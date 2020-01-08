@@ -101,8 +101,8 @@ public:
      */
     ~IconTextLampPlugin()
     {
-        uint16_t        bitmapWidth     = 0u;
-        uint16_t        bitmapHeight    = 0u;
+        uint16_t        bitmapWidth     = 0U;
+        uint16_t        bitmapHeight    = 0U;
         const uint16_t* bitmapBuffer    = m_bitmapWidget.get(bitmapWidth, bitmapHeight);
 
         if (NULL != m_iconCanvas)
@@ -216,7 +216,7 @@ private:
     /**
      * Max. number of lamps.
      */
-    static const uint8_t MAX_LAMPS      = 4u;
+    static const uint8_t MAX_LAMPS      = 4U;
 
     /**
      * Image upload path.

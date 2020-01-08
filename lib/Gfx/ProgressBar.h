@@ -77,7 +77,7 @@ public:
      */
     ProgressBar() :
         Widget(WIDGET_TYPE),
-        m_progress(0u),
+        m_progress(0U),
         m_color(ColorDef::RED),
         m_algorithm(ALGORITHM_PROGRESS_BAR)
     {

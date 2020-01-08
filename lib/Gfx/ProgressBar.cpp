@@ -95,7 +95,7 @@ void ProgressBar::update(IGfx& gfx)
 
 void ProgressBar::showProgressPixel(IGfx& gfx)
 {
-    int16_t pixelCount  = gfx.width() * gfx.height() * m_progress / 100u;
+    int16_t pixelCount  = gfx.width() * gfx.height() * m_progress / 100U;
     int16_t x           = 0;
     int16_t y           = 0;
 

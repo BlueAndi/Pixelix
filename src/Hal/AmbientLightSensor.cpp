@@ -58,17 +58,17 @@
 static const uint16_t   ambientLightLevels[AmbientLightSensor::AMBIENT_LIGHT_LEVEL_MAX] =
 {
     /* Pitch black with 1 Lux => 65 mV */
-    ( 65ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage,
+    ( 65ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Night sky with 10 Lux => 300 mV */
-    ( 300ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage,
+    ( 300ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Dark room with 50 Lux => 778 mV */
-    ( 778ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage,
+    ( 778ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Dark overcast with 500 Lux => 2004 mV */
-    (2004ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage,
+    (2004ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Overcast day with 1000 Lux => 2360 mV */
-    (2360ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage,
+    (2360ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Full daylight with 15000 Lux => 3114 mV */
-    (3114ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage,
+    (3114ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
     /* Full sunlight with more than 15000 Lux */
     4095u
 };
@@ -77,7 +77,7 @@ static const uint16_t   ambientLightLevels[AmbientLightSensor::AMBIENT_LIGHT_LEV
  * Expected voltage is lower or equal than 3 mV.
  * This corresponds to the absolute dark resistance of the LDR with 1 MOhm.
  */
-const uint16_t  AmbientLightSensor::NO_LDR_THRESHOLD    = (3ul * (Board::adcResolution - 1u)) / Board::adcRefVoltage;
+const uint16_t  AmbientLightSensor::NO_LDR_THRESHOLD    = (3ul * (Board::adcResolution - 1U)) / Board::adcRefVoltage;
 
 /* Initialize ambient light sensor */
 AmbientLightSensor AmbientLightSensor::m_instance;
@@ -102,7 +102,7 @@ bool AmbientLightSensor::isSensorAvailable()
 AmbientLightSensor::AmbientLightLevel AmbientLightSensor::getAmbientLightLevel()
 {
     uint16_t            adcValue    = Board::ldrIn.read();
-    uint8_t             levelIndex  = 0u;
+    uint8_t             levelIndex  = 0U;
     AmbientLightLevel   level       = AMBIENT_LIGHT_LEVEL_MAX;
 
     while((AMBIENT_LIGHT_LEVEL_MAX >= levelIndex) && (AMBIENT_LIGHT_LEVEL_MAX == level))
@@ -194,7 +194,7 @@ float AmbientLightSensor::getIlluminance()
         * I = 5179474.6792312 * R_LDR ^ -1.42857142857143
         * I = 5179474.6792312 * [ ( ADC_max * R - ADC * R ) / ADC ] ^ -1.42857142857143
         */
-        const float ADC_MAX         = static_cast<float>(Board::adcResolution - 1u);
+        const float ADC_MAX         = static_cast<float>(Board::adcResolution - 1U);
         const float R               = 1000.0f;  /* Resistor in the voltage divider, connected to GND. */
         const float ADC_FLOAT       = static_cast<float>(ADC_UINT16);
 

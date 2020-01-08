@@ -213,7 +213,7 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
         {
             lock();
 
-            slotId = 0u;
+            slotId = 0U;
             while((MAX_SLOTS > slotId) && (NULL != m_slots[slotId]))
             {
                 ++slotId;
@@ -383,10 +383,10 @@ DisplayMgr::DisplayMgr() :
     m_slotTimer(),
     m_autoBrightnessTimer()
 {
-    uint8_t index = 0u;
+    uint8_t index = 0U;
 
     /* Initialize all slots */
-    for(index = 0u; index < MAX_SLOTS; ++index)
+    for(index = 0U; index < MAX_SLOTS; ++index)
     {
         m_slots[index] = NULL;
     }
@@ -399,11 +399,11 @@ DisplayMgr::~DisplayMgr()
 
 uint8_t DisplayMgr::nextSlot(uint8_t slotId)
 {
-    uint8_t count = 0u;
+    uint8_t count = 0U;
 
     if (MAX_SLOTS <= slotId)
     {
-        slotId = 0u;
+        slotId = 0U;
     }
     else
     {
@@ -442,7 +442,7 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
 void DisplayMgr::process()
 {
     LedMatrix&  matrix  = LedMatrix::getInstance();
-    uint8_t     index   = 0u;
+    uint8_t     index   = 0U;
 
     /* Ambient light sensor available for automatic brightness adjustment? */
     if (true == m_autoBrightnessTimer.isTimerRunning())
@@ -542,7 +542,7 @@ void DisplayMgr::process()
         /* Next enabled plugin found? */
         if (MAX_SLOTS > m_selectedSlot)
         {
-            uint32_t duration = 0u;
+            uint32_t duration = 0U;
 
             m_selectedPlugin    = m_slots[m_selectedSlot];
             duration            = m_selectedPlugin->getDuration();
@@ -558,7 +558,7 @@ void DisplayMgr::process()
     }
 
     /* Process all installed plugins. */
-    for(index = 0u; index < MAX_SLOTS; ++index)
+    for(index = 0U; index < MAX_SLOTS; ++index)
     {
         Plugin* plugin = m_slots[index];
 

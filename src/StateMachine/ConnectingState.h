@@ -95,13 +95,13 @@ public:
     void exit(StateMachine& sm);
 
     /** Retry delay after a failed connection attempt in ms. */
-    static const uint32_t   RETRY_DELAY             = 30000u;
+    static const uint32_t   RETRY_DELAY             = 30000U;
 
     /** Standard wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_STD   = 2000u;
+    static const uint32_t   SYS_MSG_WAIT_TIME_STD   = 2000U;
 
     /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250u;
+    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
 
 private:
 

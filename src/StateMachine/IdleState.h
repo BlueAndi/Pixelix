@@ -93,7 +93,7 @@ public:
     void exit(StateMachine& sm);
 
     /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250u;
+    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
 
 private:
 
