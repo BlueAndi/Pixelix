@@ -33,8 +33,8 @@
  * Includes
  *****************************************************************************/
 #include "TextWidget.h"
+#include "TomThumb.h"
 
-#include <Fonts/TomThumb.h>
 #include <Util.h>
 
 #include <Logging.h>
