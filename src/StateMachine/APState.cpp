@@ -38,6 +38,7 @@
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "Settings.h"
+#include "WebConfig.h"
 
 #include "ErrorState.h"
 #include "RestartState.h"
@@ -45,6 +46,7 @@
 #include <WiFi.h>
 #include <Logging.h>
 #include <string.h>
+#include <ESPmDNS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -174,6 +176,17 @@ void APState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
+    /* Enable mDNS */
+    else if (false == MDNS.begin(hostname.c_str()))
+    {
+        String errorStr = "Failed to setup mDNS.";
+
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        SysMsg::getInstance().show(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
     /* Wifi access point successful up. */
     else
     {
@@ -184,6 +197,10 @@ void APState::entry(StateMachine& sm)
 
         /* Start over-the-air update server. */
         UpdateMgr::getInstance().begin();
+
+        /* Add MDNS services */
+        MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
+        MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
 
         /* Show SSID and ip address */
         String infoStr = "SSID: ";
@@ -217,6 +234,9 @@ void APState::process(StateMachine& sm)
 void APState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
+
+    /* Stop mDNS */
+    MDNS.end();
 
     /* Stop webserver */
     MyWebServer::end();

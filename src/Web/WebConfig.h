@@ -73,6 +73,9 @@ static const uint32_t   WEBSOCKET_PORT          = 80U;
 /** Websocket path */
 static const char       WEBSOCKET_PATH[]        = "/ws";
 
+/** Arduino OTA port */
+static const uint32_t   ARDUINO_OTA_PORT        = 3232U;
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
