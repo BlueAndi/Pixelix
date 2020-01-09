@@ -512,6 +512,22 @@ static String networkPageProcessor(const String& var)
             result = WiFi.localIP().toString();
         }
     }
+    else if (var == "MAC_ADDR")
+    {
+        uint64_t    macAddr         = ESP.getEfuseMac();
+        uint8_t*    macAddrPtr      = reinterpret_cast<uint8_t*>(&macAddr);
+        char        macAddrStr[18];
+
+        snprintf(macAddrStr, UTIL_ARRAY_NUM(macAddrStr), "%02X:%02X:%02X:%02X:%02X:%02X", 
+            macAddrPtr[0],
+            macAddrPtr[1],
+            macAddrPtr[2],
+            macAddrPtr[3],
+            macAddrPtr[4],
+            macAddrPtr[5]);
+
+        result = macAddrStr;
+    }
     else
     {
         result = commonPageProcessor(var);
