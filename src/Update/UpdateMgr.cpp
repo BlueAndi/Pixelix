@@ -97,6 +97,9 @@ bool UpdateMgr::init()
      */
     ArduinoOTA.setRebootOnSuccess(false);
 
+    /* Do not additional enable mDNS. */
+    ArduinoOTA.setMdnsEnabled(false);
+
     /* Get hostname */
     if (false == Settings::getInstance().open(true))
     {
@@ -167,7 +170,6 @@ void UpdateMgr::updateProgress(uint8_t progress)
     {
         m_progress = progress;
 
-        LOG_INFO(String("[") + m_progress + "%]");
         m_progressBar.setProgress(m_progress);
 
         /* Update display manually. Note, that this must be done to avoid
@@ -186,6 +188,9 @@ void UpdateMgr::updateProgress(uint8_t progress)
             /* Just wait. */
             ;
         }
+
+        /* Show update status on console. */
+        LOG_INFO(String("[") + m_progress + "%]");
     }
 
     return;
