@@ -167,7 +167,7 @@ void UpdateMgr::updateProgress(uint8_t progress)
     {
         m_progress = progress;
 
-        LOG_INFO(String("Update progress: ") + m_progress + "%");
+        LOG_INFO(String("[") + m_progress + "%]");
         m_progressBar.setProgress(m_progress);
 
         /* Update display manually. Note, that this must be done to avoid
