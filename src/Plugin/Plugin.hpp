@@ -65,10 +65,18 @@ class Plugin
 public:
 
     /**
-     * Constructs the plugin.
-     * It is enabled by default.
+     * Plugin creation function, used by the plugin manager to create a plugin instance.
      */
-    Plugin() :
+    typedef Plugin* (*CreateFunc)(const String& name);
+
+    /**
+     * Constructs the plugin.
+     * It is disabled by default.
+     * 
+     * @param[in] name  Plugin name
+     */
+    Plugin(const String& name) :
+        m_name(name),
         m_slotId(UINT8_MAX),
         m_isEnabled(false)
     {
@@ -133,7 +141,10 @@ public:
      *
      * @return Name of the plugin.
      */
-    virtual const char* getName() const = 0;
+    const char* getName() const
+    {
+        return m_name.c_str();
+    }
 
     /**
      * Get duration how long the plugin shall be active.
@@ -246,9 +257,11 @@ public:
 
 private:
 
+    String  m_name;         /**< Plugin name */
     uint8_t m_slotId;       /**< Slot id */
     bool    m_isEnabled;    /**< Plugin is enabled or disabled */
 
+    Plugin();
     Plugin(const Plugin& plugin);
     Plugin& operator=(const Plugin& plugin);
 

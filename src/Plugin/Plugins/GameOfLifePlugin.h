@@ -78,9 +78,11 @@ public:
 
     /**
      * Constructs the plugin.
+     * 
+     * @param[in] name  Plugin name
      */
-    GameOfLifePlugin() :
-        Plugin(),
+    GameOfLifePlugin(const String& name) :
+        Plugin(name),
         m_activeGrid(0U),
         m_gridSize(0U),
         m_grids(),
@@ -108,13 +110,15 @@ public:
     }
 
     /**
-     * Get the plugin name.
-     *
-     * @return Name of the plugin.
+     * Plugin creation method, used to register on the plugin manager.
+     * 
+     * @param[in] name  Plugin name
+     * 
+     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    const char* getName() const
+    static Plugin* create(const String& name)
     {
-        return "GameOfLifePlugin";
+        return new GameOfLifePlugin(name);
     }
 
     /**

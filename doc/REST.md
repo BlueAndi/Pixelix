@@ -125,14 +125,18 @@ $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/slots
 Install/Uninstall plugins to display slots.
 
 Detail:
+* Method: GET
+  * List all plugins:
+    * Arguments:
+      * list
 * Method: POST
-* Install a plugin:
-  * Arguments:
-    * install=`<plugin-name>`
-* Uninstall a plugin:
-  * Arguments:
-    * uninstall=`<plugin-name>`
-    * slotId=`<slot-id>`
+  * Install a plugin:
+    * Arguments:
+      * install=`<plugin-name>`
+  * Uninstall a plugin:
+    * Arguments:
+      * uninstall=`<plugin-name>`
+      * slotId=`<slot-id>`
 
 Example:
 ```
@@ -151,8 +155,9 @@ Result:
 
 Example with curl:
 ```
-$ curl -u luke:skywalker -d "install=JustTextPlugin" -X POST http://192.168.2.166/rest/api/v1/display
-$ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://192.168.2.166/rest/api/v1/display
+$ curl -u luke:skywalker -d "list=" -X GET http://192.168.2.166/rest/api/v1/plugin
+$ curl -u luke:skywalker -d "install=JustTextPlugin" -X POST http://192.168.2.166/rest/api/v1/plugin
+$ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://192.168.2.166/rest/api/v1/plugin
 ```
 
 ## Plugin depended

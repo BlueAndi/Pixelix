@@ -131,6 +131,11 @@ private:
      * Show startup information on the display.
      */
     void showStartupInfoOnDisplay(void);
+
+    /**
+     * Register plugins on the plugin manager.
+     */
+    void registerPlugins();
 };
 
 /******************************************************************************

@@ -66,100 +66,75 @@ PluginMgr   PluginMgr::m_instance;
  * Public Methods
  *****************************************************************************/
 
-SysMsgPlugin* PluginMgr::installSysMsgPlugin()
+void PluginMgr::registerPlugin(const String& name, Plugin::CreateFunc createFunc)
 {
-    SysMsgPlugin*   plugin = new SysMsgPlugin();
+    PluginRegEntry* entry = new PluginRegEntry();
 
-    if (nullptr != plugin)
+    if (nullptr != entry)
     {
-        if (false == install(plugin))
+        entry->name         = name;
+        entry->createFunc   = createFunc;
+
+        if (false == m_registry.append(entry))
         {
-            delete plugin;
-            plugin = nullptr;
+            LOG_ERROR("Couldn't add %s to registry.", name.c_str());
+
+            delete entry;
+            entry = nullptr;
+        }
+        else
+        {
+            LOG_INFO("Plugin %s registered.", name.c_str());
         }
     }
+    else
+    {
+        LOG_ERROR("Couldn't add %s to registry.", name.c_str());
+    }
 
-    return  plugin;
+    return;
 }
 
-JustTextPlugin* PluginMgr::installJustTextPlugin()
+Plugin* PluginMgr::install(const String& name)
 {
-    JustTextPlugin* plugin = new JustTextPlugin();
-
-    if (nullptr != plugin)
+    Plugin*         plugin  = nullptr;
+    PluginRegEntry* entry   = nullptr;
+    
+    if (true == m_registry.selectFirstElement())
     {
-        if (false == install(plugin))
+        bool isFound = false;
+
+        entry = *m_registry.current();
+
+        while((false == isFound) && (nullptr != entry))
         {
-            delete plugin;
-            plugin = nullptr;
+            if (name == entry->name)
+            {
+                isFound = true;
+            }
+            else if (false == m_registry.next())
+            {
+                entry = nullptr;
+            }
+            else
+            {
+                entry = *m_registry.current();
+            }
+        }
+
+        if ((true == isFound) &&
+            (nullptr != entry))
+        {
+            plugin = entry->createFunc(entry->name);
+            if (false == installToAutoSlot(plugin))
+            {
+                delete plugin;
+                plugin = nullptr;
+            }
         }
     }
 
-    return  plugin;
-}
-
-FirePlugin* PluginMgr::installFirePlugin()
-{
-    FirePlugin* plugin = new FirePlugin();
-
-    if (nullptr != plugin)
-    {
-        if (false == install(plugin))
-        {
-            delete plugin;
-            plugin = nullptr;
-        }
-    }
-
-    return  plugin;
-}
-
-IconTextPlugin* PluginMgr::installIconTextPlugin()
-{
-    IconTextPlugin* plugin = new IconTextPlugin();
-
-    if (nullptr != plugin)
-    {
-        if (false == install(plugin))
-        {
-            delete plugin;
-            plugin = nullptr;
-        }
-    }
-
-    return  plugin;
-}
-
-IconTextLampPlugin* PluginMgr::installIconTextLampPlugin()
-{
-    IconTextLampPlugin* plugin = new IconTextLampPlugin();
-
-    if (nullptr != plugin)
-    {
-        if (false == install(plugin))
-        {
-            delete plugin;
-            plugin = nullptr;
-        }
-    }
-
-    return  plugin;
-}
-
-GameOfLifePlugin* PluginMgr::installGameOfLifePlugin()
-{
-    GameOfLifePlugin* plugin = new GameOfLifePlugin();
-
-    if (nullptr != plugin)
-    {
-        if (false == install(plugin))
-        {
-            delete plugin;
-            plugin = nullptr;
-        }
-    }
-
-    return  plugin;
+    return plugin;
 }
 
 void PluginMgr::uninstall(Plugin* plugin)
@@ -181,6 +156,30 @@ void PluginMgr::uninstall(Plugin* plugin)
     }
 
     return;
+}
+
+const char* PluginMgr::findFirst()
+{
+    const char* name = nullptr;
+
+    if (true == m_registry.selectFirstElement())
+    {
+        name = (*m_registry.current())->name.c_str();
+    }
+
+    return name;
+}
+
+const char* PluginMgr::findNext()
+{
+    const char* name = nullptr;
+
+    if (true == m_registry.next())
+    {
+        name = (*m_registry.current())->name.c_str();
+    }
+
+    return name;
 }
 
 String PluginMgr::getRestApiBaseUri(uint8_t slotId)
@@ -205,7 +204,7 @@ String PluginMgr::getRestApiBaseUri(uint8_t slotId)
  * Private Methods
  *****************************************************************************/
 
-bool PluginMgr::install(Plugin* plugin)
+bool PluginMgr::installToAutoSlot(Plugin* plugin)
 {
     bool status = false;
 

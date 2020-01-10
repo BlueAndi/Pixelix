@@ -79,9 +79,11 @@ public:
 
     /**
      * Constructs the plugin.
+     * 
+     * @param[in] name  Plugin name
      */
-    FirePlugin() :
-        Plugin(),
+    FirePlugin(const String& name) :
+        Plugin(name),
         m_heat(nullptr),
         m_heatSize(0U)
     {
@@ -100,13 +102,15 @@ public:
     }
 
     /**
-     * Get the plugin name.
-     *
-     * @return Name of the plugin.
+     * Plugin creation method, used to register on the plugin manager.
+     * 
+     * @param[in] name  Plugin name
+     * 
+     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    const char* getName() const
+    static Plugin* create(const String& name)
     {
-        return "FirePlugin";
+        return new FirePlugin(name);
     }
 
     /**

@@ -46,13 +46,6 @@
 #include <stdint.h>
 #include "Plugin.hpp"
 
-#include "SysMsgPlugin.h"
-#include "JustTextPlugin.h"
-#include "FirePlugin.h"
-#include "IconTextPlugin.h"
-#include "IconTextLampPlugin.h"
-#include "GameOfLifePlugin.h"
-
 #include <LinkedList.hpp>
 
 /******************************************************************************
@@ -82,46 +75,21 @@ public:
     }
 
     /**
-     * Install SysMsgPlugin plugin.
+     * Register a plugin.
      * 
-     * @return If successful installed, it will return true otherwise false.
+     * @param[in] name          Plugin name
+     * @param[in] createMethod  The plugin creation function.
      */
-    SysMsgPlugin* installSysMsgPlugin(void);
+    void registerPlugin(const String& name, Plugin::CreateFunc createFunc);
 
     /**
-     * Install JustTextPlugin plugin.
+     * Install plugin.
      * 
-     * @return If successful installed, it will return true otherwise false.
-     */
-    JustTextPlugin* installJustTextPlugin(void);
-
-    /**
-     * Install FirePlugin plugin.
+     * @param[in] name  Plugin name
      * 
-     * @return If successful installed, it will return true otherwise false.
+     * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    FirePlugin* installFirePlugin(void);
-
-    /**
-     * Install IconTextPlugin plugin.
-     * 
-     * @return If successful installed, it will return true otherwise false.
-     */
-    IconTextPlugin* installIconTextPlugin(void);
-
-    /**
-     * Install IconTextLampPlugin plugin.
-     * 
-     * @return If successful installed, it will return true otherwise false.
-     */
-    IconTextLampPlugin* installIconTextLampPlugin(void);
-
-    /**
-     * Install GameOfLifePlugin plugin.
-     * 
-     * @return If successful installed, it will return true otherwise false.
-     */
-    GameOfLifePlugin* installGameOfLifePlugin(void);
+    Plugin* install(const String& name);
 
     /**
      * Uninstall plugin.
@@ -129,6 +97,20 @@ public:
      * @param[in] plugin    Plugin, which to remove
      */
     void uninstall(Plugin* plugin);
+
+    /**
+     * Find first plugin.
+     * 
+     * @return If plugin found, it will return its name otherwise nullptr.
+     */
+    const char* findFirst();
+
+    /**
+     * Find next plugin.
+     * 
+     * @return If plugin found, it will return its name otherwise nullptr.
+     */
+    const char* findNext();
 
     /**
      * Get plugin REST base URI.
@@ -141,15 +123,28 @@ public:
 
 private:
 
-    static PluginMgr        m_instance; /**< Plugin manager instance */
+    static PluginMgr    m_instance; /**< Plugin manager instance */
 
-    DLinkedList<Plugin*>    m_plugins;  /**< List with all installed plugins */
+    /**
+     * Plugin registry entry.
+     */
+    struct PluginRegEntry
+    {
+        String              name;       /**< Plugin name */
+        Plugin::CreateFunc  createFunc; /**< Plugin creation function */
+    };
+
+    DLinkedList<PluginRegEntry*>    m_registry; /**< Plugin registry */
+    DLinkedList<Plugin*>            m_plugins;  /**< List with all installed plugins */
+    PluginRegEntry*                 m_current;  /**< Current registry entry */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
-        m_plugins()
+        m_registry(),
+        m_plugins(),
+        m_current(nullptr)
     {
     }
 
@@ -171,7 +166,7 @@ private:
      * 
      * @return If successful installed, it will return true otherwise false.
      */
-    bool install(Plugin* plugin);
+    bool installToAutoSlot(Plugin* plugin);
 
     /**
      * Install plugin to a specific display slot.

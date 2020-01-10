@@ -73,9 +73,11 @@ public:
 
     /**
      * Constructs the plugin.
+     * 
+     * @param[in] name  Plugin name
      */
-    IconTextPlugin() :
-        Plugin(),
+    IconTextPlugin(const String& name) :
+        Plugin(name),
         m_textCanvas(nullptr),
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
@@ -118,15 +120,17 @@ public:
     }
 
     /**
-     * Get the plugin name.
-     *
-     * @return Name of the plugin.
+     * Plugin creation method, used to register on the plugin manager.
+     * 
+     * @param[in] name  Plugin name
+     * 
+     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    const char* getName() const
+    static Plugin* create(const String& name)
     {
-        return "IconTextPlugin";
+        return new IconTextPlugin(name);
     }
-
+    
     /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.

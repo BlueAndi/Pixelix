@@ -69,9 +69,11 @@ public:
 
     /**
      * Constructs the plugin.
+     * 
+     * @param[in] name  Plugin name
      */
-    JustTextPlugin() :
-        Plugin(),
+    JustTextPlugin(const String& name) :
+        Plugin(name),
         m_textWidget(),
         m_url(),
         m_callbackWebHandler(nullptr)
@@ -88,13 +90,15 @@ public:
     }
 
     /**
-     * Get the plugin name.
-     *
-     * @return Name of the plugin.
+     * Plugin creation method, used to register on the plugin manager.
+     * 
+     * @param[in] name  Plugin name
+     * 
+     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    const char* getName() const
+    static Plugin* create(const String& name)
     {
-        return "JustTextPlugin";
+        return new JustTextPlugin(name);
     }
 
     /**

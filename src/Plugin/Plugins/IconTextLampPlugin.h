@@ -76,9 +76,11 @@ public:
 
     /**
      * Constructs the plugin.
+     * 
+     * @param[in] name  Plugin name
      */
-    IconTextLampPlugin() :
-        Plugin(),
+    IconTextLampPlugin(const String& name) :
+        Plugin(name),
         m_iconCanvas(nullptr),
         m_textCanvas(nullptr),
         m_lampCanvas(nullptr),
@@ -131,13 +133,15 @@ public:
     }
 
     /**
-     * Get the plugin name.
-     *
-     * @return Name of the plugin.
+     * Plugin creation method, used to register on the plugin manager.
+     * 
+     * @param[in] name  Plugin name
+     * 
+     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    const char* getName() const
+    static Plugin* create(const String& name)
     {
-        return "IconTextLampPlugin";
+        return new IconTextLampPlugin(name);
     }
 
     /**

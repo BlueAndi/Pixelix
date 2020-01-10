@@ -57,6 +57,13 @@
 #include <Logging.h>
 #include <Util.h>
 
+#include "FirePlugin.h"
+#include "GameOfLifePlugin.h"
+#include "IconTextLampPlugin.h"
+#include "IconTextPlugin.h"
+#include "JustTextPlugin.h"
+#include "SysMsgPlugin.h"
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -106,6 +113,9 @@ void InitState::entry(StateMachine& sm)
 
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
+
+    /* Register plugins. This must be done before system message handler is initialized! */
+    registerPlugins();
 
     /* Initialize button driver */
     if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
@@ -168,7 +178,7 @@ void InitState::entry(StateMachine& sm)
         showStartupInfoOnDisplay();
 
         /* Install default plugin. */
-        plugin = PluginMgr::getInstance().installIconTextLampPlugin();
+        plugin = static_cast<IconTextLampPlugin*>(PluginMgr::getInstance().install("IconTextLampPlugin"));
         
         if (nullptr != plugin)
         {
@@ -256,6 +266,21 @@ void InitState::showStartupInfoOnDisplay()
 
     /* Clear and wait */
     sysMsg.show("", SYS_MSG_WAIT_TIME / 2U);
+
+    return;
+}
+
+void InitState::registerPlugins()
+{
+    PluginMgr&  pluginMgr = PluginMgr::getInstance();
+
+    /* Register in alphabetic order. */
+    pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
+    pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
+    pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
+    pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
+    pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
+    pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
 
     return;
 }

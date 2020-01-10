@@ -69,7 +69,7 @@ bool SysMsg::init()
 {
     bool status = false;
 
-    m_plugin = PluginMgr::getInstance().installSysMsgPlugin();
+    m_plugin = static_cast<SysMsgPlugin*>(PluginMgr::getInstance().install("SysMsgPlugin"));
 
     if (nullptr != m_plugin)
     {

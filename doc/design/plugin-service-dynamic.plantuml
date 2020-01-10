@@ -13,7 +13,8 @@ note over app,webServer
 end note
 
 app -> pluginMgr: Install concrete plugin.
-pluginMgr -> pluginMgr: Create concrete plugin.
+pluginMgr -> plugin: Create concrete plugin.
+plugin --> pluginMgr: Concrete plugin
 pluginMgr -> displayMgr: Install plugin in display slot.
 
 alt Empty slot available
@@ -27,7 +28,7 @@ alt Empty slot available
     plugin -> webServer: Register web interface.
     webServer --> plugin
     plugin --> pluginMgr
-    pluginMgr --> app: concrete plugin
+    pluginMgr --> app: Concrete plugin
 
     alt Depends on application
         app -> plugin: Enable plugin.

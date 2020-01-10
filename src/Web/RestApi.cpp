@@ -286,6 +286,7 @@ static void handleSlots(AsyncWebServerRequest* request)
 
 /**
  * Install/Uninstall plugins
+ * List plugins:     GET \c "/api/v1/plugin?list"
  * Install plugin:   POST \c "/api/v1/plugin?install=<plugin-name>"
  * Uninstall plugin: POST \c "/api/v1/plugin?uninstall=<plugin-name>&slotId=<slot-id>"
  * 
@@ -293,148 +294,155 @@ static void handleSlots(AsyncWebServerRequest* request)
  */
 static void handlePlugin(AsyncWebServerRequest* request)
 {
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    String              content;
+    DynamicJsonDocument jsonDoc(400);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
         return;
     }
 
-    if (HTTP_POST != request->method())
+    if (HTTP_GET == request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        /* List all plugins? */
+        if (true == request->hasArg("list"))
+        {
+            JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+            JsonArray   pluginArray = dataObj.createNestedArray("plugins");
+            const char* pluginName  = PluginMgr::getInstance().findFirst();
 
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    /* Plugin installation? */
-    else if (true == request->hasArg("install"))
-    {
-        String  pluginName  = request->arg("install");
-        Plugin* plugin      = nullptr;
-
-        if (0 == pluginName.compareTo("JustTextPlugin"))
-        {
-            plugin = PluginMgr::getInstance().installJustTextPlugin();
-        }
-        else if (0 == pluginName.compareTo("IconTextPlugin"))
-        {
-            plugin = PluginMgr::getInstance().installIconTextPlugin();
-        }
-        else if (0 == pluginName.compareTo("IconTextLampPlugin"))
-        {
-            plugin = PluginMgr::getInstance().installIconTextLampPlugin();
-        }
-        else if (0 == pluginName.compareTo("FirePlugin"))
-        {
-            plugin = PluginMgr::getInstance().installFirePlugin();
-        }
-        else if (0 == pluginName.compareTo("GameOfLifePlugin"))
-        {
-            plugin = PluginMgr::getInstance().installGameOfLifePlugin();
-        }
-        else
-        {
-            ;
-        }
-
-        /* Plugin not found? */
-        if (nullptr == plugin)
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
+            while(nullptr != pluginName)
+            {
+                pluginArray.add(pluginName);
+                pluginName = PluginMgr::getInstance().findNext();
+            }
+            
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Plugin unknown.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        /* Plugin successful installed. */
-        else
-        {
-            JsonObject dataObj = jsonDoc.createNestedObject("data");
-
-            plugin->enable();
-
-            /* Prepare response */
-            dataObj["slotId"]   = plugin->getSlotId();
             jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
-    }
-    /* Plugin uninstallation? */
-    else if (true == request->hasArg("uninstall"))
-    {
-        /* "slotId" argument missing? */
-        if (false == request->hasArg("slotId"))
+        else
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Slot id is missing.";
+            errorObj["msg"]     = "Unknown argument.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
-        else
+    }
+    else if (HTTP_POST == request->method())
+    {
+        /* Plugin installation? */
+        if (true == request->hasArg("install"))
         {
-            uint8_t slotId          = DisplayMgr::SLOT_ID_INVALID;
-            bool    slotIdStatus    = Util::strToUInt8(request->arg("slotId"), slotId);
+            String  pluginName  = request->arg("install");
+            Plugin* plugin      = PluginMgr::getInstance().install(pluginName);
 
-            if (false == slotIdStatus)
+            /* Plugin not found? */
+            if (nullptr == plugin)
             {
                 JsonObject errorObj = jsonDoc.createNestedObject("error");
 
                 /* Prepare response */
                 jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                errorObj["msg"]     = "Invalid slot id.";
+                errorObj["msg"]     = "Plugin unknown.";
+                httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            }
+            /* Plugin successful installed. */
+            else
+            {
+                JsonObject dataObj = jsonDoc.createNestedObject("data");
+
+                plugin->enable();
+
+                /* Prepare response */
+                dataObj["slotId"]   = plugin->getSlotId();
+                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+                httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+            }
+        }
+        /* Plugin uninstallation? */
+        else if (true == request->hasArg("uninstall"))
+        {
+            /* "slotId" argument missing? */
+            if (false == request->hasArg("slotId"))
+            {
+                JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                /* Prepare response */
+                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+                errorObj["msg"]     = "Slot id is missing.";
                 httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
             }
             else
             {
-                String  pluginName  = request->arg("uninstall");
-                Plugin* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
+                uint8_t slotId          = DisplayMgr::SLOT_ID_INVALID;
+                bool    slotIdStatus    = Util::strToUInt8(request->arg("slotId"), slotId);
 
-                if (nullptr == plugin)
+                if (false == slotIdStatus)
                 {
                     JsonObject errorObj = jsonDoc.createNestedObject("error");
 
                     /* Prepare response */
                     jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                    errorObj["msg"]     = "No plugin in slot.";
-                    httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-                }
-                else if (0 != pluginName.compareTo(plugin->getName()))
-                {
-                    JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                    /* Prepare response */
-                    jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                    errorObj["msg"]     = "Wrong plugin in slot.";
+                    errorObj["msg"]     = "Invalid slot id.";
                     httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
                 }
                 else
                 {
-                    PluginMgr::getInstance().uninstall(plugin);
+                    String  pluginName  = request->arg("uninstall");
+                    Plugin* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
-                    /* Prepare response */
-                    (void)jsonDoc.createNestedObject("data");
-                    jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+                    if (nullptr == plugin)
+                    {
+                        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                        /* Prepare response */
+                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+                        errorObj["msg"]     = "No plugin in slot.";
+                        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+                    }
+                    else if (0 != pluginName.compareTo(plugin->getName()))
+                    {
+                        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                        /* Prepare response */
+                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+                        errorObj["msg"]     = "Wrong plugin in slot.";
+                        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+                    }
+                    else
+                    {
+                        PluginMgr::getInstance().uninstall(plugin);
+
+                        /* Prepare response */
+                        (void)jsonDoc.createNestedObject("data");
+                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+                        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+                    }
                 }
             }
         }
+        /* Unknown command */
+        else
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "Unknown argument.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
     }
-    /* Unknown command */
     else
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "Install or uninstall?";
+        errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 

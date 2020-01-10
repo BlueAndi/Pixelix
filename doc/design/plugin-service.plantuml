@@ -2,22 +2,27 @@
 
 title Plugin Service
 
+interface "CreateFunc" as createFunc
+
 interface "Plugin" as plugin {
 
+    + m_name : String
     + m_isEnabled : bool
     + m_slotId : uint8_t
+
+    + Plugin(name : const String&)
     + getSlotId(): uint8_t
     + setSlotId(slotId : uint8_t) : void
     + {abstract} registerWebInterface(srv : AsyncWebServer&) : void
     + {abstract} unregisterWebInterface(srv : AsyncWebServer&) : void
-    + {abstract} getName() = 0 : const char*
+    + getName() : const char*
     + {abstract} getDuration() : uint32_t
     + enable() : void
     + disable() : void
     + isEnabled() : bool
     + {abstract} start() : void
     + {abstract} stop() : void
-    + {abstract} update(gfx: Adafruit_Gfx&) = 0 : void
+    + {abstract} update(gfx: IGfx&) = 0 : void
 }
 
 note right of plugin
@@ -28,7 +33,11 @@ class "PluginMgr" as pluginMgr
 class "DisplayMgr" as displayMgr
 class "MyWebserver" as myWebserver
 class "App" as app
-class "ConcretePlugin" as concretePlugin
+class "ConcretePlugin" as concretePlugin {
+    + {static} create(name : const String&) : Plugin*
+    + update(gfx: IGfx&) : void
+}
+
 class "Settings" as settings
 
 app ..> pluginMgr: Install/Uninstall plugin
@@ -44,6 +53,7 @@ note right of app
     therefore installed during startup.
 end note
 
+plugin +-l- createFunc
 plugin <|.. concretePlugin: <<realize>>
 
 note right of concretePlugin
