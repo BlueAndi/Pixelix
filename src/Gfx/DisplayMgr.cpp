@@ -154,26 +154,6 @@ void DisplayMgr::end()
     return;
 }
 
-void DisplayMgr::lock()
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTake(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void DisplayMgr::unlock()
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGive(m_xMutex);
-    }
-
-    return;
-}
-
 bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
 {
     bool status = true;
@@ -615,6 +595,26 @@ void DisplayMgr::updateTask(void* parameters)
     }
 
     vTaskDelete(nullptr);
+
+    return;
+}
+
+void DisplayMgr::lock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTake(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void DisplayMgr::unlock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGive(m_xMutex);
+    }
 
     return;
 }

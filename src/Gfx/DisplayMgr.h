@@ -93,17 +93,6 @@ public:
     void end(void);
 
     /**
-     * Lock display and prevent the display update, which will be done in a
-     * separate task.
-     */
-    void lock(void);
-
-    /**
-     * Unlock display.
-     */
-    void unlock(void);
-
-    /**
      * Enable/Disable automatic brightness adjustment.
      * 
      * @param[in] enable    Enable (true) or disable (false)
@@ -253,6 +242,16 @@ private:
      */
     static void updateTask(void* parameters);
 
+    /**
+     * Lock display and prevent the display update, which will be done in a
+     * separate task.
+     */
+    void lock(void);
+
+    /**
+     * Unlock display.
+     */
+    void unlock(void);
 };
 
 /******************************************************************************
