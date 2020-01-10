@@ -45,11 +45,13 @@
  *****************************************************************************/
 #include <stdint.h>
 #include "Plugin.hpp"
+
 #include "SysMsgPlugin.h"
 #include "JustTextPlugin.h"
 #include "FirePlugin.h"
 #include "IconTextPlugin.h"
 #include "IconTextLampPlugin.h"
+#include "GameOfLifePlugin.h"
 
 #include <LinkedList.hpp>
 
@@ -113,6 +115,13 @@ public:
      * @return If successful installed, it will return true otherwise false.
      */
     IconTextLampPlugin* installIconTextLampPlugin(void);
+
+    /**
+     * Install GameOfLifePlugin plugin.
+     * 
+     * @return If successful installed, it will return true otherwise false.
+     */
+    GameOfLifePlugin* installGameOfLifePlugin(void);
 
     /**
      * Uninstall plugin.

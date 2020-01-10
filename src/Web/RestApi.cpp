@@ -333,6 +333,10 @@ static void handlePlugin(AsyncWebServerRequest* request)
         {
             plugin = PluginMgr::getInstance().installFirePlugin();
         }
+        else if (0 == pluginName.compareTo("GameOfLifePlugin"))
+        {
+            plugin = PluginMgr::getInstance().installGameOfLifePlugin();
+        }
         else
         {
             ;

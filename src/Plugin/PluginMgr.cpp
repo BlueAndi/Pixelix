@@ -146,6 +146,22 @@ IconTextLampPlugin* PluginMgr::installIconTextLampPlugin()
     return  plugin;
 }
 
+GameOfLifePlugin* PluginMgr::installGameOfLifePlugin()
+{
+    GameOfLifePlugin* plugin = new GameOfLifePlugin();
+
+    if (nullptr != plugin)
+    {
+        if (false == install(plugin))
+        {
+            delete plugin;
+            plugin = nullptr;
+        }
+    }
+
+    return  plugin;
+}
+
 void PluginMgr::uninstall(Plugin* plugin)
 {
     if (nullptr != plugin)
