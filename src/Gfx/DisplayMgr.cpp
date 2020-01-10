@@ -344,6 +344,8 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
         int16_t     y       = 0;
         size_t      index   = 0;
 
+        lock();
+
         /* Copy framebuffer after it is completely updated. */
         for(y = 0; y < matrix.height(); ++y)
         {
@@ -358,6 +360,8 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
                 }
             }
         }
+
+        unlock();
     }
 
     return;

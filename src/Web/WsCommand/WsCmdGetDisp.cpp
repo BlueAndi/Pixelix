@@ -81,9 +81,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         const char  DELIMITER   = ';';
         uint32_t    framebuffer[Board::LedMatrix::width * Board::LedMatrix::height];
 
-        DisplayMgr::getInstance().lock();
         DisplayMgr::getInstance().getFBCopy(framebuffer, UTIL_ARRAY_NUM(framebuffer));
-        DisplayMgr::getInstance().unlock();
 
         for(index = 0U; index <  UTIL_ARRAY_NUM(framebuffer); ++index)
         {
