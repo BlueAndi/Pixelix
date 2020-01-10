@@ -312,6 +312,32 @@ bool GameOfLifePlugin::getCellState(uint8_t gridId, int16_t x, int16_t y)
 {
     bool isAlive = false;
 
+    if (0 > x)
+    {
+        x = m_width + x;
+    }
+    else if (m_width <= x)
+    {
+        x -= m_width;
+    }
+    else
+    {
+        ;
+    }
+
+    if (0 > y)
+    {
+        y = m_height + y;
+    }
+    else if (m_height <= y)
+    {
+        y -= m_height;
+    }
+    else
+    {
+        ;
+    }
+
     if ((0 <= x) &&
         (0 <= y) &&
         (m_width > x) &&
@@ -329,6 +355,32 @@ bool GameOfLifePlugin::getCellState(uint8_t gridId, int16_t x, int16_t y)
 
 void GameOfLifePlugin::setCellState(uint8_t gridId, int16_t x, int16_t y, bool state)
 {
+    if (0 > x)
+    {
+        x = m_width + x;
+    }
+    else if (m_width <= x)
+    {
+        x -= m_width;
+    }
+    else
+    {
+        ;
+    }
+
+    if (0 > y)
+    {
+        y = m_height + y;
+    }
+    else if (m_height <= y)
+    {
+        y -= m_height;
+    }
+    else
+    {
+        ;
+    }
+
     if ((0 <= x) &&
         (0 <= y) &&
         (m_width > x) &&
