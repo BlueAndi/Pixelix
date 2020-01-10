@@ -78,7 +78,7 @@ public:
      * Register a plugin.
      * 
      * @param[in] name          Plugin name
-     * @param[in] createMethod  The plugin creation function.
+     * @param[in] createFunc    The plugin creation function.
      */
     void registerPlugin(const String& name, Plugin::CreateFunc createFunc);
 
