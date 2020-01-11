@@ -176,7 +176,7 @@ void Pages::init(AsyncWebServer& srv)
 
 /**
  * Error web page used in case a requested path was not found.
- * 
+ *
  * @param[in] request   HTTP request
  */
 void Pages::error(AsyncWebServerRequest* request)
@@ -206,9 +206,9 @@ void Pages::error(AsyncWebServerRequest* request)
 /**
  * Check the given hostname and returns whether it is valid or not.
  * Validation is according to RFC952.
- * 
+ *
  * @param[in] hostname  Hostname which to validate
- * 
+ *
  * @return Is valid (true) or not (false).
  */
 static bool isValidHostname(const String& hostname)
@@ -270,9 +270,9 @@ static bool isValidHostname(const String& hostname)
 /**
  * Check the given wifi SSID and returns whether it is valid or not.
  * Validation is according to Section 7.3.2.1 of the 802.11-2007 specification.
- * 
+ *
  * @param[in] hostname  SSID which to validate
- * 
+ *
  * @return Is valid (true) or not (false).
  */
 static bool isValidSSID(const String& ssid)
@@ -290,9 +290,9 @@ static bool isValidSSID(const String& ssid)
 
 /**
  * Get text in color format (HTML).
- * 
+ *
  * @param[in] text  Text
- * 
+ *
  * @return Text in color format (HTML).
  */
 static String getColoredText(const String& text)
@@ -331,7 +331,7 @@ static String getColoredText(const String& text)
 /**
  * Processor for page template, containing the common part, which is available
  * in every page. It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String commonPageProcessor(const String& var)
@@ -361,7 +361,7 @@ static String commonPageProcessor(const String& var)
 /**
  * Processor for error page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String errorPageProcessor(const String& var)
@@ -371,7 +371,7 @@ static String errorPageProcessor(const String& var)
 
 /**
  * Index page on root path ("/").
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void indexPage(AsyncWebServerRequest* request)
@@ -397,7 +397,7 @@ static void indexPage(AsyncWebServerRequest* request)
 /**
  * Processor for index page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String indexPageProcessor(const String& var)
@@ -438,7 +438,7 @@ static String indexPageProcessor(const String& var)
 
 /**
  * Network page, shows all information regarding the network.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void networkPage(AsyncWebServerRequest* request)
@@ -464,7 +464,7 @@ static void networkPage(AsyncWebServerRequest* request)
 /**
  * Processor for network page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String networkPageProcessor(const String& var)
@@ -518,7 +518,7 @@ static String networkPageProcessor(const String& var)
         uint8_t*    macAddrPtr      = reinterpret_cast<uint8_t*>(&macAddr);
         char        macAddrStr[18];
 
-        snprintf(macAddrStr, UTIL_ARRAY_NUM(macAddrStr), "%02X:%02X:%02X:%02X:%02X:%02X", 
+        snprintf(macAddrStr, UTIL_ARRAY_NUM(macAddrStr), "%02X:%02X:%02X:%02X:%02X:%02X",
             macAddrPtr[0],
             macAddrPtr[1],
             macAddrPtr[2],
@@ -538,7 +538,7 @@ static String networkPageProcessor(const String& var)
 
 /**
  * Settings page to show and store settings.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void settingsPage(AsyncWebServerRequest* request)
@@ -721,14 +721,14 @@ static void settingsPage(AsyncWebServerRequest* request)
     {
         request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
     }
-    
+
     return;
 }
 
 /**
  * Add settings data to the destination string in JSON format.
  * The structure depends on the javascript code in settings.html.
- * 
+ *
  * @param[in] dst       Destination string
  * @param[in] title     Settings title
  * @param[in] name      Input field name
@@ -766,7 +766,7 @@ static void addSettingsData(String& dst, const char* title, const char* name, co
 /**
  * Processor for settings page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String settingsPageProcessor(const String& var)
@@ -809,7 +809,7 @@ static String settingsPageProcessor(const String& var)
 
 /**
  * Page with stuff for development and debug purposes.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void devPage(AsyncWebServerRequest* request)
@@ -835,7 +835,7 @@ static void devPage(AsyncWebServerRequest* request)
 /**
  * Processor for dev page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String devPageProcessor(const String& var)
@@ -875,7 +875,7 @@ static String devPageProcessor(const String& var)
 
 /**
  * Page for software update.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void updatePage(AsyncWebServerRequest* request)
@@ -901,7 +901,7 @@ static void updatePage(AsyncWebServerRequest* request)
 /**
  * Processor for update page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String updatePageProcessor(const String& var)
@@ -926,7 +926,7 @@ static String updatePageProcessor(const String& var)
 
 /**
  * Page for upload result.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void uploadPage(AsyncWebServerRequest* request)
@@ -958,7 +958,7 @@ static void uploadPage(AsyncWebServerRequest* request)
 
 /**
  * File upload handler.
- * 
+ *
  * @param[in] request   HTTP request.
  * @param[in] filename  Name of the uploaded file.
  * @param[in] index     Current file offset.
@@ -981,7 +981,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         /* Update filesystem? */
         if (U_SPIFFS == cmd)
         {
-            /* Close filesystem before continue. 
+            /* Close filesystem before continue.
              * Note, this needs a restart after update is finished.
              */
             SPIFFS.end();
@@ -994,6 +994,12 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         {
             LOG_ERROR("Upload failed: %s", Update.errorString());
             gIsUploadError = true;
+
+            /* Mount filesystem again. */
+            if (false == SPIFFS.begin())
+            {
+                LOG_FATAL("Couldn't mount filesystem.");
+            }
         }
         /* Update is now running. */
         else
@@ -1058,7 +1064,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 
 /**
  * Display page, showing current display content.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void displayPage(AsyncWebServerRequest* request)
@@ -1084,7 +1090,7 @@ static void displayPage(AsyncWebServerRequest* request)
 /**
  * Processor for display page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String displayPageProcessor(const String& var)
