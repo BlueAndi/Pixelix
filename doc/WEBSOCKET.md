@@ -14,8 +14,8 @@ Parameter:
 Response:
 * Successful:
   * ```ACK;<slot-id>;<color>;<color>;...;<color>```
-  * slotId: Id of current active slot.
-  * Colors starting with the row y = 0 and from x = 0 to N. Then the next row and etc.
+  * ```<slot-id>```: Id of current active slot.
+  * ```<color>```: Colors starting with the row y = 0 and from x = 0 to N. Then the next row and etc.
 * Failed:
   * ```NACK```
 
@@ -28,8 +28,8 @@ Parameter:
 Response:
 * Successful:
   * ```ACK;<max-slots>;<slot-info>; ...```
-  * max-slots: Max. number of slots.
-  * slot-info: The name of the installed plugin in ```"..."```. This will be repeated for all slots. If a slot is empty, nothing will be in.
+  * ```<max-slots>```: Max. number of slots.
+  * ```<slot-info>```: The name of the installed plugin in ```"..."```. This will be repeated for all slots. If a slot is empty, nothing will be in.
 * Failed:
   * ```NACK```
 
@@ -42,7 +42,20 @@ Parameter:
 Response:
 * Successful:
   * ```ACK;<plugin-info>; ...```
-  * plugin-info: The name of the plugin in ```"..."```. This will be repeated for all plugins.
+  * ```<plugin-info>```: The name of the plugin in ```"..."```. This will be repeated for all plugins.
+* Failed:
+  * ```NACK```
+
+## Install a plugin
+Command: ```INSTALL;<plugin-name>```
+
+Parameter:
+* ```<plugin-name>```: Name of the plugin to install.
+
+Response:
+* Successful:
+  * ```ACK;<slot-id>```
+  * ```<slot-id>```: The id of the slot, where the plugin was installed.
 * Failed:
   * ```NACK```
 

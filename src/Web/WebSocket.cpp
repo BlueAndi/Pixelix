@@ -37,6 +37,7 @@
 #include "WsCmdGetDisp.h"
 #include "WsCmdSlots.h"
 #include "WsCmdPlugins.h"
+#include "WsCmdInstall.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -73,12 +74,16 @@ static WsCmdSlots   gWsCmdSlots;
 /** Websocket plugins command */
 static WsCmdPlugins gWsCmdPlugins;
 
+/** Websocket install command */
+static WsCmdInstall gWsCmdInstall;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
     &gWsCmdGetDisp,
     &gWsCmdSlots,
-    &gWsCmdPlugins
+    &gWsCmdPlugins,
+    &gWsCmdInstall
 };
 
 /******************************************************************************
