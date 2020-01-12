@@ -78,16 +78,16 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     {
         String      rsp         = "ACK";
         const char  DELIMITER   = ';';
-        Plugin*     plugin      = PluginMgr::getInstance().findFirst();
+        const char* pluginName  = PluginMgr::getInstance().findFirst();
 
-        while(nullptr != plugin)
+        while(nullptr != pluginName)
         {
             rsp += DELIMITER;
             rsp += "\"";
-            rsp += plugin->getName();
+            rsp += pluginName;
             rsp += "\"";
 
-            plugin = PluginMgr::getInstance().findNext();
+            pluginName = PluginMgr::getInstance().findNext();
         }
 
         server->text(client->id(), rsp);

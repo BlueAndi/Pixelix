@@ -82,7 +82,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         if (nullptr == plugin)
         {
-            rsp = "NACK;\"Plugin not found.\""
+            rsp = "NACK;\"Plugin not found.\"";
         }
         else
         {

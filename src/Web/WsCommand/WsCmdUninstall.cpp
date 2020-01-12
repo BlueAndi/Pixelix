@@ -76,13 +76,12 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
     }
     else
     {
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
-        Plugin*     plugin      = DisplayMgr::getInstance().getPluginInSlot(m_slotId);
+        String  rsp     = "ACK";
+        Plugin* plugin  = DisplayMgr::getInstance().getPluginInSlot(m_slotId);
 
         if (nullptr == plugin)
         {
-            rsp = "NACK;\"Slot is empty.\""
+            rsp = "NACK;\"Slot is empty.\"";
         }
         else
         {
