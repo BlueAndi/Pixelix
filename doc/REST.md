@@ -103,14 +103,14 @@ Result:
 ```json
 {
     "data": {
-        "slot": [
+        "slots": [
             "SysMsgPlugin",
             "IconTextLampPlugin",
             "empty",
             "empty",
             "empty"
         ],
-        "slots": 5
+        "maxSlots": 5
     },
     "status": 0
 }

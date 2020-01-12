@@ -91,13 +91,13 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/status", handleStatus);
     (void)srv.on("/rest/api/v1/display/slots", handleSlots);
     (void)srv.on("/rest/api/v1/plugin", handlePlugin);
-    
+
     return;
 }
 
 /**
  * Handle invalid rest path request.
- * 
+ *
  * @param[in] request   HTTP request
  */
 void RestApi::error(AsyncWebServerRequest* request)
@@ -116,7 +116,7 @@ void RestApi::error(AsyncWebServerRequest* request)
     jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
     errorObj["msg"]     = "Invalid path requested.";
     httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    
+
     serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
@@ -129,9 +129,9 @@ void RestApi::error(AsyncWebServerRequest* request)
 
 /**
  * Get the wifi signal quality, derrived from the RSSI.
- * 
+ *
  * @param[in] rssi  RSSI in dBm
- * 
+ *
  * @return Signal quality in percent
  */
 static uint8_t getSignalQuality(int8_t rssi)
@@ -159,7 +159,7 @@ static uint8_t getSignalQuality(int8_t rssi)
 /**
  * Get status information.
  * GET \c "/api/v1/status"
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void handleStatus(AsyncWebServerRequest* request)
@@ -226,7 +226,7 @@ static void handleStatus(AsyncWebServerRequest* request)
 /**
  * Get number of slots and which plugin is installed.
  * GET \c "/api/v1/display/slots"
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void handleSlots(AsyncWebServerRequest* request)
@@ -252,11 +252,11 @@ static void handleSlots(AsyncWebServerRequest* request)
     else
     {
         JsonObject  dataObj     = jsonDoc.createNestedObject("data");
-        JsonArray   slotArray   = dataObj.createNestedArray("slot");
+        JsonArray   slotArray   = dataObj.createNestedArray("slots");
         uint8_t     index       = 0U;
 
         /* Add max. number of slots */
-        dataObj["slots"] = DisplayMgr::getInstance().MAX_SLOTS;
+        dataObj["maxSlots"] = DisplayMgr::getInstance().MAX_SLOTS;
 
         /* Add which plugin's are installed. */
         for(index = 0U; index < DisplayMgr::MAX_SLOTS; ++index)
@@ -289,7 +289,7 @@ static void handleSlots(AsyncWebServerRequest* request)
  * List plugins:     GET \c "/api/v1/plugin?list"
  * Install plugin:   POST \c "/api/v1/plugin?install=<plugin-name>"
  * Uninstall plugin: POST \c "/api/v1/plugin?uninstall=<plugin-name>&slotId=<slot-id>"
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void handlePlugin(AsyncWebServerRequest* request)
@@ -317,7 +317,7 @@ static void handlePlugin(AsyncWebServerRequest* request)
                 pluginArray.add(pluginName);
                 pluginName = PluginMgr::getInstance().findNext();
             }
-            
+
             /* Prepare response */
             jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;

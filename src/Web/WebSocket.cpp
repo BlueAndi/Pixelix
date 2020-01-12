@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "WebSocket.h"
 #include "WsCmdGetDisp.h"
+#include "WsCmdSlots.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -64,10 +65,14 @@ WebSocketSrv    WebSocketSrv::m_instance;
 /** Websocket get display command */
 static WsCmdGetDisp gWsCmdGetDisp;
 
+/** Websocket slots command */
+static WsCmdSlots   gWsCmdSlots;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
-    &gWsCmdGetDisp
+    &gWsCmdGetDisp,
+    &gWsCmdSlots
 };
 
 /******************************************************************************
