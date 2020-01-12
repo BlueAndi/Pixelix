@@ -48,6 +48,7 @@
 #include <Update.h>
 #include <Logging.h>
 #include <Util.h>
+#include <SPIFFSEditor.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -138,6 +139,9 @@ static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
 /** Flag used to signal any kind of file upload error. */
 static bool             gIsUploadError               = false;
 
+/** The SPIFFS editor instance. */
+static SPIFFSEditor     gSPIFFSEditor(SPIFFS);
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -173,6 +177,9 @@ void Pages::init(AsyncWebServer& srv)
 
     handler = &srv.serveStatic("/data/ws.js", SPIFFS, "/ws.js");
     handler->setCacheControl("max-age=3600");
+
+    /* Add SPIFFS file editor to "/edit" */
+    (void)srv.addHandler(&gSPIFFSEditor);
 
     return;
 }
