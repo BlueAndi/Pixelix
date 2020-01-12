@@ -159,6 +159,8 @@ static bool             gIsUploadError               = false;
 
 void Pages::init(AsyncWebServer& srv)
 {
+    AsyncStaticWebHandler*  handler = nullptr;
+
     (void)srv.on("/", HTTP_GET, indexPage);
     (void)srv.on("/dev", HTTP_GET, devPage);
     (void)srv.on("/display", HTTP_GET, displayPage);
@@ -167,9 +169,14 @@ void Pages::init(AsyncWebServer& srv)
     (void)srv.on("/update", HTTP_GET, updatePage);
     (void)srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
 
-    /* Serve files from filesystem */
-    (void)srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
-    (void)srv.serveStatic("/data/util.js", SPIFFS, "/util.js");
+    /* Serve files with static content with enabled cache control.
+     * The client may cache files from filesytem for 1 hour.
+     */
+    handler = &srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
+    handler->setCacheControl("max-age=3600");
+
+    handler = &srv.serveStatic("/data/ws.js", SPIFFS, "/ws.js");
+    handler->setCacheControl("max-age=3600");
 
     return;
 }
@@ -420,9 +427,28 @@ static String indexPageProcessor(const String& var)
     {
         result = ESP.getFreeHeap();
     }
+    else if (var == "FS_SIZE")
+    {
+        result = SPIFFS.totalBytes();
+    }
+    else if (var == "USED_FS_SIZE")
+    {
+        result = SPIFFS.usedBytes();
+    }
     else if (var == "ESP_CHIP_REV")
     {
         result = ESP.getChipRevision();
+    }
+    else if (var == "ESP_CHIP_ID")
+    {
+        uint64_t    chipId      = ESP.getEfuseMac();
+        uint32_t    highPart    = (chipId >> 32U) & 0x0000ffffU;
+        uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
+        char        chipIdStr[13];
+
+        snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
+
+        result = chipIdStr;
     }
     else if (var == "ESP_CPU_FREQ")
     {
@@ -514,19 +540,7 @@ static String networkPageProcessor(const String& var)
     }
     else if (var == "MAC_ADDR")
     {
-        uint64_t    macAddr         = ESP.getEfuseMac();
-        uint8_t*    macAddrPtr      = reinterpret_cast<uint8_t*>(&macAddr);
-        char        macAddrStr[18];
-
-        snprintf(macAddrStr, UTIL_ARRAY_NUM(macAddrStr), "%02X:%02X:%02X:%02X:%02X:%02X",
-            macAddrPtr[0],
-            macAddrPtr[1],
-            macAddrPtr[2],
-            macAddrPtr[3],
-            macAddrPtr[4],
-            macAddrPtr[5]);
-
-        result = macAddrStr;
+        result = WiFi.macAddress();
     }
     else
     {
@@ -971,10 +985,27 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     /* Begin of upload? */
     if (0 == index)
     {
+        AsyncWebHeader* header = request->getHeader("X-File-Size");
+        uint32_t        fileSize    = UPDATE_SIZE_UNKNOWN;
+
         /* Upload firmware or filesystem? */
         int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
 
-        LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
+        /* File size available? */
+        if (nullptr != header)
+        {
+            /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
+            (void)Util::strToUInt32(header->value(), fileSize);
+        }
+
+        if (UPDATE_SIZE_UNKNOWN == fileSize)
+        {
+            LOG_INFO("Upload of %s (unknown size) starts.", filename.c_str());
+        }
+        else
+        {
+            LOG_INFO("Upload of %s (%u byte) starts.", filename.c_str(), fileSize);
+        }
 
         gIsUploadError = false;
 
@@ -987,10 +1018,10 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             SPIFFS.end();
         }
 
-        /* TODO request->contentLength() contains 200 bytes more, than which will be written.
-         * How to calculate it correct?
+        /* We will get only the content length of the whole request, but not the size
+         * of the file itself. Therefore we must set UPDATE_SIZE_UNKNOWN.
          */
-        if (false == Update.begin(request->contentLength(), cmd))
+        if (false == Update.begin(fileSize, cmd))
         {
             LOG_ERROR("Upload failed: %s", Update.errorString());
             gIsUploadError = true;
@@ -1000,6 +1031,9 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             {
                 LOG_FATAL("Couldn't mount filesystem.");
             }
+
+            /* Inform client about abort.*/
+            request->send(HttpStatus::STATUS_CODE_ENTITY_TOO_LARGE, "text/plain", "Upload aborted.");
         }
         /* Update is now running. */
         else

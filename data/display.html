@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>%PAGE_TITLE%</title>
     <link rel="stylesheet" href="/data/style.css"></link>
-    <script src="/data/util.js"></script>
+    <script src="/data/ws.js"></script>
     <script>
         var matrixWidth     = 32;
         var matrixHeight    = 8;
@@ -13,111 +13,10 @@
         var pixelWidth      = 10;
         var pixelHeight     = 10;
         var intervalId      = 0;
-        var webSocket       = null;
-        
-        function wsOpen(protocol, hostname, port, endpoint, onSuccess, onError, onClosed, onMessage) {
-            var webSocketURL    = protocol + "://" + hostname + ":" + port + endpoint;
-            var ws              = null;
-            
-            try {
-                ws = new WebSocket(webSocketURL);
-                
-                ws.onopen = function(openEvent) {
-                    console.debug("WebSocket OPEN: " + JSON.stringify(openEvent, null, 4));
-                    if ("function" === typeof onSuccess) {
-                        onSuccess();
-                    }
-                };
-                
-                ws.onclose = function(closeEvent) {
-                    console.debug("WebSocket CLOSE: " + JSON.stringify(closeEvent, null, 4));
-                    if ("function" === typeof onClosed) {
-                        onClosed();
-                    }
-                };
-                
-                ws.onerror = function(errorEvent) {
-                    console.debug("WebSocket ERROR: " + JSON.stringify(errorEvent, null, 4));
-                    if ("function" === typeof onError) {
-                        onError();
-                    }
-                };
-                
-                ws.onmessage = function(messageEvent) {
-                    var wsMsg = messageEvent.data;
-                    
-                    console.debug("WebSocket MESSAGE: " + wsMsg);
+        var wsClient        = null;
 
-                    if ("function" === typeof onMessage) {
-                        onMessage(wsMsg);
-                    }
-                };
-            } catch (exception) {
-                console.error(exception);
-
-                if ("function" === typeof onError) {
-                    onError();
-                }
-            }
-
-            return ws;
-        }
-
-        function onSuccess()
-        {
-            console.info("Websocket connected.");
-            intervalId = window.setInterval(requestDisplayContent, 400);
-            return;
-        }
-
-        function onError()
-        {
-            console.info("Websocket error.");
-            return;
-        }
-
-        function onClosed()
-        {
-            console.info("Websocket disconnected.");
+        function onClosed() {
             window.clearInterval(intervalId);
-            return;
-        }
-
-        function onMessage(msg)
-        {
-            var data    = msg.split(";");
-            var status  = data.shift();
-            var x       = 0;
-            var y       = 0;
-            var index   = 0;
-            var color   = 0;
-
-            if ("ACK" === status) {
-                for(y = 0; y < matrixHeight; ++y) {
-                    for(x = 0; x < matrixWidth; ++x) {
-                        if (data.length > index) {
-                            color   = parseInt(data[index]);
-                            red     = (color & 0xff0000) >> 16;
-                            green   = (color & 0x00ff00) >> 8;
-                            blue    = (color & 0x0000ff) >> 0;
-                            plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
-                            ++index;
-                        }
-                    }
-                }
-            } else {
-                console.error("ARGH!");
-            }
-
-            return;
-        }
-
-        function requestDisplayContent()
-        {
-            if (null !== webSocket) {
-                webSocket.send("GETDISP");
-            }
-
             return;
         }
 
@@ -130,12 +29,72 @@
             }
         }
 
+        function getDisplayContent() {
+            wsClient.getDisplayContent().then(function(rsp) {
+                var x       = 0;
+                var y       = 0;
+                var index   = 0;
+                var color   = 0;
+
+                document.getElementById("slotId").innerHTML = "Slot: " + rsp.slotId;
+
+                /* Handle display data */
+                for(y = 0; y < matrixHeight; ++y) {
+                    for(x = 0; x < matrixWidth; ++x) {
+                        if (rsp.data.length > index) {
+                            color   = parseInt(rsp.data[index]);
+                            red     = (color & 0xff0000) >> 16;
+                            green   = (color & 0x00ff00) >> 8;
+                            blue    = (color & 0x0000ff) >> 0;
+                            plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
+                            ++index;
+                        }
+                    }
+                }
+            }).catch(function(err) {
+
+            });
+
+            return;
+        }
+
         window.onload = function() {
             var displayCanvas = document.getElementById("canvas");
-            
+
             ctx = displayCanvas.getContext("2d");
 
-            webSocket = wsOpen("%WS_PROTOCOL%", "%WS_HOSTNAME%", "%WS_PORT%", "%WS_ENDPOINT%", onSuccess, onError, onClosed, onMessage);
+            wsClient = new pixelix.ws.Client();
+            wsClient.connect({
+                protocol: "%WS_PROTOCOL%",
+                hostname: "%WS_HOSTNAME%",
+                port: %WS_PORT%,
+                endpoint: "%WS_ENDPOINT%",
+                onClosed: onClosed,
+            }).then(function(rsp) {
+                return wsClient.getSlots();
+            }).then(function(rsp) {
+                var slots = "";
+                var index = 0;
+
+                slots += "<ul>\r\n";
+                for(index = 0; index < rsp.slots.length; ++index) {
+                    slots += "<li>"
+                    slots += "Slot " + index + ": ";
+                    if (0 == rsp.slots[index].length) {
+                        slots += "-";
+                    } else {
+                        slots += rsp.slots[index].substring(1, rsp.slots[index].length - 1);
+                    }
+                    slots += "</li>\r\n"
+                }
+                slots += "</ul>\r\n";
+
+                document.getElementById("slots").innerHTML = slots;
+            }).then(function(rsp) {
+                intervalId = window.setInterval(getDisplayContent, 400);
+            }).catch(function(err) {
+
+            });
         };
     </script>
 </head>
@@ -148,12 +107,14 @@
     <a href="/display" class="active">Display</a>
     <a href="/network">Network</a>
     <a href="/settings">Settings</a>
-    <a href="/dev">Development</a>
     <a href="/update">Update</a>
 </div>
 <div class="main">
     <h2>Display</h2>
+    <p id="slotId">Slot: -</p>
     <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
+    <p>Installed plugins:</p>
+    <p id="slots"></p>
 </div>
 <div class="footer">
     <hr />
