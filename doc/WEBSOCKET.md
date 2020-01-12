@@ -59,6 +59,18 @@ Response:
 * Failed:
   * ```NACK```
 
+## Uninstall a plugin
+Command: ```UNINSTALL;<slot-id>```
+
+Parameter:
+* ```<slot-id>```: Id of the slot, where the plugin shall be uninstalled.
+
+Response:
+* Successful:
+  * ```ACK```
+* Failed:
+  * ```NACK```
+
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 

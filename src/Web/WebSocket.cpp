@@ -38,6 +38,7 @@
 #include "WsCmdSlots.h"
 #include "WsCmdPlugins.h"
 #include "WsCmdInstall.h"
+#include "WsCmdUninstall.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -66,16 +67,19 @@
 WebSocketSrv    WebSocketSrv::m_instance;
 
 /** Websocket get display command */
-static WsCmdGetDisp gWsCmdGetDisp;
+static WsCmdGetDisp     gWsCmdGetDisp;
 
 /** Websocket slots command */
-static WsCmdSlots   gWsCmdSlots;
+static WsCmdSlots       gWsCmdSlots;
 
 /** Websocket plugins command */
-static WsCmdPlugins gWsCmdPlugins;
+static WsCmdPlugins     gWsCmdPlugins;
 
 /** Websocket install command */
-static WsCmdInstall gWsCmdInstall;
+static WsCmdInstall     gWsCmdInstall;
+
+/** Websocket uninstall command */
+static WsCmdUninstall   gWsCmdUninstall;
 
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
@@ -83,7 +87,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdGetDisp,
     &gWsCmdSlots,
     &gWsCmdPlugins,
-    &gWsCmdInstall
+    &gWsCmdInstall,
+    &gWsCmdUninstall
 };
 
 /******************************************************************************
