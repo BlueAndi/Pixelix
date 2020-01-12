@@ -63,9 +63,17 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             rsp.slotId = data.shift();
             rsp.data = data;
             this.resolve(rsp);
+        } else if ("INSTALL" === this.cmd) {
+            rsp.slotId = parseInt(data[0]);
+            this.resolve(rsp);
+        } else if ("PLUGINS" === this.cmd) {
+            rsp.plugins = data;
+            this.resolve(rsp);
         } else if ("SLOTS" === this.cmd) {
             rsp.maxSlots = parseInt(data.shift());
             rsp.slots = data;
+            this.resolve(rsp);
+        } else if ("UNINSTALL" === this.cmd) {
             this.resolve(rsp);
         } else {
             console.error("Unknown command: " + this.cmd);
@@ -104,6 +112,52 @@ pixelix.ws.Client.prototype.getSlots = function() {
             reject();
         } else {
             this.cmd = "SLOTS";
+            this.resolve = resolve;
+            this.reject = reject;
+            this.socket.send(this.cmd);
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getPlugins = function() {
+    return new Promise(function(resolve, reject) {
+
+        if (null === this.socket) {
+            reject();
+        } else {
+            this.cmd = "PLUGINS";
+            this.resolve = resolve;
+            this.reject = reject;
+            this.socket.send(this.cmd);
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.install = function(options) {
+    return new Promise(function(resolve, reject) {
+
+        if (null === this.socket) {
+            reject();
+        else if ("string" !== typeof options.pluginName) {
+            reject();
+        } else {
+            this.cmd = "INSTALL;" + options.pluginName;
+            this.resolve = resolve;
+            this.reject = reject;
+            this.socket.send(this.cmd);
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.uninstall = function(options) {
+    return new Promise(function(resolve, reject) {
+
+        if (null === this.socket) {
+            reject();
+        else if ("number" !== typeof options.slotId) {
+            reject();
+        } else {
+            this.cmd = "UNINSTALL;" + options.slotId;
             this.resolve = resolve;
             this.reject = reject;
             this.socket.send(this.cmd);
