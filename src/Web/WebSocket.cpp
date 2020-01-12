@@ -33,8 +33,10 @@
  * Includes
  *****************************************************************************/
 #include "WebSocket.h"
+
 #include "WsCmdGetDisp.h"
 #include "WsCmdSlots.h"
+#include "WsCmdPlugins.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -68,11 +70,15 @@ static WsCmdGetDisp gWsCmdGetDisp;
 /** Websocket slots command */
 static WsCmdSlots   gWsCmdSlots;
 
+/** Websocket plugins command */
+static WsCmdPlugins gWsCmdPlugins;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
     &gWsCmdGetDisp,
-    &gWsCmdSlots
+    &gWsCmdSlots,
+    &gWsCmdPlugins
 };
 
 /******************************************************************************
@@ -115,22 +121,22 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     case WS_EVT_CONNECT:
         m_instance.onConnect(server, client, reinterpret_cast<AsyncWebServerRequest*>(arg));
         break;
-        
+
     /* Client disconnected */
     case WS_EVT_DISCONNECT:
         m_instance.onDisconnect(server, client);
         break;
-        
+
     /* Pong received */
     case WS_EVT_PONG:
         m_instance.onPong(server, client, data, len);
         break;
-        
+
     /* Remote error */
     case WS_EVT_ERROR:
         m_instance.onError(server, client, *reinterpret_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
         break;
-        
+
     /* Data */
     case WS_EVT_DATA:
         m_instance.onData(server, client, reinterpret_cast<AwsFrameInfo*>(arg), data, len);

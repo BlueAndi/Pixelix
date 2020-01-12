@@ -33,6 +33,19 @@ Response:
 * Failed:
   * ```NACK```
 
+## Get plugins information
+Command: ```PLUGINS```
+
+Parameter:
+* N/A
+
+Response:
+* Successful:
+  * ```ACK;<plugin-info>; ...```
+  * plugin-info: The name of the plugin in ```"..."```. This will be repeated for all plugins.
+* Failed:
+  * ```NACK```
+
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
