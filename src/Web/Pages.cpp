@@ -1042,6 +1042,8 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
                 {
                     LOG_INFO("Upload of %s finished.", filename.c_str());
 
+                    /* Filesystem is not mounted here, because we will restart in the next seconds. */
+
                     /* Ensure that the user see 100% update status on the display. */
                     UpdateMgr::getInstance().updateProgress(100U);
                     UpdateMgr::getInstance().endProgress();
@@ -1053,9 +1055,18 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         }
         else
         {
+            /* Mount filesystem again, it may be unmounted in case of filesystem update. */
+            if (false == SPIFFS.begin())
+            {
+                LOG_FATAL("Couldn't mount filesystem.");
+            }
+
             /* Abort update */
             Update.abort();
             UpdateMgr::getInstance().endProgress();
+
+            /* Inform client about abort.*/
+            request->send(HttpStatus::STATUS_CODE_ENTITY_TOO_LARGE, "text/plain", "Upload aborted.");
         }
     }
 
