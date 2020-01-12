@@ -83,9 +83,6 @@ static void addSettingsData(String& dst, const char* title, const char* name, co
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
 
-static void devPage(AsyncWebServerRequest* request);
-static String devPageProcessor(const String& var);
-
 static void updatePage(AsyncWebServerRequest* request);
 static String updatePageProcessor(const String& var);
 
@@ -162,7 +159,6 @@ void Pages::init(AsyncWebServer& srv)
     AsyncStaticWebHandler*  handler = nullptr;
 
     (void)srv.on("/", HTTP_GET, indexPage);
-    (void)srv.on("/dev", HTTP_GET, devPage);
     (void)srv.on("/display", HTTP_GET, displayPage);
     (void)srv.on("/network", HTTP_GET, networkPage);
     (void)srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
@@ -812,72 +808,6 @@ static String settingsPageProcessor(const String& var)
         addSettingsData(result, "Wifi AP Passphrase", FORM_INPUT_NAME_WIFI_AP_PASSPHRASE, wifiApPassphrase.c_str(), MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH);
         result += ", ";
         addSettingsData(result, "Hostname", FORM_INPUT_NAME_HOSTNAME, hostname.c_str(), MAX_HOSTNAME_LENGTH, MIN_HOSTNAME_LENGTH, MAX_HOSTNAME_LENGTH);
-    }
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
-}
-
-/**
- * Page with stuff for development and debug purposes.
- *
- * @param[in] request   HTTP request
- */
-static void devPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    request->send(SPIFFS, "/dev.html", "text/html", false, devPageProcessor);
-
-    return;
-}
-
-/**
- * Processor for dev page template.
- * It is responsible for the data binding.
- *
- * @param[in] var   Name of variable in the template
- */
-static String devPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "WS_PROTOCOL")
-    {
-        result = WebConfig::WEBSOCKET_PROTOCOL;
-    }
-    else if (var == "WS_HOSTNAME")
-    {
-        if (WIFI_MODE_AP == WiFi.getMode())
-        {
-            result = WiFi.softAPIP().toString();
-        }
-        else
-        {
-            result = WiFi.localIP().toString();
-        }
-    }
-    else if (var == "WS_PORT")
-    {
-        result = WebConfig::WEBSOCKET_PORT;
-    }
-    else if (var == "WS_ENDPOINT")
-    {
-        result = WebConfig::WEBSOCKET_PATH;
     }
     else
     {
