@@ -142,8 +142,9 @@ public:
      * 
      * @param[out] fb       Pointer to framebuffer copy
      * @param[out] length   Number of elements in the framebuffer copy
+     * @param[out] slotId   Id of slot, from which the copy was taken.
      */
-    void getFBCopy(uint32_t* fb, size_t length);
+    void getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId);
 
     /** Invalid slot id. */
     static const uint8_t    SLOT_ID_INVALID         = UINT8_MAX;

@@ -314,7 +314,7 @@ void DisplayMgr::activatePlugin(Plugin* plugin)
     return;
 }
 
-void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
+void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
 {    
     if ((nullptr != fb) &&
         (0 < length))
@@ -339,6 +339,11 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length)
                     break;
                 }
             }
+        }
+
+        if (NULL != slotId)
+        {
+            *slotId = m_selectedSlot;
         }
 
         unlock();
