@@ -27,7 +27,7 @@
 /**
  * @brief  HTTP status
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup web
  *
  * @{
@@ -63,11 +63,12 @@ namespace HttpStatus
  */
 enum StatusCode
 {
-    STATUS_CODE_OK              = 200,  /**< Ok */
-    STATUS_CODE_BAD_REQ         = 400,  /**< Bad request */
-    STATUS_CODE_UNAUTHORIZED    = 401,  /**< Unauthorized */
-    STATUS_CODE_FORBIDDEN       = 403,  /**< Forbidden */
-    STATUS_CODE_NOT_FOUND       = 404   /**< Not found */
+    STATUS_CODE_OK                  = 200,  /**< Ok */
+    STATUS_CODE_BAD_REQ             = 400,  /**< Bad request */
+    STATUS_CODE_UNAUTHORIZED        = 401,  /**< Unauthorized */
+    STATUS_CODE_FORBIDDEN           = 403,  /**< Forbidden */
+    STATUS_CODE_NOT_FOUND           = 404,  /**< Not found */
+    STATUS_CODE_ENTITY_TOO_LARGE    = 413   /**< Request entity too large */
 };
 
 /******************************************************************************

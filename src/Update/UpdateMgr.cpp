@@ -248,7 +248,7 @@ void UpdateMgr::onStart()
     {
         infoStr += "filesystem.";
 
-        /* Close filesystem before continue. 
+        /* Close filesystem before continue.
          * Note, this needs a restart after update is finished.
          */
         SPIFFS.end();
@@ -293,7 +293,7 @@ void UpdateMgr::onError(ota_error_t error)
     String infoStr;
 
     m_instance.m_updateIsRunning = false;
-    
+
     switch(error)
     {
     case OTA_AUTH_ERROR:
@@ -323,24 +323,27 @@ void UpdateMgr::onError(ota_error_t error)
 
     LOG_INFO(infoStr);
 
-    m_instance.endProgress();
-
-    /* Reset only if the error happened during update.
-     * Security note: This avoids a reset in case the authentication failed.
-     */
-    if (true == m_instance.m_updateIsRunning)
+    /* Mount SPIFFS, because it may be unmounted in case of failed filesystem update. */
+    if (false == SPIFFS.begin())
     {
-        /* Start display manager */
-        if (false == DisplayMgr::getInstance().begin())
-        {
-            LOG_WARNING("Couldn't initialize display manager again.");
-        }
-
-        SysMsg::getInstance().show(infoStr);
-        delay(infoStr.length() * 600U);
-
-        /* Request a restart */
+        LOG_FATAL("Couldn't mount filesystem.");
         m_instance.reqRestart();
+    }
+    else
+    {
+        m_instance.endProgress();
+
+        /* Reset only if the error happened during update.
+        * Security note: This avoids a reset in case the authentication failed.
+        */
+        if (true == m_instance.m_updateIsRunning)
+        {
+            SysMsg::getInstance().show(infoStr);
+            delay(infoStr.length() * 600U);
+
+            /* Request a restart */
+            m_instance.reqRestart();
+        }
     }
 
     return;
