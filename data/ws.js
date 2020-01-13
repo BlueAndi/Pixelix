@@ -138,7 +138,7 @@ pixelix.ws.Client.prototype.install = function(options) {
 
         if (null === this.socket) {
             reject();
-        else if ("string" !== typeof options.pluginName) {
+        } else if ("string" !== typeof options.pluginName) {
             reject();
         } else {
             this.cmd = "INSTALL;" + options.pluginName;
@@ -154,7 +154,7 @@ pixelix.ws.Client.prototype.uninstall = function(options) {
 
         if (null === this.socket) {
             reject();
-        else if ("number" !== typeof options.slotId) {
+        } else if ("number" !== typeof options.slotId) {
             reject();
         } else {
             this.cmd = "UNINSTALL;" + options.slotId;
