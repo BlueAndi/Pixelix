@@ -922,7 +922,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     /* Begin of upload? */
     if (0 == index)
     {
-        AsyncWebHeader* header = request->getHeader("X-File-Size");
+        AsyncWebHeader* header      = request->getHeader("X-File-Size");
         uint32_t        fileSize    = UPDATE_SIZE_UNKNOWN;
 
         /* Upload firmware or filesystem? */
@@ -949,21 +949,17 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         /* Update filesystem? */
         if (U_SPIFFS == cmd)
         {
-            /* Close filesystem before continue.
-             * Note, this needs a restart after update is finished.
-             */
+            /* Close filesystem before continue. */
             SPIFFS.end();
         }
 
-        /* We will get only the content length of the whole request, but not the size
-         * of the file itself. Therefore we must set UPDATE_SIZE_UNKNOWN.
-         */
+        /* Start update */
         if (false == Update.begin(fileSize, cmd))
         {
             LOG_ERROR("Upload failed: %s", Update.errorString());
             gIsUploadError = true;
 
-            /* Mount filesystem again. */
+            /* Mount filesystem again, it may be unmounted in case of filesystem update.*/
             if (false == SPIFFS.begin())
             {
                 LOG_FATAL("Couldn't mount filesystem.");
