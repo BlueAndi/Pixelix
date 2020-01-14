@@ -184,9 +184,11 @@ bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
 
 uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
 {
-    bool status = false;
-
-    if (nullptr != plugin)
+    if (nullptr == plugin)
+    {
+        slotId = SLOT_ID_INVALID;
+    }
+    else
     {
         /* Install to any available slot? */
         if (SLOT_ID_INVALID == slotId)
@@ -206,10 +208,12 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
                 plugin->setSlotId(slotId);
                 plugin->start();
             }
+            else
+            {
+                slotId = SLOT_ID_INVALID;
+            }
 
             unlock();
-
-            status = true;
         }
         /* Install to specific slot? */
         else if ((MAX_SLOTS > slotId) &&
@@ -223,21 +227,19 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
             plugin->start();
 
             unlock();
-
-            status = true;
         }
         else
         {
-            ;
+            slotId = SLOT_ID_INVALID;
         }
-        
-        if (true == status)
+
+        if (MAX_SLOTS > slotId)
         {
             LOG_INFO("Plugin %s installed in slot %u.", plugin->getName(), slotId);
         }
     }
 
-    return status;
+    return slotId;
 }
 
 void DisplayMgr::uninstallPlugin(Plugin* plugin)
@@ -315,7 +317,7 @@ void DisplayMgr::activatePlugin(Plugin* plugin)
 }
 
 void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
-{    
+{
     if ((nullptr != fb) &&
         (0 < length))
     {
@@ -412,7 +414,7 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
                 break;
             }
         }
-        
+
         ++slotId;
         slotId %= MAX_SLOTS;
 
@@ -470,7 +472,7 @@ void DisplayMgr::process()
             ;
         }
     }
-        
+
     /* Plugin selected? */
     if (nullptr != m_selectedPlugin)
     {
@@ -583,7 +585,7 @@ void DisplayMgr::updateTask(void* parameters)
         {
             /* Refresh display content periodically */
             displayMgr->process();
-            
+
             /* Wait until the physical update is ready to avoid flickering
              * and artifacts on the display, because of e.g. webserver flash
              * access.
