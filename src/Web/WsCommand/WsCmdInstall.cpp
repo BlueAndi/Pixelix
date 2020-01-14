@@ -88,6 +88,8 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         {
             rsp += DELIMITER;
             rsp += plugin->getSlotId();
+
+            plugin->enable();
         }
 
         server->text(client->id(), rsp);
@@ -101,9 +103,14 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
 void WsCmdInstall::setPar(const char* par)
 {
-    if (0 == m_pluginName.length())
+    /* The name of the plugin is enclosed in "". */
+    if ((0U == m_pluginName.length()) &&
+        (2U <= strlen(par)))
     {
         m_pluginName = par;
+
+        /* Remove the enclosing "" */
+        m_pluginName = m_pluginName.substring(1, m_pluginName.length() - 1);
     }
     else
     {
