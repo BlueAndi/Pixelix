@@ -195,15 +195,16 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
         {
             lock();
 
+            /* Find a empty unlocked slot. */
             slotId = 0U;
-            while((MAX_SLOTS > slotId) && (nullptr != m_slots[slotId]))
+            while((MAX_SLOTS > slotId) && (nullptr != m_slots[slotId].plugin) && (true == m_slots[slotId].isLocked))
             {
                 ++slotId;
             }
 
             if (MAX_SLOTS > slotId)
             {
-                m_slots[slotId] = plugin;
+                m_slots[slotId].plugin = plugin;
 
                 plugin->setSlotId(slotId);
                 plugin->start();
@@ -217,11 +218,12 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
         }
         /* Install to specific slot? */
         else if ((MAX_SLOTS > slotId) &&
-                 (nullptr == m_slots[slotId]))
+                 (nullptr == m_slots[slotId].plugin) &&
+                 (false == m_slots[slotId].isLocked))
         {
             lock();
 
-            m_slots[slotId] = plugin;
+            m_slots[slotId].plugin = plugin;
 
             plugin->setSlotId(slotId);
             plugin->start();
@@ -242,8 +244,10 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
     return slotId;
 }
 
-void DisplayMgr::uninstallPlugin(Plugin* plugin)
+bool DisplayMgr::uninstallPlugin(Plugin* plugin)
 {
+    bool status = false;
+
     if (nullptr != plugin)
     {
         if (MAX_SLOTS <= plugin->getSlotId())
@@ -256,24 +260,36 @@ void DisplayMgr::uninstallPlugin(Plugin* plugin)
 
             lock();
 
-            /* Is this plugin selected at the moment? */
-            if (m_selectedPlugin == plugin)
+            if (false == m_slots[slotId].isLocked)
             {
-                /* Remove selection */
-                m_selectedPlugin = nullptr;
-            }
+                /* Is this plugin selected at the moment? */
+                if (m_selectedPlugin == plugin)
+                {
+                    /* Remove selection */
+                    m_selectedPlugin = nullptr;
+                }
 
-            plugin->stop();
-            m_slots[slotId] = nullptr;
-            plugin->setSlotId(SLOT_ID_INVALID);
+                plugin->stop();
+                m_slots[slotId].plugin = nullptr;
+                plugin->setSlotId(SLOT_ID_INVALID);
+
+                status = true;
+            }
 
             unlock();
 
-            LOG_INFO("Plugin %s removed from slot %u.", plugin->getName(), slotId);
+            if (false == status)
+            {
+                LOG_INFO("Couldn't remove plugin %s from slot %u, because slot is locked.", plugin->getName(), slotId);
+            }
+            else
+            {
+                LOG_INFO("Plugin %s removed from slot %u.", plugin->getName(), slotId);
+            }
         }
     }
 
-    return;
+    return status;
 }
 
 Plugin* DisplayMgr::getPluginInSlot(uint8_t slotId)
@@ -284,7 +300,7 @@ Plugin* DisplayMgr::getPluginInSlot(uint8_t slotId)
     {
         lock();
 
-        plugin = m_slots[slotId];
+        plugin = m_slots[slotId].plugin;
 
         unlock();
     }
@@ -300,7 +316,7 @@ void DisplayMgr::activatePlugin(Plugin* plugin)
 
         if (MAX_SLOTS > plugin->getSlotId())
         {
-            if (plugin != m_slots[plugin->getSlotId()])
+            if (plugin != m_slots[plugin->getSlotId()].plugin)
             {
                 LOG_WARNING("Plugin %s should be in slot %u, but isn't!", plugin->getName(), plugin->getSlotId());
             }
@@ -314,6 +330,50 @@ void DisplayMgr::activatePlugin(Plugin* plugin)
     }
 
     return;
+}
+
+void DisplayMgr::lockSlot(uint8_t slotId)
+{
+    if (MAX_SLOTS > slotId)
+    {
+        lock();
+
+        m_slots[slotId].isLocked = true;
+
+        unlock();
+    }
+
+    return;
+}
+
+void DisplayMgr::unlockSlot(uint8_t slotId)
+{
+    if (MAX_SLOTS > slotId)
+    {
+        lock();
+
+        m_slots[slotId].isLocked = false;
+
+        unlock();
+    }
+
+    return;
+}
+
+bool DisplayMgr::isSlotLocked(uint8_t slotId)
+{
+    bool isLocked = true;
+
+    if (MAX_SLOTS > slotId)
+    {
+        lock();
+
+        isLocked = m_slots[slotId].isLocked;
+
+        unlock();
+    }
+
+    return isLocked;
 }
 
 void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
@@ -374,13 +434,6 @@ DisplayMgr::DisplayMgr() :
     m_slotTimer(),
     m_autoBrightnessTimer()
 {
-    uint8_t index = 0U;
-
-    /* Initialize all slots */
-    for(index = 0U; index < MAX_SLOTS; ++index)
-    {
-        m_slots[index] = nullptr;
-    }
 }
 
 DisplayMgr::~DisplayMgr()
@@ -406,10 +459,10 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
     do
     {
         /* Plugin installed? */
-        if (nullptr != m_slots[slotId])
+        if (nullptr != m_slots[slotId].plugin)
         {
             /* Plugin enabled? */
-            if (true == m_slots[slotId]->isEnabled())
+            if (true == m_slots[slotId].plugin->isEnabled())
             {
                 break;
             }
@@ -535,7 +588,7 @@ void DisplayMgr::process()
         {
             uint32_t duration = 0U;
 
-            m_selectedPlugin    = m_slots[m_selectedSlot];
+            m_selectedPlugin    = m_slots[m_selectedSlot].plugin;
             duration            = m_selectedPlugin->getDuration();
 
             if (Plugin::DURATION_INFINITE != duration)
@@ -551,7 +604,7 @@ void DisplayMgr::process()
     /* Process all installed plugins. */
     for(index = 0U; index < MAX_SLOTS; ++index)
     {
-        Plugin* plugin = m_slots[index];
+        Plugin* plugin = m_slots[index].plugin;
 
         if (nullptr != plugin)
         {

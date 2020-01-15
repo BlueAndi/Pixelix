@@ -99,7 +99,7 @@ Plugin* PluginMgr::install(const String& name)
 {
     Plugin*         plugin  = nullptr;
     PluginRegEntry* entry   = nullptr;
-    
+
     if (true == m_registry.selectFirstElement())
     {
         bool isFound = false;
@@ -137,8 +137,10 @@ Plugin* PluginMgr::install(const String& name)
     return plugin;
 }
 
-void PluginMgr::uninstall(Plugin* plugin)
+bool PluginMgr::uninstall(Plugin* plugin)
 {
+    bool status = false;
+
     if (nullptr != plugin)
     {
         if (false == m_plugins.find(plugin))
@@ -147,15 +149,17 @@ void PluginMgr::uninstall(Plugin* plugin)
         }
         else
         {
-            plugin->unregisterWebInterface(MyWebServer::getInstance());
-            DisplayMgr::getInstance().uninstallPlugin(plugin);
+            status = DisplayMgr::getInstance().uninstallPlugin(plugin);
 
-            m_plugins.removeSelected();
+            if (true == status)
+            {
+                plugin->unregisterWebInterface(MyWebServer::getInstance());
+                m_plugins.removeSelected();
+            }
         }
-        
     }
 
-    return;
+    return status;
 }
 
 const char* PluginMgr::findFirst()
@@ -220,7 +224,7 @@ bool PluginMgr::installToAutoSlot(Plugin* plugin)
             {
                 LOG_ERROR("Couldn't append plugin %s.", plugin->getName());
 
-                DisplayMgr::getInstance().uninstallPlugin(plugin);
+                (void)DisplayMgr::getInstance().uninstallPlugin(plugin);
             }
             else
             {
@@ -251,8 +255,8 @@ bool PluginMgr::installToSlot(Plugin* plugin, uint8_t slotId)
             if (false == m_plugins.append(plugin))
             {
                 LOG_ERROR("Couldn't append plugin %s.", plugin->getName());
-                
-                DisplayMgr::getInstance().uninstallPlugin(plugin);
+
+                (void)DisplayMgr::getInstance().uninstallPlugin(plugin);
             }
             else
             {

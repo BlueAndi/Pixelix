@@ -27,7 +27,7 @@
 /**
  * @brief  Plugin manager
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup plugin
  *
  * @{
@@ -76,7 +76,7 @@ public:
 
     /**
      * Register a plugin.
-     * 
+     *
      * @param[in] name          Plugin name
      * @param[in] createFunc    The plugin creation function.
      */
@@ -84,9 +84,9 @@ public:
 
     /**
      * Install plugin.
-     * 
+     *
      * @param[in] name  Plugin name
-     * 
+     *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
     Plugin* install(const String& name);
@@ -95,28 +95,30 @@ public:
      * Uninstall plugin.
      *
      * @param[in] plugin    Plugin, which to remove
+     *
+     * @return If successful uninstalled, it will return true otherwise false.
      */
-    void uninstall(Plugin* plugin);
+    bool uninstall(Plugin* plugin);
 
     /**
      * Find first plugin.
-     * 
+     *
      * @return If plugin found, it will return its name otherwise nullptr.
      */
     const char* findFirst();
 
     /**
      * Find next plugin.
-     * 
+     *
      * @return If plugin found, it will return its name otherwise nullptr.
      */
     const char* findNext();
 
     /**
      * Get plugin REST base URI.
-     * 
+     *
      * @param[in] slotId    Slot id of installed plugin.
-     * 
+     *
      * @return Plugin REST API base URI
      */
     String getRestApiBaseUri(uint8_t slotId);
@@ -163,7 +165,7 @@ private:
      * Install plugin to any available display slot.
      *
      * @param[in] plugin    Plugin, which to install
-     * 
+     *
      * @return If successful installed, it will return true otherwise false.
      */
     bool installToAutoSlot(Plugin* plugin);
@@ -173,7 +175,7 @@ private:
      *
      * @param[in] plugin    Plugin, which to install
      * @param[in] slotId    Id of the slot, where to install the plugin
-     * 
+     *
      * @return If successful installed, it will return true otherwise false.
      */
     bool installToSlot(Plugin* plugin, uint8_t slotId);

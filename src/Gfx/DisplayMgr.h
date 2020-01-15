@@ -27,7 +27,7 @@
 /**
  * @brief  Display manager
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -70,7 +70,7 @@ public:
 
     /**
      * Get LED matrix instance.
-     * 
+     *
      * @return LED matrix
      */
     static DisplayMgr& getInstance()
@@ -81,7 +81,7 @@ public:
     /**
      * Start the display manager. Call this once during startup.
      * This will start updating the display.
-     * 
+     *
      * @return If initialization is successful, it will return true otherwise false.
      */
     bool begin(void);
@@ -94,7 +94,7 @@ public:
 
     /**
      * Enable/Disable automatic brightness adjustment.
-     * 
+     *
      * @param[in] enable    Enable (true) or disable (false)
      * @return Status
      * @retval true     It was successful enabled/disabled.
@@ -109,37 +109,60 @@ public:
      *
      * @param[in] plugin    Plugin which to install
      * @param[in] slotId    Slot id
-     * 
+     *
      * @return Returns slot id. If it fails, it will return SLOT_ID_INVALID.
      */
     uint8_t installPlugin(Plugin* plugin, uint8_t slotId = SLOT_ID_INVALID);
 
     /**
      * Remove plugin from slot.
-     * 
+     *
      * @param[in] plugin    Plugin which to uninstall
+     *
+     * @return If successful uninstalled, it will return true otherwise false.
      */
-    void uninstallPlugin(Plugin* plugin);
+    bool uninstallPlugin(Plugin* plugin);
 
     /**
      * Get plugin from slot.
-     * 
+     *
      * @param[in] slotId    Slot id, where to get plugin.
-     * 
+     *
      * @return Plugin which is installed in given slot.
      */
     Plugin* getPluginInSlot(uint8_t slotId);
 
     /**
      * Activate a specific plugin immediately.
-     * 
+     *
      * @param[in] plugin    Plugin which to activate
      */
     void activatePlugin(Plugin* plugin);
 
     /**
+     * Lock a slot.
+     *
+     * @param[in] slotId    Id of slot, which shall be locked.
+     */
+    void lockSlot(uint8_t slotId);
+
+    /**
+     * Unlock a slot.
+     *
+     * @param[in] slotId    Id of slot, which shall be unlocked.
+     */
+    void unlockSlot(uint8_t slotId);
+
+    /**
+     * Is slot locked?
+     *
+     * @return If slot is locked, it will return true otherwise false.
+     */
+    bool isSlotLocked(uint8_t slotId);
+
+    /**
      * Get access to copy of framebuffer.
-     * 
+     *
      * @param[out] fb       Pointer to framebuffer copy
      * @param[out] length   Number of elements in the framebuffer copy
      * @param[out] slotId   Id of slot, from which the copy was taken.
@@ -172,6 +195,31 @@ public:
 
 private:
 
+    /**
+     * A slot.
+     */
+    struct Slot
+    {
+        /**
+         * Constructs a empty slot.
+         */
+        Slot() :
+            plugin(nullptr),
+            isLocked(false)
+        {
+        }
+
+        /**
+         * Destroys a slot.
+         */
+        ~Slot()
+        {
+        }
+
+        Plugin* plugin;     /**< Plugin */
+        bool    isLocked;   /**< If a slot is locked, it can nothing be installed or uninstalled there. */
+    };
+
     /** Display manager instance */
     static DisplayMgr   m_instance;
 
@@ -188,7 +236,7 @@ private:
     SemaphoreHandle_t   m_xSemaphore;
 
     /** List of all slots with their connected plugins. */
-    Plugin*             m_slots[MAX_SLOTS];
+    Slot                m_slots[MAX_SLOTS];
 
     /** Current selected slot. */
     uint8_t             m_selectedSlot;
@@ -221,9 +269,9 @@ private:
 
     /**
      * Schedule next slot with a installed and enabled plugin.
-     * 
+     *
      * @param[in] slotId    Id of current slot
-     * 
+     *
      * @return Id of next slot
      */
     uint8_t nextSlot(uint8_t slotId);
@@ -231,14 +279,14 @@ private:
     /**
      * Process the slots. This shall be called periodically in
      * a higher period than the DEFAULT_PERIOD.
-     * 
+     *
      * It will handle which slot to show on the display.
      */
     void process(void);
 
     /**
      * Display update task is responsible to refresh the display content.
-     * 
+     *
      * @param[in]   parameters  Task pParameters
      */
     static void updateTask(void* parameters);

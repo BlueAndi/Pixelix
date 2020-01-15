@@ -413,10 +413,26 @@ static void handlePlugin(AsyncWebServerRequest* request)
                         errorObj["msg"]     = "Wrong plugin in slot.";
                         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
                     }
+                    else if (true == DisplayMgr::getInstance().isSlotLocked(plugin->getSlotId()))
+                    {
+                        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                        /* Prepare response */
+                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+                        errorObj["msg"]     = "Slot is locked.";
+                        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+                    }
+                    else if (false == PluginMgr::getInstance().uninstall(plugin))
+                    {
+                        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                        /* Prepare response */
+                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+                        errorObj["msg"]     = "Failed to uninstall.";
+                        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+                    }
                     else
                     {
-                        PluginMgr::getInstance().uninstall(plugin);
-
                         /* Prepare response */
                         (void)jsonDoc.createNestedObject("data");
                         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);

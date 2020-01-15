@@ -73,6 +73,7 @@ bool SysMsg::init()
 
     if (nullptr != m_plugin)
     {
+        DisplayMgr::getInstance().lockSlot(m_plugin->getSlotId());
         status = true;
     }
 

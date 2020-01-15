@@ -76,16 +76,24 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
     }
     else
     {
-        String  rsp     = "ACK";
+        String  rsp;
         Plugin* plugin  = DisplayMgr::getInstance().getPluginInSlot(m_slotId);
 
         if (nullptr == plugin)
         {
             rsp = "NACK;\"Slot is empty.\"";
         }
+        else if (true == DisplayMgr::getInstance().isSlotLocked(m_slotId))
+        {
+            rsp = "NACK;\"Slot is locked.\"";
+        }
+        else if (false == PluginMgr::getInstance().uninstall(plugin))
+        {
+            rsp = "NACK;\"Failed to uninstall.\"";
+        }
         else
         {
-            PluginMgr::getInstance().uninstall(plugin);
+            rsp = "ACK";
         }
 
         server->text(client->id(), rsp);
