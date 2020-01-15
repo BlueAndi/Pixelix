@@ -17,7 +17,11 @@
             }
 
             xhr.onload = function() {
-                options.onDone(null, xhr.response);
+                if (200 === xhr.status) {
+                    options.onDone(null, xhr.response);
+                } else {
+                    options.onDone(xhr.response, null);
+                }
             };
 
             xhr.onerror = function() {
@@ -35,7 +39,7 @@
 
         function updateProgress(evt) {
             var progress = 0;
-            
+
             if (true === evt.lengthComputable) {
                 progress = Math.ceil(evt.loaded * 100 / evt.total);
             }
@@ -45,6 +49,7 @@
         function upload() {
             var file = document.getElementById("inputFile").files[0];
             var formData = new FormData();
+            var fileSize = file.size;
 
             document.getElementById("progress").innerHTML = "Progress: 0%%";
 
@@ -65,9 +70,12 @@
                     method: "POST",
                     url: "/upload",
                     params: formData,
+                    headers: {
+                        "X-File-Size": fileSize
+                    },
                     onDone: function(err, data) {
                         if (null !== err) {
-                            alert("Upload failed.");
+                            alert(err);
                         } else {
                             alert("Upload successful.");
                         }
@@ -85,10 +93,9 @@
 <div class="topnav">
     <a href="/">Home</a>
     <a href="/display">Display</a>
+    <a href="/edit">Filesystem</a>
     <a href="/network">Network</a>
-    <a href="/config">Configuration</a>
     <a href="/settings">Settings</a>
-    <a href="/dev">Development</a>
     <a href="/update" class="active">Update</a>
 </div>
 <div class="main">
@@ -102,7 +109,7 @@
 </div>
 <div class="footer">
     <hr />
-    <p>(C) 2019 by Andreas Merkle (web@blue-andi.de)</p>
+    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
 </div>
 </body>
 </html>

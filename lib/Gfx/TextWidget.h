@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,6 +59,17 @@
 
 /**
  * A text widget, showing a colored string.
+ * The text has a given color, which can be changed.
+ * 
+ * Different keywords in the string are supported, e.g. for coloring or alignment.
+ * Each keyword starts with a '\\', otherwise its treated as just text.
+ * Example: "\\#FF0000H#FFFFFFello!" contains a red "H" and a white "ello!".
+ * 
+ * Keywords:
+ * - "\\#RRGGBB": Change text color; RRGGBB in hex
+ * - "\\lalign" : Alignment left
+ * - "\\ralign" : Alignment right
+ * - "\\calign" : Alignment center
  */
 class TextWidget : public Widget
 {
@@ -69,13 +80,13 @@ public:
      */
     TextWidget() :
         Widget(WIDGET_TYPE),
-        m_str(),
+        m_formatStr(),
         m_textColor(DEFAULT_TEXT_COLOR),
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
-        m_textWidth(0u),
-        m_scrollOffset(0u),
+        m_textWidth(0U),
+        m_scrollOffset(0),
         m_scrollTimer()
     {
     }
@@ -84,18 +95,18 @@ public:
      * Constructs a text widget with the given string and its color.
      * If there is no color given, it will be default color.
      * 
-     * @param[in] str   String
+     * @param[in] str   String, which may contain format tags.
      * @param[in] color Color of the string
      */
     TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR) :
         Widget(WIDGET_TYPE),
-        m_str(str),
+        m_formatStr(str),
         m_textColor(color),
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
-        m_textWidth(0u),
-        m_scrollOffset(0u),
+        m_textWidth(0U),
+        m_scrollOffset(0),
         m_scrollTimer()
     {
     }
@@ -107,7 +118,7 @@ public:
      */
     TextWidget(const TextWidget& widget) :
         Widget(WIDGET_TYPE),
-        m_str(widget.m_str),
+        m_formatStr(widget.m_formatStr),
         m_textColor(widget.m_textColor),
         m_font(widget.m_font),
         m_checkScrollingNeed(widget.m_checkScrollingNeed),
@@ -132,14 +143,17 @@ public:
      */
     TextWidget& operator=(const TextWidget& widget)
     {
-        m_str                   = widget.m_str;
-        m_textColor             = widget.m_textColor;
-        m_font                  = widget.m_font;
-        m_checkScrollingNeed    = widget.m_checkScrollingNeed;
-        m_isScrollingEnabled    = widget.m_isScrollingEnabled;
-        m_textWidth             = widget.m_textWidth;
-        m_scrollOffset          = widget.m_scrollOffset;
-        m_scrollTimer           = widget.m_scrollTimer;
+        if (&widget != this)
+        {
+            m_formatStr             = widget.m_formatStr;
+            m_textColor             = widget.m_textColor;
+            m_font                  = widget.m_font;
+            m_checkScrollingNeed    = widget.m_checkScrollingNeed;
+            m_isScrollingEnabled    = widget.m_isScrollingEnabled;
+            m_textWidth             = widget.m_textWidth;
+            m_scrollOffset          = widget.m_scrollOffset;
+            m_scrollTimer           = widget.m_scrollTimer;
+        }
 
         return *this;
     }
@@ -149,28 +163,44 @@ public:
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(Adafruit_GFX& gfx);
+    void update(IGfx& gfx) override;
 
     /**
-     * Set the text string.
+     * Set the text string. It can contain format tags like:
+     * - "#RRGGBB" Color information in RGB888 format
      * 
-     * @param[in] str String
+     * @param[in] formatStr String, which may contain format tags
      */
-    void setStr(const String& str)
+    void setFormatStr(const String& formatStr)
     {
-        m_str                   = str;
-        m_checkScrollingNeed    = true;
+        /* Avoid upate if not necessary. */
+        if (m_formatStr != formatStr)
+        {
+            m_formatStr             = formatStr;
+            m_checkScrollingNeed    = true;
+        }
+        
         return;
     }
 
     /**
-     * Get the text string.
+     * Get the text string, which may contain format tags.
+     * 
+     * @return String, which may contain format tags.
+     */
+    String getFormatStr() const
+    {
+        return m_formatStr;
+    }
+
+    /**
+     * Get the text string, without format tags.
      * 
      * @return String
      */
-    String getStr(void) const
+    String getStr() const
     {
-        return m_str;
+        return removeFormatTags(m_formatStr);
     }
 
     /**
@@ -189,7 +219,7 @@ public:
      * 
      * @return Text color
      */
-    const Color& getTextColor(void) const
+    const Color& getTextColor() const
     {
         return m_textColor;
     }
@@ -203,15 +233,16 @@ public:
     {
         m_font                  = font;
         m_checkScrollingNeed    = true;
+
         return;
     }
 
     /**
      * Get font.
      * 
-     * @return If a font is set, it will be returned otherwise NULL.
+     * @return If a font is set, it will be returned otherwise nullptr.
      */
-    const GFXfont* getFont(void) const
+    const GFXfont* getFont() const
     {
         return m_font;
     }
@@ -226,19 +257,66 @@ public:
     static const GFXfont*   DEFAULT_FONT;
 
     /** Default pause between character scrolling in ms */
-    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 200u;
+    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 100U;
 
 private:
 
-    String          m_str;                  /**< String */
+    /** Keyword handler method. */
+    typedef bool (TextWidget::*KeywordHandler)(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
+
+    String          m_formatStr;            /**< String, which contains format tags. */
     Color           m_textColor;            /**< Text color of the string */
     const GFXfont*  m_font;                 /**< Current font */
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
     bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
     uint16_t        m_textWidth;            /**< Text width in pixel */
-    uint16_t        m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
+    int16_t         m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
 
+    static KeywordHandler   m_keywordHandlers[];    /**< List of all supported keyword handlers. */
+
+    /**
+     * Remove format tags from string.
+     * 
+     * @param[in] formatStr String which contains format tags
+     * 
+     * @return String without format tags
+     */
+    String removeFormatTags(const String& formatStr) const;
+ 
+    /**
+     * Show formatted text.
+     * Format tags:
+     * - #RRGGBB Color in HTML form (RGB888)
+     * 
+     * @param[in] gfx       Graphics, used to draw the characters
+     * @param[in] formatStr String which contains format tags
+     */
+    void show(IGfx& gfx, const String& formatStr) const;
+
+    /**
+     * Handles the keyword for color changes.
+     * 
+     * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
+     * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
+     * @param[in] formatStr String which may contain keywords.
+     * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
+     * 
+     * @return If keyword is handled successful, it returns true otherwise false.
+     */
+    bool handleColor(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
+
+    /**
+     * Handles the keyword for alignment changes.
+     * 
+     * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
+     * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
+     * @param[in] formatStr String which may contain keywords.
+     * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
+     * 
+     * @return If keyword is handled successful, it returns true otherwise false.
+     */
+    bool handleAlignment(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
 };
 
 /******************************************************************************

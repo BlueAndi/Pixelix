@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,7 @@ public:
      * 
      * @return State instance
      */
-    static InitState& getInstance(void)
+    static InitState& getInstance()
     {
         return m_instance;
     }
@@ -94,8 +94,8 @@ public:
      */
     void exit(StateMachine& sm);
 
-    /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT;
+    /** Wait time for showing a system message in ms */
+    static const uint32_t   SYS_MSG_WAIT_TIME;
 
     /** Serial interface baudrate. */
     static const uint32_t   SERIAL_BAUDRATE;
@@ -123,9 +123,19 @@ private:
     InitState& operator=(const InitState& state);
 
     /**
-     * Show boot information.
+     * Show startup information on the serial interface.
      */
-    void showBootInfo(void);
+    void showStartupInfoOnSerial(void);
+
+    /**
+     * Show startup information on the display.
+     */
+    void showStartupInfoOnDisplay(void);
+
+    /**
+     * Register plugins on the plugin manager.
+     */
+    void registerPlugins();
 };
 
 /******************************************************************************

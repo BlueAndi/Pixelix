@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,8 +67,8 @@ public:
     SimpleTimer() :
         m_isRunning(false),
         m_isTimeout(false),
-        m_duration(0u),
-        m_start(0u)
+        m_duration(0U),
+        m_start(0U)
     {
     }
 
@@ -125,7 +125,7 @@ public:
     /**
      * Stop timer.
      */
-    void stop(void)
+    void stop()
     {
         m_isRunning = false;
         m_isTimeout = false;
@@ -136,7 +136,7 @@ public:
     /**
      * Restart timer with the previous specified duration.
      */
-    void restart(void)
+    void restart()
     {
         m_isRunning = true;
         m_isTimeout = false;
@@ -150,7 +150,7 @@ public:
      * 
      * @return If timer is running, it will return true otherwise false.
      */
-    bool isTimerRunning(void) const
+    bool isTimerRunning() const
     {
         return m_isRunning;
     }
@@ -161,7 +161,7 @@ public:
      * 
      * @return If timeout it will return true, otherwise false.
      */
-    bool isTimeout(void)
+    bool isTimeout()
     {
         bool isTimeout = false;
 

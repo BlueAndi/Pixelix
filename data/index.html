@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>%PAGE_TITLE%</title>
     <link rel="stylesheet" href="/data/style.css"></link>
-    <script src="/data/util.js"></script>
 </head>
 <body>
 <div class="header">
@@ -14,10 +13,9 @@
 <div class="topnav">
     <a href="/" class="active">Home</a>
     <a href="/display">Display</a>
+    <a href="/edit">Filesystem</a>
     <a href="/network">Network</a>
-    <a href="/config">Configuration</a>
     <a href="/settings">Settings</a>
-    <a href="/dev">Development</a>
     <a href="/update">Update</a>
 </div>
 <div class="main">
@@ -41,12 +39,24 @@
             <td>Available Heap Size:</td>
             <td>%AVAILABLE_HEAP_SIZE% byte</td>
         </tr>
+        <tr>
+            <td>Filesystem size:</td>
+            <td>%FS_SIZE% byte</td>
+        </tr>
+        <tr>
+            <td>Used filesystem size:</td>
+            <td>%USED_FS_SIZE% byte</td>
+        </tr>
     </table>
     <h3>Hardware</h3>
     <table>
         <tr>
             <td>ESP Chip Rev.:</td>
             <td>%ESP_CHIP_REV%</td>
+        </tr>
+        <tr>
+            <td>ESP Chip ID:</td>
+            <td>%ESP_CHIP_ID%</td>
         </tr>
         <tr>
             <td>ESP CPU Freq.:</td>
@@ -56,7 +66,7 @@
 </div>
 <div class="footer">
     <hr />
-    <p>(C) 2019 by Andreas Merkle (web@blue-andi.de)</p>
+    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
 </div>
 </body>
 </html>

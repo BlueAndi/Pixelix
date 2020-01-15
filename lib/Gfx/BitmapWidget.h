@@ -66,24 +66,10 @@ public:
      */
     BitmapWidget() :
         Widget(WIDGET_TYPE),
-        m_buffer(NULL),
-        m_width(0u),
-        m_height(0u)
-    {
-    }
-
-    /**
-     * Constructs a bitmap widget.
-     * 
-     * @param[in] bitmap    Ext. bitmap buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
-     */
-    BitmapWidget(const uint16_t* bitmap, uint16_t width, uint16_t height) :
-        Widget(WIDGET_TYPE),
-        m_buffer(bitmap),
-        m_width(width),
-        m_height(height)
+        m_buffer(nullptr),
+        m_bufferSize(0U),
+        m_width(0U),
+        m_height(0U)
     {
     }
 
@@ -94,10 +80,24 @@ public:
      */
     BitmapWidget(const BitmapWidget& widget) :
         Widget(WIDGET_TYPE),
-        m_buffer(widget.m_buffer),
+        m_buffer(nullptr),
+        m_bufferSize(widget.m_bufferSize),
         m_width(widget.m_width),
         m_height(widget.m_height)
     {
+        if (nullptr != widget.m_buffer)
+        {
+            m_buffer = new uint16_t[m_bufferSize];
+
+            if (nullptr == m_buffer)
+            {
+                m_bufferSize = 0U;
+            }
+            else
+            {
+                memcpy(m_buffer, widget.m_buffer, m_bufferSize * sizeof(uint16_t));
+            }
+        }
     }
 
     /**
@@ -105,6 +105,12 @@ public:
      */
     ~BitmapWidget()
     {
+        if (nullptr != m_buffer)
+        {
+            delete[] m_buffer;
+            m_buffer = nullptr;
+            m_bufferSize = 0U;
+        }
     }
 
     /**
@@ -112,23 +118,16 @@ public:
      * 
      * @param[in] widget Bitmap widge, which to assign
      */
-    BitmapWidget& operator=(const BitmapWidget& widget)
-    {
-        m_buffer    = widget.m_buffer;
-        m_width     = widget.m_width;
-        m_height    = widget.m_height;
-
-        return *this;
-    }
+    BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
      * Update/Draw the bitmap widget on the canvas.
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(Adafruit_GFX& gfx)
+    void update(IGfx& gfx) override
     {
-        if (NULL != m_buffer)
+        if (nullptr != m_buffer)
         {
             gfx.drawRGBBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
         }
@@ -143,14 +142,7 @@ public:
      * @param[in] width     Bitmap width in pixel
      * @param[in] height    Bitmap height in pixel
      */
-    void set(const uint16_t* bitmap, uint16_t width, uint16_t height)
-    {
-        m_buffer    = bitmap;
-        m_width     = width;
-        m_height    = height;
-
-        return;
-    }
+    void set(const uint16_t* bitmap, uint16_t width, uint16_t height);
 
     /**
      * Get the bitmap.
@@ -168,14 +160,28 @@ public:
         return m_buffer;
     }
 
+    #ifndef NATIVE
+
+    /**
+     * Load bitmap image from filesystem.
+     * 
+     * @param[in] filename  Filename with full path
+     * 
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool load(const String& filename);
+
+    #endif  /* NATIVE */
+
     /** Widget type string */
     static const char* WIDGET_TYPE;
 
 private:
 
-    const uint16_t* m_buffer;   /**< Ext. bitmap buffer */
-    uint16_t        m_width;    /**< Bitmap width in pixel */
-    uint16_t        m_height;   /**< Bitmap height in pixel */
+    uint16_t*   m_buffer;       /**< Raw bitmap buffer */
+    size_t      m_bufferSize;   /**< Raw bitmap buffer size in number of elements */
+    uint16_t    m_width;        /**< Bitmap width in pixel */
+    uint16_t    m_height;       /**< Bitmap height in pixel */
 
 };
 

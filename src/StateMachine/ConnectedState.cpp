@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,10 +33,11 @@
  * Includes
  *****************************************************************************/
 #include "ConnectedState.h"
-#include "DisplayMgr.h"
+#include "SysMsg.h"
 #include "UpdateMgr.h"
 #include "MyWebServer.h"
 #include "Settings.h"
+#include "WebConfig.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -45,6 +46,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Logging.h>
+#include <ESPmDNS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -99,7 +101,18 @@ void ConnectedState::entry(StateMachine& sm)
 
         /* Fatal error */
         LOG_FATAL(errorStr);
-        DisplayMgr::getInstance().showSysMsg(errorStr);
+        SysMsg::getInstance().show(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
+    /* Enable mDNS */
+    else if (false == MDNS.begin(hostname.c_str()))
+    {
+        String errorStr = "Failed to setup mDNS.";
+
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        SysMsg::getInstance().show(errorStr);
 
         sm.setState(ErrorState::getInstance());
     }
@@ -113,20 +126,17 @@ void ConnectedState::entry(StateMachine& sm)
         /* Start over-the-air update server. */
         UpdateMgr::getInstance().begin();
         
+        /* Add MDNS services */
+        MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
+        MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
+
         /* Show hostname and don't believe its the same as set before. */
         infoStr += WiFi.getHostname();
         LOG_INFO(infoStr);
-        DisplayMgr::getInstance().lock();
-        DisplayMgr::getInstance().showSysMsg(infoStr);
-        DisplayMgr::getInstance().unlock();
-        delay(SYS_MSG_WAIT_TIME_STD);
+        SysMsg::getInstance().show(infoStr, infoStr.length() * 600U);
 
         /* Show ip address */
         LOG_INFO(String("IP: ") + WiFi.localIP().toString());
-
-        /* Enable slots */
-        DisplayMgr::getInstance().enableSlots(true);
-        DisplayMgr::getInstance().startRotating(true);
     }
     
     return;
@@ -157,6 +167,11 @@ void ConnectedState::process(StateMachine& sm)
 
 void ConnectedState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+    
+    /* Stop mDNS */
+    MDNS.end();
+
     /* Stop webserver */
     MyWebServer::end();
 

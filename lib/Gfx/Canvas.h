@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,7 @@
  * This class defines a drawing canvas. The canvas can contain several widgets
  * and will update their drawings.
  */
-class Canvas : public Adafruit_GFX, public Widget
+class Canvas : public IGfx, public Widget
 {
 public:
 
@@ -73,9 +73,9 @@ public:
      * @param[in] y         y-coordinate position in the matrix.
      */
     Canvas(int16_t width, int16_t height, int16_t x, int16_t y) :
-        Adafruit_GFX(width, height),
+        IGfx(width, height),
         Widget(WIDGET_TYPE, x, y),
-        m_gfx(NULL),
+        m_gfx(nullptr),
         m_widgets()
     {
     }
@@ -133,7 +133,7 @@ public:
      * 
      * @return Children
      */
-    const DLinkedList<Widget*>& children(void) const
+    const DLinkedList<Widget*>& children() const
     {
         return m_widgets;
     }
@@ -144,7 +144,7 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    void update(Adafruit_GFX& gfx)
+    void update(IGfx& gfx) override
     {
         /* Walk through all widgets and draw them in the priority as
          * they were added.
@@ -159,10 +159,34 @@ public:
             }
             while(true == m_widgets.next());
 
-            m_gfx = NULL;
+            m_gfx = nullptr;
         }
 
         return;
+    }
+
+    /**
+     * Get pixel color at given position.
+     * 
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     * 
+     * @return Color in RGB565 format.
+     */
+    uint16_t getColor(int16_t x, int16_t y) override
+    {
+        uint16_t color565 = 0U;
+
+        if ((0 <= x) &&
+            (0 <= y) &&
+            (width() > x) &&
+            (height() > y) &&
+            (nullptr != m_gfx))
+        {
+            color565 = m_gfx->getColor(x, y);
+        }
+
+        return color565;
     }
 
     /**
@@ -170,11 +194,11 @@ public:
      * 
      * @param[in] name  Widget name to search for
      * 
-     * @return If widget is found, it will be returned otherwise NULL.
+     * @return If widget is found, it will be returned otherwise nullptr.
      */
-    Widget* find(const String& name)
+    Widget* find(const String& name) override
     {
-        Widget* widget = NULL;
+        Widget* widget = nullptr;
 
         if (name == m_name)
         {
@@ -182,7 +206,7 @@ public:
         }
 
         /* If its not the canvas itself, continue searching in the widget list. */
-        if (NULL == widget)
+        if (nullptr == widget)
         {
             if (true == m_widgets.selectFirstElement())
             {
@@ -190,7 +214,7 @@ public:
                 {
                     widget = (*m_widgets.current())->find(name);
 
-                } while ((NULL == widget) &&
+                } while ((nullptr == widget) &&
                          (true == m_widgets.next()));
             }
         }
@@ -203,7 +227,7 @@ public:
 
 private:
 
-    Adafruit_GFX*           m_gfx;      /**< Graphics interface of the underlying layer */
+    IGfx*                   m_gfx;      /**< Graphics interface of the underlying layer */
     DLinkedList<Widget*>    m_widgets;  /**< Widgets in the canvas */
 
     Canvas(const Canvas& canvas);
@@ -219,7 +243,7 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        if (NULL != m_gfx)
+        if (nullptr != m_gfx)
         {
             /* Don't draw outside the canvas. */
             if ((0 <= x) &&

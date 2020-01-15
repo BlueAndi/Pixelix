@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,13 +65,13 @@ namespace Board
 namespace Pin
 {
     /** Pin number of onboard LED */
-    static const uint8_t    onBoardLedPinNo         = 2u;
+    static const uint8_t    onBoardLedPinNo         = 2U;
     /** Pin number of user button */
-    static const uint8_t    userButtonPinNo         = 4u;
+    static const uint8_t    userButtonPinNo         = 4U;
     /** Pin number of LDR in */
-    static const uint8_t    ldrInPinNo              = 26u;
+    static const uint8_t    ldrInPinNo              = 26U;
     /** Pin number of LED matrix data out */
-    static const uint8_t    ledMatrixDataOutPinNo   = 27u;
+    static const uint8_t    ledMatrixDataOutPinNo   = 27U;
 };
 
 /** Digital output pin: Onboard LED */
@@ -87,26 +87,29 @@ static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 static const DOutPin<Pin::ledMatrixDataOutPinNo>        ledMatrixDataOut;
 
 /** ADC resolution in digits */
-static const uint16_t   adcResolution   = 4096u;
+static const uint16_t   adcResolution   = 4096U;
 
 /** ADC reference voltage in mV */
-static const uint16_t   adcRefVoltage   = 3300u;
+static const uint16_t   adcRefVoltage   = 3300U;
 
 /** LED matrix specific values */
 namespace LedMatrix
 {
 
 /** LED matrix width in pixels */
-static const uint8_t    width               = 32u;
+static const uint8_t    width               = 32U;
 
 /** LED matrix height in pixels */
-static const uint8_t    height              = 8u;
+static const uint8_t    height              = 8U;
 
 /** LED matrix supply voltage in volt */
-static const uint8_t    supplyVoltage       = 5u;
+static const uint8_t    supplyVoltage       = 5U;
 
 /** LED matrix max. supply current in mA */
-static const uint32_t   supplyCurrentMax    = 3500u;
+static const uint32_t   supplyCurrentMax    = 3500U;
+
+/** Max. current in mA per LED */
+static const uint32_t   maxCurrentPerLed    = 60U;
 
 };
 
@@ -118,6 +121,11 @@ static const uint32_t   supplyCurrentMax    = 3500u;
  * Initialize all i/o pins.
  */
 extern void init();
+
+/**
+ * Execute a hard reset!
+ */
+extern void reset();
 
 };
 

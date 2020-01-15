@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,7 +53,7 @@ namespace WebConfig
  *****************************************************************************/
 
 /** Web server port */
-static const uint32_t   WEBSERVER_PORT          = 80u;
+static const uint32_t   WEBSERVER_PORT          = 80U;
 
 /** Project title, used by the web pages. */
 static const char       PROJECT_TITLE[]         = "PIXELIX";
@@ -68,10 +68,13 @@ static const char       WEB_LOGIN_PASSWORD[]    = "skywalker";
 static const char       WEBSOCKET_PROTOCOL[]    = "ws";
 
 /** Websocket port */
-static const uint32_t   WEBSOCKET_PORT          = 80u;
+static const uint32_t   WEBSOCKET_PORT          = 80U;
 
 /** Websocket path */
 static const char       WEBSOCKET_PATH[]        = "/ws";
+
+/** Arduino OTA port */
+static const uint32_t   ARDUINO_OTA_PORT        = 3232U;
 
 /******************************************************************************
  * Macros

@@ -5,119 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>%PAGE_TITLE%</title>
     <link rel="stylesheet" href="/data/style.css"></link>
-    <script src="/data/util.js"></script>
+    <script src="/data/ws.js"></script>
     <script>
-        var matrixWidth     = 32;
-        var matrixHeight    = 8;
-        var ctx             = null;
-        var pixelWidth      = 10;
-        var pixelHeight     = 10;
-        var intervalId      = 0;
-        var webSocket       = null;
-        
-        function wsOpen(protocol, hostname, port, endpoint, onSuccess, onError, onClosed, onMessage) {
-            var webSocketURL    = protocol + "://" + hostname + ":" + port + endpoint;
-            var ws              = null;
-            
-            try {
-                ws = new WebSocket(webSocketURL);
-                
-                ws.onopen = function(openEvent) {
-                    console.debug("WebSocket OPEN: " + JSON.stringify(openEvent, null, 4));
-                    if ("function" === typeof onSuccess) {
-                        onSuccess();
-                    }
-                };
-                
-                ws.onclose = function(closeEvent) {
-                    console.debug("WebSocket CLOSE: " + JSON.stringify(closeEvent, null, 4));
-                    if ("function" === typeof onClosed) {
-                        onClosed();
-                    }
-                };
-                
-                ws.onerror = function(errorEvent) {
-                    console.debug("WebSocket ERROR: " + JSON.stringify(errorEvent, null, 4));
-                    if ("function" === typeof onError) {
-                        onError();
-                    }
-                };
-                
-                ws.onmessage = function(messageEvent) {
-                    var wsMsg = messageEvent.data;
-                    
-                    console.debug("WebSocket MESSAGE: " + wsMsg);
+        var matrixWidth     = 32;   // LED matrix width in number of LEDs
+        var matrixHeight    = 8;    // LED matrix height in number of LEDs
+        var ctx             = null; // Canvas context
+        var pixelWidth      = 10;   // Width of a single LED in pixels
+        var pixelHeight     = 10;   // Height of a single LED in pixels
+        var timerId         = 0;    // Timer id
+        var period          = 400;  // Display refresh period in ms
+        var wsClient        = null; // Websocket client
+        var plugins         = [];   // List of all available plugins
 
-                    if ("function" === typeof onMessage) {
-                        onMessage(wsMsg);
-                    }
-                };
-            } catch (exception) {
-                console.error(exception);
-
-                if ("function" === typeof onError) {
-                    onError();
-                }
-            }
-
-            return ws;
-        }
-
-        function onSuccess()
-        {
-            console.info("Websocket connected.");
-            intervalId = window.setInterval(requestDisplayContent, 400);
-            return;
-        }
-
-        function onError()
-        {
-            console.info("Websocket error.");
-            return;
-        }
-
-        function onClosed()
-        {
-            console.info("Websocket disconnected.");
-            window.clearInterval(intervalId);
-            return;
-        }
-
-        function onMessage(msg)
-        {
-            var data    = msg.split(";");
-            var status  = data.shift();
-            var x       = 0;
-            var y       = 0;
-            var index   = 0;
-            var color   = 0;
-
-            if ("ACK" === status) {
-                for(y = 0; y < matrixHeight; ++y) {
-                    for(x = 0; x < matrixWidth; ++x) {
-                        if (data.length > index) {
-                            color   = parseInt(data[index]);
-                            red     = (color & 0xff0000) >> 16;
-                            green   = (color & 0x00ff00) >> 8;
-                            blue    = (color & 0x0000ff) >> 0;
-                            plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
-                            ++index;
-                        }
-                    }
-                }
-            } else {
-                console.error("ARGH!");
-            }
-
-            return;
-        }
-
-        function requestDisplayContent()
-        {
-            if (null !== webSocket) {
-                webSocket.send("GETDISP");
-            }
-
+        function onClosed() {
+            window.clearTimeout(timerId);
             return;
         }
 
@@ -130,12 +31,134 @@
             }
         }
 
+        function getDisplayContent() {
+            wsClient.getDisplayContent().then(function(rsp) {
+                var x       = 0;
+                var y       = 0;
+                var index   = 0;
+                var color   = 0;
+
+                document.getElementById("slotId").innerHTML = "Slot: " + rsp.slotId;
+
+                /* Handle display data */
+                for(y = 0; y < matrixHeight; ++y) {
+                    for(x = 0; x < matrixWidth; ++x) {
+                        if (rsp.data.length > index) {
+                            color   = parseInt(rsp.data[index]);
+                            red     = (color & 0xff0000) >> 16;
+                            green   = (color & 0x00ff00) >> 8;
+                            blue    = (color & 0x0000ff) >> 0;
+                            plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
+                            ++index;
+                        }
+                    }
+                }
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+            }).finally(function() {
+                timerId = window.setTimeout(getDisplayContent, period);
+            });
+
+            return;
+        }
+
+        function install() {
+            var element = document.getElementById("pluginToInstall");
+            var pluginIndex = parseInt(element.options[element.selectedIndex].value);
+            var pluginName = plugins[pluginIndex];
+
+            return wsClient.install({
+                pluginName: pluginName
+            }).then(function(rsp) {
+                return updateSlotInfo();
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+                alert("Install " + pluginName + " failed.");
+            });
+        }
+
+        function uninstall(slotId) {
+            return wsClient.uninstall({
+                slotId: slotId
+            }).then(function(rsp) {
+                return updateSlotInfo();
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+                alert("Uninstall slot " + slotId + " failed.");
+            });
+        }
+
+        function updateSlotInfo() {
+            return wsClient.getSlots().then(function(rsp) {
+                var element = document.getElementById("slots");
+                var index = 0;
+                var row = null;
+                var cell = null;
+
+                while(1 < element.rows.length) {
+                    element.deleteRow(-1);
+                }
+
+                for(index = 0; index < rsp.slots.length; ++index) {
+                    row = element.insertRow(-1);
+                    cell = row.insertCell(-1);
+                    cell.innerHTML = index;
+                    cell = row.insertCell(-1);
+                    if (0 === rsp.slots[index].length) {
+                        cell.innerHTML = "-";
+                    } else {
+                        cell.innerHTML = rsp.slots[index];
+                    }
+                    cell = row.insertCell(-1);
+                    if (0 < rsp.slots[index].length) {
+                        cell.innerHTML = "<input type=\"button\" value=\"Uninstall\" onclick=\"uninstall(" + index + ")\" />";
+                    }
+                }
+            });
+        }
+
         window.onload = function() {
             var displayCanvas = document.getElementById("canvas");
-            
+
             ctx = displayCanvas.getContext("2d");
 
-            webSocket = wsOpen("%WS_PROTOCOL%", "%WS_HOSTNAME%", "%WS_PORT%", "%WS_ENDPOINT%", onSuccess, onError, onClosed, onMessage);
+            wsClient = new pixelix.ws.Client();
+            wsClient.connect({
+                protocol: "%WS_PROTOCOL%",
+                hostname: "%WS_HOSTNAME%",
+                port: %WS_PORT%,
+                endpoint: "%WS_ENDPOINT%",
+                onClosed: onClosed,
+            }).then(function(rsp) {
+                return wsClient.getPlugins();
+            }).then(function(rsp) {
+                var element = document.getElementById("pluginToInstall");
+                var option = null;
+                var index = 0;
+
+                plugins = rsp.plugins;
+
+                for(index = 0; index < plugins.length; ++index) {
+                    option = document.createElement("option");
+                    option.value = index;
+                    option.text = plugins[index];
+                    element.add(option);
+                }
+
+                return updateSlotInfo();
+            }).then(function(rsp) {
+                timerId = window.setTimeout(getDisplayContent, period);
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+            });
         };
     </script>
 </head>
@@ -146,19 +169,32 @@
 <div class="topnav">
     <a href="/">Home</a>
     <a href="/display" class="active">Display</a>
+    <a href="/edit">Filesystem</a>
     <a href="/network">Network</a>
-    <a href="/config">Configuration</a>
     <a href="/settings">Settings</a>
-    <a href="/dev">Development</a>
     <a href="/update">Update</a>
 </div>
 <div class="main">
     <h2>Display</h2>
+    <p id="slotId">Slot: -</p>
     <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
+    <p>
+        <table id="slots">
+            <tr>
+                <th>Slot</th><th>Installed plugin</th><th>Action</th>
+            </tr>
+        </table>
+    </p>
+    <p>
+        <select id="pluginToInstall" size="1">
+        </select>
+        <br />
+        <input type="button" value="Install" onclick="install()" />
+    </p>
 </div>
 <div class="footer">
     <hr />
-    <p>(C) 2019 by Andreas Merkle (web@blue-andi.de)</p>
+    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
 </div>
 </body>
 </html>

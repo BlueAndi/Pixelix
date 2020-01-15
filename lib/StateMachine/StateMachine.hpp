@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -114,8 +114,8 @@ public:
      * Constructs a state machine.
      */
     StateMachine() :
-        m_currentState(NULL),
-        m_nextState(NULL)
+        m_currentState(nullptr),
+        m_nextState(nullptr)
     {
     }
 
@@ -124,8 +124,8 @@ public:
      * 
      * @param[in] state Starting state
      */
-    StateMachine(AbstractState& state) :
-        m_currentState(NULL),
+    explicit StateMachine(AbstractState& state) :
+        m_currentState(nullptr),
         m_nextState(&state)
     {
     }
@@ -135,7 +135,7 @@ public:
      * 
      * @return Current state
      */
-    AbstractState* getState(void)
+    AbstractState* getState()
     {
         return m_currentState;
     }
@@ -155,26 +155,26 @@ public:
      * Process the state machine.
      * It handles all state activities.
      */
-    void process(void)
+    void process()
     {
         /* Request for change state available? */
-        if (NULL != m_nextState)
+        if (nullptr != m_nextState)
         {
             /* Leave current state */
-            if (NULL != m_currentState)
+            if (nullptr != m_currentState)
             {
                 m_currentState->exit(*this);
             }
 
             /* Change state */
             m_currentState  = m_nextState;
-            m_nextState     = NULL;
+            m_nextState     = nullptr;
 
             /* Enter new state */
             m_currentState->entry(*this);
         }
         /* Process current state */
-        else if (NULL != m_currentState)
+        else if (nullptr != m_currentState)
         {
             m_currentState->process(*this);
         }

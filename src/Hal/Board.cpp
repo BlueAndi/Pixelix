@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,10 @@
  *****************************************************************************/
 #include "Board.h"
 
+#include <Util.h>
+#include <esp_int_wdt.h>
+#include <esp_task_wdt.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -43,9 +47,6 @@ using namespace Board;
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
 /******************************************************************************
  * Types and classes
@@ -86,15 +87,29 @@ static const IoPin* ioPinList[] =
 
 extern void Board::init()
 {
-    uint8_t index = 0u;
+    uint8_t index = 0U;
 
     /* Initialize all i/o pins */
-    for(index = 0u; index < ARRAY_NUM(ioPinList); ++index)
+    for(index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
     {
-        if (NULL != ioPinList[index])
+        if (nullptr != ioPinList[index])
         {
             ioPinList[index]->init();
         }
+    }
+
+    return;
+}
+
+extern void Board::reset()
+{
+    esp_task_wdt_init(1, true);
+    esp_task_wdt_add(nullptr);
+    
+    for(;;)
+    {
+        /* Wait for reset. */
+        ;
     }
 
     return;

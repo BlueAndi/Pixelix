@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -127,7 +127,7 @@ public:
      * 
      * @param[in] gfx Graphics interface.
      */
-    void update(Adafruit_GFX& gfx)
+    void update(IGfx& gfx) override
     {
         Color color = m_colorOn;
 
@@ -136,7 +136,7 @@ public:
             color = m_colorOff;
         }
 
-        gfx.fillRect(m_posX, m_posY, WIDTH, HEIGHT, color.get565());
+        gfx.fillRect(m_posX, m_posY, WIDTH, HEIGHT, color.to565());
 
         return;
     }
@@ -158,7 +158,7 @@ public:
      * 
      * @return On state
      */
-    bool getOnState(void) const
+    bool getOnState() const
     {
         return m_isOn;
     }
@@ -180,7 +180,7 @@ public:
      * 
      * @return Color in off state
      */
-    const Color& getColorOff(void) const
+    const Color& getColorOff() const
     {
         return m_colorOff;
     }
@@ -202,7 +202,7 @@ public:
      * 
      * @return Color in on state
      */
-    const Color& getColorOn(void) const
+    const Color& getColorOn() const
     {
         return m_colorOn;
     }
@@ -211,10 +211,10 @@ public:
     static const char*      WIDGET_TYPE;
 
     /** Lamp width in pixel */
-    static const uint16_t   WIDTH   = 4u;
+    static const uint16_t   WIDTH   = 4U;
 
     /** Lamp height in pixel */
-    static const uint16_t   HEIGHT  = 1u;
+    static const uint16_t   HEIGHT  = 1U;
 
 private:
 

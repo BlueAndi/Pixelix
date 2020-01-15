@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <WString.h>
-#include <Adafruit_GFX.h>
+#include <IGfx.hpp>
 
 /******************************************************************************
  * Macros
@@ -162,14 +162,14 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    virtual void update(Adafruit_GFX& gfx) = 0;
+    virtual void update(IGfx& gfx) = 0;
 
     /**
      * Get widget type as string.
      * 
      * @return Widget type string
      */
-    const char* getType(void) const
+    const char* getType() const
     {
         return m_type;
     }
@@ -180,7 +180,7 @@ public:
      * 
      * @return Name
      */
-    const String& getName(void) const
+    const String& getName() const
     {
         return m_name;
     }
@@ -203,11 +203,11 @@ public:
      * 
      * @param[in] name  Widget name to search for
      * 
-     * @return If widget is found, it will be returned otherwise NULL.
+     * @return If widget is found, it will be returned otherwise nullptr.
      */
     virtual Widget* find(const String& name)
     {
-        Widget* widget = NULL;
+        Widget* widget = nullptr;
 
         if (name == m_name)
         {

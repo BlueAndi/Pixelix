@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "WsCmdGetDisp.h"
-
 #include "DisplayMgr.h"
+
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -43,9 +44,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
 /******************************************************************************
  * Types and classes
@@ -65,8 +63,8 @@
 
 void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 {
-    if ((NULL == server) ||
-        (NULL == client))
+    if ((nullptr == server) ||
+        (nullptr == client))
     {
         return;
     }
@@ -78,16 +76,18 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
     else
     {
-        uint32_t    index       = 0u;
+        uint32_t    index       = 0U;
         String      rsp         = "ACK";
         const char  DELIMITER   = ';';
         uint32_t    framebuffer[Board::LedMatrix::width * Board::LedMatrix::height];
+        uint8_t     slotId      = DisplayMgr::SLOT_ID_INVALID;
 
-        DisplayMgr::getInstance().lock();
-        DisplayMgr::getInstance().getFBCopy(framebuffer, ARRAY_NUM(framebuffer));
-        DisplayMgr::getInstance().unlock();
+        DisplayMgr::getInstance().getFBCopy(framebuffer, UTIL_ARRAY_NUM(framebuffer), &slotId);
 
-        for(index = 0u; index <  ARRAY_NUM(framebuffer); ++index)
+        rsp += DELIMITER;
+        rsp += slotId;
+
+        for(index = 0U; index <  UTIL_ARRAY_NUM(framebuffer); ++index)
         {
             rsp += DELIMITER;
             rsp += framebuffer[index];
@@ -103,6 +103,8 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
 void WsCmdGetDisp::setPar(const char* par)
 {
+    UTIL_NOT_USED(par);
+
     m_isError = true;
 
     return;

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@
 /**
  * @brief  Display manager
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -49,6 +49,7 @@
 #include <SimpleTimer.hpp>
 
 #include "Board.h"
+#include "Plugin.hpp"
 
 /******************************************************************************
  * Macros
@@ -69,35 +70,31 @@ public:
 
     /**
      * Get LED matrix instance.
-     * 
+     *
      * @return LED matrix
      */
-    static DisplayMgr& getInstance(void)
+    static DisplayMgr& getInstance()
     {
         return m_instance;
     }
 
     /**
-     * Initialize the display manager. Call this once during startup.
-     * 
+     * Start the display manager. Call this once during startup.
+     * This will start updating the display.
+     *
      * @return If initialization is successful, it will return true otherwise false.
      */
-    bool init(void);
+    bool begin(void);
 
     /**
-     * Lock display and prevent the display update, which will be done in a
-     * separate task.
+     * Stop the display manager.
+     * It will immediately stop updating the display.
      */
-    void lock(void);
-
-    /**
-     * Unlock display.
-     */
-    void unlock(void);
+    void end(void);
 
     /**
      * Enable/Disable automatic brightness adjustment.
-     * 
+     *
      * @param[in] enable    Enable (true) or disable (false)
      * @return Status
      * @retval true     It was successful enabled/disabled.
@@ -106,136 +103,122 @@ public:
     bool enableAutoBrightnessAdjustment(bool enable);
 
     /**
-     * Layouts to choose.
-     */
-    enum LayoutId
-    {
-        LAYOUT_ID_0 = 0,    /**< One text box */
-        LAYOUT_ID_1,        /**< A bitmap icon box and a text box */
-        LAYOUT_ID_2,        /**< A bitmap icon box, a text box and box with lampes */
-        LAYOUT_ID_COUNT     /**< Number of layouts */
-    };
-
-    /**
-     * Get slot canvas.
-     * 
-     * @param[in] slotId    Slot id [0; N]
-     * @return Slot canvas
-     */
-    Canvas* getSlot(uint8_t slotId);
-
-    /**
-     * Set layout for a slot.
-     * 
-     * @param[in] slotId    Slot id [0; N]
-     * @param[in] layoutId  Layout id
-     */
-    void setLayout(uint8_t slotId, LayoutId layoutId);
-
-    /**
-     * Set text in the text widget of a slot.
-     * 
+     * Install plugin to slot. If the slot contains already a plugin, it will fail.
+     * If a invalid slot id is given, the plugin will be installed in the next
+     * available slot.
+     *
+     * @param[in] plugin    Plugin which to install
      * @param[in] slotId    Slot id
-     * @param[in] str       Text
+     *
+     * @return Returns slot id. If it fails, it will return SLOT_ID_INVALID.
      */
-    void setText(uint8_t slotId, const String& str);
+    uint8_t installPlugin(Plugin* plugin, uint8_t slotId = SLOT_ID_INVALID);
 
     /**
-     * Set bitmap in the bitmap widget of a slot.
-     * Note, a copy of the bitmap will be created. For max. width and size
-     * see @sa BMP_WIDTH and @sa BMP_HEIGHT.
-     * 
-     * @param[in] slotId    Slot id
-     * @param[in] bitmap    Bitmap buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
+     * Remove plugin from slot.
+     *
+     * @param[in] plugin    Plugin which to uninstall
+     *
+     * @return If successful uninstalled, it will return true otherwise false.
      */
-    void setBitmap(uint8_t slotId, const uint16_t* bitmap, uint16_t width, uint16_t height);
+    bool uninstallPlugin(Plugin* plugin);
 
     /**
-     * Set lamp state in the lamp widget of a slot.
-     * 
-     * @param[in] slotId    Slot id
-     * @param[in] lampId    Lamp id
-     * @param[in] onState   New lamp state on (true) or off (false)
+     * Get plugin from slot.
+     *
+     * @param[in] slotId    Slot id, where to get plugin.
+     *
+     * @return Plugin which is installed in given slot.
      */
-    void setLamp(uint8_t slotId, uint8_t lampId, bool onState);
+    Plugin* getPluginInSlot(uint8_t slotId);
 
     /**
-     * Set all lamp states in the lamp widget of a slot.
-     * 
-     * @param[in] slotId    Slot id
-     * @param[in] onState   New lamp state on (true) or off (false)
+     * Activate a specific plugin immediately.
+     *
+     * @param[in] plugin    Plugin which to activate
      */
-    void setAllLamps(uint8_t slotId, bool onState);
+    void activatePlugin(Plugin* plugin);
 
     /**
-     * Start/Stop rotating the slots.
-     * It will always start with slot 0. It is no resume possible.
-     * Stopping means showing only slot 0.
-     * 
-     * @param[in] start Start (true) or stop (false) it
+     * Lock a slot.
+     *
+     * @param[in] slotId    Id of slot, which shall be locked.
      */
-    void startRotating(bool start);
+    void lockSlot(uint8_t slotId);
 
     /**
-     * Enable/Disable showing slots.
-     * 
-     * @param[in] enableIt  Enable (true) or disable (false) it.
+     * Unlock a slot.
+     *
+     * @param[in] slotId    Id of slot, which shall be unlocked.
      */
-    void enableSlots(bool enableIt);
+    void unlockSlot(uint8_t slotId);
 
     /**
-     * Show a system message on the display.
-     * It will automatically disable the slots.
+     * Is slot locked?
+     *
+     * @return If slot is locked, it will return true otherwise false.
      */
-    void showSysMsg(const String& msg);
+    bool isSlotLocked(uint8_t slotId);
 
     /**
      * Get access to copy of framebuffer.
-     * 
+     *
      * @param[out] fb       Pointer to framebuffer copy
      * @param[out] length   Number of elements in the framebuffer copy
+     * @param[out] slotId   Id of slot, from which the copy was taken.
      */
-    void getFBCopy(uint32_t* fb, size_t length);
+    void getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId);
 
-    /** Update task stack size in bytes */
-    static const uint32_t   UPDATE_TASK_STACKE_SIZE = 4096u;
+    /** Invalid slot id. */
+    static const uint8_t    SLOT_ID_INVALID         = UINT8_MAX;
 
-    /** MCU core where the update task shall run */
-    static const BaseType_t UPDATE_TASK_RUN_CORE    = 1;
+    /** Task stack size in bytes */
+    static const uint32_t   TASK_STACKE_SIZE        = 4096U;
+
+    /** Task period in ms */
+    static const uint32_t   TASK_PERIOD             = 20U;
+
+    /** MCU core where the task shall run */
+    static const BaseType_t TASK_RUN_CORE           = 1;
 
     /** Maximum number of supported slots. */
-    static const uint8_t    MAX_SLOTS               = 4u;
+    static const uint8_t    MAX_SLOTS               = 5U;
 
-    /** Default period for changing slots in ms. */
-    static const uint32_t   DEFAULT_PERIOD          = 10000u;
+    /** If no ambient light sensor is available, the default brightness shall be 40%. */
+    static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40U) / 100U;
 
-    /** Text widget name, used for identification. */
-    static const char*      TEXT_WIDGET_NAME;
-
-    /** Bitmap widget name, used for identification. */
-    static const char*      BMP_WIDGET_NAME;
-
-    /** Lamp widget name, used for identification. */
-    static const char*      LAMP_WIDGET_NAME;
-
-    /** Bitmap width in pixel, used for bitmap buffers. */
-    static const uint8_t    BMP_WIDTH               = 8u;
-
-    /** Bitmap height in pixel, used for bitmap buffers. */
-    static const uint8_t    BMP_HEIGHT              = 8u;
-
-    /** If no ambient light sensor is available, the default brightness shall be 75%. */
-    static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 75u) / 100u;
-
-    /** Minimum brightness of 25% in case of a dark room. Only used during automatic brightness adjustment. */
-    static const uint8_t    BRIGHTNESS_MIN          = (UINT8_MAX * 25u) / 100u;
+    /** Minimum brightness of 10% in case of a dark room. Only used during automatic brightness adjustment. */
+    static const uint8_t    BRIGHTNESS_MIN          = (UINT8_MAX * 10U) / 100U;
 
     /** Default period for automatic brightness adjustment in ms. */
-    static const uint32_t   ALS_AUTO_ADJUST_PERIOD  = 250u;
+    static const uint32_t   ALS_AUTO_ADJUST_PERIOD  = 250U;
 
 private:
+
+    /**
+     * A slot.
+     */
+    struct Slot
+    {
+        /**
+         * Constructs a empty slot.
+         */
+        Slot() :
+            plugin(nullptr),
+            isLocked(false)
+        {
+        }
+
+        /**
+         * Destroys a slot.
+         */
+        ~Slot()
+        {
+        }
+
+        Plugin* plugin;     /**< Plugin */
+        bool    isLocked;   /**< If a slot is locked, it can nothing be installed or uninstalled there. */
+    };
 
     /** Display manager instance */
     static DisplayMgr   m_instance;
@@ -243,29 +226,29 @@ private:
     /** Mutex to lock/unlock display update. */
     SemaphoreHandle_t   m_xMutex;
 
-    /** Update task handle */
-    TaskHandle_t        m_updateTaskHandle;
+    /** Display update task handle */
+    TaskHandle_t        m_taskHandle;
 
-    /** List of all slots. A slot is based on a canvas over the full LED matrix. */
-    Canvas*             m_slots[MAX_SLOTS];
+    /** Flag to signal the task to exit. */
+    bool                m_taskExit;
 
-    /** Id of the current active slot */
-    uint8_t             m_activeSlotId;
+    /** Binary semaphore used to signal the task exit. */
+    SemaphoreHandle_t   m_xSemaphore;
 
-    /** Timer, used for changing the slot. */
-    SimpleTimer         m_slotChangeTimer;
+    /** List of all slots with their connected plugins. */
+    Slot                m_slots[MAX_SLOTS];
 
-    /** Rotate (true) slots or not (false) */
-    bool                m_rotate;
+    /** Current selected slot. */
+    uint8_t             m_selectedSlot;
 
-    /** Enable/Disable showing slots */
-    bool                m_slotsEnabled;
+    /** Current selected plugin, which is active shown. */
+    Plugin*             m_selectedPlugin;
 
-    /** System message widget */
-    TextWidget          m_sysMsgWidget;
+    /** Plugin which is requested to be activated immediately. */
+    Plugin*             m_requestedPlugin;
 
-    /** Static buffer for bitmaps */
-    uint16_t            m_bitmapBuffer[MAX_SLOTS][sizeof(uint16_t) * BMP_WIDTH * BMP_HEIGHT];
+    /** Timer, used for changing the slot after a specific duration. */
+    SimpleTimer         m_slotTimer;
 
     /** Timer, used for automatic brightness adjustment. */
     SimpleTimer         m_autoBrightnessTimer;
@@ -285,68 +268,39 @@ private:
     DisplayMgr& operator=(const DisplayMgr& mgr);
 
     /**
+     * Schedule next slot with a installed and enabled plugin.
+     *
+     * @param[in] slotId    Id of current slot
+     *
+     * @return Id of next slot
+     */
+    uint8_t nextSlot(uint8_t slotId);
+
+    /**
      * Process the slots. This shall be called periodically in
      * a higher period than the DEFAULT_PERIOD.
-     * 
+     *
      * It will handle which slot to show on the display.
      */
     void process(void);
 
     /**
      * Display update task is responsible to refresh the display content.
-     * 
+     *
      * @param[in]   parameters  Task pParameters
      */
     static void updateTask(void* parameters);
 
     /**
-     * Destroy widget and all children.
-     * 
-     * @param[in] widget Widget, which to destroy.
+     * Lock display and prevent the display update, which will be done in a
+     * separate task.
      */
-    void destroyWidget(Widget*& widget);
+    void lock(void);
 
     /**
-     * Clear all slots.
+     * Unlock display.
      */
-    void clearSlots(void);
-
-    /**
-     * Create layout 0:
-     * - One text box over the whole display.
-     * - The text widget name is "text".
-     * 
-     * @param[in] canvas    Pointer to layout, based on a canvas.
-     * 
-     * @return Successful (true) or not (false).
-     */
-    bool createLayout0(Canvas*& canvas) const;
-
-    /**
-     * Create layout 1:
-     * - A 8x8 bitmap box left. The bitmap widget name is "bitmap".
-     * - Right side as one text box. The text widget name is "text".
-     * 
-     * @param[in] canvas        Pointer to layout, based on a canvas.
-     * @param[in] bitmapBuffer  Static buffer for bitmap. Size defined via BMP_WIDTH and BMP_HEIGHT.
-     * 
-     * @return Successful (true) or not (false).
-     */
-    bool createLayout1(Canvas*& canvas, uint16_t* bitmapBuffer) const;
-
-    /**
-     * Create layout 2:
-     * - A 8x8 bitmap box left. The bitmap widget name is "bitmap".
-     * - Right side as one text box. The text widget name is "text".
-     * - Lower right side with signal lamps. The lamp widgets name is "lampN".
-     * 
-     * @param[in] canvas    Pointer to layout, based on a canvas.
-     * @param[in] bitmapBuffer  Static buffer for bitmap. Size defined via BMP_WIDTH and BMP_HEIGHT.
-     * 
-     * @return Successful (true) or not (false).
-     */
-    bool createLayout2(Canvas*& canvas, uint16_t* bitmapBuffer) const;
-
+    void unlock(void);
 };
 
 /******************************************************************************

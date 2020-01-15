@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,6 +36,7 @@
 #include "DisplayMgr.h"
 
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -66,6 +67,8 @@ IdleState   IdleState::m_instance;
 
 void IdleState::entry(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     LOG_INFO("Going in idle state.");
 
     return;
@@ -73,12 +76,16 @@ void IdleState::entry(StateMachine& sm)
 
 void IdleState::process(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Nothing to do. */
     return;
 }
 
 void IdleState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Nothing to do. */
     return;
 }

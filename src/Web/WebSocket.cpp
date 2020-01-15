@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,9 +33,15 @@
  * Includes
  *****************************************************************************/
 #include "WebSocket.h"
+
 #include "WsCmdGetDisp.h"
+#include "WsCmdSlots.h"
+#include "WsCmdPlugins.h"
+#include "WsCmdInstall.h"
+#include "WsCmdUninstall.h"
 
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -44,12 +50,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
-
-/** Use it to mark not used function parameters. */
-#define NOT_USED(__var)     (void)(__var)
 
 /******************************************************************************
  * Types and classes
@@ -67,12 +67,28 @@
 WebSocketSrv    WebSocketSrv::m_instance;
 
 /** Websocket get display command */
-static WsCmdGetDisp gWsCmdGetDisp;
+static WsCmdGetDisp     gWsCmdGetDisp;
+
+/** Websocket slots command */
+static WsCmdSlots       gWsCmdSlots;
+
+/** Websocket plugins command */
+static WsCmdPlugins     gWsCmdPlugins;
+
+/** Websocket install command */
+static WsCmdInstall     gWsCmdInstall;
+
+/** Websocket uninstall command */
+static WsCmdUninstall   gWsCmdUninstall;
 
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
-    &gWsCmdGetDisp
+    &gWsCmdGetDisp,
+    &gWsCmdSlots,
+    &gWsCmdPlugins,
+    &gWsCmdInstall,
+    &gWsCmdUninstall
 };
 
 /******************************************************************************
@@ -103,8 +119,8 @@ void WebSocketSrv::init(AsyncWebServer& srv)
 
 void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len)
 {
-    if ((NULL == server) ||
-        (NULL == client))
+    if ((nullptr == server) ||
+        (nullptr == client))
     {
         return;
     }
@@ -115,22 +131,22 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     case WS_EVT_CONNECT:
         m_instance.onConnect(server, client, reinterpret_cast<AsyncWebServerRequest*>(arg));
         break;
-        
+
     /* Client disconnected */
     case WS_EVT_DISCONNECT:
         m_instance.onDisconnect(server, client);
         break;
-        
+
     /* Pong received */
     case WS_EVT_PONG:
         m_instance.onPong(server, client, data, len);
         break;
-        
+
     /* Remote error */
     case WS_EVT_ERROR:
         m_instance.onError(server, client, *reinterpret_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
         break;
-        
+
     /* Data */
     case WS_EVT_DATA:
         m_instance.onData(server, client, reinterpret_cast<AwsFrameInfo*>(arg), data, len);
@@ -145,7 +161,7 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
 
 void WebSocketSrv::onConnect(AsyncWebSocket* server, AsyncWebSocketClient* client, AsyncWebServerRequest* request)
 {
-    NOT_USED(request);
+    UTIL_NOT_USED(request);
 
     LOG_INFO("ws[%s][%u] Client connected.", server->url(), client->id());
     return;
@@ -159,7 +175,7 @@ void WebSocketSrv::onDisconnect(AsyncWebSocket* server, AsyncWebSocketClient* cl
 
 void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, uint8_t* data, size_t len)
 {
-    if ((NULL == data) ||
+    if ((nullptr == data) ||
         (0 == len))
     {
         LOG_INFO("ws[%s][%u] Pong: -", server->url(), client->id());
@@ -174,7 +190,7 @@ void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, 
 
 void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client, uint16_t reasonCode, const char* reasonStr, size_t reasonStrLen)
 {
-    if ((NULL == reasonStr) ||
+    if ((nullptr == reasonStr) ||
         (0 == reasonStrLen))
     {
         LOG_INFO("ws[%s][%u] Error %u: -", server->url(), client->id(), reasonCode);
@@ -190,25 +206,25 @@ void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client,
 void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsFrameInfo* info, const uint8_t* data, size_t len)
 {
     /* Frame info missing? */
-    if (NULL == info)
+    if (nullptr == info)
     {
         LOG_ERROR("ws[%s][%u] Frame info is missing.", server->url(), client->id());
-        server->close(client->id(), 0u, "Frame info is missing.");
+        server->close(client->id(), 0U, "Frame info is missing.");
     }
     /* No text frame? */
     else if (WS_TEXT != info->opcode)
     {
         LOG_ERROR("ws[%s][%u] Not supported message type received: %u", server->url(), client->id(), info->opcode);
-        server->close(client->id(), 0u, "Not supported message type.");
+        server->close(client->id(), 0U, "Not supported message type.");
     }
     /* Is the whole message in a single frame and we got all of it's data? */
-    else if ((0 < info->final) &&
-                (0 == info->index) &&
+    else if ((0U < info->final) &&
+                (0U == info->index) &&
                 (len == info->len ))
     {
         /* Empty text message? */
-        if ((NULL == data) ||
-            (0 == len))
+        if ((nullptr == data) ||
+            (0U == len))
         {
             LOG_WARNING("ws[%s][%u] Message: -", server->url(), client->id());
         }
@@ -222,7 +238,7 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
     else
     {
         LOG_ERROR("ws[%s][%u] Fragmented messages not supported.", server->url(), client->id());
-        server->close(client->id(), 0u, "Not supported message type.");
+        server->close(client->id(), 0U, "Not supported message type.");
     }
 
     return;
@@ -230,16 +246,16 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
 
 void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen)
 {
-    size_t      msgIndex    = 0u;
-    uint8_t     index       = 0u;
+    size_t      msgIndex    = 0U;
+    uint8_t     index       = 0U;
     String      cmd;
     String      par;
-    WsCmd*      wsCmd       = NULL;
+    WsCmd*      wsCmd       = nullptr;
     const char  DELIMITER   = ';';
 
-    if ((NULL == server) ||
-        (NULL == client) ||
-        (NULL == msg) ||
+    if ((nullptr == server) ||
+        (nullptr == client) ||
+        (nullptr == msg) ||
         (0 == msgLen))
     {
         return;
@@ -262,8 +278,8 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
     if (0 < cmd.length())
     {
         /* Find command object */
-        index = 0u;
-        while((NULL == wsCmd) && (index < ARRAY_NUM(gWsCommands)))
+        index = 0U;
+        while((nullptr == wsCmd) && (index < UTIL_ARRAY_NUM(gWsCommands)))
         {
             if (cmd == gWsCommands[index]->getCmd())
             {
@@ -274,7 +290,7 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
         }
 
         /* Command not found? */
-        if (NULL == wsCmd)
+        if (nullptr == wsCmd)
         {
             client->text("NACK;\"Command unknown.\"");
         }

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@
  *****************************************************************************/
 #include "ConnectingState.h"
 #include "Settings.h"
-#include "DisplayMgr.h"
+#include "SysMsg.h"
 
 #include "IdleState.h"
 #include "ConnectedState.h"
@@ -88,7 +88,7 @@ void ConnectingState::entry(StateMachine& sm)
         String infoStr = "Keep button pressed and reboot. Set SSID/password via webserer.";
 
         LOG_INFO(infoStr);
-        DisplayMgr::getInstance().showSysMsg(infoStr);
+        SysMsg::getInstance().show(infoStr);
 
         sm.setState(IdleState::getInstance());
     }
@@ -108,7 +108,7 @@ void ConnectingState::entry(StateMachine& sm)
 
         /* Fatal error */
         LOG_FATAL(errorStr);
-        DisplayMgr::getInstance().showSysMsg(errorStr);
+        SysMsg::getInstance().show(errorStr);
 
         sm.setState(ErrorState::getInstance());
     }
@@ -127,7 +127,9 @@ void ConnectingState::process(StateMachine& sm)
         infoStr += m_wifiSSID;
 
         LOG_INFO(infoStr);
-        DisplayMgr::getInstance().showSysMsg(infoStr);
+        SysMsg::getInstance().show(infoStr);
+        delay(infoStr.length() * 600U);
+        SysMsg::getInstance().show("", 500U);
 
         /* Remote wifi network informations are available, try to establish a connection. */
         status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());
@@ -176,6 +178,8 @@ void ConnectingState::process(StateMachine& sm)
 
 void ConnectingState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+    
     /* Nothing to do. */
     return;
 }

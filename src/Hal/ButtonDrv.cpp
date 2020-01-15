@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,7 +74,7 @@ ButtonDrv::Ret ButtonDrv::init()
     /* Create semaphore to protect button state member. */
     m_semaphore = xSemaphoreCreateBinary();
 
-    if (NULL == m_semaphore)
+    if (nullptr == m_semaphore)
     {
         ret = RET_ERROR;
     }
@@ -100,7 +100,7 @@ ButtonDrv::Ret ButtonDrv::init()
             ret = RET_ERROR;
 
             vSemaphoreDelete(m_semaphore);
-            m_semaphore = NULL;
+            m_semaphore = nullptr;
         }
     }
 
@@ -144,7 +144,7 @@ ButtonDrv::State ButtonDrv::getState()
 void ButtonDrv::buttonTask(void *parameters)
 {
     ButtonDrv*  buttonDrv   = reinterpret_cast<ButtonDrv*>(parameters);
-    uint32_t    cycleCnt    = 0u;
+    uint32_t    cycleCnt    = 0U;
     uint8_t     buttonValue = Board::userButtonIn.read();
 
     /* The ISR shall notify about on change to determine whether the
@@ -164,9 +164,9 @@ void ButtonDrv::buttonTask(void *parameters)
     for(;;)
     {
         /* Is button pin value unstable? */
-        if (0u < ulTaskNotifyTake(pdTRUE, 0u))
+        if (0U < ulTaskNotifyTake(pdTRUE, 0U))
         {
-            cycleCnt = 0u;
+            cycleCnt = 0U;
         }
         /* Button didn't trigger during a complete debounce time period? */
         else if ((BUTTON_DEBOUNCE_TIME / BUTTON_TASK_PERIOD) <= cycleCnt)
@@ -223,7 +223,7 @@ void ButtonDrv::buttonTask(void *parameters)
                 }
             }
 
-            cycleCnt = 0u;
+            cycleCnt = 0U;
         }
         else
         {
@@ -254,9 +254,9 @@ static void IRAM_ATTR isrButton(void* arg)
 {
     TaskHandle_t* taskHandle = reinterpret_cast<TaskHandle_t*>(arg);
 
-    if (NULL != taskHandle)
+    if (nullptr != taskHandle)
     {
-        vTaskNotifyGiveFromISR(*taskHandle, NULL);
+        vTaskNotifyGiveFromISR(*taskHandle, nullptr);
     }
 
     return;

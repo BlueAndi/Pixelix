@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@
 #include "ErrorState.h"
 
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -65,6 +66,8 @@ ErrorState  ErrorState::m_instance;
 
 void ErrorState::entry(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     LOG_INFO("Going in error state.");
 
     return;
@@ -72,12 +75,16 @@ void ErrorState::entry(StateMachine& sm)
 
 void ErrorState::process(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Wait for manual reset. */
     return;
 }
 
 void ErrorState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Nothing to do. */
     return;
 }

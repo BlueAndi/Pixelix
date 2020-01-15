@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -101,7 +101,7 @@ public:
     };
 
     /** The maximum size of the logMessage buffer to get the variable arguments. */
-    static const uint16_t MESSAGE_BUFFER_SIZE       = 80u;
+    static const uint16_t MESSAGE_BUFFER_SIZE       = 80U;
 
     /** The maximum size of the whole log message. */
     static const uint16_t LOG_MESSAGE_BUFFER_SIZE   = MESSAGE_BUFFER_SIZE  + 10u /* timestamp */ + 8u /* log level */ + 20u /* filename */ + 5u /* line */ + 6u /* others */;
@@ -118,7 +118,7 @@ public:
 
     /**
      * Set the output of the logging.
-     * Use NULL to remove any kind of log output.
+     * Use nullptr to remove any kind of log output.
      * 
      * @param[in] output The log sink where the output has to be sent to.
      */
@@ -228,7 +228,7 @@ private:
      */
     Logging() :
         m_currentLogLevel(LOGLEVEL_ERROR),
-        m_logOutput(NULL)
+        m_logOutput(nullptr)
     {
 
     }

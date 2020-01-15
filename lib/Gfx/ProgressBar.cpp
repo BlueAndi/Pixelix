@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,21 +55,53 @@
  *****************************************************************************/
 
 /* Initialize text widget type. */
-const char*     ProgressBar::WIDGET_TYPE = "progressBar";
+const char* ProgressBar::WIDGET_TYPE = "progressBar";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void ProgressBar::update(Adafruit_GFX& gfx)
+void ProgressBar::update(IGfx& gfx)
 {
-    int16_t pixelCount  = gfx.width() * gfx.height() * m_progress / 100u;
+    switch(m_algorithm)
+    {
+    case ALGORITHM_PIXEL_WISE:
+        showProgressPixel(gfx);
+        break;
+
+    case ALGORITHM_PROGRESS_BAR:
+        showProgressBar(gfx);
+        break;
+
+    case ALGORITHM_MAX:
+        /* Should never happen. */
+        break;
+
+    default:
+        /* Should never happen. */
+        break;
+    }
+
+    return;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void ProgressBar::showProgressPixel(IGfx& gfx)
+{
+    int16_t pixelCount  = gfx.width() * gfx.height() * m_progress / 100U;
     int16_t x           = 0;
     int16_t y           = 0;
 
     while((0 < pixelCount) && (gfx.height() > y))
     {
-        gfx.drawPixel(x, y, m_color.get565());
+        gfx.drawPixel(x, y, m_color.to565());
         
         --pixelCount;
         
@@ -84,13 +116,23 @@ void ProgressBar::update(Adafruit_GFX& gfx)
     return;
 }
 
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
+void ProgressBar::showProgressBar(IGfx& gfx)
+{
+    if (gfx.width() > gfx.height())
+    {
+        int16_t width = (gfx.width() * m_progress) / 100;
 
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
+        gfx.fillRect(0, 0, width, gfx.height(), m_color.to565());
+    }
+    else
+    {
+        int16_t height = (gfx.width() * m_progress) / 100;
+
+        gfx.fillRect(0, 0, gfx.width(), height, m_color.to565());
+    }
+
+    return;
+}
 
 /******************************************************************************
  * External Functions

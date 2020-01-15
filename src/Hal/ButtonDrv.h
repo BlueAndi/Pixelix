@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -111,24 +111,24 @@ private:
     SemaphoreHandle_t   m_semaphore;        /**< Semaphore lock */
 
     /** Button task stack size in bytes */
-    static const uint32_t   BUTTON_TASK_STACKE_SIZE = 2048u;
+    static const uint32_t   BUTTON_TASK_STACKE_SIZE = 2048U;
 
     /** MCU core where the button task shall run */
     static const BaseType_t BUTTON_TASK_RUN_CORE    = 1;
 
     /** Task period in ms */
-    static const uint32_t   BUTTON_TASK_PERIOD      = 10u;
+    static const uint32_t   BUTTON_TASK_PERIOD      = 10U;
 
     /** Button debouncing time in ms */
-    static const uint32_t   BUTTON_DEBOUNCE_TIME    = 100u;
+    static const uint32_t   BUTTON_DEBOUNCE_TIME    = 100U;
 
     /**
      * Constructs the button driver instance.
      */
     ButtonDrv() :
-        m_buttonTaskHandle(NULL),
+        m_buttonTaskHandle(nullptr),
         m_state(STATE_UNKNOWN),
-        m_semaphore(NULL)
+        m_semaphore(nullptr)
     {
     }
 

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,7 @@ public:
      * 
      * @return State instance
      */
-    static ConnectingState& getInstance(void)
+    static ConnectingState& getInstance()
     {
         return m_instance;
     }
@@ -95,13 +95,13 @@ public:
     void exit(StateMachine& sm);
 
     /** Retry delay after a failed connection attempt in ms. */
-    static const uint32_t   RETRY_DELAY             = 30000u;
+    static const uint32_t   RETRY_DELAY             = 30000U;
 
     /** Standard wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_STD   = 2000u;
+    static const uint32_t   SYS_MSG_WAIT_TIME_STD   = 2000U;
 
     /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250u;
+    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
 
 private:
 

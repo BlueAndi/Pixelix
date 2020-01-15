@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,12 +40,15 @@
 #include "UpdateMgr.h"
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
+#include "RestApi.h"
 
 #include <WiFi.h>
 #include <Esp.h>
 #include <SPIFFS.h>
 #include <Update.h>
 #include <Logging.h>
+#include <Util.h>
+#include <SPIFFSEditor.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -54,9 +57,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
 
 /******************************************************************************
  * Types and classes
@@ -72,7 +72,6 @@ static String getColoredText(const String& text);
 
 static String commonPageProcessor(const String& var);
 
-static void errorPage(AsyncWebServerRequest* request);
 static String errorPageProcessor(const String& var);
 
 static void indexPage(AsyncWebServerRequest* request);
@@ -81,15 +80,9 @@ static String indexPageProcessor(const String& var);
 static void networkPage(AsyncWebServerRequest* request);
 static String networkPageProcessor(const String& var);
 
-static void configPage(AsyncWebServerRequest* request);
-static String configPageProcessor(const String& var);
-
 static void addSettingsData(String& dst, const char* title, const char* name, const char* value, uint8_t size, uint8_t minLen, uint8_t maxLen);
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
-
-static void devPage(AsyncWebServerRequest* request);
-static String devPageProcessor(const String& var);
 
 static void updatePage(AsyncWebServerRequest* request);
 static String updatePageProcessor(const String& var);
@@ -120,28 +113,34 @@ static const char*      FORM_INPUT_NAME_WIFI_AP_PASSPHRASE  = "wifi_ap_passphras
 static const char*      FORM_INPUT_NAME_HOSTNAME            = "hostname";
 
 /** Min. wifi SSID length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const uint8_t    MIN_SSID_LENGTH             = 0u;
+static const uint8_t    MIN_SSID_LENGTH             = 0U;
 
 /** Max. wifi SSID length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const uint8_t    MAX_SSID_LENGTH             = 32u;
+static const uint8_t    MAX_SSID_LENGTH             = 32U;
 
 /** Min. wifi passphrase length */
-static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8u;
+static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8U;
 
 /** Max. wifi passphrase length */
-static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64u;
+static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64U;
 
 /** Min. hostname length (RFC1034 1 - 63) */
-static const uint8_t    MIN_HOSTNAME_LENGTH         = 1u;
+static const uint8_t    MIN_HOSTNAME_LENGTH         = 1U;
 
 /** Max. hostname length (RFC1034 1 - 63) */
-static const uint8_t    MAX_HOSTNAME_LENGTH         = 63u;
+static const uint8_t    MAX_HOSTNAME_LENGTH         = 63U;
 
 /** Firmware binary filename, used for update. */
 static const char*      FIRMWARE_FILENAME           = "firmware.bin";
 
 /** Filesystem binary filename, used for update. */
 static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
+
+/** Flag used to signal any kind of file upload error. */
+static bool             gIsUploadError               = false;
+
+/** The SPIFFS editor instance. */
+static SPIFFSEditor     gSPIFFSEditor(SPIFFS);
 
 /******************************************************************************
  * Public Methods
@@ -161,19 +160,51 @@ static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
 
 void Pages::init(AsyncWebServer& srv)
 {
-    srv.onNotFound(errorPage);
-    srv.on("/", HTTP_GET, indexPage);
-    srv.on("/dev", HTTP_GET, devPage);
-    srv.on("/display", HTTP_GET, displayPage);
-    srv.on("/network", HTTP_GET, networkPage);
-    srv.on("/config", HTTP_GET | HTTP_POST, configPage);
-    srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
-    srv.on("/update", HTTP_GET, updatePage);
-    srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
+    AsyncStaticWebHandler*  handler = nullptr;
 
-    /* Serve files from filesystem */
-    srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
-    srv.serveStatic("/data/util.js", SPIFFS, "/util.js");
+    (void)srv.on("/", HTTP_GET, indexPage);
+    (void)srv.on("/display", HTTP_GET, displayPage);
+    (void)srv.on("/network", HTTP_GET, networkPage);
+    (void)srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
+    (void)srv.on("/update", HTTP_GET, updatePage);
+    (void)srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
+
+    /* Serve files with static content with enabled cache control.
+     * The client may cache files from filesytem for 1 hour.
+     */
+    handler = &srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
+    handler->setCacheControl("max-age=3600");
+
+    handler = &srv.serveStatic("/data/ws.js", SPIFFS, "/ws.js");
+    handler->setCacheControl("max-age=3600");
+
+    /* Add SPIFFS file editor to "/edit" */
+    (void)srv.addHandler(&gSPIFFSEditor);
+
+    return;
+}
+
+/**
+ * Error web page used in case a requested path was not found.
+ *
+ * @param[in] request   HTTP request
+ */
+void Pages::error(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/error.html", "text/html", false, errorPageProcessor);
 
     return;
 }
@@ -185,9 +216,9 @@ void Pages::init(AsyncWebServer& srv)
 /**
  * Check the given hostname and returns whether it is valid or not.
  * Validation is according to RFC952.
- * 
+ *
  * @param[in] hostname  Hostname which to validate
- * 
+ *
  * @return Is valid (true) or not (false).
  */
 static bool isValidHostname(const String& hostname)
@@ -249,9 +280,9 @@ static bool isValidHostname(const String& hostname)
 /**
  * Check the given wifi SSID and returns whether it is valid or not.
  * Validation is according to Section 7.3.2.1 of the 802.11-2007 specification.
- * 
+ *
  * @param[in] hostname  SSID which to validate
- * 
+ *
  * @return Is valid (true) or not (false).
  */
 static bool isValidSSID(const String& ssid)
@@ -269,9 +300,9 @@ static bool isValidSSID(const String& ssid)
 
 /**
  * Get text in color format (HTML).
- * 
+ *
  * @param[in] text  Text
- * 
+ *
  * @return Text in color format (HTML).
  */
 static String getColoredText(const String& text)
@@ -298,7 +329,7 @@ static String getColoredText(const String& text)
         result += "</span>";
 
         ++colorIndex;
-        if (ARRAY_NUM(colors) <= colorIndex)
+        if (UTIL_ARRAY_NUM(colors) <= colorIndex)
         {
             colorIndex = 0;
         }
@@ -310,7 +341,7 @@ static String getColoredText(const String& text)
 /**
  * Processor for page template, containing the common part, which is available
  * in every page. It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String commonPageProcessor(const String& var)
@@ -338,34 +369,9 @@ static String commonPageProcessor(const String& var)
 }
 
 /**
- * Error web page used in case a requested path was not found.
- * 
- * @param[in] request   HTTP request
- */
-static void errorPage(AsyncWebServerRequest* request)
-{
-    if (NULL == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    request->send(SPIFFS, "/error.html", "text/html", false, errorPageProcessor);
-
-    return;
-}
-
-/**
  * Processor for error page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String errorPageProcessor(const String& var)
@@ -375,12 +381,12 @@ static String errorPageProcessor(const String& var)
 
 /**
  * Index page on root path ("/").
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void indexPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -401,7 +407,7 @@ static void indexPage(AsyncWebServerRequest* request)
 /**
  * Processor for index page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String indexPageProcessor(const String& var)
@@ -424,9 +430,28 @@ static String indexPageProcessor(const String& var)
     {
         result = ESP.getFreeHeap();
     }
+    else if (var == "FS_SIZE")
+    {
+        result = SPIFFS.totalBytes();
+    }
+    else if (var == "USED_FS_SIZE")
+    {
+        result = SPIFFS.usedBytes();
+    }
     else if (var == "ESP_CHIP_REV")
     {
         result = ESP.getChipRevision();
+    }
+    else if (var == "ESP_CHIP_ID")
+    {
+        uint64_t    chipId      = ESP.getEfuseMac();
+        uint32_t    highPart    = (chipId >> 32U) & 0x0000ffffU;
+        uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
+        char        chipIdStr[13];
+
+        snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
+
+        result = chipIdStr;
     }
     else if (var == "ESP_CPU_FREQ")
     {
@@ -442,12 +467,12 @@ static String indexPageProcessor(const String& var)
 
 /**
  * Network page, shows all information regarding the network.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void networkPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -468,7 +493,7 @@ static void networkPage(AsyncWebServerRequest* request)
 /**
  * Processor for network page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String networkPageProcessor(const String& var)
@@ -489,7 +514,7 @@ static String networkPageProcessor(const String& var)
     }
     else if (var == "HOSTNAME")
     {
-        const char* hostname = NULL;
+        const char* hostname = nullptr;
 
         if (WIFI_MODE_AP == WiFi.getMode())
         {
@@ -500,7 +525,7 @@ static String networkPageProcessor(const String& var)
             hostname = WiFi.getHostname();
         }
 
-        if (NULL != hostname)
+        if (nullptr != hostname)
         {
             result = hostname;
         }
@@ -516,97 +541,9 @@ static String networkPageProcessor(const String& var)
             result = WiFi.localIP().toString();
         }
     }
-    else
+    else if (var == "MAC_ADDR")
     {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
-}
-
-/**
- * Configuration page, where to configure the display.
- * 
- * @param[in] request   HTTP request
- */
-static void configPage(AsyncWebServerRequest* request)
-{
-    if (NULL == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    /* Store configuration? */
-    if ((HTTP_POST == request->method()) &&
-        (0 < request->args()))
-    {
-        String jsonRsp;
-
-        if (false == request->hasArg("matrixType"))
-        {
-            jsonRsp = "{ \"status\": 1, \"error\": \"Matrix type is missing.\" }";
-        }
-        else if (false == Settings::getInstance().open(false))
-        {
-            jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
-        }
-        else
-        {
-            int32_t i32MatrixType = request->arg("matrixType").toInt();
-
-            if ((0 > i32MatrixType) ||
-                (UINT8_MAX < i32MatrixType))
-            {
-                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid matrix type.\" }";
-            }
-            else
-            {
-                uint8_t matrixType = static_cast<uint8_t>(i32MatrixType);
-
-                Settings::getInstance().setMatrixType(matrixType);
-                LedMatrix::getInstance().setType(matrixType);
-
-                jsonRsp = "{ \"status\": 0, \"info\": \"Successful stored and applied.\" }";
-            }
-
-            Settings::getInstance().close();
-        }
-
-        request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
-    }
-    else if (HTTP_GET == request->method())
-    {
-        request->send(SPIFFS, "/configuration.html", "text/html", false, configPageProcessor);
-    }
-    else
-    {
-        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
-    }
-
-    return;
-}
-
-/**
- * Processor for configuration page template.
- * It is responsible for the data binding.
- * 
- * @param[in] var   Name of variable in the template
- */
-static String configPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "MATRIX_TYPE")
-    {
-        result += LedMatrix::getInstance().getType();
+        result = WiFi.macAddress();
     }
     else
     {
@@ -618,12 +555,12 @@ static String configPageProcessor(const String& var)
 
 /**
  * Settings page to show and store settings.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void settingsPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -801,14 +738,14 @@ static void settingsPage(AsyncWebServerRequest* request)
     {
         request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
     }
-    
+
     return;
 }
 
 /**
  * Add settings data to the destination string in JSON format.
  * The structure depends on the javascript code in settings.html.
- * 
+ *
  * @param[in] dst       Destination string
  * @param[in] title     Settings title
  * @param[in] name      Input field name
@@ -846,7 +783,7 @@ static void addSettingsData(String& dst, const char* title, const char* name, co
 /**
  * Processor for settings page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String settingsPageProcessor(const String& var)
@@ -888,79 +825,13 @@ static String settingsPageProcessor(const String& var)
 }
 
 /**
- * Page with stuff for development and debug purposes.
- * 
- * @param[in] request   HTTP request
- */
-static void devPage(AsyncWebServerRequest* request)
-{
-    if (NULL == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    request->send(SPIFFS, "/dev.html", "text/html", false, devPageProcessor);
-
-    return;
-}
-
-/**
- * Processor for dev page template.
- * It is responsible for the data binding.
- * 
- * @param[in] var   Name of variable in the template
- */
-static String devPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "WS_PROTOCOL")
-    {
-        result = WebConfig::WEBSOCKET_PROTOCOL;
-    }
-    else if (var == "WS_HOSTNAME")
-    {
-        if (WIFI_MODE_AP == WiFi.getMode())
-        {
-            result = WiFi.softAPIP().toString();
-        }
-        else
-        {
-            result = WiFi.localIP().toString();
-        }
-    }
-    else if (var == "WS_PORT")
-    {
-        result = WebConfig::WEBSOCKET_PORT;
-    }
-    else if (var == "WS_ENDPOINT")
-    {
-        result = WebConfig::WEBSOCKET_PATH;
-    }
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
-}
-
-/**
  * Page for software update.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void updatePage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -981,7 +852,7 @@ static void updatePage(AsyncWebServerRequest* request)
 /**
  * Processor for update page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String updatePageProcessor(const String& var)
@@ -1006,12 +877,12 @@ static String updatePageProcessor(const String& var)
 
 /**
  * Page for upload result.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void uploadPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -1024,14 +895,21 @@ static void uploadPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(HttpStatus::STATUS_CODE_OK, "text/plain", "Ok");
+    if (true == gIsUploadError)
+    {
+        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "text/plain", "Error");
+    }
+    else
+    {
+        request->send(HttpStatus::STATUS_CODE_OK, "text/plain", "Ok");
+    }
 
     return;
 }
 
 /**
  * File upload handler.
- * 
+ *
  * @param[in] request   HTTP request.
  * @param[in] filename  Name of the uploaded file.
  * @param[in] index     Current file offset.
@@ -1041,70 +919,122 @@ static void uploadPage(AsyncWebServerRequest* request)
  */
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-    bool            isError     = false;
-    static uint32_t progress    = 0u;
-
     /* Begin of upload? */
     if (0 == index)
     {
+        AsyncWebHeader* header      = request->getHeader("X-File-Size");
+        uint32_t        fileSize    = UPDATE_SIZE_UNKNOWN;
+
         /* Upload firmware or filesystem? */
         int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
 
-        LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
-
-        /* TODO request->contentLength() contains 200 bytes more, than which will be written.
-         * How to calculate it correct?
-         */
-        if (false == Update.begin(request->contentLength(), cmd))
+        /* File size available? */
+        if (nullptr != header)
         {
-            LOG_ERROR("Upload failed: %s", Update.errorString());
-            isError = true;
+            /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
+            (void)Util::strToUInt32(header->value(), fileSize);
         }
 
-        progress = 0u;
+        if (UPDATE_SIZE_UNKNOWN == fileSize)
+        {
+            LOG_INFO("Upload of %s (unknown size) starts.", filename.c_str());
+        }
+        else
+        {
+            LOG_INFO("Upload of %s (%u byte) starts.", filename.c_str(), fileSize);
+        }
+
+        gIsUploadError = false;
+
+        /* Update filesystem? */
+        if (U_SPIFFS == cmd)
+        {
+            /* Close filesystem before continue. */
+            SPIFFS.end();
+        }
+
+        /* Start update */
+        if (false == Update.begin(fileSize, cmd))
+        {
+            LOG_ERROR("Upload failed: %s", Update.errorString());
+            gIsUploadError = true;
+
+            /* Mount filesystem again, it may be unmounted in case of filesystem update.*/
+            if (false == SPIFFS.begin())
+            {
+                LOG_FATAL("Couldn't mount filesystem.");
+            }
+
+            /* Inform client about abort.*/
+            request->send(HttpStatus::STATUS_CODE_ENTITY_TOO_LARGE, "text/plain", "Upload aborted.");
+        }
+        /* Update is now running. */
+        else
+        {
+            /* Use UpdateMgr to show the user the update status.
+             * Note, the display manager will be completey stopped during this,
+             * to avoid artifacts on the display, because of long writes to flash.
+             */
+            UpdateMgr::getInstance().beginProgress();
+        }
     }
 
     if (true == Update.isRunning())
     {
-        if(len != Update.write(data, len))
+        if (false == gIsUploadError)
         {
-            LOG_ERROR("Upload failed: %s", Update.errorString());
-            isError = true;
-        }
-        else
-        {
-            uint32_t progressNext = (Update.progress() * 100) / Update.size();
-
-            /* Don't spam the console and output only if something changed. */
-            if (progress != progressNext)
-            {
-                LOG_INFO("Upload progress: %u %%", progressNext);
-                progress = progressNext;
-            }
-        }
-
-        /* Upload finished? */
-        if (true == final)
-        {
-            if (false == Update.end(true))
+            if(len != Update.write(data, len))
             {
                 LOG_ERROR("Upload failed: %s", Update.errorString());
-                isError = true;
+                gIsUploadError = true;
             }
             else
             {
-                LOG_INFO("Upload of %s finished.", filename.c_str());
+                uint32_t progress = (Update.progress() * 100) / Update.size();
 
-                /* Request a restart */
-                UpdateMgr::getInstance().reqRestart();
+                UpdateMgr::getInstance().updateProgress(progress);
+            }
+
+            /* Upload finished? */
+            if (true == final)
+            {
+                /* Finish update now. */
+                if (false == Update.end(true))
+                {
+                    LOG_ERROR("Upload failed: %s", Update.errorString());
+                    gIsUploadError = true;
+                }
+                /* Update was successful! */
+                else
+                {
+                    LOG_INFO("Upload of %s finished.", filename.c_str());
+
+                    /* Filesystem is not mounted here, because we will restart in the next seconds. */
+
+                    /* Ensure that the user see 100% update status on the display. */
+                    UpdateMgr::getInstance().updateProgress(100U);
+                    UpdateMgr::getInstance().endProgress();
+
+                    /* Request a restart */
+                    UpdateMgr::getInstance().reqRestart();
+                }
             }
         }
-    }
+        else
+        {
+            /* Mount filesystem again, it may be unmounted in case of filesystem update. */
+            if (false == SPIFFS.begin())
+            {
+                LOG_FATAL("Couldn't mount filesystem.");
+            }
 
-    if (true == isError)
-    {
-        Update.abort();
-        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
+            /* Abort update */
+            Update.abort();
+            UpdateMgr::getInstance().endProgress();
+
+            /* Inform client about abort.*/
+            request->send(HttpStatus::STATUS_CODE_ENTITY_TOO_LARGE, "text/plain", "Upload aborted.");
+        }
     }
 
     return;
@@ -1112,12 +1042,12 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 
 /**
  * Display page, showing current display content.
- * 
+ *
  * @param[in] request   HTTP request
  */
 static void displayPage(AsyncWebServerRequest* request)
 {
-    if (NULL == request)
+    if (nullptr == request)
     {
         return;
     }
@@ -1138,7 +1068,7 @@ static void displayPage(AsyncWebServerRequest* request)
 /**
  * Processor for display page template.
  * It is responsible for the data binding.
- * 
+ *
  * @param[in] var   Name of variable in the template
  */
 static String displayPageProcessor(const String& var)

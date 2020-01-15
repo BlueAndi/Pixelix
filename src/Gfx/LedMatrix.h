@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,9 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <FastLED_NeoMatrix.h>
+#include <IGfx.hpp>
+#include <NeoPixelBrightnessBus.h>
+#include <ColorDef.hpp>
 
 #include "Board.h"
 
@@ -59,7 +61,7 @@
 /**
  * Specific LED matrix.
  */
-class LedMatrix : public FastLED_NeoMatrix
+class LedMatrix : public IGfx
 {
 public:
 
@@ -68,31 +70,67 @@ public:
      * 
      * @return LED matrix
      */
-    static LedMatrix& getInstance(void)
+    static LedMatrix& getInstance()
     {
         return m_instance;
     }
 
     /**
-     * Get matrix type.
+     * Initialize base driver for the LED matrix.
      * 
-     * @return Matrix type
+     * @return If successful, returns true otherwise false.
      */
-    uint8_t getType(void) const
+    bool begin()
     {
-        return type;
+        m_strip.Begin();
+        m_strip.Show();
+
+        return true;
     }
 
     /**
-     * Set matrix type, which depends on how the matrix is hard-wired.
-     * 
-     * Use NEO_MATRIX_... macros to build the matrix type.
-     * 
-     * @param[in] matrixType    Matrix type
+     * Show internal framebuffer on physical LED matrix.
      */
-    void setType(uint8_t matrixType)
+    void show()
     {
-        type = matrixType;
+        m_strip.Show();
+        return;
+    }
+
+    /**
+     * LED matrix is ready, when the last physical pixel update is finished.
+     * 
+     * @return If ready for another update via show(), it will return true otherwise false.
+     */
+    bool isReady() const
+    {
+        return m_strip.CanShow();
+    }
+
+    /**
+     * Set brightness from 0 to 255.
+     *
+     * @param[in] brightness    Brightness value [0; 255]
+     */
+    void setBrightness(uint8_t brightness)
+    {
+        /* To protect the the electronic parts, the brigntness will be scaled down
+         * according to the max. supply current.
+         */
+        const uint8_t SAFE_BRIGHTNESS =
+            (Board::LedMatrix::supplyCurrentMax * brightness) /
+            (Board::LedMatrix::maxCurrentPerLed * Board::LedMatrix::width *Board::LedMatrix::height);
+
+        m_strip.SetBrightness(SAFE_BRIGHTNESS);
+        return;
+    }
+
+    /**
+     * Clear LED matrix.
+     */
+    void clear()
+    {
+        m_strip.ClearTo(ColorDef::BLACK);
         return;
     }
 
@@ -102,20 +140,20 @@ public:
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
      * 
-     * @return Color in RGB24 format.
+     * @return Color in RGB888 format.
      */
-    uint32_t getColor(int16_t x, int16_t y);
-
-    /** Default matrix type */
-    static const uint8_t MATRIX_TYPE_DEFAULT    = NEO_MATRIX_TOP |
-                                                  NEO_MATRIX_LEFT |
-                                                  NEO_MATRIX_COLUMNS |
-                                                  NEO_MATRIX_ZIGZAG;
+    uint16_t getColor(int16_t x, int16_t y);
 
 private:
 
     /** LedMatrix instance */
     static LedMatrix    m_instance;
+
+    /** Pixel representation of the LED matrix */
+    NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod>  m_strip;
+
+    /** Panel topology, used to map coordinates to the framebuffer. */
+    NeoTopology<ColumnMajorAlternatingLayout>               m_topo;
 
     /**
      * Construct LED matrix.
@@ -129,6 +167,28 @@ private:
 
     LedMatrix(const LedMatrix& matrix);
     LedMatrix& operator=(const LedMatrix& matrix);
+
+    /**
+     * Draw a single pixel in the matrix.
+     * 
+     * @param[in] x     x-coordinate
+     * @param[in] y     y-coordinate
+     * @param[in] color Pixel color in RGB565 format
+     */
+    void drawPixel(int16_t x, int16_t y, uint16_t color)
+    {
+        if ((0 <= x) &&
+            (Board::LedMatrix::width > x) &&
+            (0 <= y) &&
+            (Board::LedMatrix::height > y))
+        {
+            HtmlColor colorRGB888 = ColorDef::convert565To888(color);
+
+            m_strip.SetPixelColor(m_topo.Map(x, y), colorRGB888);
+        }
+
+        return;
+    }
 };
 
 /******************************************************************************

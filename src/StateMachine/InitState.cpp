@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,17 +42,27 @@
 #include "ButtonDrv.h"
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
+#include "SysMsg.h"
 #include "Version.h"
 #include "AmbientLightSensor.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "Settings.h"
+#include "PluginMgr.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
 #include "ErrorState.h"
 
 #include <Logging.h>
+#include <Util.h>
+
+#include "FirePlugin.h"
+#include "GameOfLifePlugin.h"
+#include "IconTextLampPlugin.h"
+#include "IconTextPlugin.h"
+#include "JustTextPlugin.h"
+#include "SysMsgPlugin.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -74,11 +84,11 @@
  * Local Variables
  *****************************************************************************/
 
-/* Set short wait time for showing a system message in ms. */
-const uint32_t  InitState::SYS_MSG_WAIT_TIME_SHORT  = 250u;
+/* Set system message show duration in ms */
+const uint32_t  InitState::SYS_MSG_WAIT_TIME    = 2000U;
 
 /* Set serial interface baudrate. */
-const uint32_t  InitState::SERIAL_BAUDRATE          = 115200u;
+const uint32_t  InitState::SERIAL_BAUDRATE      = 115200U;
 
 /* Initialization state instance */
 InitState       InitState::m_instance;
@@ -101,8 +111,11 @@ void InitState::entry(StateMachine& sm)
     Logging::getInstance().init(&Serial);
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
 
-    /* Show as soon as possible the user that the system is booting. */
-    LOG_INFO("Booting ...");
+    /* Show as soon as possible the user on the serial console that the system is booting. */
+    showStartupInfoOnSerial();
+
+    /* Register plugins. This must be done before system message handler is initialized! */
+    registerPlugins();
 
     /* Initialize button driver */
     if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
@@ -110,78 +123,69 @@ void InitState::entry(StateMachine& sm)
         LOG_FATAL("Couldn't initialize button driver.");
         isError = true;
     }
+    /* Mounting the filesystem. */
+    else if (false == SPIFFS.begin())
+    {
+        LOG_FATAL("Couldn't mount the filesystem.");
+        isError = true;
+    }
+    /* Start LED matrix */
+    else if (false == LedMatrix::getInstance().begin())
+    {
+        LOG_FATAL("Failed to initialize LED matrix.");
+        isError = true;
+    }
+    /* Initialize display manager */
+    else if (false == DisplayMgr::getInstance().begin())
+    {
+        LOG_FATAL("Failed to initialize display manager.");
+        isError = true;
+    }
+    /* Initialize system message handler */
+    else if (false == SysMsg::getInstance().init())
+    {
+        LOG_FATAL("Failed to initialize system message handler.");
+        isError = true;
+    }
+    /* Initialize over-the-air update server */
+    else if (false == UpdateMgr::getInstance().init())
+    {
+        LOG_FATAL("Failed to initialize Arduino OTA.");
+        isError = true;
+    }
     else
     {
-        uint8_t matrixType = 0u;
-
-        /* If a matrix type is stored, it will be loaded and set.
-         * Otherwise the default matrix type is kept.
-         * See LedMatrix::MATRIX_TYPE_DEFAULT
-         */
-        if (true == Settings::getInstance().open(true))
-        {
-            /* Matrix type stored? */
-            if (true == Settings::getInstance().getMatrixType(matrixType))
-            {
-                /* Set matrix type */
-                LedMatrix::getInstance().setType(matrixType);
-            }
-
-            Settings::getInstance().close();
-        }
-
-        /* Start LED matrix */
-        LedMatrix::getInstance().begin();
-
-        /* Initialize display manager */
-        if (false == DisplayMgr::getInstance().init())
-        {
-            LOG_FATAL("Failed to initialize display manager.");
-            isError = true;
-        }
-        else
-        {
-            uint8_t index   = 0u;
-
-            /* Set display layouts */
-            for(index = 0u; index < DisplayMgr::MAX_SLOTS; ++index)
-            {
-                DisplayMgr::getInstance().setLayout(index, DisplayMgr::LAYOUT_ID_2);
-            }
-        }
-    }
-    
-    if (false == isError)
-    {
-        /* Mounting the filesystem. */
-        if (false == SPIFFS.begin())
-        {
-            LOG_FATAL("Couldn't mount the filesystem.");
-            isError = true;
-        }
-
-        /* Show some interesting boot information */    
-        showBootInfo();
+        IconTextLampPlugin* plugin = nullptr;
 
         /* Enable the automatic display brightness adjustment according to the
-        * ambient light.
-        */
-        if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(true))
+         * ambient light.
+         */
+        if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(false))
         {
             LOG_WARNING("Failed to enable autom. brigthness adjustment.");
         }
         
-        /* Initialize webserver */
+        /* Initialize webserver. SPIFFS must be mounted before! */
         MyWebServer::init();
 
-        /* Initialize over-the-air update server */
-        UpdateMgr::getInstance().init();
-
         /* Don't store the wifi configuration in the NVS.
-        * This seems to cause a reset after a client connected to the access point.
-        * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
-        */
+         * This seems to cause a reset after a client connected to the access point.
+         * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
+         */
         WiFi.persistent(false);
+
+        /* Show some informations on the display. */
+        showStartupInfoOnDisplay();
+
+        /* Install default plugin. */
+        plugin = static_cast<IconTextLampPlugin*>(PluginMgr::getInstance().install("IconTextLampPlugin"));
+        
+        if (nullptr != plugin)
+        {
+            (void)plugin->loadBitmap("/images/smiley.bmp");
+            plugin->setText("Hello World!");
+            plugin->enable();
+        }
     }
 
     /* Any error happened? */
@@ -218,6 +222,8 @@ void InitState::process(StateMachine& sm)
 
 void InitState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Nothing to do. */
     return;
 }
@@ -230,25 +236,51 @@ void InitState::exit(StateMachine& sm)
  * Private Methods
  *****************************************************************************/
 
-/**
- * Show boot information on the serial interface.
- */
-void InitState::showBootInfo(void)
+void InitState::showStartupInfoOnSerial()
 {
+    LOG_INFO("PIXELIX starts up ...");
     LOG_INFO(String("SW version: ") + Version::SOFTWARE);
     LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
     LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
     LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
 
-    DisplayMgr::getInstance().lock();
-    DisplayMgr::getInstance().showSysMsg(Version::SOFTWARE);
-    DisplayMgr::getInstance().unlock();
-    delay(SYS_MSG_WAIT_TIME_SHORT);
+    return;
+}
 
-    /* Debug information */
-    LOG_INFO(String("AMPDU RX feature: ") + CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED);
-    LOG_INFO(String("AMPDU TX feature: ") + CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED);
+void InitState::showStartupInfoOnDisplay()
+{
+    SysMsg& sysMsg = SysMsg::getInstance();
+
+    /* Show colored PIXELIX */
+    sysMsg.show("\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X");
+    delay(SYS_MSG_WAIT_TIME);
+
+    /* Clear and wait */
+    sysMsg.show("");
+    delay(SYS_MSG_WAIT_TIME / 2U);
+
+    /* Show sw version */
+    sysMsg.show(Version::SOFTWARE);
+    delay(SYS_MSG_WAIT_TIME);
+
+    /* Clear and wait */
+    sysMsg.show("", SYS_MSG_WAIT_TIME / 2U);
+
+    return;
+}
+
+void InitState::registerPlugins()
+{
+    PluginMgr&  pluginMgr = PluginMgr::getInstance();
+
+    /* Register in alphabetic order. */
+    pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
+    pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
+    pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
+    pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
+    pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
+    pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
 
     return;
 }

@@ -31,7 +31,10 @@ Every response will provide two items:
 }
 ```
 
-## Endpoint `<base-uri>`/status
+## Common
+The common API, which is always there.
+
+### Endpoint `<base-uri>`/status
 Get status information:
 * Software version.
 * ESP SDK version.
@@ -82,8 +85,10 @@ Example with curl:
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/status
 ```
 
-## Endpoint `<base-uri>`/display/slots
-Get the number of supported slots.
+### Endpoint `<base-uri>`/display/slots
+Get the max. number of slots and the current installed plugins.
+The plugins are listed in the ascending order of the slots.
+If a slot is empty, "empty" will be shown at the corresponding place.
 
 Detail:
 * Method: GET
@@ -97,10 +102,17 @@ GET <base-uri>/rest/v1/display/slots
 Result:
 ```json
 {
-    "status": 0,
     "data": {
-        "slots": 4
-    }
+        "slots": [
+            "SysMsgPlugin",
+            "IconTextLampPlugin",
+            "empty",
+            "empty",
+            "empty"
+        ],
+        "maxSlots": 5
+    },
+    "status": 0
 }
 ```
 
@@ -109,7 +121,49 @@ Example with curl:
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/slots
 ```
 
-## Endpoint `<base-uri>`/display/slot/`<slot-id>`/text
+### Endpoint `<base-uri>`/plugin
+Install/Uninstall plugins to display slots.
+
+Detail:
+* Method: GET
+  * List all plugins:
+    * Arguments:
+      * list
+* Method: POST
+  * Install a plugin:
+    * Arguments:
+      * install=`<plugin-name>`
+  * Uninstall a plugin:
+    * Arguments:
+      * uninstall=`<plugin-name>`
+      * slotId=`<slot-id>`
+
+Example:
+```
+POST <base-uri>/rest/v1/display?install=JustTextPlugin
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "slotId": 1
+    }
+}
+```
+
+Example with curl:
+```
+$ curl -u luke:skywalker -d "list=" -X GET http://192.168.2.166/rest/api/v1/plugin
+$ curl -u luke:skywalker -d "install=JustTextPlugin" -X POST http://192.168.2.166/rest/api/v1/plugin
+$ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://192.168.2.166/rest/api/v1/plugin
+```
+
+## Plugin depended
+The plugin depended API.
+
+### Endpoint `<base-uri>`/display/slot/`<slot-id>`/text
 Show text in the specified slot.
 
 Detail:
@@ -135,20 +189,26 @@ Example with curl:
 $ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/text
 ```
 
-## Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap
-Show bitmap in the specified slot. The bitmap must be BASE64 encoded.
-At the momet only bitmaps in the size of 8 x 8 pixel are supported with RGB565.
+### Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap
+Show bitmap in the specified slot. Supported are bitmap files (.bmp) with:
+* 24 or 32 bits per pixel.
+* 1 plane.
+* No compression.
+
+Note, if you are using _gimp_ to create bitmap files, please configure like:
+* Compatibility options:
+  * Don't write color informations.
+* Extended options:
+  * Select 24 bit per pixel.
 
 Detail:
 * Method: POST
 * Arguments:
-  * width=`<bitmap-width>`
-  * height=`<bitmap-height>`
-  * data=`<base64-encoded-bitmap>`
+    * -
 
 Example:
 ```
-POST <base-uri>/rest/v1/display/slot/0/bitmap?width=8&height=8&data=XXXXXX
+POST <base-uri>/rest/v1/display/slot/0/bitmap
 ```
 
 Result:
@@ -160,10 +220,10 @@ Result:
 ```
 
 ```
-$ (echo -n 'width=8&height=8&data="'; base64 hacker_rgb565.bin; echo '"}') | curl -d @-  http://192.168.2.166/rest/api/v1/display/slot/0/bitmap
+$ curl -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://192.168.2.166/rest/api/v1/display/slot/0/bitmap
 ```
 
-## Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`/state
+### Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`
 Set the state of a lamp in the specified slot.
 
 Detail:
@@ -177,7 +237,7 @@ Supported lamp states:
 
 Example:
 ```
-POST <base-uri>/rest/v1/display/slot/0/lamp/0/state?set=on
+POST <base-uri>/rest/v1/display/slot/0/lamp/0?set=on
 ```
 
 Result:
@@ -190,7 +250,7 @@ Result:
 
 Example with curl:
 ```
-$ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/lamp/0/state
+$ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/lamp/0
 ```
 
 # Issues, Ideas And Bugs

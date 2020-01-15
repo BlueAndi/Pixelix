@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,9 +46,6 @@
  * Macros
  *****************************************************************************/
 
-/** Get number of array elements. */
-#define ARRAY_NUM(__arr)    (sizeof(__arr) / sizeof((__arr)[0]))
-
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -56,6 +53,8 @@
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
+
+static void error(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
@@ -80,11 +79,13 @@ static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
  * External Functions
  *****************************************************************************/
 
-void MyWebServer::init(void)
+void MyWebServer::init()
 {
     /* Register all web pages */
     Pages::init(gWebServer);
     RestApi::init(gWebServer);
+
+    gWebServer.onNotFound(error);
 
     /* Register websocket */
     WebSocketSrv::getInstance().init(gWebServer);
@@ -92,7 +93,7 @@ void MyWebServer::init(void)
     return;
 }
 
-void MyWebServer::begin(void)
+void MyWebServer::begin()
 {
     /* Start webserver */
     gWebServer.begin();
@@ -100,7 +101,7 @@ void MyWebServer::begin(void)
     return;
 }
 
-void MyWebServer::end(void)
+void MyWebServer::end()
 {
     /* Stop webserver */
     gWebServer.end();
@@ -108,6 +109,36 @@ void MyWebServer::end(void)
     return;
 }
 
+AsyncWebServer& MyWebServer::getInstance()
+{
+    return gWebServer;
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Common error handler used in case a requested path was not found.
+ * 
+ * @param[in] request   Web request
+ */
+static void error(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* REST request? */
+    if (request->url().startsWith(RestApi::BASE_URI))
+    {
+        RestApi::error(request);
+    }
+    else
+    {
+        Pages::error(request);
+    }
+
+    return;
+}

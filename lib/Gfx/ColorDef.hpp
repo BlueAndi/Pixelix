@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -490,6 +490,9 @@ namespace ColorDef
     FUNCTIONS
 *******************************************************************************/
 
+/**
+ * Color definitions
+ */
 namespace ColorDef
 {    
     /**
@@ -501,7 +504,7 @@ namespace ColorDef
      */
     inline uint8_t getRed(uint32_t value)
     {
-        return static_cast<uint8_t>((value >> 16u) & 0xffu);
+        return static_cast<uint8_t>((value >> 16U) & 0xffU);
     }
     
     /**
@@ -513,7 +516,7 @@ namespace ColorDef
      */
     inline uint8_t getGreen(uint32_t value)
     {
-        return static_cast<uint8_t>((value >> 8u) & 0xffu);
+        return static_cast<uint8_t>((value >> 8U) & 0xffU);
     }
     
     /**
@@ -525,26 +528,45 @@ namespace ColorDef
      */
     inline uint8_t getBlue(uint32_t value)
     {
-        return static_cast<uint8_t>((value >> 0u) & 0xffu);
+        return static_cast<uint8_t>((value >> 0U) & 0xffU);
     }
     
     /**
-     * Get color in 5-6-6 RGB format.
+     * Convert color in RGB888 format to RGB565 format.
      * 
-     * @param[in] value 24 bit color value
+     * @param[in] value Color value in RGB888 format
      * 
-     * @return Color in 5-6-5 RGB format.
+     * @return Color in RGB565 format.
      */
-    inline uint16_t get565(uint32_t value)
+    inline uint16_t convert888To565(uint32_t value)
     {
-        const uint16_t  RED     = (value >> 16u) & 0xffu;
-        const uint16_t  GREEN   = (value >>  8u) & 0xffu;
-        const uint16_t  BLUE    = (value >>  0u) & 0xffu;
-        const uint16_t  RED5    = static_cast<uint8_t>(RED >> 3u);
-        const uint16_t  GREEN6  = static_cast<uint8_t>(GREEN >> 2u);
-        const uint16_t  BLUE5   = static_cast<uint8_t>(BLUE >> 3u);
+        const uint16_t  RED     = (value >> 16U) & 0xffU;
+        const uint16_t  GREEN   = (value >>  8U) & 0xffU;
+        const uint16_t  BLUE    = (value >>  0U) & 0xffU;
+        const uint16_t  RED5    = RED >> 3U;
+        const uint16_t  GREEN6  = GREEN >> 2U;
+        const uint16_t  BLUE5   = BLUE >> 3U;
 
-        return ((RED5 & 0x1fu) << 11u) | ((GREEN6 & 0x3fu) << 5u) | ((BLUE5 & 0x1fu) << 0u);
+        return ((RED5 & 0x1fU) << 11U) | ((GREEN6 & 0x3fU) << 5U) | ((BLUE5 & 0x1fU) << 0U);
+    }
+
+    /**
+     * Convert color in RGB565 format to RGB888 format.
+     * 
+     * @param[in] value Color value in RGB565 format
+     * 
+     * @return Color in RGB888 format.
+     */
+    inline uint32_t convert565To888(uint16_t value)
+    {
+        const uint32_t  RED5    = (value >> 11U) & 0x1fU;
+        const uint32_t  GREEN6  = (value >>  5U) & 0x3fU;
+        const uint32_t  BLUE5   = (value >>  0U) & 0x1fU;
+        const uint32_t  RED     = RED5 << 3U;
+        const uint32_t  GREEN   = GREEN6 << 2U;
+        const uint32_t  BLUE    = BLUE5 << 3U;
+
+        return (RED << 16U) | (GREEN << 8U) | (BLUE << 0U);
     }
 }
 

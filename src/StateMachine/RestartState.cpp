@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,12 @@
  * Includes
  *****************************************************************************/
 #include "RestartState.h"
+#include "DisplayMgr.h"
+#include "LedMatrix.h"
+#include "Board.h"
 
 #include <Logging.h>
+#include <Util.h>
 #include <SPIFFS.h>
 
 /******************************************************************************
@@ -66,24 +70,44 @@ RestartState RestartState::m_instance;
 
 void RestartState::entry(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     LOG_INFO("Going in restart state.");
 
     /* Unmount filesystem */
     SPIFFS.end();
+
+    /* Stop display manager */
+    DisplayMgr::getInstance().end();
+
+    /* Clear display */
+    LedMatrix::getInstance().clear();
+    LedMatrix::getInstance().show();
+    
+    /* Wait till all physical pixels are cleared. */
+    while(false == LedMatrix::getInstance().isReady())
+    {
+        /* Just wait ... */
+        ;
+    }
 
     return;
 }
 
 void RestartState::process(StateMachine& sm)
 {
-    /* Restart */
-    ESP.restart();
+    UTIL_NOT_USED(sm);
+
+    /* Reset */
+    Board::reset();
     
     return;
 }
 
 void RestartState::exit(StateMachine& sm)
 {
+    UTIL_NOT_USED(sm);
+
     /* Nothing to do. */
     return;
 }

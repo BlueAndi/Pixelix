@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,7 +69,7 @@ public:
      * 
      * @return Websocket server instance
      */
-    static WebSocketSrv& getInstance(void)
+    static WebSocketSrv& getInstance()
     {
         return m_instance;
     }

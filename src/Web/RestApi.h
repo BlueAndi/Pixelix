@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,9 +59,19 @@ namespace RestApi
  *****************************************************************************/
 
 /**
- * REST API version number.
+ * REST API base URI.
  */
-static const char VERSION[] = "v1";
+static const char BASE_URI[] = "/rest/api/v1";
+
+/**
+ * REST request status code.
+ */
+typedef enum
+{
+    STATUS_CODE_OK = 0,     /**< Successful */
+    STATUS_CODE_NOT_FOUND   /**< Requested URI not found. */
+
+} StatusCode;
 
 /******************************************************************************
  * Functions
@@ -73,6 +83,13 @@ static const char VERSION[] = "v1";
  * @param[in] srv   Web server
  */
 void init(AsyncWebServer& srv);
+
+/**
+ * Handle invalid rest path request.
+ * 
+ * @param[in] request   HTTP request
+ */
+void error(AsyncWebServerRequest* request);
 
 }
 

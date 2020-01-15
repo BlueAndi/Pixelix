@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -75,9 +75,9 @@ public:
         m_height(height),
         m_cursorX(0),
         m_cursorY(0),
-        m_textColor(0u),
-        m_textBgColor(0u),
-        m_font(NULL)
+        m_textColor(0U),
+        m_textBgColor(0U),
+        m_font(nullptr)
     {
     }
 
@@ -93,7 +93,7 @@ public:
      * 
      * @return Width in pixel
      */
-    int16_t width(void) const
+    int16_t width() const
     {
         return m_width;
     }
@@ -103,7 +103,7 @@ public:
      * 
      * @return Height in pixel
      */
-    int16_t height(void) const
+    int16_t height() const
     {
         return m_height;
     }
@@ -141,6 +141,19 @@ public:
                 drawPixel(x + relX, y + relY, color);
             }
         }
+
+        return;
+    }
+
+    /**
+     * Fill whole screen with the given color.
+     * Note, method declaration is from Adafruit_GFX.
+     * 
+     * @param[in] color Color
+     */
+    void fillScreen(uint16_t color)
+    {
+        fillRect(0, 0, m_width, m_height, color);
 
         return;
     }
@@ -188,6 +201,26 @@ public:
     }
 
     /**
+     * Get cursor x-coordinate.
+     * 
+     * @return Cursor x-coordinate
+     */
+    int16_t getCursorX() const
+    {
+        return m_cursorX;
+    }
+
+    /**
+     * Get cursor y-coordinate.
+     * 
+     * @return Cursor y-coordinate
+     */
+    int16_t getCursorY() const
+    {
+        return m_cursorY;
+    }
+    
+    /**
      * Set text font color with transparant background.
      * Note, method declaration is from Adafruit_GFX.
      * 
@@ -228,7 +261,7 @@ public:
      * 
      * @return Current selected font.
      */
-    const GFXfont* getFont(void) const
+    const GFXfont* getFont() const
     {
         return m_font;
     }
@@ -261,6 +294,75 @@ public:
     void getTextBounds(const String &str, int16_t x, int16_t y, int16_t *x1, int16_t *y1, uint16_t *w, uint16_t *h)
     {
         /* Not supported yet. */
+        return;
+    }
+
+    /**
+     * Draw a line.
+     * Not, method declaratio is from Adafruit_GFX.
+     * 
+     * @param[in] x0    Start point x coordinate
+     * @param[in] y0    Start point y coordinate
+     * @param[in] x1    End point x coordinate
+     * @param[in] y1    End point y coordinate
+     * @param[in] color 16-bit 5-6-5 Color to draw with
+     */
+    void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
+    {
+        int16_t steep = abs(y1 - y0) > abs(x1 - x0);
+
+        if (steep) {
+            int16_t tmp = x0;
+            x0 = y0;
+            y0 = tmp;
+            tmp = x1;
+            x1 = y1;
+            y1 = tmp;
+        }
+
+        if (x0 > x1) {
+            int16_t tmp = x0;
+            x0 = x1;
+            x1 = tmp;
+            tmp = y0;
+            y0 = y1;
+            y1 = tmp;
+        }
+
+        int16_t dx, dy;
+        dx = x1 - x0;
+        dy = abs(y1 - y0);
+
+        int16_t err = dx / 2;
+        int16_t ystep;
+
+        if (y0 < y1)
+        {
+            ystep = 1;
+        }
+        else
+        {
+            ystep = -1;
+        }
+
+        for (; x0<=x1; x0++)
+        {
+            if (steep)
+            {
+                drawPixel(y0, x0, color);
+            }
+            else
+            {
+                drawPixel(x0, y0, color);
+            }
+            err -= dy;
+            if (err < 0)
+            {
+                y0 += ystep;
+                err += dx;
+            }
+        }
+
         return;
     }
 

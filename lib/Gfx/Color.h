@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -132,6 +132,21 @@ public:
     }
     
     /**
+     * Convert to RGB888 uint32_t value.
+     */
+    operator uint32_t()
+    {
+        uint32_t color888 = m_red;
+
+        color888 <<= 8;
+        color888 |= m_green;
+        color888 <<= 8;
+        color888 |= m_blue;
+
+        return color888;
+    }
+
+    /**
      * Get base color information.
      * 
      * @param[out] red      Red value
@@ -181,7 +196,7 @@ public:
      * 
      * @return Red value
      */
-    uint8_t getRed(void) const
+    uint8_t getRed() const
     {
         return m_red;
     }
@@ -191,7 +206,7 @@ public:
      * 
      * @return Green value
      */
-    uint8_t getGreen(void) const
+    uint8_t getGreen() const
     {
         return m_green;
     }
@@ -201,7 +216,7 @@ public:
      * 
      * @return Blue value
      */
-    uint8_t getBlue(void) const
+    uint8_t getBlue() const
     {
         return m_blue;
     }
@@ -247,16 +262,16 @@ public:
      * 
      * @return Color in 5-6-5 RGB format
      */
-    uint16_t get565(void) const
+    uint16_t to565() const
     {
         const uint16_t  RED     = m_red;
         const uint16_t  GREEN   = m_green;
         const uint16_t  BLUE    = m_blue;
-        const uint16_t  RED5    = RED >> 3u;
-        const uint16_t  GREEN6  = GREEN >> 2u;
-        const uint16_t  BLUE5   = BLUE >> 3u;
+        const uint16_t  RED5    = RED >> 3U;
+        const uint16_t  GREEN6  = GREEN >> 2U;
+        const uint16_t  BLUE5   = BLUE >> 3U;
 
-        return ((RED5 & 0x1fu) << 11u) | ((GREEN6 & 0x3fu) << 5u) | ((BLUE5 & 0x1fu) << 0u);
+        return ((RED5 & 0x1fU) << 11U) | ((GREEN6 & 0x3fU) << 5U) | ((BLUE5 & 0x1fU) << 0U);
     }
     
     /**

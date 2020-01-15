@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,6 @@ const char* Settings::KEY_WIFI_PASSPHRASE       = "wifi_passphrase";
 const char* Settings::KEY_WIFI_AP_SSID          = "wifi_ap_ssid";
 const char* Settings::KEY_WIFI_AP_PASSPHRASE    = "wifi_ap_passphrase";
 const char* Settings::KEY_HOSTNAME              = "hostname";
-const char* Settings::KEY_MATRIX_TYPE           = "matrix_type";
 
 /* Default values */
 const char* Settings::WIFI_AP_SSID_DEFAULT          = "pixelix";
