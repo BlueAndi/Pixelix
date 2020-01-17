@@ -27,7 +27,7 @@
 /**
  * @brief  Board Abstraction
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup hal
  *
  * @{
@@ -66,10 +66,13 @@ namespace Pin
 {
     /** Pin number of onboard LED */
     static const uint8_t    onBoardLedPinNo         = 2U;
+
     /** Pin number of user button */
     static const uint8_t    userButtonPinNo         = 4U;
+
     /** Pin number of LDR in */
-    static const uint8_t    ldrInPinNo              = 26U;
+    static const uint8_t    ldrInPinNo              = 34U;
+
     /** Pin number of LED matrix data out */
     static const uint8_t    ledMatrixDataOutPinNo   = 27U;
 };
