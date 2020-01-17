@@ -489,7 +489,8 @@ void DisplayMgr::process()
     uint8_t     index   = 0U;
 
     /* Ambient light sensor available for automatic brightness adjustment? */
-    if (true == m_autoBrightnessTimer.isTimerRunning())
+    if ((true == m_autoBrightnessTimer.isTimerRunning()) &&
+        (true == m_autoBrightnessTimer.isTimeout()))
     {
         float   lightNormalized         = AmbientLightSensor::getInstance().getNormalizedLight();
         uint8_t BRIGHTNESS_DYN_RANGE    = UINT8_MAX - BRIGHTNESS_MIN;
