@@ -197,7 +197,7 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
 
             /* Find a empty unlocked slot. */
             slotId = 0U;
-            while((MAX_SLOTS > slotId) && (nullptr != m_slots[slotId].plugin) && (true == m_slots[slotId].isLocked))
+            while((MAX_SLOTS > slotId) && ((nullptr != m_slots[slotId].plugin) || (true == m_slots[slotId].isLocked)))
             {
                 ++slotId;
             }
