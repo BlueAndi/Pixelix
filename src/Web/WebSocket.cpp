@@ -39,6 +39,7 @@
 #include "WsCmdPlugins.h"
 #include "WsCmdInstall.h"
 #include "WsCmdUninstall.h"
+#include "WsCmdReset.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -81,6 +82,9 @@ static WsCmdInstall     gWsCmdInstall;
 /** Websocket uninstall command */
 static WsCmdUninstall   gWsCmdUninstall;
 
+/** Websocket reset command */
+static WsCmdReset       gWsCmdReset;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
@@ -88,7 +92,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdSlots,
     &gWsCmdPlugins,
     &gWsCmdInstall,
-    &gWsCmdUninstall
+    &gWsCmdUninstall,
+    &gWsCmdReset
 };
 
 /******************************************************************************

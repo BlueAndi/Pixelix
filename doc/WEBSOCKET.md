@@ -33,6 +33,18 @@ Response:
 * Failed:
   * ```NACK```
 
+## Reset
+Command: ```RESET```
+
+Parameter:
+* N/A
+
+Response:
+* Successful:
+    * ```ACK```
+* Failed:
+    * ```NACK```
+
 ## Get plugins information
 Command: ```PLUGINS```
 

@@ -100,6 +100,8 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 rsp.plugins.push(data[index].substring(1, data[index].length - 1));
             }
             this.pendingCmd.resolve(rsp);
+        } else if ("RESET" === this.pendingCmd.name) {
+            this.pendingCmd.resolve(rsp);
         } else if ("SLOTS" === this.pendingCmd.name) {
             rsp.maxSlots = parseInt(data.shift());
             rsp.slots = [];
@@ -146,6 +148,21 @@ pixelix.ws.Client.prototype.getSlots = function() {
         } else {
             this._sendCmd({
                 name: "SLOTS",
+                par: null,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.reset = function() {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "RESET",
                 par: null,
                 resolve: resolve,
                 reject: reject
