@@ -73,9 +73,9 @@ bool DisplayMgr::begin()
     if (nullptr == m_taskHandle)
     {
         /* Set the display brightness here just once.
-        * There is no need to do this in the process() method periodically.
-        */
-        LedMatrix::getInstance().setBrightness(BRIGHTNESS_DEFAULT);
+         * There is no need to do this in the process() method periodically.
+         */
+        LedMatrix::getInstance().setBrightness(m_brightness);
 
         /* Create mutex to lock/unlock display update */
         m_xMutex = xSemaphoreCreateMutex();
@@ -192,6 +192,22 @@ bool DisplayMgr::getAutoBrightnessAdjustment(void) const
     }
 
     return isEnabled;
+}
+
+void DisplayMgr::setBrightness(uint8_t level)
+{
+    if (false == getAutoBrightnessAdjustment())
+    {
+        m_brightness = level;
+        LedMatrix::getInstance().setBrightness(m_brightness);
+    }
+
+    return;
+}
+
+uint8_t DisplayMgr::getBrightness(void) const
+{
+    return m_brightness;
 }
 
 uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
@@ -444,7 +460,8 @@ DisplayMgr::DisplayMgr() :
     m_selectedPlugin(nullptr),
     m_requestedPlugin(nullptr),
     m_slotTimer(),
-    m_autoBrightnessTimer()
+    m_autoBrightnessTimer(),
+    m_brightness(BRIGHTNESS_DEFAULT)
 {
 }
 
@@ -507,9 +524,9 @@ void DisplayMgr::process()
         float   lightNormalized         = AmbientLightSensor::getInstance().getNormalizedLight();
         uint8_t BRIGHTNESS_DYN_RANGE    = UINT8_MAX - BRIGHTNESS_MIN;
         float   fBrightness             = static_cast<float>(BRIGHTNESS_MIN) + ( static_cast<float>(BRIGHTNESS_DYN_RANGE) * lightNormalized );
-        uint8_t brightness              = static_cast<uint8_t>(fBrightness);
 
-        matrix.setBrightness(brightness);
+        m_brightness = static_cast<uint8_t>(fBrightness);
+        matrix.setBrightness(m_brightness);
 
         m_autoBrightnessTimer.restart();
     }

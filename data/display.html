@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>%PAGE_TITLE%</title>
     <link rel="stylesheet" href="/data/style.css"></link>
     <script src="/data/ws.js"></script>
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
     <script>
         var matrixWidth     = 32;   // LED matrix width in number of LEDs
         var matrixHeight    = 8;    // LED matrix height in number of LEDs
@@ -153,6 +154,11 @@
 
                 return updateSlotInfo();
             }).then(function(rsp) {
+                return wsClient.getBrightness();
+            }).then(function(rsp) {
+                document.getElementById("brightness").innerHTML = "Brightness: " + (rsp.brightness * 100 / 255) + " %%";
+                document.getElementById("autoBrightnessControl").innerHTML = "Automatic brightness control: " + rsp.automaticBrightnessControl;
+            }).then(function(rsp) {
                 timerId = window.setTimeout(getDisplayContent, period);
             }).catch(function(err) {
                 if ("undefined" !== typeof err) {
@@ -191,6 +197,8 @@
         <br />
         <input type="button" value="Install" onclick="install()" />
     </p>
+    <p id="brightness"></p>
+    <p id="autoBrightnessControl"></p>
 </div>
 <div class="footer">
     <hr />

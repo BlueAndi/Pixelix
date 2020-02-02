@@ -110,6 +110,20 @@ public:
     bool getAutoBrightnessAdjustment(void) const;
 
     /**
+     * Set display brightness in digits [0; 255].
+     *
+     * @param[in] level Brightness level in digits
+     */
+    void setBrightness(uint8_t level);
+
+    /**
+     * Get display brightness in digits [0; 255].
+     *
+     * @return Display brightness in digits
+     */
+    uint8_t getBrightness(void) const;
+
+    /**
      * Install plugin to slot. If the slot contains already a plugin, it will fail.
      * If a invalid slot id is given, the plugin will be installed in the next
      * available slot.
@@ -259,6 +273,9 @@ private:
 
     /** Timer, used for automatic brightness adjustment. */
     SimpleTimer         m_autoBrightnessTimer;
+
+    /** Display brightness in percent ([0; 100]). */
+    uint8_t             m_brightness;
 
     /**
      * Construct LED matrix.

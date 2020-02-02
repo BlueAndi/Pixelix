@@ -91,6 +91,10 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             rsp.slotId = data.shift();
             rsp.data = data;
             this.pendingCmd.resolve(rsp);
+        } else if ("BRIGHTNESS" === this.pendingCmd.name) {
+            rsp.brightness = parseInt(data[0]);
+            rsp.automaticBrightnessControl = (1 === parseInt(data[1])) ? true : false;
+            this.pendingCmd.resolve(rsp);
         } else if ("INSTALL" === this.pendingCmd.name) {
             rsp.slotId = parseInt(data[0]);
             this.pendingCmd.resolve(rsp);
@@ -164,6 +168,48 @@ pixelix.ws.Client.prototype.reset = function() {
             this._sendCmd({
                 name: "RESET",
                 par: null,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getBrightness = function() {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "BRIGHTNESS",
+                par: null,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.setBrightness = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "";
+
+        if (null === this.socket) {
+            reject();
+        } else if ("number" !== typeof options.brightness) {
+            reject();
+        } else {
+
+            par += options.brightness;
+
+            if ("boolean" === typeof options.automaticBrightnessControl) {
+                par += ";";
+                par += options.automaticBrightnessControl;
+            }
+
+            this._sendCmd({
+                name: "BRIGHTNESS",
+                par: par,
                 resolve: resolve,
                 reject: reject
             });

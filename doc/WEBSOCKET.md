@@ -45,6 +45,35 @@ Response:
 * Failed:
     * ```NACK```
 
+## Brightness
+
+### Get brightness information
+Command: ```BRIGHTNESS```
+
+Parameter:
+* N/A
+
+### Set brightness
+Command: ```BRIGHTNESS;<brightness>```
+
+Parameter:
+* ```<brightness>```: Brightness in percent [0; 100].
+
+### Set brightness and enable/eisable automatic brightness adjustment
+Command: ```BRIGHTNESS;<brightness>;<automatic-brightness-control>```
+
+Parameter:
+* ```<brightness>```: Brightness in percent [0; 100].
+* ```<automatic-brightness-control>```: Enable (```1```) or disable (```0```) it.
+
+### Response
+
+Response:
+* Successful:
+    * ```ACK;<brightness>;<auto-brightness-adjustment>```
+* Failed:
+    * ```NACK```
+
 ## Get plugins information
 Command: ```PLUGINS```
 
