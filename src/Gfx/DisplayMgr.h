@@ -100,7 +100,14 @@ public:
      * @retval true     It was successful enabled/disabled.
      * @retval false    It failed to enable/disable it.
      */
-    bool enableAutoBrightnessAdjustment(bool enable);
+    bool setAutoBrightnessAdjustment(bool enable);
+
+    /**
+     * Get state of automatic brightness adjustment.
+     *
+     * @return If enabled, it will return true otherwise false.
+     */
+    bool getAutoBrightnessAdjustment(void) const;
 
     /**
      * Install plugin to slot. If the slot contains already a plugin, it will fail.

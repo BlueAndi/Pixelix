@@ -155,16 +155,24 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        IconTextLampPlugin* plugin = nullptr;
+        Settings*           settings    = &Settings::getInstance();
+        IconTextLampPlugin* plugin      = nullptr;
 
-        /* Enable the automatic display brightness adjustment according to the
-         * ambient light.
+        /* Enable or disable the automatic display brightness adjustment,
+         * depended on settings. Enable it may fail in case there is no
+         * LDR sensor available.
          */
-        if (false == DisplayMgr::getInstance().enableAutoBrightnessAdjustment(false))
+        if (true == settings->open(true))
         {
-            LOG_WARNING("Failed to enable autom. brigthness adjustment.");
+            bool isEnabled = settings->getAutoBrightnessAdjustment();
+
+            if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
+            {
+                LOG_WARNING("Failed to enable autom. brigthness adjustment.");
+            }
+            settings->close();
         }
-        
+
         /* Initialize webserver. SPIFFS must be mounted before! */
         MyWebServer::init();
 
@@ -179,7 +187,7 @@ void InitState::entry(StateMachine& sm)
 
         /* Install default plugin. */
         plugin = static_cast<IconTextLampPlugin*>(PluginMgr::getInstance().install("IconTextLampPlugin"));
-        
+
         if (nullptr != plugin)
         {
             (void)plugin->loadBitmap("/images/smiley.bmp");

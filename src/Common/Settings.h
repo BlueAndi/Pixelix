@@ -27,7 +27,7 @@
 /**
  * @brief  Settings
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup utilities
  *
  * @{
@@ -62,7 +62,7 @@ public:
 
     /**
      * Get the settings instance.
-     * 
+     *
      * @return Settings instance
      */
     static Settings& getInstance()
@@ -73,9 +73,9 @@ public:
     /**
      * Open settings.
      * If the settings storage doesn't exist, it will be created.
-     * 
+     *
      * @param[in] readOnly  Open read only or read/write
-     * 
+     *
      * @return Status
      * @retval false    Failed to open
      * @retval true     Successful opened
@@ -117,7 +117,7 @@ public:
     /**
      * Get remote wifi network SSID.
      * If there is no SSID available, a empty string will be returned.
-     * 
+     *
      * @return Wifi network SSID
      */
     String getWifiSSID()
@@ -127,7 +127,7 @@ public:
 
     /**
      * Store a remote wifi network SSID.
-     * 
+     *
      * @param[in] ssid  Wifi network SSID
      */
     void setWifiSSID(const String& ssid)
@@ -139,7 +139,7 @@ public:
     /**
      * Get remote wifi network passphrase.
      * If there is no passphrase available, a empty string will be returned.
-     * 
+     *
      * @return Wifi network passphrase
      */
     String getWifiPassphrase()
@@ -149,7 +149,7 @@ public:
 
     /**
      * Store a remote wifi network passphrase.
-     * 
+     *
      * @param[in] passphrase Wifi network passphrase
      */
     void setWifiPassphrase(const String& passphrase)
@@ -160,7 +160,7 @@ public:
 
     /**
      * Get wifi access point network SSID.
-     * 
+     *
      * @return Wifi access point network SSID
      */
     String getWifiApSSID()
@@ -170,7 +170,7 @@ public:
 
     /**
      * Store a wifi access point network SSID.
-     * 
+     *
      * @param[in] ssid  Wifi access point network SSID
      */
     void setWifiApSSID(const String& ssid)
@@ -182,7 +182,7 @@ public:
     /**
      * Get wifi access point network passphrase.
      * If there is no passphrase available, a empty string will be returned.
-     * 
+     *
      * @return Wifi access point network passphrase
      */
     String getWifiApPassphrase()
@@ -192,7 +192,7 @@ public:
 
     /**
      * Store a wifi access point network passphrase.
-     * 
+     *
      * @param[in] passphrase Wifi access point network passphrase
      */
     void setWifiApPassphrase(const String& passphrase)
@@ -203,7 +203,7 @@ public:
 
     /**
      * Get hostname.
-     * 
+     *
      * @return Hostname
      */
     String getHostname()
@@ -213,12 +213,31 @@ public:
 
     /**
      * Store hostname.
-     * 
+     *
      * @param[in] hostname Hostname
      */
     void setHostname(const String& hostname)
     {
         m_preferences.putString(KEY_HOSTNAME, hostname);
+        return;
+    }
+
+    /**
+     * Get state of automatic brightness adjustment.
+     */
+    bool getAutoBrightnessAdjustment()
+    {
+        return m_preferences.getBool(KEY_AUTO_BRIGHTNESS_CTRL, false);
+    }
+
+    /**
+     * Set state of automatic brightness adjustment.
+     *
+     * @param[in] state State
+     */
+    void setAutoBrightnessAdjustment(bool state)
+    {
+        m_preferences.putBool(KEY_AUTO_BRIGHTNESS_CTRL, state);
         return;
     }
 
@@ -232,12 +251,13 @@ private:
 
     Preferences         m_preferences;  /**< Persistent storage */
 
-    static const char*  PREF_NAMESPACE;         /**< Settings namespace used for preferences */
-    static const char*  KEY_WIFI_SSID;          /**< Wifi network key */
-    static const char*  KEY_WIFI_PASSPHRASE;    /**< Wifi network passphrase key */
-    static const char*  KEY_WIFI_AP_SSID;       /**< Wifi access point network key */
-    static const char*  KEY_WIFI_AP_PASSPHRASE; /**< Wifi access point network passphrase key */
-    static const char*  KEY_HOSTNAME;           /**< Hostname key */
+    static const char*  PREF_NAMESPACE;             /**< Settings namespace used for preferences */
+    static const char*  KEY_WIFI_SSID;              /**< Wifi network key */
+    static const char*  KEY_WIFI_PASSPHRASE;        /**< Wifi network passphrase key */
+    static const char*  KEY_WIFI_AP_SSID;           /**< Wifi access point network key */
+    static const char*  KEY_WIFI_AP_PASSPHRASE;     /**< Wifi access point network passphrase key */
+    static const char*  KEY_HOSTNAME;               /**< Hostname key */
+    static const char*  KEY_AUTO_BRIGHTNESS_CTRL;   /**< Automatic brightness control */
 
     /**
      * Constructs the settings instance.

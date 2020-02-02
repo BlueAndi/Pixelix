@@ -154,7 +154,7 @@ void DisplayMgr::end()
     return;
 }
 
-bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
+bool DisplayMgr::setAutoBrightnessAdjustment(bool enable)
 {
     bool status = true;
 
@@ -180,6 +180,18 @@ bool DisplayMgr::enableAutoBrightnessAdjustment(bool enable)
     }
 
     return status;
+}
+
+bool DisplayMgr::getAutoBrightnessAdjustment(void) const
+{
+    bool isEnabled = false;
+
+    if (m_autoBrightnessTimer.isTimerRunning())
+    {
+        isEnabled = true;
+    }
+
+    return isEnabled;
 }
 
 uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
