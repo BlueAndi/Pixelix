@@ -204,7 +204,7 @@ pixelix.ws.Client.prototype.setBrightness = function(options) {
 
             if ("boolean" === typeof options.automaticBrightnessControl) {
                 par += ";";
-                par += options.automaticBrightnessControl;
+                par += (false == options.automaticBrightnessControl) ? 0 : 1;
             }
 
             this._sendCmd({

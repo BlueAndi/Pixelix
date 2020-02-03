@@ -109,7 +109,7 @@ void WsCmdUninstall::setPar(const char* par)
 {
     if (DisplayMgr::SLOT_ID_INVALID == m_slotId)
     {
-        if (false == Util::strToUInt8(par, m_slotId))
+        if (false == Util::strToUInt8(String(par), m_slotId))
         {
             m_isError = true;
         }

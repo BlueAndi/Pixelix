@@ -4,19 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>%PAGE_TITLE%</title>
-    <link rel="stylesheet" href="/data/style.css"></link>
+    <link rel="stylesheet" href="/data/style.css" />
     <script src="/data/ws.js"></script>
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
     <script>
-        var matrixWidth     = 32;   // LED matrix width in number of LEDs
-        var matrixHeight    = 8;    // LED matrix height in number of LEDs
-        var ctx             = null; // Canvas context
-        var pixelWidth      = 10;   // Width of a single LED in pixels
-        var pixelHeight     = 10;   // Height of a single LED in pixels
-        var timerId         = 0;    // Timer id
-        var period          = 400;  // Display refresh period in ms
-        var wsClient        = null; // Websocket client
-        var plugins         = [];   // List of all available plugins
+        var matrixWidth         = 32;   // LED matrix width in number of LEDs
+        var matrixHeight        = 8;    // LED matrix height in number of LEDs
+        var ctx                 = null; // Canvas context
+        var pixelWidth          = 10;   // Width of a single LED in pixels
+        var pixelHeight         = 10;   // Height of a single LED in pixels
+        var timerId             = 0;    // Timer id
+        var period              = 400;  // Display refresh period in ms
+        var wsClient            = null; // Websocket client
+        var plugins             = [];   // List of all available plugins
+        var autoBrightnessCtrl  = false;// Is automatic brightness control enabled or disabled?
+        var brightness          = 0;    // Brightness [0; 255]
 
         function onClosed() {
             window.clearTimeout(timerId);
@@ -124,6 +126,55 @@
             });
         }
 
+        function updateBrightness() {
+            document.getElementById("brightness").innerHTML = "" + (brightness * 100 / 255).toFixed(2) + " %%";
+            document.getElementById("sliderBrightness").value = brightness;
+        }
+
+        function changeBrightness() {
+            wsClient.setBrightness({
+                brightness: parseInt(document.getElementById("sliderBrightness").value)
+            }).then(function(rsp) {
+                brightness = rsp.brightness;
+                autoBrightnessCtrl = rsp.automaticBrightnessControl;
+                updateAutoBrightnessCtrl();
+                updateBrightness();
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+                alert("Changing brightness failed.");
+                updateBrightness();
+            });
+        }
+
+        function updateAutoBrightnessCtrl() {
+            if (false === autoBrightnessCtrl) {
+                document.getElementById("autoBrightnessCtrl").innerHTML = "Disabled";
+                document.getElementById("bAutoBrightnessCtrl").value = "Enable";
+            } else {
+                document.getElementById("autoBrightnessCtrl").innerHTML = "Enabled";
+                document.getElementById("bAutoBrightnessCtrl").value = "Disable";
+            }
+        }
+
+        function changeAutoBrightnessCtrl() {
+            wsClient.setBrightness({
+                brightness: brightness,
+                automaticBrightnessControl: (false == autoBrightnessCtrl) ? true : false
+            }).then(function(rsp) {
+                brightness = rsp.brightness;
+                autoBrightnessCtrl = rsp.automaticBrightnessControl;
+                updateAutoBrightnessCtrl();
+                updateBrightness();
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+                alert("Changing automatic brightness control failed.");
+            });
+        }
+
         window.onload = function() {
             var displayCanvas = document.getElementById("canvas");
 
@@ -156,8 +207,10 @@
             }).then(function(rsp) {
                 return wsClient.getBrightness();
             }).then(function(rsp) {
-                document.getElementById("brightness").innerHTML = "Brightness: " + (rsp.brightness * 100 / 255) + " %%";
-                document.getElementById("autoBrightnessControl").innerHTML = "Automatic brightness control: " + rsp.automaticBrightnessControl;
+                brightness = rsp.brightness;
+                autoBrightnessCtrl = rsp.automaticBrightnessControl;
+                updateAutoBrightnessCtrl();
+                updateBrightness();
             }).then(function(rsp) {
                 timerId = window.setTimeout(getDisplayContent, period);
             }).catch(function(err) {
@@ -197,8 +250,22 @@
         <br />
         <input type="button" value="Install" onclick="install()" />
     </p>
-    <p id="brightness"></p>
-    <p id="autoBrightnessControl"></p>
+    <p>
+        <table border="0">
+            <tr>
+                <td>Automatic brightness control:</td>
+                <td id="autoBrightnessCtrl"></td>
+                <td><input id="bAutoBrightnessCtrl" type="button" value="" onclick="changeAutoBrightnessCtrl()" /></td>
+            </tr>
+            <tr>
+                <td>Brightness:</td>
+                <td id="brightness"></td>
+                <td>
+                    <input type="range" id="sliderBrightness" min="0" max="255" onchange="changeBrightness()" />
+                </td>
+            </tr>
+        </table>
+    </p>
 </div>
 <div class="footer">
     <hr />

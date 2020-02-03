@@ -112,7 +112,7 @@ void WsCmdBrightness::setPar(const char* par)
     switch(m_parCnt)
     {
     case 0:
-        if (false == Util::strToUInt8(par, m_brightness))
+        if (false == Util::strToUInt8(String(par), m_brightness))
         {
             m_isError = true;
         }
