@@ -622,6 +622,8 @@ static void settingsPage(AsyncWebServerRequest* request)
 
                 ++index;
             }
+
+            Settings::getInstance().close();
         }
 
         if (false == isError)
@@ -663,6 +665,11 @@ static String settingsPageProcessor(const String& var)
             for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
             {
                 KeyValue* parameter = list[index];
+
+                if (0U < index)
+                {
+                    result += ", ";
+                }
 
                 result += "{";
                 result += "title: \"";
