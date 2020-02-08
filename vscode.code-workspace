@@ -33,7 +33,10 @@
 			"xhash": "cpp",
 			"xstring": "cpp",
 			"xutility": "cpp",
-			"array": "cpp"
+			"array": "cpp",
+			"bitset": "cpp",
+			"typeinfo": "cpp",
+			"utility": "cpp"
 		},
 		"files.exclude": {
 			"**/.classpath": true,

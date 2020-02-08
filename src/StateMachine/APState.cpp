@@ -99,19 +99,19 @@ void APState::entry(StateMachine& sm)
     if (false == Settings::getInstance().open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::HOSTNAME_DEFAULT;
+        hostname = Settings::getInstance().getHostname().getDefault();
 
         LOG_WARNING("Use default wifi AP SSID.");
-        wifiApSSID = Settings::WIFI_AP_SSID_DEFAULT;
+        wifiApSSID = Settings::getInstance().getWifiApSSID().getDefault();
 
         LOG_WARNING("Use default wifi AP passphrase.");
-        wifiApPassphrase = Settings::WIFI_AP_SSID_DEFAULT;
+        wifiApPassphrase = Settings::getInstance().getWifiApPassphrase().getDefault();
     }
     else
     {
-        hostname            = Settings::getInstance().getHostname();
-        wifiApSSID          = Settings::getInstance().getWifiApSSID();
-        wifiApPassphrase    = Settings::getInstance().getWifiApPassphrase();
+        hostname            = Settings::getInstance().getHostname().getValue();
+        wifiApSSID          = Settings::getInstance().getWifiApSSID().getValue();
+        wifiApPassphrase    = Settings::getInstance().getWifiApPassphrase().getValue();
         Settings::getInstance().close();
     }
 
@@ -246,7 +246,7 @@ void APState::exit(StateMachine& sm)
 
     /* Disconnect all connections */
     (void)WiFi.softAPdisconnect();
-    
+
     return;
 }
 

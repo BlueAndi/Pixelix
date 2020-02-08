@@ -75,8 +75,8 @@ void ConnectingState::entry(StateMachine& sm)
     /* Are remote wifi network informations available? */
     if (true == Settings::getInstance().open(true))
     {
-        m_wifiSSID          = Settings::getInstance().getWifiSSID();
-        m_wifiPassphrase    = Settings::getInstance().getWifiPassphrase();
+        m_wifiSSID          = Settings::getInstance().getWifiSSID().getValue();
+        m_wifiPassphrase    = Settings::getInstance().getWifiPassphrase().getValue();
 
         Settings::getInstance().close();
     }
@@ -179,7 +179,7 @@ void ConnectingState::process(StateMachine& sm)
 void ConnectingState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
-    
+
     /* Nothing to do. */
     return;
 }

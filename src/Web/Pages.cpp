@@ -67,7 +67,6 @@
  *****************************************************************************/
 
 static bool isValidHostname(const String& hostname);
-static bool isValidSSID(const String& ssid);
 static String getColoredText(const String& text);
 
 static String commonPageProcessor(const String& var);
@@ -80,7 +79,6 @@ static String indexPageProcessor(const String& var);
 static void networkPage(AsyncWebServerRequest* request);
 static String networkPageProcessor(const String& var);
 
-static void addSettingsData(String& dst, const char* title, const char* name, const char* value, uint8_t size, uint8_t minLen, uint8_t maxLen);
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
 
@@ -96,39 +94,6 @@ static String displayPageProcessor(const String& var);
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/** Name of the input field for wifi SSID. */
-static const char*      FORM_INPUT_NAME_WIFI_SSID           = "wifi_ssid";
-
-/** Name of the input field for wifi passphrase. */
-static const char*      FORM_INPUT_NAME_WIFI_PASSPHRASE     = "wifi_passphrase";
-
-/** Name of the input field for wifi access point SSID. */
-static const char*      FORM_INPUT_NAME_WIFI_AP_SSID        = "wifi_ap_ssid";
-
-/** Name of the input field for wifi access point passphrase. */
-static const char*      FORM_INPUT_NAME_WIFI_AP_PASSPHRASE  = "wifi_ap_passphrase";
-
-/** Name of the input field for hostname. */
-static const char*      FORM_INPUT_NAME_HOSTNAME            = "hostname";
-
-/** Min. wifi SSID length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const uint8_t    MIN_SSID_LENGTH             = 0U;
-
-/** Max. wifi SSID length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const uint8_t    MAX_SSID_LENGTH             = 32U;
-
-/** Min. wifi passphrase length */
-static const uint8_t    MIN_PASSPHRASE_LENGTH       = 8U;
-
-/** Max. wifi passphrase length */
-static const uint8_t    MAX_PASSPHRASE_LENGTH       = 64U;
-
-/** Min. hostname length (RFC1034 1 - 63) */
-static const uint8_t    MIN_HOSTNAME_LENGTH         = 1U;
-
-/** Max. hostname length (RFC1034 1 - 63) */
-static const uint8_t    MAX_HOSTNAME_LENGTH         = 63U;
 
 /** Firmware binary filename, used for update. */
 static const char*      FIRMWARE_FILENAME           = "firmware.bin";
@@ -223,7 +188,9 @@ void Pages::error(AsyncWebServerRequest* request)
  */
 static bool isValidHostname(const String& hostname)
 {
-    bool isValid = true;
+    bool            isValid             = true;
+    const size_t    MIN_HOSTNAME_LENGTH = Settings::getInstance().getHostname().getMinLength();
+    const size_t    MAX_HOSTNAME_LENGTH = Settings::getInstance().getHostname().getMaxLength();
 
     if ((MIN_HOSTNAME_LENGTH > hostname.length()) ||
         (MAX_HOSTNAME_LENGTH < hostname.length()))
@@ -272,27 +239,6 @@ static bool isValidHostname(const String& hostname)
 
             ++index;
         }
-    }
-
-    return isValid;
-}
-
-/**
- * Check the given wifi SSID and returns whether it is valid or not.
- * Validation is according to Section 7.3.2.1 of the 802.11-2007 specification.
- *
- * @param[in] hostname  SSID which to validate
- *
- * @return Is valid (true) or not (false).
- */
-static bool isValidSSID(const String& ssid)
-{
-    bool isValid = true;
-
-    if ((MIN_SSID_LENGTH > ssid.length()) ||
-        (MAX_SSID_LENGTH < ssid.length()))
-    {
-        isValid = false;
     }
 
     return isValid;
@@ -504,7 +450,7 @@ static String networkPageProcessor(const String& var)
     {
         if (true == Settings::getInstance().open(true))
         {
-            result = Settings::getInstance().getWifiSSID();
+            result = Settings::getInstance().getWifiSSID().getValue();
             Settings::getInstance().close();
         }
     }
@@ -577,150 +523,105 @@ static void settingsPage(AsyncWebServerRequest* request)
     if ((HTTP_POST == request->method()) &&
         (0 < request->args()))
     {
-        bool    isError = false;
-        String  jsonRsp;
+        bool        isError = false;
+        String      jsonRsp;
+        KeyValue**  list    = Settings::getInstance().getList();
+        uint8_t     index   = 0U;
 
-        if (true == request->hasArg(FORM_INPUT_NAME_WIFI_SSID))
+        if (false == Settings::getInstance().open(false))
         {
-            String  wifiSSID = request->arg(FORM_INPUT_NAME_WIFI_SSID);
+            LOG_WARNING("Couldn't open settings.");
 
-            if (false == isValidSSID(wifiSSID))
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid SSID.\" }";
-            }
-            else
-            {
-                if (false == Settings::getInstance().open(false))
-                {
-                    LOG_WARNING("Couldn't open settings.");
-
-                    isError = true;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
-                }
-                else
-                {
-                    Settings::getInstance().setWifiSSID(wifiSSID);
-                    Settings::getInstance().close();
-                }
-            }
-        }
-        else if (true == request->hasArg(FORM_INPUT_NAME_WIFI_PASSPHRASE))
-        {
-            String  wifiPassphrase = request->arg(FORM_INPUT_NAME_WIFI_PASSPHRASE);
-
-            /* Check arguments min. and max. lengths */
-            if (MIN_PASSPHRASE_LENGTH > wifiPassphrase.length())
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Passphrase too short.\" }";
-            }
-            else if (MAX_PASSPHRASE_LENGTH < wifiPassphrase.length())
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Passphrase too long.\" }";
-            }
-            else
-            {
-                if (false == Settings::getInstance().open(false))
-                {
-                    LOG_WARNING("Couldn't open settings.");
-
-                    isError = true;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
-                }
-                else
-                {
-                    Settings::getInstance().setWifiPassphrase(wifiPassphrase);
-                    Settings::getInstance().close();
-                }
-            }
-        }
-        else if (true == request->hasArg(FORM_INPUT_NAME_WIFI_AP_SSID))
-        {
-            String  wifiApSSID = request->arg(FORM_INPUT_NAME_WIFI_AP_SSID);
-
-            if (false == isValidSSID(wifiApSSID))
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid SSID.\" }";
-            }
-            else
-            {
-                if (false == Settings::getInstance().open(false))
-                {
-                    LOG_WARNING("Couldn't open settings.");
-
-                    isError = true;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
-                }
-                else
-                {
-                    Settings::getInstance().setWifiApSSID(wifiApSSID);
-                    Settings::getInstance().close();
-                }
-            }
-        }
-        else if (true == request->hasArg(FORM_INPUT_NAME_WIFI_AP_PASSPHRASE))
-        {
-            String  wifiApPassphrase = request->arg(FORM_INPUT_NAME_WIFI_AP_PASSPHRASE);
-
-            /* Check arguments min. and max. lengths */
-            if (MIN_PASSPHRASE_LENGTH > wifiApPassphrase.length())
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Passphrase too short.\" }";
-            }
-            else if (MAX_PASSPHRASE_LENGTH < wifiApPassphrase.length())
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Passphrase too long.\" }";
-            }
-            else
-            {
-                if (false == Settings::getInstance().open(false))
-                {
-                    LOG_WARNING("Couldn't open settings.");
-
-                    isError = true;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
-                }
-                else
-                {
-                    Settings::getInstance().setWifiApPassphrase(wifiApPassphrase);
-                    Settings::getInstance().close();
-                }
-            }
-        }
-        else if (true == request->hasArg(FORM_INPUT_NAME_HOSTNAME))
-        {
-            String  hostname = request->arg(FORM_INPUT_NAME_HOSTNAME);
-
-            if (false == isValidHostname(hostname))
-            {
-                isError = true;
-                jsonRsp = "{ \"status\": 1, \"error\": \"Hostname is invalid.\" }";
-            }
-            else
-            {
-                if (false == Settings::getInstance().open(false))
-                {
-                    LOG_WARNING("Couldn't open settings.");
-
-                    isError = true;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
-                }
-                else
-                {
-                    Settings::getInstance().setHostname(hostname);
-                    Settings::getInstance().close();
-                }
-            }
+            isError = true;
+            jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
         }
         else
         {
-            isError = true;
-            jsonRsp = "{ \"status\": 1, \"error\": \"Unknown argument.\" }";
+            while((index < Settings::KEY_VALUE_PAIR_NUM) && (false == isError))
+            {
+                KeyValue* parameter = list[index];
+
+                if (true == request->hasArg(parameter->getKey()))
+                {
+                    String value = request->arg(parameter->getKey());
+
+                    switch(parameter->getValueType())
+                    {
+                    case KeyValue::TYPE_STRING:
+                        {
+                            KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
+
+                            /* If it is the hostname, verify it explicit. */
+                            if (0 == strcmp(Settings::getInstance().getHostname().getKey(), kvStr->getKey()))
+                            {
+                                if (false == isValidHostname(value))
+                                {
+                                    isError = true;
+                                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid hostname.\" }";
+                                }
+                            }
+
+                            if (false == isError)
+                            {
+                                /* Check for min. and max. length */
+                                if (kvStr->getMinLength() > value.length())
+                                {
+                                    isError = true;
+                                    jsonRsp = "{ \"status\": 1, \"error\": \"String too short.\" }";
+                                }
+                                else if (kvStr->getMaxLength() < value.length())
+                                {
+                                    isError = true;
+                                    jsonRsp = "{ \"status\": 1, \"error\": \"String too long.\" }";
+                                }
+                                else
+                                {
+                                    kvStr->setValue(value.c_str());
+                                }
+                            }
+                        }
+                        break;
+
+                    case KeyValue::TYPE_BOOL:
+                        {
+                            KeyValueBool*   kvBool  = static_cast<KeyValueBool*>(parameter);
+                            uint8_t         bit     = 0;
+                            bool            status  = Util::strToUInt8(value, bit);
+
+                            /* Conversion failed? */
+                            if (false == status)
+                            {
+                                isError = true;
+                                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                            }
+                            /* Only 0 and 1 are allowed. */
+                            else if (1U < bit)
+                            {
+                                isError = true;
+                                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                            }
+                            else if (0U == bit)
+                            {
+                                kvBool->setValue(false);
+                            }
+                            else
+                            {
+                                kvBool->setValue(true);
+                            }
+                        }
+                        break;
+
+                    case KeyValue::TYPE_UNKNOWN:
+                        /* fallthrough */
+                    default:
+                        isError = true;
+                        jsonRsp = "{ \"status\": 1, \"error\": \"Unknown parameter.\" }";
+                        break;
+                    }
+                }
+
+                ++index;
+            }
         }
 
         if (false == isError)
@@ -743,44 +644,6 @@ static void settingsPage(AsyncWebServerRequest* request)
 }
 
 /**
- * Add settings data to the destination string in JSON format.
- * The structure depends on the javascript code in settings.html.
- *
- * @param[in] dst       Destination string
- * @param[in] title     Settings title
- * @param[in] name      Input field name
- * @param[in] value     Input field value
- * @param[in] size      Input field size in characters
- * @param[in] minLen    Minimum length of input field value
- * @param[in] maxLen    Maximum length of input field value
- */
-static void addSettingsData(String& dst, const char* title, const char* name, const char* value, uint8_t size, uint8_t minLen, uint8_t maxLen)
-{
-    dst += "{";
-    dst += "title: \"";
-    dst += title;
-    dst += "\", ";
-    dst += "input: {";
-    dst += "name: \"";
-    dst += name;
-    dst += "\", ";
-    dst += "value: \"";
-    dst += value;
-    dst += "\", ";
-    dst += "size: ";
-    dst += size;
-    dst += ", ";
-    dst += "minlength: ";
-    dst += minLen;
-    dst += ", ";
-    dst += "maxlength: ";
-    dst += maxLen;
-    dst += "} ";
-    dst += "}";
-    return;
-}
-
-/**
  * Processor for settings page template.
  * It is responsible for the data binding.
  *
@@ -792,29 +655,69 @@ static String settingsPageProcessor(const String& var)
 
     if (var == "DATA")
     {
-        String  wifiSSID;
-        String  wifiPassphrase;
-        String  wifiApSSID;
-        String  wifiApPassphrase;
-        String  hostname;
+        if (true == Settings::getInstance().open(true))
+        {
+            KeyValue**  list    = Settings::getInstance().getList();
+            uint8_t     index   = 0U;
 
-        Settings::getInstance().open(true);
-        wifiSSID            = Settings::getInstance().getWifiSSID();
-        wifiPassphrase      = Settings::getInstance().getWifiPassphrase();
-        wifiApSSID          = Settings::getInstance().getWifiApSSID();
-        wifiApPassphrase    = Settings::getInstance().getWifiApPassphrase();
-        hostname            = Settings::getInstance().getHostname();
-        Settings::getInstance().close();
+            for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
+            {
+                KeyValue* parameter = list[index];
 
-        addSettingsData(result, "Wifi SSID", FORM_INPUT_NAME_WIFI_SSID, wifiSSID.c_str(), MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH);
-        result += ", ";
-        addSettingsData(result, "Wifi Passphrase", FORM_INPUT_NAME_WIFI_PASSPHRASE, wifiPassphrase.c_str(), MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH);
-        result += ", ";
-        addSettingsData(result, "Wifi AP SSID", FORM_INPUT_NAME_WIFI_AP_SSID, wifiApSSID.c_str(), MAX_SSID_LENGTH, MIN_SSID_LENGTH, MAX_SSID_LENGTH);
-        result += ", ";
-        addSettingsData(result, "Wifi AP Passphrase", FORM_INPUT_NAME_WIFI_AP_PASSPHRASE, wifiApPassphrase.c_str(), MAX_PASSPHRASE_LENGTH, MIN_PASSPHRASE_LENGTH, MAX_PASSPHRASE_LENGTH);
-        result += ", ";
-        addSettingsData(result, "Hostname", FORM_INPUT_NAME_HOSTNAME, hostname.c_str(), MAX_HOSTNAME_LENGTH, MIN_HOSTNAME_LENGTH, MAX_HOSTNAME_LENGTH);
+                result += "{";
+                result += "title: \"";
+                result += parameter->getName();
+                result += "\", ";
+                result += "input: {";
+                result += "name: \"";
+                result += parameter->getKey();
+                result += "\", ";
+                result += "value: \"";
+
+                switch(parameter->getValueType())
+                {
+                case KeyValue::TYPE_STRING:
+                    {
+                        KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
+                        result += kvStr->getValue();
+                        result += "\", ";
+                        result += "size: ";
+                        result += kvStr->getMaxLength();
+                        result += ", ";
+                        result += "minlength: ";
+                        result += kvStr->getMinLength();
+                        result += ", ";
+                        result += "maxlength: ";
+                        result += kvStr->getMaxLength();
+                    }
+                    break;
+
+                case KeyValue::TYPE_BOOL:
+                    {
+                        KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
+                        result += (false == kvBool->getValue()) ? 0 : 1;
+                        result += "\", ";
+                        result += "size: ";
+                        result += 1;
+                        result += ", ";
+                        result += "minlength: ";
+                        result += 1;
+                        result += ", ";
+                        result += "maxlength: ";
+                        result += 1;
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+
+                result += "} ";
+                result += "}";
+            }
+
+            Settings::getInstance().close();
+        }
     }
     else
     {

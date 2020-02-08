@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <Preferences.h>
+#include "KeyValue.h"
 
 /******************************************************************************
  * Macros
@@ -80,199 +81,109 @@ public:
      * @retval false    Failed to open
      * @retval true     Successful opened
      */
-    bool open(bool readOnly)
-    {
-        /* Open Preferences with namespace. Each application module, library, etc
-         * has to use a namespace name to prevent key name collisions. We will open storage in
-         * RW-mode (second parameter has to be false).
-         * Note: Namespace name is limited to 15 chars.
-         */
-        bool status = m_preferences.begin(PREF_NAMESPACE, readOnly);
-
-        /* If settings storage doesn't exist, it will be created. */
-        if ((false == status) &&
-            (true == readOnly))
-        {
-            status = m_preferences.begin(PREF_NAMESPACE, false);
-
-            if (true == status)
-            {
-                m_preferences.end();
-                status = m_preferences.begin(PREF_NAMESPACE, readOnly);
-            }
-        }
-
-        return status;
-    }
+    bool open(bool readOnly);
 
     /**
      * Close settings.
      */
-    void close()
-    {
-        m_preferences.end();
-        return;
-    }
+    void close();
 
     /**
      * Get remote wifi network SSID.
-     * If there is no SSID available, a empty string will be returned.
      *
-     * @return Wifi network SSID
+     * @return Key value pair
      */
-    String getWifiSSID()
+    KeyValueString& getWifiSSID()
     {
-        return m_preferences.getString(KEY_WIFI_SSID, "");
-    }
-
-    /**
-     * Store a remote wifi network SSID.
-     *
-     * @param[in] ssid  Wifi network SSID
-     */
-    void setWifiSSID(const String& ssid)
-    {
-        m_preferences.putString(KEY_WIFI_SSID, ssid);
-        return;
+        return m_wifiSSID;
     }
 
     /**
      * Get remote wifi network passphrase.
-     * If there is no passphrase available, a empty string will be returned.
      *
-     * @return Wifi network passphrase
+     * @return Key value pair
      */
-    String getWifiPassphrase()
+    KeyValueString& getWifiPassphrase()
     {
-        return m_preferences.getString(KEY_WIFI_PASSPHRASE, "");
-    }
-
-    /**
-     * Store a remote wifi network passphrase.
-     *
-     * @param[in] passphrase Wifi network passphrase
-     */
-    void setWifiPassphrase(const String& passphrase)
-    {
-        m_preferences.putString(KEY_WIFI_PASSPHRASE, passphrase);
-        return;
+        return m_wifiPassphrase;
     }
 
     /**
      * Get wifi access point network SSID.
      *
-     * @return Wifi access point network SSID
+     * @return Key value pair
      */
-    String getWifiApSSID()
+    KeyValueString& getWifiApSSID()
     {
-        return m_preferences.getString(KEY_WIFI_AP_SSID, WIFI_AP_SSID_DEFAULT);
-    }
-
-    /**
-     * Store a wifi access point network SSID.
-     *
-     * @param[in] ssid  Wifi access point network SSID
-     */
-    void setWifiApSSID(const String& ssid)
-    {
-        m_preferences.putString(KEY_WIFI_AP_SSID, ssid);
-        return;
+        return m_apSSID;
     }
 
     /**
      * Get wifi access point network passphrase.
-     * If there is no passphrase available, a empty string will be returned.
      *
-     * @return Wifi access point network passphrase
+     * @return Key value pair
      */
-    String getWifiApPassphrase()
+    KeyValueString& getWifiApPassphrase()
     {
-        return m_preferences.getString(KEY_WIFI_AP_PASSPHRASE, WIFI_AP_PASSPHRASE_DEFAULT);
-    }
-
-    /**
-     * Store a wifi access point network passphrase.
-     *
-     * @param[in] passphrase Wifi access point network passphrase
-     */
-    void setWifiApPassphrase(const String& passphrase)
-    {
-        m_preferences.putString(KEY_WIFI_AP_PASSPHRASE, passphrase);
-        return;
+        return m_wifiPassphrase;
     }
 
     /**
      * Get hostname.
      *
-     * @return Hostname
+     * @return Key value pair
      */
-    String getHostname()
+    KeyValueString& getHostname()
     {
-        return m_preferences.getString(KEY_HOSTNAME, HOSTNAME_DEFAULT);
-    }
-
-    /**
-     * Store hostname.
-     *
-     * @param[in] hostname Hostname
-     */
-    void setHostname(const String& hostname)
-    {
-        m_preferences.putString(KEY_HOSTNAME, hostname);
-        return;
+        return m_hostname;
     }
 
     /**
      * Get state of automatic brightness adjustment.
+     *
+     * @return Key value pair
      */
-    bool getAutoBrightnessAdjustment()
+    KeyValueBool& getAutoBrightnessAdjustment()
     {
-        return m_preferences.getBool(KEY_AUTO_BRIGHTNESS_CTRL, false);
+        return m_autoBrightnessCtrl;
     }
 
     /**
-     * Set state of automatic brightness adjustment.
+     * Get a list of all key value pairs.
      *
-     * @param[in] state State
+     * @return List of key value pairs.
      */
-    void setAutoBrightnessAdjustment(bool state)
+    KeyValue**  getList()
     {
-        m_preferences.putBool(KEY_AUTO_BRIGHTNESS_CTRL, state);
-        return;
+        return m_keyValueList;
     }
 
-    static const char*  WIFI_AP_SSID_DEFAULT;       /**< Default wifi access point SSID */
-    static const char*  WIFI_AP_PASSPHRASE_DEFAULT; /**< Default wifi access point passphrase */
-    static const char*  HOSTNAME_DEFAULT;           /**< Default hostname */
+    /** Number of key value pairs. */
+    static const uint8_t KEY_VALUE_PAIR_NUM = 6U;
 
 private:
 
-    static Settings     m_instance;     /**< Settings instance */
+    static Settings m_instance;     /**< Settings instance */
 
-    Preferences         m_preferences;  /**< Persistent storage */
+    Preferences     m_preferences;                      /**< Persistent storage */
+    KeyValue*       m_keyValueList[KEY_VALUE_PAIR_NUM]; /**< List of all key value pairs */
 
-    static const char*  PREF_NAMESPACE;             /**< Settings namespace used for preferences */
-    static const char*  KEY_WIFI_SSID;              /**< Wifi network key */
-    static const char*  KEY_WIFI_PASSPHRASE;        /**< Wifi network passphrase key */
-    static const char*  KEY_WIFI_AP_SSID;           /**< Wifi access point network key */
-    static const char*  KEY_WIFI_AP_PASSPHRASE;     /**< Wifi access point network passphrase key */
-    static const char*  KEY_HOSTNAME;               /**< Hostname key */
-    static const char*  KEY_AUTO_BRIGHTNESS_CTRL;   /**< Automatic brightness control */
+    KeyValueString  m_wifiSSID;             /**< Remote wifi network SSID */
+    KeyValueString  m_wifiPassphrase;       /**< Remote wifi network passphrase */
+    KeyValueString  m_apSSID;               /**< Access point SSID */
+    KeyValueString  m_apPassphrase;         /**< Access point passphrase */
+    KeyValueString  m_hostname;             /**< Hostname */
+    KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
 
     /**
      * Constructs the settings instance.
      */
-    Settings() :
-        m_preferences()
-    {
-    }
+    Settings();
 
     /**
      * Destroys the i/o pin instance.
      */
-    ~Settings()
-    {
-    }
+    ~Settings();
 
     /* An instance shall not be copied. */
     Settings(const Settings& settings);

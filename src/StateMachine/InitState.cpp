@@ -164,7 +164,7 @@ void InitState::entry(StateMachine& sm)
          */
         if (true == settings->open(true))
         {
-            bool isEnabled = settings->getAutoBrightnessAdjustment();
+            bool isEnabled = settings->getAutoBrightnessAdjustment().getValue();
 
             if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
             {

@@ -194,7 +194,7 @@ static void handleStatus(AsyncWebServerRequest* request)
 
         if (true == Settings::getInstance().open(true))
         {
-            ssid = Settings::getInstance().getWifiSSID();
+            ssid = Settings::getInstance().getWifiSSID().getValue();
             Settings::getInstance().close();
         }
 

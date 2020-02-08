@@ -86,11 +86,11 @@ void ConnectedState::entry(StateMachine& sm)
     if (false == Settings::getInstance().open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::HOSTNAME_DEFAULT;
+        hostname = Settings::getInstance().getHostname().getDefault();
     }
     else
     {
-        hostname = Settings::getInstance().getHostname();
+        hostname = Settings::getInstance().getHostname().getValue();
         Settings::getInstance().close();
     }
 
@@ -125,7 +125,7 @@ void ConnectedState::entry(StateMachine& sm)
 
         /* Start over-the-air update server. */
         UpdateMgr::getInstance().begin();
-        
+
         /* Add MDNS services */
         MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
         MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
@@ -138,7 +138,7 @@ void ConnectedState::entry(StateMachine& sm)
         /* Show ip address */
         LOG_INFO(String("IP: ") + WiFi.localIP().toString());
     }
-    
+
     return;
 }
 
@@ -168,7 +168,7 @@ void ConnectedState::process(StateMachine& sm)
 void ConnectedState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
-    
+
     /* Stop mDNS */
     MDNS.end();
 
@@ -177,7 +177,7 @@ void ConnectedState::exit(StateMachine& sm)
 
     /* Stop over-the-air update server */
     UpdateMgr::getInstance().end();
-    
+
     /* Disconnect all connections */
     (void)WiFi.disconnect();
 

@@ -104,11 +104,11 @@ bool UpdateMgr::init()
     if (false == Settings::getInstance().open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::HOSTNAME_DEFAULT;
+        hostname = Settings::getInstance().getHostname().getDefault();
     }
     else
     {
-        hostname = Settings::getInstance().getHostname();
+        hostname = Settings::getInstance().getHostname().getValue();
         Settings::getInstance().close();
     }
 
