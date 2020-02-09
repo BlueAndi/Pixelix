@@ -155,8 +155,7 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        Settings*           settings    = &Settings::getInstance();
-        IconTextLampPlugin* plugin      = nullptr;
+        Settings* settings = &Settings::getInstance();
 
         /* Enable or disable the automatic display brightness adjustment,
          * depended on settings. Enable it may fail in case there is no
@@ -185,15 +184,11 @@ void InitState::entry(StateMachine& sm)
         /* Show some informations on the display. */
         showStartupInfoOnDisplay();
 
-        /* Install default plugin. */
-        plugin = static_cast<IconTextLampPlugin*>(PluginMgr::getInstance().install("IconTextLampPlugin"));
+        /* Load last plugin installation. */
+        PluginMgr::getInstance().load();
 
-        if (nullptr != plugin)
-        {
-            (void)plugin->loadBitmap("/images/smiley.bmp");
-            plugin->setText("Hello World!");
-            plugin->enable();
-        }
+        /* Welcome the user on the very first time. */
+        welcome();
     }
 
     /* Any error happened? */
@@ -290,6 +285,37 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
 
+    return;
+}
+
+void InitState::welcome()
+{
+    Settings& settings = Settings::getInstance();
+
+    /* On the very first start, the plugin installation is empty.
+     * In this case we welcome the user.
+     */
+    if (true == settings.open(true))
+    {
+        String pluginInstallation = settings.getPluginInstallation().getValue();
+
+        if (true == pluginInstallation.isEmpty())
+        {
+            IconTextLampPlugin* plugin = nullptr;
+
+            /* Install default plugin. */
+            plugin = static_cast<IconTextLampPlugin*>(PluginMgr::getInstance().install("IconTextLampPlugin"));
+
+            if (nullptr != plugin)
+            {
+                (void)plugin->loadBitmap("/images/smiley.bmp");
+                plugin->setText("Hello World!");
+                plugin->enable();
+            }
+        }
+
+        settings.close();
+    }
     return;
 }
 

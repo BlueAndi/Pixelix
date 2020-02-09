@@ -149,6 +149,16 @@ public:
     }
 
     /**
+     * Get plugin installation.
+     *
+     * @return Key value pair
+     */
+    KeyValueString& getPluginInstallation()
+    {
+        return m_pluginInstallation;
+    }
+
+    /**
      * Get a list of all key value pairs.
      *
      * @return List of key value pairs.
@@ -159,7 +169,7 @@ public:
     }
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 6U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 7U;
 
 private:
 
@@ -174,6 +184,7 @@ private:
     KeyValueString  m_apPassphrase;         /**< Access point passphrase */
     KeyValueString  m_hostname;             /**< Hostname */
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
+    KeyValueString  m_pluginInstallation;   /**< Plugin installation */
 
     /**
      * Constructs the settings instance.

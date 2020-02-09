@@ -36,6 +36,7 @@
 #include "DisplayMgr.h"
 #include "MyWebServer.h"
 #include "RestApi.h"
+#include "Settings.h"
 
 #include <Logging.h>
 
@@ -95,7 +96,7 @@ void PluginMgr::registerPlugin(const String& name, Plugin::CreateFunc createFunc
     return;
 }
 
-Plugin* PluginMgr::install(const String& name)
+Plugin* PluginMgr::install(const String& name, uint8_t slotId)
 {
     Plugin*         plugin  = nullptr;
     PluginRegEntry* entry   = nullptr;
@@ -126,10 +127,28 @@ Plugin* PluginMgr::install(const String& name)
             (nullptr != entry))
         {
             plugin = entry->createFunc(entry->name);
-            if (false == installToAutoSlot(plugin))
+
+            if (DisplayMgr::SLOT_ID_INVALID == slotId)
             {
-                delete plugin;
-                plugin = nullptr;
+                if (false == installToAutoSlot(plugin))
+                {
+                    delete plugin;
+                    plugin = nullptr;
+                }
+            }
+            else
+            {
+                if (false == installToSlot(plugin, slotId))
+                {
+                    delete plugin;
+                    plugin = nullptr;
+                }
+            }
+
+            /* If installation is successful, store setup in persistent memory. */
+            if (nullptr != plugin)
+            {
+                save();
             }
         }
     }
@@ -198,6 +217,84 @@ String PluginMgr::getRestApiBaseUri(uint8_t slotId)
     }
 
     return baseUri;
+}
+
+void PluginMgr::load()
+{
+    Settings& settings = Settings::getInstance();
+
+    if (false == settings.open(true))
+    {
+        LOG_WARNING("Couldn't open filesystem.");
+    }
+    else
+    {
+        String installation = settings.getPluginInstallation().getValue();
+
+        if (false == installation.isEmpty())
+        {
+            uint8_t slotId  = 0;
+            uint8_t index   = 0;
+            String  pluginName;
+
+            while('\0' != installation[index])
+            {
+                if (DELIMITER == installation[index])
+                {
+                    if (false == pluginName.isEmpty())
+                    {
+                        install(pluginName, slotId);
+                    }
+
+                    pluginName.clear();
+                    ++slotId;
+                }
+                else
+                {
+                    pluginName += installation[index];
+                }
+
+                ++index;
+            }
+
+            if (false == pluginName.isEmpty())
+            {
+                install(pluginName, slotId);
+            }
+        }
+
+        settings.close();
+    }
+}
+
+void PluginMgr::save()
+{
+    String      installation;
+    uint8_t     slotId      = 0;
+    Plugin*     plugin      = nullptr;
+    Settings&   settings    = Settings::getInstance();
+
+    for(slotId = 0; slotId < DisplayMgr::MAX_SLOTS; ++slotId)
+    {
+        plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
+
+        if (nullptr != plugin)
+        {
+            installation += plugin->getName();
+        }
+
+        installation += DELIMITER;
+    }
+
+    if (false == settings.open(true))
+    {
+        LOG_WARNING("Couldn't open filesystem.");
+    }
+    else
+    {
+        settings.getPluginInstallation().setValue(installation);
+        settings.close();
+    }
 }
 
 /******************************************************************************

@@ -27,9 +27,9 @@
 /**
  * @brief  System state: Init
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup sys_states
- * 
+ *
  * @{
  */
 
@@ -65,7 +65,7 @@ public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
     static InitState& getInstance()
@@ -75,21 +75,21 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm);
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm);
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm);
@@ -118,7 +118,7 @@ private:
     ~InitState()
     {
     }
-    
+
     InitState(const InitState& state);
     InitState& operator=(const InitState& state);
 
@@ -136,6 +136,11 @@ private:
      * Register plugins on the plugin manager.
      */
     void registerPlugins();
+
+    /**
+     * Welcome the user on the very first start.
+     */
+    void welcome();
 };
 
 /******************************************************************************

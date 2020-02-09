@@ -80,6 +80,9 @@ static const char*  KEY_HOSTNAME                    = "hostname";
 /** Automatic brightness control key */
 static const char*  KEY_AUTO_BRIGHTNESS_CTRL        = "auto_brightness_ctrl";
 
+/** Plugin installation key */
+static const char* KEY_PLUGIN_INSTALLATION          = "plugin_installation";
+
 /* ---------- Key value pair names ---------- */
 
 /** Wifi network name of key value pair */
@@ -99,6 +102,9 @@ static const char*  NAME_HOSTNAME                   = "Hostname";
 
 /** Automatic brightness control name of key value pair */
 static const char*  NAME_AUTO_BRIGHTNESS_CTRL       = "Autom. brightness control";
+
+/** Plugin installation name of key value pair */
+static const char* NAME_PLUGIN_INSTALLATION         = "Plugin installation";
 
 /* ---------- Default values ---------- */
 
@@ -120,6 +126,9 @@ static const char*  DEFAULT_HOSTNAME                = "pixelix";
 /** Automatic brightness control default value */
 static bool         DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
 
+/** Plugin installation default value */
+static const char*  DEFAULT_PLUGIN_INSTALLATION     = "";
+
 /* ---------- Minimum values ---------- */
 
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -139,6 +148,9 @@ static const size_t MIN_VALUE_HOSTNAME             = 1U;
 
 /*                  MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
 
+/** Plugin installation min. length */
+static const size_t MIN_VALUE_PLUGIN_INSTALLATION   = 0U;
+
 /* ---------- Maximum values ---------- */
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -157,6 +169,9 @@ static const size_t MAX_VALUE_WIFI_AP_PASSPHRASE   = 64U;
 static const size_t MAX_VALUE_HOSTNAME             = 63U;
 
 /*                  MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
+
+/** Plugin installation max. length */
+static const size_t MAX_VALUE_PLUGIN_INSTALLATION  = 120U;
 
 /******************************************************************************
  * Public Methods
@@ -209,7 +224,8 @@ Settings::Settings() :
     m_apSSID(m_preferences, KEY_WIFI_AP_SSID, NAME_WIFI_AP_SSID, DEFAULT_WIFI_AP_SSID, MIN_VALUE_WIFI_AP_SSID, MAX_VALUE_WIFI_AP_SSID),
     m_apPassphrase(m_preferences, KEY_WIFI_AP_PASSPHRASE, NAME_WIFI_AP_PASSPHRASE, DEFAULT_WIFI_AP_PASSPHRASE, MIN_VALUE_WIFI_AP_PASSPHRASE, MAX_VALUE_WIFI_AP_PASSPHRASE),
     m_hostname(m_preferences, KEY_HOSTNAME, NAME_HOSTNAME, DEFAULT_HOSTNAME, MIN_VALUE_HOSTNAME, MAX_VALUE_HOSTNAME),
-    m_autoBrightnessCtrl(m_preferences, KEY_AUTO_BRIGHTNESS_CTRL, NAME_AUTO_BRIGHTNESS_CTRL, DEFAULT_AUTO_BRIGHTNESS_CTRL)
+    m_autoBrightnessCtrl(m_preferences, KEY_AUTO_BRIGHTNESS_CTRL, NAME_AUTO_BRIGHTNESS_CTRL, DEFAULT_AUTO_BRIGHTNESS_CTRL),
+    m_pluginInstallation(m_preferences, KEY_PLUGIN_INSTALLATION, NAME_PLUGIN_INSTALLATION, DEFAULT_PLUGIN_INSTALLATION, MIN_VALUE_PLUGIN_INSTALLATION, MAX_VALUE_PLUGIN_INSTALLATION)
 {
     m_keyValueList[0] = &m_wifiSSID;
     m_keyValueList[1] = &m_wifiPassphrase;
@@ -217,6 +233,7 @@ Settings::Settings() :
     m_keyValueList[3] = &m_apPassphrase;
     m_keyValueList[4] = &m_hostname;
     m_keyValueList[5] = &m_autoBrightnessCtrl;
+    m_keyValueList[6] = &m_pluginInstallation;
 }
 
 Settings::~Settings()

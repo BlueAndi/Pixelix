@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include "Plugin.hpp"
+#include "DisplayMgr.h"
 
 #include <LinkedList.hpp>
 
@@ -84,12 +85,14 @@ public:
 
     /**
      * Install plugin.
+     * If no slot id is given, the plugin will be installed in the next available slot.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name      Plugin name
+     * @param[in] slotId    Optional slot id
      *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    Plugin* install(const String& name);
+    Plugin* install(const String& name, uint8_t slotId = DisplayMgr::SLOT_ID_INVALID);
 
     /**
      * Uninstall plugin.
@@ -123,6 +126,16 @@ public:
      */
     String getRestApiBaseUri(uint8_t slotId);
 
+    /**
+     * Load plugin installation from persistent memory.
+     */
+    void load();
+
+    /**
+     * Save plugin installation to persistent memory.
+     */
+    void save();
+
 private:
 
     static PluginMgr    m_instance; /**< Plugin manager instance */
@@ -135,6 +148,9 @@ private:
         String              name;       /**< Plugin name */
         Plugin::CreateFunc  createFunc; /**< Plugin creation function */
     };
+
+    /** Delimiter, used for plugin installation setup in persistent memory. */
+    static const char               DELIMITER   = ';';
 
     DLinkedList<PluginRegEntry*>    m_registry; /**< Plugin registry */
     DLinkedList<Plugin*>            m_plugins;  /**< List with all installed plugins */
