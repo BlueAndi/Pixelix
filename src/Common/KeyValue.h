@@ -223,6 +223,7 @@ private:
     size_t          m_min;      /**< Min. length */
     size_t          m_max;      /**< Max. length */
 
+    /* An instance shall not be copied. */
     KeyValueString(const KeyValueString& kv);
     KeyValueString& operator=(const KeyValueString& kv);
 };
@@ -320,6 +321,7 @@ private:
     const char*     m_name;     /**< Name */
     bool            m_defValue; /**< Default value */
 
+    /* An instance shall not be copied. */
     KeyValueBool(const KeyValueBool& kv);
     KeyValueBool& operator=(const KeyValueBool& kv);
 };
@@ -436,6 +438,9 @@ protected:
     T               m_min;      /**< Min. length */
     T               m_max;      /**< Max. length */
 
+private:
+
+    /* An instance shall not be copied. */
     KeyValueNumber(const KeyValueNumber& kv);
     KeyValueNumber& operator=(const KeyValueNumber& kv);
 };
@@ -484,6 +489,7 @@ public:
 
 private:
 
+    /* An instance shall not be copied. */
     KeyValueUInt8(const KeyValueUInt8& kv);
     KeyValueUInt8& operator=(const KeyValueUInt8& kv);
 };
