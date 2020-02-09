@@ -191,7 +191,7 @@ public:
      */
     String getValue() const
     {
-        return m_pref.getString(getKey(), getDefault());
+        return m_pref.getString(m_key, getDefault());
     }
 
     /**
@@ -201,7 +201,7 @@ public:
      */
     void setValue(const String& value)
     {
-        m_pref.putString(getKey(), value);
+        m_pref.putString(m_key, value);
     }
 
     /**
@@ -290,7 +290,7 @@ public:
      */
     bool getValue() const
     {
-        return m_pref.getBool(getKey(), getDefault());
+        return m_pref.getBool(m_key, getDefault());
     }
 
     /**
@@ -300,7 +300,7 @@ public:
      */
     void setValue(bool value)
     {
-        m_pref.putBool(getKey(), value);
+        m_pref.putBool(m_key, value);
     }
 
     /**
