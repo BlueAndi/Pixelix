@@ -174,6 +174,9 @@ bool PluginMgr::uninstall(Plugin* plugin)
             {
                 plugin->unregisterWebInterface(MyWebServer::getInstance());
                 m_plugins.removeSelected();
+
+                /* Save current plugin installation in persistent memory. */
+                save();
             }
         }
     }
@@ -278,15 +281,18 @@ void PluginMgr::save()
     {
         plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
+        if (0 < slotId)
+        {
+            installation += DELIMITER;
+        }
+
         if (nullptr != plugin)
         {
             installation += plugin->getName();
         }
-
-        installation += DELIMITER;
     }
 
-    if (false == settings.open(true))
+    if (false == settings.open(false))
     {
         LOG_WARNING("Couldn't open filesystem.");
     }
