@@ -543,7 +543,7 @@ static void settingsPage(AsyncWebServerRequest* request)
 
                 if (true == request->hasArg(parameter->getKey()))
                 {
-                    String value = request->arg(parameter->getKey());
+                    const String& value = request->arg(parameter->getKey());
 
                     switch(parameter->getValueType())
                     {
@@ -576,7 +576,7 @@ static void settingsPage(AsyncWebServerRequest* request)
                                 }
                                 else
                                 {
-                                    kvStr->setValue(value.c_str());
+                                    kvStr->setValue(value);
                                 }
                             }
                         }
