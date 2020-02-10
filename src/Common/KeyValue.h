@@ -98,7 +98,7 @@ public:
     virtual const char* getName() const = 0;
 
     /**
-     * Get key.
+     * Get unique key.
      *
      * @return Key
      */
@@ -356,16 +356,6 @@ public:
     }
 
     /**
-     * Get value type.
-     *
-     * @return Value type
-     */
-    Type getValueType() const
-    {
-        return TYPE_STRING;
-    }
-
-    /**
      * Get user friendly name of key value pair.
      *
      * @return User friendly name
@@ -465,6 +455,16 @@ public:
      */
     virtual ~KeyValueUInt8()
     {
+    }
+
+    /**
+     * Get value type.
+     *
+     * @return Value type
+     */
+    Type getValueType() const
+    {
+        return TYPE_UINT8;
     }
 
     /**
