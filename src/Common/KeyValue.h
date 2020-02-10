@@ -386,21 +386,21 @@ public:
     }
 
     /**
-     * Get minimum string length.
+     * Get minimum value.
      *
-     * @return Minimum string length
+     * @return Minimum value
      */
-    T getMinLength() const
+    T getMin() const
     {
         return m_min;
     }
 
     /**
-     * Get maximum string length.
+     * Get maximum value.
      *
-     * @return Maximum string length
+     * @return Maximum value
      */
-    T getMaxLength() const
+    T getMax() const
     {
         return m_max;
     }
