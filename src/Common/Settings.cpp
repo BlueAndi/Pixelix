@@ -62,26 +62,32 @@ static const char*  PREF_NAMESPACE                  = "settings";
 
 /* ---------- Keys ---------- */
 
+/* Note:
+ * Zero-terminated ASCII string containing a key name.
+ * Maximum string length is 15 bytes, excluding a zero terminator.
+ * https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/storage/nvs_flash.html
+ */
+
 /** Wifi network key */
-static const char*  KEY_WIFI_SSID                   = "wifi_ssid";
+static const char*  KEY_WIFI_SSID                   = "sta_ssid";
 
 /** Wifi network passphrase key */
-static const char*  KEY_WIFI_PASSPHRASE             = "wifi_passphrase";
+static const char*  KEY_WIFI_PASSPHRASE             = "sta_passphrase";
 
 /** Wifi access point network key */
-static const char*  KEY_WIFI_AP_SSID                = "wifi_ap_ssid";
+static const char*  KEY_WIFI_AP_SSID                = "ap_ssid";
 
 /** Wifi access point network passphrase key */
-static const char*  KEY_WIFI_AP_PASSPHRASE          = "wifi_ap_passphrase";
+static const char*  KEY_WIFI_AP_PASSPHRASE          = "ap_passphrase";
 
 /** Hostname key */
 static const char*  KEY_HOSTNAME                    = "hostname";
 
 /** Automatic brightness control key */
-static const char*  KEY_AUTO_BRIGHTNESS_CTRL        = "auto_brightness_ctrl";
+static const char*  KEY_AUTO_BRIGHTNESS_CTRL        = "a_brightn_ctrl";
 
 /** Plugin installation key */
-static const char* KEY_PLUGIN_INSTALLATION          = "plugin_installation";
+static const char* KEY_PLUGIN_INSTALLATION          = "plugin_install";
 
 /* ---------- Key value pair names ---------- */
 
