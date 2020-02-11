@@ -125,7 +125,7 @@ public:
      */
     KeyValueString& getWifiApPassphrase()
     {
-        return m_wifiPassphrase;
+        return m_apPassphrase;
     }
 
     /**
