@@ -93,6 +93,9 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
         }
         else
         {
+            /* Save current installed plugins to persistent memory. */
+            PluginMgr::getInstance().save();
+
             rsp = "ACK";
         }
 

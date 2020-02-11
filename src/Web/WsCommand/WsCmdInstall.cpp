@@ -90,6 +90,9 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             rsp += plugin->getSlotId();
 
             plugin->enable();
+
+            /* Save current installed plugins to persistent memory. */
+            PluginMgr::getInstance().save();
         }
 
         server->text(client->id(), rsp);

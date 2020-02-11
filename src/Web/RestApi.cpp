@@ -357,6 +357,9 @@ static void handlePlugin(AsyncWebServerRequest* request)
 
                 plugin->enable();
 
+                /* Save current installed plugins to persistent memory. */
+                PluginMgr::getInstance().save();
+
                 /* Prepare response */
                 dataObj["slotId"]   = plugin->getSlotId();
                 jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
@@ -433,6 +436,9 @@ static void handlePlugin(AsyncWebServerRequest* request)
                     }
                     else
                     {
+                        /* Save current installed plugins to persistent memory. */
+                        PluginMgr::getInstance().save();
+
                         /* Prepare response */
                         (void)jsonDoc.createNestedObject("data");
                         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);

@@ -144,12 +144,6 @@ Plugin* PluginMgr::install(const String& name, uint8_t slotId)
                     plugin = nullptr;
                 }
             }
-
-            /* If installation is successful, store setup in persistent memory. */
-            if (nullptr != plugin)
-            {
-                save();
-            }
         }
     }
 
@@ -174,9 +168,6 @@ bool PluginMgr::uninstall(Plugin* plugin)
             {
                 plugin->unregisterWebInterface(MyWebServer::getInstance());
                 m_plugins.removeSelected();
-
-                /* Save current plugin installation in persistent memory. */
-                save();
             }
         }
     }
