@@ -168,6 +168,17 @@ public:
         return m_keyValueList;
     }
 
+    /**
+     * Clear all key value pairs, which means set them to
+     * factory defaults.
+     *
+     * @return If successful cleared, it will return true otherwise false.
+     */
+    bool clear()
+    {
+        return m_preferences.clear();
+    }
+
     /** Number of key value pairs. */
     static const uint8_t KEY_VALUE_PAIR_NUM = 7U;
 
