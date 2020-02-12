@@ -66,7 +66,8 @@ public:
         TYPE_UNKNOWN = 0,   /**< Unknown type */
         TYPE_UINT8,         /**< uint8_t type */
         TYPE_STRING,        /**< String type */
-        TYPE_BOOL           /**< bool type */
+        TYPE_BOOL,          /**< bool type */
+        TYPE_INT32,         /**< int32_t type */
     };
 
     /**
@@ -494,6 +495,64 @@ private:
     KeyValueUInt8& operator=(const KeyValueUInt8& kv);
 };
 
+/**
+ * Key value pair with int32_t value type.
+ */
+class KeyValueInt32 : public KeyValueNumber<int32_t>
+{
+public:
+
+    /**
+     * Constructs a key value pair.
+     */
+    KeyValueInt32(Preferences& pref, const char* key, const char* name, int32_t defValue, size_t min, size_t max) :
+        KeyValueNumber(pref, key, name, defValue, min, max)
+    {
+    }
+
+    /**
+     * Destroys a key value pair.
+     */
+    virtual ~KeyValueInt32()
+    {
+    }
+
+    /**
+     * Get value type.
+     *
+     * @return Value type
+     */
+    Type getValueType() const
+    {
+        return TYPE_INT32;
+    }
+
+    /**
+     * Get value.
+     *
+     * @return Value
+     */
+    int32_t getValue() const
+    {
+        return m_pref.getInt(m_key, m_defValue);
+    }
+
+    /**
+     * Set value.
+     *
+     * @param[in] value Value
+     */
+    void setValue(int32_t value)
+    {
+        m_pref.putInt(m_key, value);
+    }
+
+private:
+
+    /* An instance shall not be copied. */
+    KeyValueInt32(const KeyValueInt32& kv);
+    KeyValueInt32& operator=(const KeyValueInt32& kv);
+};
 /******************************************************************************
  * Functions
  *****************************************************************************/

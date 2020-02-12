@@ -89,6 +89,12 @@ static const char*  KEY_AUTO_BRIGHTNESS_CTRL        = "a_brightn_ctrl";
 /** Plugin installation key */
 static const char* KEY_PLUGIN_INSTALLATION          = "plugin_install";
 
+/** GMT offset key */
+static const char* KEY_GMTOFFSET                    = "gmt_offset";
+
+/** Daylight saving time control key */
+static const char* KEY_DAYLIGHT_SAVING_CTRL         = "dst_ctrl";
+
 /* ---------- Key value pair names ---------- */
 
 /** Wifi network name of key value pair */
@@ -111,6 +117,12 @@ static const char*  NAME_AUTO_BRIGHTNESS_CTRL       = "Autom. brightness control
 
 /** Plugin installation name of key value pair */
 static const char* NAME_PLUGIN_INSTALLATION         = "Plugin installation";
+
+/** GMT offset name of key value pair */
+static const char* NAME_GMT_OFFSET                  = "GMT offset [s]";
+
+/** DaylightSaving name of key value pair */
+static const char* NAME_DAYLIGHT_SAVING_CTRL        = "DST control";
 
 /* ---------- Default values ---------- */
 
@@ -135,6 +147,12 @@ static bool         DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
 /** Plugin installation default value */
 static const char*  DEFAULT_PLUGIN_INSTALLATION     = "";
 
+/** GMT offset default value */
+static const int16_t DEFAULT_GMT_OFFSET             = 0;
+
+/** Daylight saving control default value */
+static bool DEFAULT_DAYLIGHT_SAVING_CTRL            = false;
+
 /* ---------- Minimum values ---------- */
 
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -157,6 +175,13 @@ static const size_t MIN_VALUE_HOSTNAME             = 1U;
 /** Plugin installation min. length */
 static const size_t MIN_VALUE_PLUGIN_INSTALLATION   = 0U;
 
+/** Min. GMT offset (-12h+60s = -43200s) length */
+static const int32_t MIN_VALUE_GMT_OFFSET   = -43200;
+
+
+/*                  MIN_VALUE_DAYLIGHT_SAVING_CTRL */
+
+
 /* ---------- Maximum values ---------- */
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -178,6 +203,12 @@ static const size_t MAX_VALUE_HOSTNAME             = 63U;
 
 /** Plugin installation max. length */
 static const size_t MAX_VALUE_PLUGIN_INSTALLATION  = 120U;
+
+/** Max. GMT offset (14h*60s = 50400s) length */
+static const int32_t MAX_VALUE_GMT_OFFSET           = 50400;
+
+/*                  MIN_VALUE_DAYLIGHT_SAVING_CTRL */
+
 
 /******************************************************************************
  * Public Methods
@@ -231,7 +262,9 @@ Settings::Settings() :
     m_apPassphrase          (m_preferences, KEY_WIFI_AP_PASSPHRASE,     NAME_WIFI_AP_PASSPHRASE,    DEFAULT_WIFI_AP_PASSPHRASE,     MIN_VALUE_WIFI_AP_PASSPHRASE,   MAX_VALUE_WIFI_AP_PASSPHRASE),
     m_hostname              (m_preferences, KEY_HOSTNAME,               NAME_HOSTNAME,              DEFAULT_HOSTNAME,               MIN_VALUE_HOSTNAME,             MAX_VALUE_HOSTNAME),
     m_autoBrightnessCtrl    (m_preferences, KEY_AUTO_BRIGHTNESS_CTRL,   NAME_AUTO_BRIGHTNESS_CTRL,  DEFAULT_AUTO_BRIGHTNESS_CTRL),
-    m_pluginInstallation    (m_preferences, KEY_PLUGIN_INSTALLATION,    NAME_PLUGIN_INSTALLATION,   DEFAULT_PLUGIN_INSTALLATION,    MIN_VALUE_PLUGIN_INSTALLATION,  MAX_VALUE_PLUGIN_INSTALLATION)
+    m_pluginInstallation    (m_preferences, KEY_PLUGIN_INSTALLATION,    NAME_PLUGIN_INSTALLATION,   DEFAULT_PLUGIN_INSTALLATION,    MIN_VALUE_PLUGIN_INSTALLATION,  MAX_VALUE_PLUGIN_INSTALLATION),
+    m_gmtOffset             (m_preferences, KEY_GMTOFFSET,              NAME_GMT_OFFSET,            DEFAULT_GMT_OFFSET,             MIN_VALUE_GMT_OFFSET, MAX_VALUE_GMT_OFFSET),
+    m_IsDaylightSaving      (m_preferences, KEY_DAYLIGHT_SAVING_CTRL,   NAME_DAYLIGHT_SAVING_CTRL,  DEFAULT_DAYLIGHT_SAVING_CTRL)
 {
     m_keyValueList[0] = &m_wifiSSID;
     m_keyValueList[1] = &m_wifiPassphrase;
@@ -240,6 +273,8 @@ Settings::Settings() :
     m_keyValueList[4] = &m_hostname;
     m_keyValueList[5] = &m_autoBrightnessCtrl;
     m_keyValueList[6] = &m_pluginInstallation;
+    m_keyValueList[7] = &m_gmtOffset;
+    m_keyValueList[8] = &m_IsDaylightSaving;
 }
 
 Settings::~Settings()

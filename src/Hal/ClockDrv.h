@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Utilitiy
+ * @brief  RelatimeClock driver
  * @author Yann Le Glaz <yann_le@web.de>
  * 
- * @addtogroup utilities
+ * @addtogroup Hal
  *
  * @{
  */
 
-#ifndef __UTILITY_H__
-#define __UTILITY_H__
+#ifndef __CLOCKDRV_H__
+#define __CLOCKDRV_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,78 +43,114 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include <WString.h>
-#include <cerrno>
-
+#include "Arduino.h"
+#include "time.h"
+#include "SimpleTimer.hpp"
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/** Get number of array elements. */
-#define UTIL_ARRAY_NUM(__arr)   (sizeof(__arr) / sizeof((__arr)[0]))
-
-/** Use it to mark not used function parameters. */
-#define UTIL_NOT_USED(__var)    (void)(__var)
 
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
 
-/** Utilitiy functions */
-namespace Util
+/**
+ * Clock driver.
+ */
+class ClockDrv
 {
+public:
+
+    /**
+    *  Get the ClockDrv instance.
+    *
+    * @return ClockDrv instance.
+    */
+    static ClockDrv& getInstance()
+    {
+        
+        return m_instance;
+    }
+
+    /**
+    * Initialize the ClockDrv. 
+    * 
+    */
+    void init();
+
+    /**
+     * Get the current time.
+     * 
+     * @param[out] currentTime Pointer to the currentTime.
+     * @return true if successful, otherwise false.
+    */
+    bool getTime(tm *currentTime);
+
+     /**
+     * Process the ClockDrv, if the ntp sync timer expires a ntp update is triggered..
+     */
+    void process(void);
+
+    /**
+     * Get the current syncState.
+     * 
+     * @return true if synchronized, otherwise false.
+    */
+    bool isSynchronized(void);
+
+private:
+
+    /** ClockDrv instance. */
+    static ClockDrv m_instance;
+    
+    /** Flag indicating a initialized ClockDrv. */
+    bool m_isClockDrvInitialized;
+
+    /** Flag indicating a synchronized time. */
+    bool m_isSynchronized;
+
+    /** Timer, used for cyclic ntp synchronization. */
+    SimpleTimer m_ntpSyncTimer;
+   
+   /** The GMT offset as read from settings.*/
+   int32_t m_gmtOffset;
+
+    /** Daylight saving value.*/
+   int16_t m_daylightSavingValue;
+
+    /** Period for cyclic NTP synchronization in ms */
+    static const uint32_t   NTP_SYNC_PERIOD          = 3600000U;
+
+     /**
+     * Construct ClockDrv.
+     */
+    ClockDrv() :
+        m_isClockDrvInitialized(false),
+        m_isSynchronized(false),
+        m_ntpSyncTimer(),
+        m_gmtOffset(0),
+        m_daylightSavingValue(0)
+    {
+       
+    }
+
+    /**
+     * Destroys ClockDrv.
+     */
+    ~ClockDrv()
+    {
+
+    }
+
+    /* Prevent copying */
+    ClockDrv(const ClockDrv&);
+    ClockDrv&operator=(const ClockDrv&);
+};
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-/**
- * Convert a string to uint8_t. String can contain integer number in decimal
- * or hexadecimal format.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-extern bool strToUInt8(const String& str, uint8_t& value);
-
-/**
- * Convert a string to uint16_t. String can contain integer number in decimal
- * or hexadecimal format.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-extern bool strToUInt16(const String& str, uint16_t& value);
-
-/**
- * Convert a string to uint32_t. String can contain integer number in decimal
- * or hexadecimal format.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-extern bool strToUInt32(const String& str, uint32_t& value);
-
-/**
- * Convert a string to int32_t. String can contain integer number in decimal
- * or hexadecimal format.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-extern bool strToInt32(const String& str, int32_t& value);
-
-}
-
-#endif  /* __UTILITY_H__ */
+#endif  /* __CLOCKDRV_H__ */
 
 /** @} */

@@ -25,14 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Utility
+ * @brief  Time plugin
  * @author Yann Le Glaz <yann_le@web.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Util.h"
+#include "TimePlugin.h"
+
+#include "ClockDrv.h"
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -41,7 +44,17 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
+ /** Size of formatted timestring in the form of HH:MM
+ * 
+ *  "\\calign" = 8  (Alignment center )
+ *         "H" = 2
+ *         ":" = 1
+ *         "M" = 2
+ *        "\0" = 1  
+ *       ---------
+ *           = 14
+ */
+#define SIZE_OF_FORMATED_TIME_STRING_HHMM (14U) 
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -58,6 +71,60 @@
  * Public Methods
  *****************************************************************************/
 
+void TimePlugin::active(IGfx& gfx)
+{
+    m_updateTimeTimer.start(TIME_UPDATE_PERIOD);
+}
+
+void TimePlugin::inactive()
+{
+    m_updateTimeTimer.stop();
+
+    return;
+}
+
+void TimePlugin::update(IGfx& gfx)
+{
+    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    m_textWidget.update(gfx);
+
+    return;
+}
+
+void TimePlugin::setText(const String& formatText)
+{
+    m_textWidget.setFormatStr(formatText);
+    
+    return;
+}
+
+void TimePlugin::process()
+{
+    char timeBuffer [SIZE_OF_FORMATED_TIME_STRING_HHMM]; 
+    struct tm timeinfo = {0};
+  
+    if (false != ClockDrv::getInstance().isSynchronized())
+    {
+        if ((true == m_updateTimeTimer.isTimerRunning()) &&
+                (true == m_updateTimeTimer.isTimeout()))
+        {
+            if(getLocalTime(&timeinfo))
+            {
+                strftime (timeBuffer,sizeof(timeBuffer),"\\calign%H:%M",&timeinfo);
+                setText(timeBuffer);
+                LOG_ERROR(timeBuffer);
+            }
+
+            m_updateTimeTimer.restart(); 
+        }
+    }
+    else
+    {
+        setText("Waiting for NTP");
+    }
+    
+    return;
+}
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -66,87 +133,10 @@
  * Private Methods
  *****************************************************************************/
 
+
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-extern bool Util::strToUInt8(const String& str, uint8_t& value)
-{
-    bool            success = false;
-    char*           endPtr  = nullptr;
-    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
-
-    if ((0 == errno) &&
-        (nullptr != endPtr) &&
-        ('\0' == *endPtr) &&
-        (str.c_str() != endPtr) &&
-        (UINT8_MAX >= tmp))
-    {
-        value = static_cast<uint8_t>(tmp);
-        success = true;
-    }
-
-    return success;
-}
-
-extern bool Util::strToUInt16(const String& str, uint16_t& value)
-{
-    bool            success = false;
-    char*           endPtr  = nullptr;
-    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
-
-    if ((0 == errno) &&
-        (nullptr != endPtr) &&
-        ('\0' == *endPtr) &&
-        (str.c_str() != endPtr) &&
-        (UINT16_MAX >= tmp))
-    {
-        value = static_cast<uint16_t>(tmp);
-        success = true;
-    }
-
-    return success;
-}
-
-extern bool Util::strToInt32(const String& str, int32_t& value)
-{
-    bool            success = false;
-    char*           endPtr  = nullptr;
-    signed long   tmp     = strtoul(str.c_str(), &endPtr, 0);
-
-    if ((0 == errno) &&
-        (nullptr != endPtr) &&
-        ('\0' == *endPtr) &&
-        (str.c_str() != endPtr) &&
-        (INT32_MAX >= tmp))
-    {
-        value = static_cast<int32_t>(tmp);
-        success = true;
-    }
-
-    return success;
-}
-
-#include <stdio.h>
-
-extern bool Util::strToUInt32(const String& str, uint32_t& value)
-{
-    bool            success = false;
-    char*           endPtr  = nullptr;
-    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
-
-    if ((0 == errno) &&
-        (nullptr != endPtr) &&
-        ('\0' == *endPtr) &&
-        (str.c_str() != endPtr) &&
-        (UINT32_MAX >= tmp))
-    {
-        value = static_cast<uint32_t>(tmp);
-        success = true;
-    }
-
-    return success;
-}
 
 /******************************************************************************
  * Local Functions

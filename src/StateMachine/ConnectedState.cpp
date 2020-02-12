@@ -38,6 +38,7 @@
 #include "MyWebServer.h"
 #include "Settings.h"
 #include "WebConfig.h"
+#include "ClockDrv.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -79,6 +80,7 @@ void ConnectedState::entry(StateMachine& sm)
 {
     String infoStr = "Hostname: ";
     String hostname;
+    String infoStringIp = "IP: ";
 
     LOG_INFO("Connected.");
 
@@ -118,6 +120,9 @@ void ConnectedState::entry(StateMachine& sm)
     }
     else
     {
+        /* Start the ClockDriver */
+        ClockDrv::getInstance().init();
+
         /* Start webserver after a wifi connection is established.
          * If its done earlier, it will cause an exception.
          */
@@ -131,12 +136,15 @@ void ConnectedState::entry(StateMachine& sm)
         MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
 
         /* Show hostname and don't believe its the same as set before. */
-        infoStr += WiFi.getHostname();
+        /*infoStr += WiFi.getHostname();
+        SysMsg::getInstance().show(infoStr, infoStr.length() * 600U);*/
+
         LOG_INFO(infoStr);
-        SysMsg::getInstance().show(infoStr, infoStr.length() * 600U);
 
         /* Show ip address */
-        LOG_INFO(String("IP: ") + WiFi.localIP().toString());
+        infoStringIp += WiFi.localIP().toString();
+        LOG_INFO(infoStringIp);
+        SysMsg::getInstance().show(infoStringIp, infoStringIp.length() * 600U);
     }
 
     return;

@@ -649,7 +649,39 @@ static void settingsPage(AsyncWebServerRequest* request)
                             }
                         }
                         break;
+                        case KeyValue::TYPE_INT32:
+                        {
+                            KeyValueInt32*  kvInt32     = static_cast<KeyValueInt32*>(parameter);
+                            int32_t         int32Value  = 0;
+                            bool            status      = Util::strToInt32(value, int32Value);
 
+                            /* Conversion failed? */
+                            if (false == status)
+                            {
+                                isError = true;
+                                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                            }
+                            /* Check for min. and max. length */
+                            else if (kvInt32->getMin() > int32Value)
+                            {
+                                isError = true;
+                                jsonRsp = "{ \"status\": 1, \"error\": \"Value lower than ";
+                                jsonRsp += kvInt32->getMin();
+                                jsonRsp += "\" }";
+                            }
+                            else if (kvInt32->getMax() < int32Value)
+                            {
+                                isError = true;
+                                jsonRsp = "{ \"status\": 1, \"error\": \"Value greater than ";
+                                jsonRsp += kvInt32->getMax();
+                                jsonRsp += "\" }";
+                            }
+                            else
+                            {
+                                kvInt32->setValue(int32Value);
+                            }
+                        }
+                        break;
                     case KeyValue::TYPE_UNKNOWN:
                         /* fallthrough */
                     default:
@@ -771,7 +803,23 @@ static String settingsPageProcessor(const String& var)
                         // TODO Use input field of number type and consider the min. and max. value.
                     }
                     break;
+                    case KeyValue::TYPE_INT32:
+                    {
+                        KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
+                        result += kvInt32->getValue();
+                        result += "\", ";
+                        result += "size: ";
+                        result += 5;            
+                        result += ", ";
+                        result += "minlength: ";    // Note, this is the min. input field string length.
+                        result += 0;            
+                        result += ", ";
+                        result += "maxlength: ";    // Note, this is the max. input field string length.
+                        result += 5;
 
+                        // TODO Use input field of number type and consider the min. and max. value.
+                    }
+                    break;
                 default:
                     break;
                 }

@@ -112,6 +112,7 @@ void APState::entry(StateMachine& sm)
         hostname            = Settings::getInstance().getHostname().getValue();
         wifiApSSID          = Settings::getInstance().getWifiApSSID().getValue();
         wifiApPassphrase    = Settings::getInstance().getWifiApPassphrase().getValue();
+
         Settings::getInstance().close();
     }
 

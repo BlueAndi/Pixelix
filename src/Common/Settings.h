@@ -178,9 +178,29 @@ public:
     {
         return m_preferences.clear();
     }
+	
+	/**
+     * Get GMT offset.
+     *
+     * @return Key value pair
+     */
+    KeyValueInt32& getGmtOffset()
+    {
+        return m_gmtOffset;
+    }
 
+   	/**
+     * Get state of daylight saving adjustment.
+     *
+     * @return Key value pair
+     */
+    KeyValueBool& getDaylightSavingAdjustment()
+    {
+        return m_IsDaylightSaving;
+    }
+	
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 7U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 9U;
 
 private:
 
@@ -196,7 +216,8 @@ private:
     KeyValueString  m_hostname;             /**< Hostname */
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
     KeyValueString  m_pluginInstallation;   /**< Plugin installation */
-
+    KeyValueInt32   m_gmtOffset;            /**< GMT offset */
+    KeyValueBool    m_IsDaylightSaving;     /**< Daylight saving time switch */
     /**
      * Constructs the settings instance.
      */

@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Utilitiy
+ * @brief  Time plugin
  * @author Yann Le Glaz <yann_le@web.de>
  * 
- * @addtogroup utilities
+ * @addtogroup plugin
  *
  * @{
  */
 
-#ifndef __UTILITY_H__
-#define __UTILITY_H__
+#ifndef __TIMEPLUGIN_H__
+#define __TIMEPLUGIN_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,78 +43,111 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+
 #include <stdint.h>
-#include <WString.h>
-#include <cerrno>
+#include <time.h>
+#include "Plugin.hpp"
+
+#include <TextWidget.h>
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
-/** Get number of array elements. */
-#define UTIL_ARRAY_NUM(__arr)   (sizeof(__arr) / sizeof((__arr)[0]))
-
-/** Use it to mark not used function parameters. */
-#define UTIL_NOT_USED(__var)    (void)(__var)
-
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
 
-/** Utilitiy functions */
-namespace Util
+/**
+ * Shows time over the whole display.
+ * 
+ */
+class TimePlugin : public Plugin
 {
+public:
+
+    /**
+     * Constructs the plugin.
+     * 
+     * @param[in] name  Plugin name
+     */
+    TimePlugin(const String& name) :
+        Plugin(name),
+        m_textWidget(),
+        m_updateTimeTimer()
+    {
+        /* Move the text widget one line lower for better look. */
+        m_textWidget.move(0, 1);
+    }
+
+    /**
+     * Destroys the plugin.
+     */
+    ~TimePlugin()
+    {
+    }
+
+    /**
+     * Plugin creation method, used to register on the plugin manager.
+     * 
+     * @param[in] name  Plugin name
+     * 
+     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
+     */
+    static Plugin* create(const String& name)
+    {
+        return new TimePlugin(name);
+    }
+
+    /**
+     * Update the display.
+     * The scheduler will call this method periodically.
+     * 
+     * @param[in] gfx   Display graphics interface
+     */
+    void update(IGfx& gfx);
+
+    /**
+     * Set text, which may contain format tags.
+     * 
+     * @param[in] formatText    Text, which may contain format tags.
+     */
+    void setText(const String& formatText);
+
+   /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     * 
+     * @param[in] gfx   Display graphics interface
+     */
+    void active(IGfx& gfx) override;
+
+    /**
+     * This method will be called in case the plugin is set inactive, which means
+     * it won't be shown on the display anymore.
+     */
+    void inactive() override;
+
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) override;
+
+private:
+
+    TextWidget                  m_textWidget;           /**< Text widget, used for showing the text. */
+    SimpleTimer                 m_updateTimeTimer;      /**< Timer, used for cyclic time update. */
+  
+    /** Time to display update period in ms */
+    static const uint32_t   TIME_UPDATE_PERIOD          = 5000U;
+};
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-/**
- * Convert a string to uint8_t. String can contain integer number in decimal
- * or hexadecimal format.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-extern bool strToUInt8(const String& str, uint8_t& value);
-
-/**
- * Convert a string to uint16_t. String can contain integer number in decimal
- * or hexadecimal format.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-extern bool strToUInt16(const String& str, uint16_t& value);
-
-/**
- * Convert a string to uint32_t. String can contain integer number in decimal
- * or hexadecimal format.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-extern bool strToUInt32(const String& str, uint32_t& value);
-
-/**
- * Convert a string to int32_t. String can contain integer number in decimal
- * or hexadecimal format.
- * 
- * @param[in]   str     String
- * @param[out]  value   Converted value
- * 
- * @return If conversion fails, it will return false otherwise true.
- */
-extern bool strToInt32(const String& str, int32_t& value);
-
-}
-
-#endif  /* __UTILITY_H__ */
+#endif  /* __TIMEPLUGIN_H__ */
 
 /** @} */

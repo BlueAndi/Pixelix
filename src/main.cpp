@@ -35,6 +35,7 @@
 #include <Arduino.h>
 #include <StateMachine.hpp>
 #include "InitState.h"
+#include "ClockDrv.h"
 
 /******************************************************************************
  * Macros
@@ -83,6 +84,9 @@ void loop()
 {
     /* Process system state machine */
     gSysStateMachine.process();
+
+    /* Process the ClockDrv. */
+    ClockDrv::getInstance().process();
 
     return;
 }
