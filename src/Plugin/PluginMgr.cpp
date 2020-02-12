@@ -237,8 +237,12 @@ void PluginMgr::load()
                 {
                     if (false == pluginName.isEmpty())
                     {
-                        install(pluginName, slotId);
-                        DisplayMgr::getInstance().getPluginInSlot(slotId)->enable();
+                        Plugin* plugin = install(pluginName, slotId);
+
+                        if (nullptr != plugin)
+                        {
+                            plugin->enable();
+                        }
                     }
 
                     pluginName.clear();
@@ -254,8 +258,12 @@ void PluginMgr::load()
 
             if (false == pluginName.isEmpty())
             {
-                install(pluginName, slotId);
-                DisplayMgr::getInstance().getPluginInSlot(slotId)->enable();
+                Plugin* plugin = install(pluginName, slotId);
+
+                if (nullptr != plugin)
+                {
+                    plugin->enable();
+                }
             }
         }
 

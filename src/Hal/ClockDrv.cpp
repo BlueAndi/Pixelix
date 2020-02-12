@@ -35,8 +35,10 @@
 #include "ClockDrv.h"
 #include "Settings.h"
 #include "time.h"
+
 #include <sys/time.h>
 #include <Logging.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -60,7 +62,7 @@
 /* Instantiate the button driver singleton. */
 ClockDrv ClockDrv::m_instance;
 
-/** Daylight saving time offset */
+/** Daylight saving time offset in s */
 static const int16_t NTP_DAYLIGHT_OFFSET_SEC    = 3600;
 
 /******************************************************************************
@@ -69,8 +71,8 @@ static const int16_t NTP_DAYLIGHT_OFFSET_SEC    = 3600;
 
 void ClockDrv::init()
 {
-    struct tm timeInfo;
-    bool isDaylightSaving;
+    struct tm   timeInfo;
+    bool        isDaylightSaving;
 
     if (false == m_isClockDrvInitialized)
     {
@@ -92,11 +94,11 @@ void ClockDrv::init()
             Settings::getInstance().close();
         }
 
-        m_daylightSavingValue = (false != isDaylightSaving) ? NTP_DAYLIGHT_OFFSET_SEC: 0; 
+        m_daylightSavingValue = (false != isDaylightSaving) ? NTP_DAYLIGHT_OFFSET_SEC : 0;
 
         configTime(m_gmtOffset, m_daylightSavingValue, m_ntpServerAddress.c_str());
 
-        if(!getLocalTime(&timeInfo))
+        if (!getLocalTime(&timeInfo))
         {
             m_isSynchronized = false;
             LOG_ERROR("Failed to synchronize time");
@@ -104,7 +106,7 @@ void ClockDrv::init()
         else
         {
             m_isSynchronized = true;
-            LOG_INFO("Time successfully synchronized:  %d:%d",timeInfo.tm_hour, timeInfo.tm_min);
+            LOG_INFO("Time successfully synchronized:  %d:%d", timeInfo.tm_hour, timeInfo.tm_min);
         }
     }
 }
@@ -124,18 +126,18 @@ bool ClockDrv::getTime(tm *currentTime)
 void ClockDrv::process()
 {
     if ((true == m_ntpSyncTimer.isTimerRunning()) &&
-             (true == m_ntpSyncTimer.isTimeout()))
+        (true == m_ntpSyncTimer.isTimeout()))
     {
         m_isSynchronized = false;
         m_ntpSyncTimer.restart();
     }
 
-    if( false == m_isSynchronized)
+    if ( false == m_isSynchronized)
     {
         struct tm timeInfo;
 
         configTime(m_gmtOffset, m_daylightSavingValue, m_ntpServerAddress.c_str());
-        if(!getLocalTime(&timeInfo))
+        if (!getLocalTime(&timeInfo))
         {
             m_isSynchronized = false;
             LOG_ERROR("Failed to synchronize time");
@@ -143,7 +145,7 @@ void ClockDrv::process()
         else
         {
             m_isSynchronized = true;
-            LOG_INFO("Time successfully synchronized:  %d:%d",timeInfo.tm_hour, timeInfo.tm_min);
+            LOG_INFO("Time successfully synchronized:  %d:%d", timeInfo.tm_hour, timeInfo.tm_min);
         }
     }
 }
@@ -160,7 +162,6 @@ bool ClockDrv::isSynchronized()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
 
 /******************************************************************************
  * External Functions

@@ -27,7 +27,7 @@
 /**
  * @brief  RelatimeClock driver
  * @author Yann Le Glaz <yann_le@web.de>
- * 
+ *
  * @addtogroup Hal
  *
  * @{
@@ -46,6 +46,7 @@
 #include "Arduino.h"
 #include "time.h"
 #include "SimpleTimer.hpp"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -62,47 +63,46 @@ class ClockDrv
 public:
 
     /**
-    *  Get the ClockDrv instance.
-    *
-    * @return ClockDrv instance.
-    */
+     *  Get the ClockDrv instance.
+     *
+     * @return ClockDrv instance.
+     */
     static ClockDrv& getInstance()
     {
-        
         return m_instance;
     }
 
     /**
-    * Initialize the ClockDrv. 
-    * 
-    */
+     * Initialize the ClockDrv.
+     *
+     */
     void init();
 
     /**
      * Get the current time.
-     * 
+     *
      * @param[out] currentTime Pointer to the currentTime.
      * @return true if successful, otherwise false.
-    */
+     */
     bool getTime(tm *currentTime);
 
      /**
-     * Process the ClockDrv, if the ntp sync timer expires a ntp update is triggered.
-     */
+      * Process the ClockDrv, if the ntp sync timer expires a ntp update is triggered.
+      */
     void process(void);
 
     /**
      * Get the current syncState.
-     * 
+     *
      * @return true if synchronized, otherwise false.
-    */
+     */
     bool isSynchronized(void);
 
 private:
 
     /** ClockDrv instance. */
     static ClockDrv m_instance;
-    
+
     /** Flag indicating a initialized ClockDrv. */
     bool m_isClockDrvInitialized;
 
@@ -111,7 +111,7 @@ private:
 
     /** Timer, used for cyclic ntp synchronization. */
     SimpleTimer m_ntpSyncTimer;
-   
+
     /** The GMT offset as read from settings.*/
     int32_t m_gmtOffset;
 
@@ -122,7 +122,7 @@ private:
     String m_ntpServerAddress;
 
     /** Period for cyclic NTP synchronization in ms */
-    static const uint32_t   NTP_SYNC_PERIOD          = 3600000U;
+    static const uint32_t   NTP_SYNC_PERIOD = 3600000U;
 
      /**
      * Construct ClockDrv.
@@ -135,7 +135,7 @@ private:
         m_daylightSavingValue(0),
         m_ntpServerAddress()
     {
-       
+
     }
 
     /**

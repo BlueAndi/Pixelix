@@ -44,17 +44,19 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
  /** Size of formatted timestring in the form of HH:MM
- * 
+ *
  *  "\\calign" = 8  (Alignment center )
  *         "H" = 2
  *         ":" = 1
  *         "M" = 2
- *        "\0" = 1  
+ *        "\0" = 1
  *       ---------
  *           = 14
  */
-#define SIZE_OF_FORMATED_TIME_STRING_HHMM (14U) 
+#define SIZE_OF_FORMATED_TIME_STRING_HHMM (14U)
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -94,37 +96,39 @@ void TimePlugin::update(IGfx& gfx)
 void TimePlugin::setText(const String& formatText)
 {
     m_textWidget.setFormatStr(formatText);
-    
+
     return;
 }
 
 void TimePlugin::process()
 {
-    char timeBuffer [SIZE_OF_FORMATED_TIME_STRING_HHMM]; 
-    struct tm timeinfo = {0};
-  
+    char        timeBuffer [SIZE_OF_FORMATED_TIME_STRING_HHMM];
+    struct tm   timeinfo = {0};
+
     if (false != ClockDrv::getInstance().isSynchronized())
     {
         if ((true == m_updateTimeTimer.isTimerRunning()) &&
-                (true == m_updateTimeTimer.isTimeout()))
+            (true == m_updateTimeTimer.isTimeout()))
         {
-            if(getLocalTime(&timeinfo))
+            if (true == getLocalTime(&timeinfo))
             {
-                strftime (timeBuffer,sizeof(timeBuffer),"\\calign%H:%M",&timeinfo);
+                strftime(timeBuffer, sizeof(timeBuffer), "\\calign%H:%M", &timeinfo);
                 setText(timeBuffer);
-                LOG_ERROR(timeBuffer);
+
+                LOG_INFO(timeBuffer);
             }
 
-            m_updateTimeTimer.restart(); 
+            m_updateTimeTimer.restart();
         }
     }
     else
     {
         setText("Waiting for NTP");
     }
-    
+
     return;
 }
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -132,7 +136,6 @@ void TimePlugin::process()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
 
 /******************************************************************************
  * External Functions

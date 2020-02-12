@@ -128,6 +128,8 @@ public:
 
     /**
      * Load plugin installation from persistent memory.
+     * It will automatically enable the installed plugins.
+     * If a slot already contains a plugin, this slot won't change.
      */
     void load();
 

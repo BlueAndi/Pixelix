@@ -27,7 +27,7 @@
 /**
  * @brief  Time plugin
  * @author Yann Le Glaz <yann_le@web.de>
- * 
+ *
  * @addtogroup plugin
  *
  * @{
@@ -60,7 +60,7 @@
 
 /**
  * Shows time over the whole display.
- * 
+ *
  */
 class TimePlugin : public Plugin
 {
@@ -68,7 +68,7 @@ public:
 
     /**
      * Constructs the plugin.
-     * 
+     *
      * @param[in] name  Plugin name
      */
     TimePlugin(const String& name) :
@@ -89,9 +89,9 @@ public:
 
     /**
      * Plugin creation method, used to register on the plugin manager.
-     * 
+     *
      * @param[in] name  Plugin name
-     * 
+     *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
     static Plugin* create(const String& name)
@@ -102,14 +102,14 @@ public:
     /**
      * Update the display.
      * The scheduler will call this method periodically.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void update(IGfx& gfx);
 
     /**
      * Set text, which may contain format tags.
-     * 
+     *
      * @param[in] formatText    Text, which may contain format tags.
      */
     void setText(const String& formatText);
@@ -117,7 +117,7 @@ public:
    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void active(IGfx& gfx) override;
@@ -137,11 +137,11 @@ public:
 
 private:
 
-    TextWidget                  m_textWidget;           /**< Text widget, used for showing the text. */
-    SimpleTimer                 m_updateTimeTimer;      /**< Timer, used for cyclic time update. */
-  
+    TextWidget  m_textWidget;       /**< Text widget, used for showing the text. */
+    SimpleTimer m_updateTimeTimer;  /**< Timer, used for cyclic time update. */
+
     /** Time to display update period in ms */
-    static const uint32_t   TIME_UPDATE_PERIOD          = 5000U;
+    static const uint32_t   TIME_UPDATE_PERIOD  = 5000U;
 };
 
 /******************************************************************************
