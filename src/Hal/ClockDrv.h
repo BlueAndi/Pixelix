@@ -87,7 +87,7 @@ public:
     bool getTime(tm *currentTime);
 
      /**
-     * Process the ClockDrv, if the ntp sync timer expires a ntp update is triggered..
+     * Process the ClockDrv, if the ntp sync timer expires a ntp update is triggered.
      */
     void process(void);
 
