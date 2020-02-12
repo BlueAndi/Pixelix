@@ -238,6 +238,7 @@ void PluginMgr::load()
                     if (false == pluginName.isEmpty())
                     {
                         install(pluginName, slotId);
+                        DisplayMgr::getInstance().getPluginInSlot(slotId)->enable();
                     }
 
                     pluginName.clear();
@@ -254,6 +255,7 @@ void PluginMgr::load()
             if (false == pluginName.isEmpty())
             {
                 install(pluginName, slotId);
+                DisplayMgr::getInstance().getPluginInSlot(slotId)->enable();
             }
         }
 

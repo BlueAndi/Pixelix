@@ -110,9 +110,9 @@ extern bool Util::strToUInt16(const String& str, uint16_t& value)
 
 extern bool Util::strToInt32(const String& str, int32_t& value)
 {
-    bool            success = false;
-    char*           endPtr  = nullptr;
-    signed long   tmp     = strtoul(str.c_str(), &endPtr, 0);
+    bool    success = false;
+    char*   endPtr  = nullptr;
+    long    tmp     = strtol(str.c_str(), &endPtr, 0);
 
     if ((0 == errno) &&
         (nullptr != endPtr) &&
@@ -126,8 +126,6 @@ extern bool Util::strToInt32(const String& str, int32_t& value)
 
     return success;
 }
-
-#include <stdio.h>
 
 extern bool Util::strToUInt32(const String& str, uint32_t& value)
 {

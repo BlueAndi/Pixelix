@@ -135,16 +135,13 @@ void ConnectedState::entry(StateMachine& sm)
         MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
         MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
 
-        /* Show hostname and don't believe its the same as set before. */
-        /*infoStr += WiFi.getHostname();
-        SysMsg::getInstance().show(infoStr, infoStr.length() * 600U);*/
+        /* Show hostname and IP. */
+        infoStr += WiFi.getHostname(); /* Don't believe its the same as set before. */
+        infoStr += " IP: ";
+        infoStr += WiFi.localIP().toString();
+        SysMsg::getInstance().show(infoStr, infoStr.length() * 600U);
 
         LOG_INFO(infoStr);
-
-        /* Show ip address */
-        infoStringIp += WiFi.localIP().toString();
-        LOG_INFO(infoStringIp);
-        SysMsg::getInstance().show(infoStringIp, infoStringIp.length() * 600U);
     }
 
     return;

@@ -284,8 +284,8 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
     pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
-    pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
+    pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
 
     return;
 }

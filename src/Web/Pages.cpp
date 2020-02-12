@@ -649,6 +649,7 @@ static void settingsPage(AsyncWebServerRequest* request)
                             }
                         }
                         break;
+
                         case KeyValue::TYPE_INT32:
                         {
                             KeyValueInt32*  kvInt32     = static_cast<KeyValueInt32*>(parameter);
@@ -803,23 +804,25 @@ static String settingsPageProcessor(const String& var)
                         // TODO Use input field of number type and consider the min. and max. value.
                     }
                     break;
+                    
                     case KeyValue::TYPE_INT32:
                     {
                         KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
                         result += kvInt32->getValue();
                         result += "\", ";
                         result += "size: ";
-                        result += 5;            
+                        result += 10;
                         result += ", ";
                         result += "minlength: ";    // Note, this is the min. input field string length.
-                        result += 0;            
+                        result += 0;
                         result += ", ";
                         result += "maxlength: ";    // Note, this is the max. input field string length.
-                        result += 5;
+                        result += 10;
 
                         // TODO Use input field of number type and consider the min. and max. value.
                     }
                     break;
+
                 default:
                     break;
                 }

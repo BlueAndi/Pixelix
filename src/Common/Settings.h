@@ -178,8 +178,8 @@ public:
     {
         return m_preferences.clear();
     }
-	
-	/**
+
+    /**
      * Get GMT offset.
      *
      * @return Key value pair
@@ -189,7 +189,7 @@ public:
         return m_gmtOffset;
     }
 
-   	/**
+    /**
      * Get state of daylight saving adjustment.
      *
      * @return Key value pair
@@ -198,9 +198,19 @@ public:
     {
         return m_IsDaylightSaving;
     }
-	
+
+    /**
+     * Get NTP server address.
+     *
+     * @return Key value pair
+     */
+    KeyValueString& getNTPServerAddress()
+    {
+        return m_ntpServer;
+    }
+
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 9U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 10U;
 
 private:
 
@@ -218,6 +228,8 @@ private:
     KeyValueString  m_pluginInstallation;   /**< Plugin installation */
     KeyValueInt32   m_gmtOffset;            /**< GMT offset */
     KeyValueBool    m_IsDaylightSaving;     /**< Daylight saving time switch */
+    KeyValueString  m_ntpServer;            /**< NTP server address */
+
     /**
      * Constructs the settings instance.
      */

@@ -112,11 +112,14 @@ private:
     /** Timer, used for cyclic ntp synchronization. */
     SimpleTimer m_ntpSyncTimer;
    
-   /** The GMT offset as read from settings.*/
-   int32_t m_gmtOffset;
+    /** The GMT offset as read from settings.*/
+    int32_t m_gmtOffset;
 
     /** Daylight saving value.*/
-   int16_t m_daylightSavingValue;
+    int16_t m_daylightSavingValue;
+
+    /** The address of the NTP server as read from settings. */
+    String m_ntpServerAddress;
 
     /** Period for cyclic NTP synchronization in ms */
     static const uint32_t   NTP_SYNC_PERIOD          = 3600000U;
@@ -129,7 +132,8 @@ private:
         m_isSynchronized(false),
         m_ntpSyncTimer(),
         m_gmtOffset(0),
-        m_daylightSavingValue(0)
+        m_daylightSavingValue(0),
+        m_ntpServerAddress()
     {
        
     }

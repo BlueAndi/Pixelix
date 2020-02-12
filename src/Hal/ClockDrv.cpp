@@ -60,11 +60,9 @@
 /* Instantiate the button driver singleton. */
 ClockDrv ClockDrv::m_instance;
 
-/** NTP Server address */
-static const char* NTP_SERVER                   = "pool.ntp.org";
-
 /** Daylight saving time offset */
 static const int16_t NTP_DAYLIGHT_OFFSET_SEC    = 3600;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -84,17 +82,20 @@ void ClockDrv::init()
             LOG_WARNING("Use default values for NTP request.");
             m_gmtOffset = Settings::getInstance().getGmtOffset().getDefault();
             isDaylightSaving = Settings::getInstance().getDaylightSavingAdjustment().getDefault();
+            m_ntpServerAddress = Settings::getInstance().getNTPServerAddress().getDefault();
         }
         else
         {
             m_gmtOffset = Settings::getInstance().getGmtOffset().getValue();
             isDaylightSaving = Settings::getInstance().getDaylightSavingAdjustment().getValue();
+            m_ntpServerAddress = Settings::getInstance().getNTPServerAddress().getValue();
             Settings::getInstance().close();
         }
 
         m_daylightSavingValue = (false != isDaylightSaving) ? NTP_DAYLIGHT_OFFSET_SEC: 0; 
 
-        configTime(m_gmtOffset, m_daylightSavingValue, NTP_SERVER);
+        configTime(m_gmtOffset, m_daylightSavingValue, m_ntpServerAddress.c_str());
+
         if(!getLocalTime(&timeInfo))
         {
             m_isSynchronized = false;
@@ -133,7 +134,7 @@ void ClockDrv::process()
     {
         struct tm timeInfo;
 
-        configTime(m_gmtOffset, m_daylightSavingValue, NTP_SERVER);
+        configTime(m_gmtOffset, m_daylightSavingValue, m_ntpServerAddress.c_str());
         if(!getLocalTime(&timeInfo))
         {
             m_isSynchronized = false;
@@ -155,7 +156,7 @@ bool ClockDrv::isSynchronized()
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
-/* Process routine mit zyklischem update, eigener timer */
+
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
