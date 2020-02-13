@@ -32,7 +32,7 @@ addons:
       - doxygen
       - graphviz
 install:
-    - pip install -U "platformio==4.1.*"
+    - pip install -U platformio
     - platformio update
 script:
     - platformio run --environment esp32doit-devkit-v1
