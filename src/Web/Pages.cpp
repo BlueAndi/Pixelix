@@ -502,11 +502,11 @@ static String networkPageProcessor(const String& var)
 
 /**
  * Store setting in persistent memory, considering the setting type.
- * 
+ *
  * @param[in]   parameter   Key value pair
  * @param[in]   value       Value to write
  * @param[out]  jsonRsp     Response in JSON format, only applicable in error case.
- * 
+ *
  * @return If successful stored, it will return true otherwise false.
  */
 static bool storeSetting(KeyValue* parameter, const String& value, String& jsonRsp)
@@ -551,7 +551,6 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
                         jsonRsp = "{ \"status\": 1, \"error\": \"String length greater than ";
                         jsonRsp += kvStr->getMaxLength();
                         jsonRsp += "\" }";
-
                     }
                     else
                     {
@@ -563,29 +562,20 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
 
         case KeyValue::TYPE_BOOL:
             {
-                KeyValueBool*   kvBool  = static_cast<KeyValueBool*>(parameter);
-                uint8_t         bit     = 0;
-                bool            status  = Util::strToUInt8(value, bit);
+                KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
 
-                /* Conversion failed? */
-                if (false == status)
-                {
-                    status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
-                }
-                /* Only 0 and 1 are allowed. */
-                else if (1U < bit)
-                {
-                    status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
-                }
-                else if (0U == bit)
+                if (0 == strcmp(value.c_str(), "false"))
                 {
                     kvBool->setValue(false);
                 }
-                else
+                else if (0 == strcmp(value.c_str(), "true"))
                 {
                     kvBool->setValue(true);
+                }
+                else
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
                 }
             }
             break;
@@ -781,13 +771,16 @@ static String settingsPageProcessor(const String& var)
                 result += "name: \"";
                 result += parameter->getKey();
                 result += "\", ";
-                result += "value: \"";
 
                 switch(parameter->getValueType())
                 {
                 case KeyValue::TYPE_STRING:
                     {
                         KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
+                        result += "type: \"";
+                        result += "text";
+                        result += "\", ";
+                        result += "value: \"";
                         result += kvStr->getValue();
                         result += "\", ";
                         result += "size: ";
@@ -804,52 +797,53 @@ static String settingsPageProcessor(const String& var)
                 case KeyValue::TYPE_BOOL:
                     {
                         KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
-                        result += (false == kvBool->getValue()) ? 0 : 1;
+                        result += "type: \"";
+                        result += "checkbox";
                         result += "\", ";
-                        result += "size: ";
-                        result += 1;
-                        result += ", ";
-                        result += "minlength: ";    // Note, this is the min. input field string length.
-                        result += 1;
-                        result += ", ";
-                        result += "maxlength: ";    // Note, this is the max. input field string length.
-                        result += 1;
+                        result += "value: \"";
+                        result += kvBool->getKey();
+                        if (false == kvBool->getValue())
+                        {
+                            result += "\"";
+                        }
+                        else
+                        {
+                            result += "\", checked: \"checked\"";
+                        }
                     }
                     break;
 
                 case KeyValue::TYPE_UINT8:
                     {
                         KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(parameter);
+                        result += "type: \"";
+                        result += "number";
+                        result += "\", ";
+                        result += "value: \"";
                         result += kvUInt8->getValue();
                         result += "\", ";
-                        result += "size: ";
-                        result += 3;
+                        result += "min: ";
+                        result += kvUInt8->getMin();
                         result += ", ";
-                        result += "minlength: ";    // Note, this is the min. input field string length.
-                        result += 0;
-                        result += ", ";
-                        result += "maxlength: ";    // Note, this is the max. input field string length.
-                        result += 3;
-
-                        // TODO Use input field of number type and consider the min. and max. value.
+                        result += "max: ";
+                        result += kvUInt8->getMax();
                     }
                     break;
-                    
+
                     case KeyValue::TYPE_INT32:
                     {
                         KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
+                        result += "type: \"";
+                        result += "number";
+                        result += "\", ";
+                        result += "value: \"";
                         result += kvInt32->getValue();
                         result += "\", ";
-                        result += "size: ";
-                        result += 10;
+                        result += "min: ";
+                        result += kvInt32->getMin();
                         result += ", ";
-                        result += "minlength: ";    // Note, this is the min. input field string length.
-                        result += 0;
-                        result += ", ";
-                        result += "maxlength: ";    // Note, this is the max. input field string length.
-                        result += 10;
-
-                        // TODO Use input field of number type and consider the min. and max. value.
+                        result += "max: ";
+                        result += kvInt32->getMax();
                     }
                     break;
 

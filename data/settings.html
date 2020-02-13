@@ -18,7 +18,11 @@
             var xhr = new XMLHttpRequest();
             var input = document.getElementById(id);
 
-            formData.append(input.getAttribute("name"), input.value);
+            if ("checkbox" === input.type) {
+                formData.append(input.name, input.checked);
+            } else {
+                formData.append(input.name, input.value);
+            }
 
             xhr.open("POST", "/settings");
             xhr.onload = function() {
