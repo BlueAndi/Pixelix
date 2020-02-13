@@ -624,7 +624,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
             }
             break;
 
-            case KeyValue::TYPE_INT32:
+        case KeyValue::TYPE_INT32:
             {
                 KeyValueInt32*  kvInt32     = static_cast<KeyValueInt32*>(parameter);
                 int32_t         int32Value  = 0;
