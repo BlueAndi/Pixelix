@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  RelatimeClock driver
+ * @brief  Clock driver
  * @author Yann Le Glaz <yann_le@web.de>
  *
  * @addtogroup Hal
