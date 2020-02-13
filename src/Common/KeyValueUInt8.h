@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Key value pair
+ * @brief  Key value pair of uint8_t type
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup utilities
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __KEY_VALUE_H__
-#define __KEY_VALUE_H__
+#ifndef __KEY_VALUE_UINT8_H__
+#define __KEY_VALUE_UINT8_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Preferences.h>
+#include "KeyValue.h"
 
 /******************************************************************************
  * Macros
@@ -54,33 +54,24 @@
  *****************************************************************************/
 
 /**
- * Key value pair interface.
+ * Key value pair with uint8_t value type.
  */
-class KeyValue
+class KeyValueUInt8 : public KeyValueNumber<uint8_t>
 {
 public:
-
-    /** Value types */
-    enum Type
-    {
-        TYPE_UNKNOWN = 0,   /**< Unknown type */
-        TYPE_UINT8,         /**< uint8_t type */
-        TYPE_STRING,        /**< String type */
-        TYPE_BOOL,          /**< bool type */
-        TYPE_INT32,         /**< int32_t type */
-    };
 
     /**
      * Constructs a key value pair.
      */
-    KeyValue()
+    KeyValueUInt8(Preferences& pref, const char* key, const char* name, uint8_t defValue, size_t min, size_t max) :
+        KeyValueNumber(pref, key, name, defValue, min, max)
     {
     }
 
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValue()
+    virtual ~KeyValueUInt8()
     {
     }
 
@@ -89,91 +80,9 @@ public:
      *
      * @return Value type
      */
-    virtual Type getValueType() const = 0;
-
-    /**
-     * Get user friendly name of key value pair.
-     *
-     * @return User friendly name
-     */
-    virtual const char* getName() const = 0;
-
-    /**
-     * Get unique key.
-     *
-     * @return Key
-     */
-    virtual const char* getKey() const = 0;
-
-};
-
-/**
- * Key value pair with number as value.
- */
-template < typename T >
-class KeyValueNumber : public KeyValue
-{
-public:
-
-    /**
-     * Constructs a key value pair.
-     */
-    KeyValueNumber(Preferences& pref, const char* key, const char* name, T defValue, T min, T max) :
-        KeyValue(),
-        m_pref(pref),
-        m_key(key),
-        m_name(name),
-        m_defValue(defValue),
-        m_min(min),
-        m_max(max)
+    Type getValueType() const
     {
-    }
-
-    /**
-     * Destroys a key value pair.
-     */
-    virtual ~KeyValueNumber()
-    {
-    }
-
-    /**
-     * Get user friendly name of key value pair.
-     *
-     * @return User friendly name
-     */
-    const char* getName() const
-    {
-        return m_name;
-    }
-
-    /**
-     * Get key.
-     *
-     * @return Key
-     */
-    const char* getKey() const
-    {
-        return m_key;
-    }
-
-    /**
-     * Get minimum value.
-     *
-     * @return Minimum value
-     */
-    T getMin() const
-    {
-        return m_min;
-    }
-
-    /**
-     * Get maximum value.
-     *
-     * @return Maximum value
-     */
-    T getMax() const
-    {
-        return m_max;
+        return TYPE_UINT8;
     }
 
     /**
@@ -181,45 +90,32 @@ public:
      *
      * @return Value
      */
-    virtual T getValue() const = 0;
+    uint8_t getValue() const
+    {
+        return m_pref.getUChar(m_key, m_defValue);
+    }
 
     /**
      * Set value.
      *
      * @param[in] value Value
      */
-    virtual void setValue(T value) = 0;
-
-    /**
-     * Get default value.
-     *
-     * @return Default value
-     */
-    T getDefault() const
+    void setValue(uint8_t value)
     {
-        return m_defValue;
+        m_pref.putUChar(m_key, value);
     }
-
-protected:
-
-    Preferences&    m_pref;     /**< Preferences */
-    const char*     m_key;      /**< Key */
-    const char*     m_name;     /**< Name */
-    T               m_defValue; /**< Default value */
-    T               m_min;      /**< Min. length */
-    T               m_max;      /**< Max. length */
 
 private:
 
     /* An instance shall not be copied. */
-    KeyValueNumber(const KeyValueNumber& kv);
-    KeyValueNumber& operator=(const KeyValueNumber& kv);
+    KeyValueUInt8(const KeyValueUInt8& kv);
+    KeyValueUInt8& operator=(const KeyValueUInt8& kv);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_H__ */
+#endif  /* __KEY_VALUE_UINT8_H__ */
 
 /** @} */

@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Key value pair
+ * @brief  Key value pair with string type
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup utilities
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __KEY_VALUE_H__
-#define __KEY_VALUE_H__
+#ifndef __KEY_VALUE_STRING_H__
+#define __KEY_VALUE_STRING_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Preferences.h>
+#include "KeyValue.h"
 
 /******************************************************************************
  * Macros
@@ -54,71 +54,16 @@
  *****************************************************************************/
 
 /**
- * Key value pair interface.
+ * Key value pair with string value.
  */
-class KeyValue
-{
-public:
-
-    /** Value types */
-    enum Type
-    {
-        TYPE_UNKNOWN = 0,   /**< Unknown type */
-        TYPE_UINT8,         /**< uint8_t type */
-        TYPE_STRING,        /**< String type */
-        TYPE_BOOL,          /**< bool type */
-        TYPE_INT32,         /**< int32_t type */
-    };
-
-    /**
-     * Constructs a key value pair.
-     */
-    KeyValue()
-    {
-    }
-
-    /**
-     * Destroys a key value pair.
-     */
-    virtual ~KeyValue()
-    {
-    }
-
-    /**
-     * Get value type.
-     *
-     * @return Value type
-     */
-    virtual Type getValueType() const = 0;
-
-    /**
-     * Get user friendly name of key value pair.
-     *
-     * @return User friendly name
-     */
-    virtual const char* getName() const = 0;
-
-    /**
-     * Get unique key.
-     *
-     * @return Key
-     */
-    virtual const char* getKey() const = 0;
-
-};
-
-/**
- * Key value pair with number as value.
- */
-template < typename T >
-class KeyValueNumber : public KeyValue
+class KeyValueString : public KeyValue
 {
 public:
 
     /**
      * Constructs a key value pair.
      */
-    KeyValueNumber(Preferences& pref, const char* key, const char* name, T defValue, T min, T max) :
+    KeyValueString(Preferences& pref, const char* key, const char* name, const char* defValue, size_t min, size_t max) :
         KeyValue(),
         m_pref(pref),
         m_key(key),
@@ -132,8 +77,18 @@ public:
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueNumber()
+    virtual ~KeyValueString()
     {
+    }
+
+    /**
+     * Get value type.
+     *
+     * @return Value type
+     */
+    Type getValueType() const
+    {
+        return TYPE_STRING;
     }
 
     /**
@@ -157,21 +112,21 @@ public:
     }
 
     /**
-     * Get minimum value.
+     * Get minimum string length.
      *
-     * @return Minimum value
+     * @return Minimum string length
      */
-    T getMin() const
+    size_t getMinLength() const
     {
         return m_min;
     }
 
     /**
-     * Get maximum value.
+     * Get maximum string length.
      *
-     * @return Maximum value
+     * @return Maximum string length
      */
-    T getMax() const
+    size_t getMaxLength() const
     {
         return m_max;
     }
@@ -181,45 +136,49 @@ public:
      *
      * @return Value
      */
-    virtual T getValue() const = 0;
+    String getValue() const
+    {
+        return m_pref.getString(m_key, getDefault());
+    }
 
     /**
      * Set value.
      *
      * @param[in] value Value
      */
-    virtual void setValue(T value) = 0;
+    void setValue(const String& value)
+    {
+        m_pref.putString(m_key, value);
+    }
 
     /**
      * Get default value.
      *
      * @return Default value
      */
-    T getDefault() const
+    String getDefault() const
     {
-        return m_defValue;
+        return String(m_defValue);
     }
 
-protected:
+private:
 
     Preferences&    m_pref;     /**< Preferences */
     const char*     m_key;      /**< Key */
     const char*     m_name;     /**< Name */
-    T               m_defValue; /**< Default value */
-    T               m_min;      /**< Min. length */
-    T               m_max;      /**< Max. length */
-
-private:
+    const char*     m_defValue; /**< Default value */
+    size_t          m_min;      /**< Min. length */
+    size_t          m_max;      /**< Max. length */
 
     /* An instance shall not be copied. */
-    KeyValueNumber(const KeyValueNumber& kv);
-    KeyValueNumber& operator=(const KeyValueNumber& kv);
+    KeyValueString(const KeyValueString& kv);
+    KeyValueString& operator=(const KeyValueString& kv);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_H__ */
+#endif  /* __KEY_VALUE_STRING_H__ */
 
 /** @} */

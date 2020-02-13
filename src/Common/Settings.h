@@ -45,6 +45,10 @@
  *****************************************************************************/
 #include <Preferences.h>
 #include "KeyValue.h"
+#include "KeyValueString.h"
+#include "KeyValueBool.h"
+#include "KeyValueUInt8.h"
+#include "KeyValueInt32.h"
 
 /******************************************************************************
  * Macros
@@ -196,7 +200,7 @@ public:
      */
     KeyValueBool& getDaylightSavingAdjustment()
     {
-        return m_IsDaylightSaving;
+        return m_isDaylightSaving;
     }
 
     /**
@@ -227,7 +231,7 @@ private:
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
     KeyValueString  m_pluginInstallation;   /**< Plugin installation */
     KeyValueInt32   m_gmtOffset;            /**< GMT offset */
-    KeyValueBool    m_IsDaylightSaving;     /**< Daylight saving time switch */
+    KeyValueBool    m_isDaylightSaving;     /**< Daylight saving time switch */
     KeyValueString  m_ntpServer;            /**< NTP server address */
 
     /**

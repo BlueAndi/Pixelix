@@ -185,13 +185,12 @@ static const size_t MIN_VALUE_HOSTNAME             = 1U;
 static const size_t MIN_VALUE_PLUGIN_INSTALLATION   = 0U;
 
 /** Min. GMT offset (-12h+60s = -43200s) length */
-static const int32_t MIN_VALUE_GMT_OFFSET   = -43200;
+static const int32_t MIN_VALUE_GMT_OFFSET           = -43200;
 
 /*                  MIN_VALUE_DAYLIGHT_SAVING_CTRL */
 
 /** NTP server address min. length */
-static const size_t MIN_VALUE_NTP_SERVER   = 12U;
-
+static const size_t MIN_VALUE_NTP_SERVER            = 12U;
 
 /* ---------- Maximum values ---------- */
 
@@ -218,10 +217,10 @@ static const size_t MAX_VALUE_PLUGIN_INSTALLATION  = 120U;
 /** Max. GMT offset (14h*60s = 50400s) length */
 static const int32_t MAX_VALUE_GMT_OFFSET           = 50400;
 
-/*                  MIN_VALUE_DAYLIGHT_SAVING_CTRL */
+/*                  MAX_VALUE_DAYLIGHT_SAVING_CTRL */
 
-/** NTP server address min. length */
-static const size_t MAX_VALUE_NTP_SERVER   = 30U;
+/** NTP server address max. length */
+static const size_t MAX_VALUE_NTP_SERVER            = 30U;
 
 /******************************************************************************
  * Public Methods
@@ -277,7 +276,7 @@ Settings::Settings() :
     m_autoBrightnessCtrl    (m_preferences, KEY_AUTO_BRIGHTNESS_CTRL,   NAME_AUTO_BRIGHTNESS_CTRL,  DEFAULT_AUTO_BRIGHTNESS_CTRL),
     m_pluginInstallation    (m_preferences, KEY_PLUGIN_INSTALLATION,    NAME_PLUGIN_INSTALLATION,   DEFAULT_PLUGIN_INSTALLATION,    MIN_VALUE_PLUGIN_INSTALLATION,  MAX_VALUE_PLUGIN_INSTALLATION),
     m_gmtOffset             (m_preferences, KEY_GMTOFFSET,              NAME_GMT_OFFSET,            DEFAULT_GMT_OFFSET,             MIN_VALUE_GMT_OFFSET,           MAX_VALUE_GMT_OFFSET),
-    m_IsDaylightSaving      (m_preferences, KEY_DAYLIGHT_SAVING_CTRL,   NAME_DAYLIGHT_SAVING_CTRL,  DEFAULT_DAYLIGHT_SAVING_CTRL),
+    m_isDaylightSaving      (m_preferences, KEY_DAYLIGHT_SAVING_CTRL,   NAME_DAYLIGHT_SAVING_CTRL,  DEFAULT_DAYLIGHT_SAVING_CTRL),
     m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER)
 {
     m_keyValueList[0] = &m_wifiSSID;
@@ -288,7 +287,7 @@ Settings::Settings() :
     m_keyValueList[5] = &m_autoBrightnessCtrl;
     m_keyValueList[6] = &m_pluginInstallation;
     m_keyValueList[7] = &m_gmtOffset;
-    m_keyValueList[8] = &m_IsDaylightSaving;
+    m_keyValueList[8] = &m_isDaylightSaving;
     m_keyValueList[9] = &m_ntpServer;
 }
 
