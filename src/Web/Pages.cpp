@@ -79,6 +79,7 @@ static String indexPageProcessor(const String& var);
 static void networkPage(AsyncWebServerRequest* request);
 static String networkPageProcessor(const String& var);
 
+static bool storeSetting(KeyValue* parameter, const String& value, String& jsonRsp);
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
 
@@ -500,6 +501,176 @@ static String networkPageProcessor(const String& var)
 }
 
 /**
+ * Store setting in persistent memory, considering the setting type.
+ * 
+ * @param[in]   parameter   Key value pair
+ * @param[in]   value       Value to write
+ * @param[out]  jsonRsp     Response in JSON format, only applicable in error case.
+ * 
+ * @return If successful stored, it will return true otherwise false.
+ */
+static bool storeSetting(KeyValue* parameter, const String& value, String& jsonRsp)
+{
+    bool status = true;
+
+    if (nullptr == parameter)
+    {
+        status = false;
+    }
+    else
+    {
+        switch(parameter->getValueType())
+        {
+        case KeyValue::TYPE_STRING:
+            {
+                KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
+
+                /* If it is the hostname, verify it explicit. */
+                if (0 == strcmp(Settings::getInstance().getHostname().getKey(), kvStr->getKey()))
+                {
+                    if (false == isValidHostname(value))
+                    {
+                        status = false;
+                        jsonRsp = "{ \"status\": 1, \"error\": \"Invalid hostname.\" }";
+                    }
+                }
+
+                if (true == status)
+                {
+                    /* Check for min. and max. length */
+                    if (kvStr->getMinLength() > value.length())
+                    {
+                        status = false;
+                        jsonRsp = "{ \"status\": 1, \"error\": \"String length lower than ";
+                        jsonRsp += kvStr->getMinLength();
+                        jsonRsp += "\" }";
+                    }
+                    else if (kvStr->getMaxLength() < value.length())
+                    {
+                        status = false;
+                        jsonRsp = "{ \"status\": 1, \"error\": \"String length greater than ";
+                        jsonRsp += kvStr->getMaxLength();
+                        jsonRsp += "\" }";
+
+                    }
+                    else
+                    {
+                        kvStr->setValue(value);
+                    }
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_BOOL:
+            {
+                KeyValueBool*   kvBool  = static_cast<KeyValueBool*>(parameter);
+                uint8_t         bit     = 0;
+                bool            status  = Util::strToUInt8(value, bit);
+
+                /* Conversion failed? */
+                if (false == status)
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                }
+                /* Only 0 and 1 are allowed. */
+                else if (1U < bit)
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                }
+                else if (0U == bit)
+                {
+                    kvBool->setValue(false);
+                }
+                else
+                {
+                    kvBool->setValue(true);
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_UINT8:
+            {
+                KeyValueUInt8*  kvUInt8     = static_cast<KeyValueUInt8*>(parameter);
+                uint8_t         uint8Value  = 0;
+                bool            status      = Util::strToUInt8(value, uint8Value);
+
+                /* Conversion failed? */
+                if (false == status)
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                }
+                /* Check for min. and max. length */
+                else if (kvUInt8->getMin() > uint8Value)
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Value lower than ";
+                    jsonRsp += kvUInt8->getMin();
+                    jsonRsp += "\" }";
+                }
+                else if (kvUInt8->getMax() < uint8Value)
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Value greater than ";
+                    jsonRsp += kvUInt8->getMax();
+                    jsonRsp += "\" }";
+                }
+                else
+                {
+                    kvUInt8->setValue(uint8Value);
+                }
+            }
+            break;
+
+            case KeyValue::TYPE_INT32:
+            {
+                KeyValueInt32*  kvInt32     = static_cast<KeyValueInt32*>(parameter);
+                int32_t         int32Value  = 0;
+                bool            status      = Util::strToInt32(value, int32Value);
+
+                /* Conversion failed? */
+                if (false == status)
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                }
+                /* Check for min. and max. length */
+                else if (kvInt32->getMin() > int32Value)
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Value lower than ";
+                    jsonRsp += kvInt32->getMin();
+                    jsonRsp += "\" }";
+                }
+                else if (kvInt32->getMax() < int32Value)
+                {
+                    status = false;
+                    jsonRsp = "{ \"status\": 1, \"error\": \"Value greater than ";
+                    jsonRsp += kvInt32->getMax();
+                    jsonRsp += "\" }";
+                }
+                else
+                {
+                    kvInt32->setValue(int32Value);
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_UNKNOWN:
+            /* fallthrough */
+        default:
+            status = false;
+            jsonRsp = "{ \"status\": 1, \"error\": \"Unknown parameter.\" }";
+            break;
+        }
+    }
+
+    return status;
+}
+
+/**
  * Settings page to show and store settings.
  *
  * @param[in] request   HTTP request
@@ -545,150 +716,9 @@ static void settingsPage(AsyncWebServerRequest* request)
                 {
                     const String& value = request->arg(parameter->getKey());
 
-                    switch(parameter->getValueType())
+                    if (false == storeSetting(parameter, value, jsonRsp))
                     {
-                    case KeyValue::TYPE_STRING:
-                        {
-                            KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
-
-                            /* If it is the hostname, verify it explicit. */
-                            if (0 == strcmp(Settings::getInstance().getHostname().getKey(), kvStr->getKey()))
-                            {
-                                if (false == isValidHostname(value))
-                                {
-                                    isError = true;
-                                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid hostname.\" }";
-                                }
-                            }
-
-                            if (false == isError)
-                            {
-                                /* Check for min. and max. length */
-                                if (kvStr->getMinLength() > value.length())
-                                {
-                                    isError = true;
-                                    jsonRsp = "{ \"status\": 1, \"error\": \"String length lower than ";
-                                    jsonRsp += kvStr->getMinLength();
-                                    jsonRsp += "\" }";
-                                }
-                                else if (kvStr->getMaxLength() < value.length())
-                                {
-                                    isError = true;
-                                    jsonRsp = "{ \"status\": 1, \"error\": \"String length greater than ";
-                                    jsonRsp += kvStr->getMaxLength();
-                                    jsonRsp += "\" }";
-
-                                }
-                                else
-                                {
-                                    kvStr->setValue(value);
-                                }
-                            }
-                        }
-                        break;
-
-                    case KeyValue::TYPE_BOOL:
-                        {
-                            KeyValueBool*   kvBool  = static_cast<KeyValueBool*>(parameter);
-                            uint8_t         bit     = 0;
-                            bool            status  = Util::strToUInt8(value, bit);
-
-                            /* Conversion failed? */
-                            if (false == status)
-                            {
-                                isError = true;
-                                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
-                            }
-                            /* Only 0 and 1 are allowed. */
-                            else if (1U < bit)
-                            {
-                                isError = true;
-                                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
-                            }
-                            else if (0U == bit)
-                            {
-                                kvBool->setValue(false);
-                            }
-                            else
-                            {
-                                kvBool->setValue(true);
-                            }
-                        }
-                        break;
-
-                    case KeyValue::TYPE_UINT8:
-                        {
-                            KeyValueUInt8*  kvUInt8     = static_cast<KeyValueUInt8*>(parameter);
-                            uint8_t         uint8Value  = 0;
-                            bool            status      = Util::strToUInt8(value, uint8Value);
-
-                            /* Conversion failed? */
-                            if (false == status)
-                            {
-                                isError = true;
-                                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
-                            }
-                            /* Check for min. and max. length */
-                            else if (kvUInt8->getMin() > uint8Value)
-                            {
-                                isError = true;
-                                jsonRsp = "{ \"status\": 1, \"error\": \"Value lower than ";
-                                jsonRsp += kvUInt8->getMin();
-                                jsonRsp += "\" }";
-                            }
-                            else if (kvUInt8->getMax() < uint8Value)
-                            {
-                                isError = true;
-                                jsonRsp = "{ \"status\": 1, \"error\": \"Value greater than ";
-                                jsonRsp += kvUInt8->getMax();
-                                jsonRsp += "\" }";
-                            }
-                            else
-                            {
-                                kvUInt8->setValue(uint8Value);
-                            }
-                        }
-                        break;
-
-                        case KeyValue::TYPE_INT32:
-                        {
-                            KeyValueInt32*  kvInt32     = static_cast<KeyValueInt32*>(parameter);
-                            int32_t         int32Value  = 0;
-                            bool            status      = Util::strToInt32(value, int32Value);
-
-                            /* Conversion failed? */
-                            if (false == status)
-                            {
-                                isError = true;
-                                jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
-                            }
-                            /* Check for min. and max. length */
-                            else if (kvInt32->getMin() > int32Value)
-                            {
-                                isError = true;
-                                jsonRsp = "{ \"status\": 1, \"error\": \"Value lower than ";
-                                jsonRsp += kvInt32->getMin();
-                                jsonRsp += "\" }";
-                            }
-                            else if (kvInt32->getMax() < int32Value)
-                            {
-                                isError = true;
-                                jsonRsp = "{ \"status\": 1, \"error\": \"Value greater than ";
-                                jsonRsp += kvInt32->getMax();
-                                jsonRsp += "\" }";
-                            }
-                            else
-                            {
-                                kvInt32->setValue(int32Value);
-                            }
-                        }
-                        break;
-                    case KeyValue::TYPE_UNKNOWN:
-                        /* fallthrough */
-                    default:
                         isError = true;
-                        jsonRsp = "{ \"status\": 1, \"error\": \"Unknown parameter.\" }";
-                        break;
                     }
                 }
 
