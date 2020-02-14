@@ -76,7 +76,7 @@ void ClockDrv::init()
         bool        isDaylightSaving    = false;
         struct tm   timeInfo            = { 0 };
 
-        /* Get the GMT offset, daylight saving time and NTP server address from persistent memory. */
+        /* Get the GMT offset, daylight saving enabled/disabled and NTP server address from persistent memory. */
         if (false == Settings::getInstance().open(true))
         {
             LOG_WARNING("Use default values for NTP request.");
