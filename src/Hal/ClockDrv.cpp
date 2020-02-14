@@ -62,97 +62,71 @@
 /* Instantiate the button driver singleton. */
 ClockDrv ClockDrv::m_instance;
 
-/** Daylight saving time offset in s */
-static const int16_t NTP_DAYLIGHT_OFFSET_SEC    = 3600;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
 void ClockDrv::init()
 {
-    struct tm   timeInfo;
-    bool        isDaylightSaving;
-
     if (false == m_isClockDrvInitialized)
     {
-        m_ntpSyncTimer.start(NTP_SYNC_PERIOD);
+        int32_t     gmtOffset           = 0;
+        int16_t     daylightSavingValue = 0;
+        String      ntpServerAddress;
+        bool        isDaylightSaving    = false;
+        struct tm   timeInfo            = { 0 };
 
-        /* Get the GMT offset. */
+        /* Get the GMT offset, daylight saving time and NTP server address from persistent memory. */
         if (false == Settings::getInstance().open(true))
         {
             LOG_WARNING("Use default values for NTP request.");
-            m_gmtOffset = Settings::getInstance().getGmtOffset().getDefault();
-            isDaylightSaving = Settings::getInstance().getDaylightSavingAdjustment().getDefault();
-            m_ntpServerAddress = Settings::getInstance().getNTPServerAddress().getDefault();
+
+            gmtOffset           = Settings::getInstance().getGmtOffset().getDefault();
+            isDaylightSaving    = Settings::getInstance().getDaylightSavingAdjustment().getDefault();
+            ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getDefault();
         }
         else
         {
-            m_gmtOffset = Settings::getInstance().getGmtOffset().getValue();
-            isDaylightSaving = Settings::getInstance().getDaylightSavingAdjustment().getValue();
-            m_ntpServerAddress = Settings::getInstance().getNTPServerAddress().getValue();
+            gmtOffset           = Settings::getInstance().getGmtOffset().getValue();
+            isDaylightSaving    = Settings::getInstance().getDaylightSavingAdjustment().getValue();
+            ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getValue();
+
             Settings::getInstance().close();
         }
 
-        m_daylightSavingValue = (false != isDaylightSaving) ? NTP_DAYLIGHT_OFFSET_SEC : 0;
-
-        configTime(m_gmtOffset, m_daylightSavingValue, m_ntpServerAddress.c_str());
-
-        if (!getLocalTime(&timeInfo))
+        if (true == isDaylightSaving)
         {
-            m_isSynchronized = false;
-            LOG_ERROR("Failed to synchronize time");
+            daylightSavingValue = NTP_DAYLIGHT_OFFSET_SEC;
+        }
+
+        /* Configure NTP:
+         * This will periodically synchronize the time. The time synchronization
+         * period is determined by CONFIG_LWIP_SNTP_UPDATE_DELAY (default value is one hour).
+         * To modify the variable, set CONFIG_LWIP_SNTP_UPDATE_DELAY in project configuration.
+         * https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/system_time.html
+         * https://github.com/espressif/esp-idf/issues/4386
+         */
+        configTime(gmtOffset, daylightSavingValue, ntpServerAddress.c_str());
+
+        /* Wait for synchronization (default 5s) */
+        if (false == getLocalTime(&timeInfo))
+        {
+            LOG_ERROR("Failed to synchronize time.");
         }
         else
         {
-            m_isSynchronized = true;
-            LOG_INFO("Time successfully synchronized:  %d:%d", timeInfo.tm_hour, timeInfo.tm_min);
+            LOG_INFO("Time successfully synchronized: %d:%d", timeInfo.tm_hour, timeInfo.tm_min);
         }
+
+        m_isClockDrvInitialized = true;
     }
 }
 
 bool ClockDrv::getTime(tm *currentTime)
 {
-    bool ret = false;
+    const uint32_t WAIT_TIME_MS = 0;
 
-    if (m_isClockDrvInitialized)
-    {
-        ret = getLocalTime(currentTime);
-    }
-
-    return ret;
-}
-
-void ClockDrv::process()
-{
-    if ((true == m_ntpSyncTimer.isTimerRunning()) &&
-        (true == m_ntpSyncTimer.isTimeout()))
-    {
-        m_isSynchronized = false;
-        m_ntpSyncTimer.restart();
-    }
-
-    if ( false == m_isSynchronized)
-    {
-        struct tm timeInfo;
-
-        configTime(m_gmtOffset, m_daylightSavingValue, m_ntpServerAddress.c_str());
-        if (!getLocalTime(&timeInfo))
-        {
-            m_isSynchronized = false;
-            LOG_ERROR("Failed to synchronize time");
-        }
-        else
-        {
-            m_isSynchronized = true;
-            LOG_INFO("Time successfully synchronized:  %d:%d", timeInfo.tm_hour, timeInfo.tm_min);
-        }
-    }
-}
-
-bool ClockDrv::isSynchronized()
-{
-    return m_isSynchronized;
+    return getLocalTime(currentTime, WAIT_TIME_MS);
 }
 
 /******************************************************************************

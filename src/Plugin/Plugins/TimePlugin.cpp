@@ -76,6 +76,11 @@
 void TimePlugin::active(IGfx& gfx)
 {
     m_updateTimeTimer.start(TIME_UPDATE_PERIOD);
+
+    /* Force immediate time update to avoid displaying
+     * an old time for one TIME_UPDATE_PERIOD.
+     */
+    updateTime();
 }
 
 void TimePlugin::inactive()
@@ -102,28 +107,12 @@ void TimePlugin::setText(const String& formatText)
 
 void TimePlugin::process()
 {
-    char        timeBuffer [SIZE_OF_FORMATED_TIME_STRING_HHMM];
-    struct tm   timeinfo = {0};
-
-    if (false != ClockDrv::getInstance().isSynchronized())
+    if ((true == m_updateTimeTimer.isTimerRunning()) &&
+        (true == m_updateTimeTimer.isTimeout()))
     {
-        if ((true == m_updateTimeTimer.isTimerRunning()) &&
-            (true == m_updateTimeTimer.isTimeout()))
-        {
-            if (true == getLocalTime(&timeinfo))
-            {
-                strftime(timeBuffer, sizeof(timeBuffer), "\\calign%H:%M", &timeinfo);
-                setText(timeBuffer);
+        updateTime();
 
-                LOG_INFO(timeBuffer);
-            }
-
-            m_updateTimeTimer.restart();
-        }
-    }
-    else
-    {
-        setText("Waiting for NTP");
+        m_updateTimeTimer.restart();
     }
 
     return;
@@ -136,6 +125,21 @@ void TimePlugin::process()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void TimePlugin::updateTime()
+{
+    struct tm timeinfo = { 0 };
+
+    if (true == ClockDrv::getInstance().getTime(&timeinfo))
+    {
+        char timeBuffer [SIZE_OF_FORMATED_TIME_STRING_HHMM];
+
+        strftime(timeBuffer, sizeof(timeBuffer), "\\calign%H:%M", &timeinfo);
+        setText(timeBuffer);
+
+        LOG_INFO(timeBuffer);
+    }
+}
 
 /******************************************************************************
  * External Functions

@@ -73,7 +73,7 @@ public:
      */
     TimePlugin(const String& name) :
         Plugin(name),
-        m_textWidget(),
+        m_textWidget("Waiting for NTP"),
         m_updateTimeTimer()
     {
         /* Move the text widget one line lower for better look. */
@@ -142,6 +142,11 @@ private:
 
     /** Time to display update period in ms */
     static const uint32_t   TIME_UPDATE_PERIOD  = 5000U;
+
+    /**
+     * Get current time and update the text, which to be displayed.
+     */
+    void updateTime();
 };
 
 /******************************************************************************

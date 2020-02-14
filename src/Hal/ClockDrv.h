@@ -82,58 +82,27 @@ public:
      * Get the current time.
      *
      * @param[out] currentTime Pointer to the currentTime.
-     * @return true if successful, otherwise false.
+     *
+     * @return If time is not synchronized, it will return false otherwise true.
      */
     bool getTime(tm *currentTime);
 
-     /**
-      * Process the ClockDrv, if the ntp sync timer expires a ntp update is triggered.
-      */
-    void process(void);
-
-    /**
-     * Get the current syncState.
-     *
-     * @return true if synchronized, otherwise false.
-     */
-    bool isSynchronized(void);
+    /** Daylight saving time offset in s */
+    static const int16_t NTP_DAYLIGHT_OFFSET_SEC    = 3600;
 
 private:
 
     /** ClockDrv instance. */
     static ClockDrv m_instance;
 
-    /** Flag indicating a initialized ClockDrv. */
+    /** Flag indicating a initialized clock driver. */
     bool m_isClockDrvInitialized;
 
-    /** Flag indicating a synchronized time. */
-    bool m_isSynchronized;
-
-    /** Timer, used for cyclic ntp synchronization. */
-    SimpleTimer m_ntpSyncTimer;
-
-    /** The GMT offset as read from settings.*/
-    int32_t m_gmtOffset;
-
-    /** Daylight saving value.*/
-    int16_t m_daylightSavingValue;
-
-    /** The address of the NTP server as read from settings. */
-    String m_ntpServerAddress;
-
-    /** Period for cyclic NTP synchronization in ms */
-    static const uint32_t   NTP_SYNC_PERIOD = 3600000U;
-
-     /**
+    /**
      * Construct ClockDrv.
      */
     ClockDrv() :
-        m_isClockDrvInitialized(false),
-        m_isSynchronized(false),
-        m_ntpSyncTimer(),
-        m_gmtOffset(0),
-        m_daylightSavingValue(0),
-        m_ntpServerAddress()
+        m_isClockDrvInitialized(false)
     {
 
     }
