@@ -27,7 +27,7 @@
 /**
  * @brief  Logging
  * @author Yann Le Glaz <yann_le@web.de>
- * 
+ *
  * @addtogroup utilities
  *
  * @{
@@ -82,6 +82,9 @@
  * Types and Classes
  *****************************************************************************/
 
+/* Forward declaration */
+class LogSink;
+
 /**
  * Logging class for log messages depending on the previously set log level.
  */
@@ -100,11 +103,32 @@ public:
         LOGLEVEL_FATAL      /**< Log fatal messages in case there is no way out. */
     };
 
-    /** The maximum size of the logMessage buffer to get the variable arguments. */
-    static const uint16_t MESSAGE_BUFFER_SIZE       = 80U;
+    /**
+     * A single log message.
+     */
+    struct Msg
+    {
+        unsigned long       timestamp;  /**< Timestamp in ms */
+        Logging::LogLevel   level;      /**< Log level */
+        const char*         filename;   /**< Name of the file where this message is thrown. */
+        int                 line;       /**< Line number in the file, where this message is thrown. */
+        const char*         str;        /**< Message text */
 
-    /** The maximum size of the whole log message. */
-    static const uint16_t LOG_MESSAGE_BUFFER_SIZE   = MESSAGE_BUFFER_SIZE  + 10u /* timestamp */ + 8u /* log level */ + 20u /* filename */ + 5u /* line */ + 6u /* others */;
+        /**
+         * Initializes a empty message.
+         */
+        Msg() :
+            timestamp(0U),
+            level(LOGLEVEL_INFO),
+            filename(nullptr),
+            line(0),
+            str(nullptr)
+        {
+        }
+    };
+
+    /** The maximum size of the logMessage buffer to get the variable arguments. */
+    static const uint16_t MESSAGE_BUFFER_SIZE   = 80U;
 
     /**
      * Get the Logging instance.
@@ -117,23 +141,47 @@ public:
     }
 
     /**
-     * Set the output of the logging.
-     * Use nullptr to remove any kind of log output.
-     * 
-     * @param[in] output The log sink where the output has to be sent to.
+     * Register a log sink.
+     *
+     * @param[in] sink  Log sink
+     *
+     * @return If successful registered it will return true otherwise false.
      */
-    void init(Print* output);
+    bool registerSink(LogSink* sink);
+
+    /**
+     * Unregister a log sink.
+     *
+     * @param[in] sink  Log sink
+     */
+    void unregisterSink(LogSink* sink);
+
+    /**
+     * Select log sink.
+     *
+     * @param[in] name Log sink name
+     *
+     * @return If sink is selected, it will return true otherwise false.
+     */
+    bool selectSink(const String& name);
+
+    /**
+     * Get selected sink.
+     *
+     * @return Selected sink
+     */
+    LogSink* getSelectedSink();
 
     /**
      * Set the logLevel.
-     * 
+     *
      * @param[in] logLevel The new logLevel.
     */
     void setLogLevel(const LogLevel logLevel);
 
     /**
      * Get the current logLevel.
-     * 
+     *
      * @return The current logLevel.
     */
     LogLevel getLogLevel() const;
@@ -151,7 +199,7 @@ public:
      * @note The max. size of a logMessage is restricted by MESSAGE_BUFFER_SIZE.
      */
     void processLogMessage(const char* file, int line, const LogLevel messageLogLevel, const char* format, ...);
-    
+
     /**
      * Write a formatable logMessage to the current output,
      * if the severity is >= the current logLevel, otherwise the logMessage is discarded.
@@ -165,20 +213,26 @@ public:
      */
     void processLogMessage(const char* file, int line, const LogLevel messageLogLevel, const String& message);
 
+    /** Number of supported log sinks. */
+    static const uint8_t MAX_SINKS = 2U;
+
 private:
 
     /** Logging  instance. */
     static Logging m_instance;
 
-    /** The current logLevel. */
-    LogLevel m_currentLogLevel;
+    /** The current log level. */
+    LogLevel    m_currentLogLevel;
 
-    /** The current logOutput. */
-    Print* m_logOutput;
+    /** List of log sinks */
+    LogSink*    m_sinks[MAX_SINKS];
+
+    /** Active sink */
+    LogSink*    m_selectedSink;
 
     /**
      * Checks wether the given severity of a logMessage is valid to be printed.
-     * 
+     *
      * @param[in] logLevel the logLevel that has to be checked.
      *
      * @return True if the severity is >= the current logLevel, otherwise false.
@@ -195,42 +249,19 @@ private:
     const char* getBaseNameFromPath(const char* path) const;
 
     /**
-     * Print the logMessage to the current output.
-     * 
-     * @param[in] file The filename.
-     * @param[in] line The linenumber in the file.
-     * @param[in] messageLogLevel The logLevel of the current message.
-     * @param[in] message The message as char*.
-     */
-    void printLogMessage(const char* file, int line,  const Logging::LogLevel messageLogLevel, const char* message) const;
-    
-     /**
-     * Print the logMessage to the current output.
-     *
-     * @param[in] file The filename.
-     * @param[in] line The linenumber in the file.
-     * @param[in] messageLogLevel The logLevel of the current message .
-     * @param[in] message The message as string.
-     */
-    void printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message) const;
-
-    /**
-     * Get a string representation of the given logLevel.
-     * 
-     * @param[in] logLevel The logLevel.
-     * 
-     * @return The severity of the given logLevel as string.
-     */
-    const char* logLevelToString(const Logging::LogLevel LogLevel) const; 
-
-    /**
      * Construct Logging.
      */
     Logging() :
         m_currentLogLevel(LOGLEVEL_ERROR),
-        m_logOutput(nullptr)
+        m_sinks(),
+        m_selectedSink(nullptr)
     {
+        uint8_t index = 0U;
 
+        for(index = 0U; index < MAX_SINKS; ++index)
+        {
+            m_sinks[index] = nullptr;
+        }
     }
 
     /**
@@ -244,6 +275,44 @@ private:
     /* Prevent copying */
     Logging(const Logging&);
     Logging&operator=(const Logging&);
+};
+
+/**
+ * Logging sink interface.
+ */
+class LogSink
+{
+public:
+
+    /**
+     * Constructs the log sink.
+     */
+    LogSink()
+    {
+    }
+
+    /**
+     * Destroys the log sink.
+     */
+    virtual ~LogSink()
+    {
+    }
+
+    /**
+     * Get sink name.
+     *
+     * @return Name of the sink.
+     */
+    virtual const String& getName() const = 0;
+
+    /**
+     * Send a log message to this sink.
+     *
+     * @param[in] msg   Log message
+     */
+    virtual void send(const Logging::Msg& msg) = 0;
+
+private:
 };
 
 /******************************************************************************

@@ -46,6 +46,7 @@
 #include <SimpleTimer.hpp>
 #include <ProgressBar.h>
 #include <Logging.h>
+#include <LogSinkPrinter.h>
 #include <Util.h>
 
 /******************************************************************************
@@ -80,9 +81,9 @@ public:
 
     /**
      * Write a single byte.
-     * 
+     *
      * @param[in] data The byte to be written.
-     * 
+     *
      * @return 1.
      */
     size_t write(uint8_t data)
@@ -98,16 +99,16 @@ public:
 
     /**
      * Write a single byte.
-     * 
+     *
      * @param[in] buffer Pointer to the data to be written.
      * @param[in] size the size of the data to be written.
-     * 
+     *
      * @return The size of the written data.
      */
     size_t write(const uint8_t* buffer, size_t size)
     {
         uint16_t index = 0U;
-        
+
         for(index = 0U; index < UTIL_ARRAY_NUM(m_buffer); ++index)
         {
             m_buffer[index] = static_cast<char>(buffer[index]);
@@ -118,7 +119,7 @@ public:
 
     /**
      * Get the Write buffer.
-     * 
+     *
      * @return Write buffer
      */
     const char* getBuffer()
@@ -171,7 +172,7 @@ public:
     /**
      * Draw a single pixel in the matrix and ensure that the drawing borders
      * are not violated.
-     * 
+     *
      * @param[in] x     x-coordinate
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
@@ -193,10 +194,10 @@ public:
 
     /**
      * Get pixel color at given position.
-     * 
+     *
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
-     * 
+     *
      * @return Color in RGB565 format.
      */
     uint16_t getColor(int16_t x, int16_t y)
@@ -212,7 +213,7 @@ public:
 
     /**
      * Get display buffer.
-     * 
+     *
      * @return Display buffer
      */
     uint16_t* getBuffer()
@@ -222,7 +223,7 @@ public:
 
     /**
      * Get call counter of @drawPixel.
-     * 
+     *
      * @return Call counter
      */
     uint32_t getCallCounterDrawPixel() const
@@ -232,7 +233,7 @@ public:
 
     /**
      * Set call counter of @drawPixel.
-     * 
+     *
      * @param[in] counter New call counter value
      */
     void setCallCounterDrawPixel(uint32_t counter)
@@ -269,7 +270,7 @@ public:
 
     /**
      * Verify rectangle at given position. It must be there with the given color.
-     * 
+     *
      * @param[in] posX      Top left x-coordinate
      * @param[in] posY      Top left y-coordinate
      * @param[in] width     Width in pixel
@@ -309,7 +310,7 @@ public:
 
     /**
      * Fill display buffer with given color.
-     * 
+     *
      * @param[in] color Fill color
      */
     void fill(uint16_t color)
@@ -367,7 +368,7 @@ public:
 
     /**
      * Update widget drawing.
-     * 
+     *
      * @param[in] gfx Graphics interface, which to use.
      */
     void update(IGfx& gfx)
@@ -382,13 +383,13 @@ public:
                 gfx.drawPixel(m_posX + x, m_posY + y, m_color.to565());
             }
         }
-        
+
         return;
     }
 
     /**
      * Get pen color, used to draw the widget.
-     * 
+     *
      * @return Pen color
      */
     const Color& getPenColor() const
@@ -398,7 +399,7 @@ public:
 
     /**
      * Set pen color, used to draw the widget.
-     * 
+     *
      * @param[in] color Pen color
      */
     void setPenColor(const Color& color)
@@ -445,7 +446,7 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm)
@@ -456,7 +457,7 @@ public:
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
 
@@ -466,13 +467,13 @@ public:
         {
             sm.setState(*m_nextState);
         }
-        
+
         return;
     }
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm)
@@ -483,7 +484,7 @@ public:
 
     /**
      * Set next state.
-     * 
+     *
      * @param[in] nextState Next state to go in process method.
      */
     void setState(AbstractState& nextState)
@@ -494,7 +495,7 @@ public:
 
     /**
      * Get call counter for entry method.
-     * 
+     *
      * @return Call counter for entry method.
      */
     uint32_t getCallCntEntry() const
@@ -504,7 +505,7 @@ public:
 
     /**
      * Get call counter for exit method.
-     * 
+     *
      * @return Call counter for exit method.
      */
     uint32_t getCallCntExit() const
@@ -548,7 +549,7 @@ static void testLogging(void);
 
 /**
  * Main entry point
- * 
+ *
  * @param[in] argc  Number of command line arguments
  * @param[in] argv  Command line arguments
  */
@@ -579,10 +580,10 @@ int main(int argc, char **argv)
 
 /**
  * Get minimum of two values.
- * 
+ *
  * @param[in] value1    Value 1
  * @param[in] value2    Value 2
- * 
+ *
  * @return Minimum of value 1 and value 2
  */
 template < typename T >
@@ -666,7 +667,7 @@ static void testDoublyLinkedList()
         {
             TEST_ASSERT_FALSE(list.next());
         }
-        
+
     }
 
     /* Select element for element, from tail to head. */
@@ -683,7 +684,7 @@ static void testDoublyLinkedList()
         {
             TEST_ASSERT_FALSE(list.prev());
         }
-        
+
     }
 
     /* Remove all elements */
@@ -817,7 +818,7 @@ static void testWidget()
     testWidget.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
+                                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH),
                                     getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
                                     COLOR.to565()));
 
@@ -829,7 +830,7 @@ static void testWidget()
     testWidget.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH), 
+                                    getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH),
                                     getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
                                     COLOR.to565()));
 
@@ -871,9 +872,9 @@ void testCanvas()
     /* Draw canvas with widget. Expected is a full drawn widget. */
     testGfx.fill(0);
     testCanvas.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(WIDGET_POS_X, 
-                                    WIDGET_POS_Y, 
-                                    getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X), 
+    TEST_ASSERT_TRUE(testGfx.verify(WIDGET_POS_X,
+                                    WIDGET_POS_Y,
+                                    getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X),
                                     getMin<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
                                     WIDGET_COLOR.to565()));
 
@@ -881,9 +882,9 @@ void testCanvas()
     testGfx.fill(0);
     testWidget.move(CANVAS_WIDTH, CANVAS_HEIGHT);
     testCanvas.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 
-                                    0, 
-                                    CANVAS_WIDTH, 
+    TEST_ASSERT_TRUE(testGfx.verify(0,
+                                    0,
+                                    CANVAS_WIDTH,
                                     CANVAS_HEIGHT,
                                     0));
 
@@ -891,9 +892,9 @@ void testCanvas()
     testGfx.fill(0);
     testWidget.move(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
     testCanvas.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(CANVAS_WIDTH / 2, 
-                                    CANVAS_HEIGHT / 2, 
-                                    CANVAS_WIDTH / 2, 
+    TEST_ASSERT_TRUE(testGfx.verify(CANVAS_WIDTH / 2,
+                                    CANVAS_HEIGHT / 2,
+                                    CANVAS_WIDTH / 2,
                                     CANVAS_HEIGHT / 2,
                                     WIDGET_COLOR.to565()));
 
@@ -1139,7 +1140,7 @@ static void testTextWidget()
     /* Check for default font */
     TEST_ASSERT_NOT_NULL(textWidget.getFont());
     TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, textWidget.getFont());
-    
+
     /* Font shall be used for drawing */
     textWidget.update(testGfx);
     TEST_ASSERT_NOT_NULL(testGfx.getFont());
@@ -1387,27 +1388,28 @@ static void testProgressBar()
 
 /**
  * Test Logging.
- * 
- * Note: In order to let these tests pass the formating of the expected logMessage has to stay directly after the LogMessage (__LINE__-1), 
+ *
+ * Note: In order to let these tests pass the formating of the expected logMessage has to stay directly after the LogMessage (__LINE__-1),
  * otherwise the tests will fail.
  */
 static void testLogging()
 {
     TestLogger      myTestLogger;
+    LogSinkPrinter  myLogSink("test", &myTestLogger);
     const char*     printBuffer     = nullptr;
     const char*     TEST_STRING_1   = "TestMessage";
     const String    TEST_STRING_2   = "TestMessageAsString";
     char            expectedLogMessage[52];
     int             lineNo          = 0;
-    
+
     /* Check intial LogLevel. */
-    Logging::getInstance().init(&myTestLogger);
+    TEST_ASSERT_TRUE(Logging::getInstance().registerSink(&myLogSink));
     TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOGLEVEL_ERROR);
 
     /* Set LogLevel to LOGLEVEL_INFO. */
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
     TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOGLEVEL_INFO);
-    
+
     /* Set LogLevel to LOGLEVEL_ERROR and trigger a LOG_INFO message. */
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_ERROR);
     LOG_INFO(TEST_STRING_1);
@@ -1450,6 +1452,11 @@ static void testLogging()
     }
 
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
+
+    /* Unregister log sink and nothing shall be printed anymore. */
+    Logging::getInstance().unregisterSink(&myLogSink);
+    LOG_ERROR("Should not be shown.");
+    TEST_ASSERT_EQUAL_size_t(0, strlen(myTestLogger.getBuffer()));
 
     return;
 }

@@ -196,15 +196,7 @@ private:
      */
     size_t write(const uint8_t* buffer, size_t size)
     {
-        const size_t    CMD_LEN = 4U;   /* Length of "EVT;" */
-        char            msg[CMD_LEN + size + 1];   /* "EVT;" + buffer + '\0' */
-
-        // TODO Improve this, because it copies the data again here.
-        // TODO Idea is to extend the logging class, so it will support several log sinks.
-        strcpy(msg, "EVT;");
-        strncat(msg, (const char*)buffer, size);
-
-        m_webSocket.textAll(msg, size + CMD_LEN);
+        m_webSocket.textAll(const_cast<uint8_t*>(buffer), size);
         return size;
     }
 };

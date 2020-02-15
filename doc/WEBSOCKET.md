@@ -156,9 +156,13 @@ Response:
 * Failed:
   * ```NACK```
 
-Event:
-* ```EVT;<log-information>```
-* If logging is enabled, a event will be automatically be sent for every log message.
+Event: If logging is enabled, a event will be automatically be sent for every log message.
+* ```EVT;<timestamp>;<level>;<filename>;<line>;<text>```
+* ```<timestamp>```: Timestamp in ms
+* ```<level>```: Log level
+* ```<filename>```: Filename where the log message comes from, emphasized in "".
+* ```<line>```: Line number if in the file where the log message comes from.
+* ```<text>```: Logged text, emphasized in "".
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

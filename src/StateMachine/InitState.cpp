@@ -88,9 +88,6 @@
 /* Set system message show duration in ms */
 const uint32_t  InitState::SYS_MSG_WAIT_TIME    = 2000U;
 
-/* Set serial interface baudrate. */
-const uint32_t  InitState::SERIAL_BAUDRATE      = 115200U;
-
 /* Initialization state instance */
 InitState       InitState::m_instance;
 
@@ -104,13 +101,6 @@ void InitState::entry(StateMachine& sm)
 
     /* Initialize hardware */
     Board::init();
-
-    /* Setup serial interface */
-    Serial.begin(SERIAL_BAUDRATE);
-
-    /* Initialize logging, which uses the serial interface as sink. */
-    Logging::getInstance().init(&Serial);
-    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
 
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();

@@ -4,6 +4,35 @@ pixelix = {
     ws: {}
 };
 
+pixelix.ws.getLogLevelStr = function(logLevel) {
+    var str = "";
+
+    switch(logLevel)
+    {
+    case 0:
+        str = "INFO";
+        break;
+
+    case 1:
+        str = "WARNING";
+        break;
+
+    case 2:
+        str = "ERROR";
+        break;
+
+    case 3:
+        str = "FATAL";
+        break;
+
+    default:
+        str = "UNKNWON";
+        break;
+    }
+
+    return str;
+};
+
 pixelix.ws.Client = function(options) {
 
     this.socket     = null;
@@ -99,7 +128,11 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
     var index   = 0;
 
     if ("EVT" === status) {
-        rsp.data = data;
+        rsp.timestamp = parseInt(data[0]);
+        rsp.level = parseInt(data[1]);
+        rsp.filename = data[2].substring(1, data[2].length - 1);
+        rsp.line = parseInt(data[3]);
+        rsp.text = data[4].substring(1, data[4].length - 1);
         this._sendEvt(rsp);
     } else {
         if (null === this.pendingCmd) {

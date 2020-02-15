@@ -76,24 +76,36 @@ void WsCmdLog::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
     else
     {
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
+        String      rsp             = "ACK";
+        const char  DELIMITER       = ';';
+        LogSink*    selectedSink    = nullptr;
 
         /* Set logging on/off? */
         if (0 < m_cnt)
         {
             if (false == m_isLoggingOn)
             {
-                Logging::getInstance().init(&Serial);
+                (void)Logging::getInstance().selectSink("Serial");
             }
             else
             {
-                Logging::getInstance().init(&WebSocketSrv::getInstance());
+                (void)Logging::getInstance().selectSink("Websocket");
             }
         }
 
         rsp += DELIMITER;
-        rsp += (false == m_isLoggingOn) ? 0 : 1;
+
+        selectedSink = Logging::getInstance().getSelectedSink();
+
+        if ((nullptr == selectedSink) ||
+            (selectedSink->getName() != "Websocket"))
+        {
+            rsp += "0";
+        }
+        else
+        {
+            rsp += "1";
+        }
 
         server->text(client->id(), rsp);
     }

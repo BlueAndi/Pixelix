@@ -61,9 +61,79 @@ Logging Logging::m_instance;
  * Public Methods
  *****************************************************************************/
 
-void Logging::init(Print* output)
+bool Logging::registerSink(LogSink* sink)
 {
-    m_logOutput = output;
+    bool status = false;
+
+    if (nullptr != sink)
+    {
+        uint8_t index = 0U;
+
+        while((MAX_SINKS > index) && (false == status))
+        {
+            if (nullptr == m_sinks[index])
+            {
+                m_sinks[index] = sink;
+                status = true;
+            }
+            else
+            {
+                ++index;
+            }
+        }
+    }
+
+    return status;
+}
+
+void Logging::unregisterSink(LogSink* sink)
+{
+    uint8_t index = 0U;
+
+    while((MAX_SINKS > index) && (nullptr != sink))
+    {
+        if (sink == m_sinks[index])
+        {
+            m_sinks[index] = nullptr;
+
+            if (sink == m_selectedSink)
+            {
+                m_selectedSink = nullptr;
+            }
+
+            sink = nullptr;
+        }
+        else
+        {
+            ++index;
+        }
+    }
+}
+
+bool Logging::selectSink(const String& name)
+{
+    bool    status  = false;
+    uint8_t index   = 0U;
+
+    while((MAX_SINKS > index) && (false == status))
+    {
+        if (m_sinks[index]->getName() == name)
+        {
+            m_selectedSink = m_sinks[index];
+            status = true;
+        }
+        else
+        {
+            ++index;
+        }
+    }
+
+    return status;
+}
+
+LogSink* Logging::getSelectedSink()
+{
+    return m_selectedSink;
 }
 
 void Logging::setLogLevel(const LogLevel logLevel)
@@ -78,28 +148,36 @@ Logging::LogLevel Logging::getLogLevel() const
 
 void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* format, ...)
 {
-    if (true == isSeverityValid(messageLogLevel))
+    if ((true == isSeverityValid(messageLogLevel)) &&
+        (nullptr != m_selectedSink))
     {
         char            buffer[MESSAGE_BUFFER_SIZE];
         int             written             = 0;
         const char*     STR_CUT_OFF_SEQ     = "...";
         const uint16_t  STR_CUT_OFF_SEQ_LEN = strlen(STR_CUT_OFF_SEQ);
         va_list         args;
+        Msg             msg;
 
         va_start(args, format);
         written = vsnprintf(buffer, MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, format, args);
         va_end(args);
 
         /* If buffer was too small or any other error happended, it shall be shown in the
-        * output string message with the STR_CUT_OFF_SEQ.
-        */
+         * output string message with the STR_CUT_OFF_SEQ.
+         */
         if ((0 > written) ||
             ((MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN) <= written))
         {
             strcat(buffer, STR_CUT_OFF_SEQ);
         }
 
-        printLogMessage(file, line, messageLogLevel, buffer);
+        msg.timestamp   = millis();
+        msg.level       = messageLogLevel;
+        msg.filename    = getBaseNameFromPath(file);
+        msg.line        = line;
+        msg.str         = buffer;
+
+        m_selectedSink->send(msg);
     }
     else
     {
@@ -109,9 +187,18 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
 
 void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message)
 {
-    if (true == isSeverityValid(messageLogLevel))
+    if ((true == isSeverityValid(messageLogLevel)) &&
+        (nullptr != m_selectedSink))
     {
-        printLogMessage(file, line, messageLogLevel, message.c_str());
+        Msg msg;
+
+        msg.timestamp   = millis();
+        msg.level       = messageLogLevel;
+        msg.filename    = getBaseNameFromPath(file);
+        msg.line        = line;
+        msg.str         = message.c_str();
+
+        m_selectedSink->send(msg);
     }
     else
     {
@@ -149,60 +236,6 @@ const char* Logging::getBaseNameFromPath(const char* path) const
     }
 
     return basename;
-}
-
-void Logging::printLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* message) const
-{
-    if (nullptr != m_logOutput)
-    {
-        char            buffer[LOG_MESSAGE_BUFFER_SIZE] = { 0 };
-        int             written                         = 0;
-        const char*     STR_CUT_OFF_SEQ                 = "...";
-        const uint16_t  STR_CUT_OFF_SEQ_LEN             = strlen(STR_CUT_OFF_SEQ);
-
-        written = snprintf(buffer, LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, "|%ld| %s %s:%d %s\r\n", millis(), logLevelToString(messageLogLevel), getBaseNameFromPath(file), line, message);
-
-        /* If buffer was too small or any other error happended, it shall be shown in the
-        * output string message with the STR_CUT_OFF_SEQ.
-        */
-        if ((0 > written) ||
-            ((LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN) <= written))
-        {
-            strcat(buffer, STR_CUT_OFF_SEQ);
-        }
-
-        (void)m_logOutput->print(buffer);
-    }
-}
-
-const char* Logging::logLevelToString(const Logging::LogLevel LogLevel) const
-{
-    const char* logLevelString = nullptr;
-
-    switch (LogLevel)
-    {
-        case Logging::LOGLEVEL_INFO:
-            logLevelString = "INFO:";
-            break;
-
-        case Logging::LOGLEVEL_WARNING :
-            logLevelString = "WARNING:";
-            break;
-
-        case Logging::LOGLEVEL_ERROR :
-            logLevelString = "ERROR:";
-        break;
-
-        case Logging::LOGLEVEL_FATAL :
-            logLevelString = "FATAL:";
-            break;
-
-        default:
-            logLevelString = "UNKNOWN:";
-            break;
-    }
-
-    return logLevelString;
 }
 
 /******************************************************************************

@@ -2,22 +2,22 @@ body {
     color: white;
     background-color: #202020;
 }
-h2 { 
-    color: #ff0000; 
-} 
-h3 { 
-    color: #ffff00; 
-} 
-table { 
-    border-collapse: collapse; 
-} 
-tr:nth-child(even) { 
-    background-color: #333; 
-} 
-td { 
-    border: 1px solid white; 
-    padding: 2px 
-} 
+h2 {
+    color: #ff0000;
+}
+h3 {
+    color: #ffff00;
+}
+table {
+    border-collapse: collapse;
+}
+tr:nth-child(even) {
+    background-color: #333;
+}
+td {
+    border: 1px solid white;
+    padding: 4px
+}
 .header {
     padding: 10px 16px;
 }

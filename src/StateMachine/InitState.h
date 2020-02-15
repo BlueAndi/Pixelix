@@ -97,9 +97,6 @@ public:
     /** Wait time for showing a system message in ms */
     static const uint32_t   SYS_MSG_WAIT_TIME;
 
-    /** Serial interface baudrate. */
-    static const uint32_t   SERIAL_BAUDRATE;
-
 private:
 
     /** Initialization state instance */

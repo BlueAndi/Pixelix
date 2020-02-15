@@ -33,7 +33,12 @@
  * Includes
  *****************************************************************************/
 #include <Arduino.h>
+#include <Logging.h>
+#include <LogSinkPrinter.h>
+#include "LogSinkWebsocket.h"
 #include <StateMachine.hpp>
+
+#include "Board.h"
 #include "InitState.h"
 
 /******************************************************************************
@@ -53,7 +58,16 @@
  *****************************************************************************/
 
 /** System state machine */
-static StateMachine gSysStateMachine(InitState::getInstance());
+static StateMachine     gSysStateMachine(InitState::getInstance());
+
+/** Serial log sink */
+static LogSinkPrinter   gLogSinkSerial("Serial", &Serial);
+
+/** Websocket log sink */
+static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
+
+/** Serial interface baudrate. */
+static const uint32_t   SERIAL_BAUDRATE = 115200U;
 
 /******************************************************************************
  * External functions
@@ -64,6 +78,21 @@ static StateMachine gSysStateMachine(InitState::getInstance());
  */
 void setup()
 {
+    /* Setup serial interface */
+    Serial.begin(SERIAL_BAUDRATE);
+
+    /* Register serial log sink and select it per default. */
+    if (true == Logging::getInstance().registerSink(&gLogSinkSerial))
+    {
+        (void)Logging::getInstance().selectSink("Serial");
+    }
+
+    /* Register websocket log sink. */
+    (void)Logging::getInstance().registerSink(&gLogSinkWebsocket);
+
+    /* Set severity */
+    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
+
     /* The setup routine shall handle only the initialization state.
      * All other states are handled in the loop routine.
      */
