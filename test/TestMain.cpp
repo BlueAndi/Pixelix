@@ -128,6 +128,14 @@ public:
     }
 
     /**
+     * Clear internal buffer.
+     */
+    void clear()
+    {
+        m_buffer[0] = '\0';
+    }
+
+    /**
      * Destroys the logging interface.
      */
     ~TestLogger( )
@@ -1456,6 +1464,7 @@ static void testLogging()
 
     /* Unregister log sink and nothing shall be printed anymore. */
     Logging::getInstance().unregisterSink(&myLogSink);
+    myTestLogger.clear();
     LOG_ERROR("Should not be shown.");
     TEST_ASSERT_EQUAL_size_t(0, strlen(myTestLogger.getBuffer()));
 
