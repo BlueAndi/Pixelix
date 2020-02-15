@@ -1404,6 +1404,7 @@ static void testLogging()
 
     /* Check intial LogLevel. */
     TEST_ASSERT_TRUE(Logging::getInstance().registerSink(&myLogSink));
+    TEST_ASSERT_TRUE(Logging::getInstance().selectSink("test"));
     TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOGLEVEL_ERROR);
 
     /* Set LogLevel to LOGLEVEL_INFO. */
