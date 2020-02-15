@@ -41,6 +41,7 @@
 #include "WsCmdUninstall.h"
 #include "WsCmdReset.h"
 #include "WsCmdBrightness.h"
+#include "WsCmdLog.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -89,6 +90,9 @@ static WsCmdReset       gWsCmdReset;
 /** Websocket get/set brightness command */
 static WsCmdBrightness  gWsCmdBrightness;
 
+/** Websocket log command */
+static WsCmdLog         gWsCmdLog;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
@@ -98,7 +102,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdInstall,
     &gWsCmdUninstall,
     &gWsCmdReset,
-    &gWsCmdBrightness
+    &gWsCmdBrightness,
+    &gWsCmdLog
 };
 
 /******************************************************************************

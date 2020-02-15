@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>%PAGE_TITLE%</title>
+    <link rel="stylesheet" href="/data/style.css" />
+    <script src="/data/ws.js"></script>
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+    <script>
+        var wsClient    = null; // Websocket client
+        var logMessages = [];
+        var maxLogs     = 40;
+
+        function onClosed() {
+            alert("Websocket connection closed.");
+        }
+
+        function onEvent(evt) {
+            var p = document.getElementById("output");
+            var index = 0;
+
+            logMessages.push(evt.data);
+
+            if (maxLogs < logMessages.length) {
+                logMesages.shift();
+            }
+
+            p.innerHTML = "";
+            for(index = 0; index < logMessages.length; ++index) {
+                p.innerHTML += logMessages[index];
+                p.innerHTML += "<br />";
+            }
+        }
+
+        function toggle() {
+            var bLog = document.getElementById("bLog");
+
+            wsClient.setLog({
+                enable: ("Enable" === bLog.value) ? true : false
+            }).then(function(rsp) {
+
+                if (false == rsp.isEnabled) {
+                    bLog.value = "Enable";
+                } else {
+                    bLog.value = "Disable";
+                }
+
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+            });
+        }
+
+        window.onload = function() {
+            wsClient = new pixelix.ws.Client();
+            wsClient.connect({
+                protocol: "%WS_PROTOCOL%",
+                hostname: "%WS_HOSTNAME%",
+                port: %WS_PORT%,
+                endpoint: "%WS_ENDPOINT%",
+                onClosed: onClosed,
+                onEvent: onEvent
+            }).then(function() {
+                return wsClient.getLog();
+            }).then(function(rsp) {
+                var bLog = document.getElementById("bLog");
+
+                if (false == rsp.isEnabled) {
+                    bLog.value = "Enable";
+                } else {
+                    bLog.value = "Disable";
+                }
+
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+            });
+        };
+    </script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div class="topnav">
+    <a href="/">Home</a>
+    <a href="/dev" class="active">Development</a>
+    <a href="/display">Display</a>
+    <a href="/edit">Filesystem</a>
+    <a href="/network">Network</a>
+    <a href="/settings">Settings</a>
+    <a href="/update">Update</a>
+</div>
+<div class="main">
+    <h2>Development</h2>
+    <h3>Logging</h3>
+    <input id="bLog" type="button" value="Enable" onclick="toggle();" />
+    <p>Note, only the last 40 messages are show.</p>
+    <p id="output"></p>
+</div>
+<div class="footer" style="border: yellow 5px solid; padding: 10px">
+    <hr />
+    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>

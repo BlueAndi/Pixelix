@@ -9,6 +9,7 @@ pixelix.ws.Client = function(options) {
     this.socket     = null;
     this.cmdQueue   = [];
     this.pendingCmd = null;
+    this.onEvent    = null;
 
     this._sendCmdFromQueue = function() {
         var msg = "";
@@ -35,6 +36,12 @@ pixelix.ws.Client = function(options) {
             this._sendCmdFromQueue();
         }
     };
+
+    this._sendEvt = function(evt) {
+        if (null !== this.onEvent) {
+            this.onEvent(evt);
+        }
+    }
 };
 
 pixelix.ws.Client.prototype.connect = function(options) {
@@ -48,6 +55,10 @@ pixelix.ws.Client.prototype.connect = function(options) {
 
             reject();
         } else {
+
+            if ("function" === typeof options.onEvent) {
+                this.onEvent = options.onEvent;
+            }
 
             try {
                 wsUrl = options.protocol + "://" + options.hostname + ":" + options.port + options.endpoint;
@@ -63,6 +74,8 @@ pixelix.ws.Client.prototype.connect = function(options) {
                     if ("function" === typeof options.onClosed) {
                         options.onClosed();
                     }
+
+                    options.evtCallback = null;
                 };
 
                 this.socket.onmessage = function(messageEvent) {
@@ -72,6 +85,7 @@ pixelix.ws.Client.prototype.connect = function(options) {
 
             } catch (exception) {
                 console.error(exception);
+                options.evtCallback = null;
                 reject();
             }
         }
@@ -84,47 +98,56 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
     var rsp     = {};
     var index   = 0;
 
-    if (null === this.pendingCmd) {
-        console.error("No pending command, but response received.");
-    } else if ("ACK" === status) {
-        if ("GETDISP" === this.pendingCmd.name) {
-            rsp.slotId = data.shift();
-            rsp.data = data;
-            this.pendingCmd.resolve(rsp);
-        } else if ("BRIGHTNESS" === this.pendingCmd.name) {
-            rsp.brightness = parseInt(data[0]);
-            rsp.automaticBrightnessControl = (1 === parseInt(data[1])) ? true : false;
-            this.pendingCmd.resolve(rsp);
-        } else if ("INSTALL" === this.pendingCmd.name) {
-            rsp.slotId = parseInt(data[0]);
-            this.pendingCmd.resolve(rsp);
-        } else if ("PLUGINS" === this.pendingCmd.name) {
-            rsp.plugins = [];
-            for(index = 0; index < data.length; ++index) {
-                rsp.plugins.push(data[index].substring(1, data[index].length - 1));
+    if ("EVT" === status) {
+        rsp.data = data;
+        this._sendEvt(rsp);
+    } else {
+        if (null === this.pendingCmd) {
+            console.error("No pending command, but response received.");
+        } else if ("ACK" === status) {
+            if ("GETDISP" === this.pendingCmd.name) {
+                rsp.slotId = data.shift();
+                rsp.data = data;
+                this.pendingCmd.resolve(rsp);
+            } else if ("BRIGHTNESS" === this.pendingCmd.name) {
+                rsp.brightness = parseInt(data[0]);
+                rsp.automaticBrightnessControl = (1 === parseInt(data[1])) ? true : false;
+                this.pendingCmd.resolve(rsp);
+            } else if ("INSTALL" === this.pendingCmd.name) {
+                rsp.slotId = parseInt(data[0]);
+                this.pendingCmd.resolve(rsp);
+            } else if ("LOG" === this.pendingCmd.name) {
+                rsp.isEnabled = (1 === parseInt(data[0])) ? true : false;
+                this.pendingCmd.resolve(rsp);
+            } else if ("PLUGINS" === this.pendingCmd.name) {
+                rsp.plugins = [];
+                for(index = 0; index < data.length; ++index) {
+                    rsp.plugins.push(data[index].substring(1, data[index].length - 1));
+                }
+                this.pendingCmd.resolve(rsp);
+            } else if ("RESET" === this.pendingCmd.name) {
+                this.pendingCmd.resolve(rsp);
+            } else if ("SLOTS" === this.pendingCmd.name) {
+                rsp.maxSlots = parseInt(data.shift());
+                rsp.slots = [];
+                for(index = 0; index < data.length; ++index) {
+                    rsp.slots.push(data[index].substring(1, data[index].length - 1));
+                }
+                this.pendingCmd.resolve(rsp);
+            } else if ("UNINSTALL" === this.pendingCmd.name) {
+                this.pendingCmd.resolve(rsp);
+            } else {
+                console.error("Unknown command: " + this.pendingCmd.name);
+                this.pendingCmd.reject();
             }
-            this.pendingCmd.resolve(rsp);
-        } else if ("RESET" === this.pendingCmd.name) {
-            this.pendingCmd.resolve(rsp);
-        } else if ("SLOTS" === this.pendingCmd.name) {
-            rsp.maxSlots = parseInt(data.shift());
-            rsp.slots = [];
-            for(index = 0; index < data.length; ++index) {
-                rsp.slots.push(data[index].substring(1, data[index].length - 1));
-            }
-            this.pendingCmd.resolve(rsp);
-        } else if ("UNINSTALL" === this.pendingCmd.name) {
-            this.pendingCmd.resolve(rsp);
         } else {
-            console.error("Unknown command: " + this.pendingCmd.name);
+            console.error("Command " + this.pendingCmd.name + " failed.");
             this.pendingCmd.reject();
         }
-    } else {
-        console.error("Command " + this.pendingCmd.name + " failed.");
-        this.pendingCmd.reject();
+
+        this.pendingCmd = null;
     }
 
-    this.pendingCmd = null;
     this._sendCmdFromQueue();
 
     return;
@@ -259,6 +282,38 @@ pixelix.ws.Client.prototype.uninstall = function(options) {
             this._sendCmd({
                 name: "UNINSTALL",
                 par: options.slotId,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getLog = function(options) {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "LOG",
+                par: null,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.setLog = function(options) {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else if ("boolean" !== typeof options.enable) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "LOG",
+                par: (false == options.enable) ? 0 : 1,
                 resolve: resolve,
                 reject: reject
             });

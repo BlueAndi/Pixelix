@@ -27,7 +27,7 @@
 /**
  * @brief  Websocket
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup web
  *
  * @{
@@ -66,7 +66,7 @@ public:
 
     /**
      * Get websocket server instance.
-     * 
+     *
      * @return Websocket server instance
      */
     static WebSocketSrv& getInstance()
@@ -76,7 +76,7 @@ public:
 
     /**
      * Initialize websocket server and register it on the webserver.
-     * 
+     *
      * @param[in] srv   Web server
      */
     void init(AsyncWebServer& srv);
@@ -104,7 +104,7 @@ private:
 
     /**
      * Websocket event handler.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] client    Websocket client
      * @param[in] type      Websocket event type
@@ -116,7 +116,7 @@ private:
 
     /**
      * Websocket connect event handler.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] client    Websocket client
      * @param[in] request   Websocket request
@@ -125,7 +125,7 @@ private:
 
     /**
      * Websocket disconnect event handler.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] client    Websocket client
      */
@@ -133,7 +133,7 @@ private:
 
     /**
      * Websocket pong event handler.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] client    Websocket client
      * @param[in] data      Websocket data
@@ -143,7 +143,7 @@ private:
 
     /**
      * Websocket error event handler.
-     * 
+     *
      * @param[in] server        Websocket server
      * @param[in] client        Websocket client
      * @param[in] reasonCode    Error reason code
@@ -154,7 +154,7 @@ private:
 
     /**
      * Websocket data event handler.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] client    Websocket client
      * @param[in] info      Websocket frame info
@@ -165,7 +165,7 @@ private:
 
     /**
      * Handle a websocket message.
-     * 
+     *
      * @param[in] server    Websocket server
      * @param[in] client    Weboscket client
      * @param[in] msg       Websocket message (not '\0' terminated)
@@ -175,9 +175,9 @@ private:
 
     /**
      * Write single data byte to all clients.
-     * 
+     *
      * @param[in] data  Data byte
-     * 
+     *
      * @return Number of written bytes.
      */
     size_t write(uint8_t data)
@@ -188,15 +188,23 @@ private:
 
     /**
      * Write data to all clients.
-     * 
+     *
      * @param[in] buffer    Data buffer
      * @param[in] size      Data buffer size
-     * 
+     *
      * @return Number of written bytes.
      */
-    size_t write(const uint8_t *buffer, size_t size)
+    size_t write(const uint8_t* buffer, size_t size)
     {
-        m_webSocket.textAll(const_cast<uint8_t*>(buffer), size);
+        const size_t    CMD_LEN = 4U;   /* Length of "EVT;" */
+        char            msg[CMD_LEN + size + 1];   /* "EVT;" + buffer + '\0' */
+
+        // TODO Improve this, because it copies the data again here.
+        // TODO Idea is to extend the logging class, so it will support several log sinks.
+        strcpy(msg, "EVT;");
+        strncat(msg, (const char*)buffer, size);
+
+        m_webSocket.textAll(msg, size + CMD_LEN);
         return size;
     }
 };

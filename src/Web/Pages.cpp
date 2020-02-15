@@ -92,6 +92,9 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 static void displayPage(AsyncWebServerRequest* request);
 static String displayPageProcessor(const String& var);
 
+static void devPage(AsyncWebServerRequest* request);
+static String devPageProcessor(const String& var);
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -129,6 +132,7 @@ void Pages::init(AsyncWebServer& srv)
     AsyncStaticWebHandler*  handler = nullptr;
 
     (void)srv.on("/", HTTP_GET, indexPage);
+    (void)srv.on("/dev", HTTP_GET, devPage);
     (void)srv.on("/display", HTTP_GET, displayPage);
     (void)srv.on("/network", HTTP_GET, networkPage);
     (void)srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
@@ -1114,6 +1118,72 @@ static void displayPage(AsyncWebServerRequest* request)
  * @param[in] var   Name of variable in the template
  */
 static String displayPageProcessor(const String& var)
+{
+    String  result;
+
+    if (var == "WS_PROTOCOL")
+    {
+        result = WebConfig::WEBSOCKET_PROTOCOL;
+    }
+    else if (var == "WS_HOSTNAME")
+    {
+        if (WIFI_MODE_AP == WiFi.getMode())
+        {
+            result = WiFi.softAPIP().toString();
+        }
+        else
+        {
+            result = WiFi.localIP().toString();
+        }
+    }
+    else if (var == "WS_PORT")
+    {
+        result = WebConfig::WEBSOCKET_PORT;
+    }
+    else if (var == "WS_ENDPOINT")
+    {
+        result = WebConfig::WEBSOCKET_PATH;
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
+}
+
+/**
+ * Development page, showing the log output on demand.
+ *
+ * @param[in] request   HTTP request
+ */
+static void devPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/dev.html", "text/html", false, devPageProcessor);
+
+    return;
+}
+
+/**
+ * Processor for development page template.
+ * It is responsible for the data binding.
+ *
+ * @param[in] var   Name of variable in the template
+ */
+static String devPageProcessor(const String& var)
 {
     String  result;
 

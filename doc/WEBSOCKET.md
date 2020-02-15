@@ -3,6 +3,25 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
+- [Pixelix](#pixelix)
+- [Websocket API](#websocket-api)
+  - [Get display pixel colors](#get-display-pixel-colors)
+  - [Get slots information](#get-slots-information)
+  - [Reset](#reset)
+  - [Brightness](#brightness)
+    - [Get brightness information](#get-brightness-information)
+    - [Set brightness](#set-brightness)
+    - [Set brightness and enable/eisable automatic brightness adjustment](#set-brightness-and-enableeisable-automatic-brightness-adjustment)
+    - [Response](#response)
+  - [Get plugins information](#get-plugins-information)
+  - [Install a plugin](#install-a-plugin)
+  - [Uninstall a plugin](#uninstall-a-plugin)
+  - [Enable/Disable logging](#enabledisable-logging)
+    - [Is logging enabled?](#is-logging-enabled)
+    - [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+
 # Websocket API
 
 ## Get display pixel colors
@@ -111,6 +130,35 @@ Response:
   * ```ACK```
 * Failed:
   * ```NACK```
+
+## Enable/Disable logging
+
+### Is logging enabled?
+Command: ```LOG```
+
+Response:
+* Successful:
+  * ```ACK;<is-enabled>```
+  * ```<is-enabled>```: 0 means disabled and 1 enabled
+* Failed:
+  * ```NACK```
+
+### Enable/Disable logging to websocket
+Command: ```LOG;<enable>```
+
+Parameter:
+* ```<enable>```: 0 to disable or 1 to enable
+
+Response:
+* Successful:
+  * ```ACK;<is-enabled>```
+  * ```<is-enabled>```: 0 means disabled and 1 enabled
+* Failed:
+  * ```NACK```
+
+Event:
+* ```EVT;<log-information>```
+* If logging is enabled, a event will be automatically be sent for every log message.
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
