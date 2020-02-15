@@ -959,9 +959,10 @@ static void testLampWidget()
     const Color     COLOR_OFF   = 0x111111;
     const Color     COLOR_ON    = 0x222222;
     const char*     WIDGET_NAME = "lampWidgetName";
+    const uint8_t   WIDTH =  4u;
 
     TestGfx         testGfx;
-    LampWidget      lampWidget(false, COLOR_OFF, COLOR_ON);
+    LampWidget      lampWidget(false, COLOR_OFF, COLOR_ON, WIDTH);
     int16_t         posX        = 0;
     int16_t         posY        = 0;
 
@@ -991,7 +992,7 @@ static void testLampWidget()
     lampWidget.getPos(posX, posY);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    LampWidget::WIDTH,
+                                    LampWidget::DEFAULT_WIDTH,
                                     LampWidget::HEIGHT,
                                     COLOR_OFF.to565()));
 
@@ -1001,7 +1002,7 @@ static void testLampWidget()
     lampWidget.getPos(posX, posY);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    LampWidget::WIDTH,
+                                    LampWidget::DEFAULT_WIDTH,
                                     LampWidget::HEIGHT,
                                     COLOR_ON.to565()));
 
@@ -1011,7 +1012,7 @@ static void testLampWidget()
     lampWidget.getPos(posX, posY);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    LampWidget::WIDTH,
+                                    LampWidget::DEFAULT_WIDTH,
                                     LampWidget::HEIGHT,
                                     COLOR_OFF.to565()));
 
@@ -1022,7 +1023,7 @@ static void testLampWidget()
     lampWidget.getPos(posX, posY);
     TEST_ASSERT_TRUE(testGfx.verify(posX,
                                     posY,
-                                    LampWidget::WIDTH,
+                                    LampWidget::DEFAULT_WIDTH,
                                     LampWidget::HEIGHT,
                                     COLOR_OFF.to565()));
 
