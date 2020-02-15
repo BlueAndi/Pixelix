@@ -69,7 +69,8 @@ public:
         Widget(WIDGET_TYPE),
         m_isOn(false),
         m_colorOff(ColorDef::RED),
-        m_colorOn(ColorDef::WHITE)
+        m_colorOn(ColorDef::WHITE),
+        m_width(DEFAULT_WIDTH)
     {
     }
 
@@ -79,12 +80,14 @@ public:
      * @param[in] isOn      Initial on state
      * @param[in] colorOff  Lamp color in off state
      * @param[in] colorOn   Lamp color in on state
+     * @param[in] width     Lamp width in pixel
      */
-    LampWidget(bool isOn, const Color& colorOff, const Color& colorOn) :
+    LampWidget(bool isOn, const Color& colorOff, const Color& colorOn, uint8_t width) :
         Widget(WIDGET_TYPE),
         m_isOn(isOn),
         m_colorOff(colorOff),
-        m_colorOn(colorOn)
+        m_colorOn(colorOn),
+        m_width(DEFAULT_WIDTH)
     {
     }
 
@@ -97,7 +100,8 @@ public:
         Widget(WIDGET_TYPE),
         m_isOn(widget.m_isOn),
         m_colorOff(widget.m_colorOff),
-        m_colorOn(widget.m_colorOn)
+        m_colorOn(widget.m_colorOn),
+        m_width(widget.m_width)
     {
     }
 
@@ -118,6 +122,7 @@ public:
         m_isOn      = widget.m_isOn;
         m_colorOff  = widget.m_colorOff;
         m_colorOn   = widget.m_colorOn;
+        m_width     = widget.m_width;
 
         return *this;
     }
@@ -136,7 +141,7 @@ public:
             color = m_colorOff;
         }
 
-        gfx.fillRect(m_posX, m_posY, WIDTH, HEIGHT, color.to565());
+        gfx.fillRect(m_posX, m_posY, m_width, HEIGHT, color.to565());
 
         return;
     }
@@ -207,11 +212,33 @@ public:
         return m_colorOn;
     }
 
+     /**
+     * Set the width of the lamp.
+     * 
+     * @param[in] width widht of the lamp
+     */
+    void setWidth(uint8_t width)
+    {
+        m_width = width;
+
+        return;
+    }
+
+    /**
+     * Get the width of the lamp.
+     * 
+     * @return width
+     */
+    uint8_t getWidth() const
+    {
+        return m_width;
+    }
+
     /** Widget type string */
     static const char*      WIDGET_TYPE;
 
     /** Lamp width in pixel */
-    static const uint16_t   WIDTH   = 4U;
+    static const uint16_t   DEFAULT_WIDTH   = 4U;
 
     /** Lamp height in pixel */
     static const uint16_t   HEIGHT  = 1U;
@@ -221,6 +248,7 @@ private:
     bool    m_isOn;     /**< Lamp on state */
     Color   m_colorOff; /**< Lamp color in off state */
     Color   m_colorOn;  /**< Lamp color in on state */
+    uint8_t m_width;    /**< Lamp width in pixel */
 
 };
 

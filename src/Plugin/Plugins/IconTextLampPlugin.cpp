@@ -99,7 +99,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
             for(index = 0U; index < MAX_LAMPS; ++index)
             {
                 /* One space at the begin, two spaces between the lamps. */
-                int16_t x = (LampWidget::WIDTH + 2) * index + 1;
+                int16_t x = (LampWidget::DEFAULT_WIDTH + 2) * index + 1;
 
                 m_lampCanvas->addWidget(m_lampWidgets[index]);
                 m_lampWidgets[index].move(x, 0);
