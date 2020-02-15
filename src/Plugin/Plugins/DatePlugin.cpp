@@ -166,7 +166,7 @@ void DatePlugin::updateDate()
     {
         char dateBuffer [SIZE_OF_FORMATED_DATE_STRING];
         /* tm_wday starts at sunday, first lamp indicates monday.*/
-        uint8_t activeLamp = (timeinfo.tm_wday > 0) ? (timeinfo.tm_wday -1) : 0u;
+        uint8_t activeLamp = (timeinfo.tm_wday > 0) ? (timeinfo.tm_wday -1) : 6u;
         setLamp(activeLamp, true);
         strftime(dateBuffer, sizeof(dateBuffer), "\\calign%d.%m", &timeinfo);
         setText(dateBuffer);
