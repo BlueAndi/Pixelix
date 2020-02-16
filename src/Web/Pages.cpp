@@ -129,8 +129,6 @@ static SPIFFSEditor     gSPIFFSEditor(SPIFFS);
 
 void Pages::init(AsyncWebServer& srv)
 {
-    AsyncStaticWebHandler*  handler = nullptr;
-
     (void)srv.on("/", HTTP_GET, indexPage);
     (void)srv.on("/dev", HTTP_GET, devPage);
     (void)srv.on("/display", HTTP_GET, displayPage);
@@ -142,11 +140,8 @@ void Pages::init(AsyncWebServer& srv)
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesytem for 1 hour.
      */
-    handler = &srv.serveStatic("/data/style.css", SPIFFS, "/style.css");
-    handler->setCacheControl("max-age=3600");
-
-    handler = &srv.serveStatic("/data/ws.js", SPIFFS, "/ws.js");
-    handler->setCacheControl("max-age=3600");
+    (void)srv.serveStatic("/style/", SPIFFS, "/style/", "max-age=3600");
+    (void)srv.serveStatic("/js/", SPIFFS, "/js/", "max-age=3600");
 
     /* Add SPIFFS file editor to "/edit" */
     (void)srv.addHandler(&gSPIFFSEditor);
