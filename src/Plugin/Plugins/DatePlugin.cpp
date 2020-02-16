@@ -99,7 +99,7 @@ void DatePlugin::active(IGfx& gfx)
                 m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
                 m_lampWidgets[index].setColorOff(ColorDef::DARKSLATEGRAY);
                 m_lampWidgets[index].setWidth(CUSTOM_LAMP_WIDTH);
-                
+
                 m_lampCanvas->addWidget(m_lampWidgets[index]);
                 m_lampWidgets[index].move(x, 0);
             }
@@ -111,7 +111,7 @@ void DatePlugin::active(IGfx& gfx)
     m_checkDateUpdateTimer.start(DatePlugin::CHECK_DATE_UPDATE_PERIOD);
 
     /* Force immediate date update on activation */
-    updateDate();
+    updateDate(true);
 }
 
 void DatePlugin::inactive()
@@ -166,39 +166,12 @@ void DatePlugin::setLamp(uint8_t lampId, bool state)
     return;
 }
 
-void DatePlugin::updateDate()
-{
-    struct tm   timeinfo = {0};
-
-    if (true == ClockDrv::getInstance().getTime(&timeinfo))
-    {
-        if (m_currentDay != timeinfo.tm_mday)
-        {
-            char dateBuffer [SIZE_OF_FORMATED_DATE_STRING];
-            
-            /* tm_wday starts at sunday, first lamp indicates monday.*/
-            uint8_t activeLamp = (0U < timeinfo.tm_wday) ? (timeinfo.tm_wday -1U) : (MAX_LAMPS -1U);
-
-            uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp -1U) : (MAX_LAMPS-1U);
-
-            setLamp(activeLamp, true);
-            setLamp(lampToDeactivate, false);
-
-            strftime(dateBuffer, sizeof(dateBuffer), "\\calign%d.%m.", &timeinfo);
-            setText(dateBuffer);
-
-            m_currentDay = timeinfo.tm_mday;
-            m_isUpdateAvailable = true;
-        }
-    }
-}
-
 void DatePlugin::process()
 {
     if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
         (true == m_checkDateUpdateTimer.isTimeout()))
     {
-        updateDate();
+        updateDate(false);
 
         m_checkDateUpdateTimer.restart();
     }
@@ -212,6 +185,34 @@ void DatePlugin::process()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void DatePlugin::updateDate(bool force)
+{
+    struct tm   timeinfo = {0};
+
+    if (true == ClockDrv::getInstance().getTime(&timeinfo))
+    {
+        if ((m_currentDay != timeinfo.tm_mday) ||
+            (true == force))
+        {
+            char dateBuffer [SIZE_OF_FORMATED_DATE_STRING];
+
+            /* tm_wday starts at sunday, first lamp indicates monday.*/
+            uint8_t activeLamp = (0U < timeinfo.tm_wday) ? (timeinfo.tm_wday - 1U) : (MAX_LAMPS - 1U);
+
+            uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (MAX_LAMPS - 1U);
+
+            setLamp(activeLamp, true);
+            setLamp(lampToDeactivate, false);
+
+            strftime(dateBuffer, sizeof(dateBuffer), "\\calign%d.%m.", &timeinfo);
+            setText(dateBuffer);
+
+            m_currentDay = timeinfo.tm_mday;
+            m_isUpdateAvailable = true;
+        }
+    }
+}
 
 /******************************************************************************
  * External Functions

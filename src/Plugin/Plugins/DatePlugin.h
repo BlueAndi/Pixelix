@@ -43,7 +43,6 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
 #include <stdint.h>
 #include <time.h>
 #include "Plugin.hpp"
@@ -51,6 +50,7 @@
 #include <LampWidget.h>
 #include <TextWidget.h>
 #include <Canvas.h>
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -148,16 +148,11 @@ public:
 
     /**
      * Set lamp state.
-     * 
+     *
      * @param[in] lampId    Lamp id
      * @param[in] state     Lamp state (true = on / false = off)
      */
     void setLamp(uint8_t lampId, bool state);
-    
-    /**
-     * Get current date and update the text, which to be displayed.
-     */
-    void updateDate(void);
 
     /**
      * Process the plugin.
@@ -168,19 +163,14 @@ public:
 
 private:
 
-    /**
-     * Max. number of lamps.
-     */
-    static const uint8_t MAX_LAMPS      = 7U;
+    /** Max. number of lamps. */
+    static const uint8_t    MAX_LAMPS                   = 7U;
 
-    /** 
-     * Size of lamp widgets used for weekday indication.
-     * 
-     */
-    static const uint16_t CUSTOM_LAMP_WIDTH = 3;
+    /** Size of lamp widgets used for weekday indication. */
+    static const uint16_t   CUSTOM_LAMP_WIDTH           = 3;
 
     /** Time to check date update period in ms */
-    static const uint32_t   CHECK_DATE_UPDATE_PERIOD  = 1000U;
+    static const uint32_t   CHECK_DATE_UPDATE_PERIOD    = 1000U;
 
     TextWidget  m_textWidget;               /**< Text widget, used for showing the text. */
     Canvas*     m_textCanvas;               /**< Canvas used for the text widget. */
@@ -188,8 +178,15 @@ private:
     LampWidget  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
     SimpleTimer m_checkDateUpdateTimer;     /**< Timer, used for cyclic check if date update is necessarry. */
     int32_t     m_currentDay;               /**< Variable to hold the current day. */
-    bool        m_isUpdateAvailable;         /**< Flag to indicate an updated date value. */
+    bool        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
 
+    /**
+     * Get current date and update the text, which to be displayed.
+     * The update takes only place, if the date changed.
+     *
+     * @param[in] force Force update independent of date.
+     */
+    void updateDate(bool force);
 };
 
 /******************************************************************************
