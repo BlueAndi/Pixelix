@@ -77,7 +77,10 @@ public:
         m_textWidget("\\calignNo NTP"),
         m_textCanvas(nullptr),
         m_lampCanvas(nullptr),
-        m_lampWidgets()
+        m_lampWidgets(),
+        m_checkDateUpdateTimer(),
+        m_currentDay(0),
+        m_isUpdateAvailable(false)
 
     {
         /* Move the text widget one line lower for better look. */
@@ -89,7 +92,17 @@ public:
      */
     ~DatePlugin()
     {
-        
+        if (nullptr != m_textCanvas)
+        {
+            delete m_textCanvas;
+            m_textCanvas = nullptr;
+        }
+
+        if (nullptr != m_lampCanvas)
+        {
+            delete m_lampCanvas;
+            m_lampCanvas = nullptr;
+        }
     }
 
     /**
@@ -146,6 +159,13 @@ public:
      */
     void updateDate(void);
 
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) override;
+
 private:
 
     /**
@@ -153,10 +173,23 @@ private:
      */
     static const uint8_t MAX_LAMPS      = 7U;
 
+    /** 
+     * Size of lamp widgets used for weekday indication.
+     * 
+     */
+    static const uint16_t CUSTOM_LAMP_WIDTH = 3;
+
+    /** Time to check date update period in ms */
+    static const uint32_t   CHECK_DATE_UPDATE_PERIOD  = 1000U;
+
     TextWidget  m_textWidget;               /**< Text widget, used for showing the text. */
     Canvas*     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*     m_lampCanvas;               /**< Canvas used for the lamp widget. */
     LampWidget  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
+    SimpleTimer m_checkDateUpdateTimer;     /**< Timer, used for cyclic check if date update is necessarry. */
+    int32_t     m_currentDay;               /**< Variable to hold the current day. */
+    bool        m_isUpdateAvailable;         /**< Flag to indicate an updated date value. */
+
 };
 
 /******************************************************************************

@@ -45,13 +45,14 @@
 
  /** Size of formatted timestring in the form of DD:MM
  *
- *  "\\calign" = 8  (Alignment center )
- *         "Day/Month" = 2
- *         ":" = 1
- *         "Month/Day" = 2
- *        "\0" = 1
- *       ---------
- *           = 14
+ *      "\\calign"      = 8  (Alignment center )
+ *      "Day/Month"     = 2
+ *      "."             = 1
+ *      "Month/Day"     = 2
+ *      "."             = 1
+ *      "\0"            = 1
+ *                    ---------
+ *                      = 15
  */
 #define SIZE_OF_FORMATED_DATE_STRING (14U)
 
@@ -73,7 +74,7 @@
 
 void DatePlugin::active(IGfx& gfx)
 {
-     if (nullptr == m_textCanvas)
+    if (nullptr == m_textCanvas)
     {
         m_textCanvas = new Canvas(gfx.width(), gfx.height() - 2, 0, 0);
 
@@ -93,11 +94,11 @@ void DatePlugin::active(IGfx& gfx)
             for(index = 0U; index < MAX_LAMPS; ++index)
             {
                 /* One space at the begin, two spaces between the lamps. */
-                int16_t x = (3 + 1) * index + 1;
+                int16_t x = (CUSTOM_LAMP_WIDTH + 1) * index + 1;
 
                 m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
                 m_lampWidgets[index].setColorOff(ColorDef::DARKSLATEGRAY);
-                m_lampWidgets[index].setWidth(3u);
+                m_lampWidgets[index].setWidth(CUSTOM_LAMP_WIDTH);
                 
                 m_lampCanvas->addWidget(m_lampWidgets[index]);
                 m_lampWidgets[index].move(x, 0);
@@ -105,37 +106,46 @@ void DatePlugin::active(IGfx& gfx)
         }
     }
 
-      /* Force immediate date update on activation */
+    m_isUpdateAvailable = true;
+
+    m_checkDateUpdateTimer.start(DatePlugin::CHECK_DATE_UPDATE_PERIOD);
+
+    /* Force immediate date update on activation */
     updateDate();
 }
 
 void DatePlugin::inactive()
 {
-    setLamp(0, false);
-    setLamp(1, false);
-    setLamp(2, false);
-    setLamp(3, false);
-    setLamp(4, false);
-    setLamp(5, false);
-    setLamp(6, false);
+    uint8_t index = 0U;
+
+    for(index = 0U; index < MAX_LAMPS; ++index)
+    {
+        setLamp(index, false);
+    }
+
+    m_checkDateUpdateTimer.stop();
 
     return;
 }
 
 void DatePlugin::update(IGfx& gfx)
 {
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
-
-     if (nullptr != m_textCanvas)
+    if (false != m_isUpdateAvailable)
     {
-        m_textCanvas->update(gfx);
-    }
+        gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
 
-    if (nullptr != m_lampCanvas)
-    {
-        m_lampCanvas->update(gfx);
-    }
+        if (nullptr != m_textCanvas)
+        {
+            m_textCanvas->update(gfx);
+        }
 
+        if (nullptr != m_lampCanvas)
+        {
+            m_lampCanvas->update(gfx);
+        }
+
+        m_isUpdateAvailable = false;
+    }
     return;
 }
 
@@ -162,15 +172,39 @@ void DatePlugin::updateDate()
 
     if (true == ClockDrv::getInstance().getTime(&timeinfo))
     {
-        char dateBuffer [SIZE_OF_FORMATED_DATE_STRING];
-        /* tm_wday starts at sunday, first lamp indicates monday.*/
-        uint8_t activeLamp = (timeinfo.tm_wday > 0) ? (timeinfo.tm_wday -1) : 6u;
-        setLamp(activeLamp, true);
-        strftime(dateBuffer, sizeof(dateBuffer), "\\calign%d.%m", &timeinfo);
-        setText(dateBuffer);
+        if (m_currentDay != timeinfo.tm_mday)
+        {
+            char dateBuffer [SIZE_OF_FORMATED_DATE_STRING];
+            
+            /* tm_wday starts at sunday, first lamp indicates monday.*/
+            uint8_t activeLamp = (0U < timeinfo.tm_wday) ? (timeinfo.tm_wday -1U) : (MAX_LAMPS -1U);
+
+            uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp -1U) : (MAX_LAMPS-1U);
+
+            setLamp(activeLamp, true);
+            setLamp(lampToDeactivate, false);
+
+            strftime(dateBuffer, sizeof(dateBuffer), "\\calign%d.%m.", &timeinfo);
+            setText(dateBuffer);
+
+            m_currentDay = timeinfo.tm_mday;
+            m_isUpdateAvailable = true;
+        }
     }
 }
 
+void DatePlugin::process()
+{
+    if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
+        (true == m_checkDateUpdateTimer.isTimeout()))
+    {
+        updateDate();
+
+        m_checkDateUpdateTimer.restart();
+    }
+
+    return;
+}
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

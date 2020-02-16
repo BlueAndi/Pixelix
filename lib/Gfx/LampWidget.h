@@ -82,12 +82,12 @@ public:
      * @param[in] colorOn   Lamp color in on state
      * @param[in] width     Lamp width in pixel
      */
-    LampWidget(bool isOn, const Color& colorOff, const Color& colorOn, uint8_t width) :
+    LampWidget(bool isOn, const Color& colorOff, const Color& colorOn, uint16_t width) :
         Widget(WIDGET_TYPE),
         m_isOn(isOn),
         m_colorOff(colorOff),
         m_colorOn(colorOn),
-        m_width(DEFAULT_WIDTH)
+        m_width(width)
     {
     }
 
@@ -215,9 +215,9 @@ public:
      /**
      * Set the width of the lamp.
      * 
-     * @param[in] width widht of the lamp
+     * @param[in] width width of the lamp
      */
-    void setWidth(uint8_t width)
+    void setWidth(uint16_t width)
     {
         m_width = width;
 
@@ -229,7 +229,7 @@ public:
      * 
      * @return width
      */
-    uint8_t getWidth() const
+    uint16_t getWidth() const
     {
         return m_width;
     }
@@ -248,7 +248,7 @@ private:
     bool    m_isOn;     /**< Lamp on state */
     Color   m_colorOff; /**< Lamp color in off state */
     Color   m_colorOn;  /**< Lamp color in on state */
-    uint8_t m_width;    /**< Lamp width in pixel */
+    uint16_t m_width;   /**< Lamp width in pixel */
 
 };
 
