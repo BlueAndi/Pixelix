@@ -73,8 +73,10 @@ public:
      */
     TimePlugin(const String& name) :
         Plugin(name),
-        m_textWidget("Waiting for NTP"),
-        m_updateTimeTimer()
+        m_textWidget("\\calignNo NTP"),
+        m_checkTimeUpdateTimer(),
+        m_currentMinute(0),
+        m_isUpdateAvailable(false)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -137,16 +139,21 @@ public:
 
 private:
 
-    TextWidget  m_textWidget;       /**< Text widget, used for showing the text. */
-    SimpleTimer m_updateTimeTimer;  /**< Timer, used for cyclic time update. */
+    /** Time to check time update period in ms */
+    static const uint32_t   CHECK_TIME_UPDATE_PERIOD  = 5000U;
 
-    /** Time to display update period in ms */
-    static const uint32_t   TIME_UPDATE_PERIOD  = 5000U;
+    TextWidget  m_textWidget;           /**< Text widget, used for showing the text. */
+    SimpleTimer m_checkTimeUpdateTimer; /**< Timer, used for cyclic check if time update is necessarry. */
+    int32_t     m_currentMinute;        /**< Variable to hold the current minute value. */
+    bool        m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
 
     /**
      * Get current time and update the text, which to be displayed.
+     * The update takes only place, if the time changed.
+     *
+     * @param[in] force Force update independent of time.
      */
-    void updateTime();
+    void updateTime(bool force);
 };
 
 /******************************************************************************

@@ -35,7 +35,6 @@
 #include "TimePlugin.h"
 
 #include "ClockDrv.h"
-#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -75,25 +74,32 @@
 
 void TimePlugin::active(IGfx& gfx)
 {
-    m_updateTimeTimer.start(TIME_UPDATE_PERIOD);
+    m_isUpdateAvailable = true;
+
+    m_checkTimeUpdateTimer.start(CHECK_TIME_UPDATE_PERIOD);
 
     /* Force immediate time update to avoid displaying
      * an old time for one TIME_UPDATE_PERIOD.
      */
-    updateTime();
+    updateTime(true);
 }
 
 void TimePlugin::inactive()
 {
-    m_updateTimeTimer.stop();
+    m_checkTimeUpdateTimer.stop();
 
     return;
 }
 
 void TimePlugin::update(IGfx& gfx)
 {
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
-    m_textWidget.update(gfx);
+    if (false != m_isUpdateAvailable)
+    {
+        gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+        m_textWidget.update(gfx);
+
+        m_isUpdateAvailable = false;
+    }
 
     return;
 }
@@ -107,12 +113,12 @@ void TimePlugin::setText(const String& formatText)
 
 void TimePlugin::process()
 {
-    if ((true == m_updateTimeTimer.isTimerRunning()) &&
-        (true == m_updateTimeTimer.isTimeout()))
+    if ((true == m_checkTimeUpdateTimer.isTimerRunning()) &&
+        (true == m_checkTimeUpdateTimer.isTimeout()))
     {
-        updateTime();
+        updateTime(false);
 
-        m_updateTimeTimer.restart();
+        m_checkTimeUpdateTimer.restart();
     }
 
     return;
@@ -126,18 +132,23 @@ void TimePlugin::process()
  * Private Methods
  *****************************************************************************/
 
-void TimePlugin::updateTime()
+void TimePlugin::updateTime(bool force)
 {
     struct tm timeinfo = { 0 };
 
     if (true == ClockDrv::getInstance().getTime(&timeinfo))
     {
-        char timeBuffer [SIZE_OF_FORMATED_TIME_STRING_HHMM];
+        if ((m_currentMinute != timeinfo.tm_min) ||
+            (true == force))
+        {
+            char timeBuffer [SIZE_OF_FORMATED_TIME_STRING_HHMM];
 
-        strftime(timeBuffer, sizeof(timeBuffer), "\\calign%H:%M", &timeinfo);
-        setText(timeBuffer);
+            strftime(timeBuffer, sizeof(timeBuffer), "\\calign%H:%M", &timeinfo);
+            setText(timeBuffer);
 
-        LOG_INFO(timeBuffer);
+            m_currentMinute = timeinfo.tm_min;
+            m_isUpdateAvailable = true;
+        }
     }
 }
 
