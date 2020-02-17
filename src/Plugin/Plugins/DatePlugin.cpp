@@ -43,7 +43,7 @@
  * Macros
  *****************************************************************************/
 
- /** Size of formatted timestring in the form of DD:MM
+ /** Size of formatted date string in the form of DD:MM
  *
  *      "\\calign"      = 8  (Alignment center )
  *      "Day/Month"     = 2
@@ -54,7 +54,7 @@
  *                    ---------
  *                      = 15
  */
-#define SIZE_OF_FORMATED_DATE_STRING (14U)
+#define SIZE_OF_FORMATED_DATE_STRING (15U)
 
 /******************************************************************************
  * Types and classes
@@ -86,7 +86,8 @@ void DatePlugin::active(IGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.width(), 1, 2, gfx.height()-1);
+        m_lampCanvas = new Canvas(gfx.width(), 1, 2, gfx.height() - 1);
+
         if (nullptr != m_lampCanvas)
         {
             uint8_t index = 0U;
@@ -116,13 +117,6 @@ void DatePlugin::active(IGfx& gfx)
 
 void DatePlugin::inactive()
 {
-    uint8_t index = 0U;
-
-    for(index = 0U; index < MAX_LAMPS; ++index)
-    {
-        setLamp(index, false);
-    }
-
     m_checkDateUpdateTimer.stop();
 
     return;
@@ -146,6 +140,7 @@ void DatePlugin::update(IGfx& gfx)
 
         m_isUpdateAvailable = false;
     }
+    
     return;
 }
 
@@ -200,6 +195,7 @@ void DatePlugin::updateDate(bool force)
             /* tm_wday starts at sunday, first lamp indicates monday.*/
             uint8_t activeLamp = (0U < timeinfo.tm_wday) ? (timeinfo.tm_wday - 1U) : (MAX_LAMPS - 1U);
 
+            /* Last active lamp has to be deactivated. */
             uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (MAX_LAMPS - 1U);
 
             setLamp(activeLamp, true);
