@@ -58,6 +58,7 @@
 #include <Util.h>
 
 #include "DatePlugin.h"
+#include "DateTimePlugin.h"
 #include "FirePlugin.h"
 #include "GameOfLifePlugin.h"
 #include "IconTextLampPlugin.h"
@@ -272,6 +273,7 @@ void InitState::registerPlugins()
     /* Register in alphabetic order. */
     
     pluginMgr.registerPlugin("DatePlugin", DatePlugin::create);
+    pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
     pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
     pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
     pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
