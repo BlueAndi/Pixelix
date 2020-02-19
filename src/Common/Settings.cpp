@@ -98,6 +98,12 @@ static const char* KEY_DAYLIGHT_SAVING_CTRL         = "dst_ctrl";
 /** NTP server key */
 static const char* KEY_NTP_SERVER                   = "ntp_server";
 
+/** Time format key */
+static const char* KEY_TIME_FORMAT                  = "time_format";
+
+/** Date format key */
+static const char* KEY_DATE_FORMAT                  = "date_format";
+
 /* ---------- Key value pair names ---------- */
 
 /** Wifi network name of key value pair */
@@ -129,6 +135,13 @@ static const char* NAME_DAYLIGHT_SAVING_CTRL        = "DST control";
 
 /** NTP server name of key value pair */
 static const char* NAME_NTP_SERVER                  = "NTP server address";
+
+/** Time format name of key value pair*/
+static const char* NAME_TIME_FORMAT_CTRL            = "Time format: true = 24h, false = 12h (AM/PM)";
+
+/** Date format name of key value pair*/
+static const char* NAME_DATE_FORMAT_CTRL            = "Date format: true = DD:MM, false = MM:DD";
+
 
 /* ---------- Default values ---------- */
 
@@ -162,6 +175,12 @@ static bool DEFAULT_DAYLIGHT_SAVING_CTRL            = false;
 /** NTP server default value */
 static const char* DEFAULT_NTP_SERVER               = "pool.ntp.org";
 
+/** Time format control default value */
+static bool DEFAULT_TIME_FORMAT_CTRL                = true;
+
+/** Date format control default value */
+static bool DEFAULT_DATE_FORMAT_CTRL                = true;
+
 /* ---------- Minimum values ---------- */
 
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -192,6 +211,10 @@ static const int32_t MIN_VALUE_GMT_OFFSET           = -43200;
 /** NTP server address min. length */
 static const size_t MIN_VALUE_NTP_SERVER            = 12U;
 
+/*                  MIN_VALUE_TIME_FORMAT_CTRL */
+
+/*                  MIN_VALUE_TIME_FORMAT_CTRL */
+
 /* ---------- Maximum values ---------- */
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -221,6 +244,10 @@ static const int32_t MAX_VALUE_GMT_OFFSET           = 50400;
 
 /** NTP server address max. length */
 static const size_t MAX_VALUE_NTP_SERVER            = 30U;
+
+/*                  MAX_VALUE_TIME_FORMAT_CTRL */
+
+/*                  MAX_VALUE_TIME_FORMAT_CTRL */
 
 /******************************************************************************
  * Public Methods
@@ -277,7 +304,9 @@ Settings::Settings() :
     m_pluginInstallation    (m_preferences, KEY_PLUGIN_INSTALLATION,    NAME_PLUGIN_INSTALLATION,   DEFAULT_PLUGIN_INSTALLATION,    MIN_VALUE_PLUGIN_INSTALLATION,  MAX_VALUE_PLUGIN_INSTALLATION),
     m_gmtOffset             (m_preferences, KEY_GMTOFFSET,              NAME_GMT_OFFSET,            DEFAULT_GMT_OFFSET,             MIN_VALUE_GMT_OFFSET,           MAX_VALUE_GMT_OFFSET),
     m_isDaylightSaving      (m_preferences, KEY_DAYLIGHT_SAVING_CTRL,   NAME_DAYLIGHT_SAVING_CTRL,  DEFAULT_DAYLIGHT_SAVING_CTRL),
-    m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER)
+    m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER),
+    m_timeFormatCtrl        (m_preferences, KEY_TIME_FORMAT,            NAME_TIME_FORMAT_CTRL,      DEFAULT_TIME_FORMAT_CTRL),
+    m_dateFormatCtrl        (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT_CTRL,      DEFAULT_DATE_FORMAT_CTRL)
 {
     m_keyValueList[0] = &m_wifiSSID;
     m_keyValueList[1] = &m_wifiPassphrase;
@@ -289,6 +318,8 @@ Settings::Settings() :
     m_keyValueList[7] = &m_gmtOffset;
     m_keyValueList[8] = &m_isDaylightSaving;
     m_keyValueList[9] = &m_ntpServer;
+    m_keyValueList[10] = &m_timeFormatCtrl;
+    m_keyValueList[11] = &m_dateFormatCtrl;
 }
 
 Settings::~Settings()

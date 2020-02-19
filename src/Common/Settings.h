@@ -213,8 +213,28 @@ public:
         return m_ntpServer;
     }
 
+    /**
+     * Get state of time format adjustment.
+     *
+     * @return Key value pair
+     */
+    KeyValueBool& getTimeFormatAdjustment()
+    {
+        return m_timeFormatCtrl;
+    }
+
+    /**
+     * Get state of date format adjustment.
+     *
+     * @return Key value pair
+     */
+    KeyValueBool& getDateFormatAdjustment()
+    {
+        return m_dateFormatCtrl;
+    }
+    
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 10U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 12U;
 
 private:
 
@@ -233,6 +253,8 @@ private:
     KeyValueInt32   m_gmtOffset;            /**< GMT offset */
     KeyValueBool    m_isDaylightSaving;     /**< Daylight saving time switch */
     KeyValueString  m_ntpServer;            /**< NTP server address */
+    KeyValueBool    m_timeFormatCtrl;       /**< Time format control */
+    KeyValueBool    m_dateFormatCtrl;       /**< Date format control */
 
     /**
      * Constructs the settings instance.
