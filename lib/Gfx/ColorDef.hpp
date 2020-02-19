@@ -124,6 +124,9 @@ namespace ColorDef
     /** Color definition for MEDIUMSEAGREEN. */
     static const uint32_t   MEDIUMSEAGREEN          = 0x3CB371;
 
+    /** Color definition for ULTRADARKGRAY. */
+    static const uint32_t   ULTRADARKGRAY           = 0x404040;
+
     /** Color definition for TURQUOISE. */
     static const uint32_t   TURQUOISE               = 0x40E0D0;
 
