@@ -84,13 +84,16 @@ void ClockDrv::init()
             gmtOffset           = Settings::getInstance().getGmtOffset().getDefault();
             isDaylightSaving    = Settings::getInstance().getDaylightSavingAdjustment().getDefault();
             ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getDefault();
+            m_is24HourFormat    = Settings::getInstance().getTimeFormatAdjustment().getDefault();
+            m_isDayMonthYear    = Settings::getInstance().getDateFormatAdjustment().getDefault();
         }
         else
         {
             gmtOffset           = Settings::getInstance().getGmtOffset().getValue();
             isDaylightSaving    = Settings::getInstance().getDaylightSavingAdjustment().getValue();
             ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getValue();
-
+            m_is24HourFormat    = Settings::getInstance().getTimeFormatAdjustment().getValue();
+            m_isDayMonthYear    = Settings::getInstance().getDateFormatAdjustment().getValue();
             Settings::getInstance().close();
         }
 
@@ -127,6 +130,16 @@ bool ClockDrv::getTime(tm *currentTime)
     const uint32_t WAIT_TIME_MS = 0;
 
     return getLocalTime(currentTime, WAIT_TIME_MS);
+}
+
+bool ClockDrv::getTimeFormat()
+{
+    return m_is24HourFormat;
+}
+
+bool ClockDrv::getDateFormat()
+{
+    return m_isDayMonthYear;
 }
 
 /******************************************************************************

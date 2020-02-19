@@ -87,6 +87,20 @@ public:
      */
     bool getTime(tm *currentTime);
 
+    /**
+     * Get the time format.
+     *
+     * @return true if 24h format is set otherwise false.
+     */
+    bool getTimeFormat();
+
+    /**
+     * Get the date format.
+     *
+     * @return true if DayMonthYear format is set otherwise false.
+     */
+    bool getDateFormat();
+
     /** Daylight saving time offset in s */
     static const int16_t NTP_DAYLIGHT_OFFSET_SEC    = 3600;
 
@@ -98,11 +112,19 @@ private:
     /** Flag indicating a initialized clock driver. */
     bool m_isClockDrvInitialized;
 
+    /** Flag holding the time format. */
+    bool m_is24HourFormat;
+
+    /** Flag holding the date format. */
+    bool m_isDayMonthYear;
+
     /**
      * Construct ClockDrv.
      */
     ClockDrv() :
-        m_isClockDrvInitialized(false)
+        m_isClockDrvInitialized(false),
+        m_is24HourFormat(false),
+        m_isDayMonthYear(false)
     {
 
     }

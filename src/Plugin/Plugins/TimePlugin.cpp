@@ -46,15 +46,17 @@
 
  /** Size of formatted timestring in the form of HH:MM
  *
- *  "\\calign" = 8  (Alignment center )
- *         "H" = 2
- *         ":" = 1
- *         "M" = 2
- *        "\0" = 1
- *       ---------
- *           = 14
+ *      "\\calign"      = 8  (Alignment center )
+ *      "H"             = 2
+ *      "separator"     = 1
+ *      "M"             = 2
+ *      " "             = 1
+ *      "AM/PM"         = 2
+ *      "\0"            = 1
+ *  ------------------------
+ *                      = 17
  */
-#define SIZE_OF_FORMATED_TIME_STRING_HHMM (14U)
+#define SIZE_OF_FORMATED_TIME_STRING_HHMM (17U)
 
 /******************************************************************************
  * Types and classes
@@ -142,8 +144,9 @@ void TimePlugin::updateTime(bool force)
             (true == force))
         {
             char timeBuffer [SIZE_OF_FORMATED_TIME_STRING_HHMM];
+            const char* formattedTimeString = ClockDrv::getInstance().getDateFormat() ? "\\calign%H:%M":"\\calign%I:%M %p";
 
-            strftime(timeBuffer, sizeof(timeBuffer), "\\calign%H:%M", &timeinfo);
+            strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeinfo);
             setText(timeBuffer);
 
             m_currentMinute = timeinfo.tm_min;

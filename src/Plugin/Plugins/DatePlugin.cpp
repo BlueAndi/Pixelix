@@ -43,15 +43,15 @@
  * Macros
  *****************************************************************************/
 
- /** Size of formatted date string in the form of DD:MM
+ /** Size of formatted date string in the form of DD.MM. / MM/DD
  *
  *      "\\calign"      = 8  (Alignment center )
  *      "Day/Month"     = 2
- *      "."             = 1
+ *      "separator"     = 1
  *      "Month/Day"     = 2
- *      "."             = 1
+ *      "separator"     = 1
  *      "\0"            = 1
- *                    ---------
+ *  ------------------------
  *                      = 15
  */
 #define SIZE_OF_FORMATED_DATE_STRING (15U)
@@ -86,7 +86,7 @@ void DatePlugin::active(IGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.width(), 1, 2, gfx.height() - 1);
+        m_lampCanvas = new Canvas(gfx.width(), 1, 1, gfx.height() - 1);
 
         if (nullptr != m_lampCanvas)
         {
@@ -98,7 +98,7 @@ void DatePlugin::active(IGfx& gfx)
                 int16_t x = (CUSTOM_LAMP_WIDTH + 1) * index + 1;
 
                 m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
-                m_lampWidgets[index].setColorOff(ColorDef::DARKSLATEGRAY);
+                m_lampWidgets[index].setColorOff(ColorDef::ULTRADARKGRAY);
                 m_lampWidgets[index].setWidth(CUSTOM_LAMP_WIDTH);
 
                 m_lampCanvas->addWidget(m_lampWidgets[index]);
@@ -197,11 +197,14 @@ void DatePlugin::updateDate(bool force)
 
             /* Last active lamp has to be deactivated. */
             uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (MAX_LAMPS - 1U);
+            
+            /* Consider date format. */
+            const char* formattedDateString = ClockDrv::getInstance().getDateFormat() ? "\\calign%d.%m.":"\\calign%m/%d";
 
             setLamp(activeLamp, true);
             setLamp(lampToDeactivate, false);
 
-            strftime(dateBuffer, sizeof(dateBuffer), "\\calign%d.%m.", &timeinfo);
+            strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeinfo);
             setText(dateBuffer);
 
             m_currentDay = timeinfo.tm_mday;
