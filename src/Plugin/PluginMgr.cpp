@@ -105,6 +105,7 @@ Plugin* PluginMgr::install(const String& name, uint8_t slotId)
     {
         bool isFound = false;
 
+        /* Find plugin in the registry */
         entry = *m_registry.current();
 
         while((false == isFound) && (nullptr != entry))
@@ -123,10 +124,11 @@ Plugin* PluginMgr::install(const String& name, uint8_t slotId)
             }
         }
 
+        /* Plugin found? */
         if ((true == isFound) &&
             (nullptr != entry))
         {
-            plugin = entry->createFunc(entry->name);
+            plugin = entry->createFunc(entry->name, generateUID());
 
             if (DisplayMgr::SLOT_ID_INVALID == slotId)
             {
@@ -374,6 +376,43 @@ bool PluginMgr::installToSlot(Plugin* plugin, uint8_t slotId)
     }
 
     return status;
+}
+
+uint16_t PluginMgr::generateUID()
+{
+    uint16_t    uid;
+    bool        isFound;
+
+    do
+    {
+        isFound = false;
+        uid     = random(UINT16_MAX);
+
+        /* Ensure that UID is really unique. */
+        if (true == m_plugins.selectFirstElement())
+        {
+            Plugin* plugin = *m_plugins.current();
+
+            while((false == isFound) && (nullptr != plugin))
+            {
+                if (uid == plugin->getUID())
+                {
+                    isFound = true;
+                }
+                else if (false == m_plugins.next())
+                {
+                    plugin = nullptr;
+                }
+                else
+                {
+                    plugin = *m_plugins.current();
+                }
+            }
+        }
+    }
+    while(true == isFound);
+
+    return uid;
 }
 
 /******************************************************************************

@@ -27,7 +27,7 @@
 /**
  * @brief  Fire demo plugin
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup plugin
  *
  * @{
@@ -58,19 +58,19 @@
 
 /**
  * Fire simulation plugin.
- * 
+ *
  * This basic one-dimensional 'fire' simulation works roughly as follows:
  * There's a underlying array of 'heat' cells, that model the temperature
- * at each point along the line.  Every cycle through the simulation, 
+ * at each point along the line.  Every cycle through the simulation,
  * four steps are performed:
- * 
+ *
  * 1) All cells cool down a little bit, losing heat to the air
  * 2) The heat from each cell drifts 'up' and diffuses a little
  * 3) Sometimes randomly new 'sparks' of heat are added at the bottom
  * 4) The heat from each cell is rendered as a color into the leds array
- * 
+ *
  * The heat-to-color mapping uses a black-body radiation approximation.
- * 
+ *
  * It was ported from https://github.com/FastLED/FastLED/blob/master/examples/Fire2012/Fire2012.ino
  */
 class FirePlugin : public Plugin
@@ -79,11 +79,12 @@ public:
 
     /**
      * Constructs the plugin.
-     * 
+     *
      * @param[in] name  Plugin name
+     * @param[in] uid   Unique id
      */
-    FirePlugin(const String& name) :
-        Plugin(name),
+    FirePlugin(const String& name, uint16_t uid) :
+        Plugin(name, uid),
         m_heat(nullptr),
         m_heatSize(0U)
     {
@@ -103,20 +104,21 @@ public:
 
     /**
      * Plugin creation method, used to register on the plugin manager.
-     * 
+     *
      * @param[in] name  Plugin name
-     * 
+     * @param[in] uid   Unique id
+     *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static Plugin* create(const String& name)
+    static Plugin* create(const String& name, uint16_t uid)
     {
-        return new FirePlugin(name);
+        return new FirePlugin(name, uid);
     }
 
     /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void active(IGfx& gfx) override;
@@ -130,7 +132,7 @@ public:
     /**
      * Update the display.
      * The scheduler will call this method periodically.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void update(IGfx& gfx);

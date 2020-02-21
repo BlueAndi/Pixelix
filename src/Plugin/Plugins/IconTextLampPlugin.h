@@ -27,7 +27,7 @@
 /**
  * @brief  Icon, text and lamp plugin
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup plugin
  *
  * @{
@@ -64,7 +64,7 @@
  * Shows a icon (bitmap) on the left side in 8 x 8, text on the right side and
  * under the text a bar with lamps.
  * If the text is too long for the display width, it automatically scrolls.
- * 
+ *
  * Change icon, text or lamps via REST API:
  * Icon: POST \c "<base-uri>/bitmap" with multipart/form-data file upload.
  * Text: POST \c "<base-uri>/text?show=<text>"
@@ -76,11 +76,12 @@ public:
 
     /**
      * Constructs the plugin.
-     * 
+     *
      * @param[in] name  Plugin name
+     * @param[in] uid   Unique id
      */
-    IconTextLampPlugin(const String& name) :
-        Plugin(name),
+    IconTextLampPlugin(const String& name, uint16_t uid) :
+        Plugin(name, uid),
         m_iconCanvas(nullptr),
         m_textCanvas(nullptr),
         m_lampCanvas(nullptr),
@@ -134,20 +135,21 @@ public:
 
     /**
      * Plugin creation method, used to register on the plugin manager.
-     * 
+     *
      * @param[in] name  Plugin name
-     * 
+     * @param[in] uid   Unique id
+     *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static Plugin* create(const String& name)
+    static Plugin* create(const String& name, uint16_t uid)
     {
-        return new IconTextLampPlugin(name);
+        return new IconTextLampPlugin(name, uid);
     }
 
     /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void active(IGfx& gfx) override;
@@ -160,7 +162,7 @@ public:
 
     /**
      * Register web interface, e.g. REST API functionality.
-     * 
+     *
      * @param[in] srv       Webserver
      * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
@@ -168,7 +170,7 @@ public:
 
     /**
      * Unregister web interface.
-     * 
+     *
      * @param[in] srv   Webserver
      */
     void unregisterWebInterface(AsyncWebServer& srv) override;
@@ -176,21 +178,21 @@ public:
     /**
      * Update the display.
      * The scheduler will call this method periodically.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void update(IGfx& gfx);
 
     /**
      * Set text, which may contain format tags.
-     * 
+     *
      * @param[in] formatText    Text, which may contain format tags.
      */
     void setText(const String& formatText);
 
     /**
      * Set bitmap in raw RGB565 format.
-     * 
+     *
      * @param[in] bitmap    Bitmap buffer
      * @param[in] width     Bitmap width in pixel
      * @param[in] height    Bitmap height in pixel
@@ -199,16 +201,16 @@ public:
 
     /**
      * Load bitmap from filesystem.
-     * 
+     *
      * @param[in] filename  Bitmap filename
-     * 
+     *
      * @return If successul, it will return true otherwise false.
      */
     bool loadBitmap(const String& filename);
 
     /**
      * Set lamp state.
-     * 
+     *
      * @param[in] lampId    Lamp id
      * @param[in] state     Lamp state (true = on / false = off)
      */
@@ -254,7 +256,7 @@ private:
     /**
      * Instance specific web request handler, called by the static web request
      * handler. It will really handle the request.
-     * 
+     *
      * @param[in] request   Web request
      */
     void webReqHandlerText(AsyncWebServerRequest *request);
@@ -262,7 +264,7 @@ private:
     /**
      * Instance specific web request handler, called by the static web request
      * handler. It will really handle the request.
-     * 
+     *
      * @param[in] request   Web request
      */
     void webReqHandlerIcon(AsyncWebServerRequest *request);
@@ -270,14 +272,14 @@ private:
     /**
      * Instance specific web request handler, called by the static web request
      * handler. It will really handle the request.
-     * 
+     *
      * @param[in] request   Web request
      */
     void webReqHandlerLamp(AsyncWebServerRequest *request);
 
     /**
      * File upload handler.
-     * 
+     *
      * @param[in] request   HTTP request.
      * @param[in] filename  Name of the uploaded file.
      * @param[in] index     Current file offset.
@@ -289,7 +291,7 @@ private:
 
     /**
      * Get image filename with path.
-     * 
+     *
      * @return Image filename with path.
      */
     String getFileName(void);

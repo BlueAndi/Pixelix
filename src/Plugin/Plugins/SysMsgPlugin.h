@@ -27,7 +27,7 @@
 /**
  * @brief  System message plugin
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup plugin
  *
  * @{
@@ -66,11 +66,12 @@ public:
 
     /**
      * Constructs the plugin.
-     * 
+     *
      * @param[in] name  Plugin name
+     * @param[in] uid   Unique id
      */
-    SysMsgPlugin(const String& name) :
-        Plugin(name),
+    SysMsgPlugin(const String& name, uint16_t uid) :
+        Plugin(name, uid),
         m_textWidget(),
         m_duration(0U)
     {
@@ -87,21 +88,22 @@ public:
 
     /**
      * Plugin creation method, used to register on the plugin manager.
-     * 
+     *
      * @param[in] name  Plugin name
-     * 
+     * @param[in] uid   Unique id
+     *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static Plugin* create(const String& name)
+    static Plugin* create(const String& name, uint16_t uid)
     {
-        return new SysMsgPlugin(name);
+        return new SysMsgPlugin(name, uid);
     }
 
     /**
      * Get duration how long the plugin shall be active.
      * If the plugin want to be displayed infinite, it will
      * return DURATION_INFINITE.
-     * 
+     *
      * @return Duration in ms
      */
     uint32_t getDuration() override
@@ -112,7 +114,7 @@ public:
     /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void active(IGfx& gfx) override;
@@ -126,14 +128,14 @@ public:
     /**
      * Update the display.
      * The scheduler will call this method periodically.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void update(IGfx& gfx);
 
     /**
      * Show message with the given duration. If the duration is 0, it will be shown infinite.
-     * 
+     *
      * @param[in] msg       Message to show
      * @param[in] duration  Duration in ms, how long the message shall be shown. Note, a 0 means infinite.
      */
