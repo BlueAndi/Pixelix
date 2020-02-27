@@ -225,14 +225,14 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
 
             /* Find a empty unlocked slot. */
             slotId = 0U;
-            while((MAX_SLOTS > slotId) && ((nullptr != m_slots[slotId].plugin) || (true == m_slots[slotId].isLocked)))
+            while((MAX_SLOTS > slotId) && ((false == m_slots[slotId].isEmpty()) || (true == m_slots[slotId].isLocked())))
             {
                 ++slotId;
             }
 
             if (MAX_SLOTS > slotId)
             {
-                m_slots[slotId].plugin = plugin;
+                m_slots[slotId].setPlugin(plugin);
 
                 plugin->setSlotId(slotId);
                 plugin->start();
@@ -246,12 +246,12 @@ uint8_t DisplayMgr::installPlugin(Plugin* plugin, uint8_t slotId)
         }
         /* Install to specific slot? */
         else if ((MAX_SLOTS > slotId) &&
-                 (nullptr == m_slots[slotId].plugin) &&
-                 (false == m_slots[slotId].isLocked))
+                 (true == m_slots[slotId].isEmpty()) &&
+                 (false == m_slots[slotId].isLocked()))
         {
             lock();
 
-            m_slots[slotId].plugin = plugin;
+            m_slots[slotId].setPlugin(plugin);
 
             plugin->setSlotId(slotId);
             plugin->start();
@@ -288,7 +288,7 @@ bool DisplayMgr::uninstallPlugin(Plugin* plugin)
 
             lock();
 
-            if (false == m_slots[slotId].isLocked)
+            if (false == m_slots[slotId].isLocked())
             {
                 /* Is this plugin selected at the moment? */
                 if (m_selectedPlugin == plugin)
@@ -298,7 +298,7 @@ bool DisplayMgr::uninstallPlugin(Plugin* plugin)
                 }
 
                 plugin->stop();
-                m_slots[slotId].plugin = nullptr;
+                m_slots[slotId].setPlugin(nullptr);
                 plugin->setSlotId(SLOT_ID_INVALID);
 
                 status = true;
@@ -328,7 +328,7 @@ Plugin* DisplayMgr::getPluginInSlot(uint8_t slotId)
     {
         lock();
 
-        plugin = m_slots[slotId].plugin;
+        plugin = m_slots[slotId].getPlugin();
 
         unlock();
     }
@@ -344,7 +344,7 @@ void DisplayMgr::activatePlugin(Plugin* plugin)
 
         if (MAX_SLOTS > plugin->getSlotId())
         {
-            if (plugin != m_slots[plugin->getSlotId()].plugin)
+            if (plugin != m_slots[plugin->getSlotId()].getPlugin())
             {
                 LOG_WARNING("Plugin %s should be in slot %u, but isn't!", plugin->getName(), plugin->getSlotId());
             }
@@ -366,7 +366,7 @@ void DisplayMgr::lockSlot(uint8_t slotId)
     {
         lock();
 
-        m_slots[slotId].isLocked = true;
+        m_slots[slotId].lock();
 
         unlock();
     }
@@ -380,7 +380,7 @@ void DisplayMgr::unlockSlot(uint8_t slotId)
     {
         lock();
 
-        m_slots[slotId].isLocked = false;
+        m_slots[slotId].unlock();
 
         unlock();
     }
@@ -396,7 +396,7 @@ bool DisplayMgr::isSlotLocked(uint8_t slotId)
     {
         lock();
 
-        isLocked = m_slots[slotId].isLocked;
+        isLocked = m_slots[slotId].isLocked();
 
         unlock();
     }
@@ -488,10 +488,10 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
     do
     {
         /* Plugin installed? */
-        if (nullptr != m_slots[slotId].plugin)
+        if (false == m_slots[slotId].isEmpty())
         {
             /* Plugin enabled? */
-            if (true == m_slots[slotId].plugin->isEnabled())
+            if (true == m_slots[slotId].getPlugin()->isEnabled())
             {
                 break;
             }
@@ -618,7 +618,7 @@ void DisplayMgr::process()
         {
             uint32_t duration = 0U;
 
-            m_selectedPlugin    = m_slots[m_selectedSlot].plugin;
+            m_selectedPlugin    = m_slots[m_selectedSlot].getPlugin();
             duration            = m_selectedPlugin->getDuration();
 
             if (Plugin::DURATION_INFINITE != duration)
@@ -634,7 +634,7 @@ void DisplayMgr::process()
     /* Process all installed plugins. */
     for(index = 0U; index < MAX_SLOTS; ++index)
     {
-        Plugin* plugin = m_slots[index].plugin;
+        Plugin* plugin = m_slots[index].getPlugin();
 
         if (nullptr != plugin)
         {

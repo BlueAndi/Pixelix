@@ -50,6 +50,7 @@
 
 #include "Board.h"
 #include "Plugin.hpp"
+#include "Slot.h"
 
 /******************************************************************************
  * Macros
@@ -215,31 +216,6 @@ public:
     static const uint32_t   ALS_AUTO_ADJUST_PERIOD  = 250U;
 
 private:
-
-    /**
-     * A slot.
-     */
-    struct Slot
-    {
-        /**
-         * Constructs a empty slot.
-         */
-        Slot() :
-            plugin(nullptr),
-            isLocked(false)
-        {
-        }
-
-        /**
-         * Destroys a slot.
-         */
-        ~Slot()
-        {
-        }
-
-        Plugin* plugin;     /**< Plugin */
-        bool    isLocked;   /**< If a slot is locked, it can nothing be installed or uninstalled there. */
-    };
 
     /** Display manager instance */
     static DisplayMgr   m_instance;
