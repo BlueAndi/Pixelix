@@ -3,6 +3,21 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
+- [Pixelix](#pixelix)
+- [REST API](#rest-api)
+  - [Version](#version)
+  - [In general](#in-general)
+  - [Common](#common)
+    - [Endpoint `<base-uri>`/status](#endpoint-base-uristatus)
+    - [Endpoint `<base-uri>`/display/slots](#endpoint-base-uridisplayslots)
+    - [Endpoint `<base-uri>`/plugin](#endpoint-base-uriplugin)
+  - [Plugin depended](#plugin-depended)
+    - [Endpoint `<base-uri>`/display/slot/`<slot-id>`/text](#endpoint-base-uridisplayslotslot-idtext)
+    - [Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap](#endpoint-base-uridisplayslotslot-idbitmap)
+    - [Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`](#endpoint-base-uridisplayslotslot-idlamplamp-id)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+
 # REST API
 
 The base URI (`<base-uri>`) for the REST API access is always ```http://<host>/rest/api/<version>```.
@@ -51,7 +66,7 @@ Detail:
 
 Example:
 ```
-GET <base-uri>/rest/v1/status
+GET <base-uri>/rest/api/v1/status
 ```
 
 Result:
@@ -96,7 +111,7 @@ Detail:
 
 Example:
 ```
-GET <base-uri>/rest/v1/display/slots
+GET <base-uri>/rest/api/v1/display/slots
 ```
 
 Result:
@@ -140,7 +155,7 @@ Detail:
 
 Example:
 ```
-POST <base-uri>/rest/v1/display?install=JustTextPlugin
+POST <base-uri>/rest/api/v1/display?install=JustTextPlugin
 ```
 
 Result:
@@ -173,7 +188,7 @@ Detail:
 
 Example:
 ```
-POST <base-uri>/rest/v1/display/slot/0/text?show=Test
+POST <base-uri>/rest/api/v1/display/slot/0/text?show=Test
 ```
 
 Result:
@@ -208,7 +223,7 @@ Detail:
 
 Example:
 ```
-POST <base-uri>/rest/v1/display/slot/0/bitmap
+POST <base-uri>/rest/api/v1/display/slot/0/bitmap
 ```
 
 Result:
@@ -237,7 +252,7 @@ Supported lamp states:
 
 Example:
 ```
-POST <base-uri>/rest/v1/display/slot/0/lamp/0?set=on
+POST <base-uri>/rest/api/v1/display/slot/0/lamp/0?set=on
 ```
 
 Result:
