@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System message plugin
+ * @brief  Slot
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup plugin
+ * @addtogroup gfx
  *
  * @{
  */
 
-#ifndef __SYSMSGPLUGIN_H__
-#define __SYSMSGPLUGIN_H__
+#ifndef __SLOT_H__
+#define __SLOT_H__
 
 /******************************************************************************
  * Compile Switches
@@ -46,8 +46,6 @@
 #include <stdint.h>
 #include "Plugin.hpp"
 
-#include <TextWidget.h>
-
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -57,101 +55,95 @@
  *****************************************************************************/
 
 /**
- * Shows system message over the whole display.
- * If the text is too long for the display width, it automatically scrolls.
+ * A slot, where a plugin can be plugged in or removed.
  */
-class SysMsgPlugin : public Plugin
+class Slot
 {
 public:
 
     /**
-     * Constructs the plugin.
-     *
-     * @param[in] name  Plugin name
-     * @param[in] uid   Unique id
+     * Constructs a slot.
      */
-    SysMsgPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
-        m_textWidget(),
-        m_duration(0U)
-    {
-        /* Move the text widget one line lower for better look. */
-        m_textWidget.move(0, 1);
-    }
+    Slot();
 
     /**
-     * Destroys the plugin.
+     * Destroys slot.
      */
-    ~SysMsgPlugin()
-    {
-    }
+    ~Slot();
 
     /**
-     * Plugin creation method, used to register on the plugin manager.
+     * Get plugin which is plugged in.
      *
-     * @param[in] name  Plugin name
-     * @param[in] uid   Unique id
-     *
-     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
+     * @return Plugin
      */
-    static Plugin* create(const String& name, uint16_t uid)
-    {
-        return new SysMsgPlugin(name, uid);
-    }
+    Plugin* getPlugin();
 
     /**
-     * Get duration how long the plugin shall be active.
-     * If the plugin want to be displayed infinite, it will
-     * return DURATION_INFINITE.
+     * Set plugin to slot.
+     * If slot is locked, unlock it first!
+     * Remove plugin from slot, use nullptr as argument.
+     *
+     * @param[in] plugin Plugin
+     *
+     * @return If successful it will return true otherwise false.
+     */
+    bool setPlugin(Plugin* plugin);
+
+    /**
+     * Is slot empty?
+     *
+     * @return If slot is empty, it will return true otherwise false.
+     */
+    bool isEmpty() const;
+
+    /**
+     * Get duration in ms, how long the plugin shall be active.
      *
      * @return Duration in ms
      */
-    uint32_t getDuration() override
-    {
-        return m_duration;
-    }
+    uint32_t getDuration() const;
 
     /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
+     * Set duration in ms, how long the plugin shall be active.
      *
-     * @param[in] gfx   Display graphics interface
+     * @param[in] duration Duration in ms
      */
-    void active(IGfx& gfx) override;
+    void setDuration(uint32_t duration);
 
     /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
+     * Lock slot to protect the plugin against removing it.
      */
-    void inactive() override;
+    void lock();
 
     /**
-     * Update the display.
-     * The scheduler will call this method periodically.
+     * Unlock slot to be able to remove a plugin or plug a new one in.
+     */
+    void unlock();
+
+    /**
+     * Is slot locked?
      *
-     * @param[in] gfx   Display graphics interface
+     * @return If slot is locked, it will return true otherwise false.
      */
-    void update(IGfx& gfx);
+    bool isLocked() const;
 
-    /**
-     * Show message with the given duration. If the duration is 0, it will be shown infinite.
-     *
-     * @param[in] msg       Message to show
-     * @param[in] duration  Duration in ms, how long the message shall be shown. Note, a 0 means infinite.
-     */
-    void show(const String& msg, uint32_t duration = DURATION_INFINITE);
+    /** Default duration in ms */
+    static const uint32_t DURATION_DEFAULT  = 30000U;
 
 private:
 
-    TextWidget  m_textWidget;   /**< Text widget, used for showing the text. */
-    uint32_t    m_duration;     /**< Duration how long the message shall be shown. */
+    Plugin*     m_plugin;   /**< Plugged in slot */
+    uint32_t    m_duration; /**< Duration in ms, how long the plugin shall be active. */
+    bool        m_isLocked; /**< Is slot locked or not. */
 
+    Slot(const Slot& matrix);
+    Slot& operator=(const Slot& matrix);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __SYSMSGPLUGIN_H__ */
+#endif  /* __SLOT_H__ */
 
 /** @} */

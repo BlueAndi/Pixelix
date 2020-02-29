@@ -197,6 +197,13 @@ private:
      * @return If successful installed, it will return true otherwise false.
      */
     bool installToSlot(Plugin* plugin, uint8_t slotId);
+
+    /**
+     * Generate a 16-bit unique id, for a plugin instance.
+     *
+     * @return Unique id
+     */
+    uint16_t generateUID();
 };
 
 /******************************************************************************

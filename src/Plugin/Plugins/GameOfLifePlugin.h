@@ -27,7 +27,7 @@
 /**
  * @brief  Conways Game of Life plugin
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup plugin
  *
  * @{
@@ -58,7 +58,7 @@
 
 /**
  * Conways Game of Life plugin.
- * 
+ *
  * The universe of the Game of Life is an infinite, two-dimensional orthogonal
  * grid of square cells, each of which is in one of two possible states, alive
  * or dead, (or populated and unpopulated, respectively). Every cell interacts
@@ -69,7 +69,7 @@
  * 2. Any live cell with two or three live neighbours lives on to the next generation.
  * 3. Any live cell with more than three live neighbours dies, as if by overpopulation.
  * 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
- * 
+ *
  * See https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
  */
 class GameOfLifePlugin : public Plugin
@@ -78,11 +78,12 @@ public:
 
     /**
      * Constructs the plugin.
-     * 
+     *
      * @param[in] name  Plugin name
+     * @param[in] uid   Unique id
      */
-    GameOfLifePlugin(const String& name) :
-        Plugin(name),
+    GameOfLifePlugin(const String& name, uint16_t uid) :
+        Plugin(name, uid),
         m_activeGrid(0U),
         m_gridSize(0U),
         m_grids(),
@@ -111,20 +112,21 @@ public:
 
     /**
      * Plugin creation method, used to register on the plugin manager.
-     * 
+     *
      * @param[in] name  Plugin name
-     * 
+     * @param[in] uid   Unique id
+     *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static Plugin* create(const String& name)
+    static Plugin* create(const String& name, uint16_t uid)
     {
-        return new GameOfLifePlugin(name);
+        return new GameOfLifePlugin(name, uid);
     }
 
     /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void active(IGfx& gfx) override;
@@ -138,7 +140,7 @@ public:
     /**
      * Update the display.
      * The scheduler will call this method periodically.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void update(IGfx& gfx);
@@ -171,7 +173,7 @@ private:
 
     /**
      * Create all grids.
-     * 
+     *
      * @return If successful, it will return true otherwise false.
      */
     bool createGrids();
@@ -183,25 +185,25 @@ private:
 
     /**
      * Generate a random initial pattern.
-     * 
+     *
      * @param[in] gridId    Id of grid, where to generate.
      */
     void generateInitialPattern(uint8_t gridId);
 
     /**
      * Get cell state.
-     * 
+     *
      * @param[in] gridId    Id of grid, where the cell lives
      * @param[in] x         x-coordinate of cell
      * @param[in] y         y-coordinate of cell
-     * 
+     *
      * @return Alive (true) or dead (false).
      */
     bool getCellState(uint8_t gridId, int16_t x, int16_t y);
 
     /**
      * Set cell state.
-     * 
+     *
      * @param[in] gridId    Id of grid, where the cell lives
      * @param[in] x         x-coordinate of cell
      * @param[in] y         y-coordinate of cell
@@ -211,18 +213,18 @@ private:
 
     /**
      * Count all alive neighbours of cell.
-     * 
+     *
      * @param[in] gridId    Id of grid, where the cell lives
      * @param[in] x         x-coordinate of cell
      * @param[in] y         y-coordinate of cell
-     * 
+     *
      * @return Number of alive neighbours.
      */
     uint8_t countAliveNeighbours(uint8_t gridId, int16_t x, int16_t y);
 
     /**
      * Update the display with the grid.
-     * 
+     *
      * @param[in] gfx       Graphics interface
      * @param[in] gridId    Grid id
      */

@@ -27,7 +27,7 @@
 /**
  * @brief  JustText plugin
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup plugin
  *
  * @{
@@ -59,7 +59,7 @@
 /**
  * Shows text over the whole display.
  * If the text is too long for the display width, it automatically scrolls.
- * 
+ *
  * Change text via REST API:
  * Text: POST \c "<base-uri>/text?show=<text>"
  */
@@ -69,11 +69,12 @@ public:
 
     /**
      * Constructs the plugin.
-     * 
+     *
      * @param[in] name  Plugin name
+     * @param[in] uid   Unique id
      */
-    JustTextPlugin(const String& name) :
-        Plugin(name),
+    JustTextPlugin(const String& name, uint16_t uid) :
+        Plugin(name, uid),
         m_textWidget(),
         m_url(),
         m_callbackWebHandler(nullptr)
@@ -91,19 +92,20 @@ public:
 
     /**
      * Plugin creation method, used to register on the plugin manager.
-     * 
+     *
      * @param[in] name  Plugin name
-     * 
+     * @param[in] uid   Unique id
+     *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static Plugin* create(const String& name)
+    static Plugin* create(const String& name, uint16_t uid)
     {
-        return new JustTextPlugin(name);
+        return new JustTextPlugin(name, uid);
     }
 
     /**
      * Register web interface, e.g. REST API functionality.
-     * 
+     *
      * @param[in] srv       Webserver
      * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
@@ -111,7 +113,7 @@ public:
 
     /**
      * Unregister web interface.
-     * 
+     *
      * @param[in] srv   Webserver
      */
     void unregisterWebInterface(AsyncWebServer& srv) override;
@@ -119,14 +121,14 @@ public:
     /**
      * Update the display.
      * The scheduler will call this method periodically.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     void update(IGfx& gfx);
 
     /**
      * Set text, which may contain format tags.
-     * 
+     *
      * @param[in] formatText    Text, which may contain format tags.
      */
     void setText(const String& formatText);
@@ -140,7 +142,7 @@ private:
     /**
      * Instance specific web request handler, called by the static web request
      * handler. It will really handle the request.
-     * 
+     *
      * @param[in] request   Web request
      */
     void webReqHandler(AsyncWebServerRequest *request);

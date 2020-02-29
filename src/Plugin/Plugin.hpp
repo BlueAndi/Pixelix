@@ -27,7 +27,7 @@
 /**
  * @brief  Plugin interface
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup plugin
  *
  * @{
@@ -67,15 +67,17 @@ public:
     /**
      * Plugin creation function, used by the plugin manager to create a plugin instance.
      */
-    typedef Plugin* (*CreateFunc)(const String& name);
+    typedef Plugin* (*CreateFunc)(const String& name, uint16_t uid);
 
     /**
      * Constructs the plugin.
      * It is disabled by default.
-     * 
+     *
      * @param[in] name  Plugin name
+     * @param[in] uid   Unique id
      */
-    Plugin(const String& name) :
+    Plugin(const String& name, uint16_t uid) :
+        m_uid(uid),
         m_name(name),
         m_slotId(UINT8_MAX),
         m_isEnabled(false)
@@ -87,6 +89,16 @@ public:
      */
     virtual ~Plugin()
     {
+    }
+
+    /**
+     * Get unique id.
+     *
+     * @return Unique id
+     */
+    uint16_t getUID() const
+    {
+        return m_uid;
     }
 
     /**
@@ -102,7 +114,7 @@ public:
 
     /**
      * Get the unique slot id.
-     * 
+     *
      * @return Slot id
      */
     uint8_t getSlotId() const
@@ -113,7 +125,7 @@ public:
     /**
      * Register web interface, e.g. REST API functionality.
      * Overwrite it, if your plugin provides a web interface.
-     * 
+     *
      * @param[in] srv       Webserver
      * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
@@ -127,7 +139,7 @@ public:
     /**
      * Unregister web interface.
      * Overwrite it, if your plugin provides a web interface.
-     * 
+     *
      * @param[in] srv   Webserver
      */
     virtual void unregisterWebInterface(AsyncWebServer& srv)
@@ -150,7 +162,7 @@ public:
      * Get duration how long the plugin shall be active.
      * If the plugin want to be displayed infinite, it will
      * return DURATION_INFINITE.
-     * 
+     *
      * @return Duration in ms
      */
     virtual uint32_t getDuration()
@@ -160,7 +172,7 @@ public:
 
     /**
      * Is plugin enabled or not?
-     * 
+     *
      * @return If plugin is enabled, it will return true otherwise false.
      */
     bool isEnabled() const
@@ -221,7 +233,7 @@ public:
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      * Overwrite it if your plugin needs to know this.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     virtual void active(IGfx& gfx)
@@ -244,7 +256,7 @@ public:
      * Update the display.
      * If the plugin is in active slot, this function will be called cyclic
      * as long as the slot is active.
-     * 
+     *
      * @param[in] gfx   Display graphics interface
      */
     virtual void update(IGfx& gfx) = 0;
@@ -257,9 +269,10 @@ public:
 
 private:
 
-    String  m_name;         /**< Plugin name */
-    uint8_t m_slotId;       /**< Slot id */
-    bool    m_isEnabled;    /**< Plugin is enabled or disabled */
+    uint16_t    m_uid;          /**< Unique id */
+    String      m_name;         /**< Plugin name */
+    uint8_t     m_slotId;       /**< Slot id */
+    bool        m_isEnabled;    /**< Plugin is enabled or disabled */
 
     Plugin();
     Plugin(const Plugin& plugin);
