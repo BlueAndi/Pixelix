@@ -25,22 +25,27 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Main entry point
+ * @brief  Task monitor
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * @addtogroup common
+ *
+ * @{
  */
+
+#ifndef __TASK_MON_H__
+#define __TASK_MON_H__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <Arduino.h>
-#include <Logging.h>
-#include <LogSinkPrinter.h>
-#include "LogSinkWebsocket.h"
-#include <StateMachine.hpp>
-
-#include "Board.h"
-#include "InitState.h"
-#include "TaskMon.h"
+#include <stdint.h>
+#include <SysMsgPlugin.h>
+#include <WString.h>
 
 /******************************************************************************
  * Macros
@@ -50,76 +55,77 @@
  * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
-
-/** System state machine */
-static StateMachine     gSysStateMachine(InitState::getInstance());
-
-/** Serial log sink */
-static LogSinkPrinter   gLogSinkSerial("Serial", &Serial);
-
-/** Websocket log sink */
-static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
-
-/** Serial interface baudrate. */
-static const uint32_t   SERIAL_BAUDRATE = 115200U;
-
-/******************************************************************************
- * External functions
- *****************************************************************************/
-
 /**
- * Setup the system.
+ * Task monitor
  */
-void setup()
+class TaskMon
 {
-    /* Setup serial interface */
-    Serial.begin(SERIAL_BAUDRATE);
+public:
 
-    /* Register serial log sink and select it per default. */
-    if (true == Logging::getInstance().registerSink(&gLogSinkSerial))
-    {
-        (void)Logging::getInstance().selectSink("Serial");
-    }
-
-    /* Register websocket log sink. */
-    (void)Logging::getInstance().registerSink(&gLogSinkWebsocket);
-
-    /* Set severity */
-    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
-
-    /* The setup routine shall handle only the initialization state.
-     * All other states are handled in the loop routine.
+    /**
+     * Get task monitor instance.
+     *
+     * @return Task monitor instance
      */
-    do
+    static TaskMon& getInstance()
     {
-        gSysStateMachine.process();
+        return m_instance;
     }
-    while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
 
-    return;
-}
+    /**
+     * Get current number of tasks and their properties.
+     */
+    void process();
 
-/**
- * Main loop, which is called periodically.
- */
-void loop()
-{
-    /* Process system state machine */
-    gSysStateMachine.process();
+    /** Processing cycle in ms. */
+    static const uint32_t PROCESSING_CYCLE  = 60U * 1000U;
 
-    /* Task monitor */
-    TaskMon::getInstance().process();
+private:
 
-    return;
-}
+    static TaskMon  m_instance; /**< System message handler instance */
+
+    SimpleTimer     m_timer;    /**< Timer used for cyclic processing. */
+
+    /**
+     * Constructs the task monitor.
+     */
+    TaskMon()
+    {
+    }
+
+    /**
+     * Destroys the task monitor.
+     */
+    ~TaskMon()
+    {
+        /* Will never be called. */
+    }
+
+    TaskMon(const TaskMon& taskMon);
+    TaskMon& operator=(const TaskMon& taskMon);
+
+    /**
+     * Get task state as user friendly string.
+     *
+     * @return Task state name
+     */
+    String taskState2Str(eTaskState state);
+
+    /**
+     * Fill string up with spaces until given length is reached.
+     *
+     * @param[in] str   String, which to fill up
+     * @param[in] len   Length of the result string
+     *
+     * @return Filled up string
+     */
+    String fillUpSpaces(const char* str, size_t len);
+};
 
 /******************************************************************************
- * Local functions
+ * Functions
  *****************************************************************************/
+
+#endif  /* __TASK_MON_H__ */
+
+/** @} */
