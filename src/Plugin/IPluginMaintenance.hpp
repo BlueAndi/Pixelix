@@ -90,7 +90,7 @@ public:
      *
      * @param[in] slotInterf    Slot interface
      */
-    virtual void setSlot(const ISlotPlugin& slotInterf) = 0;
+    virtual void setSlot(const ISlotPlugin* slotInterf) = 0;
 
     /**
      * Get unique instance id.

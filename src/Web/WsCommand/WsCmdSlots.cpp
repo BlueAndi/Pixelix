@@ -85,8 +85,8 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         for(slotId = 0U; slotId < DisplayMgr::MAX_SLOTS; ++slotId)
         {
-            Plugin*     plugin  = DisplayMgr::getInstance().getPluginInSlot(slotId);
-            const char* name    = (nullptr != plugin) ? plugin->getName() : nullptr;
+            IPluginMaintenance* plugin  = DisplayMgr::getInstance().getPluginInSlot(slotId);
+            const char*         name    = (nullptr != plugin) ? plugin->getName() : nullptr;
 
             rsp += DELIMITER;
             if (nullptr != name)

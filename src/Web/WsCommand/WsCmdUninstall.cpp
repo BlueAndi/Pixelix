@@ -76,8 +76,8 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
     }
     else
     {
-        String  rsp;
-        Plugin* plugin  = DisplayMgr::getInstance().getPluginInSlot(m_slotId);
+        String              rsp;
+        IPluginMaintenance* plugin  = DisplayMgr::getInstance().getPluginInSlot(m_slotId);
 
         if (nullptr == plugin)
         {

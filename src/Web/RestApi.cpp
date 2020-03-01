@@ -261,7 +261,7 @@ static void handleSlots(AsyncWebServerRequest* request)
         /* Add which plugin's are installed. */
         for(index = 0U; index < DisplayMgr::MAX_SLOTS; ++index)
         {
-            Plugin* plugin = DisplayMgr::getInstance().getPluginInSlot(index);
+            IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(index);
 
             if (nullptr == plugin)
             {
@@ -337,8 +337,8 @@ static void handlePlugin(AsyncWebServerRequest* request)
         /* Plugin installation? */
         if (true == request->hasArg("install"))
         {
-            String  pluginName  = request->arg("install");
-            Plugin* plugin      = PluginMgr::getInstance().install(pluginName);
+            String              pluginName  = request->arg("install");
+            IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName);
 
             /* Plugin not found? */
             if (nullptr == plugin)
@@ -361,7 +361,7 @@ static void handlePlugin(AsyncWebServerRequest* request)
                 PluginMgr::getInstance().save();
 
                 /* Prepare response */
-                dataObj["slotId"]   = plugin->getSlotId();
+                dataObj["slotId"]   = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
                 jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
                 httpStatusCode      = HttpStatus::STATUS_CODE_OK;
             }
@@ -395,8 +395,8 @@ static void handlePlugin(AsyncWebServerRequest* request)
                 }
                 else
                 {
-                    String  pluginName  = request->arg("uninstall");
-                    Plugin* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
+                    String              pluginName  = request->arg("uninstall");
+                    IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
                     if (nullptr == plugin)
                     {
@@ -416,7 +416,7 @@ static void handlePlugin(AsyncWebServerRequest* request)
                         errorObj["msg"]     = "Wrong plugin in slot.";
                         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
                     }
-                    else if (true == DisplayMgr::getInstance().isSlotLocked(plugin->getSlotId()))
+                    else if (true == DisplayMgr::getInstance().isSlotLocked(slotId))
                     {
                         JsonObject errorObj = jsonDoc.createNestedObject("error");
 

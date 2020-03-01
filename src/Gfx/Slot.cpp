@@ -77,7 +77,7 @@ Slot::~Slot()
 {
 }
 
-Plugin* Slot::getPlugin()
+IPluginMaintenance* Slot::getPlugin()
 {
     return m_plugin;
 }
@@ -89,6 +89,15 @@ bool Slot::setPlugin(IPluginMaintenance* plugin)
     if (false == m_isLocked)
     {
         m_plugin = plugin;
+
+        if (nullptr == m_plugin)
+        {
+            plugin->setSlot(nullptr);
+        }
+        else
+        {
+            plugin->setSlot(this);
+        }
     }
 
     return status;

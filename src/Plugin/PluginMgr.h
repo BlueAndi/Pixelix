@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "IPluginMaintenance.hpp"
 #include "DisplayMgr.h"
 
 #include <LinkedList.hpp>
@@ -81,7 +81,7 @@ public:
      * @param[in] name          Plugin name
      * @param[in] createFunc    The plugin creation function.
      */
-    void registerPlugin(const String& name, Plugin::CreateFunc createFunc);
+    void registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc);
 
     /**
      * Install plugin.
@@ -92,7 +92,7 @@ public:
      *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    Plugin* install(const String& name, uint8_t slotId = DisplayMgr::SLOT_ID_INVALID);
+    IPluginMaintenance* install(const String& name, uint8_t slotId = DisplayMgr::SLOT_ID_INVALID);
 
     /**
      * Uninstall plugin.
@@ -101,7 +101,7 @@ public:
      *
      * @return If successful uninstalled, it will return true otherwise false.
      */
-    bool uninstall(Plugin* plugin);
+    bool uninstall(IPluginMaintenance* plugin);
 
     /**
      * Find first plugin.
@@ -120,11 +120,11 @@ public:
     /**
      * Get plugin REST base URI.
      *
-     * @param[in] slotId    Slot id of installed plugin.
+     * @param[in] uid   Plugin UID
      *
      * @return Plugin REST API base URI
      */
-    String getRestApiBaseUri(uint8_t slotId);
+    String getRestApiBaseUri(uint16_t uid);
 
     /**
      * Load plugin installation from persistent memory.
@@ -147,16 +147,16 @@ private:
      */
     struct PluginRegEntry
     {
-        String              name;       /**< Plugin name */
-        Plugin::CreateFunc  createFunc; /**< Plugin creation function */
+        String                          name;       /**< Plugin name */
+        IPluginMaintenance::CreateFunc  createFunc; /**< Plugin creation function */
     };
 
     /** Delimiter, used for plugin installation setup in persistent memory. */
     static const char               DELIMITER   = ';';
 
-    DLinkedList<PluginRegEntry*>    m_registry; /**< Plugin registry */
-    DLinkedList<Plugin*>            m_plugins;  /**< List with all installed plugins */
-    PluginRegEntry*                 m_current;  /**< Current registry entry */
+    DLinkedList<PluginRegEntry*>        m_registry; /**< Plugin registry */
+    DLinkedList<IPluginMaintenance*>    m_plugins;  /**< List with all installed plugins */
+    PluginRegEntry*                     m_current;  /**< Current registry entry */
 
     /**
      * Constructs the plugin manager.
@@ -186,7 +186,7 @@ private:
      *
      * @return If successful installed, it will return true otherwise false.
      */
-    bool installToAutoSlot(Plugin* plugin);
+    bool installToAutoSlot(IPluginMaintenance* plugin);
 
     /**
      * Install plugin to a specific display slot.
@@ -196,7 +196,7 @@ private:
      *
      * @return If successful installed, it will return true otherwise false.
      */
-    bool installToSlot(Plugin* plugin, uint8_t slotId);
+    bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
 
     /**
      * Generate a 16-bit unique id, for a plugin instance.

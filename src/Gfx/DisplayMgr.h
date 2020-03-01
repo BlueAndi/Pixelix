@@ -49,7 +49,7 @@
 #include <SimpleTimer.hpp>
 
 #include "Board.h"
-#include "Plugin.hpp"
+#include "IPluginMaintenance.hpp"
 #include "Slot.h"
 
 /******************************************************************************
@@ -134,7 +134,7 @@ public:
      *
      * @return Returns slot id. If it fails, it will return SLOT_ID_INVALID.
      */
-    uint8_t installPlugin(Plugin* plugin, uint8_t slotId = SLOT_ID_INVALID);
+    uint8_t installPlugin(IPluginMaintenance* plugin, uint8_t slotId = SLOT_ID_INVALID);
 
     /**
      * Remove plugin from slot.
@@ -143,7 +143,16 @@ public:
      *
      * @return If successful uninstalled, it will return true otherwise false.
      */
-    bool uninstallPlugin(Plugin* plugin);
+    bool uninstallPlugin(IPluginMaintenance* plugin);
+
+    /**
+     * Get slot id by plugin UID.
+     *
+     * @param[in] uid   Plugin UID
+     *
+     * @return Slot id
+     */
+    uint8_t getSlotIdByPluginUID(uint16_t uid);
 
     /**
      * Get plugin from slot.
@@ -152,14 +161,14 @@ public:
      *
      * @return Plugin which is installed in given slot.
      */
-    Plugin* getPluginInSlot(uint8_t slotId);
+    IPluginMaintenance* getPluginInSlot(uint8_t slotId);
 
     /**
      * Activate a specific plugin immediately.
      *
      * @param[in] plugin    Plugin which to activate
      */
-    void activatePlugin(Plugin* plugin);
+    void activatePlugin(IPluginMaintenance* plugin);
 
     /**
      * Lock a slot.
@@ -239,10 +248,10 @@ private:
     uint8_t             m_selectedSlot;
 
     /** Current selected plugin, which is active shown. */
-    Plugin*             m_selectedPlugin;
+    IPluginMaintenance* m_selectedPlugin;
 
     /** Plugin which is requested to be activated immediately. */
-    Plugin*             m_requestedPlugin;
+    IPluginMaintenance* m_requestedPlugin;
 
     /** Timer, used for changing the slot after a specific duration. */
     SimpleTimer         m_slotTimer;

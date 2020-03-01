@@ -67,7 +67,7 @@ PluginMgr   PluginMgr::m_instance;
  * Public Methods
  *****************************************************************************/
 
-void PluginMgr::registerPlugin(const String& name, Plugin::CreateFunc createFunc)
+void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
 {
     PluginRegEntry* entry = new PluginRegEntry();
 
@@ -96,10 +96,10 @@ void PluginMgr::registerPlugin(const String& name, Plugin::CreateFunc createFunc
     return;
 }
 
-Plugin* PluginMgr::install(const String& name, uint8_t slotId)
+IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
 {
-    Plugin*         plugin  = nullptr;
-    PluginRegEntry* entry   = nullptr;
+    IPluginMaintenance* plugin  = nullptr;
+    PluginRegEntry*     entry   = nullptr;
 
     if (true == m_registry.selectFirstElement())
     {
@@ -152,7 +152,7 @@ Plugin* PluginMgr::install(const String& name, uint8_t slotId)
     return plugin;
 }
 
-bool PluginMgr::uninstall(Plugin* plugin)
+bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 {
     bool status = false;
 
@@ -201,16 +201,12 @@ const char* PluginMgr::findNext()
     return name;
 }
 
-String PluginMgr::getRestApiBaseUri(uint8_t slotId)
+String PluginMgr::getRestApiBaseUri(uint16_t uid)
 {
     String  baseUri = RestApi::BASE_URI;
     baseUri += "/display";
-
-    if (DisplayMgr::MAX_SLOTS > slotId)
-    {
-        baseUri += "/slot/";
-        baseUri += slotId;
-    }
+    baseUri += "/uid/";
+    baseUri += uid;
 
     return baseUri;
 }
@@ -239,7 +235,7 @@ void PluginMgr::load()
                 {
                     if (false == pluginName.isEmpty())
                     {
-                        Plugin* plugin = install(pluginName, slotId);
+                        IPluginMaintenance* plugin = install(pluginName, slotId);
 
                         if (nullptr != plugin)
                         {
@@ -260,7 +256,7 @@ void PluginMgr::load()
 
             if (false == pluginName.isEmpty())
             {
-                Plugin* plugin = install(pluginName, slotId);
+                IPluginMaintenance* plugin = install(pluginName, slotId);
 
                 if (nullptr != plugin)
                 {
@@ -275,10 +271,10 @@ void PluginMgr::load()
 
 void PluginMgr::save()
 {
-    String      installation;
-    uint8_t     slotId      = 0;
-    Plugin*     plugin      = nullptr;
-    Settings&   settings    = Settings::getInstance();
+    String              installation;
+    uint8_t             slotId      = 0;
+    IPluginMaintenance* plugin      = nullptr;
+    Settings&           settings    = Settings::getInstance();
 
     for(slotId = 0; slotId < DisplayMgr::MAX_SLOTS; ++slotId)
     {
@@ -314,7 +310,7 @@ void PluginMgr::save()
  * Private Methods
  *****************************************************************************/
 
-bool PluginMgr::installToAutoSlot(Plugin* plugin)
+bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
 {
     bool status = false;
 
@@ -334,7 +330,7 @@ bool PluginMgr::installToAutoSlot(Plugin* plugin)
             }
             else
             {
-                String baseUri = getRestApiBaseUri(plugin->getSlotId());
+                String baseUri = getRestApiBaseUri(plugin->getUID());
 
                 plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
 
@@ -346,7 +342,7 @@ bool PluginMgr::installToAutoSlot(Plugin* plugin)
     return status;
 }
 
-bool PluginMgr::installToSlot(Plugin* plugin, uint8_t slotId)
+bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
 {
     bool status = false;
 
@@ -366,7 +362,7 @@ bool PluginMgr::installToSlot(Plugin* plugin, uint8_t slotId)
             }
             else
             {
-                String baseUri = getRestApiBaseUri(plugin->getSlotId());
+                String baseUri = getRestApiBaseUri(plugin->getUID());
 
                 plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
 
@@ -391,7 +387,7 @@ uint16_t PluginMgr::generateUID()
         /* Ensure that UID is really unique. */
         if (true == m_plugins.selectFirstElement())
         {
-            Plugin* plugin = *m_plugins.current();
+            IPluginMaintenance* plugin = *m_plugins.current();
 
             while((false == isFound) && (nullptr != plugin))
             {

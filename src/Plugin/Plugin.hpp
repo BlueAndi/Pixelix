@@ -48,6 +48,7 @@
 #include <HttpStatus.h>
 #include <ESPAsyncWebServer.h>
 #include <Util.h>
+#include "IPluginMaintenance.hpp"
 
 /******************************************************************************
  * Macros
@@ -60,14 +61,9 @@
 /**
  * A plugin can be plugged into a display slot and will shown.
  */
-class Plugin
+class Plugin : public IPluginMaintenance
 {
 public:
-
-    /**
-     * Plugin creation function, used by the plugin manager to create a plugin instance.
-     */
-    typedef Plugin* (*CreateFunc)(const String& name, uint16_t uid);
 
     /**
      * Constructs the plugin.
@@ -89,6 +85,18 @@ public:
      */
     virtual ~Plugin()
     {
+    }
+
+    /**
+     * Set the slot interface, which the plugin can used to request information
+     * from the slot, it is plugged in.
+     *
+     * @param[in] slotInterf    Slot interface
+     */
+    virtual void setSlot(const ISlotPlugin* slotInterf)
+    {
+        UTIL_NOT_USED(slotInterf);
+        return;
     }
 
     /**

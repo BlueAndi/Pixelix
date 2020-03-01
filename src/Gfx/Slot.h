@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include "IPluginMaintenance.hpp"
+#include "ISlotPlugin.hpp"
 
 /******************************************************************************
  * Macros
@@ -57,7 +58,7 @@
 /**
  * A slot, where a plugin can be plugged in or removed.
  */
-class Slot
+class Slot : public ISlotPlugin
 {
 public:
 

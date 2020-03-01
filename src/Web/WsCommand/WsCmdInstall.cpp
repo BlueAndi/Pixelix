@@ -76,9 +76,9 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
     else
     {
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
-        Plugin*     plugin      = PluginMgr::getInstance().install(m_pluginName);
+        String              rsp         = "ACK";
+        const char          DELIMITER   = ';';
+        IPluginMaintenance* plugin      = PluginMgr::getInstance().install(m_pluginName);
 
         if (nullptr == plugin)
         {
@@ -87,7 +87,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         else
         {
             rsp += DELIMITER;
-            rsp += plugin->getSlotId();
+            rsp += DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
 
             plugin->enable();
 

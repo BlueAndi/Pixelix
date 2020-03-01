@@ -128,7 +128,7 @@ public:
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static Plugin* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
         return new IconTextPlugin(name, uid);
     }
