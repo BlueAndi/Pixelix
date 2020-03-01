@@ -65,6 +65,7 @@ TaskMon  TaskMon::m_instance;
 
 void TaskMon::process()
 {
+#if configUSE_TRACE_FACILITY
     bool isProcessingTime = false;
 
     if (false == m_timer.isTimerRunning())
@@ -143,6 +144,7 @@ void TaskMon::process()
             delete[] taskStatus;
         }
     }
+#endif  /* configUSE_TRACE_FACILITY */
 }
 
 String TaskMon::taskState2Str(eTaskState state)
