@@ -421,6 +421,38 @@ bool DisplayMgr::isSlotLocked(uint8_t slotId)
     return isLocked;
 }
 
+uint32_t DisplayMgr::getSlotDuration(uint8_t slotId)
+{
+    uint32_t duration = 0U;
+
+    if (MAX_SLOTS > slotId)
+    {
+        lock();
+
+        duration = m_slots[slotId].getDuration();
+
+        unlock();
+    }
+
+    return duration;
+}
+
+bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration)
+{
+    bool status = false;
+
+    if (MAX_SLOTS > slotId)
+    {
+        lock();
+
+        m_slots[slotId].setDuration(duration);
+
+        unlock();
+    }
+
+    return status;
+}
+
 void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
 {
     if ((nullptr != fb) &&

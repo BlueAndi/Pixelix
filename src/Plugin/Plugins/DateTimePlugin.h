@@ -81,7 +81,8 @@ public:
         m_lampWidgets(),
         m_checkUpdateTimer(),
         m_durationCounter(0u),
-        m_isUpdateAvailable(false)
+        m_isUpdateAvailable(false),
+        m_slotInterf(nullptr)
 
     {
         /* Move the text widget one line lower for better look. */
@@ -120,6 +121,28 @@ public:
     }
 
     /**
+     * Set the slot interface, which the plugin can used to request information
+     * from the slot, it is plugged in.
+     *
+     * @param[in] slotInterf    Slot interface
+     */
+    void setSlot(const ISlotPlugin* slotInterf) override;
+
+    /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void active(IGfx& gfx) override;
+
+    /**
+     * This method will be called in case the plugin is set inactive, which means
+     * it won't be shown on the display anymore.
+     */
+    void inactive() override;
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
@@ -133,20 +156,6 @@ public:
      * @param[in] formatText    Text, which may contain format tags.
      */
     void setText(const String& formatText);
-
-   /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void active(IGfx& gfx) override;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() override;
 
     /**
      * Set lamp state.
@@ -174,13 +183,14 @@ private:
     /** Time to check date update period in ms */
     static const uint32_t   CHECK_UPDATE_PERIOD     = 1000U;
 
-    TextWidget  m_textWidget;               /**< Text widget, used for showing the text. */
-    Canvas*     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*     m_lampCanvas;               /**< Canvas used for the lamp widget. */
-    LampWidget  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
-    SimpleTimer m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessarry. */
-    uint8_t     m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
-    bool        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
+    Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*             m_lampCanvas;               /**< Canvas used for the lamp widget. */
+    LampWidget          m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
+    SimpleTimer         m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessarry. */
+    uint8_t             m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
+    bool                m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    const ISlotPlugin*  m_slotInterf;               /**< Slot interface */
 
     /**
      * Get current date/time and update the text, which to be displayed.
@@ -197,7 +207,6 @@ private:
      * @param[in] timeinfo the current timeinfo.
      */
     void setWeekdayIndicator(tm timeinfo);
-
 };
 
 /******************************************************************************

@@ -27,7 +27,7 @@
 /**
  * @brief  System message
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup common
  *
  * @{
@@ -64,7 +64,7 @@ public:
 
     /**
      * Get system message handler instance.
-     * 
+     *
      * @return System message handler instance
      */
     static SysMsg& getInstance()
@@ -75,18 +75,18 @@ public:
     /**
      * Initialize system message handler.
      * It will hook into the display manager.
-     * 
+     *
      * @return If initialization is successful, it will return true otherwise false.
      */
     bool init(void);
 
     /**
-     * Show message with the given duration. If the duration is Plugin::DURATION_INFINITE, it will be shown infinite.
-     * 
+     * Show message with the given duration. If the duration is infinite, it will be shown infinite.
+     *
      * @param[in] msg       Message to show
      * @param[in] duration  Duration in ms, how long the message shall be shown.
      */
-    void show(const String& msg, uint32_t duration = Plugin::DURATION_INFINITE);
+    void show(const String& msg, uint32_t duration = 0U);
 
 private:
 

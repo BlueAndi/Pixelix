@@ -192,6 +192,25 @@ public:
     bool isSlotLocked(uint8_t slotId);
 
     /**
+     * Get slot duration in ms, how long the given plugin will be shown.
+     *
+     * @param[in] slotId    Slot id
+     *
+     * @return Duration in ms
+     */
+    uint32_t getSlotDuration(uint8_t slotId);
+
+    /**
+     * Get slot duration in ms, how long the given plugin will be shown.
+     *
+     * @param[in] slotId    Slot id
+     * @param[in] duration  Duration in ms
+     *
+     * @return Duration in ms
+     */
+    bool setSlotDuration(uint8_t slotId, uint32_t duration);
+
+    /**
      * Get access to copy of framebuffer.
      *
      * @param[out] fb       Pointer to framebuffer copy

@@ -75,7 +75,6 @@ public:
     Plugin(const String& name, uint16_t uid) :
         m_uid(uid),
         m_name(name),
-        m_slotId(UINT8_MAX),
         m_isEnabled(false)
     {
     }
@@ -107,27 +106,6 @@ public:
     uint16_t getUID() const
     {
         return m_uid;
-    }
-
-    /**
-     * Set the slot id.
-     *
-     * @param[in] slotId    Slot id
-     */
-    void setSlotId(uint8_t slotId)
-    {
-        m_slotId = slotId;
-        return;
-    }
-
-    /**
-     * Get the unique slot id.
-     *
-     * @return Slot id
-     */
-    uint8_t getSlotId() const
-    {
-        return m_slotId;
     }
 
     /**
@@ -164,18 +142,6 @@ public:
     const char* getName() const
     {
         return m_name.c_str();
-    }
-
-    /**
-     * Get duration how long the plugin shall be active.
-     * If the plugin want to be displayed infinite, it will
-     * return DURATION_INFINITE.
-     *
-     * @return Duration in ms
-     */
-    virtual uint32_t getDuration()
-    {
-        return DURATION_DEFAULT;
     }
 
     /**
@@ -269,17 +235,10 @@ public:
      */
     virtual void update(IGfx& gfx) = 0;
 
-    /** Infinite duration */
-    static const uint32_t DURATION_INFINITE = 0U;
-
-    /** Default duration in ms */
-    static const uint32_t DURATION_DEFAULT  = 30000U;
-
 private:
 
     uint16_t    m_uid;          /**< Unique id */
     String      m_name;         /**< Plugin name */
-    uint8_t     m_slotId;       /**< Slot id */
     bool        m_isEnabled;    /**< Plugin is enabled or disabled */
 
     Plugin();

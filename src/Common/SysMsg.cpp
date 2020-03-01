@@ -73,7 +73,8 @@ bool SysMsg::init()
 
     if (nullptr != m_plugin)
     {
-        DisplayMgr::getInstance().lockSlot(m_plugin->getSlotId());
+        uint8_t slotId = DisplayMgr::getInstance().getSlotIdByPluginUID(m_plugin->getUID());
+        DisplayMgr::getInstance().lockSlot(slotId);
         status = true;
     }
 
@@ -84,8 +85,11 @@ void SysMsg::show(const String& msg, uint32_t duration)
 {
     if (nullptr != m_plugin)
     {
+        uint8_t slotId = DisplayMgr::getInstance().getSlotIdByPluginUID(m_plugin->getUID());
+
         m_plugin->enable();
-        m_plugin->show(msg, duration);
+        m_plugin->show(msg);
+        DisplayMgr::getInstance().setSlotDuration(slotId, duration);
 
         /* Schedule plugin immediately */
         DisplayMgr::getInstance().activatePlugin(m_plugin);

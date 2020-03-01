@@ -66,11 +66,7 @@ void SysMsgPlugin::active(IGfx& gfx)
 
 void SysMsgPlugin::inactive()
 {
-    /* If duration is not infinite, disable plugin now. */
-    if (DURATION_INFINITE != m_duration)
-    {
-        disable();
-    }
+    disable();
 
     return;
 }
@@ -83,10 +79,9 @@ void SysMsgPlugin::update(IGfx& gfx)
     return;
 }
 
-void SysMsgPlugin::show(const String& msg, uint32_t duration)
+void SysMsgPlugin::show(const String& msg)
 {
     m_textWidget.setFormatStr(msg);
-    m_duration = duration;
 
     return;
 }

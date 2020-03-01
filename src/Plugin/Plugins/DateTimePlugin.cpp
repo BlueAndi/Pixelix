@@ -60,8 +60,8 @@
 /** Divider to convert ms in s */
 #define MS_TO_SEC_DIVIDER                       (1000U)
 
-/** Toggle counter value to switch between date and time 
-* if DURATION_INFINITE was set for the plugin. 
+/** Toggle counter value to switch between date and time
+* if DURATION_INFINITE was set for the plugin.
 */
 #define MAX_COUNTER_VALUE_FOR_DURATION_INFINITE (15U)
 /******************************************************************************
@@ -79,6 +79,12 @@
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
+{
+    m_slotInterf = slotInterf;
+    return;
+}
 
 void DateTimePlugin::active(IGfx& gfx)
 {
@@ -150,7 +156,7 @@ void DateTimePlugin::update(IGfx& gfx)
 
         m_isUpdateAvailable = false;
     }
-    
+
     return;
 }
 
@@ -177,7 +183,7 @@ void DateTimePlugin::process()
         (true == m_checkUpdateTimer.isTimeout()))
     {
         updateDateTime(false);
-        
+
         m_checkUpdateTimer.restart();
     }
 
@@ -194,20 +200,20 @@ void DateTimePlugin::process()
 void DateTimePlugin::updateDateTime(bool force)
 {
     struct tm   timeinfo = { 0 };
+    bool        showTime = ((0 == m_durationCounter) ? true : false);
+    bool        showDate = false;
+    uint32_t    duration = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
 
-    bool showTime = ((0 == m_durationCounter) ? true : false);
-    bool showDate = false;
-
-    /* If DURATION_INFINITE was set switch every 15s between time and date. */
-    if (DateTimePlugin::getDuration() != Plugin::DURATION_INFINITE)
+    /* If infinite duration was set switch every 15s between time and date. */
+    if (0U == duration)
     {
         showDate = ((MAX_COUNTER_VALUE_FOR_DURATION_INFINITE == m_durationCounter) ? true : false);
     }
     else
     {
-        showDate = ((DateTimePlugin::getDuration() / (2 * MS_TO_SEC_DIVIDER) == m_durationCounter) ? true : false);
+        showDate = ((duration / (2 * MS_TO_SEC_DIVIDER) == m_durationCounter) ? true : false);
     }
-    
+
     m_durationCounter++;
 
     if (true == ClockDrv::getInstance().getTime(&timeinfo))
@@ -224,7 +230,7 @@ void DateTimePlugin::updateDateTime(bool force)
             m_isUpdateAvailable = true;
         }
 
-        if (false != showDate) 
+        if (false != showDate)
         {
             char dateBuffer [SIZE_OF_FORMATED_DATE_TIME_STRING];
             const char* formattedDateString = ClockDrv::getInstance().getDateFormat() ? "\\calign%d.%m.":"\\calign%m/%d";
@@ -237,19 +243,19 @@ void DateTimePlugin::updateDateTime(bool force)
             m_isUpdateAvailable = true;
         }
 
-        /* If DURATION_INFINITE was switch every 15s between time and date. */
-        if (DateTimePlugin::getDuration() != Plugin::DURATION_INFINITE)
+        /* If infinite duration was switch every 15s between time and date. */
+        if (0U == duration)
         {
             if ((2 * MAX_COUNTER_VALUE_FOR_DURATION_INFINITE) == m_durationCounter)
             {
-                m_durationCounter = 0U; 
+                m_durationCounter = 0U;
             }
         }
         else
         {
-            if ((DateTimePlugin::getDuration() / MS_TO_SEC_DIVIDER) == m_durationCounter)
+            if ((duration / MS_TO_SEC_DIVIDER) == m_durationCounter)
             {
-                m_durationCounter = 0U; 
+                m_durationCounter = 0U;
             }
         }
     }
@@ -273,5 +279,4 @@ void DateTimePlugin::setWeekdayIndicator(tm timeinfo)
 
     setLamp(activeLamp, true);
     setLamp(lampToDeactivate, false);
-
 }

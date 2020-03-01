@@ -72,8 +72,7 @@ public:
      */
     SysMsgPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
-        m_textWidget(),
-        m_duration(0U)
+        m_textWidget()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -100,18 +99,6 @@ public:
     }
 
     /**
-     * Get duration how long the plugin shall be active.
-     * If the plugin want to be displayed infinite, it will
-     * return DURATION_INFINITE.
-     *
-     * @return Duration in ms
-     */
-    uint32_t getDuration() override
-    {
-        return m_duration;
-    }
-
-    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
@@ -134,17 +121,15 @@ public:
     void update(IGfx& gfx);
 
     /**
-     * Show message with the given duration. If the duration is 0, it will be shown infinite.
+     * Show message.
      *
-     * @param[in] msg       Message to show
-     * @param[in] duration  Duration in ms, how long the message shall be shown. Note, a 0 means infinite.
+     * @param[in] msg   Message to show
      */
-    void show(const String& msg, uint32_t duration = DURATION_INFINITE);
+    void show(const String& msg);
 
 private:
 
     TextWidget  m_textWidget;   /**< Text widget, used for showing the text. */
-    uint32_t    m_duration;     /**< Duration how long the message shall be shown. */
 
 };
 
