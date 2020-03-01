@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "IPluginMaintenance.hpp"
 
 /******************************************************************************
  * Macros
@@ -76,7 +76,7 @@ public:
      *
      * @return Plugin
      */
-    Plugin* getPlugin();
+    IPluginMaintenance* getPlugin();
 
     /**
      * Set plugin to slot.
@@ -87,7 +87,7 @@ public:
      *
      * @return If successful it will return true otherwise false.
      */
-    bool setPlugin(Plugin* plugin);
+    bool setPlugin(IPluginMaintenance* plugin);
 
     /**
      * Is slot empty?
@@ -132,9 +132,9 @@ public:
 
 private:
 
-    Plugin*     m_plugin;   /**< Plugged in slot */
-    uint32_t    m_duration; /**< Duration in ms, how long the plugin shall be active. */
-    bool        m_isLocked; /**< Is slot locked or not. */
+    IPluginMaintenance* m_plugin;   /**< Plugged in slot */
+    uint32_t            m_duration; /**< Duration in ms, how long the plugin shall be active. */
+    bool                m_isLocked; /**< Is slot locked or not. */
 
     Slot(const Slot& matrix);
     Slot& operator=(const Slot& matrix);

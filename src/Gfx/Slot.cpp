@@ -82,7 +82,7 @@ Plugin* Slot::getPlugin()
     return m_plugin;
 }
 
-bool Slot::setPlugin(Plugin* plugin)
+bool Slot::setPlugin(IPluginMaintenance* plugin)
 {
     bool status = false;
 
