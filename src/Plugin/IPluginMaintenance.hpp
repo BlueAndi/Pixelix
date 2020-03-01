@@ -68,15 +68,12 @@ public:
     /**
      * IPluginMaintenance creation function, used by the plugin manager to create a plugin instance.
      */
-    typedef IPluginMaintenance* (*CreateFunc)(const String& name);
+    typedef IPluginMaintenance* (*CreateFunc)(const String& name, uint16_t uid);
 
     /**
      * Constructs the interface.
-     *
-     * @param[in] name  Plugin name, used for plugin type identification.
-     * @param[in] uid   Unique plugin id, used for instance identification.
      */
-    IPluginMaintenance(const String& name, uint16_t uid)
+    IPluginMaintenance()
     {
     }
 
