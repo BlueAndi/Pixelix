@@ -67,11 +67,11 @@ const char* IconTextPlugin::UPLOAD_PATH = "/tmp";
  *****************************************************************************/
 
 void IconTextPlugin::active(IGfx& gfx)
-{    
+{
     if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
-        
+
         if (nullptr != m_iconCanvas)
         {
             m_iconCanvas->addWidget(m_bitmapWidget);
@@ -85,7 +85,7 @@ void IconTextPlugin::active(IGfx& gfx)
         if (nullptr != m_textCanvas)
         {
             m_textCanvas->addWidget(m_textWidget);
-            
+
             /* Move the text widget one line lower for better look. */
             m_textWidget.move(0, 1);
         }
@@ -103,8 +103,8 @@ void IconTextPlugin::inactive()
 void IconTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
 {
     m_urlIcon = baseUri + "/bitmap";
-    m_callbackWebHandlerIcon = &srv.on( m_urlIcon.c_str(), 
-                                        HTTP_ANY, 
+    m_callbackWebHandlerIcon = &srv.on( m_urlIcon.c_str(),
+                                        HTTP_ANY,
                                         [this](AsyncWebServerRequest *request)
                                         {
                                             this->webReqHandlerIcon(request);
@@ -115,9 +115,9 @@ void IconTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& bas
                                         });
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlIcon.c_str());
-    
+
     m_urlText = baseUri + "/text";
-    m_callbackWebHandlerText = &srv.on( m_urlText.c_str(), 
+    m_callbackWebHandlerText = &srv.on( m_urlText.c_str(),
                                         [this](AsyncWebServerRequest *request)
                                         {
                                             this->webReqHandlerText(request);
@@ -154,12 +154,12 @@ void IconTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 void IconTextPlugin::update(IGfx& gfx)
 {
     gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
-    
+
     if (nullptr != m_iconCanvas)
     {
         m_iconCanvas->update(gfx);
     }
-    
+
     if (nullptr != m_textCanvas)
     {
         m_textCanvas->update(gfx);
@@ -226,7 +226,7 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
     String                  content;
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    
+
     if (nullptr == request)
     {
         return;
@@ -277,7 +277,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
     String                  content;
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    
+
     if (nullptr == request)
     {
         return;
@@ -397,7 +397,7 @@ String IconTextPlugin::getFileName()
     String filename = UPLOAD_PATH;
 
     filename += "/";
-    filename += getSlotId();
+    filename += getUID();
     filename += ".bmp";
 
     return filename;

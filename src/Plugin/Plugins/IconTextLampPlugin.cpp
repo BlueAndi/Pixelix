@@ -67,11 +67,11 @@ const char* IconTextLampPlugin::UPLOAD_PATH = "/tmp";
  *****************************************************************************/
 
 void IconTextLampPlugin::active(IGfx& gfx)
-{    
+{
     if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
-        
+
         if (nullptr != m_iconCanvas)
         {
             m_iconCanvas->addWidget(m_bitmapWidget);
@@ -91,7 +91,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
     if (nullptr == m_lampCanvas)
     {
         m_lampCanvas = new Canvas(gfx.width() - ICON_WIDTH, 1, ICON_WIDTH, gfx.height() - 1);
-        
+
         if (nullptr != m_lampCanvas)
         {
             uint8_t index = 0U;
@@ -119,8 +119,8 @@ void IconTextLampPlugin::inactive()
 void IconTextLampPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
 {
     m_urlIcon = baseUri + "/bitmap";
-    m_callbackWebHandlerIcon = &srv.on( m_urlIcon.c_str(), 
-                                        HTTP_ANY, 
+    m_callbackWebHandlerIcon = &srv.on( m_urlIcon.c_str(),
+                                        HTTP_ANY,
                                         [this](AsyncWebServerRequest *request)
                                         {
                                             this->webReqHandlerIcon(request);
@@ -131,9 +131,9 @@ void IconTextLampPlugin::registerWebInterface(AsyncWebServer& srv, const String&
                                         });
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlIcon.c_str());
-    
+
     m_urlText = baseUri + "/text";
-    m_callbackWebHandlerText = &srv.on( m_urlText.c_str(), 
+    m_callbackWebHandlerText = &srv.on( m_urlText.c_str(),
                                         [this](AsyncWebServerRequest *request)
                                         {
                                             this->webReqHandlerText(request);
@@ -188,12 +188,12 @@ void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
 void IconTextLampPlugin::update(IGfx& gfx)
 {
     gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
-    
+
     if (nullptr != m_iconCanvas)
     {
         m_iconCanvas->update(gfx);
     }
-    
+
     if (nullptr != m_textCanvas)
     {
         m_textCanvas->update(gfx);
@@ -275,7 +275,7 @@ void IconTextLampPlugin::webReqHandlerText(AsyncWebServerRequest *request)
     String                  content;
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    
+
     if (nullptr == request)
     {
         return;
@@ -326,7 +326,7 @@ void IconTextLampPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
     String                  content;
     StaticJsonDocument<200> jsonDoc;
     uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    
+
     if (nullptr == request)
     {
         return;
@@ -465,9 +465,9 @@ void IconTextLampPlugin::webReqHandlerLamp(AsyncWebServerRequest *request)
     {
         uint32_t    indexBeginLampId    = m_urlLamp.length() - 1;
         uint32_t    indexEndLampId      = request->url().indexOf("/", indexBeginLampId);
-        String      slotIdStr           = request->url().substring(indexBeginLampId, indexEndLampId);
+        String      lampIdStr           = request->url().substring(indexBeginLampId, indexEndLampId);
         uint8_t     lampId              = MAX_LAMPS;
-        bool        status              = Util::strToUInt8(slotIdStr, lampId);
+        bool        status              = Util::strToUInt8(lampIdStr, lampId);
 
         /* Lamp id invalid? */
         if ((false == status) ||
@@ -520,7 +520,7 @@ String IconTextLampPlugin::getFileName()
     String filename = UPLOAD_PATH;
 
     filename += "/";
-    filename += getSlotId();
+    filename += getUID();
     filename += ".bmp";
 
     return filename;
