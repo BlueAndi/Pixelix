@@ -88,12 +88,21 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             IPluginMaintenance* plugin  = DisplayMgr::getInstance().getPluginInSlot(slotId);
             const char*         name    = (nullptr != plugin) ? plugin->getName() : nullptr;
 
-            rsp += DELIMITER;
-            if (nullptr != name)
+            if (nullptr == name)
             {
+                rsp += DELIMITER;
+                rsp += "\"\"";
+                rsp += DELIMITER;
+                rsp += 0;
+            }
+            else
+            {
+                rsp += DELIMITER;
                 rsp += "\"";
                 rsp += name;
                 rsp += "\"";
+                rsp += DELIMITER;
+                rsp += plugin->getUID();
             }
         }
 

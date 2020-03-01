@@ -113,13 +113,19 @@
                     cell = row.insertCell(-1);
                     cell.innerHTML = index;
                     cell = row.insertCell(-1);
-                    if (0 === rsp.slots[index].length) {
+                    if (0 === rsp.slots[index].name.length) {
                         cell.innerHTML = "-";
                     } else {
-                        cell.innerHTML = rsp.slots[index];
+                        cell.innerHTML = rsp.slots[index].name;
                     }
                     cell = row.insertCell(-1);
-                    if (0 < rsp.slots[index].length) {
+                    if (0 === rsp.slots[index].name.length) {
+                        cell.innerHTML = "-";
+                    } else {
+                        cell.innerHTML = rsp.slots[index].uid;
+                    }
+                    cell = row.insertCell(-1);
+                    if (0 < rsp.slots[index].name.length) {
                         cell.innerHTML = "<input type=\"button\" value=\"Uninstall\" onclick=\"uninstall(" + index + ")\" />";
                     }
                 }
@@ -241,7 +247,7 @@
     <p>
         <table id="slots">
             <tr>
-                <th>Slot</th><th>Installed plugin</th><th>Action</th>
+                <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Action</th>
             </tr>
         </table>
     </p>

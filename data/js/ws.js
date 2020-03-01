@@ -163,8 +163,11 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("SLOTS" === this.pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
                 rsp.slots = [];
-                for(index = 0; index < data.length; ++index) {
-                    rsp.slots.push(data[index].substring(1, data[index].length - 1));
+                for(index = 0; index < (data.length / 2); ++index) {
+                    rsp.slots.push({
+                        name: data[2 * index + 0].substring(1, data[2 * index + 0].length - 1),
+                        uid: parseInt(data[2 * index + 1])
+                    });
                 }
                 this.pendingCmd.resolve(rsp);
             } else if ("UNINSTALL" === this.pendingCmd.name) {

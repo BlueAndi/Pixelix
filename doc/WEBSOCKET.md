@@ -46,9 +46,11 @@ Parameter:
 
 Response:
 * Successful:
-  * ```ACK;<max-slots>;<slot-info>; ...```
+  * ```ACK;<max-slots>;<plugin-type>;<plugin-uid>...```
   * ```<max-slots>```: Max. number of slots.
-  * ```<slot-info>```: The name of the installed plugin in ```"..."```. This will be repeated for all slots. If a slot is empty, nothing will be in.
+  * ```<plugin-type>```: The name of the installed plugin in ```"..."```.
+  * ```<plugin-uid>```: The plugin UID.
+  * The plugin type and UID will be repeated for all slots. If a slot is empty, nothing will be in.
 * Failed:
   * ```NACK```
 
