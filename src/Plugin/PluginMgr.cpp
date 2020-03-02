@@ -212,7 +212,7 @@ void PluginMgr::load()
                 }
 
                 ++slotId;
-                if (slotId <= DisplayMgr::MAX_SLOTS)
+                if (DisplayMgr::MAX_SLOTS <= slotId)
                 {
                     break;
                 }
