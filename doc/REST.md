@@ -12,9 +12,9 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
     - [Endpoint `<base-uri>`/display/slots](#endpoint-base-uridisplayslots)
     - [Endpoint `<base-uri>`/plugin](#endpoint-base-uriplugin)
   - [Plugin depended](#plugin-depended)
-    - [Endpoint `<base-uri>`/display/slot/`<slot-id>`/text](#endpoint-base-uridisplayslotslot-idtext)
-    - [Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap](#endpoint-base-uridisplayslotslot-idbitmap)
-    - [Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`](#endpoint-base-uridisplayslotslot-idlamplamp-id)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/text](#endpoint-base-uridisplayuidplugin-uidtext)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/bitmap](#endpoint-base-uridisplayuidplugin-uidbitmap)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamp/`<lamp-id>`](#endpoint-base-uridisplayuidplugin-uidlamplamp-id)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -178,7 +178,7 @@ $ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://1
 ## Plugin depended
 The plugin depended API.
 
-### Endpoint `<base-uri>`/display/slot/`<slot-id>`/text
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/text
 Show text in the specified slot.
 
 Detail:
@@ -188,7 +188,7 @@ Detail:
 
 Example:
 ```
-POST <base-uri>/rest/api/v1/display/slot/0/text?show=Test
+POST <base-uri>/rest/api/v1/display/uid/0/text?show=Test
 ```
 
 Result:
@@ -201,10 +201,10 @@ Result:
 
 Example with curl:
 ```
-$ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/text
+$ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/text
 ```
 
-### Endpoint `<base-uri>`/display/slot/`<slot-id>`/bitmap
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/bitmap
 Show bitmap in the specified slot. Supported are bitmap files (.bmp) with:
 * 24 or 32 bits per pixel.
 * 1 plane.
@@ -223,7 +223,7 @@ Detail:
 
 Example:
 ```
-POST <base-uri>/rest/api/v1/display/slot/0/bitmap
+POST <base-uri>/rest/api/v1/display/uid/0/bitmap
 ```
 
 Result:
@@ -235,10 +235,10 @@ Result:
 ```
 
 ```
-$ curl -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://192.168.2.166/rest/api/v1/display/slot/0/bitmap
+$ curl -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://192.168.2.166/rest/api/v1/display/uid/0/bitmap
 ```
 
-### Endpoint `<base-uri>`/display/slot/`<slot-id>`/lamp/`<lamp-id>`
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamp/`<lamp-id>`
 Set the state of a lamp in the specified slot.
 
 Detail:
@@ -252,7 +252,7 @@ Supported lamp states:
 
 Example:
 ```
-POST <base-uri>/rest/api/v1/display/slot/0/lamp/0?set=on
+POST <base-uri>/rest/api/v1/display/uid/0/lamp/0?set=on
 ```
 
 Result:
@@ -265,7 +265,7 @@ Result:
 
 Example with curl:
 ```
-$ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/slot/0/lamp/0
+$ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/lamp/0
 ```
 
 # Issues, Ideas And Bugs
