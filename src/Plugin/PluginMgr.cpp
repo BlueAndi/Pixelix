@@ -39,6 +39,7 @@
 #include "Settings.h"
 
 #include <Logging.h>
+#include <ArduinoJson.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -98,58 +99,7 @@ void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFun
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
 {
-    IPluginMaintenance* plugin  = nullptr;
-    PluginRegEntry*     entry   = nullptr;
-
-    if (true == m_registry.selectFirstElement())
-    {
-        bool isFound = false;
-
-        /* Find plugin in the registry */
-        entry = *m_registry.current();
-
-        while((false == isFound) && (nullptr != entry))
-        {
-            if (name == entry->name)
-            {
-                isFound = true;
-            }
-            else if (false == m_registry.next())
-            {
-                entry = nullptr;
-            }
-            else
-            {
-                entry = *m_registry.current();
-            }
-        }
-
-        /* Plugin found? */
-        if ((true == isFound) &&
-            (nullptr != entry))
-        {
-            plugin = entry->createFunc(entry->name, generateUID());
-
-            if (DisplayMgr::SLOT_ID_INVALID == slotId)
-            {
-                if (false == installToAutoSlot(plugin))
-                {
-                    delete plugin;
-                    plugin = nullptr;
-                }
-            }
-            else
-            {
-                if (false == installToSlot(plugin, slotId))
-                {
-                    delete plugin;
-                    plugin = nullptr;
-                }
-            }
-        }
-    }
-
-    return plugin;
+    return install(name, generateUID(), slotId);
 }
 
 bool PluginMgr::uninstall(IPluginMaintenance* plugin)
@@ -221,51 +171,53 @@ void PluginMgr::load()
     }
     else
     {
-        String installation = settings.getPluginInstallation().getValue();
+        String                  installation    = settings.getPluginInstallation().getValue();
+        const size_t            JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
+        DeserializationError    error           = deserializeJson(jsonDoc, installation);
 
-        if (false == installation.isEmpty())
+        if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
         {
-            uint8_t slotId  = 0;
-            uint8_t index   = 0;
-            String  pluginName;
-
-            while('\0' != installation[index])
-            {
-                if (DELIMITER == installation[index])
-                {
-                    if (false == pluginName.isEmpty())
-                    {
-                        IPluginMaintenance* plugin = install(pluginName, slotId);
-
-                        if (nullptr != plugin)
-                        {
-                            plugin->enable();
-                        }
-                    }
-
-                    pluginName.clear();
-                    ++slotId;
-                }
-                else
-                {
-                    pluginName += installation[index];
-                }
-
-                ++index;
-            }
-
-            if (false == pluginName.isEmpty())
-            {
-                IPluginMaintenance* plugin = install(pluginName, slotId);
-
-                if (nullptr != plugin)
-                {
-                    plugin->enable();
-                }
-            }
+            LOG_WARNING("Max. JSON buffer size reached.");
         }
 
         settings.close();
+
+        if (DeserializationError::Ok != error)
+        {
+            LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+        }
+        else
+        {
+            JsonArray   jsonSlots   = jsonDoc["slots"].as<JsonArray>();
+            uint8_t     slotId      = 0;
+
+            for(JsonObject jsonSlot: jsonSlots)
+            {
+                String      name    = jsonSlot["name"];
+                uint16_t    uid     = jsonSlot["uid"];
+
+                if (false == name.isEmpty())
+                {
+                    IPluginMaintenance* plugin = install(name, uid, slotId);
+
+                    if (nullptr == plugin)
+                    {
+                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                    }
+                    else
+                    {
+                        plugin->enable();
+                    }
+                }
+
+                ++slotId;
+                if (slotId <= DisplayMgr::MAX_SLOTS)
+                {
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -273,21 +225,25 @@ void PluginMgr::save()
 {
     String              installation;
     uint8_t             slotId      = 0;
-    IPluginMaintenance* plugin      = nullptr;
     Settings&           settings    = Settings::getInstance();
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    JsonArray           jsonSlots   = jsonDoc.createNestedArray("slots");
 
     for(slotId = 0; slotId < DisplayMgr::MAX_SLOTS; ++slotId)
     {
-        plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
+        IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
+        JsonObject          jsonSlot    = jsonSlots.createNestedObject();
 
-        if (0 < slotId)
+        if (nullptr == plugin)
         {
-            installation += DELIMITER;
+            jsonSlot["name"]    = "";
+            jsonSlot["uid"]     = 0;
         }
-
-        if (nullptr != plugin)
+        else
         {
-            installation += plugin->getName();
+            jsonSlot["name"]    = plugin->getName();
+            jsonSlot["uid"]     = plugin->getUID();
         }
     }
 
@@ -297,6 +253,13 @@ void PluginMgr::save()
     }
     else
     {
+        if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+        {
+            LOG_WARNING("Max. JSON buffer size reached.");
+        }
+
+        serializeJson(jsonDoc, installation);
+
         settings.getPluginInstallation().setValue(installation);
         settings.close();
     }
@@ -309,6 +272,62 @@ void PluginMgr::save()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+IPluginMaintenance* PluginMgr::install(const String& name, uint16_t uid, uint8_t slotId)
+{
+    IPluginMaintenance* plugin  = nullptr;
+    PluginRegEntry*     entry   = nullptr;
+
+    if (true == m_registry.selectFirstElement())
+    {
+        bool isFound = false;
+
+        /* Find plugin in the registry */
+        entry = *m_registry.current();
+
+        while((false == isFound) && (nullptr != entry))
+        {
+            if (name == entry->name)
+            {
+                isFound = true;
+            }
+            else if (false == m_registry.next())
+            {
+                entry = nullptr;
+            }
+            else
+            {
+                entry = *m_registry.current();
+            }
+        }
+
+        /* Plugin found? */
+        if ((true == isFound) &&
+            (nullptr != entry))
+        {
+            plugin = entry->createFunc(entry->name, uid);
+
+            if (DisplayMgr::SLOT_ID_INVALID == slotId)
+            {
+                if (false == installToAutoSlot(plugin))
+                {
+                    delete plugin;
+                    plugin = nullptr;
+                }
+            }
+            else
+            {
+                if (false == installToSlot(plugin, slotId))
+                {
+                    delete plugin;
+                    plugin = nullptr;
+                }
+            }
+        }
+    }
+
+    return plugin;
+}
 
 bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
 {

@@ -49,6 +49,7 @@
 #include <Logging.h>
 #include <Util.h>
 #include <SPIFFSEditor.h>
+#include <ArduinoJson.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -79,7 +80,7 @@ static String indexPageProcessor(const String& var);
 static void networkPage(AsyncWebServerRequest* request);
 static String networkPageProcessor(const String& var);
 
-static bool storeSetting(KeyValue* parameter, const String& value, String& jsonRsp);
+static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& jsonRsp);
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
 
@@ -508,13 +509,15 @@ static String networkPageProcessor(const String& var)
  *
  * @return If successful stored, it will return true otherwise false.
  */
-static bool storeSetting(KeyValue* parameter, const String& value, String& jsonRsp)
+static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& jsonRsp)
 {
     bool status = true;
 
     if (nullptr == parameter)
     {
         status = false;
+        jsonRsp["status"]   = 1;
+        jsonRsp["error"]    = "Internal error.";
     }
     else
     {
@@ -530,7 +533,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
                     if (false == isValidHostname(value))
                     {
                         status = false;
-                        jsonRsp = "{ \"status\": 1, \"error\": \"Invalid hostname.\" }";
+                        jsonRsp["status"]   = 1;
+                        jsonRsp["error"]    = "Invalid hostname.";
                     }
                 }
 
@@ -539,17 +543,23 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
                     /* Check for min. and max. length */
                     if (kvStr->getMinLength() > value.length())
                     {
+                        String  errorStr = "String length lower than ";
+                        errorStr += kvStr->getMinLength();
+                        errorStr += ".";
+
                         status = false;
-                        jsonRsp = "{ \"status\": 1, \"error\": \"String length lower than ";
-                        jsonRsp += kvStr->getMinLength();
-                        jsonRsp += "\" }";
+                        jsonRsp["status"]   = 1;
+                        jsonRsp["error"]    = errorStr;
                     }
                     else if (kvStr->getMaxLength() < value.length())
                     {
+                        String  errorStr = "String length greater than ";
+                        errorStr += kvStr->getMaxLength();
+                        errorStr += ".";
+
                         status = false;
-                        jsonRsp = "{ \"status\": 1, \"error\": \"String length greater than ";
-                        jsonRsp += kvStr->getMaxLength();
-                        jsonRsp += "\" }";
+                        jsonRsp["status"]   = 1;
+                        jsonRsp["error"]    = errorStr;
                     }
                     else
                     {
@@ -574,7 +584,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
                 else
                 {
                     status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = "Invalid value.";
                 }
             }
             break;
@@ -589,22 +600,29 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
                 if (false == status)
                 {
                     status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = "Invalid value.";
                 }
                 /* Check for min. and max. length */
                 else if (kvUInt8->getMin() > uint8Value)
                 {
+                    String  errorStr = "Value lower than ";
+                    errorStr += kvUInt8->getMin();
+                    errorStr += ".";
+
                     status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Value lower than ";
-                    jsonRsp += kvUInt8->getMin();
-                    jsonRsp += "\" }";
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = errorStr;
                 }
                 else if (kvUInt8->getMax() < uint8Value)
                 {
+                    String  errorStr = "Value greater than ";
+                    errorStr += kvUInt8->getMax();
+                    errorStr += ".";
+
                     status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Value greater than ";
-                    jsonRsp += kvUInt8->getMax();
-                    jsonRsp += "\" }";
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = errorStr;
                 }
                 else
                 {
@@ -623,22 +641,29 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
                 if (false == status)
                 {
                     status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Invalid value.\" }";
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = "Invalid value.";
                 }
                 /* Check for min. and max. length */
                 else if (kvInt32->getMin() > int32Value)
                 {
+                    String  errorStr = "Value lower than ";
+                    errorStr += kvInt32->getMin();
+                    errorStr += ".";
+
                     status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Value lower than ";
-                    jsonRsp += kvInt32->getMin();
-                    jsonRsp += "\" }";
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = errorStr;
                 }
                 else if (kvInt32->getMax() < int32Value)
                 {
+                    String  errorStr = "Value greater than ";
+                    errorStr += kvInt32->getMax();
+                    errorStr += ".";
+
                     status = false;
-                    jsonRsp = "{ \"status\": 1, \"error\": \"Value greater than ";
-                    jsonRsp += kvInt32->getMax();
-                    jsonRsp += "\" }";
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = errorStr;
                 }
                 else
                 {
@@ -647,11 +672,44 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& jsonR
             }
             break;
 
+        case KeyValue::TYPE_JSON:
+            {
+                KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
+
+                /* Check for min. and max. length */
+                if (kvJson->getMinLength() > value.length())
+                {
+                    String  errorStr = "JSON length lower than ";
+                    errorStr += kvJson->getMinLength();
+                    errorStr += ".";
+
+                    status = false;
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = errorStr;
+                }
+                else if (kvJson->getMaxLength() < value.length())
+                {
+                    String  errorStr = "JSON length greater than ";
+                    errorStr += kvJson->getMaxLength();
+                    errorStr += ".";
+
+                    status = false;
+                    jsonRsp["status"]   = 1;
+                    jsonRsp["error"]    = errorStr;
+                }
+                else
+                {
+                    kvJson->setValue(value);
+                }
+            }
+            break;
+
         case KeyValue::TYPE_UNKNOWN:
             /* fallthrough */
         default:
             status = false;
-            jsonRsp = "{ \"status\": 1, \"error\": \"Unknown parameter.\" }";
+            jsonRsp["status"]   = 1;
+            jsonRsp["error"]    = "Unknown parameter.";
             break;
         }
     }
@@ -683,17 +741,21 @@ static void settingsPage(AsyncWebServerRequest* request)
     if ((HTTP_POST == request->method()) &&
         (0 < request->args()))
     {
-        bool        isError = false;
-        String      jsonRsp;
-        KeyValue**  list    = Settings::getInstance().getList();
-        uint8_t     index   = 0U;
+        bool                isError         = false;
+        KeyValue**          list            = Settings::getInstance().getList();
+        uint8_t             index           = 0U;
+        const size_t        JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonRsp         = jsonDoc.createNestedObject();
+        String              rsp;
 
         if (false == Settings::getInstance().open(false))
         {
             LOG_WARNING("Couldn't open settings.");
 
             isError = true;
-            jsonRsp = "{ \"status\": 1, \"error\": \"Internal error.\" }";
+            jsonRsp["status"]   = 1;
+            jsonRsp["error"]    = "Internal error.";
         }
         else
         {
@@ -719,10 +781,18 @@ static void settingsPage(AsyncWebServerRequest* request)
 
         if (false == isError)
         {
-            jsonRsp = "{ \"status\": 0, \"info\": \"Successful stored.\" }";
+            jsonRsp["status"]   = 0;
+            jsonRsp["error"]    = "Successful stored.";
         }
 
-        request->send(HttpStatus::STATUS_CODE_OK, "application/json", jsonRsp);
+        if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+        {
+            LOG_WARNING("Max. JSON buffer size reached.");
+        }
+
+        (void)serializeJson(jsonDoc, rsp);
+
+        request->send(HttpStatus::STATUS_CODE_OK, "application/json", rsp);
     }
     else if (HTTP_GET == request->method())
     {
@@ -750,64 +820,42 @@ static String settingsPageProcessor(const String& var)
     {
         if (true == Settings::getInstance().open(true))
         {
-            KeyValue**  list    = Settings::getInstance().getList();
-            uint8_t     index   = 0U;
+            KeyValue**          list            = Settings::getInstance().getList();
+            uint8_t             index           = 0U;
+            const size_t        JSON_DOC_SIZE   = 2048U;
+            DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
             for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
             {
-                KeyValue* parameter = list[index];
+                KeyValue*   parameter   = list[index];
+                JsonObject  jsonSetting = jsonDoc.createNestedObject();
+                JsonObject  jsonInput   = jsonSetting.createNestedObject("input");
 
-                if (0U < index)
-                {
-                    result += ", ";
-                }
-
-                result += "{";
-                result += "title: \"";
-                result += parameter->getName();
-                result += "\", ";
-                result += "input: {";
-                result += "name: \"";
-                result += parameter->getKey();
-                result += "\", ";
+                jsonSetting["title"]    = parameter->getName();
+                jsonInput["name"]       = parameter->getKey();
 
                 switch(parameter->getValueType())
                 {
                 case KeyValue::TYPE_STRING:
                     {
                         KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
-                        result += "type: \"";
-                        result += "text";
-                        result += "\", ";
-                        result += "value: \"";
-                        result += kvStr->getValue();
-                        result += "\", ";
-                        result += "size: ";
-                        result += kvStr->getMaxLength();
-                        result += ", ";
-                        result += "minlength: ";
-                        result += kvStr->getMinLength();
-                        result += ", ";
-                        result += "maxlength: ";
-                        result += kvStr->getMaxLength();
+                        jsonInput["type"]       = "text";
+                        jsonInput["value"]      = kvStr->getValue();
+                        jsonInput["size"]       = kvStr->getMaxLength();
+                        jsonInput["minlength"]  = kvStr->getMinLength();
+                        jsonInput["maxlength"]  = kvStr->getMaxLength();
                     }
                     break;
 
                 case KeyValue::TYPE_BOOL:
                     {
                         KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
-                        result += "type: \"";
-                        result += "checkbox";
-                        result += "\", ";
-                        result += "value: \"";
-                        result += kvBool->getKey();
-                        if (false == kvBool->getValue())
+                        jsonInput["type"]       = "checkbox";
+                        jsonInput["value"]      = kvBool->getKey();
+
+                        if (true == kvBool->getValue())
                         {
-                            result += "\"";
-                        }
-                        else
-                        {
-                            result += "\", checked: \"checked\"";
+                            jsonInput["checked"] = "checked";
                         }
                     }
                     break;
@@ -815,46 +863,47 @@ static String settingsPageProcessor(const String& var)
                 case KeyValue::TYPE_UINT8:
                     {
                         KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(parameter);
-                        result += "type: \"";
-                        result += "number";
-                        result += "\", ";
-                        result += "value: \"";
-                        result += kvUInt8->getValue();
-                        result += "\", ";
-                        result += "min: ";
-                        result += kvUInt8->getMin();
-                        result += ", ";
-                        result += "max: ";
-                        result += kvUInt8->getMax();
+                        jsonInput["type"]   = "number";
+                        jsonInput["value"]  = kvUInt8->getValue();
+                        jsonInput["min"]    = kvUInt8->getMin();
+                        jsonInput["max"]    = kvUInt8->getMax();
                     }
                     break;
 
-                    case KeyValue::TYPE_INT32:
+                case KeyValue::TYPE_INT32:
+                {
+                    KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
+                    jsonInput["type"]   = "number";
+                    jsonInput["value"]  = kvInt32->getValue();
+                    jsonInput["min"]    = kvInt32->getMin();
+                    jsonInput["max"]    = kvInt32->getMax();
+                }
+                break;
+
+                case KeyValue::TYPE_JSON:
                     {
-                        KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
-                        result += "type: \"";
-                        result += "number";
-                        result += "\", ";
-                        result += "value: \"";
-                        result += kvInt32->getValue();
-                        result += "\", ";
-                        result += "min: ";
-                        result += kvInt32->getMin();
-                        result += ", ";
-                        result += "max: ";
-                        result += kvInt32->getMax();
+                        KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
+                        jsonInput["type"]       = "text";
+                        jsonInput["value"]      = kvJson->getValue();
+                        jsonInput["size"]       = kvJson->getMaxLength();
+                        jsonInput["minlength"]  = kvJson->getMinLength();
+                        jsonInput["maxlength"]  = kvJson->getMaxLength();
                     }
                     break;
 
                 default:
                     break;
                 }
-
-                result += "} ";
-                result += "}";
             }
 
             Settings::getInstance().close();
+
+            if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+            {
+                LOG_WARNING("Max. JSON buffer size reached.");
+            }
+
+            (void)serializeJson(jsonDoc, result);
         }
     }
     else

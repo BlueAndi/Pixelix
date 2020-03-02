@@ -49,6 +49,7 @@
 #include "KeyValueBool.h"
 #include "KeyValueUInt8.h"
 #include "KeyValueInt32.h"
+#include "KeyValueJson.h"
 
 /******************************************************************************
  * Macros
@@ -157,7 +158,7 @@ public:
      *
      * @return Key value pair
      */
-    KeyValueString& getPluginInstallation()
+    KeyValueJson& getPluginInstallation()
     {
         return m_pluginInstallation;
     }
@@ -232,7 +233,7 @@ public:
     {
         return m_dateFormatCtrl;
     }
-    
+
     /** Number of key value pairs. */
     static const uint8_t KEY_VALUE_PAIR_NUM = 12U;
 
@@ -249,7 +250,7 @@ private:
     KeyValueString  m_apPassphrase;         /**< Access point passphrase */
     KeyValueString  m_hostname;             /**< Hostname */
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
-    KeyValueString  m_pluginInstallation;   /**< Plugin installation */
+    KeyValueJson    m_pluginInstallation;   /**< Plugin installation */
     KeyValueInt32   m_gmtOffset;            /**< GMT offset */
     KeyValueBool    m_isDaylightSaving;     /**< Daylight saving time switch */
     KeyValueString  m_ntpServer;            /**< NTP server address */

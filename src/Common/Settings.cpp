@@ -235,7 +235,7 @@ static const size_t MAX_VALUE_HOSTNAME             = 63U;
 /*                  MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** Plugin installation max. length */
-static const size_t MAX_VALUE_PLUGIN_INSTALLATION  = 120U;
+static const size_t MAX_VALUE_PLUGIN_INSTALLATION  = 512U;
 
 /** Max. GMT offset (14h*60s = 50400s) length */
 static const int32_t MAX_VALUE_GMT_OFFSET           = 50400;

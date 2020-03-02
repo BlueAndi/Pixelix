@@ -151,9 +151,6 @@ private:
         IPluginMaintenance::CreateFunc  createFunc; /**< Plugin creation function */
     };
 
-    /** Delimiter, used for plugin installation setup in persistent memory. */
-    static const char               DELIMITER   = ';';
-
     DLinkedList<PluginRegEntry*>        m_registry; /**< Plugin registry */
     DLinkedList<IPluginMaintenance*>    m_plugins;  /**< List with all installed plugins */
     PluginRegEntry*                     m_current;  /**< Current registry entry */
@@ -178,6 +175,17 @@ private:
 
     PluginMgr(const PluginMgr& fab);
     PluginMgr& operator=(const PluginMgr& fab);
+
+    /**
+     * Create plugin with given UID and install it to the given slot.
+     *
+     * @param[in] name      Plugin name
+     * @param[in] uid       Plugin UID
+     * @param[in] slotId    Slot id
+     *
+     * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
+     */
+    IPluginMaintenance* install(const String& name, uint16_t uid, uint8_t slotId);
 
     /**
      * Install plugin to any available display slot.
