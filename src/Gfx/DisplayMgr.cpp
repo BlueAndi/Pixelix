@@ -232,9 +232,14 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
 
             if (MAX_SLOTS > slotId)
             {
-                m_slots[slotId].setPlugin(plugin);
-
-                plugin->start();
+                if (false == m_slots[slotId].setPlugin(plugin))
+                {
+                    slotId = SLOT_ID_INVALID;
+                }
+                else
+                {
+                    plugin->start();
+                }
             }
             else
             {
@@ -250,9 +255,14 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
         {
             lock();
 
-            m_slots[slotId].setPlugin(plugin);
-
-            plugin->start();
+            if (false == m_slots[slotId].setPlugin(plugin))
+            {
+                slotId = SLOT_ID_INVALID;
+            }
+            else
+            {
+                plugin->start();
+            }
 
             unlock();
         }
@@ -278,9 +288,13 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
     {
         uint8_t slotId = SLOT_ID_INVALID;
 
+        LOG_INFO("uninstallPlugin(): %u", plugin->getUID());
+
         lock();
 
         slotId = getSlotIdByPluginUID(plugin->getUID());
+
+        LOG_INFO("after getSlotIdByPluginUID()");
 
         if (MAX_SLOTS > slotId)
         {
@@ -294,9 +308,14 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
                 }
 
                 plugin->stop();
-                m_slots[slotId].setPlugin(nullptr);
-
-                status = true;
+                if (false == m_slots[slotId].setPlugin(nullptr))
+                {
+                    LOG_FATAL("Internal error.");
+                }
+                else
+                {
+                    status = true;
+                }
             }
         }
 
@@ -304,11 +323,11 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
 
         if (false == status)
         {
-                LOG_INFO("Couldn't remove plugin %s (uid %u) from slot %u, because slot is locked.", plugin->getName(), plugin->getUID(), slotId);
+            LOG_INFO("Couldn't remove plugin %s (uid %u) from slot %u, because slot is locked.", plugin->getName(), plugin->getUID(), slotId);
         }
         else
         {
-                LOG_INFO("Plugin %s (uid %u) removed from slot %u.", plugin->getName(), plugin->getUID(), slotId);
+            LOG_INFO("Plugin %s (uid %u) removed from slot %u.", plugin->getName(), plugin->getUID(), slotId);
         }
     }
 

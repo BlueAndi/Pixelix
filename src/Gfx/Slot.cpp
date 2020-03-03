@@ -88,16 +88,19 @@ bool Slot::setPlugin(IPluginMaintenance* plugin)
 
     if (false == m_isLocked)
     {
+        if (nullptr != m_plugin)
+        {
+            m_plugin->setSlot(nullptr);
+        }
+
         m_plugin = plugin;
 
-        if (nullptr == m_plugin)
+        if (nullptr != m_plugin)
         {
-            plugin->setSlot(nullptr);
+            m_plugin->setSlot(this);
         }
-        else
-        {
-            plugin->setSlot(this);
-        }
+
+        status = true;
     }
 
     return status;
