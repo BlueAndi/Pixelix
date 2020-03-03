@@ -80,7 +80,7 @@ static String indexPageProcessor(const String& var);
 static void networkPage(AsyncWebServerRequest* request);
 static String networkPageProcessor(const String& var);
 
-static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& jsonRsp);
+static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDocument& jsonDoc);
 static void settingsPage(AsyncWebServerRequest* request);
 static String settingsPageProcessor(const String& var);
 
@@ -505,19 +505,19 @@ static String networkPageProcessor(const String& var)
  *
  * @param[in]   parameter   Key value pair
  * @param[in]   value       Value to write
- * @param[out]  jsonRsp     Response in JSON format, only applicable in error case.
+ * @param[out]  jsonDoc     Response in JSON format, only applicable in error case.
  *
  * @return If successful stored, it will return true otherwise false.
  */
-static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& jsonRsp)
+static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDocument& jsonDoc)
 {
     bool status = true;
 
     if (nullptr == parameter)
     {
         status = false;
-        jsonRsp["status"]   = 1;
-        jsonRsp["error"]    = "Internal error.";
+        jsonDoc["status"]   = 1;
+        jsonDoc["error"]    = "Internal error.";
     }
     else
     {
@@ -533,8 +533,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                     if (false == isValidHostname(value))
                     {
                         status = false;
-                        jsonRsp["status"]   = 1;
-                        jsonRsp["error"]    = "Invalid hostname.";
+                        jsonDoc["status"]   = 1;
+                        jsonDoc["error"]    = "Invalid hostname.";
                     }
                 }
 
@@ -548,8 +548,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                         errorStr += ".";
 
                         status = false;
-                        jsonRsp["status"]   = 1;
-                        jsonRsp["error"]    = errorStr;
+                        jsonDoc["status"]   = 1;
+                        jsonDoc["error"]    = errorStr;
                     }
                     else if (kvStr->getMaxLength() < value.length())
                     {
@@ -558,8 +558,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                         errorStr += ".";
 
                         status = false;
-                        jsonRsp["status"]   = 1;
-                        jsonRsp["error"]    = errorStr;
+                        jsonDoc["status"]   = 1;
+                        jsonDoc["error"]    = errorStr;
                     }
                     else
                     {
@@ -584,8 +584,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                 else
                 {
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = "Invalid value.";
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = "Invalid value.";
                 }
             }
             break;
@@ -600,8 +600,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                 if (false == status)
                 {
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = "Invalid value.";
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = "Invalid value.";
                 }
                 /* Check for min. and max. length */
                 else if (kvUInt8->getMin() > uint8Value)
@@ -611,8 +611,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                     errorStr += ".";
 
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = errorStr;
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = errorStr;
                 }
                 else if (kvUInt8->getMax() < uint8Value)
                 {
@@ -621,8 +621,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                     errorStr += ".";
 
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = errorStr;
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = errorStr;
                 }
                 else
                 {
@@ -641,8 +641,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                 if (false == status)
                 {
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = "Invalid value.";
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = "Invalid value.";
                 }
                 /* Check for min. and max. length */
                 else if (kvInt32->getMin() > int32Value)
@@ -652,8 +652,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                     errorStr += ".";
 
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = errorStr;
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = errorStr;
                 }
                 else if (kvInt32->getMax() < int32Value)
                 {
@@ -662,8 +662,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                     errorStr += ".";
 
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = errorStr;
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = errorStr;
                 }
                 else
                 {
@@ -684,8 +684,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                     errorStr += ".";
 
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = errorStr;
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = errorStr;
                 }
                 else if (kvJson->getMaxLength() < value.length())
                 {
@@ -694,8 +694,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
                     errorStr += ".";
 
                     status = false;
-                    jsonRsp["status"]   = 1;
-                    jsonRsp["error"]    = errorStr;
+                    jsonDoc["status"]   = 1;
+                    jsonDoc["error"]    = errorStr;
                 }
                 else
                 {
@@ -708,8 +708,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, JsonObject& j
             /* fallthrough */
         default:
             status = false;
-            jsonRsp["status"]   = 1;
-            jsonRsp["error"]    = "Unknown parameter.";
+            jsonDoc["status"]   = 1;
+            jsonDoc["error"]    = "Unknown parameter.";
             break;
         }
     }
@@ -746,7 +746,6 @@ static void settingsPage(AsyncWebServerRequest* request)
         uint8_t             index           = 0U;
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonRsp         = jsonDoc.createNestedObject();
         String              rsp;
 
         if (false == Settings::getInstance().open(false))
@@ -754,8 +753,8 @@ static void settingsPage(AsyncWebServerRequest* request)
             LOG_WARNING("Couldn't open settings.");
 
             isError = true;
-            jsonRsp["status"]   = 1;
-            jsonRsp["error"]    = "Internal error.";
+            jsonDoc["status"]   = 1;
+            jsonDoc["error"]    = "Internal error.";
         }
         else
         {
@@ -767,7 +766,7 @@ static void settingsPage(AsyncWebServerRequest* request)
                 {
                     const String& value = request->arg(parameter->getKey());
 
-                    if (false == storeSetting(parameter, value, jsonRsp))
+                    if (false == storeSetting(parameter, value, jsonDoc))
                     {
                         isError = true;
                     }
@@ -781,8 +780,8 @@ static void settingsPage(AsyncWebServerRequest* request)
 
         if (false == isError)
         {
-            jsonRsp["status"]   = 0;
-            jsonRsp["info"]     = "Successful stored.";
+            jsonDoc["status"]   = 0;
+            jsonDoc["info"]     = "Successful stored.";
         }
 
         if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
