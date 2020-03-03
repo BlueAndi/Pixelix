@@ -5,6 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>%PAGE_TITLE%</title>
     <link rel="stylesheet" href="/style/style.css" />
+    <style>
+        div.divSlot {
+            border: 1px solid white;
+            padding: 4px 4px 4px 4px;
+            margin: 4px 4px 4px 4px;
+            width: 12em;
+            height: 6em;
+            float: left;
+        }
+        p.dragableSlot {
+            border: 1px solid red;
+            padding: 4px 4px 4px 4px;
+        }
+        /* Prevent the text contents of draggable elements from being selectable. */
+        [draggable] {
+            -moz-user-select: none;
+            -khtml-user-select: none;
+            -webkit-user-select: none;
+            user-select: none;
+            /* Required to make elements draggable in old WebKit */
+            -khtml-user-drag: element;
+            -webkit-user-drag: element;
+        }
+    </style>
     <script src="/js/ws.js"></script>
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
     <script>
@@ -97,12 +121,58 @@
             });
         }
 
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("src", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("src");
+            var src = document.getElementById(data);
+            var srcParent = src.parentNode;
+            var dst = ev.currentTarget.lastElementChild;
+
+            ev.currentTarget.replaceChild(src, dst);
+            srcParent.appendChild(dst);
+        }
+
         function updateSlotInfo() {
             return wsClient.getSlots().then(function(rsp) {
                 var element = document.getElementById("slots");
                 var index = 0;
                 var row = null;
                 var cell = null;
+
+                var divSlots = document.getElementById("divSlots");
+                var divSlot = null;
+                var dragableSlot = null;
+
+                for(index = 0; index < rsp.slots.length; ++index) {
+                    divSlot = document.createElement("div");
+                    divSlot.setAttribute("class", "divSlot");
+                    divSlot.setAttribute("ondragover", "allowDrop(event)");
+                    divSlot.setAttribute("ondrop", "drop(event)");
+                    divSlot.innerHTML = "<p>Slot: " + index + "</p>";
+                    divSlots.appendChild(divSlot);
+
+                    dragableSlot = document.createElement("p");
+                    dragableSlot.setAttribute("class", "dragableSlot");
+                    dragableSlot.setAttribute("draggable", "true");
+                    dragableSlot.setAttribute("ondragstart", "drag(event)");
+
+                    if (0 == rsp.slots[index].name.length) {
+                        dragableSlot.setAttribute("id", "A" + index);
+                        dragableSlot.innerHTML = "-<br />UID -";
+                    } else {
+                        dragableSlot.setAttribute("id", rsp.slots[index].uid);
+                        dragableSlot.innerHTML = rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid;
+                    }
+                    divSlot.appendChild(dragableSlot);
+                }
 
                 while(1 < element.rows.length) {
                     element.deleteRow(-1);
@@ -244,35 +314,33 @@
     <h2>Display</h2>
     <p id="slotId">Slot: -</p>
     <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
-    <p>
-        <table id="slots">
-            <tr>
-                <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Action</th>
-            </tr>
-        </table>
-    </p>
+    <div id="divSlots">
+    </div>
+    <table id="slots" style="clear: both;">
+        <tr>
+            <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Action</th>
+        </tr>
+    </table>
     <p>
         <select id="pluginToInstall" size="1">
         </select>
         <br />
         <input type="button" value="Install" onclick="install()" />
     </p>
-    <p>
-        <table border="0">
-            <tr>
-                <td>Automatic brightness control:</td>
-                <td id="autoBrightnessCtrl"></td>
-                <td><input id="bAutoBrightnessCtrl" type="button" value="" onclick="changeAutoBrightnessCtrl()" /></td>
-            </tr>
-            <tr>
-                <td>Brightness:</td>
-                <td id="brightness"></td>
-                <td>
-                    <input type="range" id="sliderBrightness" min="0" max="255" onchange="changeBrightness()" />
-                </td>
-            </tr>
-        </table>
-    </p>
+    <table border="0">
+        <tr>
+            <td>Automatic brightness control:</td>
+            <td id="autoBrightnessCtrl"></td>
+            <td><input id="bAutoBrightnessCtrl" type="button" value="" onclick="changeAutoBrightnessCtrl()" /></td>
+        </tr>
+        <tr>
+            <td>Brightness:</td>
+            <td id="brightness"></td>
+            <td>
+                <input type="range" id="sliderBrightness" min="0" max="255" onchange="changeBrightness()" />
+            </td>
+        </tr>
+    </table>
 </div>
 <div class="footer">
     <hr />
