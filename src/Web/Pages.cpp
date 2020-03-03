@@ -782,7 +782,7 @@ static void settingsPage(AsyncWebServerRequest* request)
         if (false == isError)
         {
             jsonRsp["status"]   = 0;
-            jsonRsp["error"]    = "Successful stored.";
+            jsonRsp["info"]     = "Successful stored.";
         }
 
         if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
