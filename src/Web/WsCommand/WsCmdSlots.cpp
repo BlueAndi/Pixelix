@@ -96,7 +96,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
                 rsp += DELIMITER;
                 rsp += 0;
                 rsp += DELIMITER;
-                rsp += "false";
+                rsp += "0";
             }
             else
             {
