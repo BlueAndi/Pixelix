@@ -392,6 +392,46 @@ void DisplayMgr::activatePlugin(IPluginMaintenance* plugin)
     return;
 }
 
+bool DisplayMgr::movePluginToSlot(IPluginMaintenance* plugin, uint8_t slotId)
+{
+    bool status = false;
+
+    if ((nullptr != plugin) &&
+        (MAX_SLOTS > slotId))
+    {
+        uint8_t srcSlotId = getSlotIdByPluginUID(plugin->getUID());
+
+        if ((MAX_SLOTS > srcSlotId) &&
+            (srcSlotId != slotId))
+        {
+            Slot*   srcSlot = &m_slots[srcSlotId];
+            Slot*   dstSlot = &m_slots[slotId];
+
+            lock();
+
+            if (false == dstSlot->isLocked())
+            {
+                srcSlot->setPlugin(dstSlot->getPlugin());
+                dstSlot->setPlugin(plugin);
+
+                /* Is one of the moved plugins selected at the moment? */
+                if ((m_selectedPlugin == srcSlot->getPlugin()) ||
+                    (m_selectedPlugin == dstSlot->getPlugin()))
+                {
+                    /* Remove selection */
+                    m_selectedPlugin = nullptr;
+                }
+
+                status = true;
+            }
+
+            unlock();
+        }
+    }
+
+    return status;
+}
+
 void DisplayMgr::lockSlot(uint8_t slotId)
 {
     if (MAX_SLOTS > slotId)

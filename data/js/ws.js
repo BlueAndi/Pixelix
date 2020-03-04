@@ -152,6 +152,8 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("LOG" === this.pendingCmd.name) {
                 rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
                 this.pendingCmd.resolve(rsp);
+            } else if ("MOVE" === this.pendingCmd.name) {
+                this.pendingCmd.resolve(rsp);
             } else if ("PLUGINS" === this.pendingCmd.name) {
                 rsp.plugins = [];
                 for(index = 0; index < data.length; ++index) {
@@ -351,6 +353,32 @@ pixelix.ws.Client.prototype.setLog = function(options) {
             this._sendCmd({
                 name: "LOG",
                 par: (false == options.enable) ? 0 : 1,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.move = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "";
+
+        if (null === this.socket) {
+            reject();
+        } else if ("number" !== typeof options.uid) {
+            reject();
+        } else if ("number" !== typeof options.slotId) {
+            reject();
+        } else {
+
+            par = options.uid;
+            par += ";";
+            par += options.slotId;
+
+            this._sendCmd({
+                name: "MOVE",
+                par: par,
                 resolve: resolve,
                 reject: reject
             });

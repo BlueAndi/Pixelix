@@ -121,6 +121,21 @@
             });
         }
 
+        function move(uid, slotId) {
+            return wsClient.move({
+                uid: uid,
+                slotId: slotId
+            }).then(function(rsp) {
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+                alert("Moving failed.");
+            }).finally(function() {
+                return updateSlotInfo();
+            });
+        }
+
         function allowDrop(ev) {
             ev.preventDefault();
         }
@@ -135,9 +150,12 @@
             var src = document.getElementById(data);
             var srcParent = src.parentNode;
             var dst = ev.currentTarget.lastElementChild;
+            var dstParent = dst.parentNode;
 
             ev.currentTarget.replaceChild(src, dst);
             srcParent.appendChild(dst);
+
+            move(parseInt(data), parseInt(dstParent.id));
         }
 
         function updateSlotInfo() {
@@ -161,6 +179,7 @@
                         divSlot.setAttribute("ondrop", "drop(event)");
                     }
 
+                    divSlot.setAttribute("id", index);
                     divSlot.innerHTML = "<p>Slot: " + index + "</p>";
                     divSlots.appendChild(divSlot);
 

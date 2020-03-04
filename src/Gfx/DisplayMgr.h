@@ -171,6 +171,16 @@ public:
     void activatePlugin(IPluginMaintenance* plugin);
 
     /**
+     * Move plugin to a different slot.
+     *
+     * @param[in] plugin    Plugin, which to move
+     * @param[in] slotId    Slot id of destination slot
+     *
+     * @return If successful moved, it will return true otherwise false.
+     */
+    bool movePluginToSlot(IPluginMaintenance* plugin, uint8_t slotId);
+
+    /**
      * Lock a slot.
      *
      * @param[in] slotId    Id of slot, which shall be locked.

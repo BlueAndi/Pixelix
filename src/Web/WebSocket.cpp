@@ -42,6 +42,7 @@
 #include "WsCmdReset.h"
 #include "WsCmdBrightness.h"
 #include "WsCmdLog.h"
+#include "WsCmdMove.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -93,6 +94,9 @@ static WsCmdBrightness  gWsCmdBrightness;
 /** Websocket log command */
 static WsCmdLog         gWsCmdLog;
 
+/** Websocket move command */
+static WsCmdMove        gWsCmdMove;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
@@ -103,7 +107,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdUninstall,
     &gWsCmdReset,
     &gWsCmdBrightness,
-    &gWsCmdLog
+    &gWsCmdLog,
+    &gWsCmdMove
 };
 
 /******************************************************************************
