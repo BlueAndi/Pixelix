@@ -85,8 +85,9 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         for(slotId = 0U; slotId < DisplayMgr::MAX_SLOTS; ++slotId)
         {
-            IPluginMaintenance* plugin  = DisplayMgr::getInstance().getPluginInSlot(slotId);
-            const char*         name    = (nullptr != plugin) ? plugin->getName() : nullptr;
+            IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
+            const char*         name        = (nullptr != plugin) ? plugin->getName() : nullptr;
+            bool                isLocked    = DisplayMgr::getInstance().isSlotLocked(slotId);
 
             if (nullptr == name)
             {
@@ -94,6 +95,8 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
                 rsp += "\"\"";
                 rsp += DELIMITER;
                 rsp += 0;
+                rsp += DELIMITER;
+                rsp += "false";
             }
             else
             {
@@ -103,6 +106,8 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
                 rsp += "\"";
                 rsp += DELIMITER;
                 rsp += plugin->getUID();
+                rsp += DELIMITER;
+                rsp += (false == isLocked) ? "0" : "1";
             }
         }
 

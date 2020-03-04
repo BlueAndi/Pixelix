@@ -150,7 +150,7 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 rsp.slotId = parseInt(data[0]);
                 this.pendingCmd.resolve(rsp);
             } else if ("LOG" === this.pendingCmd.name) {
-                rsp.isEnabled = (1 === parseInt(data[0])) ? true : false;
+                rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
                 this.pendingCmd.resolve(rsp);
             } else if ("PLUGINS" === this.pendingCmd.name) {
                 rsp.plugins = [];
@@ -163,10 +163,11 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("SLOTS" === this.pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
                 rsp.slots = [];
-                for(index = 0; index < (data.length / 2); ++index) {
+                for(index = 0; index < (data.length / 3); ++index) {
                     rsp.slots.push({
-                        name: data[2 * index + 0].substring(1, data[2 * index + 0].length - 1),
-                        uid: parseInt(data[2 * index + 1])
+                        name: data[3 * index + 0].substring(1, data[3 * index + 0].length - 1),
+                        uid: parseInt(data[3 * index + 1]),
+                        isLocked: (0 == parseInt(data[3 * index + 2])) ? false : true
                     });
                 }
                 this.pendingCmd.resolve(rsp);

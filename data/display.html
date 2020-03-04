@@ -155,15 +155,22 @@
                 for(index = 0; index < rsp.slots.length; ++index) {
                     divSlot = document.createElement("div");
                     divSlot.setAttribute("class", "divSlot");
-                    divSlot.setAttribute("ondragover", "allowDrop(event)");
-                    divSlot.setAttribute("ondrop", "drop(event)");
+
+                    if (false == rsp.slots[index].isLocked) {
+                        divSlot.setAttribute("ondragover", "allowDrop(event)");
+                        divSlot.setAttribute("ondrop", "drop(event)");
+                    }
+
                     divSlot.innerHTML = "<p>Slot: " + index + "</p>";
                     divSlots.appendChild(divSlot);
 
                     dragableSlot = document.createElement("p");
                     dragableSlot.setAttribute("class", "dragableSlot");
-                    dragableSlot.setAttribute("draggable", "true");
-                    dragableSlot.setAttribute("ondragstart", "drag(event)");
+
+                    if (false == rsp.slots[index].isLocked) {
+                        dragableSlot.setAttribute("draggable", "true");
+                        dragableSlot.setAttribute("ondragstart", "drag(event)");
+                    }
 
                     if (0 == rsp.slots[index].name.length) {
                         dragableSlot.setAttribute("id", "A" + index);
@@ -194,6 +201,12 @@
                         cell.innerHTML = "-";
                     } else {
                         cell.innerHTML = rsp.slots[index].uid;
+                    }
+                    cell = row.insertCell(-1);
+                    if (false === rsp.slots[index].isLocked) {
+                        cell.innerHTML = "false";
+                    } else {
+                        cell.innerHTML = "true";
                     }
                     cell = row.insertCell(-1);
                     if (0 < rsp.slots[index].name.length) {
@@ -319,7 +332,7 @@
     </div>
     <table id="slots" style="clear: both;">
         <tr>
-            <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Action</th>
+            <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Is locked?</th><th>Action</th>
         </tr>
     </table>
     <p>
