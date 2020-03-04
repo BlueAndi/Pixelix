@@ -288,13 +288,9 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
     {
         uint8_t slotId = SLOT_ID_INVALID;
 
-        LOG_INFO("uninstallPlugin(): %u", plugin->getUID());
-
         lock();
 
         slotId = getSlotIdByPluginUID(plugin->getUID());
-
-        LOG_INFO("after getSlotIdByPluginUID()");
 
         if (MAX_SLOTS > slotId)
         {
