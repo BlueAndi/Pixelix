@@ -151,6 +151,7 @@
                 var divSlot = null;
                 var dragableSlot = null;
 
+                divSlots.innerHTML = "";
                 for(index = 0; index < rsp.slots.length; ++index) {
                     divSlot = document.createElement("div");
                     divSlot.setAttribute("class", "divSlot");
@@ -259,7 +260,7 @@
             wsClient = new pixelix.ws.Client();
             wsClient.connect({
                 protocol: "%WS_PROTOCOL%",
-                hostname: "%WS_HOSTNAME%",
+                hostname: location.hostname,
                 port: %WS_PORT%,
                 endpoint: "%WS_ENDPOINT%",
                 onClosed: onClosed,

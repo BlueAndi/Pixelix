@@ -1168,17 +1168,6 @@ static String displayPageProcessor(const String& var)
     {
         result = WebConfig::WEBSOCKET_PROTOCOL;
     }
-    else if (var == "WS_HOSTNAME")
-    {
-        if (WIFI_MODE_AP == WiFi.getMode())
-        {
-            result = WiFi.softAPIP().toString();
-        }
-        else
-        {
-            result = WiFi.localIP().toString();
-        }
-    }
     else if (var == "WS_PORT")
     {
         result = WebConfig::WEBSOCKET_PORT;
@@ -1233,17 +1222,6 @@ static String devPageProcessor(const String& var)
     if (var == "WS_PROTOCOL")
     {
         result = WebConfig::WEBSOCKET_PROTOCOL;
-    }
-    else if (var == "WS_HOSTNAME")
-    {
-        if (WIFI_MODE_AP == WiFi.getMode())
-        {
-            result = WiFi.softAPIP().toString();
-        }
-        else
-        {
-            result = WiFi.localIP().toString();
-        }
     }
     else if (var == "WS_PORT")
     {
