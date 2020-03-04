@@ -16,6 +16,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Get plugins information](#get-plugins-information)
   - [Install a plugin](#install-a-plugin)
   - [Uninstall a plugin](#uninstall-a-plugin)
+  - [Move a plugin](#move-a-plugin)
   - [Enable/Disable logging](#enabledisable-logging)
     - [Is logging enabled?](#is-logging-enabled)
     - [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
@@ -127,6 +128,19 @@ Command: ```UNINSTALL;<slot-id>```
 
 Parameter:
 * ```<slot-id>```: Id of the slot, where the plugin shall be uninstalled.
+
+Response:
+* Successful:
+  * ```ACK```
+* Failed:
+  * ```NACK```
+
+## Move a plugin
+Command: ```MOVE;<plugin-uid>;<slot-id>```
+
+Parameter:
+* ```<plugin-uid>```: UID of the plugin, which to move.
+* ```<slot-id>```: Id of the slot, where to move the plugin.
 
 Response:
 * Successful:
