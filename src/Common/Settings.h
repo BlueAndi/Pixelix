@@ -234,8 +234,18 @@ public:
         return m_dateFormatCtrl;
     }
 
+    /**
+     * Get max. number of display slots.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt8& getMaxSlots()
+    {
+        return m_maxSlots;
+    }
+
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 12U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 13U;
 
 private:
 
@@ -256,6 +266,7 @@ private:
     KeyValueString  m_ntpServer;            /**< NTP server address */
     KeyValueBool    m_timeFormatCtrl;       /**< Time format control */
     KeyValueBool    m_dateFormatCtrl;       /**< Date format control */
+    KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
 
     /**
      * Constructs the settings instance.

@@ -104,6 +104,9 @@ static const char* KEY_TIME_FORMAT                  = "time_format";
 /** Date format key */
 static const char* KEY_DATE_FORMAT                  = "date_format";
 
+/** Max. number of display slots key */
+static const char* KEY_MAX_SLOTS                    = "max_slots";
+
 /* ---------- Key value pair names ---------- */
 
 /** Wifi network name of key value pair */
@@ -125,129 +128,140 @@ static const char*  NAME_HOSTNAME                   = "Hostname";
 static const char*  NAME_AUTO_BRIGHTNESS_CTRL       = "Autom. brightness control";
 
 /** Plugin installation name of key value pair */
-static const char* NAME_PLUGIN_INSTALLATION         = "Plugin installation";
+static const char*  NAME_PLUGIN_INSTALLATION        = "Plugin installation";
 
 /** GMT offset name of key value pair */
-static const char* NAME_GMT_OFFSET                  = "GMT offset [s]";
+static const char*  NAME_GMT_OFFSET                 = "GMT offset [s]";
 
 /** DaylightSaving name of key value pair */
-static const char* NAME_DAYLIGHT_SAVING_CTRL        = "DST control";
+static const char*  NAME_DAYLIGHT_SAVING_CTRL       = "DST control";
 
 /** NTP server name of key value pair */
-static const char* NAME_NTP_SERVER                  = "NTP server address";
+static const char*  NAME_NTP_SERVER                 = "NTP server address";
 
-/** Time format name of key value pair*/
-static const char* NAME_TIME_FORMAT_CTRL            = "Time format: true = 24h, false = 12h (AM/PM)";
+/** Time format name of key value pair */
+static const char*  NAME_TIME_FORMAT_CTRL           = "Time format: true = 24h, false = 12h (AM/PM)";
 
-/** Date format name of key value pair*/
-static const char* NAME_DATE_FORMAT_CTRL            = "Date format: true = DD:MM, false = MM:DD";
+/** Date format name of key value pair */
+static const char*  NAME_DATE_FORMAT_CTRL           = "Date format: true = DD:MM, false = MM:DD";
 
+/** Max. number of display slots name of key value pair */
+static const char*  NAME_MAX_SLOTS                  = "Max. slots";
 
 /* ---------- Default values ---------- */
 
 /** Wifi network default value */
-static const char*  DEFAULT_WIFI_SSID               = "";
+static const char*      DEFAULT_WIFI_SSID               = "";
 
 /** Wifi network passphrase default value */
-static const char*  DEFAULT_WIFI_PASSPHRASE         = "";
+static const char*      DEFAULT_WIFI_PASSPHRASE         = "";
 
 /** Wifi access point network default value */
-static const char*  DEFAULT_WIFI_AP_SSID            = "pixelix";
+static const char*      DEFAULT_WIFI_AP_SSID            = "pixelix";
 
 /** Wifi access point network passphrase default value */
-static const char*  DEFAULT_WIFI_AP_PASSPHRASE      = "Luke, I am your father.";
+static const char*      DEFAULT_WIFI_AP_PASSPHRASE      = "Luke, I am your father.";
 
 /** Hostname default value */
-static const char*  DEFAULT_HOSTNAME                = "pixelix";
+static const char*      DEFAULT_HOSTNAME                = "pixelix";
 
 /** Automatic brightness control default value */
-static bool         DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
+static bool             DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
 
 /** Plugin installation default value */
-static const char*  DEFAULT_PLUGIN_INSTALLATION     = "";
+static const char*      DEFAULT_PLUGIN_INSTALLATION     = "";
 
 /** GMT offset default value */
-static const int16_t DEFAULT_GMT_OFFSET             = 0;
+static const int16_t    DEFAULT_GMT_OFFSET             = 0;
 
 /** Daylight saving control default value */
-static bool DEFAULT_DAYLIGHT_SAVING_CTRL            = false;
+static bool             DEFAULT_DAYLIGHT_SAVING_CTRL   = false;
 
 /** NTP server default value */
-static const char* DEFAULT_NTP_SERVER               = "pool.ntp.org";
+static const char*      DEFAULT_NTP_SERVER             = "pool.ntp.org";
 
 /** Time format control default value */
-static bool DEFAULT_TIME_FORMAT_CTRL                = true;
+static bool             DEFAULT_TIME_FORMAT_CTRL       = true;
 
 /** Date format control default value */
-static bool DEFAULT_DATE_FORMAT_CTRL                = true;
+static bool             DEFAULT_DATE_FORMAT_CTRL       = true;
+
+/** Max. number of display slots value */
+static uint8_t          DEFAULT_MAX_SLOTS              = 5U;
 
 /* ---------- Minimum values ---------- */
 
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t MIN_VALUE_WIFI_SSID            = 0;
+static const size_t     MIN_VALUE_WIFI_SSID            = 0;
 
 /** Wifi network passphrase min. length */
-static const size_t MIN_VALUE_WIFI_PASSPHRASE      = 8U;
+static const size_t     MIN_VALUE_WIFI_PASSPHRASE      = 8U;
 
 /** Wifi access point network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t MIN_VALUE_WIFI_AP_SSID         = 0;
+static const size_t     MIN_VALUE_WIFI_AP_SSID         = 0;
 
 /** Wifi access point network passphrase min. length */
-static const size_t MIN_VALUE_WIFI_AP_PASSPHRASE   = 8U;
+static const size_t     MIN_VALUE_WIFI_AP_PASSPHRASE   = 8U;
 
 /** Hostname min. length */
-static const size_t MIN_VALUE_HOSTNAME             = 1U;
+static const size_t     MIN_VALUE_HOSTNAME             = 1U;
 
-/*                  MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
+/*                      MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** Plugin installation min. length */
-static const size_t MIN_VALUE_PLUGIN_INSTALLATION   = 0U;
+static const size_t     MIN_VALUE_PLUGIN_INSTALLATION   = 0U;
 
 /** Min. GMT offset (-12h+60s = -43200s) length */
-static const int32_t MIN_VALUE_GMT_OFFSET           = -43200;
+static const int32_t    MIN_VALUE_GMT_OFFSET           = -43200;
 
-/*                  MIN_VALUE_DAYLIGHT_SAVING_CTRL */
+/*                      MIN_VALUE_DAYLIGHT_SAVING_CTRL */
 
 /** NTP server address min. length */
-static const size_t MIN_VALUE_NTP_SERVER            = 12U;
+static const size_t     MIN_VALUE_NTP_SERVER            = 12U;
 
-/*                  MIN_VALUE_TIME_FORMAT_CTRL */
+/*                      MIN_VALUE_TIME_FORMAT_CTRL */
 
-/*                  MIN_VALUE_TIME_FORMAT_CTRL */
+/*                      MIN_VALUE_TIME_FORMAT_CTRL */
+
+/** Max. number of display slots minimum value */
+static uint8_t          MIN_MAX_SLOTS                   = 2U;
 
 /* ---------- Maximum values ---------- */
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t MAX_VALUE_WIFI_SSID            = 32U;
+static const size_t     MAX_VALUE_WIFI_SSID            = 32U;
 
 /** Wifi network passphrase max. length */
-static const size_t MAX_VALUE_WIFI_PASSPHRASE      = 64U;
+static const size_t     MAX_VALUE_WIFI_PASSPHRASE      = 64U;
 
 /** Wifi access point network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t MAX_VALUE_WIFI_AP_SSID         = 32U;
+static const size_t     MAX_VALUE_WIFI_AP_SSID         = 32U;
 
 /** Wifi access point network passphrase max. length */
-static const size_t MAX_VALUE_WIFI_AP_PASSPHRASE   = 64U;
+static const size_t     MAX_VALUE_WIFI_AP_PASSPHRASE   = 64U;
 
 /** Hostname max. length */
-static const size_t MAX_VALUE_HOSTNAME             = 63U;
+static const size_t     MAX_VALUE_HOSTNAME             = 63U;
 
-/*                  MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
+/*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** Plugin installation max. length */
-static const size_t MAX_VALUE_PLUGIN_INSTALLATION  = 512U;
+static const size_t     MAX_VALUE_PLUGIN_INSTALLATION  = 512U;
 
 /** Max. GMT offset (14h*60s = 50400s) length */
-static const int32_t MAX_VALUE_GMT_OFFSET           = 50400;
+static const int32_t    MAX_VALUE_GMT_OFFSET           = 50400;
 
-/*                  MAX_VALUE_DAYLIGHT_SAVING_CTRL */
+/*                      MAX_VALUE_DAYLIGHT_SAVING_CTRL */
 
 /** NTP server address max. length */
-static const size_t MAX_VALUE_NTP_SERVER            = 30U;
+static const size_t     MAX_VALUE_NTP_SERVER            = 30U;
 
-/*                  MAX_VALUE_TIME_FORMAT_CTRL */
+/*                      MAX_VALUE_TIME_FORMAT_CTRL */
 
-/*                  MAX_VALUE_TIME_FORMAT_CTRL */
+/*                      MAX_VALUE_TIME_FORMAT_CTRL */
+
+/** Max. number of display slots maximum value */
+static uint8_t          MAX_MAX_SLOTS                   = 11U;
 
 /******************************************************************************
  * Public Methods
@@ -306,7 +320,8 @@ Settings::Settings() :
     m_isDaylightSaving      (m_preferences, KEY_DAYLIGHT_SAVING_CTRL,   NAME_DAYLIGHT_SAVING_CTRL,  DEFAULT_DAYLIGHT_SAVING_CTRL),
     m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER),
     m_timeFormatCtrl        (m_preferences, KEY_TIME_FORMAT,            NAME_TIME_FORMAT_CTRL,      DEFAULT_TIME_FORMAT_CTRL),
-    m_dateFormatCtrl        (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT_CTRL,      DEFAULT_DATE_FORMAT_CTRL)
+    m_dateFormatCtrl        (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT_CTRL,      DEFAULT_DATE_FORMAT_CTRL),
+    m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS)
 {
     m_keyValueList[0] = &m_wifiSSID;
     m_keyValueList[1] = &m_wifiPassphrase;
@@ -320,6 +335,7 @@ Settings::Settings() :
     m_keyValueList[9] = &m_ntpServer;
     m_keyValueList[10] = &m_timeFormatCtrl;
     m_keyValueList[11] = &m_dateFormatCtrl;
+    m_keyValueList[12] = &m_maxSlots;
 }
 
 Settings::~Settings()
