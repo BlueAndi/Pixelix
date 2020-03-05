@@ -36,6 +36,7 @@
 #include "PluginMgr.h"
 
 #include <Util.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -110,16 +111,20 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
 
 void WsCmdUninstall::setPar(const char* par)
 {
-    if (DisplayMgr::SLOT_ID_INVALID == m_slotId)
+    if (false == m_isError)
     {
-        if (false == Util::strToUInt8(String(par), m_slotId))
+        if (DisplayMgr::SLOT_ID_INVALID == m_slotId)
+        {
+            if (false == Util::strToUInt8(String(par), m_slotId))
+            {
+                LOG_ERROR("Conversion failed: %s", par);
+                m_isError = true;
+            }
+        }
+        else
         {
             m_isError = true;
         }
-    }
-    else
-    {
-        m_isError = true;
     }
 
     return;

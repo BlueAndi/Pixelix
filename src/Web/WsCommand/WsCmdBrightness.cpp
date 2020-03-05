@@ -36,6 +36,7 @@
 #include "DisplayMgr.h"
 
 #include <Util.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -114,6 +115,7 @@ void WsCmdBrightness::setPar(const char* par)
     case 0:
         if (false == Util::strToUInt8(String(par), m_brightness))
         {
+            LOG_ERROR("Conversion failed: %s", par);
             m_isError = true;
         }
         break;
