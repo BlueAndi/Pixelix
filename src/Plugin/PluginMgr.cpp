@@ -212,7 +212,7 @@ void PluginMgr::load()
                 }
 
                 ++slotId;
-                if (DisplayMgr::MAX_SLOTS <= slotId)
+                if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
                 {
                     break;
                 }
@@ -230,7 +230,7 @@ void PluginMgr::save()
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonArray           jsonSlots   = jsonDoc.createNestedArray("slots");
 
-    for(slotId = 0; slotId < DisplayMgr::MAX_SLOTS; ++slotId)
+    for(slotId = 0; slotId < DisplayMgr::getInstance().getMaxSlots(); ++slotId)
     {
         IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
         JsonObject          jsonSlot    = jsonSlots.createNestedObject();

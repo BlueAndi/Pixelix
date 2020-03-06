@@ -35,6 +35,7 @@
 #include "DisplayMgr.h"
 #include "LedMatrix.h"
 #include "AmbientLightSensor.h"
+#include "Settings.h"
 
 #include <Logging.h>
 
@@ -69,14 +70,36 @@ bool DisplayMgr::begin()
 {
     bool status = false;
 
-    /* Not started yet? */
-    if (nullptr == m_taskHandle)
+    /* No slots available? */
+    if (nullptr == m_slots)
     {
-        /* Set the display brightness here just once.
-         * There is no need to do this in the process() method periodically.
-         */
-        LedMatrix::getInstance().setBrightness(m_brightness);
+        if (false == Settings::getInstance().open(true))
+        {
+            m_maxSlots = Settings::getInstance().getMaxSlots().getDefault();
 
+            LOG_WARNING("Using default number of max. slots.");
+        }
+        else
+        {
+            m_maxSlots = Settings::getInstance().getMaxSlots().getValue();
+            Settings::getInstance().close();
+        }
+
+        if (0 < m_maxSlots)
+        {
+            m_slots = new Slot[m_maxSlots];
+        }
+    }
+
+    /* Set the display brightness here just once.
+     * There is no need to do this in the process() method periodically.
+     */
+    LedMatrix::getInstance().setBrightness(m_brightness);
+
+    /* Not started yet? */
+    if ((nullptr == m_taskHandle) &&
+        (nullptr != m_slots))
+    {
         /* Create mutex to lock/unlock display update */
         m_xMutex = xSemaphoreCreateRecursiveMutex();
 
@@ -133,6 +156,8 @@ bool DisplayMgr::begin()
 
 void DisplayMgr::end()
 {
+    /* Note, don't destroy the slots here. They shall live until the system restarts. */
+
     /* Already running? */
     if (nullptr != m_taskHandle)
     {
@@ -225,12 +250,12 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
 
             /* Find a empty unlocked slot. */
             slotId = 0U;
-            while((MAX_SLOTS > slotId) && ((false == m_slots[slotId].isEmpty()) || (true == m_slots[slotId].isLocked())))
+            while((m_maxSlots > slotId) && ((false == m_slots[slotId].isEmpty()) || (true == m_slots[slotId].isLocked())))
             {
                 ++slotId;
             }
 
-            if (MAX_SLOTS > slotId)
+            if (m_maxSlots > slotId)
             {
                 if (false == m_slots[slotId].setPlugin(plugin))
                 {
@@ -249,7 +274,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
             unlock();
         }
         /* Install to specific slot? */
-        else if ((MAX_SLOTS > slotId) &&
+        else if ((m_maxSlots > slotId) &&
                  (true == m_slots[slotId].isEmpty()) &&
                  (false == m_slots[slotId].isLocked()))
         {
@@ -271,7 +296,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
             slotId = SLOT_ID_INVALID;
         }
 
-        if (MAX_SLOTS > slotId)
+        if (m_maxSlots > slotId)
         {
             LOG_INFO("Plugin %s installed in slot %u.", plugin->getName(), slotId);
         }
@@ -292,7 +317,7 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
 
         slotId = getSlotIdByPluginUID(plugin->getUID());
 
-        if (MAX_SLOTS > slotId)
+        if (m_maxSlots > slotId)
         {
             if (false == m_slots[slotId].isLocked())
             {
@@ -337,7 +362,7 @@ uint8_t DisplayMgr::getSlotIdByPluginUID(uint16_t uid)
 
     lock();
 
-    while((MAX_SLOTS > index) && (MAX_SLOTS <= slotId))
+    while((m_maxSlots > index) && (m_maxSlots <= slotId))
     {
         if (false == m_slots[index].isEmpty())
         {
@@ -359,7 +384,7 @@ IPluginMaintenance* DisplayMgr::getPluginInSlot(uint8_t slotId)
 {
     IPluginMaintenance* plugin = nullptr;
 
-    if (MAX_SLOTS > slotId)
+    if (m_maxSlots > slotId)
     {
         lock();
 
@@ -381,7 +406,7 @@ void DisplayMgr::activatePlugin(IPluginMaintenance* plugin)
 
         slotId = getSlotIdByPluginUID(plugin->getUID());
 
-        if (MAX_SLOTS > slotId)
+        if (m_maxSlots > slotId)
         {
             m_requestedPlugin = plugin;
         }
@@ -397,11 +422,11 @@ bool DisplayMgr::movePluginToSlot(IPluginMaintenance* plugin, uint8_t slotId)
     bool status = false;
 
     if ((nullptr != plugin) &&
-        (MAX_SLOTS > slotId))
+        (m_maxSlots > slotId))
     {
         uint8_t srcSlotId = getSlotIdByPluginUID(plugin->getUID());
 
-        if ((MAX_SLOTS > srcSlotId) &&
+        if ((m_maxSlots > srcSlotId) &&
             (srcSlotId != slotId))
         {
             Slot*   srcSlot = &m_slots[srcSlotId];
@@ -434,7 +459,7 @@ bool DisplayMgr::movePluginToSlot(IPluginMaintenance* plugin, uint8_t slotId)
 
 void DisplayMgr::lockSlot(uint8_t slotId)
 {
-    if (MAX_SLOTS > slotId)
+    if (m_maxSlots > slotId)
     {
         lock();
 
@@ -448,7 +473,7 @@ void DisplayMgr::lockSlot(uint8_t slotId)
 
 void DisplayMgr::unlockSlot(uint8_t slotId)
 {
-    if (MAX_SLOTS > slotId)
+    if (m_maxSlots > slotId)
     {
         lock();
 
@@ -464,7 +489,7 @@ bool DisplayMgr::isSlotLocked(uint8_t slotId)
 {
     bool isLocked = true;
 
-    if (MAX_SLOTS > slotId)
+    if (m_maxSlots > slotId)
     {
         lock();
 
@@ -480,7 +505,7 @@ uint32_t DisplayMgr::getSlotDuration(uint8_t slotId)
 {
     uint32_t duration = 0U;
 
-    if (MAX_SLOTS > slotId)
+    if (m_maxSlots > slotId)
     {
         lock();
 
@@ -496,7 +521,7 @@ bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration)
 {
     bool status = false;
 
-    if (MAX_SLOTS > slotId)
+    if (m_maxSlots > slotId)
     {
         lock();
 
@@ -559,7 +584,8 @@ DisplayMgr::DisplayMgr() :
     m_taskHandle(nullptr),
     m_taskExit(false),
     m_xSemaphore(nullptr),
-    m_slots(),
+    m_slots(nullptr),
+    m_maxSlots(0U),
     m_selectedSlot(SLOT_ID_INVALID),
     m_selectedPlugin(nullptr),
     m_requestedPlugin(nullptr),
@@ -578,14 +604,14 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
 {
     uint8_t count = 0U;
 
-    if (MAX_SLOTS <= slotId)
+    if (m_maxSlots <= slotId)
     {
         slotId = 0U;
     }
     else
     {
         ++slotId;
-        slotId %= MAX_SLOTS;
+        slotId %= m_maxSlots;
     }
 
     /* Set next slot active, precondition is a installed plugin which is enabled.  */
@@ -602,13 +628,13 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
         }
 
         ++slotId;
-        slotId %= MAX_SLOTS;
+        slotId %= m_maxSlots;
 
         ++count;
     }
-    while (MAX_SLOTS > count);
+    while (m_maxSlots > count);
 
-    if (MAX_SLOTS <= count)
+    if (m_maxSlots <= count)
     {
         slotId = SLOT_ID_INVALID;
     }
@@ -721,7 +747,7 @@ void DisplayMgr::process()
         }
 
         /* Next enabled plugin found? */
-        if (MAX_SLOTS > m_selectedSlot)
+        if (m_maxSlots > m_selectedSlot)
         {
             uint32_t duration = 0U;
 
@@ -739,7 +765,7 @@ void DisplayMgr::process()
     }
 
     /* Process all installed plugins. */
-    for(index = 0U; index < MAX_SLOTS; ++index)
+    for(index = 0U; index < m_maxSlots; ++index)
     {
         IPluginMaintenance* plugin = m_slots[index].getPlugin();
 

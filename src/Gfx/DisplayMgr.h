@@ -229,6 +229,16 @@ public:
      */
     void getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId);
 
+    /**
+     * Get max. number of display slots, which can be used for plugins.
+     *
+     * @return Max. number of display slots.
+     */
+    uint8_t getMaxSlots() const
+    {
+        return m_maxSlots;
+    }
+
     /** Invalid slot id. */
     static const uint8_t    SLOT_ID_INVALID         = UINT8_MAX;
 
@@ -240,9 +250,6 @@ public:
 
     /** MCU core where the task shall run */
     static const BaseType_t TASK_RUN_CORE           = 1;
-
-    /** Maximum number of supported slots. */
-    static const uint8_t    MAX_SLOTS               = 5U;
 
     /** If no ambient light sensor is available, the default brightness shall be 40%. */
     static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40U) / 100U;
@@ -271,7 +278,10 @@ private:
     SemaphoreHandle_t   m_xSemaphore;
 
     /** List of all slots with their connected plugins. */
-    Slot                m_slots[MAX_SLOTS];
+    Slot*               m_slots;
+
+    /** Max. number of slots. */
+    uint8_t             m_maxSlots;
 
     /** Current selected slot. */
     uint8_t             m_selectedSlot;

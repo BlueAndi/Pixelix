@@ -256,10 +256,10 @@ static void handleSlots(AsyncWebServerRequest* request)
         uint8_t     index       = 0U;
 
         /* Add max. number of slots */
-        dataObj["maxSlots"] = DisplayMgr::getInstance().MAX_SLOTS;
+        dataObj["maxSlots"] = DisplayMgr::getInstance().getMaxSlots();
 
         /* Add which plugin's are installed. */
-        for(index = 0U; index < DisplayMgr::MAX_SLOTS; ++index)
+        for(index = 0U; index < DisplayMgr::getInstance().getMaxSlots(); ++index)
         {
             IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(index);
 
