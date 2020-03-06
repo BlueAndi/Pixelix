@@ -2,95 +2,176 @@
 
 title Plugin Service
 
-interface "CreateFunc" as createFunc
+interface IPluginMaintenance {
 
-interface "Plugin" as plugin {
+    + {abstract} setSlot(slot : const ISlotPlugin&) = 0 : void
+    + {abstract} getUID() const = 0 : uint16_t
+    + {abstract} registerWebInterface(srv : AsyncWebServer&, baseUri : const String&) = 0 : void
+    + {abstract} unregisterWebInterface(srv : AsyncWebServer&) = 0 : void
+    + {abstract} getName() const = 0 : const char*
+    + {abstract} enable() = 0 : void
+    + {abstract} disable() = 0 : void
+    + {abstract} isEnabled() const = 0 : bool
+    + {abstract} start() = 0 : void
+    + {abstract} process() = 0 : void
+    + {abstract} stop() = 0 : void
+    + {abstract} active(gfx : IGfx&) = 0 : void
+    + {abstract} inactive() = 0 : void
+    + {abstract} update(gfx: IGfx&) = 0 : void
+}
+
+interface CreateFunc {
+    + (*)(name : const String&, uid : uint16_t) : IPluginMaintenance*
+}
+
+class Plugin {
 
     + m_name : String
     + m_isEnabled : bool
-    + m_slotId : uint8_t
+    + m_uid : uint16_t
 
-    + Plugin(name : const String&)
-    + getSlotId(): uint8_t
-    + setSlotId(slotId : uint8_t) : void
+    + Plugin(name : const String&, uid : uint16_t)
+    + {abstract} setSlot(slot : const ISlotPlugin&) : void
+    + getUID() const : uint16_t
     + {abstract} registerWebInterface(srv : AsyncWebServer&) : void
     + {abstract} unregisterWebInterface(srv : AsyncWebServer&) : void
     + getName() : const char*
-    + {abstract} getDuration() : uint32_t
     + enable() : void
     + disable() : void
     + isEnabled() : bool
     + {abstract} start() : void
+    + {abstract} process() : void
     + {abstract} stop() : void
+    + {abstract} active(gfx : IGfx&) : void
+    + {abstract} inactive() : void
     + {abstract} update(gfx: IGfx&) = 0 : void
 }
 
-note right of plugin
-    Plugins which are installed and enabled are scheduled.
+note right of Plugin
+    The REST API URL depends on the plugin UID:
+    <base-uri>/rest/api/v1/display/<plugin-uid>
+    This provides the possibility to move the
+    plugins around in the slots, without changing
+    the plugin depended REST URL.
 end note
 
-class "PluginMgr" as pluginMgr
-class "DisplayMgr" as displayMgr
-class "MyWebserver" as myWebserver
-class "App" as app
-class "ConcretePlugin" as concretePlugin {
-    + {static} create(name : const String&) : Plugin*
+class ConcretePlugin {
+    + {static} create(name : const String&, uid : uint16_t) : IPluginMaintenance*
     + update(gfx: IGfx&) : void
 }
 
-class "Settings" as settings
+note right of ConcretePlugin
+    Each plugin represents its own functionality.
+    If a plugin is scheduled by the display manager,
+    it can draw on the display.
 
-app ..> pluginMgr: Install/Uninstall plugin
-
-note right of app
-    The application installs or uninstall plugins via
-    the plugin manager.
-    
-    This can be requested by the user via REST API or
-    web page.
-
-    Some plugins may be necessary for internal use and
-    therefore installed during startup.
+    The plugin specific interface must be protected
+    against concurrent access. This is the case if
+    a REST page is accessed from the webserver task.
 end note
 
-plugin +-l- createFunc
-plugin <|.. concretePlugin: <<realize>>
+interface ISlotPlugin {
 
-note right of concretePlugin
-    Each plugin represents its own
-    functionality. If a plugin is scheduled
-    by the display manager, it can draw on the
-    display.
+    + {abstract} getDuration() const = 0 : uint32_t
+}
+
+class Slot {
+    - m_plugin : IPluginMaintenance*
+    - m_duration: uint32_t
+    - m_isLocked : bool
+    + getPlugin() : IPluginMaintenance*
+    + setPlugin(plugin : IPluginMaintenance*) : bool
+    + isEmpty() const : bool
+    + getDuration() const : uint32_t
+    + setDuration(duration : uint32_t) : void
+    + lock() : void
+    + unlock() : void
+    + isLocked() const : bool
+}
+
+note right of Slot
+    Design decision:
+    The slot interface shall only be
+    used by the display manager, otherwise
+    its necessary to protect the slots
+    against concurrent access.
 end note
 
-displayMgr ..> plugin: Start/Stop/Update plugin
+interface DisplayObserver {
+    + {abstract} update() = 0 : void
+}
 
-note right of displayMgr
-    The display manager provides slots for the plugins,
-    where they can be plugged in.
-
-    The application can request to immediate activate
-    a specific slot and its plugged in plugin.
-
-    Or request to rotate from slot to slot.
+note top of DisplayObserver
+    Notify application about changes in
+    the slots.
+    This can be used e.g. to automatically send
+    websocket events to the web interface,
+    which updates the view.
 end note
 
-pluginMgr ..> displayMgr: Install/Uninstall\nplugin
-pluginMgr o--> "0..*" plugin: Register/Unregister\nweb pages
-pluginMgr .u.> myWebserver: Register/Unregister\nplugin web pages
-pluginMgr .u.> settings: Load/Save\nplugin configuration
+class DisplayMgr {
+    - m_slots : Slot*
+    - m_maxSlots : uint8_t
+    - m_selectedSlot : uint8_t
+    + installPlugin(plugin : IPluginMaintenance*, slotId : uint8_t) : bool
+    + uninstallPlugin(plugin : IPluginMaintenance*) : void
+    + getSlotIdByPluginUID(uid : uint16_t) const : uint8_t
+    + getPluginInSlot(slotId : uint8_t) : IPluginMaintenance*
+    + activatePlugin(plugin : IPluginMaintenance*) : void
+    + movePluginToSlot(plugin : IPluginMaintenance*, slotId : uint8_t) : bool
+    + lockSlot(slotId : uint8_t) : void
+    + unlockSlot(slotId : uint8_t) : void
+    + isSlotLocked(slotId : uint8_t) : bool
+    + getSlotDuration(slotId : uint8_t) : uint32_t
+    + setSlotDuration(slotId : uint8_t, duration : uint32_t) : bool
+}
 
-note left of pluginMgr
-    The plugin manager creates and installs a plugin in a display
-    slot and register its web pages.
-    
-    Or uninstalls and destroys a plugin and remove its registered
-    web pages.
-    
-    It saves the configuration of which plugin is in which slot
-    in persistent memory.
-    
-    It loads the configuration at startup.
+note right of DisplayMgr
+    Interface is protected against
+    concurrent access by different tasks.
 end note
+
+class Task
+
+class PluginMgr
+
+note left of PluginMgr
+    The plugin manager is able to load/save the
+    plugin configuration in persistent memory.
+    Per plugin are stored:
+    * Name
+    * UID
+    The order of saving plugins in persistent memory
+    is according to the slot number, they are
+    plugged in.
+end note
+
+class ESPAsyncWebserver
+
+CreateFunc -+ IPluginMaintenance
+
+IPluginMaintenance <|. Plugin: <<realize>>
+ISlotPlugin <.... Plugin: <<use>>
+
+Plugin <|-- ConcretePlugin
+CreateFunc <|.. ConcretePlugin: <<realize>>
+
+ISlotPlugin <|.. Slot: <<realize>>
+
+DisplayMgr ....> IPluginMaintenance: <<use>>
+DisplayMgr o---> Slot
+DisplayMgr o-u-> DisplayObserver
+
+Slot --> IPluginMaintenance
+
+Task <--- DisplayMgr
+
+PluginMgr o--> IPluginMaintenance
+PluginMgr .> DisplayMgr: <<use>>
+
+Task <-- ESPAsyncWebserver
+
+ESPAsyncWebserver ..> DisplayMgr: <<use>>
+ESPAsyncWebserver ..> PluginMgr: <<use>>
 
 @enduml
