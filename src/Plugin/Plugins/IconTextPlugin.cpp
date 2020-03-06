@@ -75,6 +75,9 @@ void IconTextPlugin::active(IGfx& gfx)
         if (nullptr != m_iconCanvas)
         {
             m_iconCanvas->addWidget(m_bitmapWidget);
+
+            /* If there is already a icon in the filesystem, load it. */
+            (void)m_bitmapWidget.load(getFileName());
         }
     }
 
