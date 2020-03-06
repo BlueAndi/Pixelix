@@ -74,7 +74,10 @@ extern bool Util::strToUInt8(const String& str, uint8_t& value)
 {
     bool            success = false;
     char*           endPtr  = nullptr;
-    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
+    unsigned long   tmp     = 0UL;
+
+    errno = 0;
+    tmp = strtoul(str.c_str(), &endPtr, 0);
 
     if ((0 == errno) &&
         (nullptr != endPtr) &&
@@ -93,7 +96,10 @@ extern bool Util::strToUInt16(const String& str, uint16_t& value)
 {
     bool            success = false;
     char*           endPtr  = nullptr;
-    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
+    unsigned long   tmp     = 0UL;
+
+    errno = 0;
+    tmp = strtoul(str.c_str(), &endPtr, 0);
 
     if ((0 == errno) &&
         (nullptr != endPtr) &&
@@ -112,7 +118,10 @@ extern bool Util::strToInt32(const String& str, int32_t& value)
 {
     bool    success = false;
     char*   endPtr  = nullptr;
-    long    tmp     = strtol(str.c_str(), &endPtr, 0);
+    long    tmp     = 0L;
+
+    errno = 0;
+    tmp = strtol(str.c_str(), &endPtr, 0);
 
     if ((0 == errno) &&
         (nullptr != endPtr) &&
@@ -131,7 +140,10 @@ extern bool Util::strToUInt32(const String& str, uint32_t& value)
 {
     bool            success = false;
     char*           endPtr  = nullptr;
-    unsigned long   tmp     = strtoul(str.c_str(), &endPtr, 0);
+    unsigned long   tmp     = 0UL;
+
+    errno = 0;
+    tmp = strtoul(str.c_str(), &endPtr, 0);
 
     if ((0 == errno) &&
         (nullptr != endPtr) &&
