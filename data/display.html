@@ -168,6 +168,11 @@
             ev.dataTransfer.setData("src", ev.target.id);
         }
 
+        function onDragEnd(ev) {
+            var src = document.getElementById(ev.target.id);
+            src.removeAttribute("style");
+        }
+
         function drop(ev) {
             ev.preventDefault();
             var data = ev.dataTransfer.getData("src");
@@ -179,7 +184,6 @@
             if ("uninstall" == dstParent.id) {
                 uninstall(parseInt(srcParent.id));
             } else {
-                src.removeAttribute("style");
                 ev.currentTarget.replaceChild(src, dst);
                 srcParent.appendChild(dst);
 
@@ -221,6 +225,7 @@
                         (0 < rsp.slots[index].name.length)) {
                         dragableSlot.setAttribute("draggable", "true");
                         dragableSlot.setAttribute("ondragstart", "drag(event)");
+                        dragableSlot.setAttribute("ondragend", "onDragEnd(event)");
                     }
 
                     if (0 == rsp.slots[index].name.length) {
