@@ -18,6 +18,9 @@
             text-align: center;
             float: left;
         }
+        div.locked {
+            background-image: repeating-linear-gradient(45deg, #ccc 0%, #ccc 2%, red 2%, red 4%, #ccc 4%);
+        }
         p.dragableSlot {
             border: 2px solid red;
             padding: 4px 4px 4px 4px;
@@ -198,11 +201,13 @@
                 divSlots.innerHTML = "";
                 for(index = 0; index < rsp.slots.length; ++index) {
                     divSlot = document.createElement("div");
-                    divSlot.setAttribute("class", "divSlot");
 
                     if (false == rsp.slots[index].isLocked) {
+                        divSlot.setAttribute("class", "divSlot");
                         divSlot.setAttribute("ondragover", "allowDrop(event)");
                         divSlot.setAttribute("ondrop", "drop(event)");
+                    } else {
+                        divSlot.setAttribute("class", "divSlot locked");
                     }
 
                     divSlot.setAttribute("id", index);
