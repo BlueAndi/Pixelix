@@ -7,16 +7,23 @@
     <link rel="stylesheet" href="/style/style.css" />
     <style>
         div.divSlot {
-            border: 1px solid white;
-            padding: 4px 4px 4px 4px;
-            margin: 4px 4px 4px 4px;
-            width: 12em;
             height: 6em;
+            width: 12em;
+            display: inline-block;
+            border: 2px solid #666666;
+            background-color: #ccc;
+            margin-right: 5px;
+            border-radius: 10px;
+            box-shadow: inset 0 0 3px #000;
+            text-align: center;
             float: left;
         }
         p.dragableSlot {
-            border: 1px solid red;
+            border: 2px solid red;
             padding: 4px 4px 4px 4px;
+            background-color: #666666;
+            margin: 1em 1em 1em 1em;
+            width: auto;
         }
         /* Prevent the text contents of draggable elements from being selectable. */
         [draggable] {
@@ -29,9 +36,20 @@
             -khtml-user-drag: element;
             -webkit-user-drag: element;
         }
+        .divSlot header {
+            color: #fff;
+            background: red;
+            text-shadow: #000 0 1px;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            pointer-events: none;
+        }
     </style>
     <script src="/js/ws.js"></script>
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+    <script src="/js/dragDropTouch.js"></script>
     <script>
         var matrixWidth         = 32;   // LED matrix width in number of LEDs
         var matrixHeight        = 8;    // LED matrix height in number of LEDs
@@ -142,6 +160,8 @@
         }
 
         function drag(ev) {
+            var src = document.getElementById(ev.target.id);
+            src.style.opacity = "0.4";
             ev.dataTransfer.setData("src", ev.target.id);
         }
 
@@ -153,10 +173,15 @@
             var dst = ev.currentTarget.lastElementChild;
             var dstParent = dst.parentNode;
 
-            ev.currentTarget.replaceChild(src, dst);
-            srcParent.appendChild(dst);
+            if ("uninstall" == dstParent.id) {
+                uninstall(parseInt(srcParent.id));
+            } else {
+                src.removeAttribute("style");
+                ev.currentTarget.replaceChild(src, dst);
+                srcParent.appendChild(dst);
 
-            move(parseInt(data), parseInt(dstParent.id));
+                move(parseInt(data), parseInt(dstParent.id));
+            }
         }
 
         function updateSlotInfo() {
@@ -181,13 +206,14 @@
                     }
 
                     divSlot.setAttribute("id", index);
-                    divSlot.innerHTML = "<p>Slot: " + index + "</p>";
+                    divSlot.innerHTML = "<header>Slot " + index + "</header>";
                     divSlots.appendChild(divSlot);
 
                     dragableSlot = document.createElement("p");
                     dragableSlot.setAttribute("class", "dragableSlot");
 
-                    if (false == rsp.slots[index].isLocked) {
+                    if ((false == rsp.slots[index].isLocked) &&
+                        (0 < rsp.slots[index].name.length)) {
                         dragableSlot.setAttribute("draggable", "true");
                         dragableSlot.setAttribute("ondragstart", "drag(event)");
                     }
@@ -201,6 +227,14 @@
                     }
                     divSlot.appendChild(dragableSlot);
                 }
+
+                divSlot = document.createElement("div");
+                divSlot.setAttribute("class", "divSlot");
+                divSlot.setAttribute("ondragover", "allowDrop(event)");
+                divSlot.setAttribute("ondrop", "drop(event)");
+                divSlot.setAttribute("id", "uninstall");
+                divSlot.innerHTML = "<header>Uninstall</header>";
+                divSlots.appendChild(divSlot);
 
                 while(1 < element.rows.length) {
                     element.deleteRow(-1);
@@ -348,13 +382,16 @@
     <h2>Display</h2>
     <p id="slotId">Slot: -</p>
     <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
+    <p></p>
     <div id="divSlots">
     </div>
-    <table id="slots" style="clear: both;">
+    <p style="clear: both;"><br /></p>
+    <table id="slots">
         <tr>
             <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Is locked?</th><th>Action</th>
         </tr>
     </table>
+    <p></p>
     <p>
         <select id="pluginToInstall" size="1">
         </select>
