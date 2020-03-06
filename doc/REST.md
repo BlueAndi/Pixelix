@@ -103,7 +103,7 @@ $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/status
 ### Endpoint `<base-uri>`/display/slots
 Get the max. number of slots and the current installed plugins.
 The plugins are listed in the ascending order of the slots.
-If a slot is empty, "empty" will be shown at the corresponding place.
+If a slot is empty, "" will be shown at the corresponding place.
 
 Detail:
 * Method: GET
@@ -117,17 +117,32 @@ GET <base-uri>/rest/api/v1/display/slots
 Result:
 ```json
 {
-    "data": {
-        "slots": [
-            "SysMsgPlugin",
-            "IconTextLampPlugin",
-            "empty",
-            "empty",
-            "empty"
-        ],
-        "maxSlots": 5
-    },
-    "status": 0
+  "data": {
+    "slots": [
+      {
+        "name": "SysMsgPlugin",
+        "uid": 372
+      },
+      {
+        "name": "IconTextLampPlugin",
+        "uid": 22076
+      },
+      {
+        "name": "FirePlugin",
+        "uid": 28133
+      },
+      {
+        "name": "DateTimePlugin",
+        "uid": 58620
+      },
+      {
+        "name": "",
+        "uid": 0
+      }
+    ],
+    "maxSlots": 5
+  },
+  "status": 0
 }
 ```
 

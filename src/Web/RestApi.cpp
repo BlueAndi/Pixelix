@@ -164,9 +164,9 @@ static uint8_t getSignalQuality(int8_t rssi)
  */
 static void handleStatus(AsyncWebServerRequest* request)
 {
-    String                  content;
-    StaticJsonDocument<256> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    DynamicJsonDocument jsonDoc(512);
 
     if (nullptr == request)
     {
@@ -231,9 +231,9 @@ static void handleStatus(AsyncWebServerRequest* request)
  */
 static void handleSlots(AsyncWebServerRequest* request)
 {
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    DynamicJsonDocument jsonDoc(512);
 
     if (nullptr == request)
     {
@@ -261,15 +261,18 @@ static void handleSlots(AsyncWebServerRequest* request)
         /* Add which plugin's are installed. */
         for(index = 0U; index < DisplayMgr::getInstance().getMaxSlots(); ++index)
         {
-            IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(index);
+            IPluginMaintenance* plugin  = DisplayMgr::getInstance().getPluginInSlot(index);
+            JsonObject          slot    = slotArray.createNestedObject();
 
             if (nullptr == plugin)
             {
-                slotArray.add("empty");
+                slot["name"]    = "";
+                slot["uid"]     = 0U;
             }
             else
             {
-                slotArray.add(plugin->getName());
+                slot["name"]    = plugin->getName();
+                slot["uid"]     = plugin->getUID();
             }
         }
 
@@ -295,7 +298,7 @@ static void handleSlots(AsyncWebServerRequest* request)
 static void handlePlugin(AsyncWebServerRequest* request)
 {
     String              content;
-    DynamicJsonDocument jsonDoc(400);
+    DynamicJsonDocument jsonDoc(512);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
