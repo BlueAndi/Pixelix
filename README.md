@@ -113,7 +113,9 @@ Build and upload the software via _Project Tasks -> Upload_ and the filesystem v
 * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) - Webserver.
 
 ## Where to change panel topology?
-In the _LedMatrix.h_ file you have to change the member variable _m\_topo_ according to your physical panel topology.
+First adapt in ```./src/HAL/Board.h``` the _width_ and _height_ according your LED matrix.
+
+In the ```./src/Gfx/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 ## Structure
 
