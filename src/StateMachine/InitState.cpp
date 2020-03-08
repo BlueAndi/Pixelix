@@ -65,6 +65,7 @@
 #include "IconTextPlugin.h"
 #include "JustTextPlugin.h"
 #include "SysMsgPlugin.h"
+#include "TestPlugin.h"
 #include "TimePlugin.h"
 
 /******************************************************************************
@@ -271,7 +272,7 @@ void InitState::registerPlugins()
     PluginMgr&  pluginMgr = PluginMgr::getInstance();
 
     /* Register in alphabetic order. */
-    
+
     pluginMgr.registerPlugin("DatePlugin", DatePlugin::create);
     pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
     pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
@@ -280,6 +281,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
+    pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
     pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
 
     return;
