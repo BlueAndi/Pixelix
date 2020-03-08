@@ -27,7 +27,7 @@
 /**
  * @brief  Ambient light sensor
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup hal
  *
  * @{
@@ -63,7 +63,7 @@ public:
 
     /**
      * Get ambilight sensor driver instance.
-     * 
+     *
      * @return Ambient light sensor driver instance
      */
     static AmbientLightSensor& getInstance()
@@ -73,7 +73,7 @@ public:
 
     /**
      * Checks whether a sensor is available or not.
-     * 
+     *
      * @return If a sensor is available, it will return true otherwise false.
      */
     bool isSensorAvailable(void);
@@ -96,14 +96,14 @@ public:
 
     /**
      * Get ambient light level.
-     * 
+     *
      * @return Ambient light level
      */
     AmbientLightLevel getAmbientLightLevel(void);
 
     /**
      * Get illuminance in Lux.
-     * 
+     *
      * @return Illuminance level in Lux.
      */
     float getIlluminance(void);
@@ -111,7 +111,7 @@ public:
     /**
      * Get the normalized light value in the range of 0.0f - 1.0f, from
      * 0 to 100000 Lux.
-     * 
+     *
      * @return Normalized light value
      */
     float getNormalizedLight(void);
@@ -119,7 +119,17 @@ public:
     /**
      * Threshold to detect a not connected LDR.
      */
-    static const uint16_t NO_LDR_THRESHOLD;
+    static const uint16_t   NO_LDR_THRESHOLD;
+
+    /**
+     * Lower limit for light luminance normalization in lux.
+     */
+    static const float      LIMIT_LOW;
+
+    /**
+     * Upper limit for light luminance normalization in lux.
+     */
+    static const float      LIMIT_HIGH;
 
 private:
 
@@ -146,7 +156,7 @@ private:
     /**
      * Calculate the normalized light value in the range of 0.0f - 1.0f, from
      * 0 to 100000 Lux.
-     * 
+     *
      * @param[in] illuminance   Illuminance in Lux
      * @return Normalized light value
      */

@@ -36,6 +36,7 @@
 #include "LedMatrix.h"
 #include "AmbientLightSensor.h"
 #include "Settings.h"
+#include "BrightnessCtrl.h"
 
 #include <Logging.h>
 
@@ -70,6 +71,12 @@ bool DisplayMgr::begin()
 {
     bool status = false;
 
+    /* Set the display brightness here just once.
+     * There is no need to do this in the process() method periodically.
+     */
+    BrightnessCtrl::getInstance().init();
+    BrightnessCtrl::getInstance().setBrightness(BRIGHTNESS_DEFAULT);
+
     /* No slots available? */
     if (nullptr == m_slots)
     {
@@ -90,11 +97,6 @@ bool DisplayMgr::begin()
             m_slots = new Slot[m_maxSlots];
         }
     }
-
-    /* Set the display brightness here just once.
-     * There is no need to do this in the process() method periodically.
-     */
-    LedMatrix::getInstance().setBrightness(m_brightness);
 
     /* Not started yet? */
     if ((nullptr == m_taskHandle) &&
@@ -181,58 +183,44 @@ void DisplayMgr::end()
 
 bool DisplayMgr::setAutoBrightnessAdjustment(bool enable)
 {
-    bool status = true;
+    bool status = false;
 
-    /* Disable automatic brightness adjustment? */
-    if (false == enable)
-    {
-        m_autoBrightnessTimer.stop();
-    }
-    /* Enable automatic brightness adjustment */
-    else
-    {
-        /* If no ambient light sensor is available, enable it makes no sense. */
-        if (false == AmbientLightSensor::getInstance().isSensorAvailable())
-        {
-            status = false;
-        }
-        /* Ambient light sensor is available */
-        else
-        {
-            /* Display brightness will be automatically adjusted in the process() method. */
-            m_autoBrightnessTimer.start(ALS_AUTO_ADJUST_PERIOD);
-        }
-    }
+    lock();
+    status = BrightnessCtrl::getInstance().enable(enable);
+    unlock();
 
     return status;
 }
 
-bool DisplayMgr::getAutoBrightnessAdjustment(void) const
+bool DisplayMgr::getAutoBrightnessAdjustment(void)
 {
     bool isEnabled = false;
 
-    if (m_autoBrightnessTimer.isTimerRunning())
-    {
-        isEnabled = true;
-    }
+    lock();
+    isEnabled = BrightnessCtrl::getInstance().isEnabled();
+    unlock();
 
     return isEnabled;
 }
 
 void DisplayMgr::setBrightness(uint8_t level)
 {
-    if (false == getAutoBrightnessAdjustment())
-    {
-        m_brightness = level;
-        LedMatrix::getInstance().setBrightness(m_brightness);
-    }
+    lock();
+    BrightnessCtrl::getInstance().setBrightness(level);
+    unlock();
 
     return;
 }
 
-uint8_t DisplayMgr::getBrightness(void) const
+uint8_t DisplayMgr::getBrightness(void)
 {
-    return m_brightness;
+    uint8_t brightness = 0U;
+
+    lock(),
+    brightness = BrightnessCtrl::getInstance().getBrightness();
+    unlock();
+
+    return brightness;
 }
 
 uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
@@ -589,9 +577,7 @@ DisplayMgr::DisplayMgr() :
     m_selectedSlot(SLOT_ID_INVALID),
     m_selectedPlugin(nullptr),
     m_requestedPlugin(nullptr),
-    m_slotTimer(),
-    m_autoBrightnessTimer(),
-    m_brightness(BRIGHTNESS_DEFAULT)
+    m_slotTimer()
 {
 }
 
@@ -647,21 +633,10 @@ void DisplayMgr::process()
     LedMatrix&  matrix  = LedMatrix::getInstance();
     uint8_t     index   = 0U;
 
-    /* Ambient light sensor available for automatic brightness adjustment? */
-    if ((true == m_autoBrightnessTimer.isTimerRunning()) &&
-        (true == m_autoBrightnessTimer.isTimeout()))
-    {
-        float   lightNormalized         = AmbientLightSensor::getInstance().getNormalizedLight();
-        uint8_t BRIGHTNESS_DYN_RANGE    = UINT8_MAX - BRIGHTNESS_MIN;
-        float   fBrightness             = static_cast<float>(BRIGHTNESS_MIN) + ( static_cast<float>(BRIGHTNESS_DYN_RANGE) * lightNormalized );
-
-        m_brightness = static_cast<uint8_t>(fBrightness);
-        matrix.setBrightness(m_brightness);
-
-        m_autoBrightnessTimer.restart();
-    }
-
     lock();
+
+    /* Handle display brightness */
+    BrightnessCtrl::getInstance().process();
 
     /* Plugin requested to choose? */
     if (nullptr != m_requestedPlugin)

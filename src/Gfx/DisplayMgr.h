@@ -108,7 +108,7 @@ public:
      *
      * @return If enabled, it will return true otherwise false.
      */
-    bool getAutoBrightnessAdjustment(void) const;
+    bool getAutoBrightnessAdjustment(void);
 
     /**
      * Set display brightness in digits [0; 255].
@@ -122,7 +122,7 @@ public:
      *
      * @return Display brightness in digits
      */
-    uint8_t getBrightness(void) const;
+    uint8_t getBrightness(void);
 
     /**
      * Install plugin to slot. If the slot contains already a plugin, it will fail.
@@ -254,12 +254,6 @@ public:
     /** If no ambient light sensor is available, the default brightness shall be 40%. */
     static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40U) / 100U;
 
-    /** Minimum brightness of 10% in case of a dark room. Only used during automatic brightness adjustment. */
-    static const uint8_t    BRIGHTNESS_MIN          = (UINT8_MAX * 10U) / 100U;
-
-    /** Default period for automatic brightness adjustment in ms. */
-    static const uint32_t   ALS_AUTO_ADJUST_PERIOD  = 250U;
-
 private:
 
     /** Display manager instance */
@@ -294,12 +288,6 @@ private:
 
     /** Timer, used for changing the slot after a specific duration. */
     SimpleTimer         m_slotTimer;
-
-    /** Timer, used for automatic brightness adjustment. */
-    SimpleTimer         m_autoBrightnessTimer;
-
-    /** Display brightness in percent ([0; 100]). */
-    uint8_t             m_brightness;
 
     /**
      * Construct LED matrix.

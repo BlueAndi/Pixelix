@@ -79,6 +79,12 @@ static const uint16_t   ambientLightLevels[AmbientLightSensor::AMBIENT_LIGHT_LEV
  */
 const uint16_t  AmbientLightSensor::NO_LDR_THRESHOLD    = (3UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage;
 
+/* Set lower limit for light luminance normalization in lux. */
+const float     AmbientLightSensor::LIMIT_LOW           = 1.0F;
+
+/* Set upper limit for light luminance normalization in lux. */
+const float     AmbientLightSensor::LIMIT_HIGH          = 100000.0F;
+
 /* Initialize ambient light sensor */
 AmbientLightSensor AmbientLightSensor::m_instance;
 
@@ -134,27 +140,27 @@ float AmbientLightSensor::getIlluminance()
         * from datasheet:
         * gamma gradient = 0.7
         * resistance at 10 Lux = 10 kOhm
-        * 
+        *
         * Calculation of R_LDR:
         * x = log10( I )
         * y = log10( R_LDR )
-        * 
+        *
         * Note, I is the ilumiance and R_LDR is the ambient light depended resistance.
-        * 
+        *
         * y = m * x + b
         * log10( R_LDR ) = -(gamma gradient) * log10( I ) + b
         * log10( R_LDR ) = log10( I ^ -(gamma gradient) ) + b
         * log10( R_LDR ) = log10( I ^ -(gamma gradient) ) + log10( 10 ^ b )
         * log10( R_LDR ) = log10( ( I ^ -(gamma gradient) ) * ( 10 ^ b ) )
         * R_LDR = ( I ^ -(gamma gradient) ) * ( 10 ^ b )
-        * 
+        *
         * Calculation of the function axis section:
         * b = log10( R_LDR * I ^ (gamma gradient) )
         * b = log10 ( 10 kOhm * 10 Lux ^ 0.7 )
         * b = log10 ( 10^4 * 10^0.7 ) kOhm
         * b = 4 + 0.7
         * b = 4.7 kOhm
-        * 
+        *
         * Calculation of I:
         * R_LDR = ( I ^ -(gamma gradient) ) * ( 10 ^ b )
         * I ^ -(gamma gradient) = R_LDR / ( 10 ^ b )
@@ -174,13 +180,13 @@ float AmbientLightSensor::getIlluminance()
         * The schematic contains a voltage divider with R = 1 kOhm connected to GND.
         * The supply voltage Vcc is 3.3 V.
         * The ADC resolution is 4096.
-        * 
+        *
         * I = Vcc / ( R_LDR + R )
-        * 
+        *
         * V_R = R * I
         * V_R = R * ( Vcc / ( R_LDR + R ) )
         * V_R = R * Vcc / ( R_LDR + R )
-        * 
+        *
         * ADC = ( ADC resolution - 1 ) * V_R / Vcc
         * ADC = ( ADC resolution - 1 ) * R * Vcc / ( ( R_LDR + R ) * Vcc )
         * ADC = ( ADC resolution - 1 ) * R / ( R_LDR + R )
@@ -189,7 +195,7 @@ float AmbientLightSensor::getIlluminance()
         * ADC * R_LDR = ( ADC resolution - 1 ) * R - ADC * R
         * R_LDR = [ ( ADC resolution - 1 ) * R - ADC * R ] / ADC
         * R_LDR = ( ADC_max * R - ADC * R ) / ADC
-        * 
+        *
         * Final calculation of I [Lux]:
         * I = 5179474.6792312 * R_LDR ^ -1.42857142857143
         * I = 5179474.6792312 * [ ( ADC_max * R - ADC * R ) / ADC ] ^ -1.42857142857143
@@ -221,8 +227,6 @@ float AmbientLightSensor::getNormalizedLight()
 
 float AmbientLightSensor::calcNormalizedLight(float illuminance)
 {
-    const float LIMIT_LOW       = 1.0F;         /* [Lux] */
-    const float LIMIT_HIGH      = 100000.0F;    /* [Lux] */
     const float LIGHT_NORM_MIN  = 0.0F;
     const float LIGHT_NORM_MAX  = 1.0F;
     float       lightNormalized = 0.0F;         /* Range: 0.0f - 1.0f */
