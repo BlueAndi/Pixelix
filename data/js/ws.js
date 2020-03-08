@@ -140,7 +140,10 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
         } else if ("ACK" === status) {
             if ("GETDISP" === this.pendingCmd.name) {
                 rsp.slotId = data.shift();
-                rsp.data = data;
+                rsp.data = [];
+                for(index = 0; index < data.length; ++index) {
+                    rsp.data.push(parseInt(data[index], 16));
+                }
                 this.pendingCmd.resolve(rsp);
             } else if ("BRIGHTNESS" === this.pendingCmd.name) {
                 rsp.brightness = parseInt(data[0]);

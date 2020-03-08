@@ -27,7 +27,7 @@
 /**
  * @brief  Utilitiy
  * @author Yann Le Glaz <yann_le@web.de>
- * 
+ *
  * @addtogroup utilities
  *
  * @{
@@ -72,10 +72,10 @@ namespace Util
 /**
  * Convert a string to uint8_t. String can contain integer number in decimal
  * or hexadecimal format.
- * 
+ *
  * @param[in]   str     String
  * @param[out]  value   Converted value
- * 
+ *
  * @return If conversion fails, it will return false otherwise true.
  */
 extern bool strToUInt8(const String& str, uint8_t& value);
@@ -83,10 +83,10 @@ extern bool strToUInt8(const String& str, uint8_t& value);
 /**
  * Convert a string to uint16_t. String can contain integer number in decimal
  * or hexadecimal format.
- * 
+ *
  * @param[in]   str     String
  * @param[out]  value   Converted value
- * 
+ *
  * @return If conversion fails, it will return false otherwise true.
  */
 extern bool strToUInt16(const String& str, uint16_t& value);
@@ -94,10 +94,10 @@ extern bool strToUInt16(const String& str, uint16_t& value);
 /**
  * Convert a string to uint32_t. String can contain integer number in decimal
  * or hexadecimal format.
- * 
+ *
  * @param[in]   str     String
  * @param[out]  value   Converted value
- * 
+ *
  * @return If conversion fails, it will return false otherwise true.
  */
 extern bool strToUInt32(const String& str, uint32_t& value);
@@ -105,13 +105,22 @@ extern bool strToUInt32(const String& str, uint32_t& value);
 /**
  * Convert a string to int32_t. String can contain integer number in decimal
  * or hexadecimal format.
- * 
+ *
  * @param[in]   str     String
  * @param[out]  value   Converted value
- * 
+ *
  * @return If conversion fails, it will return false otherwise true.
  */
 extern bool strToInt32(const String& str, int32_t& value);
+
+/**
+ * Convert uint32_t to hex string, but without "0x" as prefix.
+ *
+ * @param[in] value Value to convert
+ *
+ * @return Hex string
+ */
+extern String uint32ToHex(uint32_t value);
 
 }
 

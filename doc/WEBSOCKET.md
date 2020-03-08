@@ -35,7 +35,7 @@ Response:
 * Successful:
   * ```ACK;<slot-id>;<color>;<color>;...;<color>```
   * ```<slot-id>```: Id of current active slot.
-  * ```<color>```: Colors starting with the row y = 0 and from x = 0 to N. Then the next row and etc.
+  * ```<color>```: Color as 32 bit hex value, starting with the row y = 0 and from x = 0 to N. Then the next row and etc.
 * Failed:
   * ```NACK```
 

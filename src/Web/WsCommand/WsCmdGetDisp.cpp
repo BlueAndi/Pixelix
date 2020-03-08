@@ -90,7 +90,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         for(index = 0U; index <  UTIL_ARRAY_NUM(framebuffer); ++index)
         {
             rsp += DELIMITER;
-            rsp += framebuffer[index];
+            rsp += Util::uint32ToHex(framebuffer[index]);
         }
 
         server->text(client->id(), rsp);

@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "Util.h"
+#include <stdio.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -156,6 +157,15 @@ extern bool Util::strToUInt32(const String& str, uint32_t& value)
     }
 
     return success;
+}
+
+extern String Util::uint32ToHex(uint32_t value)
+{
+    char buffer[9];  /* Contains a 32-bit value in hex */
+
+    (void)snprintf(buffer, UTIL_ARRAY_NUM(buffer), "%x", value);
+
+    return String(buffer);
 }
 
 /******************************************************************************
