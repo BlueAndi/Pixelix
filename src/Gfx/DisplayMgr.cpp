@@ -548,7 +548,7 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
             }
         }
 
-        if (NULL != slotId)
+        if (nullptr != slotId)
         {
             *slotId = m_selectedSlot;
         }
