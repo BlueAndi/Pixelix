@@ -168,7 +168,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
         if ((0 > written) ||
             ((MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN) <= written))
         {
-            strcat(buffer, STR_CUT_OFF_SEQ);
+            strlcat(buffer, STR_CUT_OFF_SEQ, MESSAGE_BUFFER_SIZE);
         }
 
         msg.timestamp   = millis();
