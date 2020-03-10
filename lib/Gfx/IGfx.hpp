@@ -27,7 +27,7 @@
 /**
  * @brief  Graphics interface
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -63,7 +63,7 @@ public:
 
     /**
      * Constructs the graphics interface.
-     * 
+     *
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
@@ -81,16 +81,18 @@ public:
 
     /**
      * Get pixel color at given position.
-     * 
+     *
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
-     * 
+     *
      * @return Color in RGB565 format.
      */
     virtual uint16_t getColor(int16_t x, int16_t y) = 0;
 
 private:
 
+    /* Default constructor not allowed. */
+    IGfx();
 };
 
 /******************************************************************************
