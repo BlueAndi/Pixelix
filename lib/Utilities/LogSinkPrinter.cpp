@@ -82,7 +82,7 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
         if ((0 > written) ||
             ((LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN) <= written))
         {
-            strcat(buffer, STR_CUT_OFF_SEQ);
+            strlcat(buffer, STR_CUT_OFF_SEQ, LOG_MESSAGE_BUFFER_SIZE);
         }
 
         (void)m_output->print(buffer);
