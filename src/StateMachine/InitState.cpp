@@ -262,7 +262,8 @@ void InitState::showStartupInfoOnDisplay()
     delay(SYS_MSG_WAIT_TIME);
 
     /* Clear and wait */
-    sysMsg.show("", SYS_MSG_WAIT_TIME / 2U);
+    sysMsg.show("");
+    delay(SYS_MSG_WAIT_TIME / 2U);
 
     return;
 }
