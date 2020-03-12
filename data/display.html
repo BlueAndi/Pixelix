@@ -192,7 +192,7 @@
         function setDuration(slotId) {
             var element = document.getElementById("duration" + slotId);
             var duration = parseInt(element.value) * 1000;
-            return wsClient.setDuration({
+            return wsClient.setSlotDuration({
                 slotId: slotId,
                 duration: duration
             }).then(function(rsp) {
