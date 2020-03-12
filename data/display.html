@@ -273,6 +273,8 @@
                         cell.innerHTML = "true";
                     }
                     cell = row.insertCell(-1);
+                    cell.innerHTML = rsp.slots[index].duration;
+                    cell = row.insertCell(-1);
                     if (0 < rsp.slots[index].name.length) {
                         cell.innerHTML = "<input type=\"button\" value=\"Uninstall\" onclick=\"uninstall(" + index + ")\" />";
                     }
@@ -399,7 +401,7 @@
     <p style="clear: both;"><br /></p>
     <table id="slots">
         <tr>
-            <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Is locked?</th><th>Action</th>
+            <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Is locked?</th><th>Duration [ms]</th><th>Action</th>
         </tr>
     </table>
     <p></p>

@@ -253,27 +253,26 @@ static void handleSlots(AsyncWebServerRequest* request)
     {
         JsonObject  dataObj     = jsonDoc.createNestedObject("data");
         JsonArray   slotArray   = dataObj.createNestedArray("slots");
-        uint8_t     index       = 0U;
+        uint8_t     slotId      = 0U;
+        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
 
         /* Add max. number of slots */
-        dataObj["maxSlots"] = DisplayMgr::getInstance().getMaxSlots();
+        dataObj["maxSlots"] = displayMgr.getMaxSlots();
 
         /* Add which plugin's are installed. */
-        for(index = 0U; index < DisplayMgr::getInstance().getMaxSlots(); ++index)
+        for(slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
         {
-            IPluginMaintenance* plugin  = DisplayMgr::getInstance().getPluginInSlot(index);
-            JsonObject          slot    = slotArray.createNestedObject();
+            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
+            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
+            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
+            bool                isLocked    = displayMgr.isSlotLocked(slotId);
+            uint32_t            duration    = displayMgr.getSlotDuration(slotId);
+            JsonObject          slot        = slotArray.createNestedObject();
 
-            if (nullptr == plugin)
-            {
-                slot["name"]    = "";
-                slot["uid"]     = 0U;
-            }
-            else
-            {
-                slot["name"]    = plugin->getName();
-                slot["uid"]     = plugin->getUID();
-            }
+            slot["name"]        = name;
+            slot["uid"]         = uid;
+            slot["isLocked"]    = isLocked;
+            slot["duration"]    = duration;
         }
 
         /* Prepare response */

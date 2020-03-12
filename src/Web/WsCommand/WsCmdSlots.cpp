@@ -78,37 +78,36 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     {
         String      rsp         = "ACK";
         const char  DELIMITER   = ';';
+        DisplayMgr& displayMgr  = DisplayMgr::getInstance();
         uint8_t     slotId      = DisplayMgr::SLOT_ID_INVALID;
 
         rsp += DELIMITER;
-        rsp += DisplayMgr::getInstance().getMaxSlots();
+        rsp += displayMgr.getMaxSlots();
 
-        for(slotId = 0U; slotId < DisplayMgr::getInstance().getMaxSlots(); ++slotId)
+        /* Provides for every slot:
+         * - Name of plugin.
+         * - Plugin UID.
+         * - Information about whether the slot is locked or not.
+         * - Slot duration in ms.
+         */
+        for(slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
         {
-            IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
-            const char*         name        = (nullptr != plugin) ? plugin->getName() : nullptr;
-            bool                isLocked    = DisplayMgr::getInstance().isSlotLocked(slotId);
+            IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
+            const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
+            uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
+            bool                isLocked    = displayMgr.isSlotLocked(slotId);
+            uint32_t            duration    = displayMgr.getSlotDuration(slotId);
 
-            if (nullptr == name)
-            {
-                rsp += DELIMITER;
-                rsp += "\"\"";
-                rsp += DELIMITER;
-                rsp += 0;
-                rsp += DELIMITER;
-                rsp += "0";
-            }
-            else
-            {
-                rsp += DELIMITER;
-                rsp += "\"";
-                rsp += name;
-                rsp += "\"";
-                rsp += DELIMITER;
-                rsp += plugin->getUID();
-                rsp += DELIMITER;
-                rsp += (false == isLocked) ? "0" : "1";
-            }
+            rsp += DELIMITER;
+            rsp += "\"";
+            rsp += name;
+            rsp += "\"";
+            rsp += DELIMITER;
+            rsp += uid;
+            rsp += DELIMITER;
+            rsp += (false == isLocked) ? "0" : "1";
+            rsp += DELIMITER;
+            rsp += duration;
         }
 
         server->text(client->id(), rsp);

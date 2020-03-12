@@ -101,9 +101,13 @@ $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/status
 ```
 
 ### Endpoint `<base-uri>`/display/slots
-Get the max. number of slots and the current installed plugins.
+Get the following informations:
+* Max. number of slots.
+* Per slot:
+  * The current installed plugin.
+  * Whether the slot is locked or not.
+  * Slot duration in ms.
 The plugins are listed in the ascending order of the slots.
-If a slot is empty, "" will be shown at the corresponding place.
 
 Detail:
 * Method: GET
@@ -121,23 +125,33 @@ Result:
     "slots": [
       {
         "name": "SysMsgPlugin",
-        "uid": 372
+        "uid": 372,
+        "isLocked": true,
+        "duration": 21000
       },
       {
         "name": "IconTextLampPlugin",
-        "uid": 22076
+        "uid": 22076,
+        "isLocked": false,
+        "duration": 30000
       },
       {
         "name": "FirePlugin",
-        "uid": 28133
+        "uid": 28133,
+        "isLocked": false,
+        "duration": 30000
       },
       {
         "name": "DateTimePlugin",
-        "uid": 58620
+        "uid": 58620,
+        "isLocked": false,
+        "duration": 30000
       },
       {
         "name": "",
-        "uid": 0
+        "uid": 0,
+        "isLocked": false,
+        "duration": 30000
       }
     ],
     "maxSlots": 5

@@ -168,11 +168,12 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("SLOTS" === this.pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
                 rsp.slots = [];
-                for(index = 0; index < (data.length / 3); ++index) {
+                for(index = 0; index < (data.length / 4); ++index) {
                     rsp.slots.push({
-                        name: data[3 * index + 0].substring(1, data[3 * index + 0].length - 1),
-                        uid: parseInt(data[3 * index + 1]),
-                        isLocked: (0 == parseInt(data[3 * index + 2])) ? false : true
+                        name: data[4 * index + 0].substring(1, data[4 * index + 0].length - 1),
+                        uid: parseInt(data[4 * index + 1]),
+                        isLocked: (0 == parseInt(data[4 * index + 2])) ? false : true,
+                        duration: parseInt(data[4 * index + 3])
                     });
                 }
                 this.pendingCmd.resolve(rsp);
