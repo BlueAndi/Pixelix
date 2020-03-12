@@ -100,7 +100,7 @@ void WsCmdMove::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
 
     m_isError = false;
-    m_parCnt = 0;
+    m_parCnt = 0U;
 
     return;
 }

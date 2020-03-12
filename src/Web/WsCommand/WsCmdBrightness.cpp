@@ -80,11 +80,11 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
         String      rsp         = "ACK";
         const char  DELIMITER   = ';';
 
-        if (1 == m_parCnt)
+        if (1U == m_parCnt)
         {
             DisplayMgr::getInstance().setBrightness(m_brightness);
         }
-        else if (2 == m_parCnt)
+        else if (2U == m_parCnt)
         {
             DisplayMgr::getInstance().setBrightness(m_brightness);
             DisplayMgr::getInstance().setAutoBrightnessAdjustment(m_isEnabled);
@@ -103,7 +103,7 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
     }
 
     m_isError = false;
-    m_parCnt = 0;
+    m_parCnt = 0U;
 
     return;
 }
