@@ -121,6 +121,7 @@ Response:
 * Successful:
   * ```ACK;<slot-id>```
   * ```<slot-id>```: The id of the slot, where the plugin was installed.
+  * ```<plugin-uid>```: The plugin UID.
 * Failed:
   * ```NACK```
 

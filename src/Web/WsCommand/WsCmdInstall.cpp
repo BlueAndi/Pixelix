@@ -88,6 +88,8 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         {
             rsp += DELIMITER;
             rsp += DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
+            rsp += DELIMITER;
+            rsp += plugin->getUID();
 
             plugin->enable();
 

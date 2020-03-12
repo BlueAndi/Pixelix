@@ -364,6 +364,7 @@ static void handlePlugin(AsyncWebServerRequest* request)
 
                 /* Prepare response */
                 dataObj["slotId"]   = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
+                dataObj["uid"]      = plugin->getUID();
                 jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
                 httpStatusCode      = HttpStatus::STATUS_CODE_OK;
             }

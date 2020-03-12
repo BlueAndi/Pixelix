@@ -192,7 +192,8 @@ Result:
 {
     "status": 0,
     "data": {
-        "slotId": 1
+        "slotId": 1,
+        "uid": 27065
     }
 }
 ```

@@ -151,6 +151,7 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this.pendingCmd.resolve(rsp);
             } else if ("INSTALL" === this.pendingCmd.name) {
                 rsp.slotId = parseInt(data[0]);
+                rsp.uid = parseInt(data[1]);
                 this.pendingCmd.resolve(rsp);
             } else if ("LOG" === this.pendingCmd.name) {
                 rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
