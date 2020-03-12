@@ -43,6 +43,7 @@
 #include "WsCmdBrightness.h"
 #include "WsCmdLog.h"
 #include "WsCmdMove.h"
+#include "WsCmdSlotDuration.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -71,31 +72,34 @@
 WebSocketSrv    WebSocketSrv::m_instance;
 
 /** Websocket get display command */
-static WsCmdGetDisp     gWsCmdGetDisp;
+static WsCmdGetDisp         gWsCmdGetDisp;
 
 /** Websocket slots command */
-static WsCmdSlots       gWsCmdSlots;
+static WsCmdSlots           gWsCmdSlots;
 
 /** Websocket plugins command */
-static WsCmdPlugins     gWsCmdPlugins;
+static WsCmdPlugins         gWsCmdPlugins;
 
 /** Websocket install command */
-static WsCmdInstall     gWsCmdInstall;
+static WsCmdInstall         gWsCmdInstall;
 
 /** Websocket uninstall command */
-static WsCmdUninstall   gWsCmdUninstall;
+static WsCmdUninstall       gWsCmdUninstall;
 
 /** Websocket reset command */
-static WsCmdReset       gWsCmdReset;
+static WsCmdReset           gWsCmdReset;
 
 /** Websocket get/set brightness command */
-static WsCmdBrightness  gWsCmdBrightness;
+static WsCmdBrightness      gWsCmdBrightness;
 
 /** Websocket log command */
-static WsCmdLog         gWsCmdLog;
+static WsCmdLog             gWsCmdLog;
 
 /** Websocket move command */
-static WsCmdMove        gWsCmdMove;
+static WsCmdMove            gWsCmdMove;
+
+/** Websocket move command */
+static WsCmdSlotDuration    gWsCmdSlotDuration;
 
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
@@ -108,7 +112,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdReset,
     &gWsCmdBrightness,
     &gWsCmdLog,
-    &gWsCmdMove
+    &gWsCmdMove,
+    &gWsCmdSlotDuration
 };
 
 /******************************************************************************

@@ -166,6 +166,9 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this.pendingCmd.resolve(rsp);
             } else if ("RESET" === this.pendingCmd.name) {
                 this.pendingCmd.resolve(rsp);
+            } else if ("SLOT_DURATION" === this.pendingCmd.name) {
+                rsp.duration = parseInt(data[0]);
+                this.pendingCmd.resolve(rsp);
             } else if ("SLOTS" === this.pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
                 rsp.slots = [];
@@ -383,6 +386,48 @@ pixelix.ws.Client.prototype.move = function(options) {
 
             this._sendCmd({
                 name: "MOVE",
+                par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getSlotDuration = function(options) {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else if ("number" !== typeof options.slotId) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "SLOT_DURATION",
+                par: options.slotId,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.setSlotDuration = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "";
+        if (null === this.socket) {
+            reject();
+        } else if ("number" !== typeof options.slotId) {
+            reject();
+        } else if ("number" !== typeof options.duration) {
+            reject();
+        } else {
+
+            par += options.slotId;
+            par += ";";
+            par += options.duration;
+
+            this._sendCmd({
+                name: "SLOT_DURATION",
                 par: par,
                 resolve: resolve,
                 reject: reject

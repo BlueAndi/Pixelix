@@ -7,9 +7,8 @@
     <link rel="stylesheet" href="/style/style.css" />
     <style>
         div.divSlot {
-            height: 6em;
+            height: 8em;
             width: 12em;
-            display: inline-block;
             border: 2px solid #666666;
             background-color: #ccc;
             margin-right: 5px;
@@ -47,7 +46,6 @@
             border-bottom: 1px solid #ddd;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
-            pointer-events: none;
         }
     </style>
     <script src="/js/ws.js"></script>
@@ -191,6 +189,23 @@
             }
         }
 
+        function setDuration(slotId) {
+            var element = document.getElementById("duration" + slotId);
+            var duration = parseInt(element.value) * 1000;
+            return wsClient.setDuration({
+                slotId: slotId,
+                duration: duration
+            }).then(function(rsp) {
+            }).catch(function(err) {
+                if ("undefined" !== typeof err) {
+                    console.error(err);
+                }
+                alert("Set duration failed.");
+            }).finally(function() {
+                return updateSlotInfo();
+            });
+        }
+
         function updateSlotInfo() {
             return wsClient.getSlots().then(function(rsp) {
                 var element = document.getElementById("slots");
@@ -201,6 +216,7 @@
                 var divSlots = document.getElementById("divSlots");
                 var divSlot = null;
                 var dragableSlot = null;
+                var htmlStr = "";
 
                 divSlots.innerHTML = "";
                 for(index = 0; index < rsp.slots.length; ++index) {
@@ -215,7 +231,12 @@
                     }
 
                     divSlot.setAttribute("id", index);
-                    divSlot.innerHTML = "<header>Slot " + index + "</header>";
+                    htmlStr  = "<header>";
+                    htmlStr += "Slot " + index + "<br />";
+                    htmlStr += "<input id=\"duration" + index + "\" type=\"number\" value=\"" + (rsp.slots[index].duration / 1000) + "\" min=\"1\" max=\"3600000\" onchange=\"setDuration(" + index + ")\"/>"
+                    htmlStr += "[s]";
+                    htmlStr += "</header>";
+                    divSlot.innerHTML = htmlStr;
                     divSlots.appendChild(divSlot);
 
                     dragableSlot = document.createElement("p");
