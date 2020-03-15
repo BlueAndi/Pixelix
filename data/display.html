@@ -181,7 +181,7 @@
 
             if ("uninstall" == dstParent.id) {
                 uninstall(parseInt(srcParent.id));
-            } else {
+            } else if (src.id != dst.id) {
                 ev.currentTarget.replaceChild(src, dst);
                 srcParent.appendChild(dst);
 
