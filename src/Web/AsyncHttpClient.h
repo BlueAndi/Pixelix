@@ -112,17 +112,30 @@ public:
     bool isDisconnected();
 
     /**
+     * Use HTTP/1.0 instead of HTTP/1.1
+     *
+     * @param[in] useHttp10 Use HTTP/1.0 (true) or HTTP/1.1 (false)
+     */
+    void useHttp10(bool useHttp10);
+
+    /**
      * Send GET request to host.
      *
-     * @param[in] type      Request type, e.g. GET, PUT, etc.
+     * @param[in] method    Request method, e.g. GET, PUT, etc.
      * @param[in] payload   Request payload buffer
      * @param[in] size      Payload size in byte
      *
      * @return If request is successful sent, it will return true otherwise false.
      */
-    bool sendRequest(const char* type, uint8_t* payload, size_t size);
+    bool sendRequest(const char* method, uint8_t* payload, size_t size);
 
 private:
+
+    /** HTTP port */
+    static const uint16_t   HTTP_PORT   = 80U;
+
+    /** HTTPS port */
+    static const uint16_t   HTTPS_PORT  = 443U;
 
     AsyncClient m_tcpClient;            /**< Asynchronous TCP client */
     String      m_hostname;             /**< Server hostname */
@@ -131,7 +144,9 @@ private:
     String      m_uri;                  /**< Request URI */
     String      m_headers;              /**< Request headers */
     bool        m_isReqOpen;            /**< Is a request open? */
-    String      m_type;                 /**< Request type */
+    String      m_method;               /**< Request method, e.g. GET, PUT, etc. */
+    String      m_userAgent;            /**< User agent */
+    bool        m_useHttp10;            /**< Use HTTP/1.0 instead of HTTP/1.1 */
 
     AsyncHttpClient(const AsyncHttpClient& client);
     AsyncHttpClient& operator=(const AsyncHttpClient& client);
@@ -175,11 +190,13 @@ private:
     /**
      * Send request header to server.
      *
-     * @param[in] type  Request type, e.g. GET, PUT, etc.
+     * @param[in] method    Request method, e.g. GET, PUT, etc.
+     * @param[in] host      Hostname of server
+     * @param[in] port      Port
      *
      * @return If successful requested, it will return true otherwise false.
      */
-    bool sendHeader(const char* type);
+    bool sendHeader(const char* method);
 };
 
 /******************************************************************************

@@ -70,7 +70,9 @@ AsyncHttpClient::AsyncHttpClient() :
     m_uri(),
     m_headers(),
     m_isReqOpen(false),
-    m_type()
+    m_method(),
+    m_userAgent("AsyncHttpClient"),
+    m_useHttp10(false)
 {
     m_tcpClient.onConnect(  [this](void* arg, AsyncClient* client)
                             {
@@ -122,11 +124,11 @@ bool AsyncHttpClient::begin(String url)
         /* Determine port from protocol */
         if (protocol == "http")
         {
-            m_port = 80U;
+            m_port = HTTP_PORT;
         }
         else if (protocol == "https")
         {
-            m_port = 443U;
+            m_port = HTTPS_PORT;
         }
         else
         {
@@ -237,13 +239,18 @@ bool AsyncHttpClient::isDisconnected()
     return m_tcpClient.disconnected();
 }
 
-bool AsyncHttpClient::sendRequest(const char* type, uint8_t* payload, size_t size)
+void AsyncHttpClient::useHttp10(bool useHttp10)
+{
+    m_useHttp10 = useHttp10;
+}
+
+bool AsyncHttpClient::sendRequest(const char* method, uint8_t* payload, size_t size)
 {
     bool status = true;
 
     if (false == isConnected())
     {
-        m_type = type;
+        m_method = method;
         /* m_payload = payload */
         /* m_payloadSize = size */
         m_isReqOpen = true;
@@ -253,7 +260,7 @@ bool AsyncHttpClient::sendRequest(const char* type, uint8_t* payload, size_t siz
     else
     {
         m_isReqOpen = false;
-        status = sendHeader(type);
+        status = sendHeader(method);
     }
 
     return status;
@@ -273,7 +280,7 @@ void AsyncHttpClient::onConnect(AsyncClient* client)
 
     if (true == m_isReqOpen)
     {
-        (void)sendRequest(m_type.c_str(), NULL, 0U);
+        (void)sendRequest(m_method.c_str(), NULL, 0U);
     }
 }
 
@@ -311,20 +318,105 @@ void AsyncHttpClient::clear()
     return;
 }
 
-bool AsyncHttpClient::sendHeader(const char* type)
+bool AsyncHttpClient::sendHeader(const char* method)
 {
     String      header;
-    const char* PROTOCOL            = "HTTP";
-    const char* PROTOCOL_VERSION    = "1.0";
+    const char* PROTOCOL    = "HTTP";
+    const char* SP          = " ";
+    const char* CRLF        = "\r\n";
 
-    header += type;
-    header += " / ";
+    /* RFC2616
+     * Request = Request-Line
+     *           * (( general-header
+     *            | request-header
+     *            | entity-header ) CRLF)
+     *            CRLF
+     *            [ message-body ]
+     *
+     * Request-Line: Method SP Request-URI SP HTTP-Version CRLF
+     *
+     */
+
+    /* RFC2616 - Method */
+    header += method;
+    header += SP;
+
+    /* RFC2616 - Request-URI    = "*" | absoluteURI | abs_path | authority */
+    if (true == m_uri.isEmpty())
+    {
+        header += "/";
+    }
+    else
+    {
+        header += m_uri;
+    }
+
+    header += SP;
+
+    /* RFC2616 - HTTP-Version */
     header += PROTOCOL;
     header += "/";
-    header += PROTOCOL_VERSION;
-    header += "\r\nHost: ";
+
+    if (false == m_useHttp10)
+    {
+        header += "1.1";
+    }
+    else
+    {
+        header += "1.0";
+    }
+
+    header += CRLF;
+
+    /* RFC2616 - general-header */
+    /* Empty */
+    header += CRLF;
+
+    /* RFC2616 - request-header */
+    header += "Host: ";
     header += m_hostname;
-    header += "\r\n\r\n";
+
+    if ((HTTP_PORT != m_port) &&
+        (HTTPS_PORT != m_port))
+    {
+        header += ":";
+        header += m_port;
+    }
+
+    header += CRLF;
+
+    header += "User-Agent: ";
+    header += m_userAgent;
+    header += CRLF;
+
+    header += "Connection: ";
+    header += "close";
+    header += CRLF;
+
+    if (false == m_useHttp10)
+    {
+        header += "Accept-Encoding: ";
+        header += "identity;q=1,chunked;q=0.1,*;q=0";
+        header += CRLF;
+    }
+
+    if (0U < m_base64Authorization.length())
+    {
+        m_base64Authorization.replace("\n", "");
+        header += "Authorization: Basic ";
+        header += m_base64Authorization;
+        header += CRLF;
+    }
+
+    header += m_headers;
+    header += CRLF;
+
+    /* RFC2616 - entity-header */
+    /* Not used. */
+
+    /* No message-body */
+
+    //Serial.printf("---\n%s\n---\n", header.c_str());
 
     return (header.length() == m_tcpClient.write(header.c_str()));
 }
