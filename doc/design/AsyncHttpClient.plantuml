@@ -1,0 +1,88 @@
+@startuml
+
+title "AsyncHttpClient"
+
+participant "Application" as app
+participant "__client::AsyncHttpClient__" as client
+participant "__tcpClient::AsyncTcp__" as tcpClient
+
+app -> client: begin(URL)
+activate app
+activate client
+note right: Determine protocol, port, host and etc. from URL.
+app <-- client: true
+deactivate client
+
+alt No connection established
+
+    app -> client: GET()
+    activate client
+    client -> tcpClient: connect()
+    note right: Connect to server.
+    activate tcpClient
+    client <-- tcpClient
+    deactivate tcpClient
+    client -> client: busy()
+    app <-- client
+    deactivate client
+
+    client <- tcpClient: onConnected()
+    note right
+        Connection to server established.
+    end note
+    activate tcpClient
+    activate client
+    client -> client: sendRequest()
+    activate client
+    client -> tcpClient: write()
+    client <-- tcpClient
+    deactivate client
+    client --> tcpClient
+    deactivate client
+    deactivate tcpClient
+
+else Connection is established
+
+    app -> client: GET()
+    activate client
+    client -> client: sendRequest()
+    activate client
+    client -> tcpClient: write()
+    activate tcpClient
+    client <-- tcpClient
+    deactivate tcpClient
+    deactivate client
+    client -> client: busy()
+    app <-- client
+    deactivate client
+    deactivate app
+
+end alt
+
+loop For every received chunk
+
+client <- tcpClient: onData(data, size)
+note right
+    Important is to determine the payload size.
+    This is necessary to know when the last chunk
+    is received and that the response is finished.
+end note
+activate tcpClient
+activate client
+client --> tcpClient
+deactivate client
+deactivate tcpClient
+
+else Last received chunk
+
+client <- tcpClient: onData(data, size)
+activate tcpClient
+activate client
+client -> client: ready()
+client --> tcpClient
+deactivate client
+deactivate tcpClient
+
+end loop
+
+@enduml
