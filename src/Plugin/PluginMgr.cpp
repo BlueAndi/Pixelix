@@ -108,7 +108,9 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
     if (nullptr != plugin)
     {
-        if (false == m_plugins.find(plugin))
+        DLinkedListIterator<IPluginMaintenance*> it(m_plugins);
+
+        if (false == it.find(plugin))
         {
             LOG_WARNING("Plugin 0x%X (%s) not found in list.", plugin, plugin->getName());
         }
@@ -119,7 +121,7 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
             if (true == status)
             {
                 plugin->unregisterWebInterface(MyWebServer::getInstance());
-                m_plugins.removeSelected();
+                it.remove();
             }
         }
     }
@@ -131,9 +133,9 @@ const char* PluginMgr::findFirst()
 {
     const char* name = nullptr;
 
-    if (true == m_registry.selectFirstElement())
+    if (true == m_registryIter.first())
     {
-        name = (*m_registry.current())->name.c_str();
+        name = (*m_registryIter.current())->name.c_str();
     }
 
     return name;
@@ -143,9 +145,9 @@ const char* PluginMgr::findNext()
 {
     const char* name = nullptr;
 
-    if (true == m_registry.next())
+    if (true == m_registryIter.next())
     {
-        name = (*m_registry.current())->name.c_str();
+        name = (*m_registryIter.current())->name.c_str();
     }
 
     return name;
@@ -275,15 +277,16 @@ void PluginMgr::save()
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint16_t uid, uint8_t slotId)
 {
-    IPluginMaintenance* plugin  = nullptr;
-    PluginRegEntry*     entry   = nullptr;
+    IPluginMaintenance*                     plugin  = nullptr;
+    PluginRegEntry*                         entry   = nullptr;
+    DLinkedListIterator<PluginRegEntry*>    it(m_registry);
 
-    if (true == m_registry.selectFirstElement())
+    if (true == it.first())
     {
         bool isFound = false;
 
         /* Find plugin in the registry */
-        entry = *m_registry.current();
+        entry = *it.current();
 
         while((false == isFound) && (nullptr != entry))
         {
@@ -291,13 +294,13 @@ IPluginMaintenance* PluginMgr::install(const String& name, uint16_t uid, uint8_t
             {
                 isFound = true;
             }
-            else if (false == m_registry.next())
+            else if (false == it.next())
             {
                 entry = nullptr;
             }
             else
             {
-                entry = *m_registry.current();
+                entry = *it.current();
             }
         }
 
@@ -395,8 +398,9 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
 
 uint16_t PluginMgr::generateUID()
 {
-    uint16_t    uid;
-    bool        isFound;
+    uint16_t                                    uid;
+    bool                                        isFound;
+    DLinkedListIterator<IPluginMaintenance*>    it(m_plugins);
 
     do
     {
@@ -404,9 +408,9 @@ uint16_t PluginMgr::generateUID()
         uid     = random(UINT16_MAX);
 
         /* Ensure that UID is really unique. */
-        if (true == m_plugins.selectFirstElement())
+        if (true == it.first())
         {
-            IPluginMaintenance* plugin = *m_plugins.current();
+            IPluginMaintenance* plugin = *it.current();
 
             while((false == isFound) && (nullptr != plugin))
             {
@@ -414,13 +418,13 @@ uint16_t PluginMgr::generateUID()
                 {
                     isFound = true;
                 }
-                else if (false == m_plugins.next())
+                else if (false == it.next())
                 {
                     plugin = nullptr;
                 }
                 else
                 {
-                    plugin = *m_plugins.current();
+                    plugin = *it.current();
                 }
             }
         }
