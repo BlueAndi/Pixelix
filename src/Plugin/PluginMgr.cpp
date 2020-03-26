@@ -398,9 +398,9 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
 
 uint16_t PluginMgr::generateUID()
 {
-    uint16_t                                    uid;
-    bool                                        isFound;
-    DLinkedListIterator<IPluginMaintenance*>    it(m_plugins);
+    uint16_t                                        uid;
+    bool                                            isFound;
+    DLinkedListConstIterator<IPluginMaintenance*>   it(m_plugins);
 
     do
     {
@@ -410,7 +410,7 @@ uint16_t PluginMgr::generateUID()
         /* Ensure that UID is really unique. */
         if (true == it.first())
         {
-            IPluginMaintenance* plugin = *it.current();
+            const IPluginMaintenance* plugin = *it.current();
 
             while((false == isFound) && (nullptr != plugin))
             {
