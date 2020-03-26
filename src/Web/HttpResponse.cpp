@@ -189,7 +189,7 @@ String HttpResponse::getHeader(const String& name)
             hdr = *it.current();
 
             if ((nullptr != hdr) &&
-                (0U != hdr->getName().equalsIgnoreCase(name))
+                (0U != hdr->getName().equalsIgnoreCase(name)))
             {
                 value = hdr->getValue();
                 isFound = true;
