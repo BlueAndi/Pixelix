@@ -201,6 +201,7 @@ extern uint32_t Util::hexToUInt32(const String& str)
         }
         else
         {
+            value = 0U;
             isError = true;
         }
 
