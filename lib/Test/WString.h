@@ -27,7 +27,7 @@
 /**
  * @brief  String implementation for test
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup test
  *
  * @{
@@ -93,7 +93,7 @@ public:
 
     /**
      * Constructs a string by copying another.
-     * 
+     *
      * @param[in] str String to copy
      */
     String(const String& str) :
@@ -104,7 +104,7 @@ public:
             (nullptr == str.m_buffer))
         {
             m_buffer = new char[1u];
-            
+
             if (nullptr == m_buffer)
             {
                 m_size = 0U;
@@ -133,7 +133,7 @@ public:
 
     /**
      * Constructs a string by copying another.
-     * 
+     *
      * @param[in] str String to copy
      */
     String(const char* str) :
@@ -156,7 +156,7 @@ public:
 
     /**
      * Constructs a string by copying a single character.
-     * 
+     *
      * @param[in] c Single character
      */
     String(char c) :
@@ -176,7 +176,7 @@ public:
 
     /**
      * Assign a string.
-     * 
+     *
      * @param[in] str String, which to assign.
      *
      * @return String
@@ -213,9 +213,9 @@ public:
 
     /**
      * Compare two strings.
-     * 
+     *
      * @param[in] str String, which to compare with.
-     * 
+     *
      * @return If the strings are equal, it will return true otherwise false.
      */
     bool operator==(const String& str) const
@@ -232,9 +232,9 @@ public:
 
     /**
      * Compare two strings.
-     * 
+     *
      * @param[in] str String, which to compare with.
-     * 
+     *
      * @return If the strings are equal, it will return true otherwise false.
      */
     bool operator!=(const String& str) const
@@ -245,9 +245,9 @@ public:
     /**
      * Get character at given index.
      * If the index is out of bounds, it will return '\0'.
-     * 
+     *
      * @param[in] index Character index in the string.
-     * 
+     *
      * @return Character
      */
     char operator [](unsigned int index) const
@@ -311,7 +311,7 @@ public:
 
     /**
      * Get string as char array.
-     * 
+     *
      * @return Char array
      */
     const char* c_str() const
@@ -329,7 +329,7 @@ public:
 
     /**
      * Get string length.
-     * 
+     *
      * @return String length
      */
     unsigned int length() const
@@ -351,9 +351,9 @@ public:
 
     /**
      * Return the substring from index to the end.
-     * 
+     *
      * @param[in] index Index.
-     * 
+     *
      * @return Substring
      */
     String substring(unsigned int index) const
@@ -363,10 +363,10 @@ public:
 
     /**
      * Return the substring between left and right index.
-     * 
+     *
      * @param[in] left  Index left
      * @param[in] right Index right
-     * 
+     *
      * @return Substring
      */
     String substring(unsigned int left, unsigned int right) const
@@ -401,9 +401,9 @@ public:
 
     /**
      * Starts string with given pattern?
-     * 
+     *
      * @param[in] s2    Pattern
-     * 
+     *
      * @return If string starts with pattern, it will return true otherwise false.
      */
     unsigned char startsWith(const String &s2) const
@@ -418,10 +418,10 @@ public:
 
     /**
      * Starts string with given pattern from offset?
-     * 
+     *
      * @param[in] s2        Pattern
      * @param[in] offset    Offset
-     * 
+     *
      * @return If string starts with pattern, it will return true otherwise false.
      */
     unsigned char startsWith(const String &s2, unsigned int offset) const
@@ -434,6 +434,19 @@ public:
         }
 
         return 0 == strncmp(&m_buffer[offset], s2.m_buffer, s2.length());
+    }
+
+    /**
+     * Clear string.
+     */
+    void clear()
+    {
+        if (nullptr != m_buffer)
+        {
+            m_buffer[0] = '\0';
+        }
+
+        return;
     }
 
 private:

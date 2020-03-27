@@ -546,6 +546,7 @@ static void testStateMachine(void);
 static void testSimpleTimer(void);
 static void testProgressBar(void);
 static void testLogging(void);
+static void testUtil(void);
 
 /******************************************************************************
  * Variables
@@ -579,6 +580,8 @@ int main(int argc, char **argv)
     RUN_TEST(testSimpleTimer);
     RUN_TEST(testProgressBar);
     RUN_TEST(testLogging);
+    RUN_TEST(testUtil);
+
     return UNITY_END();
 }
 
@@ -1468,6 +1471,56 @@ static void testLogging()
     myTestLogger.clear();
     LOG_ERROR("Should not be shown.");
     TEST_ASSERT_EQUAL_size_t(0, strlen(myTestLogger.getBuffer()));
+
+    return;
+}
+
+/**
+ * Test utility functions.
+ */
+static void testUtil(void)
+{
+    String hexStr;
+
+    /* Value of empty hex string shall be 0. */
+    hexStr.clear();
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+
+    /* Several valid tests now. */
+    hexStr = "1";
+    TEST_ASSERT_EQUAL_UINT32(1U, Util::hexToUInt32(hexStr));
+    hexStr = "0x1";
+    TEST_ASSERT_EQUAL_UINT32(1U, Util::hexToUInt32(hexStr));
+    hexStr = "0X1";
+    TEST_ASSERT_EQUAL_UINT32(1U, Util::hexToUInt32(hexStr));
+    hexStr = "10";
+    TEST_ASSERT_EQUAL_UINT32(16U, Util::hexToUInt32(hexStr));
+    hexStr = "0x10";
+    TEST_ASSERT_EQUAL_UINT32(16U, Util::hexToUInt32(hexStr));
+    hexStr = "0X10";
+    TEST_ASSERT_EQUAL_UINT32(16U, Util::hexToUInt32(hexStr));
+    hexStr = "1f";
+    TEST_ASSERT_EQUAL_UINT32(31U, Util::hexToUInt32(hexStr));
+    hexStr = "0x1f";
+    TEST_ASSERT_EQUAL_UINT32(31U, Util::hexToUInt32(hexStr));
+    hexStr = "0x1F";
+    TEST_ASSERT_EQUAL_UINT32(31U, Util::hexToUInt32(hexStr));
+
+    /* Several invalid tests now. */
+    hexStr = " 1";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "1 ";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "g";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "G";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "1g";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "1G";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "0y5";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
 
     return;
 }

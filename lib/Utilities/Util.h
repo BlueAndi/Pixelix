@@ -122,6 +122,16 @@ extern bool strToInt32(const String& str, int32_t& value);
  */
 extern String uint32ToHex(uint32_t value);
 
+/**
+ * Convert hex string to uint32_t. String may has the prefix "0x" or not.
+ * If conversion fails, it will return 0.
+ *
+ * @param[in] str   String which contains a hex number
+ *
+ * @return 32 bit unsigned integer value
+ */
+extern uint32_t hexToUInt32(const String& str);
+
 }
 
 #endif  /* __UTILITY_H__ */
