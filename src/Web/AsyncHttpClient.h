@@ -46,6 +46,8 @@
 #include <FreeRTOS.h>
 #include <AsyncTCP.h>
 
+#include "HttpResponse.h"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -121,15 +123,41 @@ public:
     /**
      * Send GET request to host.
      *
-     * @param[in] method    Request method, e.g. GET, PUT, etc.
-     * @param[in] payload   Request payload buffer
-     * @param[in] size      Payload size in byte
-     *
      * @return If request is successful sent, it will return true otherwise false.
      */
-    bool sendRequest(const char* method, uint8_t* payload, size_t size);
+    bool GET();
 
 private:
+
+    /**
+     * HTTP response parts.
+     */
+    enum ResponsePart
+    {
+        RESPONSE_PART_STATUS_LINE = 0,  /**< Response status line */
+        RESPONSE_PART_HEADER,           /**< Response headers */
+        RESPONSE_PART_BODY              /**< Response body */
+    };
+
+    /**
+     * Supported HTTP transfer codings
+     */
+    enum TransferCoding
+    {
+        TRANSFER_CODING_IDENTITY = 0,   /**< Identity */
+        TRANSFER_CODING_CHUNCKED        /**< Chunked */
+    };
+
+    /**
+     * Chunk body parts
+     */
+    enum ChunkBodyPart
+    {
+        CHUNK_SIZE = 0, /**< Chunk or last chunk size */
+        CHUNK_DATA,     /**< Chunk data */
+        CHUNK_DATA_END, /**< Chunk data end */
+        TRAILER         /**< Trailer */
+    };
 
     /** HTTP port */
     static const uint16_t   HTTP_PORT   = 80U;
@@ -137,16 +165,29 @@ private:
     /** HTTPS port */
     static const uint16_t   HTTPS_PORT  = 443U;
 
-    AsyncClient m_tcpClient;            /**< Asynchronous TCP client */
-    String      m_hostname;             /**< Server hostname */
-    uint16_t    m_port;                 /**< Server port */
-    String      m_base64Authorization;  /**< Authorization BASE64 encoded */
-    String      m_uri;                  /**< Request URI */
-    String      m_headers;              /**< Request headers */
-    bool        m_isReqOpen;            /**< Is a request open? */
-    String      m_method;               /**< Request method, e.g. GET, PUT, etc. */
-    String      m_userAgent;            /**< User agent */
-    bool        m_useHttp10;            /**< Use HTTP/1.0 instead of HTTP/1.1 */
+    AsyncClient     m_tcpClient;            /**< Asynchronous TCP client */
+    String          m_hostname;             /**< Server hostname */
+    uint16_t        m_port;                 /**< Server port */
+    String          m_base64Authorization;  /**< Authorization BASE64 encoded */
+    String          m_uri;                  /**< Request URI */
+    String          m_headers;              /**< Additional request headers */
+    bool            m_isReqOpen;            /**< Is a request open? */
+    String          m_method;               /**< Request method, e.g. GET, PUT, etc. */
+    String          m_userAgent;            /**< User agent */
+    bool            m_useHttp10;            /**< Use HTTP/1.0 instead of HTTP/1.1 */
+    uint8_t*        m_payload;              /**< Request payload */
+    size_t          m_payloadSize;          /**< Request payload size in byte */
+    bool            m_isBusy;               /**< If a request is pending, it is true otherwise false. */
+
+    ResponsePart    m_rspPart;              /**< Current parsing part of the response */
+    HttpResponse*   m_rsp;                  /**< Response */
+    String          m_rspLine;              /**< Single line, used for response parsing */
+    TransferCoding  m_transferCoding;       /**< Transfer coding */
+    size_t          m_contentLength;        /**< Content length in byte */
+    size_t          m_contentIndex;         /**< Content index */
+    size_t          m_chunkSize;            /**< Chunk size in byte */
+    size_t          m_chunkIndex;           /**< Chunk body index */
+    ChunkBodyPart   m_chunkBodyPart;        /**< Current part of chunked response */
 
     AsyncHttpClient(const AsyncHttpClient& client);
     AsyncHttpClient& operator=(const AsyncHttpClient& client);
@@ -180,7 +221,14 @@ private:
      * @param[in] data      Data stream
      * @param[in] len       Data size in byte
      */
-    void onData(AsyncClient* client, uint8_t* data, size_t len);
+    void onData(AsyncClient* client, const uint8_t* data, size_t len);
+
+    /**
+     * Send request to host.
+     *
+     * @return If request is successful sent, it will return true otherwise false.
+     */
+    bool sendRequest();
 
     /**
      * Clear all server related parameters.
@@ -188,15 +236,94 @@ private:
     void clear();
 
     /**
-     * Send request header to server.
+     * Add header to request header.
      *
-     * @param[in] method    Request method, e.g. GET, PUT, etc.
-     * @param[in] host      Hostname of server
-     * @param[in] port      Port
-     *
-     * @return If successful requested, it will return true otherwise false.
+     * @param[in] name  Name
+     * @param[in] value Value
      */
-    bool sendHeader(const char* method);
+    void addHeader(const String& name, const String& value);
+
+    /**
+     * Handle response header.
+     */
+    void handleRspHeader();
+
+    /**
+     * Parse response chunked transfer chunk size.
+     *
+     * @param[in]       data    Data stream
+     * @param[in]       len     Data size in byte
+     * @param[in,out]   index   Current data index
+     *
+     * @return If complete parsed, it will return true otherwise false.
+     */
+    bool parseChunkedResponseSize(const char* data, size_t len, size_t& index);
+
+    /**
+     * Parse response chunked transfer chunk data.
+     *
+     * @param[in]       data    Data stream
+     * @param[in]       len     Data size in byte
+     * @param[in,out]   index   Current data index
+     *
+     * @return If complete parsed, it will return true otherwise false.
+     */
+    bool parseChunkedResponseChunkData(const uint8_t* data, size_t len, size_t& index);
+
+    /**
+     * Parse response chunked transfer chunk data end.
+     *
+     * @param[in]       data    Data stream
+     * @param[in]       len     Data size in byte
+     * @param[in,out]   index   Current data index
+     *
+     * @return If complete parsed, it will return true otherwise false.
+     */
+    bool parseChunkedResponseChunkDataEnd(const char* data, size_t len, size_t& index);
+
+    /**
+     * Parse response chunked transfer trailer.
+     *
+     * @param[in]       data    Data stream
+     * @param[in]       len     Data size in byte
+     * @param[in,out]   index   Current data index
+     *
+     * @return If complete parsed, it will return true otherwise false.
+     */
+    bool parseChunkedResponseTrailer(const char* data, size_t len, size_t& index);
+
+    /**
+     * Parse response chunked transfer.
+     *
+     * @param[in]       data    Data stream
+     * @param[in]       len     Data size in byte
+     * @param[in,out]   index   Current data index
+     *
+     * @return If chunked transfer is finished, it will return true otherwise false.
+     */
+    bool parseChunkedResponse(const uint8_t* data, size_t len, size_t& index);
+
+    /**
+     * Parse response status line.
+     *
+     * @param[in]       data    Data stream
+     * @param[in]       len     Data size in byte
+     * @param[in,out]   index   Current data index
+     *
+     * @return If status line is parsed, it will return true otherwise false.
+     */
+    bool parseRspStatusLine(const char* data, size_t len, size_t& index);
+
+    /**
+     * Parse response header.
+     *
+     * @param[in]       data    Data stream
+     * @param[in]       len     Data size in byte
+     * @param[in,out]   index   Current data index
+     *
+     * @return If all headers are parsed, it will return true otherwise false.
+     */
+    bool parseRspHeader(const char* data, size_t len, size_t& index);
 };
 
 /******************************************************************************

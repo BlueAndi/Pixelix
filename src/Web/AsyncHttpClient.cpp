@@ -72,7 +72,19 @@ AsyncHttpClient::AsyncHttpClient() :
     m_isReqOpen(false),
     m_method(),
     m_userAgent("AsyncHttpClient"),
-    m_useHttp10(false)
+    m_useHttp10(false),
+    m_payload(nullptr),
+    m_payloadSize(0U),
+    m_isBusy(false),
+    m_rspPart(RESPONSE_PART_STATUS_LINE),
+    m_rsp(nullptr),
+    m_rspLine(),
+    m_transferCoding(TRANSFER_CODING_IDENTITY),
+    m_contentLength(0U),
+    m_contentIndex(0U),
+    m_chunkSize(0U),
+    m_chunkIndex(0U),
+    m_chunkBodyPart(CHUNK_SIZE)
 {
     m_tcpClient.onConnect(  [this](void* arg, AsyncClient* client)
                             {
@@ -107,6 +119,7 @@ AsyncHttpClient::~AsyncHttpClient()
 {
 }
 
+/* TODO Make url const */
 bool AsyncHttpClient::begin(String url)
 {
     bool    status = true;
@@ -200,7 +213,7 @@ bool AsyncHttpClient::begin(String url)
             {
                 m_uri = url;
 
-                LOG_INFO("[HTTP client] host: %s port: %u uri: %s", m_hostname.c_str(), m_port, m_uri.c_str());
+                LOG_INFO("Host: %s port: %u uri: %s", m_hostname.c_str(), m_port, m_uri.c_str());
             }
         }
 
@@ -244,23 +257,28 @@ void AsyncHttpClient::useHttp10(bool useHttp10)
     m_useHttp10 = useHttp10;
 }
 
-bool AsyncHttpClient::sendRequest(const char* method, uint8_t* payload, size_t size)
+bool AsyncHttpClient::GET()
 {
-    bool status = true;
+    bool status = false;
 
-    if (false == isConnected())
+    if (false == m_isBusy)
     {
-        m_method = method;
-        /* m_payload = payload */
-        /* m_payloadSize = size */
-        m_isReqOpen = true;
+        m_method        = "GET";
+        m_payload       = nullptr;
+        m_payloadSize   = 0U;
 
-        status = connect();
-    }
-    else
-    {
-        m_isReqOpen = false;
-        status = sendHeader(method);
+        if (false == isConnected())
+        {
+            status = connect();
+            m_isReqOpen = status;
+        }
+        else
+        {
+            status = sendRequest();
+            m_isReqOpen = false;
+        }
+
+        m_isBusy = status;
     }
 
     return status;
@@ -276,51 +294,122 @@ bool AsyncHttpClient::sendRequest(const char* method, uint8_t* payload, size_t s
 
 void AsyncHttpClient::onConnect(AsyncClient* client)
 {
-    LOG_INFO("Client connected.");
+    LOG_INFO("Connected.");
 
+    /* Is there a queued request, which to send? */
     if (true == m_isReqOpen)
     {
-        (void)sendRequest(m_method.c_str(), NULL, 0U);
+        m_isReqOpen = false;
+
+        if (false == sendRequest())
+        {
+            m_isBusy = false;
+            /* TODO Error handling */
+        }
     }
 }
 
 void AsyncHttpClient::onDisconnect(AsyncClient* client)
 {
-    LOG_INFO("Client disconnected.");
+    LOG_INFO("Disconnected.");
+
+    clear();
 }
 
 void AsyncHttpClient::onError(AsyncClient* client, int8_t error)
 {
-    LOG_INFO("Client error occurred.");
+    LOG_INFO("Error occurred.");
+
+    disconnect();
 }
 
-void AsyncHttpClient::onData(AsyncClient* client, uint8_t* data, size_t len)
+void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t len)
 {
-    size_t index = 0U;
-    String rsp;
+    /* RFC2616 - Response = Status-Line
+     *                      *(( general-header
+     *                       | response-header
+     *                       | entity-header ) CRLF)
+     *                      CRLF
+     *                      [ message-body ]
+     */
 
-    for(index = 0U; index < len; ++index)
+    LOG_INFO("onData(): len = %u", len);
+
+    if (nullptr == m_rsp)
     {
-        rsp += static_cast<char>(data[index]);
+        /* TODO Abort */
     }
+    else
+    {
+        size_t      index       = 0U;
+        const char* asciiData   = reinterpret_cast<const char*>(data);
 
-    LOG_INFO("Client rsp: %s", rsp.c_str());
+        while(len > index)
+        {
+            switch(m_rspPart)
+            {
+            case RESPONSE_PART_STATUS_LINE:
+                if (true == parseRspStatusLine(asciiData, len, index))
+                {
+                    LOG_INFO("Rsp. HTTP-Version: %s", m_rsp->getHttpVersion().c_str());
+                    LOG_INFO("Rsp. Status-Code: %u", m_rsp->getStatusCode());
+                    LOG_INFO("Rsp. Reason-Phrase: %s", m_rsp->getReasonPhrase().c_str());
+
+                    m_rspPart = RESPONSE_PART_HEADER;
+                }
+                break;
+
+            case RESPONSE_PART_HEADER:
+                if (true == parseRspHeader(asciiData, len, index))
+                {
+                    /* Examine response header.
+                     * This is important to determine the number of following
+                     * payload data and to know when the last data is
+                     * received.
+                     */
+                    handleRspHeader();
+                    m_rspPart = RESPONSE_PART_BODY;
+                }
+                break;
+
+            case RESPONSE_PART_BODY:
+                if (TRANSFER_CODING_CHUNCKED == m_transferCoding)
+                {
+                    if (true == parseChunkedResponse(data, len, index))
+                    {
+                        m_transferCoding = TRANSFER_CODING_IDENTITY;
+                        m_rspPart = RESPONSE_PART_STATUS_LINE;
+                    }
+                }
+                else
+                {
+                    String rspPayload;
+
+                    while((len > index) && (0U < m_contentIndex))
+                    {
+                        rspPayload += asciiData[index];
+                        ++index;
+                        --m_contentIndex;
+                    }
+
+                    if (0U == m_contentIndex)
+                    {
+                        m_rspPart = RESPONSE_PART_STATUS_LINE;
+                    }
+                }
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
 }
 
-void AsyncHttpClient::clear()
+bool AsyncHttpClient::sendRequest()
 {
-    m_hostname.clear();
-    m_port = 0U;
-    m_base64Authorization.clear();
-    m_uri.clear();
-    m_headers.clear();
-
-    return;
-}
-
-bool AsyncHttpClient::sendHeader(const char* method)
-{
-    String      header;
+    bool        status      = false;
+    String      request;
     const char* PROTOCOL    = "HTTP";
     const char* SP          = " ";
     const char* CRLF        = "\r\n";
@@ -333,92 +422,417 @@ bool AsyncHttpClient::sendHeader(const char* method)
      *            CRLF
      *            [ message-body ]
      *
-     * Request-Line: Method SP Request-URI SP HTTP-Version CRLF
-     *
      */
 
-    /* RFC2616 - Method */
-    header += method;
-    header += SP;
+    /* Request-Line: Method SP Request-URI SP HTTP-Version CRLF */
 
-    /* RFC2616 - Request-URI    = "*" | absoluteURI | abs_path | authority */
+    /* Method */
+    request += m_method;
+    request += SP;
+
+    /* Request-URI    = "*" | absoluteURI | abs_path | authority */
     if (true == m_uri.isEmpty())
     {
-        header += "/";
+        request += "/";
     }
     else
     {
-        header += m_uri;
+        request += m_uri;
     }
 
-    header += SP;
+    request += SP;
 
-    /* RFC2616 - HTTP-Version */
-    header += PROTOCOL;
-    header += "/";
+    /* HTTP-Version */
+    request += PROTOCOL;
+    request += "/";
 
     if (false == m_useHttp10)
     {
-        header += "1.1";
+        request += "1.1";
     }
     else
     {
-        header += "1.0";
+        request += "1.0";
     }
 
-    header += CRLF;
+    request += CRLF;
+
+    /* --- Add now the request headers. --- */
 
     /* RFC2616 - general-header */
     /* Empty */
-    header += CRLF;
+    request += CRLF;
 
     /* RFC2616 - request-header */
-    header += "Host: ";
-    header += m_hostname;
+    request += "Host: ";
+    request += m_hostname;
 
     if ((HTTP_PORT != m_port) &&
         (HTTPS_PORT != m_port))
     {
-        header += ":";
-        header += m_port;
+        request += ":";
+        request += m_port;
     }
 
-    header += CRLF;
+    request += CRLF;
 
-    header += "User-Agent: ";
-    header += m_userAgent;
-    header += CRLF;
+    request += "User-Agent: ";
+    request += m_userAgent;
+    request += CRLF;
 
-    header += "Connection: ";
-    header += "close";
-    header += CRLF;
+    request += "Connection: ";
+    request += "close";
+    request += CRLF;
 
     if (false == m_useHttp10)
     {
-        header += "Accept-Encoding: ";
-        header += "identity;q=1,chunked;q=0.1,*;q=0";
-        header += CRLF;
+        request += "Accept-Encoding: ";
+        request += "identity;q=1,chunked;q=0.1,*;q=0";
+        request += CRLF;
     }
 
     if (0U < m_base64Authorization.length())
     {
         m_base64Authorization.replace("\n", "");
-        header += "Authorization: Basic ";
-        header += m_base64Authorization;
-        header += CRLF;
+        request += "Authorization: Basic ";
+        request += m_base64Authorization;
+        request += CRLF;
     }
 
-    header += m_headers;
-    header += CRLF;
+    if ((nullptr != m_payload) &&
+        (0U < m_payloadSize))
+    {
+        request += "Content-Length: ";
+        request += m_payloadSize;
+        request += CRLF;
+    }
 
-    /* RFC2616 - entity-header */
-    /* Not used. */
+    request += m_headers;
+    request += CRLF;
 
-    /* No message-body */
+    /* --- Add now the message-body. --- */
 
-    //Serial.printf("---\n%s\n---\n", header.c_str());
+    /* TODO */
 
-    return (header.length() == m_tcpClient.write(header.c_str()));
+    /* Send request */
+    status = (request.length() == m_tcpClient.write(request.c_str()));
+
+    if (true == status)
+    {
+        m_rsp = new HttpResponse;
+    }
+
+    return status;
+}
+
+void AsyncHttpClient::clear()
+{
+    m_hostname.clear();
+    m_port = 0U;
+    m_base64Authorization.clear();
+    m_uri.clear();
+    m_headers.clear();
+    m_isBusy            = false;
+    m_transferCoding    = TRANSFER_CODING_IDENTITY;
+
+    return;
+}
+
+void AsyncHttpClient::addHeader(const String& name, const String& value)
+{
+    const char* CRLF    = "\r\n";
+
+    m_headers += name;
+    m_headers += ": ";
+    m_headers += value;
+    m_headers += CRLF;
+}
+
+void AsyncHttpClient::handleRspHeader()
+{
+    String value;
+
+    value = m_rsp->getHeader("Connection");
+
+    if (false == value.isEmpty())
+    {
+        /* TODO */
+    }
+
+    value = m_rsp->getHeader("Content-Length");
+
+    if (false == value.isEmpty())
+    {
+        m_contentLength = value.toInt();
+    }
+
+    value = m_rsp->getHeader("Transfer-Encoding");
+
+    if (false == value.isEmpty())
+    {
+        if (0U != value.equalsIgnoreCase("chunked"))
+        {
+            m_transferCoding = TRANSFER_CODING_CHUNCKED;
+        }
+        else
+        {
+            /* TODO Error */
+        }
+    }
+}
+
+bool AsyncHttpClient::parseChunkedResponseSize(const char* data, size_t len, size_t& index)
+{
+    const char*     CRLF        = "\r\n";
+    const size_t    CRLF_LEN    = strlen(CRLF);
+    bool            isSizeEOF   = false;
+
+    while((len > index) && (false == isSizeEOF))
+    {
+        m_rspLine += data[index];
+        ++index;
+
+        if (0U != m_rspLine.endsWith(CRLF))
+        {
+            m_rspLine.remove(m_rspLine.indexOf(CRLF), CRLF_LEN);
+            m_chunkSize = Util::hexToUInt32(m_rspLine);
+
+            LOG_INFO("Chunk size is %u byte.", m_chunkSize);
+
+            m_rspLine.clear();
+            isSizeEOF = true;
+        }
+    }
+
+    return isSizeEOF;
+}
+
+bool AsyncHttpClient::parseChunkedResponseChunkData(const uint8_t* data, size_t len, size_t& index)
+{
+    size_t  available   = len - index;
+    size_t  needed      = m_chunkSize - m_chunkIndex;
+    size_t  copySize    = 0U;
+    bool    isDataEOF   = false;
+
+    if (available >= needed)
+    {
+        copySize = needed;
+    }
+    else
+    {
+        copySize = available;
+    }
+
+    m_rsp->addPayload(&data[index], copySize);
+    index += copySize;
+    m_chunkIndex += copySize;
+
+    if (m_chunkSize <= m_chunkIndex)
+    {
+        m_chunkIndex = 0U;
+        isDataEOF = true;
+    }
+
+    return isDataEOF;
+}
+
+bool AsyncHttpClient::parseChunkedResponseChunkDataEnd(const char* data, size_t len, size_t& index)
+{
+    const char* CRLF        = "\r\n";
+    bool        isDataEOF   = false;
+
+    while((len > index) && (false == isDataEOF))
+    {
+        m_rspLine += data[index];
+        ++index;
+
+        if (0U != m_rspLine.endsWith(CRLF))
+        {
+            m_rspLine.clear();
+            isDataEOF = true;
+        }
+    }
+
+    return isDataEOF;
+}
+
+bool AsyncHttpClient::parseChunkedResponseTrailer(const char* data, size_t len, size_t& index)
+{
+    const char*     CRLF            = "\r\n";
+    const size_t    CRLF_LEN        = strlen(CRLF);
+    bool            isTrailerEOF    = false;
+
+    while((len > index) && (false == isTrailerEOF))
+    {
+        m_rspLine += data[index];
+        ++index;
+
+        if (0U != m_rspLine.endsWith(CRLF))
+        {
+            if (CRLF_LEN < m_rspLine.length())
+            {
+                m_rspLine.remove(m_rspLine.length() - CRLF_LEN);
+
+                LOG_INFO("Rsp. trailer: %s", m_rspLine.c_str());
+            }
+            else
+            {
+                LOG_INFO("Rsp. chunked transfer finished.");
+
+                isTrailerEOF = true;
+            }
+
+            m_rspLine.clear();
+        }
+    }
+
+    return isTrailerEOF;
+}
+
+bool AsyncHttpClient::parseChunkedResponse(const uint8_t* data, size_t len, size_t& index)
+{
+    const char* asciiData   = reinterpret_cast<const char*>(data);
+    bool        isChunkEOF  = false;
+
+    /*
+     * Chunked-Body   = *chunk
+     *                 last-chunk
+     *                 trailer
+     *                 CRLF
+     *
+     * chunk          = chunk-size [ chunk-extension ] CRLF
+     *                 chunk-data CRLF
+     * chunk-size     = 1*HEX
+     * last-chunk     = 1*("0") [ chunk-extension ] CRLF
+     *
+     * chunk-extension= *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+     * chunk-ext-name = token
+     * chunk-ext-val  = token | quoted-string
+     * chunk-data     = chunk-size(OCTET)
+     * trailer        = *(entity-header CRLF)
+     */
+
+    while((len > index) && (false == isChunkEOF))
+    {
+        switch(m_chunkBodyPart)
+        {
+        /* Handle chunk or last-chunk size */
+        case CHUNK_SIZE:
+            if (true == parseChunkedResponseSize(asciiData, len, index))
+            {
+                if (0U == m_chunkSize)
+                {
+                    m_chunkBodyPart = TRAILER;
+                }
+                else
+                {
+                    m_chunkBodyPart = CHUNK_DATA;
+
+                    /* Extend response payload */
+                    if (nullptr == m_rsp)
+                    {
+                        LOG_ERROR("Unexpected NULL pointer.");
+
+                        /* TODO Error handling */
+                    }
+                    else
+                    {
+                        m_rsp->extendPayload(m_chunkSize);
+                    }
+                }
+            }
+            break;
+
+        /* Handle chunk data */
+        case CHUNK_DATA:
+            if (true == parseChunkedResponseChunkData(data, len, index))
+            {
+                m_chunkBodyPart = CHUNK_DATA_END;
+            }
+            break;
+
+        /* Handle chunk data end (CRLF) */
+        case CHUNK_DATA_END:
+            if (true == parseChunkedResponseChunkDataEnd(asciiData, len, index))
+            {
+                m_chunkBodyPart = CHUNK_SIZE;
+            }
+            break;
+
+        /* Handle trailer and CRLF */
+        case TRAILER:
+            if (true == parseChunkedResponseTrailer(asciiData, len, index))
+            {
+                m_chunkBodyPart = CHUNK_SIZE;
+                isChunkEOF = true;
+            }
+            break;
+
+        default:
+            /* Abort */
+            index = len;
+            /* TODO Error handling */
+            break;
+        }
+    }
+
+    return isChunkEOF;
+}
+
+bool AsyncHttpClient::parseRspStatusLine(const char* data, size_t len, size_t& index)
+{
+    const char* CRLF            = "\r\n";
+    bool        isStatusLineEOF = false;
+
+    while((len > index) && (false == isStatusLineEOF))
+    {
+        m_rspLine += data[index];
+        ++index;
+
+        if (0U != m_rspLine.endsWith(CRLF))
+        {
+            m_rsp->addStatusLine(m_rspLine);
+
+            isStatusLineEOF = true;
+            m_rspLine.clear();
+        }
+    }
+
+    return isStatusLineEOF;
+}
+
+bool AsyncHttpClient::parseRspHeader(const char* data, size_t len, size_t& index)
+{
+    const char*     CRLF        = "\r\n";
+    const size_t    CRLF_LEN    = strlen(CRLF);
+    bool            isHeaderEOF = false;
+
+    while((len > index) && (false == isHeaderEOF))
+    {
+        m_rspLine += data[index];
+        ++index;
+
+        if (0U != m_rspLine.endsWith(CRLF))
+        {
+            /* The header will be finished, if a single CRLF is received. */
+            if (CRLF_LEN < m_rspLine.length())
+            {
+                m_rspLine.remove(m_rspLine.length() - CRLF_LEN);
+
+                LOG_INFO("Rsp. header: %s", m_rspLine.c_str());
+
+                m_rsp->addHeader(m_rspLine);
+            }
+            else
+            {
+                isHeaderEOF = true;
+            }
+
+            m_rspLine.clear();
+        }
+    }
+
+    return isHeaderEOF;
 }
 
 /******************************************************************************

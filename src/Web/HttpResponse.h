@@ -72,7 +72,8 @@ public:
         m_reasonPhrase(),
         m_headers(),
         m_payload(nullptr),
-        m_size(0U)
+        m_size(0U),
+        m_wrIndex(0U)
     {
     }
 
@@ -96,7 +97,8 @@ public:
         m_reasonPhrase(),
         m_headers(),
         m_payload(nullptr),
-        m_size(0U)
+        m_size(0U),
+        m_wrIndex(0U)
     {
         *this = rsp;
     }
@@ -123,6 +125,13 @@ public:
      * @param[in] line  Single header line
      */
     void addHeader(const String& line);
+
+    /**
+     * Extend payload size in bytes.
+     *
+     * @param[in] size  Size in bytes
+     */
+    void extendPayload(size_t size);
 
     /**
      * Add a complete payload or add it several times partly.
@@ -177,6 +186,7 @@ private:
     DLinkedList<HttpHeader*>    m_headers;      /**< List of headers */
     uint8_t*                    m_payload;      /**< Payload */
     size_t                      m_size;         /**< Payload size in byte */
+    size_t                      m_wrIndex;      /**< Payload write index */
 
     /**
      * Clear headers.

@@ -80,11 +80,13 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
             if (nullptr == m_payload)
             {
                 m_size = 0U;
+                m_wrIndex = 0U;
             }
             else
             {
                 memcpy(m_payload, rsp.m_payload, rsp.m_size);
                 m_size = rsp.m_size;
+                m_wrIndex = rsp.m_wrIndex;
             }
         }
 
@@ -124,13 +126,13 @@ void HttpResponse::addStatusLine(const String& line)
 
     /* Status-Code */
     index           = line.indexOf(SP, begin);
-    statusCode      = line.substring(begin, index - begin);
+    statusCode      = line.substring(begin, index);
     m_statusCode    = statusCode.toInt();
     begin           = index + 1;
 
     /* Reason-Phrase */
     index           = line.indexOf(CRLF);
-    m_reasonPhrase  = line.substring(begin, index - begin);
+    m_reasonPhrase  = line.substring(begin, index);
 }
 
 void HttpResponse::addHeader(const String& line)
@@ -143,7 +145,7 @@ void HttpResponse::addHeader(const String& line)
     }
 }
 
-void HttpResponse::addPayload(const uint8_t* payload, size_t size)
+void HttpResponse::extendPayload(size_t size)
 {
     uint8_t* tmp = m_payload;
 
@@ -151,12 +153,35 @@ void HttpResponse::addPayload(const uint8_t* payload, size_t size)
 
     if (nullptr != m_payload)
     {
-        memcpy(m_payload, tmp, m_size);
-        memcpy(&m_payload[m_size], payload, size);
-        m_size = m_size + size;
+        m_size += size;
     }
 
-    delete[] tmp;
+    if ((nullptr != m_payload) &&
+        (nullptr != tmp))
+    {
+        memcpy(m_payload, tmp, m_wrIndex);
+    }
+
+    if (nullptr != tmp)
+    {
+        delete[] tmp;
+    }
+}
+
+void HttpResponse::addPayload(const uint8_t* payload, size_t size)
+{
+    if ((nullptr == m_payload) ||
+        ((m_size - m_wrIndex) < size))
+    {
+        extendPayload(size);
+    }
+
+    if ((nullptr != m_payload) &&
+        ((m_size - m_wrIndex) >= size))
+    {
+        memcpy(&m_payload[m_wrIndex], payload, size);
+        m_wrIndex += size;
+    }
 }
 
 String HttpResponse::getHttpVersion() const
