@@ -27,7 +27,7 @@
 /**
  * @brief  Doubly linked list
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup utilities
  *
  * @{
@@ -55,7 +55,7 @@
 
 /**
  * An element in the doubly linked list.
- * 
+ *
  * @param[in] T Type of element
  */
 template < typename T >
@@ -65,7 +65,7 @@ public:
 
     /**
      * Constructs an list element.
-     * 
+     *
      * @param[in] element   Element
      * @param[in] prev      Previous list element
      * @param[in] next      Next list element
@@ -86,7 +86,7 @@ public:
 
     /**
      * Get element.
-     * 
+     *
      * @return Element
      */
     T&  getElement()
@@ -95,8 +95,18 @@ public:
     }
 
     /**
+     * Get element.
+     *
+     * @return Element
+     */
+    const T&  getElement() const
+    {
+        return m_element;
+    }
+
+    /**
      * Get previous list element.
-     * 
+     *
      * @return Previous list element.
      */
     ListElement* getPrev()
@@ -105,8 +115,18 @@ public:
     }
 
     /**
+     * Get previous list element.
+     *
+     * @return Previous list element.
+     */
+    const ListElement* getPrev() const
+    {
+        return m_prev;
+    }
+
+    /**
      * Set previous list element.
-     * 
+     *
      * @param[in] prev Previous list element
      */
     void setPrev(ListElement* prev)
@@ -117,7 +137,7 @@ public:
 
     /**
      * Get next list element.
-     * 
+     *
      * @return Next list element.
      */
     ListElement* getNext()
@@ -126,8 +146,18 @@ public:
     }
 
     /**
+     * Get next list element.
+     *
+     * @return Next list element.
+     */
+    const ListElement* getNext() const
+    {
+        return m_next;
+    }
+
+    /**
      * Set next list element.
-     * 
+     *
      * @param[in] next Next list element
      */
     void setNext(ListElement* next)
@@ -148,9 +178,422 @@ private:
 
 };
 
+template < typename T >
+class DLinkedList;
+
+/**
+ * Doubly linked list iterator.
+ */
+template < typename T >
+class DLinkedListIterator
+{
+public:
+
+    /**
+     * Constructs a iterator for the doubly linked list.
+     *
+     * @param[in] list  Doubly linked list
+     */
+    DLinkedListIterator(DLinkedList<T>& list) :
+        m_list(list),
+        m_curr(list.m_head)
+    {
+    }
+
+    /**
+     * Destroys the iterator of the doubly linked list.
+     */
+    ~DLinkedListIterator()
+    {
+    }
+
+    /**
+     * Select first element.
+     *
+     * @return If list is empty, it will return false otherwise true.
+     */
+    bool first()
+    {
+        bool status = false;
+
+        if (nullptr != m_list.m_head)
+        {
+            m_curr = m_list.m_head;
+            status = true;
+        }
+
+        return status;
+    }
+
+    /**
+     * Select last element.
+     *
+     * @return If list is empty, it will return false otherwise true.
+     */
+    bool last()
+    {
+        bool status = false;
+
+        if (nullptr != m_list.m_tail)
+        {
+            m_curr = m_list.m_tail;
+            status = true;
+        }
+
+        return status;
+    }
+
+    /**
+     * Select next element in the list.
+     * If the current selected element is the last element, it will return false
+     * otherwise true.
+     *
+     * @return If the current selected element is the last element, it will return false otherwise true.
+     */
+    bool next()
+    {
+        bool status = false;
+
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        if (nullptr != m_curr)
+        {
+            if (nullptr != m_curr->getNext())
+            {
+                m_curr = m_curr->getNext();
+                status = true;
+            }
+        }
+
+        return status;
+    }
+
+    /**
+     * Select previous element in the list.
+     * If the current selected element is the first element, it will return false
+     * otherwise true.
+     *
+     * @return If the current selected element is the first element, it will return false otherwise true.
+     */
+    bool prev()
+    {
+        bool status = false;
+
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        if (nullptr != m_curr)
+        {
+            if (nullptr != m_curr->getPrev())
+            {
+                m_curr = m_curr->getPrev();
+                status = true;
+            }
+        }
+
+        return status;
+    }
+
+    /**
+     * Get current selected element.
+     *
+     * @return Selected element
+     */
+    T* current()
+    {
+        T* elem = nullptr;
+
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        if (nullptr != m_curr)
+        {
+            elem = &m_curr->getElement();
+        }
+
+        return elem;
+    }
+
+    /**
+     * Search for a specific element in the list and select it.
+     * It starts searching from the current selected element till end of the list.
+     * If element is not found, the last element in the list is selected.
+     *
+     * @param[in] element   Element to find
+     */
+    bool find(const T& element)
+    {
+        bool found = false;
+
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        if (nullptr != m_curr)
+        {
+            do
+            {
+                if (element == m_curr->getElement())
+                {
+                    found = true;
+                }
+            }
+            while((false == found) && (true == next()));
+        }
+
+        return found;
+    }
+
+    /**
+     * Remove selected element from list.
+     */
+    void remove()
+    {
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        m_list.remove(m_curr);
+        m_curr = m_list.m_head;
+
+        return;
+    }
+
+private:
+
+    DLinkedList<T>& m_list;     /**< Doubly linked list */
+    ListElement<T>* m_curr;     /**< Current selected list element */
+
+    DLinkedListIterator();
+};
+
+/**
+ * Doubly linked list const iterator.
+ */
+template < typename T >
+class DLinkedListConstIterator
+{
+public:
+
+    /**
+     * Constructs a const iterator for the doubly linked list.
+     *
+     * @param[in] list  Doubly linked list
+     */
+    DLinkedListConstIterator(const DLinkedList<T>& list) :
+        m_list(list),
+        m_curr(list.m_head)
+    {
+    }
+
+    /**
+     * Destroys the iterator of the doubly linked list.
+     */
+    ~DLinkedListConstIterator()
+    {
+    }
+
+    /**
+     * Select first element.
+     *
+     * @return If list is empty, it will return false otherwise true.
+     */
+    bool first()
+    {
+        bool status = false;
+
+        if (nullptr != m_list.m_head)
+        {
+            m_curr = m_list.m_head;
+            status = true;
+        }
+
+        return status;
+    }
+
+    /**
+     * Select last element.
+     *
+     * @return If list is empty, it will return false otherwise true.
+     */
+    bool last()
+    {
+        bool status = false;
+
+        if (nullptr != m_list.m_tail)
+        {
+            m_curr = m_list.m_tail;
+            status = true;
+        }
+
+        return status;
+    }
+
+    /**
+     * Select next element in the list.
+     * If the current selected element is the last element, it will return false
+     * otherwise true.
+     *
+     * @return If the current selected element is the last element, it will return false otherwise true.
+     */
+    bool next()
+    {
+        bool status = false;
+
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        if (nullptr != m_curr)
+        {
+            if (nullptr != m_curr->getNext())
+            {
+                m_curr = m_curr->getNext();
+                status = true;
+            }
+        }
+
+        return status;
+    }
+
+    /**
+     * Select previous element in the list.
+     * If the current selected element is the first element, it will return false
+     * otherwise true.
+     *
+     * @return If the current selected element is the first element, it will return false otherwise true.
+     */
+    bool prev()
+    {
+        bool status = false;
+
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        if (nullptr != m_curr)
+        {
+            if (nullptr != m_curr->getPrev())
+            {
+                m_curr = m_curr->getPrev();
+                status = true;
+            }
+        }
+
+        return status;
+    }
+
+    /**
+     * Get current selected element.
+     *
+     * @return Selected element
+     */
+    const T* current()
+    {
+        const T* elem = nullptr;
+
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        if (nullptr != m_curr)
+        {
+            elem = &m_curr->getElement();
+        }
+
+        return elem;
+    }
+
+    /**
+     * Search for a specific element in the list and select it.
+     * It starts searching from the current selected element till end of the list.
+     * If element is not found, the last element in the list is selected.
+     *
+     * @param[in] element   Element to find
+     */
+    bool find(const T& element)
+    {
+        bool found = false;
+
+        /* In case that the list was empty at the time the
+         * iterator was created, the current selected element
+         * is nullptr.
+         */
+        if (nullptr == m_curr)
+        {
+            m_curr = m_list.m_head;
+        }
+
+        if (nullptr != m_curr)
+        {
+            do
+            {
+                if (element == m_curr->getElement())
+                {
+                    found = true;
+                }
+            }
+            while((false == found) && (true == next()));
+        }
+
+        return found;
+    }
+
+private:
+
+    const DLinkedList<T>&   m_list; /**< Doubly linked list */
+    const ListElement<T>*   m_curr; /**< Current selected list element */
+
+    DLinkedListConstIterator();
+};
+
 /**
  * Doubly linked list.
- * 
+ *
  * @param[in] T Type of element
  */
 template < typename T >
@@ -164,20 +607,18 @@ public:
     DLinkedList() :
         m_head(nullptr),
         m_tail(nullptr),
-        m_curr(nullptr),
         m_count(0U)
     {
     }
 
     /**
      * Constructs a double chained list, by copying an existing one.
-     * 
+     *
      * @param[in] list List, which to copy
      */
     DLinkedList(const DLinkedList& list) :
         m_head(nullptr),
         m_tail(nullptr),
-        m_curr(nullptr),
         m_count(0U)
     {
         ListElement<T>* listElement = list.m_head;
@@ -200,7 +641,7 @@ public:
     /**
      * Assign a list, including its elements.
      * Attention, if this list is not empty, you may loose data!
-     * 
+     *
      * @param[in] list List, which to assign
      */
     DLinkedList& operator=(const DLinkedList& list)
@@ -218,64 +659,10 @@ public:
     }
 
     /**
-     * Get first element in the list.
-     * If the list is empty, nullptr will be returned.
-     * 
-     * @return First element.
-     */
-    T* first() const
-    {
-        T*  element = nullptr;
-
-        if (nullptr != m_head)
-        {
-            element = &m_head->getElement();
-        }
-
-        return element;
-    }
-
-    /**
-     * Get last element in the list.
-     * If the list is empty, nullptr will be returned.
-     * 
-     * @return Last element.
-     */
-    T* last() const
-    {
-        T*  element = nullptr;
-
-        if (nullptr != m_tail)
-        {
-            element = &m_tail->getElement();
-        }
-
-        return element;
-    }
-
-    /**
-     * Get current selected element in the list.
-     * If the list is empty, nullptr will be returned.
-     * 
-     * @return Current element.
-     */
-    T* current() const
-    {
-        T*  element = nullptr;
-
-        if (nullptr != m_curr)
-        {
-            element = &m_curr->getElement();
-        }
-
-        return element;
-    }
-
-    /**
      * Append element to the list tail.
-     * 
+     *
      * @param[in] element New element in the list.
-     * 
+     *
      * @return If element is appended, it will return true otherwise false.
      */
     bool append(T& element)
@@ -291,7 +678,6 @@ public:
             {
                 m_head = listElement;
                 m_tail = listElement;
-                m_curr = listElement;
             }
             else
             {
@@ -308,163 +694,25 @@ public:
     }
 
     /**
-     * Select next element in the list.
-     * If the current selected element is the last element, it will return false
-     * otherwise true.
-     * 
-     * @return If the current selected element is the last element, it will return false otherwise true.
-     */
-    bool next()
-    {
-        bool status = false;
-
-        if (nullptr != m_curr)
-        {
-            if (nullptr != m_curr->getNext())
-            {
-                m_curr = m_curr->getNext();
-                status = true;
-            }
-        }
-
-        return status;
-    }
-
-    /**
-     * Select previous element in the list.
-     * If the current selected element is the first element, it will return false
-     * otherwise true.
-     * 
-     * @return If the current selected element is the first element, it will return false otherwise true.
-     */
-    bool prev()
-    {
-        bool status = false;
-
-        if (nullptr != m_curr)
-        {
-            if (nullptr != m_curr->getPrev())
-            {
-                m_curr = m_curr->getPrev();
-                status = true;
-            }
-        }
-
-        return status;
-    }
-
-    /**
-     * Select first element.
-     * 
-     * @return If list is empty, it will return false otherwise true.
-     */
-    bool selectFirstElement()
-    {
-        bool status = false;
-
-        if (nullptr != m_head)
-        {
-            m_curr = m_head;
-            status = true;
-        }
-
-        return status;
-    }
-
-    /**
-     * Select last element.
-     * 
-     * @return If list is empty, it will return false otherwise true.
-     */
-    bool selectLastElement()
-    {
-        bool status = false;
-
-        if (nullptr != m_head)
-        {
-            m_curr = m_tail;
-            status = true;
-        }
-
-        return status;
-    }
-
-    /**
-     * Remove selected element from list.
-     */
-    void removeSelected()
-    {
-        if (nullptr != m_curr)
-        {
-            /* Is head selected? */
-            if (m_head == m_curr)
-            {
-                /* Last element in the list */
-                if (nullptr == m_curr->getNext())
-                {
-                    delete m_curr;
-                    m_head = nullptr;
-                    m_tail = nullptr;
-                    m_curr = nullptr;
-                }
-                /* Not the last element in the list */
-                else
-                {
-                    m_head = m_curr->getNext();
-                    m_head->setPrev(nullptr);
-                    delete m_curr;
-                    m_curr = m_head;
-                }
-            }
-            /* Last element in the list? */
-            else if (m_tail == m_curr)
-            {
-                /* Here it is sure, that the list contains more than 1 element. */
-                m_tail = m_curr->getPrev();
-                m_tail->setNext(nullptr);
-                delete m_curr;
-                m_curr = m_tail;
-            }
-            /* Somewhere between */
-            else
-            {
-                ListElement<T>* tmp = m_curr->getNext();
-
-                m_curr->getPrev()->setNext(m_curr->getNext());
-                m_curr->getNext()->setPrev(m_curr->getPrev());
-                delete m_curr;
-                m_curr = tmp;
-            }
-
-            if (0 < m_count)
-            {
-                --m_count;
-            }
-        }
-
-        return;
-    }
-
-    /**
      * Clear list.
      */
     void clear()
     {
-        m_curr = m_head;
+        ListElement<T>* curr = m_head;
 
-        while(nullptr != m_curr)
+        while(nullptr != curr)
         {
             /* Last element in the list? */
-            if (nullptr == m_curr->getNext())
+            if (nullptr == curr->getNext())
             {
-                delete m_curr;
-                m_curr = nullptr;
+                delete curr;
+                curr = nullptr;
             }
             else
             {
-                m_curr = m_curr->getNext();
-                delete m_curr->getPrev();
-                m_curr->setPrev(nullptr);
+                curr = curr->getNext();
+                delete curr->getPrev();
+                curr->setPrev(nullptr);
             }
         }
 
@@ -476,34 +724,8 @@ public:
     }
 
     /**
-     * Search for a specific element in the list and select it.
-     * It starts searching from the current selected element till end of the list.
-     * If element is not found, the last element in the list is selected.
-     * 
-     * @param[in] element   Element to find
-     */
-    bool find(const T& element)
-    {
-        bool found = false;
-
-        if (nullptr != m_curr)
-        {
-            do
-            {
-                if (element == m_curr->getElement())
-                {
-                    found = true;
-                }
-            }
-            while((false == found) && (true == next()));
-        }
-
-        return found;
-    }
-
-    /**
      * Get number of elements in the list.
-     * 
+     *
      * @return Number of elements in the list.
      */
     uint32_t getNumOfElements() const
@@ -515,9 +737,68 @@ private:
 
     ListElement<T>* m_head;     /**< Head of list */
     ListElement<T>* m_tail;     /**< Tail of list */
-    ListElement<T>* m_curr;     /**< Current selected list element */
     uint32_t        m_count;    /**< Number of elements in the list */
 
+    /**
+     * Remove element from list.
+     *
+     * @param[in] listElement   List element, which to remove
+     */
+    void remove(ListElement<T>* listElement)
+    {
+        if (nullptr != listElement)
+        {
+            /* Is head selected? */
+            if (m_head == listElement)
+            {
+                /* Last element in the list */
+                if (nullptr == listElement->getNext())
+                {
+                    delete listElement;
+                    m_head = nullptr;
+                    m_tail = nullptr;
+                    listElement = nullptr;
+                }
+                /* Not the last element in the list */
+                else
+                {
+                    m_head = listElement->getNext();
+                    m_head->setPrev(nullptr);
+                    delete listElement;
+                    listElement = m_head;
+                }
+            }
+            /* Last element in the list? */
+            else if (m_tail == listElement)
+            {
+                /* Here it is sure, that the list contains more than 1 element. */
+                m_tail = listElement->getPrev();
+                m_tail->setNext(nullptr);
+                delete listElement;
+                listElement = m_tail;
+            }
+            /* Somewhere between */
+            else
+            {
+                listElement->getPrev()->setNext(listElement->getNext());
+                listElement->getNext()->setPrev(listElement->getPrev());
+                delete listElement;
+            }
+
+            if (0 < m_count)
+            {
+                --m_count;
+            }
+        }
+
+        return;
+    }
+
+    template < typename T0 >
+    friend class DLinkedListIterator;
+
+    template < typename T1 >
+    friend class DLinkedListConstIterator;
 };
 
 /******************************************************************************

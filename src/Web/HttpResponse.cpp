@@ -1,0 +1,250 @@
+/* MIT License
+ *
+ * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*******************************************************************************
+    DESCRIPTION
+*******************************************************************************/
+/**
+ * @brief  HTTP response
+ * @author Andreas Merkle <web@blue-andi.de>
+ */
+
+/******************************************************************************
+ * Includes
+ *****************************************************************************/
+#include "HttpResponse.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
+
+/******************************************************************************
+ * Macros
+ *****************************************************************************/
+
+/******************************************************************************
+ * Types and classes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Prototypes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
+
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
+{
+    if (this != &rsp)
+    {
+        DLinkedListConstIterator<HttpHeader*>   it(rsp.m_headers);
+
+        m_httpVersion   = rsp.m_httpVersion;
+        m_statusCode    = rsp.m_statusCode;
+        m_reasonPhrase  = rsp.m_reasonPhrase;
+
+        if (nullptr != m_payload)
+        {
+            delete[] m_payload;
+        }
+
+        if (nullptr != rsp.m_payload)
+        {
+            m_payload = new uint8_t[rsp.m_size];
+
+            if (nullptr == m_payload)
+            {
+                m_size = 0U;
+            }
+            else
+            {
+                memcpy(m_payload, rsp.m_payload, rsp.m_size);
+                m_size = rsp.m_size;
+            }
+        }
+
+        if (true == it.first())
+        {
+            do
+            {
+                HttpHeader* header = new HttpHeader;
+
+                if (nullptr != header)
+                {
+                    *header = **it.current();
+                    (void)m_headers.append(header);
+                }
+            }
+            while(true == it.next());
+        }
+    }
+
+    return *this;
+}
+
+void HttpResponse::addStatusLine(const String& line)
+{
+    const char* SP          = " ";
+    const char* CRLF        = "\r\n";
+    int         index       = 0;
+    int         begin       = 0;
+    String      statusCode;
+
+    /* Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF */
+
+    /* HTTP-Version */
+    index           = line.indexOf(SP);
+    m_httpVersion   = line.substring(begin, index);
+    begin           = index + 1;
+
+    /* Status-Code */
+    index           = line.indexOf(SP, begin);
+    statusCode      = line.substring(begin, index - begin);
+    m_statusCode    = statusCode.toInt();
+    begin           = index + 1;
+
+    /* Reason-Phrase */
+    index           = line.indexOf(CRLF);
+    m_reasonPhrase  = line.substring(begin, index - begin);
+}
+
+void HttpResponse::addHeader(const String& line)
+{
+    HttpHeader* header = new HttpHeader(line);
+
+    if (nullptr != header)
+    {
+        m_headers.append(header);
+    }
+}
+
+void HttpResponse::addPayload(const uint8_t* payload, size_t size)
+{
+    uint8_t* tmp = m_payload;
+
+    m_payload = new uint8_t[m_size + size];
+
+    if (nullptr != m_payload)
+    {
+        memcpy(m_payload, tmp, m_size);
+        memcpy(&m_payload[m_size], payload, size);
+        m_size = m_size + size;
+    }
+
+    delete[] tmp;
+}
+
+String HttpResponse::getHttpVersion() const
+{
+    return m_httpVersion;
+}
+
+uint16_t HttpResponse::getStatusCode() const
+{
+    return m_statusCode;
+}
+
+String HttpResponse::getReasonPhrase() const
+{
+    return m_reasonPhrase;
+}
+
+String HttpResponse::getHeader(const String& name)
+{
+    String                              value;
+    bool                                isFound = false;
+    DLinkedListIterator<HttpHeader*>    it(m_headers);
+
+    if (true == it.first())
+    {
+        HttpHeader* hdr = nullptr;
+
+        do
+        {
+            hdr = *it.current();
+
+            if ((nullptr != hdr) &&
+                (0U != hdr->getName().equalsIgnoreCase(name)))
+            {
+                value = hdr->getValue();
+                isFound = true;
+            }
+        }
+        while((false == isFound) &&
+                (true == it.next()));
+    }
+
+    return value;
+}
+
+const uint8_t* HttpResponse::getPayload(size_t& size) const
+{
+    size = m_size;
+    return m_payload;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void HttpResponse::clearHeaders()
+{
+    DLinkedListIterator<HttpHeader*> it(m_headers);
+
+    while(true == it.first())
+    {
+        HttpHeader* header = *it.current();
+
+        it.remove();
+        delete header;
+
+    }
+}
+
+void HttpResponse::clearPayload()
+{
+    if (nullptr != m_payload)
+    {
+        delete[] m_payload;
+        m_payload = nullptr;
+    }
+
+    m_size = 0U;
+}
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
