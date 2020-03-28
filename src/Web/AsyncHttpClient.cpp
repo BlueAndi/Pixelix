@@ -528,7 +528,16 @@ void AsyncHttpClient::clear()
     m_base64Authorization.clear();
     m_uri.clear();
     m_headers.clear();
+
+    m_rspPart = RESPONSE_PART_STATUS_LINE;
+    m_rsp.clear();
+    m_rspLine.clear();
     m_transferCoding = TRANSFER_CODING_IDENTITY;
+    m_contentLength = 0U;
+    m_contentIndex = 0U;
+    m_chunkSize = 0U;
+    m_chunkIndex = 0U;
+    m_chunkBodyPart = CHUNK_SIZE;
 
     return;
 }
