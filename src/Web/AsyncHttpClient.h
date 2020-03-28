@@ -146,6 +146,25 @@ public:
      */
     bool GET();
 
+    /**
+     * Send POST request to host.
+     *
+     * @param[in] payload   Payload, which must be kept alive until response is available!
+     * @param[in] size      Payload size in byte
+     *
+     * @return If request is successful sent, it will return true otherwise false.
+     */
+    bool POST(const uint8_t* payload, size_t size);
+
+    /**
+     * Send POST request to host.
+     *
+     * @param[in] payload   Payload, which must be kept alive until response is available!
+     *
+     * @return If request is successful sent, it will return true otherwise false.
+     */
+    bool POST(const String& payload);
+
 private:
 
     /**
@@ -196,7 +215,7 @@ private:
     String          m_userAgent;            /**< User agent */
     bool            m_isHttpVer10;          /**< Use HTTP/1.0 (true) instead of HTTP/1.1 (false) */
     bool            m_isKeepAlive;          /**< Keep connection alive or not? */
-    uint8_t*        m_payload;              /**< Request payload */
+    const uint8_t*  m_payload;              /**< Request payload */
     size_t          m_payloadSize;          /**< Request payload size in byte */
 
     ResponsePart    m_rspPart;              /**< Current parsing part of the response */

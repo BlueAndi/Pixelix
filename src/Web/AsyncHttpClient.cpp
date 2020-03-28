@@ -293,6 +293,56 @@ bool AsyncHttpClient::GET()
     return status;
 }
 
+bool AsyncHttpClient::POST(const uint8_t* payload, size_t size)
+{
+    bool status = false;
+
+    if (false == m_isReqOpen)
+    {
+        m_method        = "POST";
+        m_payload       = payload;
+        m_payloadSize   = size;
+
+        if (false == isConnected())
+        {
+            status = connect();
+            m_isReqOpen = status;
+        }
+        else
+        {
+            status = sendRequest();
+            m_isReqOpen = false;
+        }
+    }
+
+    return status;
+}
+
+bool AsyncHttpClient::POST(const String& payload)
+{
+    bool status = false;
+
+    if (false == m_isReqOpen)
+    {
+        m_method        = "POST";
+        m_payload       = reinterpret_cast<const uint8_t*>(payload.c_str());
+        m_payloadSize   = payload.length();
+
+        if (false == isConnected())
+        {
+            status = connect();
+            m_isReqOpen = status;
+        }
+        else
+        {
+            status = sendRequest();
+            m_isReqOpen = false;
+        }
+    }
+
+    return status;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -388,16 +438,23 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
             }
             else
             {
-                String rspPayload;
+                size_t available    = index = len;
+                size_t needed       = m_contentLength - m_contentIndex;
+                size_t copySize     = 0U;
 
-                while((len > index) && (0U < m_contentIndex))
+                if (available >= needed)
                 {
-                    rspPayload += asciiData[index];
-                    ++index;
-                    --m_contentIndex;
+                    copySize = needed;
+                }
+                else
+                {
+                    copySize = available;
                 }
 
-                if (0U == m_contentIndex)
+                m_rsp.addPayload(&data[m_contentIndex], copySize);
+                m_contentIndex += copySize;
+
+                if (m_contentLength <= m_contentIndex)
                 {
                     m_rspPart = RESPONSE_PART_STATUS_LINE;
 
@@ -501,6 +558,7 @@ bool AsyncHttpClient::sendRequest()
 
     if (false == m_isHttpVer10)
     {
+        /* By the client supported transfer codings. */
         request += "Accept-Encoding: ";
         request += "identity;q=1,chunked;q=0.1,*;q=0";
         request += CRLF;
@@ -525,12 +583,14 @@ bool AsyncHttpClient::sendRequest()
     request += m_headers;
     request += CRLF;
 
-    /* --- Add now the message-body. --- */
+    /* Send header */
+    status = (request.length() == m_tcpClient.write(request.c_str(), request.length()));
 
-    /* TODO */
-
-    /* Send request */
-    status = (request.length() == m_tcpClient.write(request.c_str()));
+    /* Send payload */
+    if (true == status)
+    {
+        status = (m_payloadSize == m_tcpClient.write(reinterpret_cast<const char*>(m_payload), m_payloadSize, 0));
+    }
 
     return status;
 }
