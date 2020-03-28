@@ -383,6 +383,7 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
 {
     size_t      index       = 0U;
     const char* asciiData   = reinterpret_cast<const char*>(data);
+    bool        isError     = false;
 
     /* RFC2616 - Response = Status-Line
      *                      *(( general-header
@@ -394,7 +395,7 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
 
     LOG_INFO("onData(): len = %u", len);
 
-    while(len > index)
+    while((len > index) && (false == isError))
     {
         switch(m_rspPart)
         {
@@ -420,7 +421,9 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
                 if (false == handleRspHeader())
                 {
                     /* Not nice, but anyway. */
+                    LOG_ERROR("Header error.");
                     client->close();
+                    isError = true;
                 }
                 m_rspPart = RESPONSE_PART_BODY;
             }
@@ -440,7 +443,7 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
             }
             else
             {
-                size_t available    = index = len;
+                size_t available    = len - index;
                 size_t needed       = m_contentLength - m_contentIndex;
                 size_t copySize     = 0U;
 
@@ -453,8 +456,9 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
                     copySize = available;
                 }
 
-                m_rsp.addPayload(&data[m_contentIndex], copySize);
+                m_rsp.addPayload(&data[index], copySize);
                 m_contentIndex += copySize;
+                index += copySize;
 
                 if (m_contentLength <= m_contentIndex)
                 {
@@ -467,7 +471,9 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
             break;
 
         default:
+            LOG_FATAL("Internal error.");
             client->close();
+            isError = true;
             break;
         }
     }
