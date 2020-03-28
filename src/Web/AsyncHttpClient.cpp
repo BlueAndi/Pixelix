@@ -76,7 +76,6 @@ AsyncHttpClient::AsyncHttpClient() :
     m_useHttp10(false),
     m_payload(nullptr),
     m_payloadSize(0U),
-    m_isBusy(false),
     m_rspPart(RESPONSE_PART_STATUS_LINE),
     m_rsp(),
     m_rspLine(),
@@ -267,7 +266,7 @@ bool AsyncHttpClient::GET()
 {
     bool status = false;
 
-    if (false == m_isBusy)
+    if (false == m_isReqOpen)
     {
         m_method        = "GET";
         m_payload       = nullptr;
@@ -283,8 +282,6 @@ bool AsyncHttpClient::GET()
             status = sendRequest();
             m_isReqOpen = false;
         }
-
-        m_isBusy = status;
     }
 
     return status;
@@ -309,7 +306,6 @@ void AsyncHttpClient::onConnect(AsyncClient* client)
 
         if (false == sendRequest())
         {
-            m_isBusy = false;
             /* TODO Error handling */
         }
     }
@@ -532,8 +528,7 @@ void AsyncHttpClient::clear()
     m_base64Authorization.clear();
     m_uri.clear();
     m_headers.clear();
-    m_isBusy            = false;
-    m_transferCoding    = TRANSFER_CODING_IDENTITY;
+    m_transferCoding = TRANSFER_CODING_IDENTITY;
 
     return;
 }

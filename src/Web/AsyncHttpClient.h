@@ -190,7 +190,6 @@ private:
     bool            m_useHttp10;            /**< Use HTTP/1.0 instead of HTTP/1.1 */
     uint8_t*        m_payload;              /**< Request payload */
     size_t          m_payloadSize;          /**< Request payload size in byte */
-    bool            m_isBusy;               /**< If a request is pending, it is true otherwise false. */
 
     ResponsePart    m_rspPart;              /**< Current parsing part of the response */
     HttpResponse    m_rsp;                  /**< Response */
