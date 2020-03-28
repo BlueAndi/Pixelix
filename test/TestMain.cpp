@@ -1550,11 +1550,15 @@ static void testUtil(void)
     TEST_ASSERT_EQUAL_INT32(-1, valueInt32);
 
     valueInt32 = 0;
-    TEST_ASSERT_FALSE(Util::strToInt32("4294967295", valueInt32));
-    TEST_ASSERT_EQUAL_INT32(0, valueInt32);
+    TEST_ASSERT_TRUE(Util::strToInt32("2147483647", valueInt32));
+    TEST_ASSERT_EQUAL_INT32(2147483647, valueInt32);
 
     valueInt32 = 0;
-    TEST_ASSERT_FALSE(Util::strToInt32("-4294967295", valueInt32));
+    TEST_ASSERT_TRUE(Util::strToInt32("-2147483648", valueInt32));
+    TEST_ASSERT_EQUAL_INT32(-2147483648, valueInt32);
+
+    valueInt32 = 0;
+    TEST_ASSERT_FALSE(Util::strToInt32("4294967295", valueInt32));
     TEST_ASSERT_EQUAL_INT32(0, valueInt32);
 
     /* Test number to hex string conversion */
