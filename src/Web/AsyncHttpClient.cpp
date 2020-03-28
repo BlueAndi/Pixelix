@@ -205,7 +205,7 @@ bool AsyncHttpClient::begin(const String& url)
 
             if (true == status)
             {
-                m_uri = url;
+                m_uri = url.substring(begin);
 
                 LOG_INFO("Host: %s port: %u uri: %s", m_hostname.c_str(), m_port, m_uri.c_str());
             }
@@ -434,10 +434,10 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
             {
                 if (true == parseChunkedResponse(data, len, index))
                 {
+                    notifyResponse();
+
                     m_transferCoding = TRANSFER_CODING_IDENTITY;
                     m_rspPart = RESPONSE_PART_STATUS_LINE;
-
-                    notifyResponse();
                     m_rsp.clear();
                 }
             }
@@ -462,10 +462,12 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
 
                 if (m_contentLength <= m_contentIndex)
                 {
-                    m_rspPart = RESPONSE_PART_STATUS_LINE;
-
                     notifyResponse();
+
+                    m_rspPart = RESPONSE_PART_STATUS_LINE;
                     m_rsp.clear();
+                    m_contentLength = 0U;
+                    m_contentIndex = 0U;
                 }
             }
             break;
@@ -553,6 +555,10 @@ bool AsyncHttpClient::sendRequest()
     request += m_userAgent;
     request += CRLF;
 
+    /* HTTP/1.1 defines the "close" connection option for the sender to
+     * signal that the connection will be closed after completion of the
+     * response.
+     */
     request += "Connection: ";
 
     if (false == m_isKeepAlive)
@@ -640,12 +646,19 @@ bool AsyncHttpClient::handleRspHeader()
     bool    isSuccess = true;
     String  value;
 
+    /* Connection = "Connection" ":" 1#(connection-token)
+     * connection-token = token
+     *
+     * HTTP/1.1 defines the "close" connection option for the sender to
+     * signal that the connection will be closed after completion of the
+     * response.
+     */
     value = m_rsp.getHeader("Connection");
 
     if (false == value.isEmpty())
     {
         /* Server closes the connection after the response? */
-        if (0U != value.equalsIgnoreCase("close"))
+        if (0 <= value.indexOf("close"))
         {
             /* Client want a permanent connection? */
             if (true == m_isKeepAlive)
