@@ -73,7 +73,8 @@ AsyncHttpClient::AsyncHttpClient() :
     m_isReqOpen(false),
     m_method(),
     m_userAgent("AsyncHttpClient"),
-    m_useHttp10(false),
+    m_isHttpVer10(false),
+    m_isKeepAlive(false),
     m_payload(nullptr),
     m_payloadSize(0U),
     m_rspPart(RESPONSE_PART_STATUS_LINE),
@@ -252,9 +253,14 @@ bool AsyncHttpClient::isDisconnected()
     return m_tcpClient.disconnected();
 }
 
-void AsyncHttpClient::useHttp10(bool useHttp10)
+void AsyncHttpClient::setHttpVersion(bool useHttp10)
 {
-    m_useHttp10 = useHttp10;
+    m_isHttpVer10 = useHttp10;
+}
+
+void AsyncHttpClient::setKeepAlive(bool keepAlive)
+{
+    m_isKeepAlive = keepAlive;
 }
 
 void AsyncHttpClient::regOnResponse(OnResponse onResponse)
@@ -447,7 +453,7 @@ bool AsyncHttpClient::sendRequest()
     request += PROTOCOL;
     request += "/";
 
-    if (false == m_useHttp10)
+    if (false == m_isHttpVer10)
     {
         request += "1.1";
     }
@@ -482,10 +488,18 @@ bool AsyncHttpClient::sendRequest()
     request += CRLF;
 
     request += "Connection: ";
-    request += "close";
+
+    if (false == m_isKeepAlive)
+    {
+        request += "close";
+    }
+    else
+    {
+        request += "keep-alive";
+    }
     request += CRLF;
 
-    if (false == m_useHttp10)
+    if (false == m_isHttpVer10)
     {
         request += "Accept-Encoding: ";
         request += "identity;q=1,chunked;q=0.1,*;q=0";

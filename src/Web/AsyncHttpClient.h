@@ -123,7 +123,14 @@ public:
      *
      * @param[in] useHttp10 Use HTTP/1.0 (true) or HTTP/1.1 (false)
      */
-    void useHttp10(bool useHttp10);
+    void setHttpVersion(bool useHttp10);
+
+    /**
+     * Keep connection alive or close it after a request.
+     *
+     * @param[in] keepAlive Keep alive (true) or close (false) it.
+     */
+    void setKeepAlive(bool keepAlive);
 
     /**
      * Register callback function on response reception.
@@ -187,7 +194,8 @@ private:
     bool            m_isReqOpen;            /**< Is a request open? */
     String          m_method;               /**< Request method, e.g. GET, PUT, etc. */
     String          m_userAgent;            /**< User agent */
-    bool            m_useHttp10;            /**< Use HTTP/1.0 instead of HTTP/1.1 */
+    bool            m_isHttpVer10;          /**< Use HTTP/1.0 (true) instead of HTTP/1.1 (false) */
+    bool            m_isKeepAlive;          /**< Keep connection alive or not? */
     uint8_t*        m_payload;              /**< Request payload */
     size_t          m_payloadSize;          /**< Request payload size in byte */
 
