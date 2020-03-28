@@ -113,6 +113,7 @@ void HttpResponse::clear()
 {
     clearHeaders();
     clearPayload();
+    m_wrIndex = 0U;
 }
 
 void HttpResponse::addStatusLine(const String& line)
@@ -257,7 +258,6 @@ void HttpResponse::clearHeaders()
 
         it.remove();
         delete header;
-
     }
 }
 
