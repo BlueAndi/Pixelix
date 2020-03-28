@@ -152,7 +152,7 @@ void ConnectedState::entry(StateMachine& sm)
             {
                 LOG_ERROR("AsyncHttpClient::begin() failed.");
             }
-            else if (false == client.sendRequest("GET", nullptr, 0U))
+            else if (false == client.GET())
             {
                 LOG_ERROR("AsyncHttpClient::sendRequest() failed.");
             }
