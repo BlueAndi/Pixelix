@@ -120,11 +120,11 @@ AsyncHttpClient::~AsyncHttpClient()
 {
 }
 
-/* TODO Make url const */
-bool AsyncHttpClient::begin(String url)
+bool AsyncHttpClient::begin(const String& url)
 {
-    bool    status = true;
-    int     index = url.indexOf(':');
+    bool    status  = true;
+    int     index   = url.indexOf(':');
+    int     begin   = 0;
 
     if (0 > index)
     {
@@ -133,7 +133,9 @@ bool AsyncHttpClient::begin(String url)
     }
     else
     {
-        String protocol = url.substring(0, index);  /* Get protocol http or https */
+        /* Get protocol http or https */
+        String protocol = url.substring(begin, index);
+        begin = index + 3; /* Overstep '://' too. */
 
         /* Determine port from protocol */
         if (protocol == "http")
@@ -154,18 +156,13 @@ bool AsyncHttpClient::begin(String url)
         {
             String host;
 
-            /* Remove protocol from url */
-            url.remove(0U, index + 3U);
-
             /* Get host */
-            index = url.indexOf('/');
-            host = url.substring(0U, index);
-
-            /* Remove host from url */
-            url.remove(0, index);
+            index = url.indexOf('/', begin);
+            host = url.substring(begin, index);
+            begin = index;
 
             /* Get authorization */
-            index = host.indexOf('@');
+            index = host.indexOf('@', begin);
 
             if (0 > index)
             {
@@ -173,16 +170,14 @@ bool AsyncHttpClient::begin(String url)
             }
             else
             {
-                String auth = host.substring(0U, index);
-
-                /* Remove auth from host */
-                host.remove(0, index + 1U);
+                String auth = host.substring(begin, index);
+                begin = index + 1;
 
                 m_base64Authorization = base64::encode(auth);
             }
 
             /* Get port */
-            index = host.indexOf(':');
+            index = host.indexOf(':', begin);
 
             if (0 > index)
             {
@@ -192,10 +187,8 @@ bool AsyncHttpClient::begin(String url)
             {
                 long port = 0;
 
-                m_hostname = host.substring(0U, index);
-
-                /* Remove hostname from host */
-                host.remove(0U, index + 1U);
+                m_hostname = host.substring(begin, index);
+                begin = index + 1;
 
                 port = host.toInt();
 
@@ -266,6 +259,11 @@ void AsyncHttpClient::setKeepAlive(bool keepAlive)
 void AsyncHttpClient::regOnResponse(OnResponse onResponse)
 {
     m_onRspCallback = onResponse;
+}
+
+void AsyncHttpClient::regOnClosed(OnClosed onClosed)
+{
+    m_onClosedCallback = onClosed;
 }
 
 bool AsyncHttpClient::GET()
@@ -362,7 +360,7 @@ void AsyncHttpClient::onConnect(AsyncClient* client)
 
         if (false == sendRequest())
         {
-            /* TODO Error handling */
+            client->close();
         }
     }
 }
@@ -370,8 +368,8 @@ void AsyncHttpClient::onConnect(AsyncClient* client)
 void AsyncHttpClient::onDisconnect(AsyncClient* client)
 {
     LOG_INFO("Disconnected.");
-
     clear();
+    notifyClosed();
 }
 
 void AsyncHttpClient::onError(AsyncClient* client, int8_t error)
@@ -415,11 +413,15 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
             if (true == parseRspHeader(asciiData, len, index))
             {
                 /* Examine response header.
-                    * This is important to determine the number of following
-                    * payload data and to know when the last data is
-                    * received.
-                    */
-                handleRspHeader();
+                 * This is important to determine the number of following
+                 * payload data and to know when the last data is
+                 * received.
+                 */
+                if (false == handleRspHeader())
+                {
+                    /* Not nice, but anyway. */
+                    client->close();
+                }
                 m_rspPart = RESPONSE_PART_BODY;
             }
             break;
@@ -465,6 +467,7 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
             break;
 
         default:
+            client->close();
             break;
         }
     }
@@ -626,15 +629,25 @@ void AsyncHttpClient::addHeader(const String& name, const String& value)
     m_headers += CRLF;
 }
 
-void AsyncHttpClient::handleRspHeader()
+bool AsyncHttpClient::handleRspHeader()
 {
-    String value;
+    bool    isSuccess = true;
+    String  value;
 
     value = m_rsp.getHeader("Connection");
 
     if (false == value.isEmpty())
     {
-        /* TODO */
+        /* Server closes the connection after the response? */
+        if (0U != value.equalsIgnoreCase("close"))
+        {
+            /* Client want a permanent connection? */
+            if (true == m_isKeepAlive)
+            {
+                LOG_WARNING("Connection can not be kept-alive.");
+                m_isKeepAlive = false;
+            }
+        }
     }
 
     value = m_rsp.getHeader("Content-Length");
@@ -648,15 +661,19 @@ void AsyncHttpClient::handleRspHeader()
 
     if (false == value.isEmpty())
     {
+        /* Only IDENTITY (default) and CHUNKED transfer coding are supported. */
         if (0U != value.equalsIgnoreCase("chunked"))
         {
             m_transferCoding = TRANSFER_CODING_CHUNCKED;
         }
+        /* Unsupported transfer coding */
         else
         {
-            /* TODO Error */
+            isSuccess = false;
         }
     }
+
+    return isSuccess;
 }
 
 bool AsyncHttpClient::parseChunkedResponseSize(const char* data, size_t len, size_t& index)
@@ -838,9 +855,7 @@ bool AsyncHttpClient::parseChunkedResponse(const uint8_t* data, size_t len, size
             break;
 
         default:
-            /* Abort */
-            index = len;
-            /* TODO Error handling */
+            LOG_FATAL("Should never happen.");
             break;
         }
     }
@@ -909,6 +924,14 @@ void AsyncHttpClient::notifyResponse()
     if (nullptr != m_onRspCallback)
     {
         m_onRspCallback(m_rsp);
+    }
+}
+
+void AsyncHttpClient::notifyClosed()
+{
+    if (nullptr != m_onClosedCallback)
+    {
+        m_onClosedCallback();
     }
 }
 

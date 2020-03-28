@@ -64,9 +64,14 @@ class AsyncHttpClient
 public:
 
     /**
-     * Prototype of HTTP response callback.
+     * Prototype of HTTP response callback for a complete received response.
      */
     typedef void (*OnResponse)(const HttpResponse& rsp);
+
+    /**
+     * Prototype of HTTP response callback for a closed connection.
+     */
+    typedef void (*OnClosed)();
 
     /**
      * Constructs a http client.
@@ -85,7 +90,7 @@ public:
      *
      * @return If successful parsed, it will return true otherwise false.
      */
-    bool begin(String url);
+    bool begin(const String& url);
 
     /**
      * Disconnect and clear all parameters.
@@ -138,6 +143,13 @@ public:
      * @param[in] onResponse    Callback
      */
     void regOnResponse(OnResponse onResponse);
+
+    /**
+     * Register callback function on closed connection.
+     *
+     * @param[in] onClosed  Callback
+     */
+    void regOnClosed(OnClosed onClosed);
 
     /**
      * Send GET request to host.
@@ -204,7 +216,8 @@ private:
     static const uint16_t   HTTPS_PORT  = 443U;
 
     AsyncClient     m_tcpClient;            /**< Asynchronous TCP client */
-    OnResponse      m_onRspCallback;        /**< Callback which to call for a complete response */
+    OnResponse      m_onRspCallback;        /**< Callback which to call for a complete response. */
+    OnClosed        m_onClosedCallback;     /**< Callback which to call for a closed connection. */
     String          m_hostname;             /**< Server hostname */
     uint16_t        m_port;                 /**< Server port */
     String          m_base64Authorization;  /**< Authorization BASE64 encoded */
@@ -284,8 +297,10 @@ private:
 
     /**
      * Handle response header.
+     *
+     * @return If client is fine with the resposne header, it will return true otherwise false.
      */
-    void handleRspHeader();
+    bool handleRspHeader();
 
     /**
      * Parse response chunked transfer chunk size.
@@ -370,6 +385,13 @@ private:
      * function is registered or not.
      */
     void notifyResponse();
+
+    /**
+     * This method will be called for a closed connection and notifies the
+     * application, depended on whether a application callback function is
+     * registered or not.
+     */
+    void notifyClosed();
 };
 
 /******************************************************************************
