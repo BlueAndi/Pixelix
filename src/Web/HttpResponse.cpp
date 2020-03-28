@@ -109,6 +109,12 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
     return *this;
 }
 
+void HttpResponse::clear()
+{
+    clearHeaders();
+    clearPayload();
+}
+
 void HttpResponse::addStatusLine(const String& line)
 {
     const char* SP          = " ";

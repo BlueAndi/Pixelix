@@ -82,8 +82,7 @@ public:
      */
     ~HttpResponse()
     {
-        clearHeaders();
-        clearPayload();
+        clear();
     }
 
     /**
@@ -111,6 +110,11 @@ public:
      * @return Response
      */
     HttpResponse& operator=(const HttpResponse& rsp);
+
+    /**
+     * Clear response.
+     */
+    void clear();
 
     /**
      * Add status line during parsing the response.

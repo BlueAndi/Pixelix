@@ -64,6 +64,7 @@
 
 AsyncHttpClient::AsyncHttpClient() :
     m_tcpClient(),
+    m_onRspCallback(nullptr),
     m_hostname(),
     m_port(0U),
     m_base64Authorization(),
@@ -77,7 +78,7 @@ AsyncHttpClient::AsyncHttpClient() :
     m_payloadSize(0U),
     m_isBusy(false),
     m_rspPart(RESPONSE_PART_STATUS_LINE),
-    m_rsp(nullptr),
+    m_rsp(),
     m_rspLine(),
     m_transferCoding(TRANSFER_CODING_IDENTITY),
     m_contentLength(0U),
@@ -257,6 +258,11 @@ void AsyncHttpClient::useHttp10(bool useHttp10)
     m_useHttp10 = useHttp10;
 }
 
+void AsyncHttpClient::regOnResponse(OnResponse onResponse)
+{
+    m_onRspCallback = onResponse;
+}
+
 bool AsyncHttpClient::GET()
 {
     bool status = false;
@@ -325,6 +331,9 @@ void AsyncHttpClient::onError(AsyncClient* client, int8_t error)
 
 void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t len)
 {
+    size_t      index       = 0U;
+    const char* asciiData   = reinterpret_cast<const char*>(data);
+
     /* RFC2616 - Response = Status-Line
      *                      *(( general-header
      *                       | response-header
@@ -335,73 +344,69 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
 
     LOG_INFO("onData(): len = %u", len);
 
-    if (nullptr == m_rsp)
+    while(len > index)
     {
-        /* TODO Abort */
-    }
-    else
-    {
-        size_t      index       = 0U;
-        const char* asciiData   = reinterpret_cast<const char*>(data);
-
-        while(len > index)
+        switch(m_rspPart)
         {
-            switch(m_rspPart)
+        case RESPONSE_PART_STATUS_LINE:
+            if (true == parseRspStatusLine(asciiData, len, index))
             {
-            case RESPONSE_PART_STATUS_LINE:
-                if (true == parseRspStatusLine(asciiData, len, index))
-                {
-                    LOG_INFO("Rsp. HTTP-Version: %s", m_rsp->getHttpVersion().c_str());
-                    LOG_INFO("Rsp. Status-Code: %u", m_rsp->getStatusCode());
-                    LOG_INFO("Rsp. Reason-Phrase: %s", m_rsp->getReasonPhrase().c_str());
+                LOG_INFO("Rsp. HTTP-Version: %s", m_rsp.getHttpVersion().c_str());
+                LOG_INFO("Rsp. Status-Code: %u", m_rsp.getStatusCode());
+                LOG_INFO("Rsp. Reason-Phrase: %s", m_rsp.getReasonPhrase().c_str());
 
-                    m_rspPart = RESPONSE_PART_HEADER;
-                }
-                break;
-
-            case RESPONSE_PART_HEADER:
-                if (true == parseRspHeader(asciiData, len, index))
-                {
-                    /* Examine response header.
-                     * This is important to determine the number of following
-                     * payload data and to know when the last data is
-                     * received.
-                     */
-                    handleRspHeader();
-                    m_rspPart = RESPONSE_PART_BODY;
-                }
-                break;
-
-            case RESPONSE_PART_BODY:
-                if (TRANSFER_CODING_CHUNCKED == m_transferCoding)
-                {
-                    if (true == parseChunkedResponse(data, len, index))
-                    {
-                        m_transferCoding = TRANSFER_CODING_IDENTITY;
-                        m_rspPart = RESPONSE_PART_STATUS_LINE;
-                    }
-                }
-                else
-                {
-                    String rspPayload;
-
-                    while((len > index) && (0U < m_contentIndex))
-                    {
-                        rspPayload += asciiData[index];
-                        ++index;
-                        --m_contentIndex;
-                    }
-
-                    if (0U == m_contentIndex)
-                    {
-                        m_rspPart = RESPONSE_PART_STATUS_LINE;
-                    }
-                }
-                break;
-
-            default:
-                break;
+                m_rspPart = RESPONSE_PART_HEADER;
             }
+            break;
+
+        case RESPONSE_PART_HEADER:
+            if (true == parseRspHeader(asciiData, len, index))
+            {
+                /* Examine response header.
+                    * This is important to determine the number of following
+                    * payload data and to know when the last data is
+                    * received.
+                    */
+                handleRspHeader();
+                m_rspPart = RESPONSE_PART_BODY;
+            }
+            break;
+
+        case RESPONSE_PART_BODY:
+            if (TRANSFER_CODING_CHUNCKED == m_transferCoding)
+            {
+                if (true == parseChunkedResponse(data, len, index))
+                {
+                    m_transferCoding = TRANSFER_CODING_IDENTITY;
+                    m_rspPart = RESPONSE_PART_STATUS_LINE;
+
+                    notifyResponse();
+                    m_rsp.clear();
+                }
+            }
+            else
+            {
+                String rspPayload;
+
+                while((len > index) && (0U < m_contentIndex))
+                {
+                    rspPayload += asciiData[index];
+                    ++index;
+                    --m_contentIndex;
+                }
+
+                if (0U == m_contentIndex)
+                {
+                    m_rspPart = RESPONSE_PART_STATUS_LINE;
+
+                    notifyResponse();
+                    m_rsp.clear();
+                }
+            }
+            break;
+
+        default:
+            break;
         }
     }
 }
@@ -517,11 +522,6 @@ bool AsyncHttpClient::sendRequest()
     /* Send request */
     status = (request.length() == m_tcpClient.write(request.c_str()));
 
-    if (true == status)
-    {
-        m_rsp = new HttpResponse;
-    }
-
     return status;
 }
 
@@ -552,21 +552,21 @@ void AsyncHttpClient::handleRspHeader()
 {
     String value;
 
-    value = m_rsp->getHeader("Connection");
+    value = m_rsp.getHeader("Connection");
 
     if (false == value.isEmpty())
     {
         /* TODO */
     }
 
-    value = m_rsp->getHeader("Content-Length");
+    value = m_rsp.getHeader("Content-Length");
 
     if (false == value.isEmpty())
     {
         m_contentLength = value.toInt();
     }
 
-    value = m_rsp->getHeader("Transfer-Encoding");
+    value = m_rsp.getHeader("Transfer-Encoding");
 
     if (false == value.isEmpty())
     {
@@ -623,7 +623,7 @@ bool AsyncHttpClient::parseChunkedResponseChunkData(const uint8_t* data, size_t 
         copySize = available;
     }
 
-    m_rsp->addPayload(&data[index], copySize);
+    m_rsp.addPayload(&data[index], copySize);
     index += copySize;
     m_chunkIndex += copySize;
 
@@ -729,16 +729,7 @@ bool AsyncHttpClient::parseChunkedResponse(const uint8_t* data, size_t len, size
                     m_chunkBodyPart = CHUNK_DATA;
 
                     /* Extend response payload */
-                    if (nullptr == m_rsp)
-                    {
-                        LOG_ERROR("Unexpected NULL pointer.");
-
-                        /* TODO Error handling */
-                    }
-                    else
-                    {
-                        m_rsp->extendPayload(m_chunkSize);
-                    }
+                    m_rsp.extendPayload(m_chunkSize);
                 }
             }
             break;
@@ -791,7 +782,7 @@ bool AsyncHttpClient::parseRspStatusLine(const char* data, size_t len, size_t& i
 
         if (0U != m_rspLine.endsWith(CRLF))
         {
-            m_rsp->addStatusLine(m_rspLine);
+            m_rsp.addStatusLine(m_rspLine);
 
             isStatusLineEOF = true;
             m_rspLine.clear();
@@ -821,7 +812,7 @@ bool AsyncHttpClient::parseRspHeader(const char* data, size_t len, size_t& index
 
                 LOG_INFO("Rsp. header: %s", m_rspLine.c_str());
 
-                m_rsp->addHeader(m_rspLine);
+                m_rsp.addHeader(m_rspLine);
             }
             else
             {
@@ -833,6 +824,14 @@ bool AsyncHttpClient::parseRspHeader(const char* data, size_t len, size_t& index
     }
 
     return isHeaderEOF;
+}
+
+void AsyncHttpClient::notifyResponse()
+{
+    if (nullptr != m_onRspCallback)
+    {
+        m_onRspCallback(m_rsp);
+    }
 }
 
 /******************************************************************************

@@ -148,6 +148,21 @@ void ConnectedState::entry(StateMachine& sm)
         {
             static AsyncHttpClient  client;
 
+            client.regOnResponse(
+                [](const HttpResponse& rsp)
+                {
+                    size_t      payloadSize     = 0U;
+                    const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                    size_t      payloadIndex    = 0U;
+
+                    while(payloadSize > payloadIndex)
+                    {
+                        Serial.print(payload[payloadIndex]);
+                        ++payloadIndex;
+                    }
+                }
+            );
+
             if (false == client.begin("http://www.google.de"))
             {
                 LOG_ERROR("AsyncHttpClient::begin() failed.");

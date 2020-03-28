@@ -64,6 +64,11 @@ class AsyncHttpClient
 public:
 
     /**
+     * Prototype of HTTP response callback.
+     */
+    typedef void (*OnResponse)(const HttpResponse& rsp);
+
+    /**
      * Constructs a http client.
      */
     AsyncHttpClient();
@@ -121,6 +126,13 @@ public:
     void useHttp10(bool useHttp10);
 
     /**
+     * Register callback function on response reception.
+     *
+     * @param[in] onResponse    Callback
+     */
+    void regOnResponse(OnResponse onResponse);
+
+    /**
      * Send GET request to host.
      *
      * @return If request is successful sent, it will return true otherwise false.
@@ -166,6 +178,7 @@ private:
     static const uint16_t   HTTPS_PORT  = 443U;
 
     AsyncClient     m_tcpClient;            /**< Asynchronous TCP client */
+    OnResponse      m_onRspCallback;        /**< Callback which to call for a complete response */
     String          m_hostname;             /**< Server hostname */
     uint16_t        m_port;                 /**< Server port */
     String          m_base64Authorization;  /**< Authorization BASE64 encoded */
@@ -180,7 +193,7 @@ private:
     bool            m_isBusy;               /**< If a request is pending, it is true otherwise false. */
 
     ResponsePart    m_rspPart;              /**< Current parsing part of the response */
-    HttpResponse*   m_rsp;                  /**< Response */
+    HttpResponse    m_rsp;                  /**< Response */
     String          m_rspLine;              /**< Single line, used for response parsing */
     TransferCoding  m_transferCoding;       /**< Transfer coding */
     size_t          m_contentLength;        /**< Content length in byte */
@@ -324,6 +337,13 @@ private:
      * @return If all headers are parsed, it will return true otherwise false.
      */
     bool parseRspHeader(const char* data, size_t len, size_t& index);
+
+    /**
+     * This method will be called for every complete response and provides
+     * it to the application, depended on whether a application callback
+     * function is registered or not.
+     */
+    void notifyResponse();
 };
 
 /******************************************************************************
