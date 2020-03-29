@@ -66,6 +66,7 @@ public:
     WsCmdSlotDuration() :
         WsCmd("SLOT_DURATION"),
         m_isError(false),
+        m_parCnt(0U),
         m_slotId(UINT8_MAX),
         m_slotDuration(0U)
     {
