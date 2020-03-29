@@ -516,6 +516,8 @@ bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration)
         m_slots[slotId].setDuration(duration);
 
         unlock();
+
+        status = true;
     }
 
     return status;
