@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "WsCmdMove.h"
+#include "PluginMgr.h"
 
 #include <Logging.h>
 
@@ -94,6 +95,9 @@ void WsCmdMove::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         else
         {
             rsp = "ACK";
+
+            /* Save new location of plugin in persistent memory. */
+            PluginMgr::getInstance().save();
         }
 
         server->text(client->id(), rsp);
