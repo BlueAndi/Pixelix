@@ -164,27 +164,6 @@ public:
     }
 
     /**
-     * Get a list of all key value pairs.
-     *
-     * @return List of key value pairs.
-     */
-    KeyValue**  getList()
-    {
-        return m_keyValueList;
-    }
-
-    /**
-     * Clear all key value pairs, which means set them to
-     * factory defaults.
-     *
-     * @return If successful cleared, it will return true otherwise false.
-     */
-    bool clear()
-    {
-        return m_preferences.clear();
-    }
-
-    /**
      * Get GMT offset.
      *
      * @return Key value pair
@@ -244,8 +223,39 @@ public:
         return m_maxSlots;
     }
 
+    /**
+     * Get display slot configuration.
+     *
+     * @return Key value pair
+     */
+    KeyValueJson& getDisplaySlotConfig()
+    {
+        return m_slotConfig;
+    }
+
+    /**
+     * Get a list of all key value pairs.
+     *
+     * @return List of key value pairs.
+     */
+    KeyValue**  getList()
+    {
+        return m_keyValueList;
+    }
+
+    /**
+     * Clear all key value pairs, which means set them to
+     * factory defaults.
+     *
+     * @return If successful cleared, it will return true otherwise false.
+     */
+    bool clear()
+    {
+        return m_preferences.clear();
+    }
+
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 13U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 14U;
 
 private:
 
@@ -267,6 +277,7 @@ private:
     KeyValueBool    m_timeFormatCtrl;       /**< Time format control */
     KeyValueBool    m_dateFormatCtrl;       /**< Date format control */
     KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
+    KeyValueJson    m_slotConfig;           /**< Display slot configuration */
 
     /**
      * Constructs the settings instance.

@@ -39,6 +39,7 @@
 #include "BrightnessCtrl.h"
 
 #include <Logging.h>
+#include <ArduinoJson.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -95,6 +96,9 @@ bool DisplayMgr::begin()
         if (0 < m_maxSlots)
         {
             m_slots = new Slot[m_maxSlots];
+
+            /* Load slot configuration */
+            load();
         }
     }
 
@@ -513,7 +517,13 @@ bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration)
     {
         lock();
 
-        m_slots[slotId].setDuration(duration);
+        if (m_slots[slotId].getDuration() != duration)
+        {
+            m_slots[slotId].setDuration(duration);
+
+            /* Save slot configuration */
+            save();
+        }
 
         unlock();
 
@@ -817,6 +827,94 @@ void DisplayMgr::unlock()
     }
 
     return;
+}
+
+void DisplayMgr::load()
+{
+    Settings& settings = Settings::getInstance();
+
+    if (nullptr == m_slots)
+    {
+        LOG_WARNING("No slot exists.");
+    }
+    else if (false == settings.open(true))
+    {
+        LOG_WARNING("Couldn't open filesystem.");
+    }
+    else
+    {
+        String                  config          = settings.getDisplaySlotConfig().getValue();
+        const size_t            JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
+        DeserializationError    error           = deserializeJson(jsonDoc, config);
+
+        if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+        {
+            LOG_WARNING("Max. JSON buffer size reached.");
+        }
+
+        settings.close();
+
+        if (DeserializationError::Ok != error)
+        {
+            LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+        }
+        else
+        {
+            JsonArray   jsonSlots   = jsonDoc["slots"].as<JsonArray>();
+            uint8_t     slotId      = 0;
+
+            for(JsonObject jsonSlot: jsonSlots)
+            {
+                uint32_t duration = jsonSlot["duration"];
+
+                m_slots[slotId].setDuration(duration);
+
+                ++slotId;
+                if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void DisplayMgr::save()
+{
+    if (nullptr != m_slots)
+    {
+        String              config;
+        uint8_t             slotId      = 0;
+        Settings&           settings    = Settings::getInstance();
+        const size_t        JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonArray           jsonSlots   = jsonDoc.createNestedArray("slots");
+
+        for(slotId = 0; slotId < m_maxSlots; ++slotId)
+        {
+            JsonObject jsonSlot = jsonSlots.createNestedObject();
+
+            jsonSlot["duration"] = m_slots[slotId].getDuration();
+        }
+
+        if (false == settings.open(false))
+        {
+            LOG_WARNING("Couldn't open filesystem.");
+        }
+        else
+        {
+            if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+            {
+                LOG_WARNING("Max. JSON buffer size reached.");
+            }
+
+            serializeJson(jsonDoc, config);
+
+            settings.getDisplaySlotConfig().setValue(config);
+            settings.close();
+        }
+    }
 }
 
 /******************************************************************************

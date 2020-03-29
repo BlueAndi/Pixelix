@@ -337,6 +337,16 @@ private:
      * Unlock display.
      */
     void unlock(void);
+
+    /**
+     * Load display slot configuration from persistent memory.
+     */
+    void load();
+
+    /**
+     * Save display slot configuration to persistent memory.
+     */
+    void save();
 };
 
 /******************************************************************************

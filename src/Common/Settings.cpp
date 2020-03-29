@@ -107,6 +107,9 @@ static const char* KEY_DATE_FORMAT                  = "date_format";
 /** Max. number of display slots key */
 static const char* KEY_MAX_SLOTS                    = "max_slots";
 
+/** Display slot configuration key */
+static const char* KEY_SLOT_CONFIG                  = "slot_cfg";
+
 /* ---------- Key value pair names ---------- */
 
 /** Wifi network name of key value pair */
@@ -134,7 +137,7 @@ static const char*  NAME_PLUGIN_INSTALLATION        = "Plugin installation";
 static const char*  NAME_GMT_OFFSET                 = "GMT offset [s]";
 
 /** DaylightSaving name of key value pair */
-static const char*  NAME_DAYLIGHT_SAVING_CTRL       = "DST control";
+static const char*  NAME_DAYLIGHT_SAVING_CTRL       = "Daylight saving control (DST)";
 
 /** NTP server name of key value pair */
 static const char*  NAME_NTP_SERVER                 = "NTP server address";
@@ -147,6 +150,9 @@ static const char*  NAME_DATE_FORMAT_CTRL           = "Date format: true = DD:MM
 
 /** Max. number of display slots name of key value pair */
 static const char*  NAME_MAX_SLOTS                  = "Max. slots";
+
+/** Display slot configuration name */
+static const char*  NAME_SLOT_CONFIG                = "Display slot configuration";
 
 /* ---------- Default values ---------- */
 
@@ -172,22 +178,25 @@ static bool             DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
 static const char*      DEFAULT_PLUGIN_INSTALLATION     = "";
 
 /** GMT offset default value */
-static const int16_t    DEFAULT_GMT_OFFSET             = 0;
+static const int16_t    DEFAULT_GMT_OFFSET              = 0;
 
 /** Daylight saving control default value */
-static bool             DEFAULT_DAYLIGHT_SAVING_CTRL   = false;
+static bool             DEFAULT_DAYLIGHT_SAVING_CTRL    = false;
 
 /** NTP server default value */
-static const char*      DEFAULT_NTP_SERVER             = "pool.ntp.org";
+static const char*      DEFAULT_NTP_SERVER              = "pool.ntp.org";
 
 /** Time format control default value */
-static bool             DEFAULT_TIME_FORMAT_CTRL       = true;
+static bool             DEFAULT_TIME_FORMAT_CTRL        = true;
 
 /** Date format control default value */
-static bool             DEFAULT_DATE_FORMAT_CTRL       = true;
+static bool             DEFAULT_DATE_FORMAT_CTRL        = true;
 
-/** Max. number of display slots value */
-static uint8_t          DEFAULT_MAX_SLOTS              = 5U;
+/** Max. number of display slots default value */
+static uint8_t          DEFAULT_MAX_SLOTS               = 5U;
+
+/** Display slot configuration default value */
+static const char*      DEFAULT_SLOT_CONFIG             = "";
 
 /* ---------- Minimum values ---------- */
 
@@ -226,6 +235,9 @@ static const size_t     MIN_VALUE_NTP_SERVER            = 12U;
 /** Max. number of display slots minimum value */
 static uint8_t          MIN_MAX_SLOTS                   = 2U;
 
+/** Display slot configuration min. length */
+static const size_t     MIN_VALUE_SLOT_CONFIG           = 0U;
+
 /* ---------- Maximum values ---------- */
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -262,6 +274,9 @@ static const size_t     MAX_VALUE_NTP_SERVER            = 30U;
 
 /** Max. number of display slots maximum value */
 static uint8_t          MAX_MAX_SLOTS                   = 11U;
+
+/** Display slot configuration max. length */
+static const size_t     MAX_VALUE_SLOT_CONFIG           = 256U;
 
 /******************************************************************************
  * Public Methods
@@ -321,7 +336,8 @@ Settings::Settings() :
     m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER),
     m_timeFormatCtrl        (m_preferences, KEY_TIME_FORMAT,            NAME_TIME_FORMAT_CTRL,      DEFAULT_TIME_FORMAT_CTRL),
     m_dateFormatCtrl        (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT_CTRL,      DEFAULT_DATE_FORMAT_CTRL),
-    m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS)
+    m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS),
+    m_slotConfig            (m_preferences, KEY_SLOT_CONFIG,            NAME_SLOT_CONFIG,           DEFAULT_SLOT_CONFIG,            MIN_VALUE_SLOT_CONFIG,          MAX_VALUE_SLOT_CONFIG)
 {
     m_keyValueList[0] = &m_wifiSSID;
     m_keyValueList[1] = &m_wifiPassphrase;
@@ -336,6 +352,7 @@ Settings::Settings() :
     m_keyValueList[10] = &m_timeFormatCtrl;
     m_keyValueList[11] = &m_dateFormatCtrl;
     m_keyValueList[12] = &m_maxSlots;
+    m_keyValueList[13] = &m_slotConfig;
 }
 
 Settings::~Settings()
