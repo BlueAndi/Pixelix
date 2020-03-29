@@ -155,14 +155,24 @@ bool AsyncHttpClient::begin(const String& url)
         if (true == status)
         {
             String host;
+            String auth;
 
-            /* Get host */
+            /* Get host (incl. authorization and port) */
             index = url.indexOf('/', begin);
             host = url.substring(begin, index);
-            begin = index;
+
+            /* Get URI */
+            if (0 > index)
+            {
+                m_uri.clear();
+            }
+            else
+            {
+                m_uri = url.substring(index);
+            }
 
             /* Get authorization */
-            index = host.indexOf('@', begin);
+            index = host.indexOf('@');
 
             if (0 > index)
             {
@@ -170,14 +180,15 @@ bool AsyncHttpClient::begin(const String& url)
             }
             else
             {
-                String auth = host.substring(begin, index);
-                begin = index + 1;
-
+                auth = host.substring(0, index);
                 m_base64Authorization = base64::encode(auth);
+
+                /* Remove authorization from host string. */
+                host.remove(0, index + 1);
             }
 
             /* Get port */
-            index = host.indexOf(':', begin);
+            index = host.indexOf(':');
 
             if (0 > index)
             {
@@ -185,29 +196,34 @@ bool AsyncHttpClient::begin(const String& url)
             }
             else
             {
-                long port = 0;
+                String  port;
+                long    portNo  = 0;
 
-                m_hostname = host.substring(begin, index);
-                begin = index + 1;
+                /* Get port */
+                port = host.substring(index + 1);
 
-                port = host.toInt();
+                portNo = port.toInt();
 
-                if ((0 > port) ||
-                    (UINT16_MAX < port))
+                if ((0 > portNo) ||
+                    (UINT16_MAX < portNo))
                 {
                     status = false;
                 }
                 else
                 {
-                    m_port = static_cast<uint16_t>(port);
+                    m_port = static_cast<uint16_t>(portNo);
                 }
+
+                /* Remove port from host */
+                m_hostname = host.substring(0, index);
             }
 
             if (true == status)
             {
-                m_uri = url.substring(begin);
-
-                LOG_INFO("Host: %s port: %u uri: %s", m_hostname.c_str(), m_port, m_uri.c_str());
+                LOG_INFO("Host: %s", m_hostname.c_str());
+                LOG_INFO("Port: %u", m_port);
+                LOG_INFO("URI: %s", m_uri.c_str());
+                LOG_INFO("Authorization: %s", auth.c_str());
             }
         }
 
