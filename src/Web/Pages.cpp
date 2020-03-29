@@ -594,10 +594,10 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
             {
                 KeyValueUInt8*  kvUInt8     = static_cast<KeyValueUInt8*>(parameter);
                 uint8_t         uint8Value  = 0;
-                bool            status      = Util::strToUInt8(value, uint8Value);
+                bool            convStatus  = Util::strToUInt8(value, uint8Value);
 
                 /* Conversion failed? */
-                if (false == status)
+                if (false == convStatus)
                 {
                     status = false;
                     jsonDoc["status"]   = 1;
@@ -635,10 +635,10 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
             {
                 KeyValueInt32*  kvInt32     = static_cast<KeyValueInt32*>(parameter);
                 int32_t         int32Value  = 0;
-                bool            status      = Util::strToInt32(value, int32Value);
+                bool            convStatus  = Util::strToInt32(value, int32Value);
 
                 /* Conversion failed? */
-                if (false == status)
+                if (false == convStatus)
                 {
                     status = false;
                     jsonDoc["status"]   = 1;
