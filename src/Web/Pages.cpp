@@ -799,7 +799,7 @@ static void settingsPage(AsyncWebServerRequest* request)
     }
     else
     {
-        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "plain/text", "Error");
+        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "plain/text", "Error");
     }
 
     return;
@@ -986,7 +986,7 @@ static void uploadPage(AsyncWebServerRequest* request)
 
     if (true == gIsUploadError)
     {
-        request->send(HttpStatus::STATUS_CODE_BAD_REQ, "text/plain", "Error");
+        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "text/plain", "Error");
     }
     else
     {
@@ -1055,7 +1055,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             }
 
             /* Inform client about abort.*/
-            request->send(HttpStatus::STATUS_CODE_ENTITY_TOO_LARGE, "text/plain", "Upload aborted.");
+            request->send(HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE, "text/plain", "Upload aborted.");
         }
         /* Update is now running. */
         else
@@ -1122,7 +1122,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             UpdateMgr::getInstance().endProgress();
 
             /* Inform client about abort.*/
-            request->send(HttpStatus::STATUS_CODE_ENTITY_TOO_LARGE, "text/plain", "Upload aborted.");
+            request->send(HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE, "text/plain", "Upload aborted.");
         }
     }
 

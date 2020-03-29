@@ -546,6 +546,7 @@ static void testStateMachine(void);
 static void testSimpleTimer(void);
 static void testProgressBar(void);
 static void testLogging(void);
+static void testUtil(void);
 
 /******************************************************************************
  * Variables
@@ -579,6 +580,8 @@ int main(int argc, char **argv)
     RUN_TEST(testSimpleTimer);
     RUN_TEST(testProgressBar);
     RUN_TEST(testLogging);
+    RUN_TEST(testUtil);
+
     return UNITY_END();
 }
 
@@ -610,43 +613,41 @@ static T getMin(const T value1, const T value2)
  */
 static void testDoublyLinkedList()
 {
-    DLinkedList<uint32_t>   list;
-    uint32_t                value   = 1U;
-    uint32_t                index   = 0U;
-    const uint32_t          max     = 3U;
+    DLinkedList<uint32_t>           list;
+    DLinkedListIterator<uint32_t>   it(list);
+    uint32_t                        value   = 1U;
+    uint32_t                        index   = 0U;
+    const uint32_t                  max     = 3U;
 
     /* List is empty. */
-    TEST_ASSERT_NULL(list.first());
-    TEST_ASSERT_NULL(list.last());
-    TEST_ASSERT_NULL(list.current());
-    TEST_ASSERT_FALSE(list.next());
-    TEST_ASSERT_FALSE(list.prev());
+    TEST_ASSERT_FALSE(it.first());
+    TEST_ASSERT_FALSE(it.last());
+    TEST_ASSERT_NULL(it.current());
+    TEST_ASSERT_FALSE(it.next());
+    TEST_ASSERT_FALSE(it.prev());
     TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
 
     /* Add one element. */
     TEST_ASSERT_TRUE(list.append(value));
     TEST_ASSERT_EQUAL_UINT32(1u, list.getNumOfElements());
 
-    TEST_ASSERT_NOT_NULL(list.first());
-    TEST_ASSERT_NOT_NULL(list.last());
-    TEST_ASSERT_NOT_NULL(list.current());
+    TEST_ASSERT_TRUE(it.first());
+    TEST_ASSERT_NOT_NULL(it.current());
+    TEST_ASSERT_EQUAL_INT(value, *it.current());
 
-    TEST_ASSERT_EQUAL_INT(value, *list.first());
-    TEST_ASSERT_EQUAL_INT(value, *list.last());
-    TEST_ASSERT_EQUAL_INT(value, *list.current());
-
-    TEST_ASSERT_EQUAL_PTR(list.first(), list.last());
-    TEST_ASSERT_EQUAL_PTR(list.first(), list.current());
+    TEST_ASSERT_TRUE(it.last());
+    TEST_ASSERT_NOT_NULL(it.current());
+    TEST_ASSERT_EQUAL_INT(value, *it.current());
 
     /* Remove element from list. List is now empty. */
-    list.removeSelected();
+    it.remove();
     TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
 
-    TEST_ASSERT_NULL(list.first());
-    TEST_ASSERT_NULL(list.last());
-    TEST_ASSERT_NULL(list.current());
-    TEST_ASSERT_FALSE(list.next());
-    TEST_ASSERT_FALSE(list.prev());
+    TEST_ASSERT_FALSE(it.first());
+    TEST_ASSERT_FALSE(it.last());
+    TEST_ASSERT_FALSE(it.current());
+    TEST_ASSERT_FALSE(it.next());
+    TEST_ASSERT_FALSE(it.prev());
 
     /* Add more elements */
     for(index = 1U; index <= max; ++index)
@@ -655,58 +656,58 @@ static void testDoublyLinkedList()
         TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
     }
 
-    TEST_ASSERT_NOT_NULL(list.first());
-    TEST_ASSERT_EQUAL_INT(1u, *list.first());
+    TEST_ASSERT_TRUE(it.first());
+    TEST_ASSERT_EQUAL_INT(1u, *it.current());
 
-    TEST_ASSERT_NOT_NULL(list.last());
-    TEST_ASSERT_EQUAL_INT(max, *list.last());
+    TEST_ASSERT_TRUE(it.last());
+    TEST_ASSERT_EQUAL_INT(max, *it.current());
 
     /* Select element for element, from head to tail. */
+    TEST_ASSERT_TRUE(it.first());
     for(index = 1U; index <= max; ++index)
     {
-        TEST_ASSERT_NOT_NULL(list.current());
-        TEST_ASSERT_EQUAL_INT(index, *list.current());
+        TEST_ASSERT_NOT_NULL(it.current());
+        TEST_ASSERT_EQUAL_INT(index, *it.current());
 
         if (index < max)
         {
-            TEST_ASSERT_TRUE(list.next());
+            TEST_ASSERT_TRUE(it.next());
         }
         else
         {
-            TEST_ASSERT_FALSE(list.next());
+            TEST_ASSERT_FALSE(it.next());
         }
-
     }
 
     /* Select element for element, from tail to head. */
+    TEST_ASSERT_TRUE(it.last());
     for(index = max; index > 0U; --index)
     {
-        TEST_ASSERT_NOT_NULL(list.current());
-        TEST_ASSERT_EQUAL_INT(index, *list.current());
+        TEST_ASSERT_NOT_NULL(it.current());
+        TEST_ASSERT_EQUAL_INT(index, *it.current());
 
         if (index > 1U)
         {
-            TEST_ASSERT_TRUE(list.prev());
+            TEST_ASSERT_TRUE(it.prev());
         }
         else
         {
-            TEST_ASSERT_FALSE(list.prev());
+            TEST_ASSERT_FALSE(it.prev());
         }
-
     }
 
     /* Remove all elements */
     for(index = 1; index <= max; ++index)
     {
-        list.removeSelected();
+        it.remove();
         TEST_ASSERT_EQUAL_UINT32(max - index, list.getNumOfElements());
     }
 
-    TEST_ASSERT_NULL(list.first());
-    TEST_ASSERT_NULL(list.last());
-    TEST_ASSERT_NULL(list.current());
-    TEST_ASSERT_FALSE(list.next());
-    TEST_ASSERT_FALSE(list.prev());
+    TEST_ASSERT_FALSE(it.first());
+    TEST_ASSERT_FALSE(it.last());
+    TEST_ASSERT_NULL(it.current());
+    TEST_ASSERT_FALSE(it.next());
+    TEST_ASSERT_FALSE(it.prev());
 
     /* Insert elements again */
     for(index = 1U; index <= max; ++index)
@@ -717,49 +718,51 @@ static void testDoublyLinkedList()
 
     /* Copy it via copy constructor */
     {
-        DLinkedList<uint32_t> copyOfList = list;
+        DLinkedList<uint32_t>           copyOfList = list;
+        DLinkedListIterator<uint32_t>   itListCopy(copyOfList);
 
-        TEST_ASSERT_TRUE(list.selectFirstElement());
+        TEST_ASSERT_TRUE(it.first());
         for(index = 1U; index <= max; ++index)
         {
-            TEST_ASSERT_NOT_NULL(copyOfList.current());
-            TEST_ASSERT_NOT_NULL(list.current());
-            TEST_ASSERT_NOT_EQUAL(copyOfList.current(), list.current());
-            TEST_ASSERT_EQUAL_INT(*copyOfList.current(), *list.current());
-            copyOfList.next();
-            list.next();
+            TEST_ASSERT_NOT_NULL(itListCopy.current());
+            TEST_ASSERT_NOT_NULL(it.current());
+            TEST_ASSERT_NOT_EQUAL(itListCopy.current(), it.current());
+            TEST_ASSERT_EQUAL_INT(*itListCopy.current(), *it.current());
+            (void)itListCopy.next();
+            (void)it.next();
         }
     }
 
     /* Copy it via assignment */
     {
-        DLinkedList<uint32_t> copyOfList;
+        DLinkedList<uint32_t>           copyOfList;
+        DLinkedListIterator<uint32_t>   itListCopy(copyOfList);
         copyOfList = list;
 
-        TEST_ASSERT_TRUE(list.selectFirstElement());
-        for(index = 1; index <= max; ++index)
+        TEST_ASSERT_TRUE(it.first());
+        for(index = 1U; index <= max; ++index)
         {
-            TEST_ASSERT_NOT_NULL(copyOfList.current());
-            TEST_ASSERT_NOT_NULL(list.current());
-            TEST_ASSERT_NOT_EQUAL(copyOfList.current(), list.current());
-            TEST_ASSERT_EQUAL_INT(*copyOfList.current(), *list.current());
-            copyOfList.next();
-            list.next();
+            TEST_ASSERT_NOT_NULL(itListCopy.current());
+            TEST_ASSERT_NOT_NULL(it.current());
+            TEST_ASSERT_NOT_EQUAL(itListCopy.current(), it.current());
+            TEST_ASSERT_EQUAL_INT(*itListCopy.current(), *it.current());
+            (void)itListCopy.next();
+            (void)it.next();
         }
     }
 
     /* Find not existing element */
-    TEST_ASSERT_TRUE(list.selectFirstElement());
-    TEST_ASSERT_FALSE(list.find(max + 1));
+    TEST_ASSERT_TRUE(it.first());
+    TEST_ASSERT_FALSE(it.find(max + 1));
 
     /* Find existing element */
-    TEST_ASSERT_TRUE(list.selectFirstElement());
-    TEST_ASSERT_TRUE(list.find(*list.first()));
-    TEST_ASSERT_EQUAL(list.first(), list.current());
+    TEST_ASSERT_TRUE(it.first());
+    TEST_ASSERT_TRUE(it.find(1U));
+    TEST_ASSERT_EQUAL(1U, *it.current());
 
-    TEST_ASSERT_TRUE(list.selectFirstElement());
-    TEST_ASSERT_TRUE(list.find(*list.last()));
-    TEST_ASSERT_EQUAL(list.last(), list.current());
+    TEST_ASSERT_TRUE(it.first());
+    TEST_ASSERT_TRUE(it.find(max));
+    TEST_ASSERT_EQUAL(max, *it.current());
 
     return;
 }
@@ -1468,6 +1471,143 @@ static void testLogging()
     myTestLogger.clear();
     LOG_ERROR("Should not be shown.");
     TEST_ASSERT_EQUAL_size_t(0, strlen(myTestLogger.getBuffer()));
+
+    return;
+}
+
+/**
+ * Test utility functions.
+ */
+static void testUtil(void)
+{
+    String      hexStr;
+    uint8_t     valueUInt8  = 0U;
+    uint16_t    valueUInt16 = 0U;
+    uint32_t    valueUInt32 = 0U;
+    int32_t     valueInt32  = 0;
+
+    /* Test string to 8 bit unsigned integer conversion. */
+    TEST_ASSERT_TRUE(Util::strToUInt8("0", valueUInt8));
+    TEST_ASSERT_EQUAL_UINT8(0U, valueUInt8);
+
+    valueUInt8 = 0U;
+    TEST_ASSERT_TRUE(Util::strToUInt8("255", valueUInt8));
+    TEST_ASSERT_EQUAL_UINT8(0xffU, valueUInt8);
+
+    valueUInt8 = 0U;
+    TEST_ASSERT_FALSE(Util::strToUInt8("256", valueUInt8));
+    TEST_ASSERT_EQUAL_UINT8(0U, valueUInt8);
+
+    valueUInt8 = 0U;
+    TEST_ASSERT_FALSE(Util::strToUInt8("-1", valueUInt8));
+    TEST_ASSERT_EQUAL_UINT8(0U, valueUInt8);
+
+    /* Test string to 16 bit unsigned integer conversion. */
+    TEST_ASSERT_TRUE(Util::strToUInt16("0", valueUInt16));
+    TEST_ASSERT_EQUAL_UINT16(0U, valueUInt16);
+
+    valueUInt16 = 0U;
+    TEST_ASSERT_TRUE(Util::strToUInt16("65535", valueUInt16));
+    TEST_ASSERT_EQUAL_UINT16(0xffffU, valueUInt16);
+
+    valueUInt16 = 0U;
+    TEST_ASSERT_FALSE(Util::strToUInt16("65536", valueUInt16));
+    TEST_ASSERT_EQUAL_UINT16(0U, valueUInt16);
+
+    valueUInt16 = 0U;
+    TEST_ASSERT_FALSE(Util::strToUInt16("-1", valueUInt16));
+    TEST_ASSERT_EQUAL_UINT16(0U, valueUInt16);
+
+    /* Test string to 32 bit unsigned integer conversion. */
+    TEST_ASSERT_TRUE(Util::strToUInt32("0", valueUInt32));
+    TEST_ASSERT_EQUAL_UINT32(0U, valueUInt32);
+
+    valueUInt32 = 0U;
+    TEST_ASSERT_TRUE(Util::strToUInt32("4294967295", valueUInt32));
+    TEST_ASSERT_EQUAL_UINT32(0xffffffffU, valueUInt32);
+
+    valueUInt32 = 0U;
+    TEST_ASSERT_FALSE(Util::strToUInt32("4294967296", valueUInt32));
+    TEST_ASSERT_EQUAL_UINT32(0U, valueUInt32);
+
+/* This test fails if executed with mingw, but is successful on CI with gcc. */
+#if 0
+    valueUInt32 = 0U;
+    TEST_ASSERT_FALSE(Util::strToUInt32("-1", valueUInt32));
+    TEST_ASSERT_EQUAL_UINT32(0U, valueUInt32);
+#endif
+
+    /* Test string to 32 bit signed integer conversion. */
+    TEST_ASSERT_TRUE(Util::strToInt32("0", valueInt32));
+    TEST_ASSERT_EQUAL_INT32(0, valueInt32);
+
+    valueInt32 = 0;
+    TEST_ASSERT_TRUE(Util::strToInt32("1", valueInt32));
+    TEST_ASSERT_EQUAL_INT32(1, valueInt32);
+
+    valueInt32 = 0;
+    TEST_ASSERT_TRUE(Util::strToInt32("-1", valueInt32));
+    TEST_ASSERT_EQUAL_INT32(-1, valueInt32);
+
+    valueInt32 = 0;
+    TEST_ASSERT_TRUE(Util::strToInt32("2147483647", valueInt32));
+    TEST_ASSERT_EQUAL_INT32(2147483647, valueInt32);
+
+    valueInt32 = 0;
+    TEST_ASSERT_TRUE(Util::strToInt32("-2147483648", valueInt32));
+    TEST_ASSERT_EQUAL_INT32(-2147483648, valueInt32);
+
+    valueInt32 = 0;
+    TEST_ASSERT_FALSE(Util::strToInt32("4294967295", valueInt32));
+    TEST_ASSERT_EQUAL_INT32(0, valueInt32);
+
+    /* Test number to hex string conversion */
+    TEST_ASSERT_EQUAL_STRING("1", Util::uint32ToHex(0x01).c_str());
+    TEST_ASSERT_EQUAL_STRING("a", Util::uint32ToHex(0x0a).c_str());
+    TEST_ASSERT_EQUAL_STRING("f", Util::uint32ToHex(0x0f).c_str());
+    TEST_ASSERT_EQUAL_STRING("10", Util::uint32ToHex(0x10).c_str());
+    TEST_ASSERT_EQUAL_STRING("ffff0000", Util::uint32ToHex(0xffff0000).c_str());
+    TEST_ASSERT_EQUAL_STRING("ffffffff", Util::uint32ToHex(0xffffffff).c_str());
+
+    /* Value of empty hex string shall be 0. */
+    hexStr.clear();
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+
+    /* Several valid tests now. */
+    hexStr = "1";
+    TEST_ASSERT_EQUAL_UINT32(1U, Util::hexToUInt32(hexStr));
+    hexStr = "0x1";
+    TEST_ASSERT_EQUAL_UINT32(1U, Util::hexToUInt32(hexStr));
+    hexStr = "0X1";
+    TEST_ASSERT_EQUAL_UINT32(1U, Util::hexToUInt32(hexStr));
+    hexStr = "10";
+    TEST_ASSERT_EQUAL_UINT32(16U, Util::hexToUInt32(hexStr));
+    hexStr = "0x10";
+    TEST_ASSERT_EQUAL_UINT32(16U, Util::hexToUInt32(hexStr));
+    hexStr = "0X10";
+    TEST_ASSERT_EQUAL_UINT32(16U, Util::hexToUInt32(hexStr));
+    hexStr = "1f";
+    TEST_ASSERT_EQUAL_UINT32(31U, Util::hexToUInt32(hexStr));
+    hexStr = "0x1f";
+    TEST_ASSERT_EQUAL_UINT32(31U, Util::hexToUInt32(hexStr));
+    hexStr = "0x1F";
+    TEST_ASSERT_EQUAL_UINT32(31U, Util::hexToUInt32(hexStr));
+
+    /* Several invalid tests now. */
+    hexStr = " 1";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "1 ";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "g";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "G";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "1g";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "1G";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
+    hexStr = "0y5";
+    TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
 
     return;
 }

@@ -95,6 +95,10 @@ extern bool strToUInt16(const String& str, uint16_t& value);
  * Convert a string to uint32_t. String can contain integer number in decimal
  * or hexadecimal format.
  *
+ * Note, negative values in the string will lead to a successful conversion.
+ * This is a limitation due to fact that the underlying strtoul() cast the
+ * result to unsigned long, which is on the esp32 equal to uint32_t.
+ *
  * @param[in]   str     String
  * @param[out]  value   Converted value
  *
@@ -121,6 +125,16 @@ extern bool strToInt32(const String& str, int32_t& value);
  * @return Hex string
  */
 extern String uint32ToHex(uint32_t value);
+
+/**
+ * Convert hex string to uint32_t. String may has the prefix "0x" or not.
+ * If conversion fails, it will return 0.
+ *
+ * @param[in] str   String which contains a hex number
+ *
+ * @return 32 bit unsigned integer value
+ */
+extern uint32_t hexToUInt32(const String& str);
 
 }
 

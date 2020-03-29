@@ -151,15 +151,17 @@ private:
         IPluginMaintenance::CreateFunc  createFunc; /**< Plugin creation function */
     };
 
-    DLinkedList<PluginRegEntry*>        m_registry; /**< Plugin registry */
-    DLinkedList<IPluginMaintenance*>    m_plugins;  /**< List with all installed plugins */
-    PluginRegEntry*                     m_current;  /**< Current registry entry */
+    DLinkedList<PluginRegEntry*>            m_registry;     /**< Plugin registry */
+    DLinkedListIterator<PluginRegEntry*>    m_registryIter; /**< Plugin registry iterator. Exclusive use in findFirst() and findNext()! */
+    DLinkedList<IPluginMaintenance*>        m_plugins;      /**< List with all installed plugins */
+    PluginRegEntry*                         m_current;      /**< Current registry entry */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
         m_registry(),
+        m_registryIter(m_registry),
         m_plugins(),
         m_current(nullptr)
     {

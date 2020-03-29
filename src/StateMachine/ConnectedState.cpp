@@ -49,6 +49,8 @@
 #include <Logging.h>
 #include <ESPmDNS.h>
 
+#include "AsyncHttpClient.h"
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -142,6 +144,38 @@ void ConnectedState::entry(StateMachine& sm)
         SysMsg::getInstance().show(infoStr, infoStr.length() * 600U);
 
         LOG_INFO(infoStr);
+
+        {
+            static AsyncHttpClient  client;
+
+            client.regOnResponse(
+                [](const HttpResponse& rsp)
+                {
+                    size_t      payloadSize     = 0U;
+                    const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                    size_t      payloadIndex    = 0U;
+
+                    while(payloadSize > payloadIndex)
+                    {
+                        Serial.print(payload[payloadIndex]);
+                        ++payloadIndex;
+                    }
+                }
+            );
+
+            if (false == client.begin("http://www.google.de"))
+            {
+                LOG_ERROR("AsyncHttpClient::begin() failed.");
+            }
+            else if (false == client.GET())
+            {
+                LOG_ERROR("AsyncHttpClient::sendRequest() failed.");
+            }
+            else
+            {
+                ;
+            }
+        }
     }
 
     return;

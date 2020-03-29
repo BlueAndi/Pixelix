@@ -27,7 +27,7 @@
 /**
  * @brief  Canvas
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -66,7 +66,7 @@ public:
 
     /**
      * Constructs a canvas.
-     * 
+     *
      * @param[in] width     Canvas width in pixel.
      * @param[in] height    Canvas height in pixel.
      * @param[in] x         x-coordinate position in the matrix.
@@ -91,9 +91,9 @@ public:
 
     /**
      * Add a widget to the canvas.
-     * 
+     *
      * @param[in] widget Widget
-     * 
+     *
      * @return If successful, it will return true, otherwise false.
      */
     bool addWidget(Widget& widget)
@@ -104,25 +104,22 @@ public:
 
     /**
      * Remove a widget from the canvas.
-     * 
+     *
      * @param[in] widget Widget
-     * 
+     *
      * @return If successful, it will return true, otherwise false.
      */
     bool removeWidget(const Widget& widget)
     {
-        bool status = false;
+        bool                            status = false;
+        DLinkedListIterator<Widget*>    it(m_widgets);
 
         /* Find widget in the list */
-        if (true == m_widgets.selectFirstElement())
+        if (true == it.find(&const_cast<Widget&>(widget)))
         {
-            /* Widget found? */
-            if (true == m_widgets.find(&const_cast<Widget&>(widget)))
-            {
-                /* Remove widget */
-                m_widgets.removeSelected();
-                status = true;
-            }
+            /* Remove widget */
+            it.remove();
+            status = true;
         }
 
         return status;
@@ -130,7 +127,7 @@ public:
 
     /**
      * Get all widget children.
-     * 
+     *
      * @return Children
      */
     const DLinkedList<Widget*>& children() const
@@ -141,23 +138,25 @@ public:
     /**
      * Update/Draw the widgets in the canvas with the
      * given graphics interface.
-     * 
+     *
      * @param[in] gfx   Graphics interface
      */
     void update(IGfx& gfx) override
     {
+        DLinkedListIterator<Widget*> it(m_widgets);
+
         /* Walk through all widgets and draw them in the priority as
          * they were added.
          */
-        if (true == m_widgets.selectFirstElement())
+        if (true == it.first())
         {
             m_gfx = &gfx;
 
             do
             {
-                (*m_widgets.current())->update(*this);
+                (*it.current())->update(*this);
             }
-            while(true == m_widgets.next());
+            while(true == it.next());
 
             m_gfx = nullptr;
         }
@@ -167,10 +166,10 @@ public:
 
     /**
      * Get pixel color at given position.
-     * 
+     *
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
-     * 
+     *
      * @return Color in RGB565 format.
      */
     uint16_t getColor(int16_t x, int16_t y) override
@@ -191,9 +190,9 @@ public:
 
     /**
      * Find widget by its name.
-     * 
+     *
      * @param[in] name  Widget name to search for
-     * 
+     *
      * @return If widget is found, it will be returned otherwise nullptr.
      */
     Widget* find(const String& name) override
@@ -208,14 +207,16 @@ public:
         /* If its not the canvas itself, continue searching in the widget list. */
         if (nullptr == widget)
         {
-            if (true == m_widgets.selectFirstElement())
+            DLinkedListIterator<Widget*> it(m_widgets);
+
+            if (true == it.first())
             {
                 do
                 {
-                    widget = (*m_widgets.current())->find(name);
-
-                } while ((nullptr == widget) &&
-                         (true == m_widgets.next()));
+                    widget = (*it.current())->find(name);
+                }
+                while(  (nullptr == widget) &&
+                        (true == it.next()));
             }
         }
 
@@ -236,7 +237,7 @@ private:
     /**
      * Draw a single pixel in the matrix and ensure that the drawing borders
      * are not violated.
-     * 
+     *
      * @param[in] x     x-coordinate
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color

@@ -168,6 +168,49 @@ extern String Util::uint32ToHex(uint32_t value)
     return String(buffer);
 }
 
+extern uint32_t Util::hexToUInt32(const String& str)
+{
+    uint32_t    value   = 0U;
+    uint32_t    index   = 0U;
+    bool        isError = false;
+
+    if ((0U != str.startsWith("0x")) ||
+        (0U != str.startsWith("0X")))
+    {
+        index = 2U;
+    }
+
+    while((str.length() > index) && (false == isError))
+    {
+        value *= 16U;
+
+        if (('0' <= str[index]) &&
+            ('9' >= str[index]))
+        {
+            value += static_cast<uint32_t>(str[index] - '0');
+        }
+        else if (('a' <= str[index]) &&
+                 ('f' >= str[index]))
+        {
+            value += static_cast<uint32_t>(str[index] - 'a') + 10U;
+        }
+        else if (('A' <= str[index]) &&
+                 ('F' >= str[index]))
+        {
+            value += static_cast<uint32_t>(str[index] - 'A') + 10U;
+        }
+        else
+        {
+            value = 0U;
+            isError = true;
+        }
+
+        ++index;
+    }
+
+    return value;
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
