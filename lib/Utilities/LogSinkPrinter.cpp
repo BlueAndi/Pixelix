@@ -69,7 +69,7 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
 
         written = snprintf( buffer,
                             LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN,
-                            "|%ld| %s %s:%d %s\r\n",
+                            "|%lu| %s %s:%d %s\r\n",
                             msg.timestamp,
                             logLevelToString(msg.level),
                             msg.filename,
