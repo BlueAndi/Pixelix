@@ -821,7 +821,7 @@ static String settingsPageProcessor(const String& var)
         {
             KeyValue**          list            = Settings::getInstance().getList();
             uint8_t             index           = 0U;
-            const size_t        JSON_DOC_SIZE   = 2048U;
+            const size_t        JSON_DOC_SIZE   = 4096U;
             DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
             for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
