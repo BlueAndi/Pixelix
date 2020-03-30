@@ -667,27 +667,30 @@ public:
      */
     bool append(T& element)
     {
-        bool            status      = false;
-        ListElement<T>* listElement = new ListElement<T>(element, m_tail, nullptr);
+        bool status = false;
 
-        if ((nullptr != listElement) &&
-            (UINT32_MAX > m_count))
+        if (UINT32_MAX > m_count)
         {
-            /* Empty list? */
-            if (nullptr == m_head)
-            {
-                m_head = listElement;
-                m_tail = listElement;
-            }
-            else
-            {
-                m_tail->setNext(listElement);
-                m_tail = listElement;
-            }
+            ListElement<T>* listElement = new ListElement<T>(element, m_tail, nullptr);
 
-            ++m_count;
+            if (nullptr != listElement)
+            {
+                /* Empty list? */
+                if (nullptr == m_head)
+                {
+                    m_head = listElement;
+                    m_tail = listElement;
+                }
+                else
+                {
+                    m_tail->setNext(listElement);
+                    m_tail = listElement;
+                }
 
-            status = true;
+                ++m_count;
+
+                status = true;
+            }
         }
 
         return status;
