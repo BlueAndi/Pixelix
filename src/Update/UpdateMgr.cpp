@@ -292,8 +292,6 @@ void UpdateMgr::onError(ota_error_t error)
 {
     String infoStr;
 
-    m_instance.m_updateIsRunning = false;
-
     switch(error)
     {
     case OTA_AUTH_ERROR:
@@ -334,8 +332,8 @@ void UpdateMgr::onError(ota_error_t error)
         m_instance.endProgress();
 
         /* Reset only if the error happened during update.
-        * Security note: This avoids a reset in case the authentication failed.
-        */
+         * Security note: This avoids a reset in case the authentication failed.
+         */
         if (true == m_instance.m_updateIsRunning)
         {
             SysMsg::getInstance().show(infoStr);
@@ -345,6 +343,8 @@ void UpdateMgr::onError(ota_error_t error)
             m_instance.reqRestart();
         }
     }
+
+    m_instance.m_updateIsRunning = false;
 
     return;
 }
