@@ -257,8 +257,8 @@ void InitState::showStartupInfoOnDisplay()
     sysMsg.show("");
     delay(SYS_MSG_WAIT_TIME / 2U);
 
-    /* Show sw version */
-    sysMsg.show(Version::SOFTWARE);
+    /* Show sw version (short) */
+    sysMsg.show(Version::SOFTWARE_SHORT);
     delay(SYS_MSG_WAIT_TIME);
 
     /* Clear and wait */

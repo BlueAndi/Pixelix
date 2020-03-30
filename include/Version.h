@@ -81,8 +81,10 @@ namespace Version
  *****************************************************************************/
 
     /** Software revision */
-    static const char* SOFTWARE = QUOTE(GIT_REV);
+    static const char* SOFTWARE         = QUOTE(GIT_REV);
 
+    /** Software revision short */
+    static const char* SOFTWARE_SHORT   = QUOTE(GIT_REV_SHORT);
 }
 
 #endif  /* __VERSION_H__ */
