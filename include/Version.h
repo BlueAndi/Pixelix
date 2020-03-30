@@ -57,6 +57,21 @@ namespace Version
  * Macros
  *****************************************************************************/
 
+#ifndef GIT_REV
+
+/**
+ * GIT revision number (SHA-1) to identify the software revision.
+ */
+#define GIT_REV "Unknown"
+
+#endif  /* GIT_REV */
+
+/** Stringizing the value. */
+#define Q(x) #x
+
+/** Quote the given value to get a string literal. */
+#define QUOTE(x) Q(x)
+
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
@@ -65,8 +80,8 @@ namespace Version
  * Functions
  *****************************************************************************/
 
-    /** Software version */
-    static const char* SOFTWARE = "Trunk";
+    /** Software revision */
+    static const char* SOFTWARE = QUOTE(GIT_REV);
 
 }
 
