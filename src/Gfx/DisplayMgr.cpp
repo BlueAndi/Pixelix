@@ -843,37 +843,45 @@ void DisplayMgr::load()
     }
     else
     {
-        String                  config          = settings.getDisplaySlotConfig().getValue();
-        const size_t            JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error           = deserializeJson(jsonDoc, config);
+        String config = settings.getDisplaySlotConfig().getValue();
 
-        if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+        if (true == config.isEmpty())
         {
-            LOG_WARNING("Max. JSON buffer size reached.");
-        }
-
-        settings.close();
-
-        if (DeserializationError::Ok != error)
-        {
-            LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+            LOG_WARNING("Display slot configuration is empty.");
         }
         else
         {
-            JsonArray   jsonSlots   = jsonDoc["slots"].as<JsonArray>();
-            uint8_t     slotId      = 0;
+            const size_t            JSON_DOC_SIZE   = 512U;
+            DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
+            DeserializationError    error           = deserializeJson(jsonDoc, config);
 
-            for(JsonObject jsonSlot: jsonSlots)
+            if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
             {
-                uint32_t duration = jsonSlot["duration"];
+                LOG_WARNING("Max. JSON buffer size reached.");
+            }
 
-                m_slots[slotId].setDuration(duration);
+            settings.close();
 
-                ++slotId;
-                if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+            if (DeserializationError::Ok != error)
+            {
+                LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+            }
+            else
+            {
+                JsonArray   jsonSlots   = jsonDoc["slots"].as<JsonArray>();
+                uint8_t     slotId      = 0;
+
+                for(JsonObject jsonSlot: jsonSlots)
                 {
-                    break;
+                    uint32_t duration = jsonSlot["duration"];
+
+                    m_slots[slotId].setDuration(duration);
+
+                    ++slotId;
+                    if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                    {
+                        break;
+                    }
                 }
             }
         }

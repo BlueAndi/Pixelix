@@ -173,50 +173,58 @@ void PluginMgr::load()
     }
     else
     {
-        String                  installation    = settings.getPluginInstallation().getValue();
-        const size_t            JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error           = deserializeJson(jsonDoc, installation);
+        String installation = settings.getPluginInstallation().getValue();
 
-        if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+        if (true == installation.isEmpty())
         {
-            LOG_WARNING("Max. JSON buffer size reached.");
-        }
-
-        settings.close();
-
-        if (DeserializationError::Ok != error)
-        {
-            LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+            LOG_WARNING("Plugin installation is empty.");
         }
         else
         {
-            JsonArray   jsonSlots   = jsonDoc["slots"].as<JsonArray>();
-            uint8_t     slotId      = 0;
+            const size_t            JSON_DOC_SIZE   = 512U;
+            DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
+            DeserializationError    error           = deserializeJson(jsonDoc, installation);
 
-            for(JsonObject jsonSlot: jsonSlots)
+            if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
             {
-                String      name    = jsonSlot["name"];
-                uint16_t    uid     = jsonSlot["uid"];
+                LOG_WARNING("Max. JSON buffer size reached.");
+            }
 
-                if (false == name.isEmpty())
+            settings.close();
+
+            if (DeserializationError::Ok != error)
+            {
+                LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+            }
+            else
+            {
+                JsonArray   jsonSlots   = jsonDoc["slots"].as<JsonArray>();
+                uint8_t     slotId      = 0;
+
+                for(JsonObject jsonSlot: jsonSlots)
                 {
-                    IPluginMaintenance* plugin = install(name, uid, slotId);
+                    String      name    = jsonSlot["name"];
+                    uint16_t    uid     = jsonSlot["uid"];
 
-                    if (nullptr == plugin)
+                    if (false == name.isEmpty())
                     {
-                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
-                    }
-                    else
-                    {
-                        plugin->enable();
-                    }
-                }
+                        IPluginMaintenance* plugin = install(name, uid, slotId);
 
-                ++slotId;
-                if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
-                {
-                    break;
+                        if (nullptr == plugin)
+                        {
+                            LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                        }
+                        else
+                        {
+                            plugin->enable();
+                        }
+                    }
+
+                    ++slotId;
+                    if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                    {
+                        break;
+                    }
                 }
             }
         }
