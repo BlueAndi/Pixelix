@@ -149,7 +149,7 @@ bool BitmapWidget::load(const String& filename)
     {
         if (false == neoFile.Begin(fd))
         {
-            LOG_ERROR("Incompatible bitmap file format.");
+            LOG_ERROR("File %s has incompatible bitmap file format.", filename.c_str());
         }
         else
         {
