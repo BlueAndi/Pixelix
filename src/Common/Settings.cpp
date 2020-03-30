@@ -285,10 +285,10 @@ static const size_t     MAX_VALUE_SLOT_CONFIG           = 256U;
 bool Settings::open(bool readOnly)
 {
     /* Open Preferences with namespace. Each application module, library, etc
-        * has to use a namespace name to prevent key name collisions. We will open storage in
-        * RW-mode (second parameter has to be false).
-        * Note: Namespace name is limited to 15 chars.
-        */
+     * has to use a namespace name to prevent key name collisions. We will open storage in
+     * RW-mode (second parameter has to be false).
+     * Note: Namespace name is limited to 15 chars.
+     */
     bool status = m_preferences.begin(PREF_NAMESPACE, readOnly);
 
     /* If settings storage doesn't exist, it will be created. */

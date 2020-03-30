@@ -135,57 +135,65 @@ void BitmapWidget::set(const uint16_t* bitmap, uint16_t width, uint16_t height)
 
 bool BitmapWidget::load(const String& filename)
 {
-    bool                                status  = false;
-    File                                fd;
-    NeoBitmapFile<NeoGrbFeature, File>  neoFile;
+    bool    status  = false;
+    File    fd;
 
-    fd = SPIFFS.open(filename, "r");
-
-    if (false == fd)
+    if (false == SPIFFS.exists(filename))
     {
-        LOG_ERROR("File %s doesn't exists.", filename.c_str());
+        LOG_WARNING("File %s doesn't exists.", filename.c_str());
     }
     else
     {
-        if (false == neoFile.Begin(fd))
+        NeoBitmapFile<NeoGrbFeature, File>  neoFile;
+
+        fd = SPIFFS.open(filename, "r");
+
+        if (false == fd)
         {
-            LOG_ERROR("File %s has incompatible bitmap file format.", filename.c_str());
+            LOG_ERROR("Failed to open file %s.", filename.c_str());
         }
         else
         {
-            m_width         = neoFile.Width();
-            m_height        = neoFile.Height();
-            m_bufferSize    = m_width * m_height;
-
-            if (nullptr != m_buffer)
+            if (false == neoFile.Begin(fd))
             {
-                delete[] m_buffer;
-                m_buffer = nullptr;
+                LOG_ERROR("File %s has incompatible bitmap file format.", filename.c_str());
             }
-
-            m_buffer = new uint16_t[m_bufferSize];
-
-            if (nullptr != m_buffer)
+            else
             {
-                uint16_t x = 0U;
-                uint16_t y = 0U;
+                m_width         = neoFile.Width();
+                m_height        = neoFile.Height();
+                m_bufferSize    = m_width * m_height;
 
-                for(y = 0U; y < m_height; ++y)
+                if (nullptr != m_buffer)
                 {
-                    for(x = 0U; x < m_width; ++x)
-                    {
-                        RgbColor    rgbColor = neoFile.GetPixelColor(x, y);
-                        Color       color888(rgbColor.R, rgbColor.G, rgbColor.B);
-
-                        m_buffer[x + y * m_width] = color888.to565();
-                    }
+                    delete[] m_buffer;
+                    m_buffer = nullptr;
                 }
 
-                status = true;
-            }
-        }
+                m_buffer = new uint16_t[m_bufferSize];
 
-        fd.close();
+                if (nullptr != m_buffer)
+                {
+                    uint16_t x = 0U;
+                    uint16_t y = 0U;
+
+                    for(y = 0U; y < m_height; ++y)
+                    {
+                        for(x = 0U; x < m_width; ++x)
+                        {
+                            RgbColor    rgbColor = neoFile.GetPixelColor(x, y);
+                            Color       color888(rgbColor.R, rgbColor.G, rgbColor.B);
+
+                            m_buffer[x + y * m_width] = color888.to565();
+                        }
+                    }
+
+                    status = true;
+                }
+            }
+
+            fd.close();
+        }
     }
 
     return status;
