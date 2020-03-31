@@ -190,8 +190,6 @@ void PluginMgr::load()
                 LOG_WARNING("Max. JSON buffer size reached.");
             }
 
-            settings.close();
-
             if (DeserializationError::Ok != error)
             {
                 LOG_WARNING("JSON deserialization failed: %s", error.c_str());
@@ -228,6 +226,8 @@ void PluginMgr::load()
                 }
             }
         }
+
+        settings.close();
     }
 }
 
