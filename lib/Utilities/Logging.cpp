@@ -171,7 +171,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
             strncat(buffer, STR_CUT_OFF_SEQ, MESSAGE_BUFFER_SIZE - strlen(buffer) - 1U);
         }
 
-        msg.timestamp   = millis();
+        msg.timestamp   = esp_log_timestamp();
         msg.level       = messageLogLevel;
         msg.filename    = getBaseNameFromPath(file);
         msg.line        = line;
@@ -192,10 +192,31 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
     {
         Msg msg;
 
-        msg.timestamp   = millis();
+        msg.timestamp   = esp_log_timestamp();
         msg.level       = messageLogLevel;
         msg.filename    = getBaseNameFromPath(file);
         msg.line        = line;
+        msg.str         = message.c_str();
+
+        m_selectedSink->send(msg);
+    }
+    else
+    {
+        /* LogMessage is discarded! */
+    }
+}
+
+void Logging::processLogMessage(uint32_t timestamp, const String& logger, const LogLevel messageLogLevel, const String& message)
+{
+    if ((true == isSeverityValid(messageLogLevel)) &&
+        (nullptr != m_selectedSink))
+    {
+        Msg msg;
+
+        msg.timestamp   = timestamp;
+        msg.level       = messageLogLevel;
+        msg.filename    = logger.c_str();
+        msg.line        = 0;
         msg.str         = message.c_str();
 
         m_selectedSink->send(msg);

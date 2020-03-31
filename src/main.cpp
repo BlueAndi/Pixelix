@@ -54,6 +54,8 @@
  * Prototypes
  *****************************************************************************/
 
+static int main_espLogVPrintf(const char* szFormat, va_list args);
+
 /******************************************************************************
  * Variables
  *****************************************************************************/
@@ -70,6 +72,9 @@ static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstanc
 /** Serial interface baudrate. */
 static const uint32_t   SERIAL_BAUDRATE = 115200U;
 
+/** Buffer for esp_log_write() method output. */
+static char gLogPrintBuffer[512U];
+
 /******************************************************************************
  * External functions
  *****************************************************************************/
@@ -81,6 +86,10 @@ void setup()
 {
     /* Setup serial interface */
     Serial.begin(SERIAL_BAUDRATE);
+
+    /* Pipe esp_log_write() output through own logging system. */
+    (void)esp_log_set_vprintf(main_espLogVPrintf);
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
 
     /* Register serial log sink and select it per default. */
     if (true == Logging::getInstance().registerSink(&gLogSinkSerial))
@@ -123,3 +132,94 @@ void loop()
 /******************************************************************************
  * Local functions
  *****************************************************************************/
+
+/**
+ * This method is called by esp_log_write() to write log messages.
+ *
+ * @param[in] szFormat  Print format
+ * @param[in] args      Variable argument list
+ *
+ * @return Number of written characters.
+ */
+static int main_espLogVPrintf(const char* szFormat, va_list args)
+{
+    int ret = vsnprintf(gLogPrintBuffer, sizeof(gLogPrintBuffer), szFormat, args);
+
+    if (0 <= ret)
+    {
+        Logging::LogLevel   logLevel    = Logging::LOGLEVEL_INFO;
+        int                 index       = 0U;
+        String              timestamp;
+        String              logger;
+        String              message;
+
+        /* Determine log level */
+        if (0 < ret)
+        {
+            switch(gLogPrintBuffer[index])
+            {
+            case 'E':
+                logLevel = Logging::LOGLEVEL_ERROR;
+                break;
+
+            case 'W':
+                logLevel = Logging::LOGLEVEL_WARNING;
+                break;
+
+            case 'I':
+                logLevel = Logging::LOGLEVEL_INFO;
+                break;
+
+            case 'D':
+                logLevel = Logging::LOGLEVEL_INFO;
+                break;
+
+            case 'V':
+                logLevel = Logging::LOGLEVEL_INFO;
+                break;
+
+            default:
+                break;
+            }
+
+            index += 2; /* Overstep log level and SP */
+        }
+
+        /* Determine timestamp */
+        ++index; /* Overstep '(' */
+        while((ret > index) && (')' != gLogPrintBuffer[index]))
+        {
+            timestamp += gLogPrintBuffer[index];
+            ++index;
+        }
+        index += 2; /* Overstep ')' and SP */
+
+        /* Determine logger */
+        while((ret > index) && (':' != gLogPrintBuffer[index]))
+        {
+            logger += gLogPrintBuffer[index];
+            ++index;
+        }
+        index += 2; /* Overstep ':' and SP */
+
+        message = &gLogPrintBuffer[index];
+
+        /* Cut message on the next CR or LF. */
+        index = 0;
+        while('\0' != message[index])
+        {
+            if (('\r' == message[index]) ||
+                ('\n' == message[index]))
+            {
+                message.remove(index);
+                break;
+            }
+
+            ++index;
+        }
+
+        Logging::getInstance().processLogMessage(timestamp.toInt(), logger, logLevel, message);
+    }
+
+    return ret;
+}

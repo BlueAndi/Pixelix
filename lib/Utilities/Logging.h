@@ -108,7 +108,7 @@ public:
      */
     struct Msg
     {
-        unsigned long       timestamp;  /**< Timestamp in ms */
+        uint32_t            timestamp;  /**< Timestamp in ms */
         Logging::LogLevel   level;      /**< Log level */
         const char*         filename;   /**< Name of the file where this message is thrown. */
         int                 line;       /**< Line number in the file, where this message is thrown. */
@@ -212,6 +212,19 @@ public:
      * @note The max. size of a logMessage is restricted by MESSAGE_BUFFER_SIZE.
      */
     void processLogMessage(const char* file, int line, const LogLevel messageLogLevel, const String& message);
+
+    /**
+     * Write a formatable logMessage to the current output,
+     * if the severity is >= the current logLevel, otherwise the logMessage is discarded.
+     *
+     * @param[in] timestamp         Timestamp in ms.
+     * @param[in] logger            Logger name.
+     * @param[in] messageLogLevel   The logLevel.
+     * @param[in] message           The message as string.
+     *
+     * @note The max. size of a logMessage is restricted by MESSAGE_BUFFER_SIZE.
+     */
+    void processLogMessage(uint32_t timestamp, const String& logger, const LogLevel messageLogLevel, const String& message);
 
     /** Number of supported log sinks. */
     static const uint8_t MAX_SINKS = 2U;
