@@ -27,7 +27,7 @@
 /**
  * @brief  Arduino stuff for test
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup test
  *
  * @{
@@ -76,6 +76,11 @@ static unsigned long millis()
     clock_t now = clock();
 
     return (now * 1000UL) / CLOCKS_PER_SEC;
+}
+
+static uint32_t esp_log_timestamp(void)
+{
+    return millis();
 }
 
 #endif  /* __ARDUINO_H__ */
