@@ -282,9 +282,9 @@ void BrightnessCtrl::updateBrightness()
 
     if (m_brightnessGoal > m_brightness)
     {
-        if ((UINT8_MAX - STEP) < m_brightness)
+        if ((m_brightnessGoal - STEP) < m_brightness)
         {
-            m_brightness = UINT8_MAX;
+            m_brightness = m_brightnessGoal;
         }
         else
         {
@@ -295,9 +295,9 @@ void BrightnessCtrl::updateBrightness()
     }
     else if (m_brightnessGoal < m_brightness)
     {
-        if ((0U + STEP) > m_brightness)
+        if ((m_brightnessGoal + STEP) > m_brightness)
         {
-            m_brightness = 0U;
+            m_brightness = m_brightnessGoal;
         }
         else
         {
