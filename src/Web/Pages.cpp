@@ -157,6 +157,8 @@ void Pages::init(AsyncWebServer& srv)
  */
 void Pages::error(AsyncWebServerRequest* request)
 {
+    LOG_INFO("Invalid web request: %s", request->url().c_str());
+
     if (nullptr == request)
     {
         return;
