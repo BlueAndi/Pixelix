@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Task monitor
+ * @brief  Memory monitor
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup common
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TASK_MON_H__
-#define __TASK_MON_H__
+#ifndef __MEM_MON_H__
+#define __MEM_MON_H__
 
 /******************************************************************************
  * Compile Switches
@@ -56,76 +56,65 @@
  *****************************************************************************/
 
 /**
- * Task monitor
+ * Memory monitor
  */
-class TaskMon
+class MemMon
 {
 public:
 
     /**
-     * Get task monitor instance.
+     * Get memory monitor instance.
      *
-     * @return Task monitor instance
+     * @return Memory monitor instance
      */
-    static TaskMon& getInstance()
+    static MemMon& getInstance()
     {
         return m_instance;
     }
 
     /**
-     * Get current number of tasks and their properties.
+     * Process memory monitor.
      */
     void process();
 
     /** Processing cycle in ms. */
-    static const uint32_t PROCESSING_CYCLE  = 60U * 1000U;
+    static const uint32_t PROCESSING_CYCLE          = 60U * 1000U;
+
+    /** Minimum size of heap memory in bytes, the monitor starts to warn. */
+    static const size_t     MIN_HEAP_MEMORY         = 1024U;
+
+    /** Minimum size of largest block of heap that can be allocated at once in bytes, the monitor starts to warn. */
+    static const size_t     MIN_HEAP_BLOCK_MEMORY   = 4096U;
 
 private:
 
-    static TaskMon  m_instance; /**< Task monitor instance */
+    static MemMon  m_instance; /**< Memory monitor instance */
 
     SimpleTimer     m_timer;    /**< Timer used for cyclic processing. */
 
     /**
-     * Constructs the task monitor.
+     * Constructs the memory monitor.
      */
-    TaskMon()
+    MemMon()
     {
     }
 
     /**
-     * Destroys the task monitor.
+     * Destroys the memory monitor.
      */
-    ~TaskMon()
+    ~MemMon()
     {
         /* Will never be called. */
     }
 
-    TaskMon(const TaskMon& taskMon);
-    TaskMon& operator=(const TaskMon& taskMon);
-
-    /**
-     * Get task state as user friendly string.
-     *
-     * @return Task state name
-     */
-    String taskState2Str(eTaskState state);
-
-    /**
-     * Fill string up with spaces until given length is reached.
-     *
-     * @param[in] str   String, which to fill up
-     * @param[in] len   Length of the result string
-     *
-     * @return Filled up string
-     */
-    String fillUpSpaces(const char* str, size_t len);
+    MemMon(const MemMon& taskMon);
+    MemMon& operator=(const MemMon& taskMon);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __TASK_MON_H__ */
+#endif  /* __MEM_MON_H__ */
 
 /** @} */

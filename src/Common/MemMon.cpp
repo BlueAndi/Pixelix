@@ -25,107 +25,93 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Task monitor
+ * @brief  Memory monitor
  * @author Andreas Merkle <web@blue-andi.de>
- *
- * @addtogroup common
- *
- * @{
  */
-
-#ifndef __TASK_MON_H__
-#define __TASK_MON_H__
-
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include <SysMsgPlugin.h>
-#include <WString.h>
+#include "MemMon.h"
+
+#include <Logging.h>
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
-
-/**
- * Task monitor
- */
-class TaskMon
-{
-public:
-
-    /**
-     * Get task monitor instance.
-     *
-     * @return Task monitor instance
-     */
-    static TaskMon& getInstance()
-    {
-        return m_instance;
-    }
-
-    /**
-     * Get current number of tasks and their properties.
-     */
-    void process();
-
-    /** Processing cycle in ms. */
-    static const uint32_t PROCESSING_CYCLE  = 60U * 1000U;
-
-private:
-
-    static TaskMon  m_instance; /**< Task monitor instance */
-
-    SimpleTimer     m_timer;    /**< Timer used for cyclic processing. */
-
-    /**
-     * Constructs the task monitor.
-     */
-    TaskMon()
-    {
-    }
-
-    /**
-     * Destroys the task monitor.
-     */
-    ~TaskMon()
-    {
-        /* Will never be called. */
-    }
-
-    TaskMon(const TaskMon& taskMon);
-    TaskMon& operator=(const TaskMon& taskMon);
-
-    /**
-     * Get task state as user friendly string.
-     *
-     * @return Task state name
-     */
-    String taskState2Str(eTaskState state);
-
-    /**
-     * Fill string up with spaces until given length is reached.
-     *
-     * @param[in] str   String, which to fill up
-     * @param[in] len   Length of the result string
-     *
-     * @return Filled up string
-     */
-    String fillUpSpaces(const char* str, size_t len);
-};
 
 /******************************************************************************
- * Functions
+ * Prototypes
  *****************************************************************************/
 
-#endif  /* __TASK_MON_H__ */
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
 
-/** @} */
+ /* Initialize memory monitor instance */
+MemMon  MemMon::m_instance;
+
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+void MemMon::process()
+{
+    bool isProcessingTime = false;
+
+    if (false == m_timer.isTimerRunning())
+    {
+        m_timer.start(PROCESSING_CYCLE);
+        isProcessingTime = true;
+    }
+    else if (true == m_timer.isTimeout())
+    {
+        isProcessingTime = true;
+        m_timer.restart();
+    }
+
+    if (true == isProcessingTime)
+    {
+        uint32_t minFreeHeap        = ESP.getMinFreeHeap();
+        uint32_t minFreeHeapBlock   = ESP.getMaxAllocHeap();
+
+        if (MIN_HEAP_MEMORY >= minFreeHeap)
+        {
+            LOG_WARNING("Min. free heap is %u byte.", minFreeHeap);
+        }
+
+        if (MIN_HEAP_BLOCK_MEMORY > minFreeHeapBlock)
+        {
+            LOG_WARNING("Largest heap block which can be allocated is %u byte.", minFreeHeapBlock);
+        }
+
+        if (true == heap_caps_check_integrity_all(true))
+        {
+            /* TODO Reset!? */
+        }
+    }
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

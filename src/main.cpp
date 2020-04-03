@@ -41,6 +41,7 @@
 #include "Board.h"
 #include "InitState.h"
 #include "TaskMon.h"
+#include "MemMon.h"
 
 /******************************************************************************
  * Macros
@@ -125,6 +126,9 @@ void loop()
 
     /* Task monitor */
     TaskMon::getInstance().process();
+
+    /* Memory monitor */
+    MemMon::getInstance().process();
 
     return;
 }
