@@ -102,10 +102,11 @@ void RestApi::init(AsyncWebServer& srv)
  */
 void RestApi::error(AsyncWebServerRequest* request)
 {
-    String                  content;
-    StaticJsonDocument<256> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    JsonObject              errorObj        = jsonDoc.createNestedObject("error");
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    JsonObject          errorObj        = jsonDoc.createNestedObject("error");
 
     if (nullptr == request)
     {
@@ -166,7 +167,8 @@ static void handleStatus(AsyncWebServerRequest* request)
 {
     String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    DynamicJsonDocument jsonDoc(512);
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
     {
@@ -233,7 +235,8 @@ static void handleSlots(AsyncWebServerRequest* request)
 {
     String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    DynamicJsonDocument jsonDoc(512);
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
     {
@@ -297,7 +300,8 @@ static void handleSlots(AsyncWebServerRequest* request)
 static void handlePlugin(AsyncWebServerRequest* request)
 {
     String              content;
-    DynamicJsonDocument jsonDoc(512);
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)

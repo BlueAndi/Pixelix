@@ -226,9 +226,10 @@ bool IconTextPlugin::loadBitmap(const String& filename)
 
 void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
 {
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
@@ -277,9 +278,10 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
 
 void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
 {
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {

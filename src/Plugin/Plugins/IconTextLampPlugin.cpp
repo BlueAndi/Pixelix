@@ -275,9 +275,10 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 
 void IconTextLampPlugin::webReqHandlerText(AsyncWebServerRequest *request)
 {
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
@@ -326,9 +327,10 @@ void IconTextLampPlugin::webReqHandlerText(AsyncWebServerRequest *request)
 
 void IconTextLampPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
 {
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
@@ -446,9 +448,10 @@ void IconTextLampPlugin::iconUploadHandler(AsyncWebServerRequest *request, const
 
 void IconTextLampPlugin::webReqHandlerLamp(AsyncWebServerRequest *request)
 {
-    String                  content;
-    StaticJsonDocument<200> jsonDoc;
-    uint32_t                httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if (nullptr == request)
     {
