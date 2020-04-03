@@ -44,6 +44,7 @@
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <Esp.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -107,6 +108,8 @@ void RestApi::error(AsyncWebServerRequest* request)
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     JsonObject          errorObj        = jsonDoc.createNestedObject("error");
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
     if (nullptr == request)
     {
@@ -117,6 +120,11 @@ void RestApi::error(AsyncWebServerRequest* request)
     jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
     errorObj["msg"]     = "Invalid path requested.";
     httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
 
     serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -169,6 +177,8 @@ static void handleStatus(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
     if (nullptr == request)
     {
@@ -219,6 +229,11 @@ static void handleStatus(AsyncWebServerRequest* request)
         httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
 
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
+
     serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
@@ -237,6 +252,8 @@ static void handleSlots(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
     if (nullptr == request)
     {
@@ -283,6 +300,11 @@ static void handleSlots(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
+
     serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
@@ -303,6 +325,8 @@ static void handlePlugin(AsyncWebServerRequest* request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
     if (nullptr == request)
     {
@@ -473,6 +497,11 @@ static void handlePlugin(AsyncWebServerRequest* request)
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
     }
 
     serializeJsonPretty(jsonDoc, content);

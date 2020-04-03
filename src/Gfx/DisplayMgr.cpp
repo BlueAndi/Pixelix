@@ -854,10 +854,12 @@ void DisplayMgr::load()
             const size_t            JSON_DOC_SIZE   = 512U;
             DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
             DeserializationError    error           = deserializeJson(jsonDoc, config);
+            const size_t            MAX_USAGE       = 80U;
+            size_t                  usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
-            if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+            if (MAX_USAGE < usageInPercent)
             {
-                LOG_WARNING("Max. JSON buffer size reached.");
+                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
             }
 
             if (DeserializationError::Ok != error)
@@ -912,9 +914,12 @@ void DisplayMgr::save()
         }
         else
         {
-            if (JSON_DOC_SIZE <= jsonDoc.memoryUsage())
+            const size_t    MAX_USAGE       = 80U;
+            size_t          usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+
+            if (MAX_USAGE < usageInPercent)
             {
-                LOG_WARNING("Max. JSON buffer size reached.");
+                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
             }
 
             serializeJson(jsonDoc, config);

@@ -230,6 +230,8 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
     if (nullptr == request)
     {
@@ -270,6 +272,11 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
         }
     }
 
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
+
     serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
@@ -282,6 +289,8 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
     if (nullptr == request)
     {
@@ -323,6 +332,11 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
         (void)jsonDoc.createNestedObject("data");
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
     }
 
     serializeJsonPretty(jsonDoc, content);
