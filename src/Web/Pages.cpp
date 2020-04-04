@@ -141,6 +141,7 @@ void Pages::init(AsyncWebServer& srv)
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesytem for 1 hour.
      */
+    (void)srv.serveStatic("/favicon.png", SPIFFS, "/favicon.png", "max-age=3600");
     (void)srv.serveStatic("/style/", SPIFFS, "/style/", "max-age=3600");
     (void)srv.serveStatic("/js/", SPIFFS, "/js/", "max-age=3600");
 
