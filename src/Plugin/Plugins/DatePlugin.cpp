@@ -43,7 +43,8 @@
  * Macros
  *****************************************************************************/
 
- /** Size of formatted date string in the form of DD.MM. / MM/DD
+/**
+ * Size of formatted date string in the form of DD.MM. / MM/DD
  *
  *      "\\calign"      = 8  (Alignment center )
  *      "Day/Month"     = 2
@@ -173,6 +174,7 @@ void DatePlugin::process()
 
     return;
 }
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

@@ -43,7 +43,8 @@
  * Macros
  *****************************************************************************/
 
- /** Size of formatted date string in the form of DD:MM / MM:DD / HH:MM
+/**
+ * Size of formatted date string in the form of DD:MM / MM:DD / HH:MM
  *
  *      "\\calign"          = 8  (Alignment center )
  *      "Day/Month/Hour"    = 2
@@ -60,10 +61,12 @@
 /** Divider to convert ms in s */
 #define MS_TO_SEC_DIVIDER                       (1000U)
 
-/** Toggle counter value to switch between date and time
-* if DURATION_INFINITE was set for the plugin.
-*/
+/**
+ * Toggle counter value to switch between date and time
+ * if DURATION_INFINITE was set for the plugin.
+ */
 #define MAX_COUNTER_VALUE_FOR_DURATION_INFINITE (15U)
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -189,6 +192,7 @@ void DateTimePlugin::process()
 
     return;
 }
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
