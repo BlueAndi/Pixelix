@@ -99,10 +99,18 @@ void ConnectingState::entry(StateMachine& sm)
     /* Disable automatic reconnect, so we are able to handle the
      * reconnect behaviour by ourself.
      */
-    WiFi.setAutoReconnect(false);
+    if (false == WiFi.setAutoReconnect(false))
+    {
+        String errorStr = "Set autom. reconnect failed.";
 
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        SysMsg::getInstance().show(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
     /* Force STA mode and start low level wifi. */
-    if (false == WiFi.mode(WIFI_MODE_STA))
+    else if (false == WiFi.mode(WIFI_MODE_STA))
     {
         String errorStr = "Set STA mode failed.";
 
