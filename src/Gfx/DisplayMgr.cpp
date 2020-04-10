@@ -786,6 +786,14 @@ void DisplayMgr::updateTask(void* parameters)
 
         while(false == displayMgr->m_taskExit)
         {
+            uint32_t        timestamp       = 0U;
+            bool            abort           = false;
+
+            /* Max. time needed to load the data into the pixels.
+             * Only a 1 ms tolerance is added, which should be enough.
+             */
+            const uint32_t  MAX_LOOP_TIME   = Board::LedMatrix::matrixLoadTime + 1U; /* ms */
+
             /* Refresh display content periodically */
             displayMgr->process();
 
@@ -793,9 +801,13 @@ void DisplayMgr::updateTask(void* parameters)
              * and artifacts on the display, because of e.g. webserver flash
              * access.
              */
-            while(false == LedMatrix::getInstance().isReady())
+            timestamp = millis();
+            while((false == LedMatrix::getInstance().isReady()) && (false == abort))
             {
-                ;
+                if (MAX_LOOP_TIME <= (millis() - timestamp))
+                {
+                    abort = true;
+                }
             }
 
             delay(TASK_PERIOD);

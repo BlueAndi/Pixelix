@@ -114,6 +114,12 @@ static const uint32_t   supplyCurrentMax    = 3500U;
 /** Max. current in mA per LED */
 static const uint32_t   maxCurrentPerLed    = 60U;
 
+/** Time to load the data for one single pixel in us. */
+static const uint32_t   pixelLoadTime       = 30U;
+
+/** Time to load the data of the whole matrix in ms. */
+static const uint32_t   matrixLoadTime      = ((width * height) * pixelLoadTime + 500U) / 1000U;
+
 };
 
 /******************************************************************************
