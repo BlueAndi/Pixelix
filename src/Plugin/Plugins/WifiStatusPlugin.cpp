@@ -144,7 +144,7 @@ void WifiStatusPlugin::update(IGfx& gfx)
                 }
                 else
                 {
-                    m_alertWidget.setFormatStr("!");
+                    m_alertWidget.setFormatStr("\\calign!");
                     m_toggle = false;
                 }
             }
