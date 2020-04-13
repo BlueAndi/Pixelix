@@ -69,6 +69,7 @@
 #include "SysMsgPlugin.h"
 #include "TestPlugin.h"
 #include "TimePlugin.h"
+#include "WifiStatusPlugin.h"
 
 #include <lwip/init.h>
 
@@ -353,6 +354,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
     pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
     pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
+    pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
 
     return;
 }
