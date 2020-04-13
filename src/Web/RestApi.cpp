@@ -39,6 +39,7 @@
 #include "DisplayMgr.h"
 #include "Version.h"
 #include "PluginMgr.h"
+#include "WiFiUtil.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -62,7 +63,6 @@
  * Prototypes
  *****************************************************************************/
 
-static uint8_t getSignalQuality(int8_t rssi);
 static void handleStatus(AsyncWebServerRequest* request);
 static void handleSlots(AsyncWebServerRequest* request);
 static void handlePlugin(AsyncWebServerRequest* request);
@@ -137,35 +137,6 @@ void RestApi::error(AsyncWebServerRequest* request)
  *****************************************************************************/
 
 /**
- * Get the wifi signal quality, derrived from the RSSI.
- *
- * @param[in] rssi  RSSI in dBm
- *
- * @return Signal quality in percent
- */
-static uint8_t getSignalQuality(int8_t rssi)
-{
-    uint8_t         signalQuality   = 0U;
-    const int8_t    RSSI_HIGH       = -50;  // dBm
-    const int8_t    RSSI_UNUSABLE   = -100; // dBm
-
-    if (RSSI_HIGH <= rssi)
-    {
-        signalQuality = 100U;
-    }
-    else if (RSSI_UNUSABLE >= rssi)
-    {
-        signalQuality = 0U;
-    }
-    else
-    {
-        signalQuality = static_cast<uint8_t>(2 * (rssi + 100));
-    }
-
-    return signalQuality;
-}
-
-/**
  * Get status information.
  * GET \c "/api/v1/status"
  *
@@ -223,8 +194,8 @@ static void handleStatus(AsyncWebServerRequest* request)
         internalRamObj["availableHeap"] = ESP.getFreeHeap();
 
         wifiObj["ssid"]         = ssid;
-        wifiObj["rssi"]         = rssi;                     // dBm
-        wifiObj["quality"]      = getSignalQuality(rssi);   // percent
+        wifiObj["rssi"]         = rssi;                             // dBm
+        wifiObj["quality"]      = WiFiUtil::getSignalQuality(rssi); // percent
 
         httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
