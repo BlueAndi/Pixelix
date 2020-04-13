@@ -124,7 +124,7 @@ bool DisplayMgr::begin()
                                             "displayTask",
                                             TASK_STACKE_SIZE,
                                             this,
-                                            4,
+                                            3,
                                             &m_taskHandle,
                                             TASK_RUN_CORE);
 
@@ -768,6 +768,7 @@ void DisplayMgr::process()
         m_selectedPlugin->update(matrix);
     }
 
+    delay(1U);
     matrix.show();
 
     unlock();
