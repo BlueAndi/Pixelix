@@ -77,27 +77,7 @@ void RestartState::entry(StateMachine& sm)
 
     LOG_INFO("Going in restart state.");
 
-    /* Stop all servers */
-    MyWebServer::end();
-    UpdateMgr::getInstance().end();
-    MDNS.end();
-
-    /* Unmount filesystem */
-    SPIFFS.end();
-
-    /* Stop display manager */
-    DisplayMgr::getInstance().end();
-
-    /* Clear display */
-    LedMatrix::getInstance().clear();
-    LedMatrix::getInstance().show();
-
-    /* Wait till all physical pixels are cleared. */
-    while(false == LedMatrix::getInstance().isReady())
-    {
-        /* Just wait ... */
-        ;
-    }
+    m_timer.start(WAIT_TILL_STOP_SVC);
 
     return;
 }
@@ -106,8 +86,36 @@ void RestartState::process(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
-    /* Reset */
-    Board::reset();
+    UpdateMgr::getInstance().process();
+
+    if ((true == m_timer.isTimerRunning()) &&
+        (true == m_timer.isTimeout()))
+    {
+        /* Stop all servers */
+        MyWebServer::end();
+        UpdateMgr::getInstance().end();
+        MDNS.end();
+
+        /* Unmount filesystem */
+        SPIFFS.end();
+
+        /* Stop display manager */
+        DisplayMgr::getInstance().end();
+
+        /* Clear display */
+        LedMatrix::getInstance().clear();
+        LedMatrix::getInstance().show();
+
+        /* Wait till all physical pixels are cleared. */
+        while(false == LedMatrix::getInstance().isReady())
+        {
+            /* Just wait ... */
+            ;
+        }
+
+        /* Reset */
+        Board::reset();
+    }
 
     return;
 }

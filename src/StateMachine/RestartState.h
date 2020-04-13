@@ -27,9 +27,9 @@
 /**
  * @brief  System state: Restart
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup sys_states
- * 
+ *
  * @{
  */
 
@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <StateMachine.hpp>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -63,7 +64,7 @@ public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
     static RestartState& getInstance()
@@ -73,34 +74,41 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm);
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm);
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm);
 
 private:
 
+    /** Wait timer in ms, after that all services will be stopped. */
+    const uint32_t  WAIT_TILL_STOP_SVC  = 500U;
+
     /** Restart state instance */
     static RestartState m_instance;
+
+    /** Wait timer */
+    SimpleTimer m_timer;
 
     /**
      * Constructs the state.
      */
-    RestartState()
+    RestartState() :
+        m_timer()
     {
     }
 
@@ -110,7 +118,7 @@ private:
     ~RestartState()
     {
     }
-    
+
     RestartState(const RestartState& state);
     RestartState& operator=(const RestartState& state);
 
