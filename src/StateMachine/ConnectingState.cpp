@@ -109,17 +109,6 @@ void ConnectingState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
-    /* Force STA mode and start low level wifi. */
-    else if (false == WiFi.mode(WIFI_MODE_STA))
-    {
-        String errorStr = "Set STA mode failed.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
-    }
 
     return;
 }

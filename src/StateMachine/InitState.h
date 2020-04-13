@@ -102,10 +102,13 @@ private:
     /** Initialization state instance */
     static InitState    m_instance;
 
+    bool    m_isApModeRequested;    /**< Is wifi AP mode requested? */
+
     /**
      * Constructs the state.
      */
-    InitState()
+    InitState() :
+        m_isApModeRequested(false)
     {
     }
 

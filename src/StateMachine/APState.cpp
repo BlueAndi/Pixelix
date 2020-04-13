@@ -38,7 +38,6 @@
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "Settings.h"
-#include "WebConfig.h"
 
 #include "ErrorState.h"
 #include "RestartState.h"
@@ -46,7 +45,6 @@
 #include <WiFi.h>
 #include <Logging.h>
 #include <string.h>
-#include <ESPmDNS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -116,21 +114,10 @@ void APState::entry(StateMachine& sm)
         Settings::getInstance().close();
     }
 
-    /* Force AP mode and start low level wifi. */
-    if (false == WiFi.mode(WIFI_MODE_AP))
-    {
-        String errorStr = "Set AP mode failed.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
-    }
     /* Configure access point.
      * The DHCP server will automatically be started and uses the range x.x.x.1 - x.x.x.11
      */
-    else if (false == WiFi.softAPConfig(LOCAL_IP, GATEWAY, SUBNET))
+    if (false == WiFi.softAPConfig(LOCAL_IP, GATEWAY, SUBNET))
     {
         String errorStr = "Configure wifi access point failed.";
 
@@ -177,32 +164,9 @@ void APState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
-    /* Enable mDNS */
-    else if (false == MDNS.begin(hostname.c_str()))
-    {
-        String errorStr = "Failed to setup mDNS.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
-    }
     /* Wifi access point successful up. */
     else
     {
-        /* Start webserver after the wifi access point is running.
-         * If its done earlier, it will cause an exception.
-         */
-        MyWebServer::begin();
-
-        /* Start over-the-air update server. */
-        UpdateMgr::getInstance().begin();
-
-        /* Add MDNS services */
-        MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
-        MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
-
         /* Show SSID and ip address */
         String infoStr = "SSID: ";
         infoStr += wifiApSSID;
@@ -235,15 +199,6 @@ void APState::process(StateMachine& sm)
 void APState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
-
-    /* Stop mDNS */
-    MDNS.end();
-
-    /* Stop webserver */
-    MyWebServer::end();
-
-    /* Stop over-the-air update server */
-    UpdateMgr::getInstance().end();
 
     /* Disconnect all connections */
     (void)WiFi.softAPdisconnect();

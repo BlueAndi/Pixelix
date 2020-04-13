@@ -36,10 +36,13 @@
 #include "DisplayMgr.h"
 #include "LedMatrix.h"
 #include "Board.h"
+#include "MyWebServer.h"
+#include "UpdateMgr.h"
 
 #include <Logging.h>
 #include <Util.h>
 #include <SPIFFS.h>
+#include <ESPmDNS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -74,6 +77,11 @@ void RestartState::entry(StateMachine& sm)
 
     LOG_INFO("Going in restart state.");
 
+    /* Stop all servers */
+    MyWebServer::end();
+    UpdateMgr::getInstance().end();
+    MDNS.end();
+
     /* Unmount filesystem */
     SPIFFS.end();
 
@@ -83,7 +91,7 @@ void RestartState::entry(StateMachine& sm)
     /* Clear display */
     LedMatrix::getInstance().clear();
     LedMatrix::getInstance().show();
-    
+
     /* Wait till all physical pixels are cleared. */
     while(false == LedMatrix::getInstance().isReady())
     {
@@ -100,7 +108,7 @@ void RestartState::process(StateMachine& sm)
 
     /* Reset */
     Board::reset();
-    
+
     return;
 }
 

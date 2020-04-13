@@ -49,6 +49,7 @@
 #include "UpdateMgr.h"
 #include "Settings.h"
 #include "PluginMgr.h"
+#include "WebConfig.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -56,6 +57,7 @@
 
 #include <Logging.h>
 #include <Util.h>
+#include <ESPmDNS.h>
 
 #include "DatePlugin.h"
 #include "DateTimePlugin.h"
@@ -67,6 +69,8 @@
 #include "SysMsgPlugin.h"
 #include "TestPlugin.h"
 #include "TimePlugin.h"
+
+#include <lwip/init.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -202,11 +206,13 @@ void InitState::process(StateMachine& sm)
     if (ButtonDrv::STATE_RELEASED == buttonState)
     {
         sm.setState(ConnectingState::getInstance());
+        m_isApModeRequested = false;
     }
     /* Does the user request for setting up an wifi access point? */
     else if (ButtonDrv::STATE_PRESSED == buttonState)
     {
         sm.setState(APState::getInstance());
+        m_isApModeRequested = true;
     }
     else
     {
@@ -219,9 +225,71 @@ void InitState::process(StateMachine& sm)
 
 void InitState::exit(StateMachine& sm)
 {
+    wifi_mode_t wifiMode = WIFI_MODE_NULL;
+    String      hostname;
+
     UTIL_NOT_USED(sm);
 
-    /* Nothing to do. */
+    /* Get hostname. */
+    if (false == Settings::getInstance().open(true))
+    {
+        LOG_WARNING("Use default hostname.");
+        hostname = Settings::getInstance().getHostname().getDefault();
+    }
+    else
+    {
+        hostname = Settings::getInstance().getHostname().getValue();
+        Settings::getInstance().close();
+    }
+
+    /* Start wifi and initialize the LwIP stack here. */
+    if (false == m_isApModeRequested)
+    {
+        wifiMode = WIFI_MODE_STA;
+    }
+    else
+    {
+        wifiMode = WIFI_MODE_AP;
+    }
+
+    if (false == WiFi.mode(wifiMode))
+    {
+        String errorStr = "Set wifi mode failed.";
+
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        SysMsg::getInstance().show(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
+    /* Enable mDNS */
+    else if (false == MDNS.begin(hostname.c_str()))
+    {
+        String errorStr = "Failed to setup mDNS.";
+
+        /* Fatal error */
+        LOG_FATAL(errorStr);
+        SysMsg::getInstance().show(errorStr);
+
+        sm.setState(ErrorState::getInstance());
+    }
+    else
+    {
+        /* Start webserver after the wifi access point is running.
+         * If its done earlier, it will cause an exception because the LwIP stack
+         * is not initialized.
+         * The LwIP stack is initialized with wifiLowLevelInit()!
+         */
+        MyWebServer::begin();
+
+        /* Start over-the-air update server. */
+        UpdateMgr::getInstance().begin();
+
+        /* Add MDNS services */
+        MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
+        MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
+    }
+
     return;
 }
 
@@ -241,6 +309,7 @@ void InitState::showStartupInfoOnSerial()
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
     LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
     LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
+    LOG_INFO(String("LwIP version: ") + LWIP_VERSION_STRING);
 
     return;
 }
