@@ -129,9 +129,19 @@ void WifiStatusPlugin::update(IGfx& gfx)
         if ((true == m_timer.isTimerRunning()) &&
             (true == m_timer.isTimeout()))
         {
-            int8_t      rssi                = WiFi.RSSI();                      // dbm
-            uint8_t     quality             = WiFiUtil::getSignalQuality(rssi); // percent
+            int8_t      rssi                = -100; // dbm
+            uint8_t     quality             = 0U;   // percent
             wl_status_t connectionStatus    = WiFi.status();
+
+            /* Only in station mode it makes sense to retrieve the RSSI.
+             * Otherwise keep it -100 dbm.
+             */
+            if (WIFI_MODE_STA == WiFi.getMode())
+            {
+                rssi = WiFi.RSSI();
+            }
+
+            quality = WiFiUtil::getSignalQuality(rssi);
 
             gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
 
@@ -150,6 +160,7 @@ void WifiStatusPlugin::update(IGfx& gfx)
             }
             else
             {
+                m_alertWidget.setFormatStr("");
                 m_toggle = true;
             }
 

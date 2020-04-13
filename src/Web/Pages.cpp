@@ -460,7 +460,17 @@ static String networkPageProcessor(const String& var)
     }
     else if (var == "RSSI")
     {
-        result = WiFi.RSSI();
+        /* Only in station mode it makes sense to retrieve the RSSI.
+         * Otherwise keep it -100 dbm.
+         */
+        if (WIFI_MODE_STA == WiFi.getMode())
+        {
+            result = WiFi.RSSI();
+        }
+        else
+        {
+            result = "-100";
+        }
     }
     else if (var == "HOSTNAME")
     {

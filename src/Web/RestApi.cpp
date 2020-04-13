@@ -168,12 +168,20 @@ static void handleStatus(AsyncWebServerRequest* request)
     else
     {
         String      ssid;
-        int8_t      rssi            = WiFi.RSSI();
+        int8_t      rssi            = -100; // dbm
         JsonObject  dataObj         = jsonDoc.createNestedObject("data");
         JsonObject  hwObj           = dataObj.createNestedObject("hardware");
         JsonObject  swObj           = dataObj.createNestedObject("software");
         JsonObject  internalRamObj  = swObj.createNestedObject("internalRam");
         JsonObject  wifiObj         = dataObj.createNestedObject("wifi");
+
+        /* Only in station mode it makes sense to retrieve the RSSI.
+         * Otherwise keep it -100 dbm.
+         */
+        if (WIFI_MODE_STA == WiFi.getMode())
+        {
+            rssi = WiFi.RSSI();
+        }
 
         if (true == Settings::getInstance().open(true))
         {
