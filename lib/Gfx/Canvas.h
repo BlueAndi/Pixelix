@@ -67,17 +67,23 @@ public:
     /**
      * Constructs a canvas.
      *
-     * @param[in] width     Canvas width in pixel.
-     * @param[in] height    Canvas height in pixel.
-     * @param[in] x         x-coordinate position in the matrix.
-     * @param[in] y         y-coordinate position in the matrix.
+     * @param[in] width         Canvas width in pixel.
+     * @param[in] height        Canvas height in pixel.
+     * @param[in] x             x-coordinate position in the matrix.
+     * @param[in] y             y-coordinate position in the matrix.
+     * @param[in] isBuffered    Create a buffered (true) canvas or not (false)
      */
-    Canvas(int16_t width, int16_t height, int16_t x, int16_t y) :
+    Canvas(int16_t width, int16_t height, int16_t x, int16_t y, bool isBuffered = false) :
         IGfx(width, height),
         Widget(WIDGET_TYPE, x, y),
         m_gfx(nullptr),
-        m_widgets()
+        m_widgets(),
+        m_buffer(nullptr)
     {
+        if (true == isBuffered)
+        {
+            m_buffer = new uint16_t[width * height];
+        }
     }
 
     /**
@@ -87,6 +93,13 @@ public:
     {
         /* Remove all widgets */
         m_widgets.clear();
+
+        /* Release buffer */
+        if (nullptr != m_buffer)
+        {
+            delete[] m_buffer;
+            m_buffer = nullptr;
+        }
     }
 
     /**
@@ -150,7 +163,11 @@ public:
          */
         if (true == it.first())
         {
-            m_gfx = &gfx;
+            /* If canvas is not buffered, draw directly on the underlying canvas. */
+            if (nullptr == m_buffer)
+            {
+                m_gfx = &gfx;
+            }
 
             do
             {
@@ -161,11 +178,27 @@ public:
             m_gfx = nullptr;
         }
 
+        /* In a buffered canvas, only the buffer into the underlying canvas. */
+        if (nullptr != m_buffer)
+        {
+            int16_t x = 0;
+            int16_t y = 0;
+
+            for(y = 0; y < height(); ++y)
+            {
+                for(x = 0; x < width(); ++x)
+                {
+                    gfx.drawPixel(x, y, m_buffer[x + y * width()]);
+                }
+            }
+        }
+
         return;
     }
 
     /**
      * Get pixel color at given position.
+     * Note, only useable in case the canvas is buffered.
      *
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
@@ -180,9 +213,9 @@ public:
             (0 <= y) &&
             (width() > x) &&
             (height() > y) &&
-            (nullptr != m_gfx))
+            (nullptr != m_buffer))
         {
-            color565 = m_gfx->getColor(x, y);
+            color565 = m_buffer[x + y * width()];
         }
 
         return color565;
@@ -230,6 +263,7 @@ private:
 
     IGfx*                   m_gfx;      /**< Graphics interface of the underlying layer */
     DLinkedList<Widget*>    m_widgets;  /**< Widgets in the canvas */
+    uint16_t*               m_buffer;   /**< Buffer */
 
     Canvas(const Canvas& canvas);
     Canvas& operator=(const Canvas& canvas);
@@ -244,15 +278,26 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, uint16_t color)
     {
-        if (nullptr != m_gfx)
+        /* Don't draw outside the canvas. */
+        if ((0 <= x) &&
+            (width() > x) &&
+            (0 <= y) &&
+            (height() > y))
         {
-            /* Don't draw outside the canvas. */
-            if ((0 <= x) &&
-                (width() > x) &&
-                (0 <= y) &&
-                (height() > y))
+            /* Draw on the real underlying canvas? */
+            if (nullptr != m_gfx)
             {
                 m_gfx->drawPixel(m_posX + x, m_posY + y, color);
+            }
+            /* Draw into buffer? */
+            else if (nullptr != m_buffer)
+            {
+                m_buffer[x + y * width()] = color;
+            }
+            /* Skip drawing */
+            else
+            {
+                ;
             }
         }
 
