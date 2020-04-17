@@ -552,7 +552,6 @@ bool AsyncHttpClient::sendRequest()
 
     /* RFC2616 - general-header */
     /* Empty */
-    request += CRLF;
 
     /* RFC2616 - request-header */
     request += "Host: ";
@@ -618,7 +617,9 @@ bool AsyncHttpClient::sendRequest()
     status = (request.length() == m_tcpClient.write(request.c_str(), request.length()));
 
     /* Send payload */
-    if (true == status)
+    if ((true == status) &&
+        (nullptr != m_payload) &&
+        (0U < m_payloadSize))
     {
         status = (m_payloadSize == m_tcpClient.write(reinterpret_cast<const char*>(m_payload), m_payloadSize, 0));
     }
