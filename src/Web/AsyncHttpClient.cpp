@@ -272,6 +272,23 @@ void AsyncHttpClient::setKeepAlive(bool keepAlive)
     m_isKeepAlive = keepAlive;
 }
 
+void AsyncHttpClient::addHeader(const String& name, const String& value)
+{
+    /* Only add header if not handled by the client itself. */
+    if ((0U == name.equalsIgnoreCase("Host")) &&
+        (0U == name.equalsIgnoreCase("User-Agent")) &&
+        (0U == name.equalsIgnoreCase("Connection")) &&
+        (0U == name.equalsIgnoreCase("Accept-Encoding")) &&
+        (0U == name.equalsIgnoreCase("Authorization")) &&
+        (0U == name.equalsIgnoreCase("Content-Length")))
+    {
+        m_headers += name;
+        m_headers += ": ";
+        m_headers += value;
+        m_headers += "\r\n";
+    }
+}
+
 void AsyncHttpClient::regOnResponse(OnResponse onResponse)
 {
     m_onRspCallback = onResponse;
@@ -646,16 +663,6 @@ void AsyncHttpClient::clear()
     m_chunkBodyPart = CHUNK_SIZE;
 
     return;
-}
-
-void AsyncHttpClient::addHeader(const String& name, const String& value)
-{
-    const char* CRLF    = "\r\n";
-
-    m_headers += name;
-    m_headers += ": ";
-    m_headers += value;
-    m_headers += CRLF;
 }
 
 bool AsyncHttpClient::handleRspHeader()

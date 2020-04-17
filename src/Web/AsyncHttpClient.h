@@ -138,6 +138,14 @@ public:
     void setKeepAlive(bool keepAlive);
 
     /**
+     * Add header to request header.
+     *
+     * @param[in] name  Name
+     * @param[in] value Value
+     */
+    void addHeader(const String& name, const String& value);
+
+    /**
      * Register callback function on response reception.
      *
      * @param[in] onResponse    Callback
@@ -286,14 +294,6 @@ private:
      * Clear all server related parameters.
      */
     void clear();
-
-    /**
-     * Add header to request header.
-     *
-     * @param[in] name  Name
-     * @param[in] value Value
-     */
-    void addHeader(const String& name, const String& value);
 
     /**
      * Handle response header.
