@@ -186,7 +186,7 @@ public:
      *
      * @return If request is successful sent, it will return true otherwise false.
      */
-    bool POST(const uint8_t* payload, size_t size);
+    bool POST(const uint8_t* payload = nullptr, size_t size = 0U);
 
     /**
      * Send POST request to host.

@@ -372,9 +372,18 @@ bool AsyncHttpClient::POST(const String& payload)
 
     if (false == m_isReqOpen)
     {
-        m_method        = "POST";
-        m_payload       = reinterpret_cast<const uint8_t*>(payload.c_str());
-        m_payloadSize   = payload.length();
+        m_method = "POST";
+
+        if (true == payload.isEmpty())
+        {
+            m_payload       = nullptr;
+            m_payloadSize   = 0U;
+        }
+        else
+        {
+            m_payload       = reinterpret_cast<const uint8_t*>(payload.c_str());
+            m_payloadSize   = payload.length();
+        }
 
         if (false == isConnected())
         {
