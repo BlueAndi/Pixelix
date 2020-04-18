@@ -146,6 +146,18 @@ public:
     void addHeader(const String& name, const String& value);
 
     /**
+     * Add parameter to request (application/x-www-form-urlencoded).
+     *
+     * Note: Don't use a user payload for the request, because it
+     * will skip the added parameters. Only parameters can be sent
+     * or a user payload.
+     *
+     * @param[in] name  Parameter name
+     * @param[in] value Parameter value
+     */
+    void addPar(const String& name, const String& value);
+
+    /**
      * Register callback function on response reception.
      *
      * @param[in] onResponse    Callback
@@ -236,6 +248,7 @@ private:
     String          m_userAgent;            /**< User agent */
     bool            m_isHttpVer10;          /**< Use HTTP/1.0 (true) instead of HTTP/1.1 (false) */
     bool            m_isKeepAlive;          /**< Keep connection alive or not? */
+    String          m_urlEncodedPars;       /**< URL encoded paramters (application/x-www-form-urlencoded) */
     const uint8_t*  m_payload;              /**< Request payload */
     size_t          m_payloadSize;          /**< Request payload size in byte */
 
@@ -392,6 +405,15 @@ private:
      * registered or not.
      */
     void notifyClosed();
+
+    /**
+     * URL encode string (RFC1738 section 2.2)
+     *
+     * @param[in] str   String which to encode
+     *
+     * @return URL encoded string
+     */
+    String urlEncode(const String& str);
 };
 
 /******************************************************************************

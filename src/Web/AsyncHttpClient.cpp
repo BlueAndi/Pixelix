@@ -75,6 +75,7 @@ AsyncHttpClient::AsyncHttpClient() :
     m_userAgent("AsyncHttpClient"),
     m_isHttpVer10(false),
     m_isKeepAlive(false),
+    m_urlEncodedPars(),
     m_payload(nullptr),
     m_payloadSize(0U),
     m_rspPart(RESPONSE_PART_STATUS_LINE),
@@ -286,6 +287,22 @@ void AsyncHttpClient::addHeader(const String& name, const String& value)
         m_headers += ": ";
         m_headers += value;
         m_headers += "\r\n";
+    }
+}
+
+void AsyncHttpClient::addPar(const String& name, const String& value)
+{
+    /* Name must be given, value could be empty. */
+    if (false == name.isEmpty())
+    {
+        if (false == m_urlEncodedPars.isEmpty())
+        {
+            m_urlEncodedPars += "&";
+        }
+
+        m_urlEncodedPars += urlEncode(name);
+        m_urlEncodedPars += "=";
+        m_urlEncodedPars += urlEncode(value);
     }
 }
 
@@ -619,12 +636,33 @@ bool AsyncHttpClient::sendRequest()
         request += CRLF;
     }
 
+    /* Only user defined payload can be sent or URL encoded parameters.
+     * Because user might already added a "Content-Type" header in case
+     * a user payload is available, in this case the URL encoded parameters
+     * are skipped.
+     */
     if ((nullptr != m_payload) &&
         (0U < m_payloadSize))
     {
         request += "Content-Length: ";
         request += m_payloadSize;
         request += CRLF;
+
+        if (false == m_urlEncodedPars.isEmpty())
+        {
+            LOG_WARNING("Parameters skipped.");
+        }
+    }
+    else if (false == m_urlEncodedPars.isEmpty())
+    {
+        request += "Content-Type: application/x-www-form-urlencoded";
+        request += CRLF;
+        request += "Content-Length: ";
+        request += m_urlEncodedPars.length();
+        request += CRLF;
+
+        m_payload       = reinterpret_cast<const uint8_t*>(m_urlEncodedPars.c_str());
+        m_payloadSize   = m_urlEncodedPars.length();
     }
 
     request += m_headers;
@@ -651,6 +689,7 @@ void AsyncHttpClient::clear()
     m_base64Authorization.clear();
     m_uri.clear();
     m_headers.clear();
+    m_urlEncodedPars.clear();
 
     m_rspPart = RESPONSE_PART_STATUS_LINE;
     m_rsp.clear();
@@ -976,6 +1015,37 @@ void AsyncHttpClient::notifyClosed()
     {
         m_onClosedCallback();
     }
+}
+
+String AsyncHttpClient::urlEncode(const String& str)
+{
+    String      encodedStr;
+    size_t      index           = 0U;
+    const char  specialChars[]  = "$-_.+!*'(),";
+
+    /* RFC1738 section 2.2 */
+    while(str.length() > index)
+    {
+        if ((true == isAlphaNumeric(str[index])) ||
+            (nullptr != strchr(specialChars, str[index])))
+        {
+            encodedStr += str[index];
+        }
+        else
+        {
+            char    buffer[3];
+            uint8_t value = static_cast<uint8_t>(str[index]);
+
+            (void)snprintf(buffer, UTIL_ARRAY_NUM(buffer), "%02X", value);
+
+            encodedStr += '%';
+            encodedStr += buffer;
+        }
+
+        ++index;
+    }
+
+    return encodedStr;
 }
 
 /******************************************************************************
