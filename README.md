@@ -6,7 +6,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![Release](https://img.shields.io/github/release/BlueAndi/esp-rgb-led-matrix.svg)](https://github.com/BlueAndi/esp-rgb-led-matrix/releases)
 [![Build Status](https://travis-ci.org/BlueAndi/esp-rgb-led-matrix.svg?branch=master)](https://travis-ci.org/BlueAndi/esp-rgb-led-matrix)
 
-![pixelix](./doc/pixelix.gif)
+![pixelix](./doc/images/pixelix.gif)
 
 - [Pixelix](#pixelix)
 - [Motivation](#motivation)
@@ -33,6 +33,12 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 
 # Motivation
 I want to have a remote display to show multiple kind of information, running 24/7 reliable. Connected over wifi to the local network, it can be controlled via REST API or websocket.
+
+| Some impressions |   |
+| - | - |
+| ![clock](./doc/images/PixelixClock.jpg) | ![date](./doc/images/PixelixDate.jpg) |
+| ![photovoltic](./doc/images/PixelixPhotovoltaic.jpg) | ![pixelix](./doc/images/PixelixElectricity.jpg) |
+| ![pixelix](./doc/images/PixelixWifiStatus.jpg) | ... |
 
 # Overview
 See [Overview.pdf](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/Overview.pdf).
