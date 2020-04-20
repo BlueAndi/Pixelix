@@ -128,13 +128,25 @@ void HttpResponse::addStatusLine(const String& line)
     /* HTTP-Version */
     index           = line.indexOf(SP);
     m_httpVersion   = line.substring(begin, index);
-    begin           = index + 1;
+
+    /* Overstep all spaces */
+    while(('\0' != line[index]) && (' ' == line[index]))
+    {
+        ++index;
+    }
+    begin = index;
 
     /* Status-Code */
     index           = line.indexOf(SP, begin);
     statusCode      = line.substring(begin, index);
     m_statusCode    = statusCode.toInt();
-    begin           = index + 1;
+
+    /* Overstep all spaces */
+    while(('\0' != line[index]) && (' ' == line[index]))
+    {
+        ++index;
+    }
+    begin = index;
 
     /* Reason-Phrase */
     m_reasonPhrase  = line.substring(begin);
