@@ -1062,14 +1062,26 @@ void AsyncHttpClient::notifyClosed()
 String AsyncHttpClient::urlEncode(const String& str)
 {
     String      encodedStr;
-    size_t      index           = 0U;
-    const char  specialChars[]  = "$-_.+!*'(),";
+    size_t      index       = 0U;
+    const char  reserved[]  = ";/?:@=&";
 
-    /* RFC1738 section 2.2 */
+    /* https://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
+     *
+     * Control names and values are escaped. Space characters are replaced by `+',
+     * and then reserved characters are escaped as described in [RFC1738],
+     * section 2.2:
+     * Non-alphanumeric characters are replaced by `%HH', a percent sign and two
+     * hexadecimal digits representing the ASCII code of the character. Line breaks
+     * are represented as "CR LF" pairs (i.e., `%0D%0A').
+     */
     while(str.length() > index)
     {
-        if ((true == isAlphaNumeric(str[index])) ||
-            (nullptr != strchr(specialChars, str[index])))
+        if (' ' == str[index])
+        {
+            encodedStr += '+';
+        }
+        else if ((true == isAlphaNumeric(str[index])) &&
+                 (nullptr != strchr(reserved, str[index])))
         {
             encodedStr += str[index];
         }
