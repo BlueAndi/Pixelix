@@ -484,6 +484,14 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
                     client->close();
                     isError = true;
                 }
+                else if (TRANSFER_CODING_IDENTITY == m_transferCoding)
+                {
+                    /* "Content-Length" may be missing. */
+                    if (0U == m_contentLength)
+                    {
+                        m_contentLength = len - index;
+                    }
+                }
                 m_rspPart = RESPONSE_PART_BODY;
             }
             break;
@@ -776,6 +784,10 @@ bool AsyncHttpClient::handleRspHeader()
     if (false == value.isEmpty())
     {
         m_contentLength = value.toInt();
+    }
+    else
+    {
+        m_contentLength = 0U;
     }
 
     value = m_rsp.getHeader("Transfer-Encoding");
