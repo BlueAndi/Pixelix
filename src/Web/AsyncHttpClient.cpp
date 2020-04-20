@@ -1074,26 +1074,44 @@ void AsyncHttpClient::notifyClosed()
 String AsyncHttpClient::urlEncode(const String& str)
 {
     String      encodedStr;
-    size_t      index       = 0U;
-    const char  reserved[]  = ";/?:@=&";
+    size_t      index               = 0U;
+    const char  SP                  = ' ';
+    const char  DIGIT_LOW           = '0';
+    const char  DIGIT_HIGH          = '9';
+    const char  ALPHA_UC_LOW        = 'A';
+    const char  ALPHA_UC_HIGH       = 'Z';
+    const char  ALPHA_LC_LOW        = 'a';
+    const char  ALPHA_LC_HIGH       = 'z';
+    const char  UNRESERVED_CHARS[]  = "-/._~";
 
     /* https://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
      *
-     * Control names and values are escaped. Space characters are replaced by `+',
-     * and then reserved characters are escaped as described in [RFC1738],
-     * section 2.2:
-     * Non-alphanumeric characters are replaced by `%HH', a percent sign and two
-     * hexadecimal digits representing the ASCII code of the character. Line breaks
-     * are represented as "CR LF" pairs (i.e., `%0D%0A').
+     * RFC1738 - 2.2 URL Character Encoding Issues
+     *
+     * RFC3986 - 2.3 Unreserved Characters
      */
     while(str.length() > index)
     {
-        if (' ' == str[index])
+        if (SP == str[index])
         {
             encodedStr += '+';
         }
-        else if ((true == isAlphaNumeric(str[index])) &&
-                 (nullptr != strchr(reserved, str[index])))
+        else if ((DIGIT_LOW <= str[index]) &&
+                 (DIGIT_HIGH >= str[index]))
+        {
+            encodedStr += str[index];
+        }
+        else if ((ALPHA_UC_LOW <= str[index]) &&
+                 (ALPHA_UC_HIGH >= str[index]))
+        {
+            encodedStr += str[index];
+        }
+        else if ((ALPHA_LC_LOW <= str[index]) &&
+                 (ALPHA_LC_HIGH >= str[index]))
+        {
+            encodedStr += str[index];
+        }
+        else if (nullptr != strchr(UNRESERVED_CHARS, str[index]))
         {
             encodedStr += str[index];
         }
