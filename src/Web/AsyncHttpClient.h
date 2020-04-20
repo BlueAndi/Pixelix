@@ -58,6 +58,10 @@
 
 /**
  * Asynchronous HTTP client
+ *
+ * Used RFCs:
+ * - RFC2616 (obsolete, because of RFC7230)
+ * - RFC7230
  */
 class AsyncHttpClient
 {
@@ -307,6 +311,16 @@ private:
      * Clear all server related parameters.
      */
     void clear();
+
+    /**
+     * Is line terminator detected?
+     *
+     * @param[in]   str String
+     * @param[out]  len Length of terminator
+     *
+     * @return If line terminator detected, it will return true otherwise false.
+     */
+    bool isEOL(const String& str, size_t& len);
 
     /**
      * Handle response header.

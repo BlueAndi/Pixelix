@@ -119,7 +119,6 @@ void HttpResponse::clear()
 void HttpResponse::addStatusLine(const String& line)
 {
     const char* SP          = " ";
-    const char* CRLF        = "\r\n";
     int         index       = 0;
     int         begin       = 0;
     String      statusCode;
@@ -138,8 +137,7 @@ void HttpResponse::addStatusLine(const String& line)
     begin           = index + 1;
 
     /* Reason-Phrase */
-    index           = line.indexOf(CRLF);
-    m_reasonPhrase  = line.substring(begin, index);
+    m_reasonPhrase  = line.substring(begin);
 }
 
 void HttpResponse::addHeader(const String& line)

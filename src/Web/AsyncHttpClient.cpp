@@ -448,8 +448,8 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
      *                      *(( general-header
      *                       | response-header
      *                       | entity-header ) CRLF)
-     *                      CRLF
-     *                      [ message-body ]
+     *                CRLF
+     *                [ message-body ]
      */
 
     LOG_INFO("onData(): len = %u", len);
@@ -713,6 +713,36 @@ void AsyncHttpClient::clear()
     return;
 }
 
+bool AsyncHttpClient::isEOL(const String& str, size_t& len)
+{
+    bool        isEOL               = false;
+    const char  TERMINATOR_LF[]     = "\n";
+    const char  TERMINATOR_CRLF[]   = "\r\n";
+
+    len = 0U;
+
+    /* RFC7230 - 3.5. Message Parsing Robustness
+     * Although the line terminator for the start-line and header fields is
+     * the sequence CRLF, a recipient MAY recognize a single LF as a line
+     * terminator and ignore any preceding CR.
+     */
+    if (0U != str.endsWith(TERMINATOR_LF))
+    {
+        isEOL = true;
+
+        if (0U != str.endsWith(TERMINATOR_CRLF))
+        {
+            len = 2U;
+        }
+        else
+        {
+            len = 1U;
+        }
+    }
+
+    return isEOL;
+}
+
 bool AsyncHttpClient::handleRspHeader()
 {
     bool    isSuccess = true;
@@ -769,18 +799,18 @@ bool AsyncHttpClient::handleRspHeader()
 
 bool AsyncHttpClient::parseChunkedResponseSize(const char* data, size_t len, size_t& index)
 {
-    const char*     CRLF        = "\r\n";
-    const size_t    CRLF_LEN    = strlen(CRLF);
-    bool            isSizeEOF   = false;
+    bool isSizeEOF = false;
 
     while((len > index) && (false == isSizeEOF))
     {
+        size_t terminatorLen = 0U;
+
         m_rspLine += data[index];
         ++index;
 
-        if (0U != m_rspLine.endsWith(CRLF))
+        if (true == isEOL(m_rspLine, terminatorLen))
         {
-            m_rspLine.remove(m_rspLine.indexOf(CRLF), CRLF_LEN);
+            m_rspLine.remove(m_rspLine.length() - terminatorLen);
             m_chunkSize = Util::hexToUInt32(m_rspLine);
 
             LOG_INFO("Chunk size is %u byte.", m_chunkSize);
@@ -824,15 +854,16 @@ bool AsyncHttpClient::parseChunkedResponseChunkData(const uint8_t* data, size_t 
 
 bool AsyncHttpClient::parseChunkedResponseChunkDataEnd(const char* data, size_t len, size_t& index)
 {
-    const char* CRLF        = "\r\n";
-    bool        isDataEOF   = false;
+    bool isDataEOF = false;
 
     while((len > index) && (false == isDataEOF))
     {
+        size_t terminatorLen = 0U;
+
         m_rspLine += data[index];
         ++index;
 
-        if (0U != m_rspLine.endsWith(CRLF))
+        if (true == isEOL(m_rspLine, terminatorLen))
         {
             m_rspLine.clear();
             isDataEOF = true;
@@ -844,20 +875,20 @@ bool AsyncHttpClient::parseChunkedResponseChunkDataEnd(const char* data, size_t 
 
 bool AsyncHttpClient::parseChunkedResponseTrailer(const char* data, size_t len, size_t& index)
 {
-    const char*     CRLF            = "\r\n";
-    const size_t    CRLF_LEN        = strlen(CRLF);
-    bool            isTrailerEOF    = false;
+    bool isTrailerEOF = false;
 
     while((len > index) && (false == isTrailerEOF))
     {
+        size_t terminatorLen = 0U;
+
         m_rspLine += data[index];
         ++index;
 
-        if (0U != m_rspLine.endsWith(CRLF))
+        if (true == isEOL(m_rspLine, terminatorLen))
         {
-            if (CRLF_LEN < m_rspLine.length())
+            if (terminatorLen < m_rspLine.length())
             {
-                m_rspLine.remove(m_rspLine.length() - CRLF_LEN);
+                m_rspLine.remove(m_rspLine.length() - terminatorLen);
 
                 LOG_INFO("Rsp. trailer: %s", m_rspLine.c_str());
             }
@@ -956,16 +987,19 @@ bool AsyncHttpClient::parseChunkedResponse(const uint8_t* data, size_t len, size
 
 bool AsyncHttpClient::parseRspStatusLine(const char* data, size_t len, size_t& index)
 {
-    const char* CRLF            = "\r\n";
-    bool        isStatusLineEOF = false;
+    bool isStatusLineEOF = false;
 
     while((len > index) && (false == isStatusLineEOF))
     {
+        size_t terminatorLen = 0U;
+
         m_rspLine += data[index];
         ++index;
 
-        if (0U != m_rspLine.endsWith(CRLF))
+        if (true == isEOL(m_rspLine, terminatorLen))
         {
+            m_rspLine.remove(m_rspLine.length() - terminatorLen);
+
             m_rsp.addStatusLine(m_rspLine);
 
             isStatusLineEOF = true;
@@ -978,21 +1012,20 @@ bool AsyncHttpClient::parseRspStatusLine(const char* data, size_t len, size_t& i
 
 bool AsyncHttpClient::parseRspHeader(const char* data, size_t len, size_t& index)
 {
-    const char*     CRLF        = "\r\n";
-    const size_t    CRLF_LEN    = strlen(CRLF);
-    bool            isHeaderEOF = false;
+    bool isHeaderEOF = false;
 
     while((len > index) && (false == isHeaderEOF))
     {
+        size_t terminatorLen = 0U;
+
         m_rspLine += data[index];
         ++index;
 
-        if (0U != m_rspLine.endsWith(CRLF))
+        if (true == isEOL(m_rspLine, terminatorLen))
         {
-            /* The header will be finished, if a single CRLF is received. */
-            if (CRLF_LEN < m_rspLine.length())
+            if (terminatorLen < m_rspLine.length())
             {
-                m_rspLine.remove(m_rspLine.length() - CRLF_LEN);
+                m_rspLine.remove(m_rspLine.length() - terminatorLen);
 
                 LOG_INFO("Rsp. header: %s", m_rspLine.c_str());
 
