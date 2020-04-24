@@ -70,12 +70,12 @@ public:
     /**
      * Prototype of HTTP response callback for a complete received response.
      */
-    typedef void (*OnResponse)(const HttpResponse& rsp);
+    typedef std::function<void(const HttpResponse& rsp)> OnResponse;
 
     /**
      * Prototype of HTTP response callback for a closed connection.
      */
-    typedef void (*OnClosed)();
+    typedef std::function<void()> OnClosed;
 
     /**
      * Constructs a http client.
