@@ -44,9 +44,9 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include "AsyncHttpClient.h"
 #include <stdint.h>
 #include "Plugin.hpp"
-
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
@@ -83,8 +83,8 @@ public:
         m_url(""),
         m_configurationFilename(""),
         m_httpResponseReceived(false),
-        m_relevantResponsePart("")
-
+        m_relevantResponsePart(""),
+        m_requestDataTimer()
     {
     }
 
@@ -148,15 +148,6 @@ public:
      */
     void setText(const String& formatText);
 
-    /**
-     * Tries to load the plugin config file.
-     * If the file doesn't exist it will be generated with the plugin 
-     * UID as filename.
-     * 
-     * @return If loaded successfully it will return true otherwise false.
-     */
-    bool loadOrGenerateConfigFile(void);
-
    /**
      * Stop the plugin.
      * Overwrite it if your plugin needs to know that it will be uninstalled.
@@ -168,6 +159,13 @@ public:
      * Overwrite it if your plugin needs to know that it was installed.
      */
     void start() override;
+    
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void);
 
 private:
 
@@ -191,17 +189,39 @@ private:
      */
     static const char* CONFIG_PATH;
 
+    /** Time to request new data period in ms */
+    static const uint32_t   UPDATE_PERIOD    = 60000U;
 
-    Canvas*         m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*         m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget    m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget      m_textWidget;               /**< Text widget, used for showing the text. */
-    File            m_fd;                       /**< File descriptor, used for bitmap file upload. */
-    String          m_url;                      /**< String used for POST request URL. */
-    String          m_configurationFilename;    /**< String used for specifying the configuration filename. */
-    bool            m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
-    String          m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
+    Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget        m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
+    File                m_fd;                       /**< File descriptor, used for bitmap file upload. */
+    String              m_url;                      /**< String used for POST request URL. */
+    String              m_configurationFilename;    /**< String used for specifying the configuration filename. */
+    bool                m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
+    String              m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
+    AsyncHttpClient     m_client;                   /**< Asynchronous HTTP client. */
+    SimpleTimer         m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
 
+    /**
+     * Request new data.
+     */
+    void requestNewData(void);
+
+    /**
+     * Register callback function on response reception.
+     */
+    void registerResponseCallback(void);
+
+    /**
+     * Tries to load the plugin config file.
+     * If the file doesn't exist it will be generated with the plugin 
+     * UID as filename.
+     * 
+     * @return If loaded successfully it will return true otherwise false.
+     */
+    bool loadOrGenerateConfigFile(void);
 };
 
 /******************************************************************************

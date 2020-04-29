@@ -94,7 +94,7 @@ void GruenbeckPlugin::active(IGfx& gfx)
             m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load("/images/gruenbeck.bmp");
+            (void)m_bitmapWidget.load(IMAGE_PATH);
             gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
 
             m_iconCanvas->update(gfx);
@@ -117,38 +117,15 @@ void GruenbeckPlugin::active(IGfx& gfx)
             m_textCanvas->update(gfx);
         }
     }
-
-    {
-        static AsyncHttpClient  client;
-
-        client.regOnResponse([this](const HttpResponse& rsp){
-            size_t      payloadSize     = 0U;
-            const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-            size_t      payloadIndex    = 0U;
-            String payloadString;
-           
-            while(payloadSize > payloadIndex)
-            {
-                payloadString += payload[payloadIndex];
-                ++payloadIndex;
-            }
-            m_relevantResponsePart = payloadString.substring(START_INDEX_OF_RELEVANT_DATA, END_INDEX_OF_RELEVANT_DATA);
-            m_httpResponseReceived = true;
-        });
-
-        client.begin(m_url);
-        client.addPar("id","42");
-        client.addPar("show","D_Y_10_1~");
-        client.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        client.POST();
-    }
-
+        requestNewData();
+        m_requestDataTimer.start(GruenbeckPlugin::UPDATE_PERIOD);
+        
     return;
 }
 
 void GruenbeckPlugin::inactive()
 {
-    /* Nothing to do. */
+    m_requestDataTimer.stop();
     return;
 }
 
@@ -186,18 +163,16 @@ void GruenbeckPlugin::setText(const String& formatText)
 
 void GruenbeckPlugin::start()
 {
-    bool success = false;
-    char pluginUid[5];
     String configPath = CONFIG_PATH;
-    
-    snprintf(pluginUid, sizeof(pluginUid), "%d", getUID());
 
-    m_configurationFilename = configPath + pluginUid + ".json";
+    m_configurationFilename = configPath + getUID() + ".json";
 
     if (false != loadOrGenerateConfigFile())
     {
-        LOG_WARNING("Error on loading/generating plugin configfile: %d", success);
+        LOG_WARNING("Error on loading/generating: %s", m_configurationFilename);
     }
+
+    registerResponseCallback();
 
     return;
 }
@@ -212,10 +187,59 @@ void GruenbeckPlugin::stop()
     return;
 }
 
+void GruenbeckPlugin::process()
+{
+    if ((true == m_requestDataTimer.isTimerRunning()) &&
+        (true == m_requestDataTimer.isTimeout()))
+    {
+        requestNewData();
+        m_requestDataTimer.restart();
+    }
+
+    return;
+}
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+void GruenbeckPlugin::requestNewData()
+{
+    m_client.begin(m_url);
+    m_client.addPar("id","42");
+    m_client.addPar("show","D_Y_10_1~");
+    m_client.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    m_client.POST();
+}
+
+void GruenbeckPlugin::registerResponseCallback()
+{
+    m_client.regOnResponse([this](const HttpResponse& rsp){
+        size_t      payloadSize     = 0U;
+        const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        size_t      payloadIndex    = 0U;
+        String payloadString;
+       
+        while(payloadSize > payloadIndex)
+        {
+            payloadString += payload[payloadIndex];
+            ++payloadIndex;
+        }
+        m_relevantResponsePart = payloadString.substring(START_INDEX_OF_RELEVANT_DATA, END_INDEX_OF_RELEVANT_DATA);
+        m_httpResponseReceived = true;
+    });
+}
+
+
 bool GruenbeckPlugin::loadOrGenerateConfigFile()
 {
     bool status = true;
-    StaticJsonDocument<75> doc;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
     /* Check if the plugin has already created it's configuration file in the filesystem.*/
     if (false == SPIFFS.exists(m_configurationFilename))
@@ -235,8 +259,8 @@ bool GruenbeckPlugin::loadOrGenerateConfigFile()
             String defaultIPAddress = "192.168.0.16";
 
             m_fd = SPIFFS.open(m_configurationFilename, "w");
-            doc["gruenbeck_ip"] = defaultIPAddress;
-            serializeJson(doc, m_fd);
+            jsonDoc["gruenbeck_ip"] = defaultIPAddress;
+            serializeJson(jsonDoc, m_fd);
             m_fd.close();
             m_url = "http://" + defaultIPAddress + "/mux_http";
             LOG_INFO("File %s created", m_configurationFilename.c_str());
@@ -255,24 +279,21 @@ bool GruenbeckPlugin::loadOrGenerateConfigFile()
         else
         {
             String file_content = m_fd.readString();
-            deserializeJson(doc, file_content);
-            JsonObject obj = doc.as<JsonObject>();
+            deserializeJson(jsonDoc, file_content);
+            JsonObject obj = jsonDoc.as<JsonObject>();
             String ipAddress = obj["gruenbeck_ip"];
             m_url = "http://" + ipAddress + "/mux_http";
             m_fd.close();
         }
     }
 
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
+
     return status;
 }
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
 
 /******************************************************************************
  * External Functions
