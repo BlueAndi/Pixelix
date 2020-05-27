@@ -66,9 +66,9 @@ void WifiStatusPlugin::active(IGfx& gfx)
 
     if (nullptr == m_dsp)
     {
-        m_dsp           = new Canvas(gfx.width(), WIFI_ICON_HEIGHT, 0, 0);
+        m_dsp           = new Canvas(gfx.getWidth(), WIFI_ICON_HEIGHT, 0, 0);
         m_iconCanvas    = new Canvas(WIFI_ICON_WIDTH, WIFI_ICON_HEIGHT, 0, 0, true);
-        m_textCanvas    = new Canvas(gfx.width() - WIFI_ICON_WIDTH - 1, WIFI_ICON_HEIGHT, WIFI_ICON_WIDTH + 1, 0);
+        m_textCanvas    = new Canvas(gfx.getWidth() - WIFI_ICON_WIDTH - 1U, WIFI_ICON_HEIGHT, WIFI_ICON_WIDTH + 1, 0);
 
         if ((nullptr == m_dsp) ||
             (nullptr == m_iconCanvas) ||

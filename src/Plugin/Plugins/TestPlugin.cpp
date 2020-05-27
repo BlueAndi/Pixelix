@@ -85,7 +85,7 @@ void TestPlugin::update(IGfx& gfx)
 
     if (true == showPage)
     {
-        int16_t min = (gfx.width() > gfx.height()) ? gfx.height() : gfx.width();
+        int16_t min = (gfx.getWidth() > gfx.getHeight()) ? gfx.getHeight() : gfx.getWidth();
 
         /* Clear display */
         gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));

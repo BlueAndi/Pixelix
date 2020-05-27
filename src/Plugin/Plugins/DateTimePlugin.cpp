@@ -93,7 +93,7 @@ void DateTimePlugin::active(IGfx& gfx)
 {
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.width(), gfx.height() - 2, 0, 0);
+        m_textCanvas = new Canvas(gfx.getWidth(), gfx.getHeight() - 2, 0, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -103,7 +103,7 @@ void DateTimePlugin::active(IGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.width(), 1, 1, gfx.height() - 1);
+        m_lampCanvas = new Canvas(gfx.getWidth(), 1U, 1, gfx.getHeight() - 1);
 
         if (nullptr != m_lampCanvas)
         {

@@ -44,7 +44,8 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Adafruit_GFX.h>
+#include <BaseGfx.hpp>
+#include <Print.h>
 
 /******************************************************************************
  * Macros
@@ -55,9 +56,14 @@
  *****************************************************************************/
 
 /**
+ * Pixelix graphics operations with RGB565 color format.
+ */
+typedef BaseGfx<uint16_t> PixelixGfx;
+
+/**
  * Graphics interface, based on the Adafruit GFX with extensions.
  */
-class IGfx : public Adafruit_GFX
+class IGfx : public PixelixGfx, public Print
 {
 public:
 
@@ -67,8 +73,8 @@ public:
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
-    IGfx(int16_t width, int16_t height) :
-        Adafruit_GFX(width, height)
+    IGfx(uint16_t width, uint16_t height) :
+        PixelixGfx(width, height)
     {
     }
 
@@ -80,14 +86,19 @@ public:
     }
 
     /**
-     * Get pixel color at given position.
+     * Write a single character on the display.
+     * This method is necessary for using print() methods.
      *
-     * @param[in] x x-coordinate
-     * @param[in] y y-coordinate
+     * @param[in] singleChar    Single character
      *
-     * @return Color in RGB565 format.
+     * @return Number of written characters.
      */
-    virtual uint16_t getColor(int16_t x, int16_t y) = 0;
+    size_t write(uint8_t singleChar)
+    {
+        drawChar(static_cast<char>(singleChar));
+
+        return 1U;
+    }
 
 private:
 

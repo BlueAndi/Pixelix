@@ -77,7 +77,7 @@ void DatePlugin::active(IGfx& gfx)
 {
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.width(), gfx.height() - 2, 0, 0);
+        m_textCanvas = new Canvas(gfx.getWidth(), gfx.getHeight() - 2U, 0, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -87,7 +87,7 @@ void DatePlugin::active(IGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.width(), 1, 1, gfx.height() - 1);
+        m_lampCanvas = new Canvas(gfx.getWidth(), 1U, 1, gfx.getHeight() - 1);
 
         if (nullptr != m_lampCanvas)
         {
@@ -141,7 +141,7 @@ void DatePlugin::update(IGfx& gfx)
 
         m_isUpdateAvailable = false;
     }
-    
+
     return;
 }
 
@@ -199,7 +199,7 @@ void DatePlugin::updateDate(bool force)
 
             /* Last active lamp has to be deactivated. */
             uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (MAX_LAMPS - 1U);
-            
+
             /* Consider date format. */
             const char* formattedDateString = ClockDrv::getInstance().getDateFormat() ? "\\calign%d.%m.":"\\calign%m/%d";
 

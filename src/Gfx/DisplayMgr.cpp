@@ -546,9 +546,9 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
         lock();
 
         /* Copy framebuffer after it is completely updated. */
-        for(y = 0; y < matrix.height(); ++y)
+        for(y = 0; y < matrix.getHeight(); ++y)
         {
-            for(x = 0; x < matrix.width(); ++x)
+            for(x = 0; x < matrix.getWidth(); ++x)
             {
                 fb[index] = ColorDef::convert565To888(matrix.getColor(x, y));
                 ++index;

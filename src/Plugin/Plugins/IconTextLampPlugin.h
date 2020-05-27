@@ -221,22 +221,22 @@ private:
     /**
      * Icon width in pixels.
      */
-    static const int16_t ICON_WIDTH     = 8;
+    static const uint16_t   ICON_WIDTH  = 8U;
 
     /**
      * Icon height in pixels.
      */
-    static const int16_t ICON_HEIGHT    = 8;
+    static const uint16_t   ICON_HEIGHT = 8U;
 
     /**
      * Max. number of lamps.
      */
-    static const uint8_t MAX_LAMPS      = 4U;
+    static const uint8_t    MAX_LAMPS   = 4U;
 
     /**
      * Image upload path.
      */
-    static const char*  UPLOAD_PATH;
+    static const char*      UPLOAD_PATH;
 
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */

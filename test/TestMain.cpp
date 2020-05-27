@@ -185,7 +185,7 @@ public:
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
      */
-    void drawPixel(int16_t x, int16_t y, uint16_t color)
+    void drawPixel(int16_t x, int16_t y, const uint16_t& color)
     {
         /* Out of bounds check */
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
@@ -208,7 +208,7 @@ public:
      *
      * @return Color in RGB565 format.
      */
-    uint16_t getColor(int16_t x, int16_t y)
+    uint16_t getColor(int16_t x, int16_t y) const
     {
         /* Out of bounds check */
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
@@ -1360,18 +1360,18 @@ static void testProgressBar()
 
     /* Progress should be now 0% */
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 50% */
     progressBar.setProgress(50U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width() / 2u, testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
-    TEST_ASSERT_TRUE(testGfx.verify(testGfx.width() / 2u, 0, testGfx.width() / 2u, testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth() / 2u, testGfx.getHeight(), ColorDef::convert888To565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(testGfx.getWidth() / 2u, 0, testGfx.getWidth() / 2u, testGfx.getHeight(), ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 100% */
     progressBar.setProgress(100U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::convert888To565(ColorDef::RED)));
 
     /* Test algorithm: progress pixel wise */
     progressBar.setAlgo(ProgressBar::ALGORITHM_PIXEL_WISE);
@@ -1382,18 +1382,18 @@ static void testProgressBar()
     /* Set progress bar to 0% */
     progressBar.setProgress(0U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 50% */
     progressBar.setProgress(50U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height() / 2u, ColorDef::convert888To565(ColorDef::RED)));
-    TEST_ASSERT_TRUE(testGfx.verify(0, testGfx.height() / 2u, testGfx.width(), testGfx.height() / 2u, ColorDef::convert888To565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight() / 2u, ColorDef::convert888To565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, testGfx.getHeight() / 2u, testGfx.getWidth(), testGfx.getHeight() / 2u, ColorDef::convert888To565(ColorDef::BLACK)));
 
     /* Set progress bar to 100% */
     progressBar.setProgress(100U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::convert888To565(ColorDef::RED)));
 
     return;
 }

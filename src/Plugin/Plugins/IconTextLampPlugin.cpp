@@ -83,7 +83,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.width() - ICON_WIDTH, gfx.height() - 2, ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight() - 2U, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -93,7 +93,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.width() - ICON_WIDTH, 1, ICON_WIDTH, gfx.height() - 1);
+        m_lampCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, 1U, ICON_WIDTH, gfx.getHeight() - 1);
 
         if (nullptr != m_lampCanvas)
         {

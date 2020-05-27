@@ -73,7 +73,7 @@ public:
      * @param[in] y             y-coordinate position in the matrix.
      * @param[in] isBuffered    Create a buffered (true) canvas or not (false)
      */
-    Canvas(int16_t width, int16_t height, int16_t x, int16_t y, bool isBuffered = false) :
+    Canvas(uint16_t width, uint16_t height, int16_t x, int16_t y, bool isBuffered = false) :
         IGfx(width, height),
         Widget(WIDGET_TYPE, x, y),
         m_gfx(nullptr),
@@ -184,11 +184,11 @@ public:
             int16_t x = 0;
             int16_t y = 0;
 
-            for(y = 0; y < height(); ++y)
+            for(y = 0; y < getHeight(); ++y)
             {
-                for(x = 0; x < width(); ++x)
+                for(x = 0; x < getWidth(); ++x)
                 {
-                    gfx.drawPixel(x, y, m_buffer[x + y * width()]);
+                    gfx.drawPixel(x, y, m_buffer[x + y * getWidth()]);
                 }
             }
         }
@@ -205,17 +205,17 @@ public:
      *
      * @return Color in RGB565 format.
      */
-    uint16_t getColor(int16_t x, int16_t y) override
+    uint16_t getColor(int16_t x, int16_t y) const
     {
         uint16_t color565 = 0U;
 
         if ((0 <= x) &&
             (0 <= y) &&
-            (width() > x) &&
-            (height() > y) &&
+            (getWidth() > x) &&
+            (getHeight() > y) &&
             (nullptr != m_buffer))
         {
-            color565 = m_buffer[x + y * width()];
+            color565 = m_buffer[x + y * getWidth()];
         }
 
         return color565;
@@ -276,13 +276,13 @@ private:
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
      */
-    void drawPixel(int16_t x, int16_t y, uint16_t color)
+    void drawPixel(int16_t x, int16_t y, const uint16_t& color)
     {
         /* Don't draw outside the canvas. */
         if ((0 <= x) &&
-            (width() > x) &&
+            (getWidth() > x) &&
             (0 <= y) &&
-            (height() > y))
+            (getHeight() > y))
         {
             /* Draw on the real underlying canvas? */
             if (nullptr != m_gfx)
@@ -292,7 +292,7 @@ private:
             /* Draw into buffer? */
             else if (nullptr != m_buffer)
             {
-                m_buffer[x + y * width()] = color;
+                m_buffer[x + y * getWidth()] = color;
             }
             /* Skip drawing */
             else

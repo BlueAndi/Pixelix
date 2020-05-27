@@ -89,25 +89,24 @@ void TextWidget::update(IGfx& gfx)
     /* Text changed, check whether scrolling is necessary? */
     if (true == m_checkScrollingNeed)
     {
-        int16_t     boundaryX       = 0;
-        int16_t     boundaryY       = 0;
         uint16_t    textHeight      = 0U;
         String      str             = removeFormatTags(m_formatStr);
 
-        gfx.getTextBounds(str, 0, 0, &boundaryX, &boundaryY, &m_textWidth, &textHeight);
-
-        /* Text too long for the display? */
-        if (gfx.width() < m_textWidth)
+        if (true == gfx.getTextBoundingBox(str.c_str(), m_textWidth, textHeight))
         {
-            m_isScrollingEnabled    = true;
-            m_scrollOffset          = ((-1) * gfx.width()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
-            m_scrollTimer.start(0U);                            /* Ensure immediate update */
-        }
-        else
-        {
-            m_isScrollingEnabled    = false;
-            m_scrollOffset          = 0;
-            m_scrollTimer.stop();
+            /* Text too long for the display? */
+            if (gfx.getWidth() < m_textWidth)
+            {
+                m_isScrollingEnabled    = true;
+                m_scrollOffset          = ((-1) * gfx.getWidth()) + 1;  /* The user can see the first characters better, if starting nearly outside the canvas. */
+                m_scrollTimer.start(0U);                                /* Ensure immediate update */
+            }
+            else
+            {
+                m_isScrollingEnabled    = false;
+                m_scrollOffset          = 0;
+                m_scrollTimer.stop();
+            }
         }
 
         m_checkScrollingNeed = false;
@@ -115,7 +114,7 @@ void TextWidget::update(IGfx& gfx)
 
     /* Move cursor to right position */
     cursorX -= m_scrollOffset;
-    gfx.setCursor(cursorX, cursorY);
+    gfx.setTextCursorPos(cursorX, cursorY);
 
     /* Show text */
     show(gfx, m_formatStr);
@@ -127,7 +126,7 @@ void TextWidget::update(IGfx& gfx)
         ++m_scrollOffset;
         if (m_textWidth < m_scrollOffset)
         {
-            m_scrollOffset = ((-1) * gfx.width()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
+            m_scrollOffset = ((-1) * gfx.getWidth()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
         }
 
         m_scrollTimer.start(DEFAULT_SCROLL_PAUSE);
@@ -320,16 +319,16 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
     else if (true == formatStr.startsWith("ralign"))
     {
         String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
-        int16_t     boundaryX   = 0;
-        int16_t     boundaryY   = 0;
         uint16_t    textWidth   = 0U;
         uint16_t    textHeight  = 0U;
 
         if ((false == noAction) &&
             (nullptr != gfx))
         {
-            gfx->getTextBounds(text, 0, 0, &boundaryX, &boundaryY, &textWidth, &textHeight);
-            gfx->setCursor(gfx->width() - textWidth, gfx->getCursorY());
+            if (true == gfx->getTextBoundingBox(text.c_str(), textWidth, textHeight))
+            {
+                gfx->setTextCursorPos(gfx->getWidth() - textWidth, gfx->getTextCursorPosY());
+            }
         }
 
         overstep    = KEYWORD_LEN;
@@ -339,16 +338,16 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
     else if (true == formatStr.startsWith("calign"))
     {
         String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
-        int16_t     boundaryX   = 0;
-        int16_t     boundaryY   = 0;
         uint16_t    textWidth   = 0U;
         uint16_t    textHeight  = 0U;
 
         if ((false == noAction) &&
             (nullptr != gfx))
         {
-            gfx->getTextBounds(text, 0, 0, &boundaryX, &boundaryY, &textWidth, &textHeight);
-            gfx->setCursor(gfx->getCursorX() + (gfx->width() - gfx->getCursorX() - textWidth) / 2, gfx->getCursorY());
+            if (true == gfx->getTextBoundingBox(text.c_str(), textWidth, textHeight))
+            {
+                gfx->setTextCursorPos(gfx->getTextCursorPosX() + (gfx->getWidth() - gfx->getTextCursorPosX() - textWidth) / 2, gfx->getTextCursorPosY());
+            }
         }
 
         overstep    = KEYWORD_LEN;
