@@ -48,6 +48,7 @@
 #include <Logging.h>
 #include <LogSinkPrinter.h>
 #include <Util.h>
+#include <TomThumb.h>
 
 /******************************************************************************
  * Macros
@@ -187,6 +188,14 @@ public:
      */
     void drawPixel(int16_t x, int16_t y, const uint16_t& color)
     {
+        if ((0 > x) ||
+            (0 > y) ||
+            (WIDTH < x) ||
+            (HEIGHT < y))
+        {
+            dumpSimple();
+        }
+
         /* Out of bounds check */
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, y);
@@ -270,7 +279,35 @@ public:
                 ::printf("0x%04X", m_buffer[x + WIDTH * y]);
             }
 
-            ::printf("\r\n");
+            ::printf("\n");
+        }
+
+        return;
+    }
+
+    /**
+     * Dump display buffer to console by using a "*" for a coloured pixel.
+     */
+    void dumpSimple() const
+    {
+        uint16_t    x   = 0U;
+        uint16_t    y   = 0U;
+
+        for(y = 0U; y < HEIGHT; ++y)
+        {
+            for(x = 0U; x < WIDTH; ++x)
+            {
+                if (0U == m_buffer[x + WIDTH * y])
+                {
+                    ::printf("_");
+                }
+                else
+                {
+                    ::printf("*");
+                }
+            }
+
+            ::printf("\n");
         }
 
         return;
@@ -536,6 +573,7 @@ template < typename T >
 static T getMin(const T value1, const T value2);
 
 static void testDoublyLinkedList(void);
+static void testGfx(void);
 static void testWidget(void);
 static void testCanvas(void);
 static void testLampWidget(void);
@@ -570,6 +608,7 @@ int main(int argc, char **argv)
     UNITY_BEGIN();
 
     RUN_TEST(testDoublyLinkedList);
+    RUN_TEST(testGfx);
     RUN_TEST(testWidget);
     RUN_TEST(testCanvas);
     RUN_TEST(testLampWidget);
@@ -763,6 +802,37 @@ static void testDoublyLinkedList()
     TEST_ASSERT_TRUE(it.first());
     TEST_ASSERT_TRUE(it.find(max));
     TEST_ASSERT_EQUAL(max, *it.current());
+
+    return;
+}
+
+/**
+ * Test the graphic functions.
+ */
+static void testGfx()
+{
+    TestGfx         testGfx;
+    const uint16_t  COLOR       = 0x1234;
+    uint16_t        width       = 0U;
+    uint16_t        height      = 0U;
+
+    TEST_ASSERT_EQUAL_UINT16(TestGfx::WIDTH, testGfx.getWidth());
+    TEST_ASSERT_EQUAL_UINT16(TestGfx::HEIGHT, testGfx.getHeight());
+
+    /* Clear screen */
+    testGfx.fill(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Draw character, but without font. Nothing shall be shown. */
+    testGfx.setTextCursorPos(0, 6);
+    testGfx.setTextWrap(false);
+    testGfx.setTextColor(COLOR);
+    testGfx.drawChar('T');
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Select font and draw again. The character shall be shown. */
+    testGfx.setFont(&TomThumb);
+    TEST_ASSERT_TRUE(testGfx.getTextBoundingBox("Test", width, height));
 
     return;
 }
