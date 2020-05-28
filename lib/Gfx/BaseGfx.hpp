@@ -418,6 +418,8 @@ public:
      */
     void drawChar(char singleChar)
     {
+        uint8_t uChar = static_cast<uint8_t>(singleChar);
+
         if (nullptr == m_font)
         {
             return;
@@ -432,10 +434,10 @@ public:
         }
         /* Is character available in the font? Note, carriage return is skipped. */
         else if (('\r' != singleChar) &&
-                 (m_font->first <= singleChar) &&
-                 (m_font->last >= singleChar))
+                 (m_font->first <= uChar) &&
+                 (m_font->last >= uChar))
         {
-            uint8_t         glyphIndex      = static_cast<uint8_t>(singleChar) - m_font->first;
+            uint8_t         glyphIndex      = uChar - m_font->first;
             const GFXglyph* glyph           = &(m_font->glyph[glyphIndex]);
             int16_t         x               = 0;
             int16_t         y               = 0;
@@ -529,19 +531,20 @@ public:
      */
     bool getCharBoundingBox(char singleChar, uint16_t& width, uint16_t& height) const
     {
-        bool status = false;
+        bool    status  = false;
+        uint8_t uChar   = static_cast<uint8_t>(singleChar);
 
         if ((nullptr != m_font) &&
-            (m_font->first <= singleChar) &&
-            (m_font->last >= singleChar) &&
+            (m_font->first <= uChar) &&
+            (m_font->last >= uChar) &&
             ('\n' != singleChar) &&
             ('\r' != singleChar))
         {
-            uint8_t         glyphIndex  = static_cast<uint8_t>(singleChar) - m_font->first;
+            uint8_t         glyphIndex  = uChar - m_font->first;
             const GFXglyph* glyph       = &(m_font->glyph[glyphIndex]);
 
-            width   = glyph->xOffset + glyph->width;
-            height  = glyph->yOffset + glyph->height;
+            width   = glyph->xAdvance;
+            height  = m_font->yAdvance;
             status  = true;
         }
 
@@ -585,6 +588,11 @@ public:
                 }
                 else if (true == getCharBoundingBox(text[index], charWidth, charHeight))
                 {
+                    if (0U == index)
+                    {
+                        height += m_font->yAdvance;
+                    }
+
                     /* If text wrap around is enabled and the character is clipping,
                      * jump to the next line.
                      */
@@ -604,6 +612,10 @@ public:
 
                     lineWidth += charWidth;
                 }
+                else
+                {
+                    ;
+                }
 
                 ++index;
             }
@@ -612,6 +624,8 @@ public:
             {
                 width = lineWidth;
             }
+
+            status = true;
         }
 
         return status;
