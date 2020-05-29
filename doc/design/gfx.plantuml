@@ -17,39 +17,149 @@ package "Makuna" {
     end note
 }
 
-package "Adafruit" {
-    class "Adafruit_GFX" as adafruitGfx
+note top of Makuna
+    https://github.com/Makuna/NeoPixelBus
+end note
 
-    note top of adafruitGfx
-        Disadvantages:
-        * Supports only 16 bit color (RGB565).
-        * Needs SPI as header include.
-    end note
+package "Adafruit" {
+
+    class "GFXglyph" as gfxGlyph
+    class "GFXfont" as gfxFont
+
+    gfxGlyph <--* gfxFont
 }
 
-class "LedMatrix" as ledMatrix
+note top of Adafruit
+    Only a copy from the Adafruit-GFX-Library to
+    be able to use the font files without change.
+    https://github.com/adafruit/Adafruit-GFX-Library/blob/master/gfxfont.h
+end note
 
-adafruitGfx <|.. ledMatrix: <<realize>>
-neoPixelBrightnessBus <--* ledMatrix: <<contains>>
-neoTopology <--* ledMatrix:: <<contains>>
+class "BaseGfx<TColor>" as baseGfx {
+    - m_width : uint16_t
+    - m_height : uint16_t
+    - m_cursorX : int16_t
+    - m_cursorY : int16_t
+    - m_textColor : TColor
+    - m_font : const GFXfont*
+    + BaseGfx(width : uint16_t, height : uint16_t)
+    + {abstract} getColor(x : int16_t, y : int16_t) = 0 : TColor
+    + {abstract} drawPixel(x : int16_t, y : int16_t, color : const TColor&) = 0 : void
+    + drawVLine(x : int16_t, y : int16_t, width : uint16_t) : void
+    + drawHLine(x : int16_t, y : int16_t, height : uint16_t) : void
+    + drawLine(xs : int16_t, ys : int16_t, xe : int16_t, ye : int16_t, color : const TColor&) : void
+    + drawRectangle(x : int16_t, y : int16_t, width : uint16_t, height : uint16_t, color : const TColor&) : void
+    + fillRect(x : int16_t, y : int16_t, width : uint16_t, height : uint16_t, color : const TColor&) : void
+    + fillScreen(color : const TColor&) : void
+    + drawRGBBitmap(x : int16_t, y : int16_t, bitmap : const TColor*, width : uint16_t, height : uint16_t) : void
+    + getTextCursorPos(x : int16_t&, y : int16_t&) const : void
+    + getTextCursorPosX() const : int16_t
+    + getTextCursorPosY() const : int16_t
+    + setTextCursorPos(x : int16_t, y : int16_t) : void
+    + getTextColor() const : TColor
+    + setTextColor(color : const TColor&) const : void
+    + getFont() const : const GFXFont*
+    + setFont(font : const GFXfont*) : void
+    + drawChar(character : char) : void
+    + drawText(text : const char*) : void
+    + isTextWrapEnabled() const : bool
+    + setTextWrap(isEnabled : bool) : void
+    + getCharBoundingBox(character : char, width : uint16_t&, height : uint16_t) : bool
+    + getTextBoundingBox(text : const char*, width : uint16_t&, height : uint16_t) : bool
+}
 
-note right of ledMatrix
+note left of baseGfx
+    Basic graphics operations,
+    independend of the color type.
+end note
+
+gfxFont <-- baseGfx
+
+class "BaseGfxPen<TColor>" as baseGfxPen {
+    - m_x : int16_t
+    - m_y : int16_t
+    - m_color : TColor
+    - m_gfx : BaseGfx&
+    + BaseGfxPen(gfx : BaseGfx&)
+    + moveTo(x : int16_t, y : int16_t) : void
+    + lineTo(x : int16_t, y : int16_t) : void
+    + plot(x : int16_t, y : int16_t) : void
+    + getColor() const : TColor
+    + setColor(color : const TColor&) : void
+}
+
+note right of baseGfxPen
+    Basic drawing pen operations,
+    independend of the color type.
+    Every drawing action starts from
+    the current pen position and moves
+    the pen.
+end note
+
+baseGfx <- baseGfxPen: <<draw>>
+
+class PixelixGfx <<typedef>>
+hide PixelixGfx members
+
+note left of PixelixGfx
+    Graphic operations, defined with
+    color type according to display type.
+
+    Step 1: uint16_t color type with RGB565 format.
+            (for easy replacement of the Adafruit_Gfx)
+    Step 2: Use a color class in RGB888 format (future step).
+end note
+
+baseGfx <|-- PixelixGfx: <<bind>>\nTColor -> uint16_t
+
+class PixelixGfxPen <<typedef>>
+hide PixelixGfxPen members
+
+note bottom of PixelixGfxPen
+    Drawing pen operations, defined with
+    color type according to display type.
+end note
+
+baseGfxPen <|-- PixelixGfxPen: <<bind>>\nTColor -> uint16_t
+
+class "Print" as print
+
+note left of print
+    Arduino Print class.
+end note
+
+class "IGfx" as igfx {
+    + write(singleChar : uint8_t) : size_t
+}
+
+note left of igfx
+    Provides arduino print support.
+end note
+
+PixelixGfx <|-- igfx
+Print <|-- igfx
+
+class "LedMatrix" as ledMatrix {
+    + drawPixel(x : int16_t, y : int16_t, color : const uint16_t&) : void
+}
+
+note left of ledMatrix
     Represents the physical LED matrix and
     provides the GFX interface to draw inside.
 end note
 
+igfx <|---- ledMatrix
+neoPixelBrightnessBus <-- ledMatrix
+neoTopology <-- ledMatrix
+
 class "DisplayMgr" as displayMgr
 
-ledMatrix <.. displayMgr: <<uses>>
-
 note right of displayMgr
-    Manages the logic layout, containing widgets.
-    It provides a simple interface for the
-    application.
+    Manages the display slots, which are shown in
+    round robin order. In a slot a plugin can be
+    installed, which shows informations on the display.
 end note
 
-class "App" as app
-
-displayMgr <.. app: <<uses>>
+ledMatrix <.. displayMgr: <<use>>
 
 @enduml

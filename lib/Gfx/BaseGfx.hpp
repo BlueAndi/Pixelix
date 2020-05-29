@@ -511,6 +511,16 @@ public:
     }
 
     /**
+     * Is text wrap around enabled?
+     *
+     * @return If text wrap around is enabled, it will return true otherwise false.
+     */
+    bool isTextWrapEnabled() const
+    {
+        return m_isTextWrapEnabled;
+    }
+
+    /**
      * Set text wrap around behaviour.
      *
      * @param[in] isEnabled Enable (true) wrap around or disable (false) it
