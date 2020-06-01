@@ -171,18 +171,18 @@ public:
      * Draw vertical line.
      * Note, this is faster than using drawLine().
      *
-     * @param[in] x     x-coordinate of start point
-     * @param[in] y     y-coordinate of start point
-     * @param[in] width Vertical line width in pixel
-     * @param[in] color Color
+     * @param[in] x         x-coordinate of start point
+     * @param[in] y         y-coordinate of start point
+     * @param[in] height    Vertical line height in pixel
+     * @param[in] color     Color
      */
-    void drawVLine(int16_t x, int16_t y, uint16_t width, const TColor& color)
+    void drawVLine(int16_t x, int16_t y, uint16_t height, const TColor& color)
     {
         uint16_t index = 0U;
 
-        for(index = 0U; index < width; ++index)
+        for(index = 0U; index < height; ++index)
         {
-            drawPixel(x + index, y, color);
+            drawPixel(x, y + index, color);
         }
     }
 
@@ -190,18 +190,18 @@ public:
      * Draw horizontal line.
      * Note, this is faster than using drawLine().
      *
-     * @param[in] x         x-coordinate of start point
-     * @param[in] y         y-coordinate of start point
-     * @param[in] height    Horizontal line height in pixel
+     * @param[in] x     x-coordinate of start point
+     * @param[in] y     y-coordinate of start point
+     * @param[in] width Horizontal line width in pixel
      * @param[in] color Color
      */
-    void drawHLine(int16_t x, int16_t y, uint16_t height, const TColor& color)
+    void drawHLine(int16_t x, int16_t y, uint16_t width, const TColor& color)
     {
         uint16_t index = 0U;
 
-        for(index = 0U; index < height; ++index)
+        for(index = 0U; index < width; ++index)
         {
-            drawPixel(x, y + index, color);
+            drawPixel(x + index, y, color);
         }
     }
 
@@ -293,10 +293,6 @@ public:
     /**
      * Fill a rectangle with a specific color.
      *
-     * @param[in] x1        x-coordinate of upper left point
-     * @param[in] y1        y-coordinate of upper left point
-     * @param[in] width     Rectangle width in pixel
-     * @param[in] height    Rectangle height in pixel
      * @param[in] color     Color
      */
     void fillScreen(const TColor& color)
