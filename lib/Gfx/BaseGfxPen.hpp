@@ -67,6 +67,9 @@ class BaseGfxPen
 {
 public:
 
+    /**
+     * Constructs a base graphics pen.
+     */
     BaseGfxPen(BaseGfx& gfx) :
         m_gfx(gfx),
         m_color(),
@@ -75,6 +78,9 @@ public:
     {
     }
 
+    /**
+     * Destroys a graphics pen.
+     */
     ~BaseGfxPen()
     {
     }
