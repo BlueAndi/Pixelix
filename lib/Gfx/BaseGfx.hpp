@@ -87,7 +87,7 @@ public:
     /**
      * Destroys the base graphics functionality object.
      */
-    ~BaseGfx()
+    virtual ~BaseGfx()
     {
     }
 
