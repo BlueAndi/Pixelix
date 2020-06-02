@@ -27,7 +27,7 @@
 /**
  * @brief  Bitmap Widget
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -75,7 +75,7 @@ public:
 
     /**
      * Constructs a bitmap widget by copying another one.
-     * 
+     *
      * @param[in] widget Bitmap widge, which to copy
      */
     BitmapWidget(const BitmapWidget& widget) :
@@ -87,7 +87,7 @@ public:
     {
         if (nullptr != widget.m_buffer)
         {
-            m_buffer = new uint16_t[m_bufferSize];
+            m_buffer = new Color[m_bufferSize];
 
             if (nullptr == m_buffer)
             {
@@ -95,7 +95,12 @@ public:
             }
             else
             {
-                memcpy(m_buffer, widget.m_buffer, m_bufferSize * sizeof(uint16_t));
+                size_t index = 0U;
+
+                for(index = 0U; index < m_bufferSize; ++index)
+                {
+                    m_buffer[index] = widget.m_buffer[index];
+                }
             }
         }
     }
@@ -115,14 +120,14 @@ public:
 
     /**
      * Assigns a existing bitmap widget.
-     * 
+     *
      * @param[in] widget Bitmap widge, which to assign
      */
     BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
      * Update/Draw the bitmap widget on the canvas.
-     * 
+     *
      * @param[in] gfx Graphics interface
      */
     void update(IGfx& gfx) override
@@ -131,28 +136,28 @@ public:
         {
             gfx.drawRGBBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
         }
-        
+
         return;
     }
 
     /**
      * Set a new bitmap.
-     * 
+     *
      * @param[in] bitmap    Ext. bitmap buffer
      * @param[in] width     Bitmap width in pixel
      * @param[in] height    Bitmap height in pixel
      */
-    void set(const uint16_t* bitmap, uint16_t width, uint16_t height);
+    void set(const Color* bitmap, uint16_t width, uint16_t height);
 
     /**
      * Get the bitmap.
-     * 
+     *
      * @param[out] width    Bitmap width in pixel
      * @param[out] height   Bitmap height in pixel
-     * 
+     *
      * @return Bitmap buffer
      */
-    const uint16_t* get(uint16_t& width, uint16_t& height) const
+    const Color* get(uint16_t& width, uint16_t& height) const
     {
         width   = m_width;
         height  = m_height;
@@ -164,9 +169,9 @@ public:
 
     /**
      * Load bitmap image from filesystem.
-     * 
+     *
      * @param[in] filename  Filename with full path
-     * 
+     *
      * @return If successful loaded it will return true otherwise false.
      */
     bool load(const String& filename);
@@ -178,7 +183,7 @@ public:
 
 private:
 
-    uint16_t*   m_buffer;       /**< Raw bitmap buffer */
+    Color*      m_buffer;       /**< Raw bitmap buffer */
     size_t      m_bufferSize;   /**< Raw bitmap buffer size in number of elements */
     uint16_t    m_width;        /**< Bitmap width in pixel */
     uint16_t    m_height;       /**< Bitmap height in pixel */

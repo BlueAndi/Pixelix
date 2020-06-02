@@ -82,11 +82,11 @@ LedMatrix::~LedMatrix()
 {
 }
 
-uint16_t LedMatrix::getColor(int16_t x, int16_t y) const
+Color LedMatrix::getColor(int16_t x, int16_t y) const
 {
-    HtmlColor   colorRGB888 = m_strip.GetPixelColor(m_topo.Map(x, y));
+    HtmlColor htmlColor = m_strip.GetPixelColor(m_topo.Map(x, y));
 
-    return ColorDef::convert888To565(colorRGB888.Color);
+    return Color(htmlColor.Color);
 }
 
 /******************************************************************************

@@ -97,10 +97,6 @@ public:
      */
     ~IconTextPlugin()
     {
-        uint16_t        bitmapWidth     = 0U;
-        uint16_t        bitmapHeight    = 0U;
-        const uint16_t* bitmapBuffer    = m_bitmapWidget.get(bitmapWidth, bitmapHeight);
-
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -111,12 +107,6 @@ public:
         {
             delete m_textCanvas;
             m_textCanvas = nullptr;
-        }
-
-        if (nullptr != bitmapBuffer)
-        {
-            delete[] bitmapBuffer;
-            bitmapBuffer = nullptr;
         }
     }
 
@@ -178,13 +168,13 @@ public:
     void setText(const String& formatText);
 
     /**
-     * Set bitmap in raw RGB565 format.
+     * Set bitmap in raw RGB888 format.
      *
      * @param[in] bitmap    Bitmap buffer
      * @param[in] width     Bitmap width in pixel
      * @param[in] height    Bitmap height in pixel
      */
-    void setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t height);
+    void setBitmap(const Color* bitmap, uint16_t width, uint16_t height);
 
     /**
      * Load bitmap from filesystem.

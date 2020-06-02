@@ -82,7 +82,7 @@ public:
     {
         if (true == isBuffered)
         {
-            m_buffer = new uint16_t[width * height];
+            m_buffer = new Color[width * height];
         }
     }
 
@@ -203,11 +203,11 @@ public:
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
      *
-     * @return Color in RGB565 format.
+     * @return Color in RGB888 format.
      */
-    uint16_t getColor(int16_t x, int16_t y) const
+    Color getColor(int16_t x, int16_t y) const
     {
-        uint16_t color565 = 0U;
+        Color color;
 
         if ((0 <= x) &&
             (0 <= y) &&
@@ -215,10 +215,10 @@ public:
             (getHeight() > y) &&
             (nullptr != m_buffer))
         {
-            color565 = m_buffer[x + y * getWidth()];
+            color = m_buffer[x + y * getWidth()];
         }
 
-        return color565;
+        return color;
     }
 
     /**
@@ -263,7 +263,7 @@ private:
 
     IGfx*                   m_gfx;      /**< Graphics interface of the underlying layer */
     DLinkedList<Widget*>    m_widgets;  /**< Widgets in the canvas */
-    uint16_t*               m_buffer;   /**< Buffer */
+    Color*                  m_buffer;   /**< Buffer */
 
     Canvas(const Canvas& canvas);
     Canvas& operator=(const Canvas& canvas);
@@ -276,7 +276,7 @@ private:
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
      */
-    void drawPixel(int16_t x, int16_t y, const uint16_t& color)
+    void drawPixel(int16_t x, int16_t y, const Color& color)
     {
         /* Don't draw outside the canvas. */
         if ((0 <= x) &&

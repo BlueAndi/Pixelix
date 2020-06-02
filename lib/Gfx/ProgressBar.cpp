@@ -101,7 +101,7 @@ void ProgressBar::showProgressPixel(IGfx& gfx)
 
     while((0U < pixelCount) && (gfx.getHeight() > y))
     {
-        gfx.drawPixel(x, y, m_color.to565());
+        gfx.drawPixel(x, y, m_color);
 
         --pixelCount;
 
@@ -122,13 +122,13 @@ void ProgressBar::showProgressBar(IGfx& gfx)
     {
         uint16_t width = (gfx.getWidth() * m_progress) / 100;
 
-        gfx.fillRect(0, 0, width, gfx.getHeight(), m_color.to565());
+        gfx.fillRect(0, 0, width, gfx.getHeight(), m_color);
     }
     else
     {
         uint16_t height = (gfx.getWidth() * m_progress) / 100;
 
-        gfx.fillRect(0, 0, gfx.getWidth(), height, m_color.to565());
+        gfx.fillRect(0, 0, gfx.getWidth(), height, m_color);
     }
 
     return;

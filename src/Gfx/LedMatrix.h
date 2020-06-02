@@ -142,7 +142,7 @@ public:
      *
      * @return Color in RGB888 format.
      */
-    uint16_t getColor(int16_t x, int16_t y) const;
+    Color getColor(int16_t x, int16_t y) const;
 
 private:
 
@@ -173,18 +173,18 @@ private:
      *
      * @param[in] x     x-coordinate
      * @param[in] y     y-coordinate
-     * @param[in] color Pixel color in RGB565 format
+     * @param[in] color Pixel color in RGB888 format
      */
-    void drawPixel(int16_t x, int16_t y, const uint16_t& color)
+    void drawPixel(int16_t x, int16_t y, const Color& color)
     {
         if ((0 <= x) &&
             (Board::LedMatrix::width > x) &&
             (0 <= y) &&
             (Board::LedMatrix::height > y))
         {
-            HtmlColor colorRGB888 = ColorDef::convert565To888(color);
+            HtmlColor htmlColor = static_cast<uint32_t>(color);
 
-            m_strip.SetPixelColor(m_topo.Map(x, y), colorRGB888);
+            m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
         }
 
         return;

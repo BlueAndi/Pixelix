@@ -86,7 +86,7 @@ void GameOfLifePlugin::active(IGfx& gfx)
     }
 
     /* Clear display */
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
 
     m_displayTimer.start(DISPLAY_PERIOD);
     m_forceRestartTimer.start(FORCE_RESTART_PERIOD);
@@ -450,11 +450,11 @@ void GameOfLifePlugin::update(IGfx& gfx, uint8_t gridId)
         {
             if (false == getCellState(gridId, x, y))
             {
-                gfx.drawPixel(x, y, ColorDef::convert888To565(ColorDef::BLACK));
+                gfx.drawPixel(x, y, ColorDef::BLACK);
             }
             else
             {
-                gfx.drawPixel(x, y, ColorDef::convert888To565(ColorDef::BLUE));
+                gfx.drawPixel(x, y, ColorDef::BLUE);
             }
         }
     }

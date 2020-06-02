@@ -94,7 +94,7 @@ void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void JustTextPlugin::update(IGfx& gfx)
 {
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
 
     return;

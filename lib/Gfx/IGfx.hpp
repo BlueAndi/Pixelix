@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <BaseGfx.hpp>
+#include <Color.h>
 #include <Print.h>
 
 /******************************************************************************
@@ -56,9 +57,9 @@
  *****************************************************************************/
 
 /**
- * Pixelix graphics operations with RGB565 color format.
+ * Pixelix graphics operations with RGB888 color format.
  */
-typedef BaseGfx<uint16_t> PixelixGfx;
+typedef BaseGfx<Color> PixelixGfx;
 
 /**
  * Graphics interface, based on the Adafruit GFX with extensions.

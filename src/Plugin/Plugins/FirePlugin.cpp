@@ -73,7 +73,7 @@ void FirePlugin::active(IGfx& gfx)
     }
 
     /* Clear display */
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
 
     return;
 }
@@ -155,7 +155,7 @@ void FirePlugin::update(IGfx& gfx)
         /* Step 4) Map from heat cells to LED colors */
         for(y = 0; y < gfx.getHeight(); ++y)
         {
-            gfx.drawPixel(x, y, heatColor(m_heat[x + y * gfx.getWidth()]).to565());
+            gfx.drawPixel(x, y, heatColor(m_heat[x + y * gfx.getWidth()]));
         }
     }
 

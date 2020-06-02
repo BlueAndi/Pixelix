@@ -156,7 +156,7 @@ void IconTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void IconTextPlugin::update(IGfx& gfx)
 {
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr != m_iconCanvas)
     {
@@ -177,35 +177,13 @@ void IconTextPlugin::setText(const String& formatText)
     return;
 }
 
-void IconTextPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t height)
+void IconTextPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t height)
 {
-    uint16_t*       buffer      = nullptr;
-    const uint16_t* oldBuffer   = nullptr;
-    uint16_t        oldWidth    = 0U;
-    uint16_t        oldHeight   = 0U;
-
-    if ((nullptr == bitmap) ||
-        (ICON_WIDTH < width) ||
-        (ICON_HEIGHT < height))
+    if ((nullptr != bitmap) &&
+        (ICON_WIDTH >= width) &&
+        (ICON_HEIGHT >= height))
     {
-        return;
-    }
-
-    /* Store current bitmap buffer */
-    oldBuffer = m_bitmapWidget.get(oldWidth, oldHeight);
-
-    /* Get new bitmap buffer */
-    buffer = new uint16_t[width * height];
-
-    if (nullptr != buffer)
-    {
-        /* Release old bitmap buffer */
-        delete[] oldBuffer;
-
-        /* Copy new bitmap */
-        memcpy(buffer, bitmap, width * height * sizeof(uint16_t));
-
-        m_bitmapWidget.set(buffer, width, height);
+        m_bitmapWidget.set(bitmap, width, height);
     }
 
     return;

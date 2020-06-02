@@ -27,7 +27,7 @@
 /**
  * @brief  Color
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -80,7 +80,7 @@ public:
 
     /**
      * Specialized constructor, used in case every base color (RGB) is given.
-     * 
+     *
      * @param[in] red   Red value
      * @param[in] green Green value
      * @param[in] blue  Blue value
@@ -91,10 +91,10 @@ public:
         m_blue(blue)
     {
     }
-    
+
     /**
      * Specialized constructor, used in case a color value (RGB) is given as uint32 type.
-     * 
+     *
      * @param[in] value Color value in 24 bit format
      */
     Color(uint32_t value) :
@@ -106,7 +106,7 @@ public:
 
     /**
      * Copy the given color.
-     * 
+     *
      * @param[in] color Color, which to copy
      */
     Color(const Color& color) :
@@ -119,7 +119,7 @@ public:
 
     /**
      * Assign RGB color.
-     * 
+     *
      * @param[in] color Color, which to assign
      */
     Color& operator=(const Color& color)
@@ -130,11 +130,11 @@ public:
 
         return *this;
     }
-    
+
     /**
      * Convert to RGB888 uint32_t value.
      */
-    operator uint32_t()
+    operator uint32_t() const
     {
         uint32_t color888 = m_red;
 
@@ -148,7 +148,7 @@ public:
 
     /**
      * Get base color information.
-     * 
+     *
      * @param[out] red      Red value
      * @param[out] green    Green value
      * @param[out] blue     Blue value
@@ -160,10 +160,10 @@ public:
         blue	= m_blue;
         return;
     }
-    
+
     /**
      * Set base color information.
-     * 
+     *
      * @param[in] red   Red value
      * @param[in] green Green value
      * @param[in] blue  Blue value
@@ -173,13 +173,13 @@ public:
         m_red	= red;
         m_green	= green;
         m_blue	= blue;
-        
+
         return;
     }
-    
+
     /**
      * Set new color information.
-     * 
+     *
      * @param[in] value Color value (RGB) in 24 bit format
      */
     void set(const uint32_t& value)
@@ -187,79 +187,79 @@ public:
         m_red	= ColorDef::getRed(value);
         m_green	= ColorDef::getGreen(value);
         m_blue	= ColorDef::getBlue(value);
-        
+
         return;
     }
-    
+
     /**
      * Get red color value.
-     * 
+     *
      * @return Red value
      */
     uint8_t getRed() const
     {
         return m_red;
     }
-    
+
     /**
      * Get green color value.
-     * 
+     *
      * @return Green value
      */
     uint8_t getGreen() const
     {
         return m_green;
     }
-    
+
     /**
      * Get blue color value.
-     * 
+     *
      * @return Blue value
      */
     uint8_t getBlue() const
     {
         return m_blue;
     }
-    
+
     /**
      * Set red color value.
-     * 
+     *
      * @param[in] value Red value
      */
     void setRed(const uint8_t& value)
     {
         m_red = value;
-        
+
         return;
     }
-    
+
     /**
      * Set green color value.
-     * 
+     *
      * @param[in] value Green value
      */
     void setGreen(const uint8_t& value)
     {
         m_green = value;
-        
+
         return;
     }
-    
+
     /**
      * Set blue color value.
-     * 
+     *
      * @param[in] value Blue value
      */
     void setBlue(const uint8_t& value)
     {
         m_blue = value;
-        
+
         return;
     }
 
     /**
      * Get color in 5-6-5 RGB format.
-     * 
+     *
      * @return Color in 5-6-5 RGB format
      */
     uint16_t to565() const
@@ -273,12 +273,12 @@ public:
 
         return ((RED5 & 0x1fU) << 11U) | ((GREEN6 & 0x3fU) << 5U) | ((BLUE5 & 0x1fU) << 0U);
     }
-    
+
     /**
      * Set color according to the position in the color wheel.
      * It provides typical rainbow colors, which means a color is based on
      * only two base colors.
-     * 
+     *
      * @param[in] wheelPos  Color wheel position
      */
     void turnColorWheel(uint8_t wheelPos);

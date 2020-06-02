@@ -83,7 +83,7 @@ void TextWidget::update(IGfx& gfx)
 
     /* Set base parameters */
     gfx.setFont(m_font);
-    gfx.setTextColor(m_textColor.to565());
+    gfx.setTextColor(m_textColor);
     gfx.setTextWrap(false); /* If text is too long, don't wrap around. */
 
     /* Text changed, check whether scrolling is necessary? */
@@ -271,7 +271,7 @@ void TextWidget::show(IGfx& gfx, const String& formatStr) const
     }
 
     /* Text color might be changed, restore original. */
-    gfx.setTextColor(m_textColor.to565());
+    gfx.setTextColor(m_textColor);
 
     return;
 }
@@ -284,7 +284,7 @@ bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, 
     {
         const uint8_t   RGB_HEX_LEN = 6U;
         String          colorStr    = String("0x") + formatStr.substring(1, 1 + RGB_HEX_LEN);
-        uint32_t        colorRGB888;
+        uint32_t        colorRGB888 = 0U;
         bool            convStatus  = Util::strToUInt32(colorStr, colorRGB888);
 
         if (true == convStatus)
@@ -292,8 +292,7 @@ bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, 
             if ((false == noAction) &&
                 (nullptr != gfx))
             {
-                Color textColor(colorRGB888);
-                gfx->setTextColor(textColor.to565());
+                gfx->setTextColor(colorRGB888);
             }
 
             overstep    = 1U + RGB_HEX_LEN;

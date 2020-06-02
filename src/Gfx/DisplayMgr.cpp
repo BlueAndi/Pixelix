@@ -550,7 +550,7 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
         {
             for(x = 0; x < matrix.getWidth(); ++x)
             {
-                fb[index] = ColorDef::convert565To888(matrix.getColor(x, y));
+                fb[index] = matrix.getColor(x, y);
                 ++index;
 
                 if (length <= index)

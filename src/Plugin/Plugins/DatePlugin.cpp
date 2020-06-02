@@ -127,7 +127,7 @@ void DatePlugin::update(IGfx& gfx)
 {
     if (false != m_isUpdateAvailable)
     {
-        gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+        gfx.fillScreen(ColorDef::BLACK);
 
         if (nullptr != m_textCanvas)
         {

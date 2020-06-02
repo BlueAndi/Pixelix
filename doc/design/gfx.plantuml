@@ -104,13 +104,9 @@ hide PixelixGfx members
 note left of PixelixGfx
     Graphic operations, defined with
     color type according to display type.
-
-    Step 1: uint16_t color type with RGB565 format.
-            (for easy replacement of the Adafruit_Gfx)
-    Step 2: Use a color class in RGB888 format (future step).
 end note
 
-baseGfx <|-- PixelixGfx: <<bind>>\nTColor -> uint16_t
+baseGfx <|-- PixelixGfx: <<bind>>\nTColor -> Color
 
 class PixelixGfxPen <<typedef>>
 hide PixelixGfxPen members
@@ -120,7 +116,7 @@ note bottom of PixelixGfxPen
     color type according to display type.
 end note
 
-baseGfxPen <|-- PixelixGfxPen: <<bind>>\nTColor -> uint16_t
+baseGfxPen <|-- PixelixGfxPen: <<bind>>\nTColor -> Color
 
 class "Print" as print
 
@@ -140,7 +136,7 @@ PixelixGfx <|-- igfx
 print <|-- igfx
 
 class "LedMatrix" as ledMatrix {
-    + drawPixel(x : int16_t, y : int16_t, color : const uint16_t&) : void
+    + drawPixel(x : int16_t, y : int16_t, color : const Color&) : void
 }
 
 note left of ledMatrix
