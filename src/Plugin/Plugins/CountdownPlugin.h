@@ -116,11 +116,6 @@ public:
      */
     ~CountdownPlugin()
     {
-    
-        uint16_t        bitmapWidth     = 0U;
-        uint16_t        bitmapHeight    = 0U;
-        const uint16_t* bitmapBuffer    = m_bitmapWidget.get(bitmapWidth, bitmapHeight);
-
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -131,12 +126,6 @@ public:
         {
             delete m_textCanvas;
             m_textCanvas = nullptr;
-        }
-
-        if (nullptr != bitmapBuffer)
-        {
-            delete[] bitmapBuffer;
-            bitmapBuffer = nullptr;
         }
     }
 
@@ -256,6 +245,15 @@ private:
      */
     void calculateDifferenceInDays(void);
 
+    /**
+     * Counts the number of leap years.
+     */
+    uint16_t countLeapYears(DateDMY date);
+
+    /**
+     * Convert a given date in days starting from year 0.;
+     */
+    uint32_t dateToDays(DateDMY date);
 };
 
 /******************************************************************************

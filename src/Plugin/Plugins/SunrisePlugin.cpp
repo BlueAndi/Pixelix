@@ -58,16 +58,6 @@
  * Prototypes
  *****************************************************************************/
 
-/**
- * Add the daylight saving (if available) and GMT offset values to the given 
- * dateTime string
- *
- * @param[in] dateTimeString dateTime string received via calling the sunrise-sunset.org API.
- *
- * @return A formatted (timezone adjusted) time string according to the configured time format.
- */
-String addCurrentTimezoneValues(String dateTimeString);
-
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -116,8 +106,9 @@ void SunrisePlugin::active(IGfx& gfx)
             m_textCanvas->update(gfx);
         }
     }
-        requestNewData();
-        
+
+    requestNewData();
+
     return;
 }
 
@@ -128,17 +119,17 @@ void SunrisePlugin::inactive()
 
 void SunrisePlugin::update(IGfx& gfx)
 {
-        gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
 
-        if (nullptr != m_iconCanvas)
-        {
-            m_iconCanvas->update(gfx);
-        }
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
 
-        if (nullptr != m_textCanvas)
-        {
-            m_textCanvas->update(gfx);
-        }
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
+    }
 
     return;
 }
@@ -193,13 +184,18 @@ void SunrisePlugin::registerResponseCallback()
 {
 
     m_client.regOnResponse([this](const HttpResponse& rsp){
-    size_t      payloadSize     = 0U;
-    const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-    size_t      payloadIndex    = 0U;
+    size_t              payloadSize     = 0U;
+    const char*         payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+    size_t              payloadIndex    = 0U;
     const size_t        JSON_DOC_SIZE   = 768U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     const size_t        MAX_USAGE       = 80U;
     size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    String sunrise;
+    String sunset;
+    JsonObject results;
+    JsonObject obj;
+
 
     while(payloadSize > payloadIndex)
     {
@@ -210,16 +206,15 @@ void SunrisePlugin::registerResponseCallback()
     m_httpResponseReceived = true;
 
     deserializeJson(jsonDoc, m_response);
-    JsonObject obj = jsonDoc.as<JsonObject>();
-    JsonObject results = obj["results"];
-    String sunrise = results["sunrise"];
-    String sunset = results["sunset"];
+    obj = jsonDoc.as<JsonObject>();
+    results = obj["results"];
+    sunrise = results["sunrise"].as<String>();
+    sunset = results["sunset"].as<String>();
 
     sunrise = addCurrentTimezoneValues(sunrise);
     sunset = addCurrentTimezoneValues(sunset);
 
     m_relevantResponsePart = sunrise + " / " + sunset;
-    LOG_ERROR(m_relevantResponsePart);
 
     setText(m_relevantResponsePart);
 
@@ -230,7 +225,7 @@ void SunrisePlugin::registerResponseCallback()
     });
 }
 
-String addCurrentTimezoneValues(String dateTimeString)
+String SunrisePlugin::addCurrentTimezoneValues(String dateTimeString)
 {
     tm timeInfo;
     char timeBuffer [17];
@@ -296,7 +291,6 @@ bool SunrisePlugin::loadOrGenerateConfigFile()
             serializeJson(jsonDoc, m_fd);
             m_fd.close();
             m_url = "http://api.sunrise-sunset.org/json?lat="+ defaultLatitude + "&lng=" + defaultLongitude + "&formatted=0";
-            LOG_ERROR(m_url);
 
             LOG_INFO("File %s created", m_configurationFilename.c_str());
             status = false;
@@ -313,13 +307,19 @@ bool SunrisePlugin::loadOrGenerateConfigFile()
         }
         else
         {
+            String longitude;
+            String latitude;
+            JsonObject obj;
             String file_content = m_fd.readString();
+
             deserializeJson(jsonDoc, file_content);
-            JsonObject obj = jsonDoc.as<JsonObject>();
-            String longitude = obj["longitude"];
-            String latitude = obj["latitude"];
+
+            obj = jsonDoc.as<JsonObject>();
+            
+            longitude = obj["longitude"].as<String>();
+            latitude = obj["latitude"].as<String>();
+            
             m_url = "http://api.sunrise-sunset.org/json?lat="+ latitude + "&lng=" + longitude + "&formatted=0";
-            LOG_ERROR(m_url);
 
             m_fd.close();
         }

@@ -98,10 +98,6 @@ public:
      */
     ~SunrisePlugin()
     {
-        uint16_t        bitmapWidth     = 0U;
-        uint16_t        bitmapHeight    = 0U;
-        const uint16_t* bitmapBuffer    = m_bitmapWidget.get(bitmapWidth, bitmapHeight);
-
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -112,12 +108,6 @@ public:
         {
             delete m_textCanvas;
             m_textCanvas = nullptr;
-        }
-
-        if (nullptr != bitmapBuffer)
-        {
-            delete[] bitmapBuffer;
-            bitmapBuffer = nullptr;
         }
     }
 
@@ -228,6 +218,16 @@ private:
      * @return If loaded successfully it will return true otherwise false.
      */
     bool loadOrGenerateConfigFile(void);
+
+    /**
+     * Add the daylight saving (if available) and GMT offset values to the given 
+     * dateTime string
+     *
+     * @param[in] dateTimeString dateTime string received via calling the sunrise-sunset.org API.
+     *
+     * @return A formatted (timezone adjusted) time string according to the configured time format.
+     */
+    String addCurrentTimezoneValues(String dateTimeString);
 };
 
 /******************************************************************************

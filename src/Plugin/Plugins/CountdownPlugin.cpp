@@ -25,67 +25,6 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Countdown plugin
- * @author Yann Le Glaz <yann_le@web.de>
- */
-
-/******************************************************************************
- * Includes
- *****************************************************************************/
-#include "CountdownPlugin.h"
-#include "ClockDrv.h"
-#include "Logging.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
-
-/******************************************************************************
- * Macros
- *****************************************************************************/
-
-/******************************************************************************
- * Types and classes
- *****************************************************************************/
-
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-/* MIT License
- *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
-/*******************************************************************************
-    DESCRIPTION
-*******************************************************************************/
-/**
  * @brief  Countdown plugin.
  * @author Yann Le Glaz <yann_le@web.de>
  */
@@ -115,15 +54,6 @@
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
-/**
- * Counts the number of leap years.
- */
-uint16_t countLeapYears(CountdownPlugin::DateDMY date);
-
-/**
- * Convert a given date in days starting from year 0.;
- */
-uint32_t dateToDays(CountdownPlugin::DateDMY date);
 
 /******************************************************************************
  * Local Variables
@@ -179,8 +109,8 @@ void CountdownPlugin::active(IGfx& gfx)
 
 void CountdownPlugin::inactive()
 {
-   m_isConfigured = false;
-   m_remainingDays = "";
+    m_isConfigured = false;
+    m_remainingDays = "";
 
     return;
 }
@@ -277,11 +207,12 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
             /* And afterwards the plugin(UID)specific configuration file with default configuration values. */
             m_fd = SPIFFS.open(m_configurationFilename, "w");
 
-            jsonDoc["day"] = 0u;
-            jsonDoc["month"] = 0u;
-            jsonDoc["year"] = 0u;
+            jsonDoc["day"] = 0U;
+            jsonDoc["month"] = 0U;
+            jsonDoc["year"] = 0U;
             jsonDoc["description_pl"] = " DAYS";
             jsonDoc["description_sg"] = " DAY";
+
             serializeJson(jsonDoc, m_fd);
 
             m_fd.close();
@@ -300,21 +231,25 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
         }
         else
         {
+            String description_pl;
+            String description_sg;
+            JsonObject obj;
             String file_content = m_fd.readString();
 
             deserializeJson(jsonDoc, file_content);
-            JsonObject obj = jsonDoc.as<JsonObject>();
+            obj = jsonDoc.as<JsonObject>();
             
             m_targetDate.day = obj["day"];
             m_targetDate.month = obj["month"];
             m_targetDate.year = obj["year"];
-            String description_pl = obj["description_pl"];
-            String description_sg = obj["description_sg"];
+
+            description_pl = obj["description_pl"].as<String>();
+            description_sg = obj["description_sg"].as<String>();
+
             m_targetDateInformation.plural = description_pl;
             m_targetDateInformation.singular = description_sg;
             
             m_fd.close();
-            LOG_ERROR("Config loaded");
         }
     }
 
@@ -329,9 +264,9 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
 void CountdownPlugin::calculateDifferenceInDays()
 {
     tm currentTime;
-    uint32_t currentDateInDays = 0u;
-    uint32_t targetDateInDays = 0u;
-    int32_t numberOfDays = 0;
+    uint32_t    currentDateInDays   = 0U;
+    uint32_t    targetDateInDays    = 0U;
+    int32_t     numberOfDays        = 0;
 
     if ((false != m_isConfigured) && (false != ClockDrv::getInstance().getTime(&currentTime)))
     {
@@ -349,7 +284,8 @@ void CountdownPlugin::calculateDifferenceInDays()
 
         if( numberOfDays > 0)
         {
-            char remaining[10] ={""};
+            char remaining[10] = "";
+
             snprintf(remaining, sizeof(remaining), " %d", numberOfDays);
             m_remainingDays += remaining;
 
@@ -372,33 +308,30 @@ void CountdownPlugin::calculateDifferenceInDays()
         m_isUpdateAvailable = true;
     }
 }
-/******************************************************************************
- * External Functions
- *****************************************************************************/
 
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
-uint16_t countLeapYears(CountdownPlugin::DateDMY date)
+uint16_t CountdownPlugin::countLeapYears(CountdownPlugin::DateDMY date)
 { 
     uint16_t years = date.year; 
-    /** Check if the current year needs to be considered 
-     * for the count of leap years or not */
-    if (date.month <= 2u) 
-        years--; 
-    /** An year is a leap year if it is a multiple of 4,
-     *  multiple of 400 and not a multiple of 100. */
-    return years / 4u - years / 100u + years / 400u; 
+    
+    /* Check if the current year needs to be considered for the count of leap years or not. */
+    if (date.month <= 2U) 
+    {
+        --years;
+    } 
+
+    /* An year is a leap year if it is a multiple of 4, multiple of 400 and not a multiple of 100. */
+    return years / 4U - years / 100U + years / 400U; 
 } 
 
-uint32_t dateToDays(CountdownPlugin::DateDMY date)
+uint32_t CountdownPlugin::dateToDays(CountdownPlugin::DateDMY date)
 {
-    const uint8_t monthDays[12] = {31u, 28u, 31u, 30u, 31u, 30u, 31u, 31u, 30u, 31u, 30u, 31u}; 
-    uint32_t dateInDays = 0u;
+    const uint8_t   monthDays[12]   = {31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U}; 
+    uint32_t        dateInDays      = 0U;
+    uint8_t         i               = 0U;
 
-    dateInDays = date.year * 365u + date.day;
+    dateInDays = date.year * 365U + date.day;
     
-    for (uint8_t i=0u; i< date.month - 1u; i++) 
+    for (i = 0U; i < (date.month - 1U); i++) 
     {
         dateInDays += monthDays[i]; 
     }
@@ -407,3 +340,11 @@ uint32_t dateToDays(CountdownPlugin::DateDMY date)
 
     return dateInDays;
 }
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

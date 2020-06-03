@@ -220,7 +220,7 @@ void GruenbeckPlugin::registerResponseCallback()
         size_t      payloadSize     = 0U;
         const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
         size_t      payloadIndex    = 0U;
-        String payloadString;
+        String      payloadString;
        
         while(payloadSize > payloadIndex)
         {
@@ -235,7 +235,7 @@ void GruenbeckPlugin::registerResponseCallback()
 
 bool GruenbeckPlugin::loadOrGenerateConfigFile()
 {
-    bool status = true;
+    bool                status          = true;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     const size_t        MAX_USAGE       = 80U;
@@ -278,10 +278,15 @@ bool GruenbeckPlugin::loadOrGenerateConfigFile()
         }
         else
         {
+            JsonObject obj;
+            String ipAddress;
             String file_content = m_fd.readString();
+            
             deserializeJson(jsonDoc, file_content);
-            JsonObject obj = jsonDoc.as<JsonObject>();
-            String ipAddress = obj["gruenbeck_ip"];
+
+            obj = jsonDoc.as<JsonObject>();
+            ipAddress = obj["gruenbeck_ip"].as<String>();
+
             m_url = "http://" + ipAddress + "/mux_http";
             m_fd.close();
         }
