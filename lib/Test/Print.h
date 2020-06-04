@@ -27,7 +27,7 @@
 /**
  * @brief  Print implementation for test
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup test
  *
  * @{
@@ -91,7 +91,7 @@ public:
 
     /**
      * Write a single byte to the output stream.
-     * 
+     *
      * @param[in] data  Data byte
      * @return Number of written data bytes.
      */
@@ -99,7 +99,7 @@ public:
 
     /**
      * Write several data bytes to the output stream.
-     * 
+     *
      * @param[in] buffer    Data buffer
      * @param[in] size      Data buffer size
      * @return Number of written data bytes.
@@ -108,7 +108,7 @@ public:
 
     /**
      * Write a single character to the output stream.
-     * 
+     *
      * @param[in] str   Character
      * @return Number of written characters.
      */
@@ -116,7 +116,7 @@ public:
 
     /**
      * Write several string characters to the output stream.
-     * 
+     *
      * @param[in] buffer    Character buffer
      * @param[in] size      Character buffer size
      * @return Number of written characters.
@@ -125,7 +125,7 @@ public:
 
     /**
      * Print a string.
-     * 
+     *
      * @param[in] s String
      * @return Number of written characters.
      */
@@ -133,15 +133,23 @@ public:
 
     /**
      * Print a string.
-     * 
+     *
      * @param[in] str String
      * @return Number of written characters.
      */
     size_t print(const char str[]);
 
     /**
+     * Print single character.
+     *
+     * @param[in] c Character
+     * @return Number of written characters.
+     */
+    size_t print(char c);
+
+    /**
      * Print a long integer.
-     * 
+     *
      * @param[in] n     Long integer
      * @param[in] base  Number base
      * @return Number of written characters.
@@ -157,7 +165,7 @@ public:
 
     /**
      * Print a string with a carriage return and new line at the end.
-     * 
+     *
      * @param[in] s String
      * @return Number of written characters.
      */
@@ -167,7 +175,7 @@ private:
 
     /**
      * Print any kind of number, depended on the number base.
-     * 
+     *
      * @param[in] n     Number to print
      * @param[in] base  Number base
      * @return Printed number of characters.

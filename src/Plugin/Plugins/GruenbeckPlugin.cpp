@@ -91,11 +91,11 @@ void GruenbeckPlugin::active(IGfx& gfx)
 
         if (nullptr != m_iconCanvas)
         {
-            m_iconCanvas->addWidget(m_bitmapWidget);
+            (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(IMAGE_PATH);
-            gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+            gfx.fillScreen(ColorDef::BLACK);
 
             m_iconCanvas->update(gfx);
         }
@@ -103,11 +103,11 @@ void GruenbeckPlugin::active(IGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.width() - ICON_WIDTH, gfx.height(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
-            m_textCanvas->addWidget(m_textWidget);
+            (void)m_textCanvas->addWidget(m_textWidget);
 
             /* Move the text widget one line lower for better look. */
             m_textWidget.move(0, 1);
@@ -134,7 +134,7 @@ void GruenbeckPlugin::update(IGfx& gfx)
     if (false != m_httpResponseReceived)
     {
         setText("\\calign" + m_relevantResponsePart + "%");
-        gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+        gfx.fillScreen(ColorDef::BLACK);
 
         if (nullptr != m_iconCanvas)
         {
@@ -198,6 +198,7 @@ void GruenbeckPlugin::process()
 
     return;
 }
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -205,13 +206,16 @@ void GruenbeckPlugin::process()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
 void GruenbeckPlugin::requestNewData()
 {
-    m_client.begin(m_url);
-    m_client.addPar("id","42");
-    m_client.addPar("show","D_Y_10_1~");
-    m_client.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    m_client.POST();
+    if (true == m_client.begin(m_url))
+    {
+        m_client.addPar("id","42");
+        m_client.addPar("show","D_Y_10_1~");
+        m_client.addHeader("Content-Type", "application/x-www-form-urlencoded");
+        (void)m_client.POST();
+    }
 }
 
 void GruenbeckPlugin::registerResponseCallback()

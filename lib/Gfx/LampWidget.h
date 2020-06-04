@@ -27,7 +27,7 @@
 /**
  * @brief  Lamp Widget
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -76,7 +76,7 @@ public:
 
     /**
      * Constructs a lamp widget.
-     * 
+     *
      * @param[in] isOn      Initial on state
      * @param[in] colorOff  Lamp color in off state
      * @param[in] colorOn   Lamp color in on state
@@ -93,7 +93,7 @@ public:
 
     /**
      * Constructs a lamp widget, by copying another one.
-     * 
+     *
      * @param[in] widget Lamp widget, which to copy
      */
     LampWidget(const LampWidget& widget) :
@@ -114,7 +114,7 @@ public:
 
     /**
      * Assigns the content of another lamp widget.
-     * 
+     *
      * @param[in] widget Lamp widget, which to assign
      */
     LampWidget& operator=(const LampWidget& widget)
@@ -129,7 +129,7 @@ public:
 
     /**
      * Update/Draw the lamp widget with the given graphics interface.
-     * 
+     *
      * @param[in] gfx Graphics interface.
      */
     void update(IGfx& gfx) override
@@ -141,14 +141,14 @@ public:
             color = m_colorOff;
         }
 
-        gfx.fillRect(m_posX, m_posY, m_width, HEIGHT, color.to565());
+        gfx.fillRect(m_posX, m_posY, m_width, HEIGHT, color);
 
         return;
     }
 
     /**
      * Set the on state.
-     * 
+     *
      * @param[in] state On state
      */
     void setOnState(bool state)
@@ -160,7 +160,7 @@ public:
 
     /**
      * Get the curren on state.
-     * 
+     *
      * @return On state
      */
     bool getOnState() const
@@ -170,7 +170,7 @@ public:
 
     /**
      * Set lamp color in off state.
-     * 
+     *
      * @param[in] color Lamp color in off state
      */
     void setColorOff(const Color& color)
@@ -182,7 +182,7 @@ public:
 
     /**
      * Get color in off state.
-     * 
+     *
      * @return Color in off state
      */
     const Color& getColorOff() const
@@ -192,7 +192,7 @@ public:
 
     /**
      * Set lamp color in on state.
-     * 
+     *
      * @param[in] color Lamp color in on state
      */
     void setColorOn(const Color& color)
@@ -204,7 +204,7 @@ public:
 
     /**
      * Get color in on state.
-     * 
+     *
      * @return Color in on state
      */
     const Color& getColorOn() const
@@ -214,7 +214,7 @@ public:
 
      /**
      * Set the width of the lamp.
-     * 
+     *
      * @param[in] width width of the lamp
      */
     void setWidth(uint16_t width)
@@ -226,7 +226,7 @@ public:
 
     /**
      * Get the width of the lamp.
-     * 
+     *
      * @return width
      */
     uint16_t getWidth() const

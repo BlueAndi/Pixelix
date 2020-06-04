@@ -79,11 +79,11 @@ void CountdownPlugin::active(IGfx& gfx)
 
         if (nullptr != m_iconCanvas)
         {
-            m_iconCanvas->addWidget(m_bitmapWidget);
+            (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load("/images/countdown.bmp");
-            gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+            gfx.fillScreen(ColorDef::BLACK);
 
             m_iconCanvas->update(gfx);
         }
@@ -91,11 +91,11 @@ void CountdownPlugin::active(IGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.width() - ICON_WIDTH, gfx.height(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
-            m_textCanvas->addWidget(m_textWidget);
+            (void)m_textCanvas->addWidget(m_textWidget);
             setText("\\calign?");
          
             m_textCanvas->update(gfx);
@@ -119,7 +119,7 @@ void CountdownPlugin::update(IGfx& gfx)
 {
     if (false != m_isUpdateAvailable)
     {
-        gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+        gfx.fillScreen(ColorDef::BLACK);
 
         if (nullptr != m_iconCanvas)
         {
@@ -184,7 +184,7 @@ void CountdownPlugin::stop()
 
 bool CountdownPlugin::loadOrGenerateConfigFile()
 {
-    bool status = true;
+    bool                status          = true;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     const size_t        MAX_USAGE       = 80U;
@@ -263,7 +263,7 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
 
 void CountdownPlugin::calculateDifferenceInDays()
 {
-    tm currentTime;
+    tm          currentTime;
     uint32_t    currentDateInDays   = 0U;
     uint32_t    targetDateInDays    = 0U;
     int32_t     numberOfDays        = 0;

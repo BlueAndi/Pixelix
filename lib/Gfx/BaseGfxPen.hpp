@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Graphics interface
+ * @brief  Base graphics pen
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __IGFX_HPP__
-#define __IGFX_HPP__
+#ifndef __BASE_GFX_PEN_HPP__
+#define __BASE_GFX_PEN_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -45,8 +45,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <BaseGfx.hpp>
-#include <Color.h>
-#include <Print.h>
 
 /******************************************************************************
  * Macros
@@ -57,60 +55,121 @@
  *****************************************************************************/
 
 /**
- * Pixelix graphics operations with RGB888 color format.
+ * The graphics draw pen can be used for continously drawing by only using
+ * always the destination coordinates. It is color agnostic like the base
+ * graphic functions.
+ *
+ * Note, the type for coordinates must be a signed type!
+ *
  */
-typedef BaseGfx<Color> PixelixGfx;
-
-/**
- * Graphics interface, based on the Adafruit GFX with extensions.
- */
-class IGfx : public PixelixGfx, public Print
+template < typename TColor >
+class BaseGfxPen
 {
 public:
 
     /**
-     * Constructs the graphics interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
+     * Constructs a base graphics pen.
      */
-    IGfx(uint16_t width, uint16_t height) :
-        PixelixGfx(width, height)
+    BaseGfxPen(BaseGfx& gfx) :
+        m_gfx(gfx),
+        m_color(),
+        m_x(0),
+        m_y(0)
     {
     }
 
     /**
-     * Destroys the graphics interface.
+     * Destroys a graphics pen.
      */
-    virtual ~IGfx()
+    ~BaseGfxPen()
     {
     }
 
     /**
-     * Write a single character on the display.
-     * This method is necessary for using print() methods.
+     * Get pen color.
      *
-     * @param[in] singleChar    Single character
-     *
-     * @return Number of written characters.
+     * @return Pen color
      */
-    size_t write(uint8_t singleChar)
+    TColor getColor() const
     {
-        drawChar(static_cast<char>(singleChar));
-
-        return 1U;
+        return m_pen;
     }
 
-private:
+    /**
+     * Set pen color.
+     *
+     * @param[in] color Pen color which to set
+     */
+    void setColor(const TColor& color)
+    {
+        m_pen = color;
+    }
 
-    /* Default constructor not allowed. */
-    IGfx();
+    /**
+     * Plot a pixel at given position with pen.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     */
+    void plot(int16_t x, int16_t y)
+    {
+        m_gfx.drawPixel(x, y, m_color);
+
+        m_x = x;
+        m_y = y;
+    }
+
+    /**
+     * Get pen position.
+     *
+     * @param[out] x x-coordinate
+     * @param[out] y y-coordinate
+     */
+    void getPos(int16_t& x, int16_t& y) const
+    {
+        x = m_x;
+        y = m_y;
+    }
+
+    /**
+     * Move pen to given coordinates.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     */
+    void moveTo(int16_t x, int16_t y)
+    {
+        m_x = x;
+        m_y = y;
+    }
+
+    /**
+     * Draw line from current pen location to the given
+     * coordinates.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     */
+    void lineTo(int16_t x, int16_t y)
+    {
+        m_gfx.line(m_x, m_y, x, y, m_color);
+
+        m_x = x;
+        m_y = y;
+    }
+
+protected:
+
+    BaseGfx<TColor>&    m_gfx;      /**< Base gfx */
+    TColor              m_color;    /**< Pen color */
+    int16_t             m_x;        /**< Pen x-coordinate */
+    int16_t             m_y;        /**< Pen y-coordinate */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __IGFX_HPP__ */
+#endif  /* __BASE_GFX_PEN_HPP__ */
 
 /** @} */

@@ -27,7 +27,7 @@
 /**
  * @brief  LED matrix
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -67,7 +67,7 @@ public:
 
     /**
      * Get LED matrix instance.
-     * 
+     *
      * @return LED matrix
      */
     static LedMatrix& getInstance()
@@ -77,7 +77,7 @@ public:
 
     /**
      * Initialize base driver for the LED matrix.
-     * 
+     *
      * @return If successful, returns true otherwise false.
      */
     bool begin()
@@ -99,7 +99,7 @@ public:
 
     /**
      * LED matrix is ready, when the last physical pixel update is finished.
-     * 
+     *
      * @return If ready for another update via show(), it will return true otherwise false.
      */
     bool isReady() const
@@ -136,13 +136,13 @@ public:
 
     /**
      * Get pixel color at given position.
-     * 
+     *
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
-     * 
+     *
      * @return Color in RGB888 format.
      */
-    uint16_t getColor(int16_t x, int16_t y);
+    Color getColor(int16_t x, int16_t y) const;
 
 private:
 
@@ -170,21 +170,21 @@ private:
 
     /**
      * Draw a single pixel in the matrix.
-     * 
+     *
      * @param[in] x     x-coordinate
      * @param[in] y     y-coordinate
-     * @param[in] color Pixel color in RGB565 format
+     * @param[in] color Pixel color in RGB888 format
      */
-    void drawPixel(int16_t x, int16_t y, uint16_t color)
+    void drawPixel(int16_t x, int16_t y, const Color& color)
     {
         if ((0 <= x) &&
             (Board::LedMatrix::width > x) &&
             (0 <= y) &&
             (Board::LedMatrix::height > y))
         {
-            HtmlColor colorRGB888 = ColorDef::convert565To888(color);
+            HtmlColor htmlColor = static_cast<uint32_t>(color);
 
-            m_strip.SetPixelColor(m_topo.Map(x, y), colorRGB888);
+            m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
         }
 
         return;

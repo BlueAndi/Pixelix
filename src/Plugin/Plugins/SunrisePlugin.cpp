@@ -80,11 +80,11 @@ void SunrisePlugin::active(IGfx& gfx)
 
         if (nullptr != m_iconCanvas)
         {
-            m_iconCanvas->addWidget(m_bitmapWidget);
+            (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(IMAGE_PATH);
-            gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+            gfx.fillScreen(ColorDef::BLACK);
 
             m_iconCanvas->update(gfx);
         }
@@ -92,11 +92,11 @@ void SunrisePlugin::active(IGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.width() - ICON_WIDTH, gfx.height(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
-            m_textCanvas->addWidget(m_textWidget);
+            (void)m_textCanvas->addWidget(m_textWidget);
 
             /* Move the text widget one line lower for better look. */
             m_textWidget.move(0, 1);
@@ -119,7 +119,7 @@ void SunrisePlugin::inactive()
 
 void SunrisePlugin::update(IGfx& gfx)
 {
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr != m_iconCanvas)
     {
@@ -174,10 +174,13 @@ void SunrisePlugin::stop()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
 void SunrisePlugin::requestNewData()
 {
-    m_client.begin(m_url);
-    m_client.GET();
+    if (true == m_client.begin(m_url))
+    {
+        (void)m_client.GET();
+    }
 }
 
 void SunrisePlugin::registerResponseCallback()

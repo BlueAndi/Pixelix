@@ -104,10 +104,6 @@ public:
      */
     ~IconTextLampPlugin()
     {
-        uint16_t        bitmapWidth     = 0U;
-        uint16_t        bitmapHeight    = 0U;
-        const uint16_t* bitmapBuffer    = m_bitmapWidget.get(bitmapWidth, bitmapHeight);
-
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -124,12 +120,6 @@ public:
         {
             delete m_lampCanvas;
             m_lampCanvas = nullptr;
-        }
-
-        if (nullptr != bitmapBuffer)
-        {
-            delete[] bitmapBuffer;
-            bitmapBuffer = nullptr;
         }
     }
 
@@ -191,13 +181,13 @@ public:
     void setText(const String& formatText);
 
     /**
-     * Set bitmap in raw RGB565 format.
+     * Set bitmap in raw RGB888 format.
      *
      * @param[in] bitmap    Bitmap buffer
      * @param[in] width     Bitmap width in pixel
      * @param[in] height    Bitmap height in pixel
      */
-    void setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t height);
+    void setBitmap(const Color* bitmap, uint16_t width, uint16_t height);
 
     /**
      * Load bitmap from filesystem.
@@ -221,22 +211,22 @@ private:
     /**
      * Icon width in pixels.
      */
-    static const int16_t ICON_WIDTH     = 8;
+    static const uint16_t   ICON_WIDTH  = 8U;
 
     /**
      * Icon height in pixels.
      */
-    static const int16_t ICON_HEIGHT    = 8;
+    static const uint16_t   ICON_HEIGHT = 8U;
 
     /**
      * Max. number of lamps.
      */
-    static const uint8_t MAX_LAMPS      = 4U;
+    static const uint8_t    MAX_LAMPS   = 4U;
 
     /**
      * Image upload path.
      */
-    static const char*  UPLOAD_PATH;
+    static const char*      UPLOAD_PATH;
 
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
