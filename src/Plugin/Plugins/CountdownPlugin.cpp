@@ -82,7 +82,7 @@ void CountdownPlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load("/images/countdown.bmp");
+            (void)m_bitmapWidget.load(IMAGE_PATH);
             gfx.fillScreen(ColorDef::BLACK);
 
             m_iconCanvas->update(gfx);
@@ -96,12 +96,15 @@ void CountdownPlugin::active(IGfx& gfx)
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
+
+              /* Move the text widget one line lower for better look. */
+            m_textWidget.move(0, 1);
+
             setText("\\calign?");
-         
+
             m_textCanvas->update(gfx);
         }
     }
-    
     calculateDifferenceInDays();
 
     return;
@@ -157,7 +160,6 @@ void CountdownPlugin::start()
     }
     else
     {
-        LOG_ERROR("Config loaded");
         m_isConfigured = true;
     }
 
@@ -207,9 +209,9 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
             /* And afterwards the plugin(UID)specific configuration file with default configuration values. */
             m_fd = SPIFFS.open(m_configurationFilename, "w");
 
-            jsonDoc["day"] = 0U;
-            jsonDoc["month"] = 0U;
-            jsonDoc["year"] = 0U;
+            jsonDoc["day"] = 29U;
+            jsonDoc["month"] = 05U;
+            jsonDoc["year"] = 2019U;
             jsonDoc["description_pl"] = " DAYS";
             jsonDoc["description_sg"] = " DAY";
 

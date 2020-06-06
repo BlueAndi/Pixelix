@@ -230,12 +230,12 @@ void SunrisePlugin::registerResponseCallback()
 
 String SunrisePlugin::addCurrentTimezoneValues(String dateTimeString)
 {
-    tm timeInfo;
-    char timeBuffer [17];
-    int16_t gmtOffset = 0;
-    int16_t isDaylightSaving = 0;
+    tm          timeInfo;
+    char        timeBuffer [17];
+    int16_t     gmtOffset           = 0;
+    int16_t     isDaylightSaving    = 0;
     const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "%H:%M":"%I:%M %p";
-    bool isPM = dateTimeString.endsWith("PM");
+    bool        isPM                = dateTimeString.endsWith("PM");
 
     /* Get the GMT offset and daylight saving enabled/disabled from persistent memory. */
     if (false == Settings::getInstance().open(true))
@@ -263,7 +263,7 @@ String SunrisePlugin::addCurrentTimezoneValues(String dateTimeString)
 
 bool SunrisePlugin::loadOrGenerateConfigFile()
 {
-    bool status = true;
+    bool                status          = true;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     const size_t        MAX_USAGE       = 80U;
