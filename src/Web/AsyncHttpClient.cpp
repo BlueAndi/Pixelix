@@ -115,6 +115,13 @@ AsyncHttpClient::AsyncHttpClient() :
 
                             onData(client, static_cast<uint8_t*>(data), len);
                         });
+
+    m_tcpClient.onTimeout(  [this](void* arg, AsyncClient* client, uint32_t timeout)
+                            {
+                                UTIL_NOT_USED(arg);
+
+                                onTimeout(client, timeout);
+                            });
 }
 
 AsyncHttpClient::~AsyncHttpClient()
@@ -426,6 +433,8 @@ void AsyncHttpClient::onConnect(AsyncClient* client)
 
 void AsyncHttpClient::onDisconnect(AsyncClient* client)
 {
+    UTIL_NOT_USED(client);
+    
     LOG_INFO("Disconnected.");
     clear();
     notifyClosed();
@@ -433,8 +442,9 @@ void AsyncHttpClient::onDisconnect(AsyncClient* client)
 
 void AsyncHttpClient::onError(AsyncClient* client, int8_t error)
 {
-    LOG_INFO("Error occurred.");
+    UTIL_NOT_USED(client);
 
+    LOG_WARNING("Error occurred: %d", error);
     disconnect();
 }
 
@@ -546,6 +556,14 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
             break;
         }
     }
+}
+
+void AsyncHttpClient::onTimeout(AsyncClient* client, uint32_t timeout)
+{
+    UTIL_NOT_USED(timeout);
+
+    LOG_WARNING("Timeout.");
+    client->close();
 }
 
 bool AsyncHttpClient::sendRequest()
