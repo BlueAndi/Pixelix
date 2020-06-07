@@ -88,8 +88,7 @@ public:
         m_url(""),
         m_configurationFilename(""),
         m_httpResponseReceived(false),
-        m_relevantResponsePart(""),
-        m_response("")
+        m_relevantResponsePart("")
     {
     }
 
@@ -196,7 +195,6 @@ private:
     String              m_configurationFilename;    /**< String used for specifying the configuration filename. */
     bool                m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     String              m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
-    String              m_response;                 /**< String used for the HTTP response. */
     AsyncHttpClient     m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer         m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
 
