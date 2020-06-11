@@ -85,21 +85,21 @@ void TestPlugin::update(IGfx& gfx)
 
     if (true == showPage)
     {
-        int16_t min = (gfx.width() > gfx.height()) ? gfx.height() : gfx.width();
+        int16_t min = (gfx.getWidth() > gfx.getHeight()) ? gfx.getHeight() : gfx.getWidth();
 
         /* Clear display */
-        gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+        gfx.fillScreen(ColorDef::BLACK);
 
         switch(m_page)
         {
         case 0U:
-            gfx.drawPixel(0, 0, ColorDef::convert888To565(ColorDef::RED));
-            gfx.drawLine(1, 0, min - 1, 0, ColorDef::convert888To565(ColorDef::GREEN));
+            gfx.drawPixel(0, 0, ColorDef::RED);
+            gfx.drawLine(1, 0, min - 1, 0, ColorDef::GREEN);
             break;
 
         case 1U:
-            gfx.drawPixel(0, 0, ColorDef::convert888To565(ColorDef::RED));
-            gfx.drawLine(0, 1, 0, min - 1, ColorDef::convert888To565(ColorDef::GREEN));
+            gfx.drawPixel(0, 0, ColorDef::RED);
+            gfx.drawLine(0, 1, 0, min - 1, ColorDef::GREEN);
             break;
 
         default:

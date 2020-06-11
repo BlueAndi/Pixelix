@@ -62,13 +62,13 @@
 
 void WifiStatusPlugin::active(IGfx& gfx)
 {
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr == m_dsp)
     {
-        m_dsp           = new Canvas(gfx.width(), WIFI_ICON_HEIGHT, 0, 0);
+        m_dsp           = new Canvas(gfx.getWidth(), WIFI_ICON_HEIGHT, 0, 0);
         m_iconCanvas    = new Canvas(WIFI_ICON_WIDTH, WIFI_ICON_HEIGHT, 0, 0, true);
-        m_textCanvas    = new Canvas(gfx.width() - WIFI_ICON_WIDTH - 1, WIFI_ICON_HEIGHT, WIFI_ICON_WIDTH + 1, 0);
+        m_textCanvas    = new Canvas(gfx.getWidth() - WIFI_ICON_WIDTH - 1U, WIFI_ICON_HEIGHT, WIFI_ICON_WIDTH + 1, 0);
 
         if ((nullptr == m_dsp) ||
             (nullptr == m_iconCanvas) ||
@@ -94,11 +94,11 @@ void WifiStatusPlugin::active(IGfx& gfx)
         }
         else
         {
-            m_dsp->addWidget(*m_iconCanvas);
-            m_dsp->addWidget(*m_textCanvas);
+            (void)m_dsp->addWidget(*m_iconCanvas);
+            (void)m_dsp->addWidget(*m_textCanvas);
 
-            m_iconCanvas->addWidget(m_alertWidget);
-            m_textCanvas->addWidget(m_textWidget);
+            (void)m_iconCanvas->addWidget(m_alertWidget);
+            (void)m_textCanvas->addWidget(m_textWidget);
 
             m_alertWidget.move(0, 1);
             m_alertWidget.setFormatStr("");
@@ -143,7 +143,7 @@ void WifiStatusPlugin::update(IGfx& gfx)
 
             quality = WiFiUtil::getSignalQuality(rssi);
 
-            gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+            gfx.fillScreen(ColorDef::BLACK);
 
             if (WL_CONNECTED != connectionStatus)
             {
@@ -187,7 +187,7 @@ void WifiStatusPlugin::updateWifiStatus(uint8_t quality)
 {
     uint8_t index = 0U;
 
-    m_iconCanvas->fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    m_iconCanvas->fillScreen(ColorDef::BLACK);
 
     /* Draw signal strength bar steps:
      *          ##
@@ -201,15 +201,15 @@ void WifiStatusPlugin::updateWifiStatus(uint8_t quality)
         int16_t     height          = WIFI_BAR_HEIGHT * (index + 1U);
         int16_t     x               = (WIFI_BAR_WIDTH * index) + (index * WIFI_BAR_SPACE_WIDTH);
         int16_t     y               = (WIFI_BARS - index - 1) * WIFI_BAR_HEIGHT;
-        uint16_t    color           = 0U;
+        Color       color           = ColorDef::BLACK;
 
         if (qualityRangeMin < quality)
         {
-            color = ColorDef::convert888To565(ColorDef::GREEN);
+            color = ColorDef::GREEN;
         }
         else
         {
-            color = ColorDef::convert888To565(ColorDef::GRAY);
+            color = ColorDef::GRAY;
         }
 
         m_iconCanvas->fillRect(x, y, WIFI_BAR_WIDTH, height, color);

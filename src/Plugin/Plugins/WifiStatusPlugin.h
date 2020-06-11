@@ -152,33 +152,33 @@ private:
     /**
      * Width in pixel of a single signal strength bar.
      */
-    const int16_t   WIFI_BAR_WIDTH          = 2;
+    const uint16_t  WIFI_BAR_WIDTH          = 2U;
 
     /**
      * Width in pixel of a single signal strength bar.
      */
-    const int16_t   WIFI_BAR_SPACE_WIDTH    = 1;
+    const uint16_t  WIFI_BAR_SPACE_WIDTH    = 1U;
 
     /**
      * Height in pixel of the lowest signal strength bar.
      */
-    const int16_t   WIFI_BAR_HEIGHT         = 2;
+    const uint16_t  WIFI_BAR_HEIGHT         = 2U;
 
     /**
      * Number of signal signal strength bars.
      */
-    const uint8_t   WIFI_BARS               = 4;
+    const uint8_t   WIFI_BARS               = 4U;
 
     /**
      * Width in pixel of the whole signal strength icon.
      * Between each bar is a short space.
      */
-    const int16_t   WIFI_ICON_WIDTH         = (WIFI_BARS * WIFI_BAR_WIDTH) + ((WIFI_BARS - 1) * WIFI_BAR_SPACE_WIDTH);
+    const uint16_t  WIFI_ICON_WIDTH         = (WIFI_BARS * WIFI_BAR_WIDTH) + ((WIFI_BARS - 1U) * WIFI_BAR_SPACE_WIDTH);
 
     /**
      * Height in pixel of the whole signal strength icon.
      */
-    const int16_t WIFI_ICON_HEIGHT          = 8;
+    const uint16_t  WIFI_ICON_HEIGHT        = 8U;
 
     Canvas*     m_dsp;          /**< Display drawing area */
     Canvas*     m_iconCanvas;   /**< Drawing area of the wifi icon */

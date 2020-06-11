@@ -74,7 +74,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
 
         if (nullptr != m_iconCanvas)
         {
-            m_iconCanvas->addWidget(m_bitmapWidget);
+            (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* If there is already a icon in the filesystem, load it. */
             (void)m_bitmapWidget.load(getFileName());
@@ -83,17 +83,17 @@ void IconTextLampPlugin::active(IGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.width() - ICON_WIDTH, gfx.height() - 2, ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight() - 2U, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
-            m_textCanvas->addWidget(m_textWidget);
+            (void)m_textCanvas->addWidget(m_textWidget);
         }
     }
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.width() - ICON_WIDTH, 1, ICON_WIDTH, gfx.height() - 1);
+        m_lampCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, 1U, ICON_WIDTH, gfx.getHeight() - 1);
 
         if (nullptr != m_lampCanvas)
         {
@@ -104,7 +104,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
                 /* One space at the begin, two spaces between the lamps. */
                 int16_t x = (LampWidget::DEFAULT_WIDTH + 2) * index + 1;
 
-                m_lampCanvas->addWidget(m_lampWidgets[index]);
+                (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
                 m_lampWidgets[index].move(x, 0);
             }
         }
@@ -190,7 +190,7 @@ void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void IconTextLampPlugin::update(IGfx& gfx)
 {
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr != m_iconCanvas)
     {
@@ -216,35 +216,13 @@ void IconTextLampPlugin::setText(const String& formatText)
     return;
 }
 
-void IconTextLampPlugin::setBitmap(const uint16_t* bitmap, uint16_t width, uint16_t height)
+void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t height)
 {
-    uint16_t*       buffer      = nullptr;
-    const uint16_t* oldBuffer   = nullptr;
-    uint16_t        oldWidth    = 0U;
-    uint16_t        oldHeight   = 0U;
-
-    if ((nullptr == bitmap) ||
-        (ICON_WIDTH < width) ||
-        (ICON_HEIGHT < height))
+    if ((nullptr != bitmap) &&
+        (ICON_WIDTH >= width) &&
+        (ICON_HEIGHT >= height))
     {
-        return;
-    }
-
-    /* Store current bitmap buffer */
-    oldBuffer = m_bitmapWidget.get(oldWidth, oldHeight);
-
-    /* Get new bitmap buffer */
-    buffer = new uint16_t[width * height];
-
-    if (nullptr != buffer)
-    {
-        /* Release old bitmap buffer */
-        delete[] oldBuffer;
-
-        /* Copy new bitmap */
-        memcpy(buffer, bitmap, width * height * sizeof(uint16_t));
-
-        m_bitmapWidget.set(buffer, width, height);
+        m_bitmapWidget.set(bitmap, width, height);
     }
 
     return;

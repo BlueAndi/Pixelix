@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include <unity.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <LinkedList.hpp>
 #include <Widget.hpp>
@@ -48,6 +49,7 @@
 #include <Logging.h>
 #include <LogSinkPrinter.h>
 #include <Util.h>
+#include <TomThumb.h>
 
 /******************************************************************************
  * Macros
@@ -185,8 +187,16 @@ public:
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
      */
-    void drawPixel(int16_t x, int16_t y, uint16_t color)
+    void drawPixel(int16_t x, int16_t y, const Color& color)
     {
+        if ((0 > x) ||
+            (0 > y) ||
+            (WIDTH < x) ||
+            (HEIGHT < y))
+        {
+            dumpSimple();
+        }
+
         /* Out of bounds check */
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, y);
@@ -206,9 +216,9 @@ public:
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
      *
-     * @return Color in RGB565 format.
+     * @return Color in RGB888 format.
      */
-    uint16_t getColor(int16_t x, int16_t y)
+    Color getColor(int16_t x, int16_t y) const
     {
         /* Out of bounds check */
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
@@ -224,7 +234,7 @@ public:
      *
      * @return Display buffer
      */
-    uint16_t* getBuffer()
+    Color* getBuffer()
     {
         return m_buffer;
     }
@@ -267,10 +277,38 @@ public:
                     ::printf(" ");
                 }
 
-                ::printf("0x%04X", m_buffer[x + WIDTH * y]);
+                ::printf("0x%04X", static_cast<uint32_t>(m_buffer[x + WIDTH * y]));
             }
 
-            ::printf("\r\n");
+            ::printf("\n");
+        }
+
+        return;
+    }
+
+    /**
+     * Dump display buffer to console by using a "*" for a coloured pixel.
+     */
+    void dumpSimple() const
+    {
+        uint16_t    x   = 0U;
+        uint16_t    y   = 0U;
+
+        for(y = 0U; y < HEIGHT; ++y)
+        {
+            for(x = 0U; x < WIDTH; ++x)
+            {
+                if (0U == m_buffer[x + WIDTH * y])
+                {
+                    ::printf("_");
+                }
+                else
+                {
+                    ::printf("*");
+                }
+            }
+
+            ::printf("\n");
         }
 
         return;
@@ -286,7 +324,7 @@ public:
      * @param[in] color     Color of widget drawing
      * @return If the verify is successful, it will return true otherwise false.
      */
-    bool verify(int16_t posX, int16_t posY, uint16_t width, uint16_t height, uint16_t color)
+    bool verify(int16_t posX, int16_t posY, uint16_t width, uint16_t height, const Color& color)
     {
         uint16_t    x               = 0U;
         uint16_t    y               = 0U;
@@ -321,7 +359,7 @@ public:
      *
      * @param[in] color Fill color
      */
-    void fill(uint16_t color)
+    void fill(const Color& color)
     {
         uint16_t    x   = 0U;
         uint16_t    y   = 0U;
@@ -342,7 +380,7 @@ public:
 
 private:
 
-    uint16_t    m_buffer[WIDTH * HEIGHT];   /**< Display buffer, containing all pixels. */
+    Color       m_buffer[WIDTH * HEIGHT];   /**< Display buffer, containing all pixels. */
     uint32_t    m_callCounterDrawPixel;     /**< Call counter for @drawPixel */
 
     TestGfx(const TestGfx& gfx);
@@ -388,7 +426,7 @@ public:
         {
             for(x = 0; x < WIDTH; ++x)
             {
-                gfx.drawPixel(m_posX + x, m_posY + y, m_color.to565());
+                gfx.drawPixel(m_posX + x, m_posY + y, m_color);
             }
         }
 
@@ -536,6 +574,7 @@ template < typename T >
 static T getMin(const T value1, const T value2);
 
 static void testDoublyLinkedList(void);
+static void testGfx(void);
 static void testWidget(void);
 static void testCanvas(void);
 static void testLampWidget(void);
@@ -570,6 +609,7 @@ int main(int argc, char **argv)
     UNITY_BEGIN();
 
     RUN_TEST(testDoublyLinkedList);
+    RUN_TEST(testGfx);
     RUN_TEST(testWidget);
     RUN_TEST(testCanvas);
     RUN_TEST(testLampWidget);
@@ -768,6 +808,142 @@ static void testDoublyLinkedList()
 }
 
 /**
+ * Test the graphic functions.
+ */
+static void testGfx()
+{
+    TestGfx     testGfx;
+    const Color COLOR       = 0x1234;
+    uint16_t    width       = 0U;
+    uint16_t    height      = 0U;
+    Color       color       = 0U;
+    Color       bitmap[TestGfx::WIDTH * TestGfx::HEIGHT];
+    int16_t     cursorPosX  = 0;
+    int16_t     cursorPosY  = 0;
+
+    /* Verify screen size */
+    TEST_ASSERT_EQUAL_UINT16(TestGfx::WIDTH, testGfx.getWidth());
+    TEST_ASSERT_EQUAL_UINT16(TestGfx::HEIGHT, testGfx.getHeight());
+
+    /* Test drawing a single pixel and read color back. */
+    testGfx.drawPixel(0, 0, COLOR);
+    TEST_ASSERT_EQUAL_UINT16(COLOR, testGfx.getColor(0, 0));
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Test drawing a vertical line. */
+    testGfx.drawVLine(0, 0, TestGfx::HEIGHT, COLOR);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, 1U, TestGfx::HEIGHT, COLOR));
+    TEST_ASSERT_TRUE(testGfx.verify(1, 0, TestGfx::WIDTH - 1U, TestGfx::HEIGHT, 0U));
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Test drawing a horizontal line. */
+    testGfx.drawHLine(0, 0, TestGfx::WIDTH, COLOR);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, 1U, COLOR));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 1, TestGfx::WIDTH, TestGfx::HEIGHT - 1U, 0U));
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Test drawing lines. */
+    testGfx.drawLine(0, 0, TestGfx::WIDTH - 1, 0, COLOR);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH - 1U, 0U, COLOR));
+
+    testGfx.drawLine(0, TestGfx::HEIGHT - 1 , TestGfx::WIDTH - 1, TestGfx::HEIGHT - 1, COLOR);
+    TEST_ASSERT_TRUE(testGfx.verify(0, TestGfx::HEIGHT - 1, TestGfx::WIDTH, 1U, COLOR));
+
+    testGfx.drawLine(0, 1, 0, TestGfx::HEIGHT - 2, COLOR);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 1, 1U, TestGfx::HEIGHT - 2U, COLOR));
+
+    testGfx.drawLine(TestGfx::WIDTH - 1, 1, TestGfx::WIDTH - 1U, TestGfx::HEIGHT - 2U, COLOR);
+    TEST_ASSERT_TRUE(testGfx.verify(TestGfx::WIDTH - 1, 1, 1U, TestGfx::HEIGHT - 2U, COLOR));
+
+    TEST_ASSERT_TRUE(testGfx.verify(1, 1, TestGfx::WIDTH - 2U, TestGfx::HEIGHT - 2U, 0U));
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Test drawing a rectangle */
+    testGfx.drawRectangle(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, COLOR);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, 1U, COLOR));
+    TEST_ASSERT_TRUE(testGfx.verify(0, TestGfx::HEIGHT - 1, TestGfx::WIDTH, 1U, COLOR));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 1, 1U, TestGfx::HEIGHT - 2, COLOR));
+    TEST_ASSERT_TRUE(testGfx.verify(TestGfx::WIDTH - 1, 1, 1U, TestGfx::HEIGHT - 2U, COLOR));
+    TEST_ASSERT_TRUE(testGfx.verify(1, 1, TestGfx::WIDTH - 2U, TestGfx::HEIGHT - 2U, 0U));
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Fill rectangle */
+    testGfx.fillRect(0, 0, TestGfx::WIDTH / 2U, TestGfx::HEIGHT / 2U, COLOR);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH / 2, TestGfx::HEIGHT / 2, COLOR));
+    TEST_ASSERT_TRUE(testGfx.verify(TestGfx::WIDTH / 2, 0, TestGfx::WIDTH / 2, TestGfx::HEIGHT / 2, 0U));
+    TEST_ASSERT_TRUE(testGfx.verify(0, TestGfx::HEIGHT / 2, TestGfx::WIDTH / 2, TestGfx::HEIGHT / 2, 0U));
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Test drawing a bitmap. */
+    for(height = 0U; height < TestGfx::HEIGHT; ++height)
+    {
+        for(width = 0U; width < TestGfx::WIDTH; ++width)
+        {
+            bitmap[width + height * TestGfx::WIDTH] = rand() % 0xFFFFU;
+        }
+    }
+
+    testGfx.drawRGBBitmap(0, 0, bitmap, TestGfx::WIDTH, TestGfx::HEIGHT);
+
+    for(height = 0U; height < TestGfx::HEIGHT; ++height)
+    {
+        for(width = 0U; width < TestGfx::WIDTH; ++width)
+        {
+            TEST_ASSERT_EQUAL_UINT16(bitmap[width + height * TestGfx::WIDTH], testGfx.getColor(width, height));
+        }
+    }
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Verify cursor positon */
+    testGfx.getTextCursorPos(cursorPosX, cursorPosY);
+    TEST_ASSERT_EQUAL_INT16(0, cursorPosX);
+    TEST_ASSERT_EQUAL_INT16(0, cursorPosY);
+    TEST_ASSERT_EQUAL_INT16(0, testGfx.getTextCursorPosX());
+    TEST_ASSERT_EQUAL_INT16(0, testGfx.getTextCursorPosY());
+
+    testGfx.setTextCursorPos(1, 2);
+    testGfx.getTextCursorPos(cursorPosX, cursorPosY);
+    TEST_ASSERT_EQUAL_INT16(1, cursorPosX);
+    TEST_ASSERT_EQUAL_INT16(2, cursorPosY);
+    TEST_ASSERT_EQUAL_INT16(1, testGfx.getTextCursorPosX());
+    TEST_ASSERT_EQUAL_INT16(2, testGfx.getTextCursorPosY());
+
+    /* Draw character, but without font. Nothing shall be shown. */
+    testGfx.setTextCursorPos(0, 6);
+    testGfx.setTextWrap(false);
+    testGfx.setTextColor(COLOR);
+    testGfx.drawChar('T');
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
+
+    /* Select font and draw again. The character shall be shown. */
+    testGfx.setFont(&TomThumb);
+    TEST_ASSERT_TRUE(testGfx.getTextBoundingBox("Test", width, height));
+
+    return;
+}
+
+/**
  * Widget tests.
  */
 static void testWidget()
@@ -831,7 +1007,7 @@ static void testWidget()
                                     posY,
                                     getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH),
                                     getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
-                                    COLOR.to565()));
+                                    COLOR));
 
     /* Draw widget at position (2, 1) and verify widget movement. */
     posX = 2;
@@ -843,7 +1019,7 @@ static void testWidget()
                                     posY,
                                     getMin<uint16_t>(TestGfx::WIDTH - posX, TestWidget::WIDTH),
                                     getMin<uint16_t>(TestGfx::HEIGHT - posY, TestWidget::HEIGHT),
-                                    COLOR.to565()));
+                                    COLOR));
 
     return;
 }
@@ -887,7 +1063,7 @@ void testCanvas()
                                     WIDGET_POS_Y,
                                     getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X),
                                     getMin<uint16_t>(TestWidget::HEIGHT, CANVAS_HEIGHT - WIDGET_POS_Y),
-                                    WIDGET_COLOR.to565()));
+                                    WIDGET_COLOR));
 
     /* Move widget outside canvas and try to draw. Expected is no drawing at all. */
     testGfx.fill(0);
@@ -907,7 +1083,7 @@ void testCanvas()
                                     CANVAS_HEIGHT / 2,
                                     CANVAS_WIDTH / 2,
                                     CANVAS_HEIGHT / 2,
-                                    WIDGET_COLOR.to565()));
+                                    WIDGET_COLOR));
 
     /* No widget name is set, it must be empty. */
     TEST_ASSERT_EQUAL_STRING("", testCanvas.getName().c_str());
@@ -997,7 +1173,7 @@ static void testLampWidget()
                                     posY,
                                     LampWidget::DEFAULT_WIDTH,
                                     LampWidget::HEIGHT,
-                                    COLOR_OFF.to565()));
+                                    COLOR_OFF));
 
     /* Draw widget in on state and verify */
     lampWidget.setOnState(true);
@@ -1007,7 +1183,7 @@ static void testLampWidget()
                                     posY,
                                     LampWidget::DEFAULT_WIDTH,
                                     LampWidget::HEIGHT,
-                                    COLOR_ON.to565()));
+                                    COLOR_ON));
 
     /* Draw widget in off state and verify */
     lampWidget.setOnState(false);
@@ -1017,7 +1193,7 @@ static void testLampWidget()
                                     posY,
                                     LampWidget::DEFAULT_WIDTH,
                                     LampWidget::HEIGHT,
-                                    COLOR_OFF.to565()));
+                                    COLOR_OFF));
 
     /* Move widget and draw in off state again. */
     testGfx.fill(0);
@@ -1028,7 +1204,7 @@ static void testLampWidget()
                                     posY,
                                     LampWidget::DEFAULT_WIDTH,
                                     LampWidget::HEIGHT,
-                                    COLOR_OFF.to565()));
+                                    COLOR_OFF));
 
     return;
 }
@@ -1044,13 +1220,13 @@ static void testBitmapWidget()
 
     TestGfx         testGfx;
     BitmapWidget    bitmapWidget;
-    uint16_t        bitmap[BITMAP_WIDTH * BITMAP_HEIGHT];
+    Color           bitmap[BITMAP_WIDTH * BITMAP_HEIGHT];
     uint8_t         x               = 0U;
     uint8_t         y               = 0U;
-    const uint16_t* bitmapPtr       = nullptr;
+    const Color*    bitmapPtr       = nullptr;
     uint16_t        width           = 0U;
     uint16_t        height          = 0U;
-    uint16_t*       displayBuffer   = nullptr;
+    Color*          displayBuffer   = nullptr;
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(BitmapWidget::WIDGET_TYPE, bitmapWidget.getType());
@@ -1143,11 +1319,11 @@ static void testTextWidget()
     TEST_ASSERT_EQUAL_STRING(testStr.c_str(), textWidget.getStr().c_str());
 
     /* Default string color */
-    TEST_ASSERT_EQUAL_UINT16(ColorDef::convert888To565(TextWidget::DEFAULT_TEXT_COLOR), textWidget.getTextColor().to565());
+    TEST_ASSERT_EQUAL_UINT32(TextWidget::DEFAULT_TEXT_COLOR, textWidget.getTextColor());
 
     /* Set/Get text color */
     textWidget.setTextColor(TEXT_COLOR);
-    TEST_ASSERT_EQUAL_UINT16(TEXT_COLOR.to565(), textWidget.getTextColor().to565());
+    TEST_ASSERT_EQUAL_UINT32(TEXT_COLOR, textWidget.getTextColor());
 
     /* Check for default font */
     TEST_ASSERT_NOT_NULL(textWidget.getFont());
@@ -1187,7 +1363,7 @@ static void testColor()
     Color myColorC  = myColorB;
 
     /* Default color is black */
-    TEST_ASSERT_EQUAL_UINT16(0u, myColorA.to565());
+    TEST_ASSERT_EQUAL_UINT32(0u, myColorA);
 
     /* Does the color assignment works? */
     TEST_ASSERT_EQUAL_UINT8(ColorDef::getRed(ColorDef::TOMATO), myColorB.getRed());
@@ -1360,40 +1536,40 @@ static void testProgressBar()
 
     /* Progress should be now 0% */
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::BLACK));
 
     /* Set progress bar to 50% */
     progressBar.setProgress(50U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width() / 2u, testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
-    TEST_ASSERT_TRUE(testGfx.verify(testGfx.width() / 2u, 0, testGfx.width() / 2u, testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth() / 2u, testGfx.getHeight(), ColorDef::RED));
+    TEST_ASSERT_TRUE(testGfx.verify(testGfx.getWidth() / 2u, 0, testGfx.getWidth() / 2u, testGfx.getHeight(), ColorDef::BLACK));
 
     /* Set progress bar to 100% */
     progressBar.setProgress(100U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::RED));
 
     /* Test algorithm: progress pixel wise */
     progressBar.setAlgo(ProgressBar::ALGORITHM_PIXEL_WISE);
 
     /* Clear display */
-    testGfx.fill(ColorDef::convert888To565(ColorDef::BLACK));
+    testGfx.fill(ColorDef::BLACK);
 
     /* Set progress bar to 0% */
     progressBar.setProgress(0U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::BLACK));
 
     /* Set progress bar to 50% */
     progressBar.setProgress(50U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height() / 2u, ColorDef::convert888To565(ColorDef::RED)));
-    TEST_ASSERT_TRUE(testGfx.verify(0, testGfx.height() / 2u, testGfx.width(), testGfx.height() / 2u, ColorDef::convert888To565(ColorDef::BLACK)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight() / 2u, ColorDef::RED));
+    TEST_ASSERT_TRUE(testGfx.verify(0, testGfx.getHeight() / 2u, testGfx.getWidth(), testGfx.getHeight() / 2u, ColorDef::BLACK));
 
     /* Set progress bar to 100% */
     progressBar.setProgress(100U);
     progressBar.update(testGfx);
-    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.width(), testGfx.height(), ColorDef::convert888To565(ColorDef::RED)));
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::RED));
 
     return;
 }

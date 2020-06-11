@@ -86,7 +86,7 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 
         if (nullptr != widget.m_buffer)
         {
-            m_buffer = new uint16_t[m_bufferSize];
+            m_buffer = new Color[m_bufferSize];
 
             if (nullptr == m_buffer)
             {
@@ -94,7 +94,12 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
             }
             else
             {
-                memcpy(m_buffer, widget.m_buffer, m_bufferSize * sizeof(uint16_t));
+                size_t index = 0U;
+
+                for(index = 0U; index < m_bufferSize; ++index)
+                {
+                    m_buffer[index] = widget.m_buffer[index];
+                }
             }
         }
     }
@@ -102,7 +107,7 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     return *this;
 }
 
-void BitmapWidget::set(const uint16_t* bitmap, uint16_t width, uint16_t height)
+void BitmapWidget::set(const Color* bitmap, uint16_t width, uint16_t height)
 {
     if (nullptr != bitmap)
     {
@@ -116,7 +121,7 @@ void BitmapWidget::set(const uint16_t* bitmap, uint16_t width, uint16_t height)
         m_width         = width;
         m_height        = height;
 
-        m_buffer = new uint16_t[m_bufferSize];
+        m_buffer = new Color[m_bufferSize];
 
         if (nullptr == m_buffer)
         {
@@ -124,7 +129,12 @@ void BitmapWidget::set(const uint16_t* bitmap, uint16_t width, uint16_t height)
         }
         else
         {
-            memcpy(m_buffer, bitmap, m_bufferSize * sizeof(uint16_t));
+            size_t index = 0U;
+
+            for(index = 0U; index < m_bufferSize; ++index)
+            {
+                m_buffer[index] = bitmap[index];
+            }
         }
     }
 
@@ -170,7 +180,7 @@ bool BitmapWidget::load(const String& filename)
                     m_buffer = nullptr;
                 }
 
-                m_buffer = new uint16_t[m_bufferSize];
+                m_buffer = new Color[m_bufferSize];
 
                 if (nullptr != m_buffer)
                 {
@@ -181,10 +191,9 @@ bool BitmapWidget::load(const String& filename)
                     {
                         for(x = 0U; x < m_width; ++x)
                         {
-                            RgbColor    rgbColor = neoFile.GetPixelColor(x, y);
-                            Color       color888(rgbColor.R, rgbColor.G, rgbColor.B);
+                            RgbColor rgbColor = neoFile.GetPixelColor(x, y);
 
-                            m_buffer[x + y * m_width] = color888.to565();
+                            m_buffer[x + y * m_width].set(rgbColor.R, rgbColor.G, rgbColor.B);
                         }
                     }
 

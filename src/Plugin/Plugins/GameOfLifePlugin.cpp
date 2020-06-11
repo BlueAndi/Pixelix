@@ -75,8 +75,8 @@ void GameOfLifePlugin::active(IGfx& gfx)
 
     if (false == isInit)
     {
-        m_width     = gfx.width();
-        m_height    = gfx.height();
+        m_width     = gfx.getWidth();
+        m_height    = gfx.getHeight();
         m_gridSize  = ((m_width * m_height) + (BITS - 1U)) / BITS;
 
         if (true == createGrids())
@@ -86,7 +86,7 @@ void GameOfLifePlugin::active(IGfx& gfx)
     }
 
     /* Clear display */
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
 
     m_displayTimer.start(DISPLAY_PERIOD);
     m_forceRestartTimer.start(FORCE_RESTART_PERIOD);
@@ -154,7 +154,7 @@ void GameOfLifePlugin::update(IGfx& gfx)
         * every cell is. This is the grid, which is shown on the display right now.
         * The next time cycle of the game will be drawn now on the inactive grid,
         * which will be then shown at the end of this routine.
-        * 
+        *
         * After that the active grid will be inactive and vice versa.
         */
 
@@ -237,7 +237,7 @@ void GameOfLifePlugin::update(IGfx& gfx)
         /* Nothing to do. */
         ;
     }
-    
+
     return;
 }
 
@@ -270,7 +270,7 @@ bool GameOfLifePlugin::createGrids()
     {
         destroyGrids();
     }
-    
+
     return status;
 }
 
@@ -346,7 +346,7 @@ bool GameOfLifePlugin::getCellState(uint8_t gridId, int16_t x, int16_t y)
         uint32_t    cellIndex       = x + m_width * y;
         uint32_t    cellDataIndex   = cellIndex / BITS;
         uint8_t     bitIndex        = cellIndex - (cellDataIndex * BITS);
-        
+
         isAlive = (0 != (m_grids[gridId][cellDataIndex] & (1 << bitIndex)));
     }
 
@@ -389,7 +389,7 @@ void GameOfLifePlugin::setCellState(uint8_t gridId, int16_t x, int16_t y, bool s
         uint32_t    cellIndex       = x + m_width * y;
         uint32_t    cellDataIndex   = cellIndex / BITS;
         uint8_t     bitIndex        = cellIndex - (cellDataIndex * BITS);
-        
+
         if (false == state)
         {
             m_grids[gridId][cellDataIndex] &= ~(1 << bitIndex);
@@ -450,11 +450,11 @@ void GameOfLifePlugin::update(IGfx& gfx, uint8_t gridId)
         {
             if (false == getCellState(gridId, x, y))
             {
-                gfx.drawPixel(x, y, ColorDef::convert888To565(ColorDef::BLACK));
+                gfx.drawPixel(x, y, ColorDef::BLACK);
             }
             else
             {
-                gfx.drawPixel(x, y, ColorDef::convert888To565(ColorDef::BLUE));
+                gfx.drawPixel(x, y, ColorDef::BLUE);
             }
         }
     }

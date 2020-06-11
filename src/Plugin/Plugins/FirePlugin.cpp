@@ -63,7 +63,7 @@ void FirePlugin::active(IGfx& gfx)
     /* Defered constructor */
     if (nullptr == m_heat)
     {
-        m_heatSize = gfx.width() * gfx.height();
+        m_heatSize = gfx.getWidth() * gfx.getHeight();
         m_heat = new uint8_t[m_heatSize];
 
         if (nullptr == m_heat)
@@ -71,9 +71,9 @@ void FirePlugin::active(IGfx& gfx)
             m_heatSize = 0U;
         }
     }
-    
+
     /* Clear display */
-    gfx.fillScreen(ColorDef::convert888To565(ColorDef::BLACK));
+    gfx.fillScreen(ColorDef::BLACK);
 
     return;
 }
@@ -94,13 +94,13 @@ void FirePlugin::update(IGfx& gfx)
         return;
     }
 
-    for(x = 0; x < gfx.width(); ++x)
+    for(x = 0; x < gfx.getWidth(); ++x)
     {
         /* Step 1) Cool down every cell a little bit */
-        for(y = 0; y < gfx.height(); ++y)
+        for(y = 0; y < gfx.getHeight(); ++y)
         {
-            uint8_t     coolDownTemperature = random(0, ((COOLING * 10U) / gfx.height()) + 2U);
-            uint32_t    heatPos             = x + y * gfx.width();
+            uint8_t     coolDownTemperature = random(0, ((COOLING * 10U) / gfx.getHeight()) + 2U);
+            uint32_t    heatPos             = x + y * gfx.getWidth();
 
             if (coolDownTemperature >= m_heat[heatPos])
             {
@@ -113,33 +113,33 @@ void FirePlugin::update(IGfx& gfx)
         }
 
         /* Step 2) Heat from each cell drifts 'up' and diffuses a little bit */
-        for(y = 0; y < (gfx.height() - 1); ++y)
+        for(y = 0; y < (gfx.getHeight() - 1U); ++y)
         {
             uint16_t    diffusHeat  = 0U;
-            
-            if ((gfx.height() - 2) > y)
+
+            if ((gfx.getHeight() - 2U) > y)
             {
-                diffusHeat += m_heat[x + (y + 1) * gfx.width()];
-                diffusHeat += m_heat[x + (y + 1) * gfx.width()];
-                diffusHeat += m_heat[x + (y + 2) * gfx.width()];
+                diffusHeat += m_heat[x + (y + 1) * gfx.getWidth()];
+                diffusHeat += m_heat[x + (y + 1) * gfx.getWidth()];
+                diffusHeat += m_heat[x + (y + 2) * gfx.getWidth()];
                 diffusHeat /= 3U;
             }
             else
             {
-                diffusHeat += m_heat[x + (y + 0) * gfx.width()];
-                diffusHeat += m_heat[x + (y + 0) * gfx.width()];
-                diffusHeat += m_heat[x + (y + 1) * gfx.width()];
+                diffusHeat += m_heat[x + (y + 0) * gfx.getWidth()];
+                diffusHeat += m_heat[x + (y + 0) * gfx.getWidth()];
+                diffusHeat += m_heat[x + (y + 1) * gfx.getWidth()];
                 diffusHeat /= 3U;
             }
 
-            m_heat[x + y * gfx.width()] = diffusHeat;
+            m_heat[x + y * gfx.getWidth()] = diffusHeat;
         }
 
         /* Step 3) Randomly ignite new 'sparks' of heat near the bottom */
         if (random(0, 255) < SPARKING)
         {
             uint8_t     randValue   = random(160, 255);
-            uint32_t    heatPos     = x + (gfx.height() - 1) * gfx.width();
+            uint32_t    heatPos     = x + (gfx.getHeight() - 1U) * gfx.getWidth();
             uint16_t    heat        = m_heat[heatPos] + randValue;
 
             if (UINT8_MAX < heat)
@@ -153,9 +153,9 @@ void FirePlugin::update(IGfx& gfx)
         }
 
         /* Step 4) Map from heat cells to LED colors */
-        for(y = 0; y < gfx.height(); ++y)
+        for(y = 0; y < gfx.getHeight(); ++y)
         {
-            gfx.drawPixel(x, y, heatColor(m_heat[x + y * gfx.width()]).to565());
+            gfx.drawPixel(x, y, heatColor(m_heat[x + y * gfx.getWidth()]));
         }
     }
 

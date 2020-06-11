@@ -73,7 +73,7 @@ public:
      * @param[in] y             y-coordinate position in the matrix.
      * @param[in] isBuffered    Create a buffered (true) canvas or not (false)
      */
-    Canvas(int16_t width, int16_t height, int16_t x, int16_t y, bool isBuffered = false) :
+    Canvas(uint16_t width, uint16_t height, int16_t x, int16_t y, bool isBuffered = false) :
         IGfx(width, height),
         Widget(WIDGET_TYPE, x, y),
         m_gfx(nullptr),
@@ -82,7 +82,7 @@ public:
     {
         if (true == isBuffered)
         {
-            m_buffer = new uint16_t[width * height];
+            m_buffer = new Color[width * height];
         }
     }
 
@@ -184,11 +184,11 @@ public:
             int16_t x = 0;
             int16_t y = 0;
 
-            for(y = 0; y < height(); ++y)
+            for(y = 0; y < getHeight(); ++y)
             {
-                for(x = 0; x < width(); ++x)
+                for(x = 0; x < getWidth(); ++x)
                 {
-                    gfx.drawPixel(x, y, m_buffer[x + y * width()]);
+                    gfx.drawPixel(x, y, m_buffer[x + y * getWidth()]);
                 }
             }
         }
@@ -203,22 +203,22 @@ public:
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
      *
-     * @return Color in RGB565 format.
+     * @return Color in RGB888 format.
      */
-    uint16_t getColor(int16_t x, int16_t y) override
+    Color getColor(int16_t x, int16_t y) const
     {
-        uint16_t color565 = 0U;
+        Color color;
 
         if ((0 <= x) &&
             (0 <= y) &&
-            (width() > x) &&
-            (height() > y) &&
+            (getWidth() > x) &&
+            (getHeight() > y) &&
             (nullptr != m_buffer))
         {
-            color565 = m_buffer[x + y * width()];
+            color = m_buffer[x + y * getWidth()];
         }
 
-        return color565;
+        return color;
     }
 
     /**
@@ -263,7 +263,7 @@ private:
 
     IGfx*                   m_gfx;      /**< Graphics interface of the underlying layer */
     DLinkedList<Widget*>    m_widgets;  /**< Widgets in the canvas */
-    uint16_t*               m_buffer;   /**< Buffer */
+    Color*                  m_buffer;   /**< Buffer */
 
     Canvas(const Canvas& canvas);
     Canvas& operator=(const Canvas& canvas);
@@ -276,13 +276,13 @@ private:
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
      */
-    void drawPixel(int16_t x, int16_t y, uint16_t color)
+    void drawPixel(int16_t x, int16_t y, const Color& color)
     {
         /* Don't draw outside the canvas. */
         if ((0 <= x) &&
-            (width() > x) &&
+            (getWidth() > x) &&
             (0 <= y) &&
-            (height() > y))
+            (getHeight() > y))
         {
             /* Draw on the real underlying canvas? */
             if (nullptr != m_gfx)
@@ -292,7 +292,7 @@ private:
             /* Draw into buffer? */
             else if (nullptr != m_buffer)
             {
-                m_buffer[x + y * width()] = color;
+                m_buffer[x + y * getWidth()] = color;
             }
             /* Skip drawing */
             else

@@ -92,6 +92,11 @@ size_t Print::print(const char str[])
     return write(str);
 }
 
+size_t Print::print(char c)
+{
+    return write(c);
+}
+
 size_t Print::print(long n, int base)
 {
     if(base == 0) {
