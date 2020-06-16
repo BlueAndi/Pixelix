@@ -46,7 +46,8 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-/** Structure of response-payload for requesting D_Y_10_1
+
+/* Structure of response-payload for requesting D_Y_10_1
  * 
  * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data> 
  * 
@@ -117,8 +118,9 @@ void GruenbeckPlugin::active(IGfx& gfx)
             m_textCanvas->update(gfx);
         }
     }
-        requestNewData();
-        m_requestDataTimer.start(GruenbeckPlugin::UPDATE_PERIOD);
+
+    requestNewData();
+    m_requestDataTimer.start(GruenbeckPlugin::UPDATE_PERIOD);
         
     return;
 }
@@ -213,7 +215,6 @@ void GruenbeckPlugin::requestNewData()
     {
         m_client.addPar("id","42");
         m_client.addPar("show","D_Y_10_1~");
-        m_client.addHeader("Content-Type", "application/x-www-form-urlencoded");
         (void)m_client.POST();
     }
 }
@@ -235,7 +236,6 @@ void GruenbeckPlugin::registerResponseCallback()
         m_httpResponseReceived = true;
     });
 }
-
 
 bool GruenbeckPlugin::loadOrGenerateConfigFile()
 {

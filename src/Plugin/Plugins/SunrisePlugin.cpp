@@ -185,57 +185,56 @@ void SunrisePlugin::requestNewData()
 
 void SunrisePlugin::registerResponseCallback()
 {
-
     m_client.regOnResponse([this](const HttpResponse& rsp){
-    size_t              payloadSize     = 0U;
-    const char*         payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-    size_t              payloadIndex    = 0U;
-    const size_t        JSON_DOC_SIZE   = 768U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    String sunrise;
-    String sunset;
-    JsonObject results;
-    JsonObject obj;
+        size_t              payloadSize     = 0U;
+        const char*         payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        size_t              payloadIndex    = 0U;
+        String              payloadStr;
+        const size_t        JSON_DOC_SIZE   = 768U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        const size_t        MAX_USAGE       = 80U;
+        size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+        String              sunrise;
+        String              sunset;
+        JsonObject          results;
+        JsonObject          obj;
 
+        while(payloadSize > payloadIndex)
+        {
+            payloadStr += payload[payloadIndex];
+            ++payloadIndex;
+        }
 
-    while(payloadSize > payloadIndex)
-    {
-        m_response += payload[payloadIndex];
-        ++payloadIndex;
-    }
+        m_httpResponseReceived = true;
 
-    m_httpResponseReceived = true;
+        deserializeJson(jsonDoc, payloadStr);
+        obj = jsonDoc.as<JsonObject>();
+        results = obj["results"];
+        sunrise = results["sunrise"].as<String>();
+        sunset = results["sunset"].as<String>();
 
-    deserializeJson(jsonDoc, m_response);
-    obj = jsonDoc.as<JsonObject>();
-    results = obj["results"];
-    sunrise = results["sunrise"].as<String>();
-    sunset = results["sunset"].as<String>();
+        sunrise = addCurrentTimezoneValues(sunrise);
+        sunset = addCurrentTimezoneValues(sunset);
 
-    sunrise = addCurrentTimezoneValues(sunrise);
-    sunset = addCurrentTimezoneValues(sunset);
+        m_relevantResponsePart = sunrise + " / " + sunset;
 
-    m_relevantResponsePart = sunrise + " / " + sunset;
+        setText(m_relevantResponsePart);
 
-    setText(m_relevantResponsePart);
-
-    if (MAX_USAGE < usageInPercent)
-    {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
-    }
+        if (MAX_USAGE < usageInPercent)
+        {
+            LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        }
     });
 }
 
 String SunrisePlugin::addCurrentTimezoneValues(String dateTimeString)
 {
-    tm timeInfo;
-    char timeBuffer [17];
-    int16_t gmtOffset = 0;
-    int16_t isDaylightSaving = 0;
+    tm          timeInfo;
+    char        timeBuffer[17]      = { 0 };
+    int16_t     gmtOffset           = 0;
+    int16_t     isDaylightSaving    = 0;
     const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "%H:%M":"%I:%M %p";
-    bool isPM = dateTimeString.endsWith("PM");
+    bool        isPM                = dateTimeString.endsWith("PM");
 
     /* Get the GMT offset and daylight saving enabled/disabled from persistent memory. */
     if (false == Settings::getInstance().open(true))
@@ -263,7 +262,7 @@ String SunrisePlugin::addCurrentTimezoneValues(String dateTimeString)
 
 bool SunrisePlugin::loadOrGenerateConfigFile()
 {
-    bool status = true;
+    bool                status          = true;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     const size_t        MAX_USAGE       = 80U;

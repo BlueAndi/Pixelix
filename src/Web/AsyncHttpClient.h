@@ -301,6 +301,14 @@ private:
     void onData(AsyncClient* client, const uint8_t* data, size_t len);
 
     /**
+     * This method is called by the TCP client if ACK timeout happens.
+     *
+     * @param[in] client    TCP client
+     * @param[in] timeout   Timeout value in ms
+     */
+    void onTimeout(AsyncClient* client, uint32_t timeout);
+
+    /**
      * Send request to host.
      *
      * @return If request is successful sent, it will return true otherwise false.
