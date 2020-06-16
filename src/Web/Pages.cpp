@@ -158,12 +158,12 @@ void Pages::init(AsyncWebServer& srv)
  */
 void Pages::error(AsyncWebServerRequest* request)
 {
-    LOG_INFO("Invalid web request: %s", request->url().c_str());
-
     if (nullptr == request)
     {
         return;
     }
+
+    LOG_INFO("Invalid web request: %s", request->url().c_str());
 
     /* Force authentication! */
     if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
