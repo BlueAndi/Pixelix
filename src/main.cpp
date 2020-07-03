@@ -74,7 +74,7 @@ static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstanc
 static const uint32_t   SERIAL_BAUDRATE = 115200U;
 
 /** Buffer for esp_log_write() method output. */
-static char gLogPrintBuffer[512U];
+static char             gLogPrintBuffer[512U];
 
 /******************************************************************************
  * External functions
@@ -152,7 +152,7 @@ static int main_espLogVPrintf(const char* szFormat, va_list args)
     if (0 <= ret)
     {
         Logging::LogLevel   logLevel    = Logging::LOGLEVEL_INFO;
-        int                 index       = 0U;
+        int                 index       = 0;
         String              timestamp;
         String              logger;
         String              message;
