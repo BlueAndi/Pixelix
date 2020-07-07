@@ -277,7 +277,7 @@ bool SunrisePlugin::loadOrGenerateConfigFile()
            First we create the directory. */
         if (false == SPIFFS.mkdir(CONFIG_PATH))
         {
-            LOG_WARNING("Couldn't create directory: %s", m_configurationFilename.c_str());
+            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
             status = false;
         }
         else
