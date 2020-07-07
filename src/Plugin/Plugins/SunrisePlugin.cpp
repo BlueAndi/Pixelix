@@ -66,7 +66,7 @@
 const char* SunrisePlugin::IMAGE_PATH     = "/images/sunrise.bmp";
 
 /* Initialize configuration path. */
-const char* SunrisePlugin::CONFIG_PATH    = "/configuration/";
+const char* SunrisePlugin::CONFIG_PATH    = "/configuration";
 
 /******************************************************************************
  * Public Methods
@@ -145,7 +145,7 @@ void SunrisePlugin::start()
 {
     String configPath = CONFIG_PATH;
 
-    m_configurationFilename = configPath + getUID() + ".json";
+    m_configurationFilename = configPath + "/" + getUID() + ".json";
 
     if (false != loadOrGenerateConfigFile())
     {
@@ -275,9 +275,9 @@ bool SunrisePlugin::loadOrGenerateConfigFile()
 
         /* If not  we are on the very first instalation of the plugin
            First we create the directory. */
-        if (false == SPIFFS.mkdir(m_configurationFilename))
+        if (false == SPIFFS.mkdir(CONFIG_PATH))
         {
-            LOG_WARNING("Couldn't create directory: %s", m_configurationFilename);
+            LOG_WARNING("Couldn't create directory: %s", m_configurationFilename.c_str());
             status = false;
         }
         else
