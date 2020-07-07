@@ -155,7 +155,7 @@ void CountdownPlugin::start()
 
     if (false == loadOrGenerateConfigFile())
     {
-        LOG_WARNING("Error on loading/generating plugin configfile: %d");
+        LOG_WARNING("Error on loading/generating plugin configfile: %s", m_configurationFilename.c_str());
         m_isConfigured = false;
     }
     else

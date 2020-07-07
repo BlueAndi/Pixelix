@@ -149,7 +149,7 @@ void SunrisePlugin::start()
 
     if (false != loadOrGenerateConfigFile())
     {
-        LOG_WARNING("Error on loading/generating: %s", m_configurationFilename);
+        LOG_WARNING("Error on loading/generating: %s", m_configurationFilename.c_str());
     }
 
     registerResponseCallback();
