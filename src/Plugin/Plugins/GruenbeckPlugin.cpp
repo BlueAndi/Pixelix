@@ -78,7 +78,7 @@
 const char* GruenbeckPlugin::IMAGE_PATH     = "/images/gruenbeck.bmp";
 
 /* Initialize configuration path. */
-const char* GruenbeckPlugin::CONFIG_PATH    = "/configuration/";
+const char* GruenbeckPlugin::CONFIG_PATH    = "/configuration";
 
 /******************************************************************************
  * Public Methods
@@ -167,7 +167,7 @@ void GruenbeckPlugin::start()
 {
     String configPath = CONFIG_PATH;
 
-    m_configurationFilename = configPath + getUID() + ".json";
+    m_configurationFilename = configPath + "/" + getUID() + ".json";
 
     if (false != loadOrGenerateConfigFile())
     {
@@ -252,9 +252,9 @@ bool GruenbeckPlugin::loadOrGenerateConfigFile()
 
         /* If not  we are on the very first instalation of the plugin
            First we create the directory. */
-        if (false == SPIFFS.mkdir(m_configurationFilename))
+        if (false == SPIFFS.mkdir(CONFIG_PATH))
         {
-            LOG_WARNING("Couldn't create directory: %s", m_configurationFilename);
+            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
             status = false;
         }
         else
