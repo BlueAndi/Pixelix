@@ -115,7 +115,6 @@ Build and upload the software via _Project Tasks -> Upload_ and the filesystem v
 ## Used Libraries
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.
 * [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (RMT).
-* [Adafruit_GFX](https://github.com/adafruit/Adafruit-GFX-Library) - GFX.
 * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) - Webserver.
 
 ## Where to change panel topology?
