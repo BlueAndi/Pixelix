@@ -168,6 +168,18 @@ public:
     virtual void drawPixel(int16_t x, int16_t y, const TColor& color) = 0;
 
     /**
+     * Dim color to black.
+     * A dim ratio of 0 means no change.
+     * 
+     * Note, the base colors may be destroyed, depends on the color type.
+     *
+     * @param[in] x     x-coordinate
+     * @param[in] y     y-coordinate
+     * @param[in] ratio Dim ration [0; 255]
+     */
+    virtual void dimPixel(int16_t x, int16_t y, uint8_t ratio) = 0;
+
+    /**
      * Draw vertical line.
      * Note, this is faster than using drawLine().
      *
@@ -291,13 +303,48 @@ public:
     }
 
     /**
-     * Fill a rectangle with a specific color.
+     * Fill screen with a specific color.
      *
-     * @param[in] color     Color
+     * @param[in] color Color
      */
     void fillScreen(const TColor& color)
     {
         fillRect(0, 0, m_width, m_height, color);
+    }
+
+    /**
+     * Dim a rectangle with a given ratio.
+     * A ratio of 0 means no change.
+     *
+     * @param[in] x         x-coordinate of upper left point
+     * @param[in] y         y-coordinate of upper left point
+     * @param[in] width     Rectangle width in pixel
+     * @param[in] height    Rectangle height in pixel
+     * @param[in] ratio     Dim ratio [0; 255]
+     */
+    void dimRect(int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t ratio)
+    {
+        int16_t xIndex = 0;
+        int16_t yIndex = 0;
+
+        for(yIndex = 0; yIndex < height; ++yIndex)
+        {
+            for(xIndex = 0; xIndex < width; ++xIndex)
+            {
+                dimPixel(x + xIndex, y + yIndex, ratio);
+            }
+        }
+    }
+
+    /**
+     * Dim screen to black with a given ratio.
+     * A dim ratio of 0 means no change.
+     *
+     * @param[in] ratio Dim ratio [0; 255]
+     */
+    void dimScreen(uint8_t ratio)
+    {
+        dimRect(0, 0, m_width, m_height, ratio);
     }
 
     /**

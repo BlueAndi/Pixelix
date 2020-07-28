@@ -56,6 +56,7 @@
 
 /**
  * Color, which is based on the three base colors red, green and blue.
+ * The base colors are internal stored as 8-bit values, so in RGB888 format.
  */
 class Color
 {
@@ -132,18 +133,18 @@ public:
     }
 
     /**
-     * Convert to RGB888 uint32_t value.
+     * Convert to RGB24 uint32_t value.
      */
     operator uint32_t() const
     {
-        uint32_t color888 = m_red;
+        uint32_t color24 = m_red;
 
-        color888 <<= 8;
-        color888 |= m_green;
-        color888 <<= 8;
-        color888 |= m_blue;
+        color24 <<= 8;
+        color24 |= m_green;
+        color24 <<= 8;
+        color24 |= m_blue;
 
-        return color888;
+        return color24;
     }
 
     /**
@@ -282,6 +283,16 @@ public:
      * @param[in] wheelPos  Color wheel position
      */
     void turnColorWheel(uint8_t wheelPos);
+
+    /**
+     * Dim color to black by ratio (simple linear algorithm).
+     * A dim ratio of 0 means, no change.
+     * 
+     * Note, the base colors may be destroyed.
+     * 
+     * @param[in] ratio Dim ratio [0; 255]
+     */
+    void dim(uint8_t ratio);
 
 protected:
 
