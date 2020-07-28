@@ -189,6 +189,31 @@ private:
 
         return;
     }
+
+    /**
+     * Dim color to black.
+     * A dim ratio of 0 means no change.
+     * 
+     * Note, the base colors may be destroyed, depends on the color type.
+     *
+     * @param[in] x     x-coordinate
+     * @param[in] y     y-coordinate
+     * @param[in] ratio Dim ration [0; 255]
+     */
+    void dimPixel(int16_t x, int16_t y, uint8_t ratio)
+    {
+        if ((0 <= x) &&
+            (Board::LedMatrix::width > x) &&
+            (0 <= y) &&
+            (Board::LedMatrix::height > y))
+        {
+            RgbColor rgbColor = m_strip.GetPixelColor(m_topo.Map(x, y)).Dim(UINT8_MAX - ratio);
+
+            m_strip.SetPixelColor(m_topo.Map(x, y), rgbColor);
+        }
+
+        return;
+    }
 };
 
 /******************************************************************************
