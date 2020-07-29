@@ -102,6 +102,17 @@ bool DisplayMgr::begin()
         }
     }
 
+    /* Canvas for fading in/out created? */
+    if (nullptr == m_mainCanvas)
+    {
+        m_mainCanvas = new Canvas(LedMatrix::getInstance().getWidth(), LedMatrix::getInstance().getHeight(), 0, 0, true);
+
+        if (nullptr == m_mainCanvas)
+        {
+            LOG_WARNING("Couldn't create main canvas.");
+        }
+    }
+
     /* Not started yet? */
     if ((nullptr == m_taskHandle) &&
         (nullptr != m_slots))
@@ -162,7 +173,7 @@ bool DisplayMgr::begin()
 
 void DisplayMgr::end()
 {
-    /* Note, don't destroy the slots here. They shall live until the system restarts. */
+    /* Note, don't destroy the slots and the main canvas here. They shall live until the system restarts. */
 
     /* Already running? */
     if (nullptr != m_taskHandle)
@@ -589,7 +600,9 @@ DisplayMgr::DisplayMgr() :
     m_selectedSlot(SLOT_ID_INVALID),
     m_selectedPlugin(nullptr),
     m_requestedPlugin(nullptr),
-    m_slotTimer()
+    m_slotTimer(),
+    m_displayFadeState(FADE_IN),
+    m_mainCanvasIntensity(Color::MIN_BRIGHT)
 {
 }
 
@@ -640,6 +653,59 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
     return slotId;
 }
 
+void DisplayMgr::fadeInOut()
+{
+    if ((nullptr != m_selectedPlugin) &&
+        (nullptr != m_mainCanvas))
+    {
+        /* Handle fading */
+        switch(m_displayFadeState)
+        {
+        /* No fading at all */
+        case FADE_IDLE:
+            m_selectedPlugin->update(*m_mainCanvas);
+            break;
+
+        /* Fade new display content in */
+        case FADE_IN:
+            m_selectedPlugin->update(*m_mainCanvas);
+
+            if ((Color::MAX_BRIGHT - FADING_DELTA) <= m_mainCanvasIntensity)
+            {
+                m_mainCanvas->dimScreen(Color::MAX_BRIGHT);
+                m_mainCanvasIntensity = Color::MAX_BRIGHT;
+                m_displayFadeState = FADE_IDLE;
+            }
+            else
+            {
+                m_mainCanvas->dimScreen(m_mainCanvasIntensity);
+                m_mainCanvasIntensity += FADING_DELTA;
+            }
+            break;
+
+        /* Fade old display content out! */
+        case FADE_OUT:
+            if ((Color::MIN_BRIGHT + FADING_DELTA) >= m_mainCanvasIntensity)
+            {
+                m_mainCanvas->dimScreen(Color::MIN_BRIGHT);
+                m_mainCanvasIntensity = Color::MIN_BRIGHT;
+                m_displayFadeState = FADE_IN;
+            }
+            else
+            {
+                m_mainCanvas->dimScreen(m_mainCanvasIntensity);
+                m_mainCanvasIntensity -= FADING_DELTA;
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    return;
+}
+
 void DisplayMgr::process()
 {
     LedMatrix&  matrix  = LedMatrix::getInstance();
@@ -687,6 +753,9 @@ void DisplayMgr::process()
             m_selectedPlugin->inactive();
             m_selectedPlugin = nullptr;
             m_slotTimer.stop();
+
+            /* Fade old display content out */
+            m_displayFadeState = FADE_OUT;
         }
         /* Plugin run duration timeout? */
         else if ((true == m_slotTimer.isTimerRunning()) &&
@@ -709,6 +778,9 @@ void DisplayMgr::process()
                 m_selectedPlugin->inactive();
                 m_selectedPlugin = nullptr;
                 m_slotTimer.stop();
+
+                /* Fade old display content out */
+                m_displayFadeState = FADE_OUT;
             }
         }
         else
@@ -765,7 +837,15 @@ void DisplayMgr::process()
     /* Update display */
     if (nullptr != m_selectedPlugin)
     {
-        m_selectedPlugin->update(matrix);
+        if (nullptr != m_mainCanvas)
+        {
+            fadeInOut();
+            m_mainCanvas->updateFromBuffer(matrix);
+        }
+        else
+        {
+            m_selectedPlugin->update(matrix);
+        }
     }
 
     delay(1U);

@@ -254,6 +254,15 @@ public:
     /** If no ambient light sensor is available, the default brightness shall be 40%. */
     static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40U) / 100U;
 
+    /** Fading in/out time in ms */
+    static const uint32_t   FADING_DURATION         = 1000U;
+
+    /** How often must the fading take place (call counter)? */
+    static const uint16_t   FADING_MAX_COUNT        = FADING_DURATION / TASK_PERIOD;
+
+    /** Fading in/out delta in digits. Calculate in percent via division by 256. */
+    static const uint8_t    FADING_DELTA            = UINT8_MAX / FADING_MAX_COUNT;
+
 private:
 
     /** Display manager instance */
@@ -289,6 +298,22 @@ private:
     /** Timer, used for changing the slot after a specific duration. */
     SimpleTimer         m_slotTimer;
 
+    /** Display fade state */
+    enum FadeState
+    {
+        FADE_IDLE = 0,  /**< No fading */
+        FADE_IN,        /**< Find in */
+        FADE_OUT        /**< Fade out */
+    };
+
+    /**
+     * A plugin change (inactive -> active) will fade the display content of
+     * the old plugin out and from the new plugin in.
+     */
+    FadeState           m_displayFadeState;
+    Canvas*             m_mainCanvas;           /**< Main canvas over the whole display. */
+    uint8_t             m_mainCanvasIntensity;  /**< Main canvas intensity [0; 255] - 0: min. bright / 255: max. bright */
+
     /**
      * Construct LED matrix.
      */
@@ -311,6 +336,13 @@ private:
      * @return Id of next slot
      */
     uint8_t nextSlot(uint8_t slotId);
+
+    /**
+     * Fade display content in/out on the main canvas, depended on the
+     * current display fading state. Note, this updates only the main canvas,
+     * but not the LED matrix.
+     */
+    void fadeInOut();
 
     /**
      * Process the slots. This shall be called periodically in
