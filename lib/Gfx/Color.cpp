@@ -94,15 +94,6 @@ void Color::turnColorWheel(uint8_t wheelPos)
     return;
 }
 
-void Color::dim(uint8_t ratio)
-{
-    m_red   = static_cast<uint16_t>(m_red) * (256U - static_cast<uint16_t>(ratio)) / 256U;
-    m_green = static_cast<uint16_t>(m_green) * (256U - static_cast<uint16_t>(ratio)) / 256U;
-    m_blue  = static_cast<uint16_t>(m_blue) * (256U - static_cast<uint16_t>(ratio)) / 256U;
-
-    return;
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

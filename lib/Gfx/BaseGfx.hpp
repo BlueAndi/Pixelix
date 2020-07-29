@@ -169,7 +169,7 @@ public:
 
     /**
      * Dim color to black.
-     * A dim ratio of 0 means no change.
+     * A dim ratio of 255 means no change.
      * 
      * Note, the base colors may be destroyed, depends on the color type.
      *
@@ -314,7 +314,7 @@ public:
 
     /**
      * Dim a rectangle with a given ratio.
-     * A ratio of 0 means no change.
+     * A ratio of 255 means no change.
      *
      * @param[in] x         x-coordinate of upper left point
      * @param[in] y         y-coordinate of upper left point
@@ -338,7 +338,7 @@ public:
 
     /**
      * Dim screen to black with a given ratio.
-     * A dim ratio of 0 means no change.
+     * A dim ratio of 255 means no change.
      *
      * @param[in] ratio Dim ratio [0; 255]
      */
