@@ -602,7 +602,7 @@ DisplayMgr::DisplayMgr() :
     m_requestedPlugin(nullptr),
     m_slotTimer(),
     m_displayFadeState(FADE_IN),
-    m_mainCanvasIntensity(Color::MIN_BRIGHT)
+    m_fadeLinearEffect()
 {
 }
 
@@ -670,31 +670,17 @@ void DisplayMgr::fadeInOut()
         case FADE_IN:
             m_selectedPlugin->update(*m_mainCanvas);
 
-            if ((Color::MAX_BRIGHT - FADING_DELTA) <= m_mainCanvasIntensity)
+            if (true == m_fadeLinearEffect.fadeIn(*m_mainCanvas))
             {
-                m_mainCanvas->dimScreen(Color::MAX_BRIGHT);
-                m_mainCanvasIntensity = Color::MAX_BRIGHT;
                 m_displayFadeState = FADE_IDLE;
-            }
-            else
-            {
-                m_mainCanvas->dimScreen(m_mainCanvasIntensity);
-                m_mainCanvasIntensity += FADING_DELTA;
             }
             break;
 
         /* Fade old display content out! */
         case FADE_OUT:
-            if ((Color::MIN_BRIGHT + FADING_DELTA) >= m_mainCanvasIntensity)
+            if (true == m_fadeLinearEffect.fadeOut(*m_mainCanvas))
             {
-                m_mainCanvas->dimScreen(Color::MIN_BRIGHT);
-                m_mainCanvasIntensity = Color::MIN_BRIGHT;
                 m_displayFadeState = FADE_IN;
-            }
-            else
-            {
-                m_mainCanvas->dimScreen(m_mainCanvasIntensity);
-                m_mainCanvasIntensity -= FADING_DELTA;
             }
             break;
 

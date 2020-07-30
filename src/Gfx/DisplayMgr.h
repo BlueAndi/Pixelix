@@ -47,6 +47,7 @@
 #include <Canvas.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
+#include <FadeLinear.h>
 
 #include "Board.h"
 #include "IPluginMaintenance.hpp"
@@ -240,28 +241,19 @@ public:
     }
 
     /** Invalid slot id. */
-    static const uint8_t    SLOT_ID_INVALID         = UINT8_MAX;
+    static const uint8_t    SLOT_ID_INVALID     = UINT8_MAX;
 
     /** Task stack size in bytes */
-    static const uint32_t   TASK_STACKE_SIZE        = 4096U;
+    static const uint32_t   TASK_STACKE_SIZE    = 4096U;
 
     /** Task period in ms */
-    static const uint32_t   TASK_PERIOD             = 20U;
+    static const uint32_t   TASK_PERIOD         = 20U;
 
     /** MCU core where the task shall run */
-    static const BaseType_t TASK_RUN_CORE           = 1;
+    static const BaseType_t TASK_RUN_CORE       = 1;
 
     /** If no ambient light sensor is available, the default brightness shall be 40%. */
-    static const uint8_t    BRIGHTNESS_DEFAULT      = (UINT8_MAX * 40U) / 100U;
-
-    /** Fading in/out time in ms */
-    static const uint32_t   FADING_DURATION         = 1000U;
-
-    /** How often must the fading take place (call counter)? */
-    static const uint16_t   FADING_MAX_COUNT        = FADING_DURATION / TASK_PERIOD;
-
-    /** Fading in/out delta in digits. Calculate in percent via division by 256. */
-    static const uint8_t    FADING_DELTA            = UINT8_MAX / FADING_MAX_COUNT;
+    static const uint8_t    BRIGHTNESS_DEFAULT  = (UINT8_MAX * 40U) / 100U;
 
 private:
 
@@ -312,7 +304,7 @@ private:
      */
     FadeState           m_displayFadeState;
     Canvas*             m_mainCanvas;           /**< Main canvas over the whole display. */
-    uint8_t             m_mainCanvasIntensity;  /**< Main canvas intensity [0; 255] - 0: min. bright / 255: max. bright */
+    FadeLinear          m_fadeLinearEffect;     /**< Linear fade effect */
 
     /**
      * Construct LED matrix.
