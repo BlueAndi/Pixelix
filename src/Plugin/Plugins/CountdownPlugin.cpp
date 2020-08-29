@@ -212,8 +212,8 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
             jsonDoc["day"] = 29U;
             jsonDoc["month"] = 05U;
             jsonDoc["year"] = 2019U;
-            jsonDoc["description_pl"] = " DAYS";
-            jsonDoc["description_sg"] = " DAY";
+            jsonDoc["descriptionPlural"] = " DAYS";
+            jsonDoc["descriptionSingular"] = " DAY";
 
             serializeJson(jsonDoc, m_fd);
 
@@ -233,8 +233,8 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
         }
         else
         {
-            String description_pl;
-            String description_sg;
+            String descriptionPlural;
+            String descriptionSingular;
             JsonObject obj;
             String file_content = m_fd.readString();
 
@@ -245,11 +245,11 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
             m_targetDate.month = obj["month"];
             m_targetDate.year = obj["year"];
 
-            description_pl = obj["description_pl"].as<String>();
-            description_sg = obj["description_sg"].as<String>();
+            descriptionPlural = obj["descriptionPlural"].as<String>();
+            descriptionSingular = obj["descriptionSingular"].as<String>();
 
-            m_targetDateInformation.plural = description_pl;
-            m_targetDateInformation.singular = description_sg;
+            m_targetDateInformation.plural = descriptionPlural;
+            m_targetDateInformation.singular = descriptionSingular;
             
             m_fd.close();
         }
