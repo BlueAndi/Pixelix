@@ -97,7 +97,7 @@
  *****************************************************************************/
 
 /* Set system message show duration in ms */
-const uint32_t  InitState::SYS_MSG_WAIT_TIME    = 2000U;
+const uint32_t  InitState::SYS_MSG_WAIT_TIME    = 3000U;
 
 /* Initialization state instance */
 InitState       InitState::m_instance;
