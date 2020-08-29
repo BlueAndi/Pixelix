@@ -6,6 +6,67 @@
     <title>%PAGE_TITLE%</title>
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
+    <script src="/js/chart.min.js"></script>
+    <script>
+        var ctxChartHeap    = null;
+        var ctxChartFs      = null;
+        var chartHeap       = null;
+        var chartFs         = null;
+
+        var availableHeapSizeInPercent  = Math.round(%AVAILABLE_HEAP_SIZE% * 100 / %HEAP_SIZE%);
+        var availableFsSizeInPercent    = Math.round((%FS_SIZE% - %USED_FS_SIZE%) * 100 / %FS_SIZE%);
+
+        window.chartColors = {
+            red: 'rgb(255, 99, 132)',
+            orange: 'rgb(255, 159, 64)',
+            yellow: 'rgb(255, 205, 86)',
+            green: 'rgb(75, 192, 192)',
+            blue: 'rgb(54, 162, 235)',
+            purple: 'rgb(153, 102, 255)',
+            grey: 'rgb(201, 203, 207)'
+        };
+
+        window.onload = function() {
+            ctxChartHeap    = document.getElementById('canvasChartHeap').getContext('2d');
+            ctxChartFs      = document.getElementById('canvasChartFs').getContext('2d');
+            chartHeap       = new Chart(ctxChartHeap, {
+                type: 'pie',
+                data: {
+                    labels: ['Heap used in %%', 'Heap available in %%'],
+                    datasets: [{
+                        data: [
+                            100 - availableHeapSizeInPercent,
+                            availableHeapSizeInPercent
+                        ],
+                        backgroundColor: [
+                            window.chartColors.red,
+                            window.chartColors.green
+                        ]
+                    }]
+                }, options: {
+                    responsive: false
+                }
+            });
+            chartFs         = new Chart(ctxChartFs, {
+                type: 'pie',
+                data: {
+                    labels: ['Filessytem used size in %%', 'Filesystem available size in %%'],
+                    datasets: [{
+                        data: [
+                            100 - availableFsSizeInPercent,
+                            availableFsSizeInPercent
+                        ],
+                        backgroundColor: [
+                            window.chartColors.red,
+                            window.chartColors.green
+                        ]
+                    }]
+                }, options: {
+                    responsive: false
+                }
+            });
+        };
+    </script>
 </head>
 <body>
 <div class="header">
@@ -23,35 +84,12 @@
 <div class="main">
     <h2>Home</h2>
     <p>Welcome!</p>
-    <h3>Software</h3>
+    <h3>ESP32</h3>
     <table>
         <tr>
-            <td>Version:</td>
-            <td>%VERSION%</td>
+            <td>ESP type:</td>
+            <td>%ESP_TYPE%</td>
         </tr>
-        <tr>
-            <td>ESP SDK Version:</td>
-            <td>%ESP_SDK_VERSION%</td>
-        </tr>
-        <tr>
-            <td>Heap Size:</td>
-            <td>%HEAP_SIZE% byte</td>
-        </tr>
-        <tr>
-            <td>Available Heap Size:</td>
-            <td>%AVAILABLE_HEAP_SIZE% byte</td>
-        </tr>
-        <tr>
-            <td>Filesystem size:</td>
-            <td>%FS_SIZE% byte</td>
-        </tr>
-        <tr>
-            <td>Used filesystem size:</td>
-            <td>%USED_FS_SIZE% byte</td>
-        </tr>
-    </table>
-    <h3>Hardware</h3>
-    <table>
         <tr>
             <td>ESP Chip Rev.:</td>
             <td>%ESP_CHIP_REV%</td>
@@ -64,6 +102,58 @@
             <td>ESP CPU Freq.:</td>
             <td>%ESP_CPU_FREQ% MHz</td>
         </tr>
+        <tr>
+            <td>Flash Chip Mode:</td>
+            <td>%FLASH_CHIP_MODE%</td>
+        </tr>
+        <tr>
+            <td>Flash Chip Size :</td>
+            <td>%FLASH_CHIP_SIZE% MByte</td>
+        </tr>
+        <tr>
+            <td>Flash Chip Speed:</td>
+            <td>%FLASH_CHIP_SPEED% MHz</td>
+        </tr>
+    </table>
+    <h3>Software Versions</h3>
+    <table>
+        <tr>
+            <td>Version:</td>
+            <td>%VERSION%</td>
+        </tr>
+        <tr>
+            <td>ESP SDK Version:</td>
+            <td>%ESP_SDK_VERSION%</td>
+        </tr>
+        <tr>
+            <td>Arduino IDF Version:</td>
+            <td>%ARDUINO_IDF_BRANCH%</td>
+        </tr>
+    </table>
+    <h3>Software Status</h3>
+    <h4>Heap</h4>
+    <table>
+        <tr>
+            <td>Heap Size:</td>
+            <td>%HEAP_SIZE% byte</td>
+        </tr>
+        <tr>
+            <td>Available Heap Size:</td>
+            <td>%AVAILABLE_HEAP_SIZE% byte</td>
+        </tr>
+        <canvas id="canvasChartHeap" width="240" height="240"></canvas>
+    </table>
+    <h4>Filesytem</h4>
+    <table>
+        <tr>
+            <td>Filesystem size:</td>
+            <td>%FS_SIZE% byte</td>
+        </tr>
+        <tr>
+            <td>Used filesystem size:</td>
+            <td>%USED_FS_SIZE% byte</td>
+        </tr>
+        <canvas id="canvasChartFs" width="240" height="240"></canvas>
     </table>
 </div>
 <div class="footer">

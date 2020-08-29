@@ -364,29 +364,16 @@ static String indexPageProcessor(const String& var)
 {
     String  result;
 
-    if (var == "VERSION")
+    /* ----- ESP ----- */
+    if (var =="ESP_TYPE")
     {
-        result = Version::SOFTWARE;
-    }
-    else if (var == "ESP_SDK_VERSION")
-    {
-        result = ESP.getSdkVersion();
-    }
-    else if (var == "HEAP_SIZE")
-    {
-        result = ESP.getHeapSize();
-    }
-    else if (var == "AVAILABLE_HEAP_SIZE")
-    {
-        result = ESP.getFreeHeap();
-    }
-    else if (var == "FS_SIZE")
-    {
-        result = SPIFFS.totalBytes();
-    }
-    else if (var == "USED_FS_SIZE")
-    {
-        result = SPIFFS.usedBytes();
+#if defined(ESP32)
+        result = "ESP32";
+#elif defined(ESP32S2)
+        result = "ESP32S2";
+#else
+        result ="UNKNOWN";
+#endif
     }
     else if (var == "ESP_CHIP_REV")
     {
@@ -407,6 +394,82 @@ static String indexPageProcessor(const String& var)
     {
         result = ESP.getCpuFreqMHz();
     }
+    /* ----- Software Versions ----- */
+    else if (var == "VERSION")
+    {
+        result = Version::SOFTWARE;
+    }
+    else if (var == "ESP_SDK_VERSION")
+    {
+        result = ESP.getSdkVersion();
+    }
+    else if (var == "ARDUINO_IDF_BRANCH")
+    {
+        result = CONFIG_ARDUINO_IDF_BRANCH;
+    }
+    /* ----- Software Status ----- */
+    else if (var == "HEAP_SIZE")
+    {
+        result = ESP.getHeapSize();
+    }
+    else if (var == "AVAILABLE_HEAP_SIZE")
+    {
+        result = ESP.getFreeHeap();
+    }
+    else if (var == "FS_SIZE")
+    {
+        result = SPIFFS.totalBytes();
+    }
+    else if (var == "USED_FS_SIZE")
+    {
+        result = SPIFFS.usedBytes();
+    }
+    /* ----- Flash ----- */
+    else if (var == "FLASH_CHIP_MODE")
+    {
+        switch(ESP.getFlashChipMode())
+        {
+        case FM_QIO:
+            result = "QUIO";
+            break;
+        
+        case FM_QOUT:
+            result = "QOUT";
+            break;
+        
+        case FM_DIO:
+            result = "DIO";
+            break;
+        
+        case FM_DOUT:
+            result = "DOUT";
+            break;
+        
+        case FM_FAST_READ:
+            result = "FAST_READ";
+            break;
+        
+        case FM_SLOW_READ:
+            result = "SLOW_READ";
+            break;
+        
+        case FM_UNKNOWN:
+            /* fallthrough */
+
+        default:
+            result = "UNKNOWN";
+            break;
+        }
+    }
+    else if (var == "FLASH_CHIP_SIZE")
+    {
+        result = ESP.getFlashChipSize() / (1024U * 1024U);
+    }
+    else if (var == "FLASH_CHIP_SPEED")
+    {
+        result = ESP.getFlashChipSpeed() / (1000U * 1000U);
+    }
+    /* ----- Common stuff ----- */
     else
     {
         result = commonPageProcessor(var);
