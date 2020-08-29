@@ -50,6 +50,7 @@
 #include <Util.h>
 #include <SPIFFSEditor.h>
 #include <ArduinoJson.h>
+#include <lwip/init.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -406,6 +407,10 @@ static String indexPageProcessor(const String& var)
     else if (var == "ARDUINO_IDF_BRANCH")
     {
         result = CONFIG_ARDUINO_IDF_BRANCH;
+    }
+    else if (var == "LWIP_VERSION")
+    {
+        result = LWIP_VERSION_STRING;
     }
     /* ----- Software Status ----- */
     else if (var == "HEAP_SIZE")
