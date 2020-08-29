@@ -77,10 +77,13 @@ public:
         Plugin(name, uid),
         m_textWidget(),
         m_url(),
-        m_callbackWebHandler(nullptr)
+        m_callbackWebHandler(nullptr),
+        m_xMutex(nullptr)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        m_xMutex = xSemaphoreCreateMutex();
     }
 
     /**
@@ -88,6 +91,11 @@ public:
      */
     ~JustTextPlugin()
     {
+        if (nullptr != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = nullptr;
+        }
     }
 
     /**
@@ -138,6 +146,7 @@ private:
     TextWidget                  m_textWidget;           /**< Text widget, used for showing the text. */
     String                      m_url;                  /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;   /**< Callback web handler */
+    SemaphoreHandle_t           m_xMutex;               /**< Mutex to protect against concurrent access. */
 
     /**
      * Instance specific web request handler, called by the static web request
@@ -147,6 +156,15 @@ private:
      */
     void webReqHandler(AsyncWebServerRequest *request);
 
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void);
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void);
 };
 
 /******************************************************************************

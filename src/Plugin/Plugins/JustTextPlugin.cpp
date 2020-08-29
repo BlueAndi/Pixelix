@@ -94,15 +94,20 @@ void JustTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void JustTextPlugin::update(IGfx& gfx)
 {
+    lock();
     gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
+    unlock();
 
     return;
 }
 
 void JustTextPlugin::setText(const String& formatText)
 {
+    lock();
     m_textWidget.setFormatStr(formatText);
+    unlock();
+
     return;
 }
 
@@ -170,6 +175,26 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
 
     serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+void JustTextPlugin::lock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void JustTextPlugin::unlock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
 
     return;
 }

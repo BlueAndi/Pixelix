@@ -105,7 +105,8 @@ public:
         m_isUpdateAvailable(false),
         m_remainingDays(""),
         m_url(),
-        m_callbackWebHandler(nullptr)
+        m_callbackWebHandler(nullptr),
+        m_xMutex(nullptr)
     {
         /* Example data, used to generate the very first configuration file. */
         m_targetDate.day                    = 29;
@@ -116,6 +117,8 @@ public:
 
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        m_xMutex = xSemaphoreCreateMutex();
     }
 
     /**
@@ -133,6 +136,12 @@ public:
         {
             delete m_textCanvas;
             m_textCanvas = nullptr;
+        }
+
+        if (nullptr != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = nullptr;
         }
     }
 
@@ -259,6 +268,7 @@ private:
     String                      m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
     String                      m_url;                      /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
+    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
 
     /**
      * Instance specific web request handler, called by the static web request
@@ -298,6 +308,16 @@ private:
      * Convert a given date in days starting from year 0.;
      */
     uint32_t dateToDays(DateDMY date);
+
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void);
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void);
 };
 
 /******************************************************************************

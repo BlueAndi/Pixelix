@@ -68,6 +68,8 @@ const char* IconTextPlugin::UPLOAD_PATH = "/tmp";
 
 void IconTextPlugin::active(IGfx& gfx)
 {
+    lock();
+
     if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
@@ -93,6 +95,8 @@ void IconTextPlugin::active(IGfx& gfx)
             m_textWidget.move(0, 1);
         }
     }
+
+    unlock();
 
     return;
 }
@@ -156,6 +160,8 @@ void IconTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void IconTextPlugin::update(IGfx& gfx)
 {
+    lock();
+
     gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr != m_iconCanvas)
@@ -168,12 +174,17 @@ void IconTextPlugin::update(IGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
+    unlock();
+
     return;
 }
 
 void IconTextPlugin::setText(const String& formatText)
 {
+    lock();
     m_textWidget.setFormatStr(formatText);
+    unlock();
+
     return;
 }
 
@@ -183,7 +194,9 @@ void IconTextPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t hei
         (ICON_WIDTH >= width) &&
         (ICON_HEIGHT >= height))
     {
+        lock();
         m_bitmapWidget.set(bitmap, width, height);
+        unlock();
     }
 
     return;
@@ -191,7 +204,13 @@ void IconTextPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t hei
 
 bool IconTextPlugin::loadBitmap(const String& filename)
 {
-    return m_bitmapWidget.load(filename);
+    bool status = false;
+
+    lock();
+    status = m_bitmapWidget.load(filename);
+    unlock();
+
+    return status;
 }
 
 /******************************************************************************
@@ -296,7 +315,7 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     /* Load bitmap file. */
-    else if (false == m_bitmapWidget.load(getFileName()))
+    else if (false == loadBitmap(getFileName()))
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -400,6 +419,26 @@ String IconTextPlugin::getFileName()
     filename += ".bmp";
 
     return filename;
+}
+
+void IconTextPlugin::lock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void IconTextPlugin::unlock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
+
+    return;
 }
 
 /******************************************************************************

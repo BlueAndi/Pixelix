@@ -102,6 +102,8 @@ void CountdownPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void CountdownPlugin::active(IGfx& gfx)
 {
+    lock();
+
     /* Reload configuration, because it may be updated. */
     (void)loadConfiguration();
 
@@ -140,6 +142,8 @@ void CountdownPlugin::active(IGfx& gfx)
 
     calculateDifferenceInDays();
 
+    unlock();
+
     return;
 }
 
@@ -152,6 +156,8 @@ void CountdownPlugin::inactive()
 
 void CountdownPlugin::update(IGfx& gfx)
 {
+    lock();
+
     if (true == m_isUpdateAvailable)
     {
         gfx.fillScreen(ColorDef::BLACK);
@@ -169,11 +175,15 @@ void CountdownPlugin::update(IGfx& gfx)
         m_isUpdateAvailable = false;
     }
 
+    unlock();
+
     return;
 }
 
 void CountdownPlugin::start()
 {
+    lock();
+
     m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
 
     /* Try to load configuration. If there is no configuration available, a default configuration
@@ -188,21 +198,29 @@ void CountdownPlugin::start()
         }
     }
 
+    unlock();
+
     return;
 }
 
 void CountdownPlugin::stop()
 {
+    lock();
+
     if (false != SPIFFS.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
+
+    unlock();
 
     return;
 }
 
 void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 {
+    lock();
+
     m_targetDate = targetDate;
 
     /* Always stores the configuration, otherwise it will be overwritten during
@@ -210,11 +228,15 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
      */
     (void)saveConfiguration();
 
+    unlock();
+
     return;
 }
 
 void CountdownPlugin::setUnitDescription(const String& plural, const String& singular)
 {
+    lock();
+
     m_targetDateInformation.plural      = plural;
     m_targetDateInformation.singular    = singular;
 
@@ -222,6 +244,8 @@ void CountdownPlugin::setUnitDescription(const String& plural, const String& sin
      * plugin activation.
      */
     (void)saveConfiguration();
+
+    unlock();
 
     return;
 }
@@ -471,6 +495,26 @@ uint32_t CountdownPlugin::dateToDays(CountdownPlugin::DateDMY date)
     dateInDays += countLeapYears(date);
 
     return dateInDays;
+}
+
+void CountdownPlugin::lock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void CountdownPlugin::unlock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
+
+    return;
 }
 
 /******************************************************************************

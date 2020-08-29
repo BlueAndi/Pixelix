@@ -104,6 +104,8 @@ void SunrisePlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void SunrisePlugin::active(IGfx& gfx)
 {
+    lock();
+
     if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
@@ -139,6 +141,8 @@ void SunrisePlugin::active(IGfx& gfx)
 
     requestNewData();
 
+    unlock();
+
     return;
 }
 
@@ -149,6 +153,8 @@ void SunrisePlugin::inactive()
 
 void SunrisePlugin::update(IGfx& gfx)
 {
+    lock();
+
     gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr != m_iconCanvas)
@@ -161,11 +167,15 @@ void SunrisePlugin::update(IGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
+    unlock();
+
     return;
 }
 
 void SunrisePlugin::start()
 {
+    lock();
+
     m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
 
     /* Try to load configuration. If there is no configuration available, a default configuration
@@ -182,21 +192,29 @@ void SunrisePlugin::start()
 
     registerResponseCallback();
 
+    unlock();
+
     return;
 }
 
 void SunrisePlugin::stop()
 {
+    lock();
+
     if (false != SPIFFS.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
+
+    unlock();
 
     return;
 }
 
 void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
 {
+    lock();
+
     m_longitude = longitude;
     m_latitude  = latitude;
 
@@ -204,6 +222,8 @@ void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
      * plugin activation.
      */
     (void)saveConfiguration();
+
+    unlock();
 
     return;
 }
@@ -434,6 +454,26 @@ void SunrisePlugin::createConfigDirectory()
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         }
     }
+}
+
+void SunrisePlugin::lock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void SunrisePlugin::unlock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
+
+    return;
 }
 
 /******************************************************************************

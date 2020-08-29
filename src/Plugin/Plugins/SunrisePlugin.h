@@ -90,11 +90,14 @@ public:
         m_httpResponseReceived(false),
         m_relevantResponsePart(""),
         m_url(),
-        m_callbackWebHandler(nullptr)
+        m_callbackWebHandler(nullptr),
+        m_xMutex(nullptr)
     {
         /* Example data, used to generate the very first configuration file. */
         m_longitude = "2.295";
         m_latitude  = "48.858";
+
+        m_xMutex = xSemaphoreCreateMutex();
     }
 
     /**
@@ -112,6 +115,12 @@ public:
         {
             delete m_textCanvas;
             m_textCanvas = nullptr;
+        }
+
+        if (nullptr != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = nullptr;
         }
     }
 
@@ -220,6 +229,7 @@ private:
     SimpleTimer                 m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
     String                      m_url;                      /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
+    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
 
     /**
      * Instance specific web request handler, called by the static web request
@@ -264,6 +274,16 @@ private:
      * Otherwise nothing happens.
      */
     void createConfigDirectory();
+
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void);
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void);
 };
 
 /******************************************************************************

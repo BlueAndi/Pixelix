@@ -68,6 +68,8 @@ const char* IconTextLampPlugin::UPLOAD_PATH = "/tmp";
 
 void IconTextLampPlugin::active(IGfx& gfx)
 {
+    lock();
+
     if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
@@ -109,6 +111,8 @@ void IconTextLampPlugin::active(IGfx& gfx)
             }
         }
     }
+
+    unlock();
 
     return;
 }
@@ -190,6 +194,8 @@ void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void IconTextLampPlugin::update(IGfx& gfx)
 {
+    lock();
+
     gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr != m_iconCanvas)
@@ -207,12 +213,17 @@ void IconTextLampPlugin::update(IGfx& gfx)
         m_lampCanvas->update(gfx);
     }
 
+    unlock();
+
     return;
 }
 
 void IconTextLampPlugin::setText(const String& formatText)
 {
+    unlock();
     m_textWidget.setFormatStr(formatText);
+    unlock();
+
     return;
 }
 
@@ -222,7 +233,9 @@ void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t
         (ICON_WIDTH >= width) &&
         (ICON_HEIGHT >= height))
     {
+        lock();
         m_bitmapWidget.set(bitmap, width, height);
+        unlock();
     }
 
     return;
@@ -230,14 +243,22 @@ void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t
 
 bool IconTextLampPlugin::loadBitmap(const String& filename)
 {
-    return m_bitmapWidget.load(filename);
+    bool status = false;
+
+    lock();
+    status = m_bitmapWidget.load(filename);
+    unlock();
+
+    return status;
 }
 
 void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
+        lock();
         m_lampWidgets[lampId].setOnState(state);
+        unlock();
     }
 
     return;
@@ -345,7 +366,7 @@ void IconTextLampPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     /* Load bitmap file. */
-    else if (false == m_bitmapWidget.load(getFileName()))
+    else if (false == loadBitmap(getFileName()))
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -532,6 +553,26 @@ String IconTextLampPlugin::getFileName()
     filename += ".bmp";
 
     return filename;
+}
+
+void IconTextLampPlugin::lock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void IconTextLampPlugin::unlock()
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
+
+    return;
 }
 
 /******************************************************************************

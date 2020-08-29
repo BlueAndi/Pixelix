@@ -88,8 +88,10 @@ public:
         m_callbackWebHandlerIcon(nullptr),
         m_callbackWebHandlerText(nullptr),
         m_fd(),
-        m_isUploadError(false)
+        m_isUploadError(false),
+        m_xMutex(nullptr)
     {
+        m_xMutex = xSemaphoreCreateMutex();
     }
 
     /**
@@ -107,6 +109,12 @@ public:
         {
             delete m_textCanvas;
             m_textCanvas = nullptr;
+        }
+
+        if (nullptr != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = nullptr;
         }
     }
 
@@ -212,6 +220,7 @@ private:
     AsyncCallbackWebHandler*    m_callbackWebHandlerText;   /**< Callback web handler for updating the text */
     File                        m_fd;                       /**< File descriptor, used for bitmap file upload. */
     bool                        m_isUploadError;            /**< Flag to signal a upload error. */
+    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
 
     /**
      * Instance specific web request handler, called by the static web request
@@ -247,6 +256,16 @@ private:
      * @return Image filename with path.
      */
     String getFileName(void);
+
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void);
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void);
 };
 
 /******************************************************************************
