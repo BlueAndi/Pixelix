@@ -212,8 +212,8 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
             jsonDoc["day"] = 29U;
             jsonDoc["month"] = 05U;
             jsonDoc["year"] = 2019U;
-            jsonDoc["descriptionPlural"] = " DAYS";
-            jsonDoc["descriptionSingular"] = " DAY";
+            jsonDoc["descriptionPlural"] = "DAYS";
+            jsonDoc["descriptionSingular"] = "DAY";
 
             serializeJson(jsonDoc, m_fd);
 
@@ -290,6 +290,7 @@ void CountdownPlugin::calculateDifferenceInDays()
 
             snprintf(remaining, sizeof(remaining), " %d", numberOfDays);
             m_remainingDays += remaining;
+            m_remainingDays += " ";
 
             if(numberOfDays > 1)
             {
