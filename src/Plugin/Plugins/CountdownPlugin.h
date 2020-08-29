@@ -45,8 +45,8 @@
  * Includes
  *****************************************************************************/
 #include "Plugin.hpp"
-
 #include "time.h"
+
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <stdint.h>
@@ -84,7 +84,7 @@ public:
     {
         String plural;      /**< The description in plural form e.g. Days. */
         String singular;    /**< The description in singular form e.g. day */
-    }TargetDayDescription;
+    } TargetDayDescription;
 
     /**
      * Constructs the plugin.
@@ -98,15 +98,22 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget(),
-        m_fd(),
-        m_isConfigured(false),
         m_configurationFilename(""),
         m_currentDate(),
         m_targetDate(),
         m_targetDateInformation(),
         m_isUpdateAvailable(false),
-        m_remainingDays("")
+        m_remainingDays(""),
+        m_url(),
+        m_callbackWebHandler(nullptr)
     {
+        /* Example data, used to generate the very first configuration file. */
+        m_targetDate.day                    = 29;
+        m_targetDate.month                  = 8;
+        m_targetDate.year                   = 2019;
+        m_targetDateInformation.plural      = "DAYS";
+        m_targetDateInformation.singular    = "DAY";
+
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
     }
@@ -143,6 +150,21 @@ public:
     }
 
     /**
+     * Register web interface, e.g. REST API functionality.
+     *
+     * @param[in] srv       Webserver
+     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     */
+    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override;
+
+    /**
+     * Unregister web interface.
+     *
+     * @param[in] srv   Webserver
+     */
+    void unregisterWebInterface(AsyncWebServer& srv) override;
+
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
@@ -165,11 +187,19 @@ public:
     void update(IGfx& gfx);
 
     /**
-     * Set text, which may contain format tags.
+     * Set target date for countdown.
      *
-     * @param[in] formatText    Text, which may contain format tags.
+     * @param[in] targetDate    Target date
      */
-    void setText(const String& formatText);
+    void setTargetDate(const DateDMY& targetDate);
+
+    /**
+     * Set language depended strings for the unit.
+     * 
+     * @param[in] plurual   Unit in plural form, e.g. "days".
+     * @param[in] singular  Unit in singular form, e.g. "day".
+     */
+    void setUnitDescription(const String& plural, const String& singular);
 
    /**
      * Stop the plugin.
@@ -217,28 +247,42 @@ private:
      */
     static const int16_t TM_OFFSET_YEAR     = 1900;
 
+    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
+    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
+    DateDMY                     m_currentDate;              /**< Date structure to hold the current date. */
+    DateDMY                     m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
+    TargetDayDescription        m_targetDateInformation;    /**< String used for configured additional target date information. */
+    bool                        m_isUpdateAvailable;        /**< Flag to indicate whether an update is available or not. */
+    String                      m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
+    String                      m_url;                      /**< REST API URL */
+    AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
 
-    Canvas*                 m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    File                    m_fd;                       /**< File descriptor, used for bitmap file upload. */
-    bool                    m_isConfigured;             /**< Flag to indicate a configured plugin. */
-    String                  m_configurationFilename;    /**< String used for specifying the configuration filename. */
-    DateDMY                 m_currentDate;              /**< Date structure to hold the current date. */
-    DateDMY                 m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
-    TargetDayDescription    m_targetDateInformation;    /**< String used for configured additional target date information. */
-    bool                    m_isUpdateAvailable;        /**< Flag to indicate whether an update is available or not. */
-    String                  m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
-    
     /**
-     * Tries to load the plugin config file.
-     * If the file doesn't exist it will be generated with the plugin 
-     * UID as filename.
-     * 
-     * @return If loaded successfully it will return true otherwise false.
+     * Instance specific web request handler, called by the static web request
+     * handler. It will really handle the request.
+     *
+     * @param[in] request   Web request
      */
-    bool loadOrGenerateConfigFile(void);
+    void webReqHandler(AsyncWebServerRequest *request);
+
+    /**
+     * Saves current configuration to JSON file.
+     */
+    bool saveConfiguration();
+
+    /**
+     * Load configuration from JSON file.
+     */
+    bool loadConfiguration();
+
+    /**
+     * If configuration directory doesn't exists, it will be created.
+     * Otherwise nothing happens.
+     */
+    void createConfigDirectory();
 
     /**
      * Calculates the differnece between m_targetTime and m_currentTime in days.

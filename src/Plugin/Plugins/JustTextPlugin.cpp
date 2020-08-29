@@ -121,7 +121,7 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -162,6 +162,7 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
         }
     }
 
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
     if (MAX_USAGE < usageInPercent)
     {
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);

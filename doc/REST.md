@@ -15,6 +15,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/text](#endpoint-base-uridisplayuidplugin-uidtext)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/bitmap](#endpoint-base-uridisplayuidplugin-uidbitmap)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamp/`<lamp-id>`](#endpoint-base-uridisplayuidplugin-uidlamplamp-id)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown](#endpoint-base-uridisplayuidplugin-uidcountdown)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -296,6 +297,34 @@ Result:
 Example with curl:
 ```
 $ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/lamp/0
+```
+
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown
+Set the target date of the countdown plugin.
+
+Detail:
+* Method: POST
+* Arguments:
+  * day=`<day>`
+  * month=`<month>`
+  * year=`<year>`
+
+Example:
+```
+POST <base-uri>/rest/api/v1/display/uid/0/countdown?day=29;month=8;year=2019
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": null
+}
+```
+
+Example with curl:
+```
+$ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/countdown
 ```
 
 # Issues, Ideas And Bugs

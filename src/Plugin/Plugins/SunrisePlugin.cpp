@@ -101,7 +101,7 @@ void SunrisePlugin::active(IGfx& gfx)
             /* Move the text widget one line lower for better look. */
             m_textWidget.move(0, 1);
 
-            setText("\\calign?");
+            m_textWidget.setFormatStr("\\calign?");
          
             m_textCanvas->update(gfx);
         }
@@ -134,22 +134,20 @@ void SunrisePlugin::update(IGfx& gfx)
     return;
 }
 
-void SunrisePlugin::setText(const String& formatText)
-{
-    m_textWidget.setFormatStr(formatText);
-
-    return;
-}
-
 void SunrisePlugin::start()
 {
-    String configPath = CONFIG_PATH;
+    m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
 
-    m_configurationFilename = configPath + "/" + getUID() + ".json";
-
-    if (false != loadOrGenerateConfigFile())
+    /* Try to load configuration. If there is no configuration available, a default configuration
+     * will be created.
+     */
+    createConfigDirectory();
+    if (false == loadConfiguration())
     {
-        LOG_WARNING("Error on loading/generating: %s", m_configurationFilename.c_str());
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to create initial configuration file %s.", m_configurationFilename.c_str());
+        }
     }
 
     registerResponseCallback();
@@ -177,7 +175,9 @@ void SunrisePlugin::stop()
 
 void SunrisePlugin::requestNewData()
 {
-    if (true == m_client.begin(m_url))
+    String url = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+
+    if (true == m_client.begin(url))
     {
         (void)m_client.GET();
     }
@@ -193,7 +193,7 @@ void SunrisePlugin::registerResponseCallback()
         const size_t        JSON_DOC_SIZE   = 768U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         const size_t        MAX_USAGE       = 80U;
-        size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+        size_t              usageInPercent  = 0U;
         String              sunrise;
         String              sunset;
         JsonObject          results;
@@ -218,8 +218,9 @@ void SunrisePlugin::registerResponseCallback()
 
         m_relevantResponsePart = sunrise + " / " + sunset;
 
-        setText(m_relevantResponsePart);
+        m_textWidget.setFormatStr(m_relevantResponsePart);
 
+        usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
         if (MAX_USAGE < usageInPercent)
         {
             LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
@@ -260,79 +261,77 @@ String SunrisePlugin::addCurrentTimezoneValues(String dateTimeString)
     return timeBuffer;
 }
 
-bool SunrisePlugin::loadOrGenerateConfigFile()
+bool SunrisePlugin::saveConfiguration()
 {
-    bool                status          = true;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    bool    status  = true;
+    File    fd      = SPIFFS.open(m_configurationFilename, "w");
 
-    /* Check if the plugin has already created it's configuration file in the filesystem.*/
-    if (false == SPIFFS.exists(m_configurationFilename))
+    if (false == fd)
     {
-        LOG_WARNING("File %s doesn't exists.", m_configurationFilename.c_str());
-
-        /* If not  we are on the very first instalation of the plugin
-           First we create the directory. */
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
-        {
-            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
-            status = false;
-        }
-        else
-        {
-            /* And afterwards the plugin(UID)specific configuration file with default configuration values. */
-            String defaultLongitude = "2.295";
-            String defaultLatitude = "48.858";
-
-            m_fd = SPIFFS.open(m_configurationFilename, "w");
-            jsonDoc["longitude"] = defaultLongitude;
-            jsonDoc["latitude"] = defaultLatitude;
-
-            serializeJson(jsonDoc, m_fd);
-            m_fd.close();
-            m_url = "http://api.sunrise-sunset.org/json?lat="+ defaultLatitude + "&lng=" + defaultLongitude + "&formatted=0";
-
-            LOG_INFO("File %s created", m_configurationFilename.c_str());
-            status = false;
-        }
+        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        status = false;
     }
     else
     {
-        m_fd = SPIFFS.open(m_configurationFilename, "r");
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-        if (false == m_fd)
-        {
-            LOG_WARNING("Failed to open file %s.", m_configurationFilename.c_str());
-            status = false;
-        }
-        else
-        {
-            String longitude;
-            String latitude;
-            JsonObject obj;
-            String file_content = m_fd.readString();
+        jsonDoc["longitude"]    = m_longitude;
+        jsonDoc["latitude"]     = m_latitude;
 
-            deserializeJson(jsonDoc, file_content);
+        (void)serializeJson(jsonDoc, fd);
+        fd.close();
 
-            obj = jsonDoc.as<JsonObject>();
-            
-            longitude = obj["longitude"].as<String>();
-            latitude = obj["latitude"].as<String>();
-            
-            m_url = "http://api.sunrise-sunset.org/json?lat="+ latitude + "&lng=" + longitude + "&formatted=0";
-
-            m_fd.close();
-        }
-    }
-
-    if (MAX_USAGE < usageInPercent)
-    {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_INFO("File %s saved.", m_configurationFilename.c_str());
     }
 
     return status;
+}
+
+bool SunrisePlugin::loadConfiguration()
+{
+    bool    status  = true;
+    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+
+    if (false == fd)
+    {
+        LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+        status = false;
+    }
+    else
+    {
+        const size_t            JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
+        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
+
+        if (DeserializationError::Ok != error)
+        {
+            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+            status = false;   
+        }
+        else
+        {
+            JsonObject obj = jsonDoc.as<JsonObject>();
+
+            m_longitude = obj["longitude"].as<String>();
+            m_latitude  = obj["latitude"].as<String>();
+        }        
+
+        fd.close();
+    }
+
+    return status;
+}
+
+void SunrisePlugin::createConfigDirectory()
+{
+    if (false == SPIFFS.exists(CONFIG_PATH))
+    {
+        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        {
+            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
+        } 
+    }
 }
 
 /******************************************************************************

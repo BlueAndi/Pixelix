@@ -32,13 +32,15 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
 #include "ClockDrv.h"
 #include "CountdownPlugin.h"
+#include "RestApi.h"
+#include "Util.h"
 
 #include <ArduinoJson.h>
 #include <Logging.h>
 #include <SPIFFS.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -69,9 +71,39 @@ const char* CountdownPlugin::CONFIG_PATH    = "/configuration";
  * Public Methods
  *****************************************************************************/
 
+void CountdownPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+{
+    m_url = baseUri + "/countdown";
+
+    m_callbackWebHandler = &srv.on( m_url.c_str(),
+                                    [this](AsyncWebServerRequest *request)
+                                    {
+                                        this->webReqHandler(request);
+                                    });
+
+    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
+
+    return;
+}
+
+void CountdownPlugin::unregisterWebInterface(AsyncWebServer& srv)
+{
+    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
+
+    if (false == srv.removeHandler(m_callbackWebHandler))
+    {
+        LOG_WARNING("Couldn't remove %s handler.", getName());
+    }
+
+    m_callbackWebHandler = nullptr;
+
+    return;
+}
+
 void CountdownPlugin::active(IGfx& gfx)
 {
-    m_isConfigured = loadOrGenerateConfigFile();
+    /* Reload configuration, because it may be updated. */
+    (void)loadConfiguration();
 
     if (nullptr == m_iconCanvas)
     {
@@ -100,11 +132,12 @@ void CountdownPlugin::active(IGfx& gfx)
               /* Move the text widget one line lower for better look. */
             m_textWidget.move(0, 1);
 
-            setText("\\calign?");
+            m_textWidget.setFormatStr("\\calign?");
 
             m_textCanvas->update(gfx);
         }
     }
+
     calculateDifferenceInDays();
 
     return;
@@ -112,15 +145,14 @@ void CountdownPlugin::active(IGfx& gfx)
 
 void CountdownPlugin::inactive()
 {
-    m_isConfigured = false;
-    m_remainingDays = "";
+    m_remainingDays.clear();
 
     return;
 }
 
 void CountdownPlugin::update(IGfx& gfx)
 {
-    if (false != m_isUpdateAvailable)
+    if (true == m_isUpdateAvailable)
     {
         gfx.fillScreen(ColorDef::BLACK);
 
@@ -134,33 +166,51 @@ void CountdownPlugin::update(IGfx& gfx)
             m_textCanvas->update(gfx);
         }
 
-        m_isUpdateAvailable = true;
+        m_isUpdateAvailable = false;
     }
 
     return;
 }
 
-void CountdownPlugin::setText(const String& formatText)
+void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 {
-    m_textWidget.setFormatStr(formatText);
+    m_targetDate = targetDate;
+    
+    /* Always stores the configuration, otherwise it will be overwritten during
+     * plugin activation.
+     */
+    (void)saveConfiguration();
+
+    return;
+}
+
+void CountdownPlugin::setUnitDescription(const String& plural, const String& singular)
+{
+    m_targetDateInformation.plural      = plural;
+    m_targetDateInformation.singular    = singular;
+    
+    /* Always stores the configuration, otherwise it will be overwritten during
+     * plugin activation.
+     */
+    (void)saveConfiguration();
 
     return;
 }
 
 void CountdownPlugin::start()
 {
-    String configPath = CONFIG_PATH;
+    m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
 
-    m_configurationFilename = configPath + "/" + getUID() + ".json";
-
-    if (false == loadOrGenerateConfigFile())
+    /* Try to load configuration. If there is no configuration available, a default configuration
+     * will be created.
+     */
+    createConfigDirectory();
+    if (false == loadConfiguration())
     {
-        LOG_WARNING("Error on loading/generating plugin configfile: %s", m_configurationFilename.c_str());
-        m_isConfigured = false;
-    }
-    else
-    {
-        m_isConfigured = true;
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to create initial configuration file %s.", m_configurationFilename.c_str());
+        }
     }
 
     return;
@@ -184,83 +234,162 @@ void CountdownPlugin::stop()
  * Private Methods
  *****************************************************************************/
 
-bool CountdownPlugin::loadOrGenerateConfigFile()
+void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
 {
-    bool                status          = true;
+    String              content;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    size_t              usageInPercent  = 0U;
 
-    /* Check if the plugin has already created it's configuration file in the filesystem.*/
-    if (false == SPIFFS.exists(m_configurationFilename))
+    if (nullptr == request)
     {
-        LOG_WARNING("File %s doesn't exists.", m_configurationFilename.c_str());
+        return;
+    }
 
-        /* If not we are on the very first installation of the plugin
-           First we create the directory. */
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
-        {
-            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
-            status = false;
-        }
-        else
-        {
-            /* And afterwards the plugin (UID) specific configuration file with default configuration values. */
-            m_fd = SPIFFS.open(m_configurationFilename, "w");
+    if (HTTP_POST != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
 
-            jsonDoc["day"] = 29U;
-            jsonDoc["month"] = 05U;
-            jsonDoc["year"] = 2019U;
-            jsonDoc["descriptionPlural"] = "DAYS";
-            jsonDoc["descriptionSingular"] = "DAY";
-
-            serializeJson(jsonDoc, m_fd);
-
-            m_fd.close();
-
-            LOG_INFO("File %s created", m_configurationFilename.c_str());
-        }
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
-        m_fd = SPIFFS.open(m_configurationFilename, "r");
-
-        if (false == m_fd)
+        /* Target date missing? */
+        if ((false == request->hasArg("day")) ||
+            (false == request->hasArg("month")) ||
+            (false == request->hasArg("year")))
         {
-            LOG_WARNING("Failed to open file %s.", m_configurationFilename.c_str());
-            status = false;
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "Argument is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
-            String descriptionPlural;
-            String descriptionSingular;
-            JsonObject obj;
-            String file_content = m_fd.readString();
+            DateDMY targetDate;
+            bool    isSuccessDay    = Util::strToUInt8(request->arg("day"), targetDate.day);
+            bool    isSuccessMonth  = Util::strToUInt8(request->arg("month"), targetDate.month);
+            bool    isSuccessYear   = Util::strToUInt16(request->arg("year"), targetDate.year);
 
-            deserializeJson(jsonDoc, file_content);
-            obj = jsonDoc.as<JsonObject>();
-            
-            m_targetDate.day = obj["day"];
-            m_targetDate.month = obj["month"];
-            m_targetDate.year = obj["year"];
+            if ((false == isSuccessDay) ||
+                (false == isSuccessMonth) ||
+                (false == isSuccessYear))
+            {
+                JsonObject errorObj = jsonDoc.createNestedObject("error");
 
-            descriptionPlural = obj["descriptionPlural"].as<String>();
-            descriptionSingular = obj["descriptionSingular"].as<String>();
+                /* Prepare response */
+                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+                errorObj["msg"]     = "Invalid arguments.";
+                httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            }
+            else
+            {
+                setTargetDate(targetDate);
 
-            m_targetDateInformation.plural = descriptionPlural;
-            m_targetDateInformation.singular = descriptionSingular;
-            
-            m_fd.close();
+                /* Prepare response */
+                (void)jsonDoc.createNestedObject("data");
+                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+                httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+            }
         }
     }
 
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
     if (MAX_USAGE < usageInPercent)
     {
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
     }
 
+    serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+bool CountdownPlugin::saveConfiguration()
+{
+    bool    status  = true;
+    File    fd      = SPIFFS.open(m_configurationFilename, "w");
+
+    if (false == fd)
+    {
+        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        status = false;
+    }
+    else
+    {
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+        jsonDoc["day"]                  = m_targetDate.day;
+        jsonDoc["month"]                = m_targetDate.month;
+        jsonDoc["year"]                 = m_targetDate.year;
+        jsonDoc["descriptionPlural"]    = m_targetDateInformation.plural;
+        jsonDoc["descriptionSingular"]  = m_targetDateInformation.singular;
+
+        (void)serializeJson(jsonDoc, fd);
+        fd.close();
+
+        LOG_INFO("File %s saved.", m_configurationFilename.c_str());
+    }
+
     return status;
+}
+
+bool CountdownPlugin::loadConfiguration()
+{
+    bool    status  = true;
+    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+
+    if (false == fd)
+    {
+        LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+        status = false;
+    }
+    else
+    {
+        const size_t            JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
+        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
+
+        if (DeserializationError::Ok != error)
+        {
+            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+            status = false;   
+        }
+        else
+        {
+            JsonObject obj = jsonDoc.as<JsonObject>();
+
+            m_targetDate.day                    = obj["day"];
+            m_targetDate.month                  = obj["month"];
+            m_targetDate.year                   = obj["year"];
+            m_targetDateInformation.plural      = obj["descriptionPlural"].as<String>();
+            m_targetDateInformation.singular    = obj["descriptionSingular"].as<String>();
+        }        
+
+        fd.close();
+    }
+
+    return status;
+}
+
+void CountdownPlugin::createConfigDirectory()
+{
+    if (false == SPIFFS.exists(CONFIG_PATH))
+    {
+        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        {
+            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
+        } 
+    }
 }
 
 void CountdownPlugin::calculateDifferenceInDays()
@@ -270,7 +399,7 @@ void CountdownPlugin::calculateDifferenceInDays()
     uint32_t    targetDateInDays    = 0U;
     int32_t     numberOfDays        = 0;
 
-    if ((false != m_isConfigured) && (false != ClockDrv::getInstance().getTime(&currentTime)))
+    if (false != ClockDrv::getInstance().getTime(&currentTime))
     {
         m_currentDate.day = currentTime.tm_mday;
         m_currentDate.month = currentTime.tm_mon;
@@ -306,7 +435,7 @@ void CountdownPlugin::calculateDifferenceInDays()
             m_remainingDays = "ELAPSED!";
         }
         
-        setText(m_remainingDays);
+        m_textWidget.setFormatStr(m_remainingDays);
 
         m_isUpdateAvailable = true;
     }
@@ -328,7 +457,7 @@ uint16_t CountdownPlugin::countLeapYears(CountdownPlugin::DateDMY date)
 
 uint32_t CountdownPlugin::dateToDays(CountdownPlugin::DateDMY date)
 {
-    const uint8_t   monthDays[12]   = {31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U}; 
+    const uint8_t   monthDays[12]   = { 31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U }; 
     uint32_t        dateInDays      = 0U;
     uint8_t         i               = 0U;
 

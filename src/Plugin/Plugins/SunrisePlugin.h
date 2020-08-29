@@ -84,12 +84,15 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget(),
-        m_fd(),
-        m_url(""),
+        m_longitude(),
+        m_latitude(),
         m_configurationFilename(""),
         m_httpResponseReceived(false),
         m_relevantResponsePart("")
     {
+        /* Example data, used to generate the very first configuration file. */
+        m_longitude = "2.295";
+        m_latitude  = "48.858";
     }
 
     /**
@@ -145,13 +148,6 @@ public:
      */
     void update(IGfx& gfx);
 
-    /**
-     * Set text, which may contain format tags.
-     *
-     * @param[in] formatText    Text, which may contain format tags.
-     */
-    void setText(const String& formatText);
-
    /**
      * Stop the plugin.
      * Overwrite it if your plugin needs to know that it will be uninstalled.
@@ -190,8 +186,8 @@ private:
     Canvas*             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget        m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
-    File                m_fd;                       /**< File descriptor, used for bitmap file upload. */
-    String              m_url;                      /**< String used for POST request URL. */
+    String              m_longitude;                /**< Longitude of sunrise location */
+    String              m_latitude;                 /**< Latitude of sunrise location */
     String              m_configurationFilename;    /**< String used for specifying the configuration filename. */
     bool                m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     String              m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
@@ -209,15 +205,6 @@ private:
     void registerResponseCallback(void);
 
     /**
-     * Tries to load the plugin config file.
-     * If the file doesn't exist it will be generated with the plugin 
-     * UID as filename.
-     * 
-     * @return If loaded successfully it will return true otherwise false.
-     */
-    bool loadOrGenerateConfigFile(void);
-
-    /**
      * Add the daylight saving (if available) and GMT offset values to the given 
      * dateTime string
      *
@@ -226,6 +213,22 @@ private:
      * @return A formatted (timezone adjusted) time string according to the configured time format.
      */
     String addCurrentTimezoneValues(String dateTimeString);
+
+    /**
+     * Saves current configuration to JSON file.
+     */
+    bool saveConfiguration();
+
+    /**
+     * Load configuration from JSON file.
+     */
+    bool loadConfiguration();
+
+    /**
+     * If configuration directory doesn't exists, it will be created.
+     * Otherwise nothing happens.
+     */
+    void createConfigDirectory();
 };
 
 /******************************************************************************

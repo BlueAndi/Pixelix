@@ -113,7 +113,7 @@ void GruenbeckPlugin::active(IGfx& gfx)
             /* Move the text widget one line lower for better look. */
             m_textWidget.move(0, 1);
 
-            setText("\\calign?");
+            m_textWidget.setFormatStr("\\calign?");
          
             m_textCanvas->update(gfx);
         }
@@ -135,7 +135,7 @@ void GruenbeckPlugin::update(IGfx& gfx)
 {
     if (false != m_httpResponseReceived)
     {
-        setText("\\calign" + m_relevantResponsePart + "%");
+        m_textWidget.setFormatStr("\\calign" + m_relevantResponsePart + "%");
         gfx.fillScreen(ColorDef::BLACK);
 
         if (nullptr != m_iconCanvas)
@@ -156,22 +156,20 @@ void GruenbeckPlugin::update(IGfx& gfx)
     return;
 }
 
-void GruenbeckPlugin::setText(const String& formatText)
-{
-    m_textWidget.setFormatStr(formatText);
-
-    return;
-}
-
 void GruenbeckPlugin::start()
 {
-    String configPath = CONFIG_PATH;
+    m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
 
-    m_configurationFilename = configPath + "/" + getUID() + ".json";
-
-    if (false != loadOrGenerateConfigFile())
+    /* Try to load configuration. If there is no configuration available, a default configuration
+     * will be created.
+     */
+    createConfigDirectory();
+    if (false == loadConfiguration())
     {
-        LOG_WARNING("Error on loading/generating: %s", m_configurationFilename.c_str());
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to create initial configuration file %s.", m_configurationFilename.c_str());
+        }
     }
 
     registerResponseCallback();
@@ -211,7 +209,9 @@ void GruenbeckPlugin::process()
 
 void GruenbeckPlugin::requestNewData()
 {
-    if (true == m_client.begin(m_url))
+    String url = String("http://") + m_ipAddress + "/mux_http";
+
+    if (true == m_client.begin(url))
     {
         m_client.addPar("id","42");
         m_client.addPar("show","D_Y_10_1~");
@@ -237,71 +237,75 @@ void GruenbeckPlugin::registerResponseCallback()
     });
 }
 
-bool GruenbeckPlugin::loadOrGenerateConfigFile()
+bool GruenbeckPlugin::saveConfiguration()
 {
-    bool                status          = true;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    bool    status  = true;
+    File    fd      = SPIFFS.open(m_configurationFilename, "w");
 
-    /* Check if the plugin has already created it's configuration file in the filesystem.*/
-    if (false == SPIFFS.exists(m_configurationFilename))
+    if (false == fd)
     {
-        LOG_WARNING("File %s doesn't exists.", m_configurationFilename.c_str());
-
-        /* If not  we are on the very first instalation of the plugin
-           First we create the directory. */
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
-        {
-            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
-            status = false;
-        }
-        else
-        {
-            /* And afterwards the plugin(UID)specific configuration file with default configuration values. */
-            String defaultIPAddress = "192.168.0.16";
-
-            m_fd = SPIFFS.open(m_configurationFilename, "w");
-            jsonDoc["gruenbeck_ip"] = defaultIPAddress;
-            serializeJson(jsonDoc, m_fd);
-            m_fd.close();
-            m_url = "http://" + defaultIPAddress + "/mux_http";
-            LOG_INFO("File %s created", m_configurationFilename.c_str());
-            status = false;
-        }
+        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        status = false;
     }
     else
     {
-        m_fd = SPIFFS.open(m_configurationFilename, "r");
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-        if (false == m_fd)
-        {
-            LOG_WARNING("Failed to open file %s.", m_configurationFilename.c_str());
-            status = false;
-        }
-        else
-        {
-            JsonObject obj;
-            String ipAddress;
-            String file_content = m_fd.readString();
-            
-            deserializeJson(jsonDoc, file_content);
+        jsonDoc["gruenbeckIP"] = m_ipAddress;
 
-            obj = jsonDoc.as<JsonObject>();
-            ipAddress = obj["gruenbeck_ip"].as<String>();
+        (void)serializeJson(jsonDoc, fd);
+        fd.close();
 
-            m_url = "http://" + ipAddress + "/mux_http";
-            m_fd.close();
-        }
-    }
-
-    if (MAX_USAGE < usageInPercent)
-    {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_INFO("File %s saved.", m_configurationFilename.c_str());
     }
 
     return status;
+}
+
+bool GruenbeckPlugin::loadConfiguration()
+{
+    bool    status  = true;
+    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+
+    if (false == fd)
+    {
+        LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+        status = false;
+    }
+    else
+    {
+        const size_t            JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
+        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
+
+        if (DeserializationError::Ok != error)
+        {
+            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+            status = false;   
+        }
+        else
+        {
+            JsonObject obj = jsonDoc.as<JsonObject>();
+
+            m_ipAddress = obj["gruenbeckIP"].as<String>();
+        }        
+
+        fd.close();
+    }
+
+    return status;
+}
+
+void GruenbeckPlugin::createConfigDirectory()
+{
+    if (false == SPIFFS.exists(CONFIG_PATH))
+    {
+        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        {
+            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
+        } 
+    }
 }
 
 /******************************************************************************

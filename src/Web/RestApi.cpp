@@ -109,7 +109,7 @@ void RestApi::error(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     JsonObject          errorObj        = jsonDoc.createNestedObject("error");
     const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -121,6 +121,7 @@ void RestApi::error(AsyncWebServerRequest* request)
     errorObj["msg"]     = "Invalid path requested.";
     httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
     if (MAX_USAGE < usageInPercent)
     {
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
@@ -149,7 +150,7 @@ static void handleStatus(AsyncWebServerRequest* request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -208,6 +209,7 @@ static void handleStatus(AsyncWebServerRequest* request)
         httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
 
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
     if (MAX_USAGE < usageInPercent)
     {
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
@@ -232,7 +234,7 @@ static void handleSlots(AsyncWebServerRequest* request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -279,6 +281,7 @@ static void handleSlots(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
     if (MAX_USAGE < usageInPercent)
     {
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
@@ -305,7 +308,7 @@ static void handlePlugin(AsyncWebServerRequest* request)
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -478,6 +481,7 @@ static void handlePlugin(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
     if (MAX_USAGE < usageInPercent)
     {
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);

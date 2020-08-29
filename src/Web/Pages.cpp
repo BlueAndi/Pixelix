@@ -829,7 +829,7 @@ static void settingsPage(AsyncWebServerRequest* request)
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         String              rsp;
         const size_t        MAX_USAGE       = 80U;
-        size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+        size_t              usageInPercent  = 0U;
 
         if (false == Settings::getInstance().open(false))
         {
@@ -867,6 +867,7 @@ static void settingsPage(AsyncWebServerRequest* request)
             jsonDoc["info"]     = "Successful stored.";
         }
 
+        usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
         if (MAX_USAGE < usageInPercent)
         {
             LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
@@ -907,7 +908,7 @@ static String settingsPageProcessor(const String& var)
             const size_t        JSON_DOC_SIZE   = 4096U;
             DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
             const size_t        MAX_USAGE       = 80U;
-            size_t              usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+            size_t              usageInPercent  = 0U;
 
             for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
             {
@@ -982,6 +983,7 @@ static String settingsPageProcessor(const String& var)
 
             Settings::getInstance().close();
 
+            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
             if (MAX_USAGE < usageInPercent)
             {
                 LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
