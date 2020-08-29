@@ -217,7 +217,7 @@ public:
     /**
      * Set language depended strings for the unit.
      *
-     * @param[in] plurual   Unit in plural form, e.g. "days".
+     * @param[in] plural    Unit in plural form, e.g. "days".
      * @param[in] singular  Unit in singular form, e.g. "day".
      */
     void setUnitDescription(const String& plural, const String& singular);
