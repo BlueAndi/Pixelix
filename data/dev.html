@@ -9,12 +9,15 @@
     <script src="/js/ws.js"></script>
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
     <script>
-        var wsClient    = null; // Websocket client
-        var logMessages = [];
-        var maxLogs     = 40;
+        var wsClient        = null; // Websocket client
+        var logMessages     = [];
+        var maxLogs         = 40;
+        var isPageUnload    = false;
 
         function onClosed() {
-            alert("Websocket connection closed.");
+            if (false === isPageUnload) {
+                alert("Websocket connection closed.");
+            }
         }
 
         function onEvent(evt) {
@@ -96,6 +99,11 @@
                     console.error(err);
                 }
             });
+        };
+
+        window.onbeforeunload = function() {
+            isPageUnload = true;
+            wsClient.disconnect();
         };
     </script>
 </head>

@@ -104,7 +104,7 @@ pixelix.ws.Client.prototype.connect = function(options) {
                         options.onClosed();
                     }
 
-                    options.evtCallback = null;
+                    this.socket = null;
                 };
 
                 this.socket.onmessage = function(messageEvent) {
@@ -114,9 +114,25 @@ pixelix.ws.Client.prototype.connect = function(options) {
 
             } catch (exception) {
                 console.error(exception);
-                options.evtCallback = null;
+
+                if (null !== this.socket) {
+                    this.socket.close();
+                    this.socket = null;
+                }
+
                 reject();
             }
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.disconnect = function(options) {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else {
+            this.socket.close();
+            resolve();
         }
     }.bind(this));
 };
