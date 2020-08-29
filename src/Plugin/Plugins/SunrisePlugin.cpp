@@ -36,6 +36,7 @@
 #include "ClockDrv.h"
 #include "Settings.h"
 #include "SunrisePlugin.h"
+#include "RestApi.h"
 
 #include "time.h"
 #include <ArduinoJson.h>
@@ -72,6 +73,35 @@ const char* SunrisePlugin::CONFIG_PATH    = "/configuration";
  * Public Methods
  *****************************************************************************/
 
+void SunrisePlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+{
+    m_url = baseUri + "/location";
+
+    m_callbackWebHandler = &srv.on( m_url.c_str(),
+                                    [this](AsyncWebServerRequest *request)
+                                    {
+                                        this->webReqHandler(request);
+                                    });
+
+    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
+
+    return;
+}
+
+void SunrisePlugin::unregisterWebInterface(AsyncWebServer& srv)
+{
+    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
+
+    if (false == srv.removeHandler(m_callbackWebHandler))
+    {
+        LOG_WARNING("Couldn't remove %s handler.", getName());
+    }
+
+    m_callbackWebHandler = nullptr;
+
+    return;
+}
+
 void SunrisePlugin::active(IGfx& gfx)
 {
     if (nullptr == m_iconCanvas)
@@ -102,7 +132,7 @@ void SunrisePlugin::active(IGfx& gfx)
             m_textWidget.move(0, 1);
 
             m_textWidget.setFormatStr("\\calign?");
-         
+
             m_textCanvas->update(gfx);
         }
     }
@@ -155,12 +185,25 @@ void SunrisePlugin::start()
     return;
 }
 
-void SunrisePlugin::stop() 
+void SunrisePlugin::stop()
 {
     if (false != SPIFFS.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
+
+    return;
+}
+
+void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
+{
+    m_longitude = longitude;
+    m_latitude  = latitude;
+
+    /* Always stores the configuration, otherwise it will be overwritten during
+     * plugin activation.
+     */
+    (void)saveConfiguration();
 
     return;
 }
@@ -172,6 +215,65 @@ void SunrisePlugin::stop()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = 0U;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        /* Location missing? */
+        if ((false == request->hasArg("longitude")) ||
+            (false == request->hasArg("latitude")))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "Argument is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            setLocation(request->arg("longitude"), request->arg("latitude"));
+
+            /* Prepare response */
+            (void)jsonDoc.createNestedObject("data");
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        }
+    }
+
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
+
+    serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
 
 void SunrisePlugin::requestNewData()
 {
@@ -251,7 +353,7 @@ String SunrisePlugin::addCurrentTimezoneValues(String dateTimeString)
         Settings::getInstance().close();
     }
 
-    strptime(dateTimeString.c_str(), "%Y-%m-%dT%H:%M:%S" ,&timeInfo); 
+    strptime(dateTimeString.c_str(), "%Y-%m-%dT%H:%M:%S" ,&timeInfo);
     timeInfo.tm_hour += gmtOffset /3600;
     timeInfo.tm_hour += isDaylightSaving;
     timeInfo.tm_hour += isPM * 12;
@@ -307,7 +409,7 @@ bool SunrisePlugin::loadConfiguration()
         if (DeserializationError::Ok != error)
         {
             LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
-            status = false;   
+            status = false;
         }
         else
         {
@@ -315,7 +417,7 @@ bool SunrisePlugin::loadConfiguration()
 
             m_longitude = obj["longitude"].as<String>();
             m_latitude  = obj["latitude"].as<String>();
-        }        
+        }
 
         fd.close();
     }
@@ -330,7 +432,7 @@ void SunrisePlugin::createConfigDirectory()
         if (false == SPIFFS.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
-        } 
+        }
     }
 }
 

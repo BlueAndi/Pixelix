@@ -62,10 +62,10 @@
 
 /**
  * Shows the current sunrise / sunset times for a configured location.
- * 
+ *
  * At the first installation a json document is generated to the SPIFFS /configuration/UUID.json
  * where the longitude and latidude have to be configured.
- * 
+ *
  * Powered by sunrise-sunset.org!
  */
 class SunrisePlugin : public Plugin
@@ -88,7 +88,9 @@ public:
         m_latitude(),
         m_configurationFilename(""),
         m_httpResponseReceived(false),
-        m_relevantResponsePart("")
+        m_relevantResponsePart(""),
+        m_url(),
+        m_callbackWebHandler(nullptr)
     {
         /* Example data, used to generate the very first configuration file. */
         m_longitude = "2.295";
@@ -127,6 +129,21 @@ public:
     }
 
     /**
+     * Register web interface, e.g. REST API functionality.
+     *
+     * @param[in] srv       Webserver
+     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     */
+    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override;
+
+    /**
+     * Unregister web interface.
+     *
+     * @param[in] srv   Webserver
+     */
+    void unregisterWebInterface(AsyncWebServer& srv) override;
+
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
@@ -160,6 +177,14 @@ public:
      */
     void start() override;
 
+    /**
+     * Set geo location.
+     *
+     * @param[in] longitude Longitude
+     * @param[in] latitude  Latitude
+     */
+    void setLocation(const String& longitude, const String& latitude);
+
 private:
 
     /**
@@ -182,17 +207,27 @@ private:
      */
     static const char* CONFIG_PATH;
 
-    Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget        m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
-    String              m_longitude;                /**< Longitude of sunrise location */
-    String              m_latitude;                 /**< Latitude of sunrise location */
-    String              m_configurationFilename;    /**< String used for specifying the configuration filename. */
-    bool                m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
-    String              m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
-    AsyncHttpClient     m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer         m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
+    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
+    String                      m_longitude;                /**< Longitude of sunrise location */
+    String                      m_latitude;                 /**< Latitude of sunrise location */
+    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
+    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
+    String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
+    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
+    SimpleTimer                 m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
+    String                      m_url;                      /**< REST API URL */
+    AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
+
+    /**
+     * Instance specific web request handler, called by the static web request
+     * handler. It will really handle the request.
+     *
+     * @param[in] request   Web request
+     */
+    void webReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Request new data.
@@ -205,7 +240,7 @@ private:
     void registerResponseCallback(void);
 
     /**
-     * Add the daylight saving (if available) and GMT offset values to the given 
+     * Add the daylight saving (if available) and GMT offset values to the given
      * dateTime string
      *
      * @param[in] dateTimeString dateTime string received via calling the sunrise-sunset.org API.

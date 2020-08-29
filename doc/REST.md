@@ -16,6 +16,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/bitmap](#endpoint-base-uridisplayuidplugin-uidbitmap)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamp/`<lamp-id>`](#endpoint-base-uridisplayuidplugin-uidlamplamp-id)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown](#endpoint-base-uridisplayuidplugin-uidcountdown)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location](#endpoint-base-uridisplayuidplugin-uidlocation)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -300,7 +301,7 @@ $ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/di
 ```
 
 ### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown
-Set the target date of the countdown plugin.
+Set the target date of the CountdownPlugin plugin.
 
 Detail:
 * Method: POST
@@ -325,6 +326,33 @@ Result:
 Example with curl:
 ```
 $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/countdown
+```
+
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location
+Set the location of the SunrisePlugin plugin.
+
+Detail:
+* Method: POST
+* Arguments:
+  * longitude=`<longitude>`
+  * latitude=`<latitude>`
+
+Example:
+```
+POST <base-uri>/rest/api/v1/display/uid/0/location?longitude=2.295;latitude=48.858
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": null
+}
+```
+
+Example with curl:
+```
+$ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/location
 ```
 
 # Issues, Ideas And Bugs

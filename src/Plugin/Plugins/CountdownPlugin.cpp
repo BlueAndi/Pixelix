@@ -172,31 +172,6 @@ void CountdownPlugin::update(IGfx& gfx)
     return;
 }
 
-void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
-{
-    m_targetDate = targetDate;
-    
-    /* Always stores the configuration, otherwise it will be overwritten during
-     * plugin activation.
-     */
-    (void)saveConfiguration();
-
-    return;
-}
-
-void CountdownPlugin::setUnitDescription(const String& plural, const String& singular)
-{
-    m_targetDateInformation.plural      = plural;
-    m_targetDateInformation.singular    = singular;
-    
-    /* Always stores the configuration, otherwise it will be overwritten during
-     * plugin activation.
-     */
-    (void)saveConfiguration();
-
-    return;
-}
-
 void CountdownPlugin::start()
 {
     m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
@@ -216,12 +191,37 @@ void CountdownPlugin::start()
     return;
 }
 
-void CountdownPlugin::stop() 
+void CountdownPlugin::stop()
 {
     if (false != SPIFFS.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
+
+    return;
+}
+
+void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
+{
+    m_targetDate = targetDate;
+
+    /* Always stores the configuration, otherwise it will be overwritten during
+     * plugin activation.
+     */
+    (void)saveConfiguration();
+
+    return;
+}
+
+void CountdownPlugin::setUnitDescription(const String& plural, const String& singular)
+{
+    m_targetDateInformation.plural      = plural;
+    m_targetDateInformation.singular    = singular;
+
+    /* Always stores the configuration, otherwise it will be overwritten during
+     * plugin activation.
+     */
+    (void)saveConfiguration();
 
     return;
 }
@@ -362,7 +362,7 @@ bool CountdownPlugin::loadConfiguration()
         if (DeserializationError::Ok != error)
         {
             LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
-            status = false;   
+            status = false;
         }
         else
         {
@@ -373,7 +373,7 @@ bool CountdownPlugin::loadConfiguration()
             m_targetDate.year                   = obj["year"];
             m_targetDateInformation.plural      = obj["descriptionPlural"].as<String>();
             m_targetDateInformation.singular    = obj["descriptionSingular"].as<String>();
-        }        
+        }
 
         fd.close();
     }
@@ -388,7 +388,7 @@ void CountdownPlugin::createConfigDirectory()
         if (false == SPIFFS.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
-        } 
+        }
     }
 }
 
@@ -434,7 +434,7 @@ void CountdownPlugin::calculateDifferenceInDays()
         {
             m_remainingDays = "ELAPSED!";
         }
-        
+
         m_textWidget.setFormatStr(m_remainingDays);
 
         m_isUpdateAvailable = true;
@@ -442,32 +442,32 @@ void CountdownPlugin::calculateDifferenceInDays()
 }
 
 uint16_t CountdownPlugin::countLeapYears(CountdownPlugin::DateDMY date)
-{ 
-    uint16_t years = date.year; 
-    
+{
+    uint16_t years = date.year;
+
     /* Check if the current year needs to be considered for the count of leap years or not. */
-    if (date.month <= 2U) 
+    if (date.month <= 2U)
     {
         --years;
-    } 
+    }
 
     /* An year is a leap year if it is a multiple of 4, multiple of 400 and not a multiple of 100. */
-    return years / 4U - years / 100U + years / 400U; 
-} 
+    return years / 4U - years / 100U + years / 400U;
+}
 
 uint32_t CountdownPlugin::dateToDays(CountdownPlugin::DateDMY date)
 {
-    const uint8_t   monthDays[12]   = { 31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U }; 
+    const uint8_t   monthDays[12]   = { 31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U };
     uint32_t        dateInDays      = 0U;
     uint8_t         i               = 0U;
 
     dateInDays = date.year * 365U + date.day;
-    
-    for (i = 0U; i < (date.month - 1U); i++) 
+
+    for (i = 0U; i < (date.month - 1U); i++)
     {
-        dateInDays += monthDays[i]; 
+        dateInDays += monthDays[i];
     }
-    
+
     dateInDays += countLeapYears(date);
 
     return dateInDays;

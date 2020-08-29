@@ -62,17 +62,17 @@
 
 /**
  * Shows the remaining days until a configured target date.
- * 
+ *
  * At the first installation a json document is generated to the SPIFFS /configuration/UUID.json
  * where the target date has to be configured.
- * 
+ *
  */
 class CountdownPlugin : public Plugin
 {
 public:
 
     /** Date data. */
-    typedef struct 
+    typedef struct
     {
         uint8_t day;    /**< Day of month. */
         uint8_t month;  /**< Month of year. */
@@ -80,7 +80,7 @@ public:
     } DateDMY;
 
     /** The target date description. */
-    typedef struct 
+    typedef struct
     {
         String plural;      /**< The description in plural form e.g. Days. */
         String singular;    /**< The description in singular form e.g. day */
@@ -186,21 +186,6 @@ public:
      */
     void update(IGfx& gfx);
 
-    /**
-     * Set target date for countdown.
-     *
-     * @param[in] targetDate    Target date
-     */
-    void setTargetDate(const DateDMY& targetDate);
-
-    /**
-     * Set language depended strings for the unit.
-     * 
-     * @param[in] plurual   Unit in plural form, e.g. "days".
-     * @param[in] singular  Unit in singular form, e.g. "day".
-     */
-    void setUnitDescription(const String& plural, const String& singular);
-
    /**
      * Stop the plugin.
      * Overwrite it if your plugin needs to know that it will be uninstalled.
@@ -212,6 +197,21 @@ public:
      * Overwrite it if your plugin needs to know that it was installed.
      */
     void start() override;
+
+    /**
+     * Set target date for countdown.
+     *
+     * @param[in] targetDate    Target date
+     */
+    void setTargetDate(const DateDMY& targetDate);
+
+    /**
+     * Set language depended strings for the unit.
+     *
+     * @param[in] plurual   Unit in plural form, e.g. "days".
+     * @param[in] singular  Unit in singular form, e.g. "day".
+     */
+    void setUnitDescription(const String& plural, const String& singular);
 
 private:
 
@@ -240,7 +240,7 @@ private:
      * to a human readable value, since months since January are used (0-11).
      */
     static const int16_t TM_OFFSET_MONTH     = 1;
-    
+
    /**
      * Offste to translate the year of the tm struct (time.h)
      * to a human readable value, since years since 1900 are used.
