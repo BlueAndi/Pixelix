@@ -206,7 +206,7 @@ bool CountdownPlugin::loadOrGenerateConfigFile()
         }
         else
         {
-            /* And afterwards the plugin(UID)specific configuration file with default configuration values. */
+            /* And afterwards the plugin (UID) specific configuration file with default configuration values. */
             m_fd = SPIFFS.open(m_configurationFilename, "w");
 
             jsonDoc["day"] = 29U;
