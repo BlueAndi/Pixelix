@@ -44,6 +44,7 @@
 #include "WsCmdLog.h"
 #include "WsCmdMove.h"
 #include "WsCmdSlotDuration.h"
+#include "WsCmdIperf.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -98,8 +99,11 @@ static WsCmdLog             gWsCmdLog;
 /** Websocket move command */
 static WsCmdMove            gWsCmdMove;
 
-/** Websocket move command */
+/** Websocket slot duration command */
 static WsCmdSlotDuration    gWsCmdSlotDuration;
+
+/** Websocket iperf command */
+static WsCmdIperf           gWsCmdIperf;
 
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
@@ -113,7 +117,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdBrightness,
     &gWsCmdLog,
     &gWsCmdMove,
-    &gWsCmdSlotDuration
+    &gWsCmdSlotDuration,
+    &gWsCmdIperf
 };
 
 /******************************************************************************

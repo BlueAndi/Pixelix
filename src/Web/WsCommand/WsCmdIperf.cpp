@@ -25,17 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Websocket command to get/set logging
+ * @brief  Websocket command to start/stop iperf
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmdLog.h"
-#include "WebSocket.h"
+#include "WsCmdIperf.h"
 
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -61,7 +61,7 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdLog::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 {
     if ((nullptr == server) ||
         (nullptr == client))
@@ -74,71 +74,133 @@ void WsCmdLog::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     {
         server->text(client->id(), "NACK;\"Parameter invalid.\"");
     }
-    else
+    /* Start iperf? */
+    else if (CMD_START == m_cmd)
     {
-        String      rsp             = "ACK";
-        const char  DELIMITER       = ';';
-        LogSink*    selectedSink    = nullptr;
-
-        /* Set logging on/off? */
-        if (0 < m_cnt)
+        if (ESP_OK != iperf_start(&m_cfg))
         {
-            if (false == m_isLoggingOn)
-            {
-                (void)Logging::getInstance().selectSink("Serial");
-            }
-            else
-            {
-                (void)Logging::getInstance().selectSink("Websocket");
-            }
-        }
-
-        rsp += DELIMITER;
-
-        selectedSink = Logging::getInstance().getSelectedSink();
-
-        if ((nullptr == selectedSink) ||
-            (selectedSink->getName() != "Websocket"))
-        {
-            rsp += "0";
+            server->text(client->id(), "NACK;\"Starting failed.\"");
         }
         else
         {
-            rsp += "1";
-        }
+            LOG_INFO("iperf started: mode = %s-%s sip = %u.%u.%u.%u:%u, dip = %u.%u.%u.%u:%u, interval = %us, time = %us",
+                (m_cfg.flag & IPERF_FLAG_TCP) ? "tcp" : "udp",
+                (m_cfg.flag & IPERF_FLAG_SERVER) ? "server" : "client",
+                m_cfg.sip & 0xffU, (m_cfg.sip >> 8) & 0xffU, (m_cfg.sip >> 16) & 0xffU, (m_cfg.sip >>24) & 0xffU, m_cfg.sport,
+                m_cfg.dip & 0xffU, (m_cfg.dip >> 8) & 0xffU, (m_cfg.dip >> 16) & 0xffU, (m_cfg.dip >>24) & 0xffU, m_cfg.dport,
+                m_cfg.interval, m_cfg.time);
 
-        server->text(client->id(), rsp);
+            server->text(client->id(), "ACK");
+        }
+    }
+    /* Stop iperf? */
+    else if (CMD_STOP == m_cmd)
+    {
+        if (ESP_OK != iperf_stop())
+        {
+            server->text(client->id(), "NACK;\"Stopping failed.\"");
+        }
+        else
+        {
+            LOG_INFO("iperf stopped.");
+            server->text(client->id(), "ACK");
+        }
+    }
+    else
+    {
+        server->text(client->id(), "NACK;\"Parameter invalid.\"");        
     }
 
-    m_cnt       = 0U;
     m_isError   = false;
+    m_parCnt    = 0U;
+    m_cmd       = CMD_UNKNOWN;
+
+    setCfgDefault();
 
     return;
 }
 
-void WsCmdLog::setPar(const char* par)
+void WsCmdIperf::setPar(const char* par)
 {
-    if (0U == m_cnt)
+    if (0U == m_parCnt)
     {
-        if (0 == strcmp(par, "0"))
+        if (0 == strcmp(par, "START"))
         {
-            m_isLoggingOn = false;
+            m_cmd = CMD_START;
         }
-        else if (0 == strcmp(par, "1"))
+        else if (0 == strcmp(par, "STOP"))
         {
-            m_isLoggingOn = true;
+            m_cmd = CMD_STOP;
         }
         else
         {
             m_isError = true;
         }
+    }
+    else if (CMD_START == m_cmd)
+    {
+        if (1U == m_parCnt)
+        {
+            if (0 == strcmp(par, "DEFAULT"))
+            {
+                m_cfg.flag = IPERF_FLAG_SERVER | IPERF_FLAG_TCP;
+            }
+            else if (0 == strcmp(par, "TCP"))
+            {
+                m_cfg.flag = IPERF_FLAG_SERVER | IPERF_FLAG_TCP;;
+            }
+            else if (0 == strcmp(par, "UDP"))
+            {
+                m_cfg.flag = IPERF_FLAG_SERVER | IPERF_FLAG_UDP;
+            }
+            else
+            {
+                m_isError = true;
+            }
+        }
+        else if (2U == m_parCnt)
+        {
+            if (0 == strcmp(par, "DEFAULT"))
+            {
+                m_cfg.interval = IPERF_DEFAULT_INTERVAL;
+            }
+            else
+            {
+                bool status = Util::strToUInt32(String(par), m_cfg.interval);
 
-        ++m_cnt;
+                if (false == status)
+                {
+                    m_isError = true;
+                }
+            }
+        }
+        else if (3U == m_parCnt)
+        {
+            if (0 == strcmp(par, "DEFAULT"))
+            {
+                m_cfg.time = IPERF_DEFAULT_TIME;
+            }
+            else
+            {
+                bool status = Util::strToUInt32(String(par), m_cfg.time);
+
+                if (false == status)
+                {
+                    m_isError = true;
+                }
+            }
+        }
+        else
+        {
+            m_isError = true;
+        }
     }
     else
     {
         m_isError = true;
     }
+
+    ++m_parCnt;
 
     return;
 }
@@ -150,6 +212,18 @@ void WsCmdLog::setPar(const char* par)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void WsCmdIperf::setCfgDefault()
+{
+    /* Default configuration */
+    m_cfg.flag      = IPERF_FLAG_SERVER | IPERF_FLAG_TCP;
+    m_cfg.sip       = WiFi.localIP();
+    m_cfg.sport     = IPERF_DEFAULT_PORT;
+    m_cfg.dip       = 0U;
+    m_cfg.dport     = IPERF_DEFAULT_PORT;
+    m_cfg.interval  = IPERF_DEFAULT_INTERVAL;
+    m_cfg.time      = IPERF_DEFAULT_TIME;
+}
 
 /******************************************************************************
  * External Functions

@@ -74,6 +74,22 @@
             });
         }
 
+        function startIperf() {
+            wsClient.startIperf().then(function(rsp) {
+                alert("Ok.");
+            }).catch(function(err) {
+                alert("Error.");
+            });
+        }
+
+        function stopIperf() {
+            wsClient.stopIperf().then(function(rsp) {
+                alert("Ok.");
+            }).catch(function(err) {
+                alert("Error.");
+            });
+        }
+
         window.onload = function() {
             wsClient = new pixelix.ws.Client();
             wsClient.connect({
@@ -124,6 +140,9 @@
     <h2>Development</h2>
     <h3>System Reset</h3>
     <input type="button" value="Reset" onclick="reset();" />
+    <h3>Performance Measurement</h3>
+    <input type="button" value="Start iperf" onclick="startIperf();" />
+    <input type="button" value="Stop iperf" onclick="stopIperf();" />
     <h3>Logging</h3>
     <input id="bLog" type="button" value="Enable" onclick="toggle();" />
     <p>Note, only the last 40 messages are show.</p>

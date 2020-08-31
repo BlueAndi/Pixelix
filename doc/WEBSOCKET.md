@@ -20,6 +20,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Enable/Disable logging](#enabledisable-logging)
     - [Is logging enabled?](#is-logging-enabled)
     - [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
+  - [Start/Stop iperf server](#startstop-iperf-server)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -182,6 +183,22 @@ Event: If logging is enabled, a event will be automatically be sent for every lo
 * ```<filename>```: Filename where the log message comes from, emphasized in "".
 * ```<line>```: Line number if in the file where the log message comes from.
 * ```<text>```: Logged text, emphasized in "".
+
+## Start/Stop iperf server
+Command: ```IPERF;<CMD>;<OPTIONS>```
+
+Parameter:
+* ```<CMD>```: START to start server; STOP to stop server
+* ```<OPTIONS>```: Options are only valid for the START command.
+  * 1st option is protocol: DEFAULT (= TCP), TCP, UDP
+  * 2nd option is interval in s: DEFAULT (= 3) or value
+  * 3rd option is time in s: DEFAULT (= 30) or value
+
+Response:
+* Successful:
+  * ```ACK```
+* Failed:
+  * ```NACK```
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

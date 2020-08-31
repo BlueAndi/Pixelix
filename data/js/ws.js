@@ -169,6 +169,8 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 rsp.slotId = parseInt(data[0]);
                 rsp.uid = parseInt(data[1]);
                 this.pendingCmd.resolve(rsp);
+            } else if ("IPERF" === this.pendingCmd.name) {
+                this.pendingCmd.resolve(rsp);
             } else if ("LOG" === this.pendingCmd.name) {
                 rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
                 this.pendingCmd.resolve(rsp);
@@ -444,6 +446,64 @@ pixelix.ws.Client.prototype.setSlotDuration = function(options) {
 
             this._sendCmd({
                 name: "SLOT_DURATION",
+                par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.startIperf = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "START";
+        if (null === this.socket) {
+            reject();
+        } else {
+
+            if ("string" === typeof options) {
+
+                if ("string" === typeof options.protocol) {
+                    par += ";";
+                    par += options.protocol;
+                } else {
+                    par += ";DEFAULT"
+                }
+
+                if ("number" === typeof options.interval) {
+                    par += ";";
+                    par += options.interval;
+                } else {
+                    par += ";DEFAULT"
+                }
+
+                if ("number" === typeof options.time) {
+                    par += ";";
+                    par += options.time;
+                } else {
+                    par += ";DEFAULT"
+                }
+            }
+
+            this._sendCmd({
+                name: "IPERF",
+                par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.stopIperf = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "STOP";
+
+        if (null === this.socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "IPERF",
                 par: par,
                 resolve: resolve,
                 reject: reject
