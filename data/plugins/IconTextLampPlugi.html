@@ -7,6 +7,56 @@
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
     <script>
+
+        var pluginName = "IconTextLampPlugin";
+
+        function getPluginInstances() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET", "/rest/api/v1/display/slots");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+                var index   = 0;
+
+                if (0 === jsonRsp.status) {
+
+                    for(index = 0; index < jsonRsp.data.slots.length; ++index) {
+                        if (jsonRsp.data.slots[index].name === pluginName) {
+
+                            var element = document.getElementById("pluginUid");
+                            var option  = document.createElement("option");
+
+                            option.value = jsonRsp.data.slots[index].uid;
+                            option.text = jsonRsp.data.slots[index].uid;
+                            element.add(option);
+                        }
+                    }
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send();
+        }
+
+        function setText(pluginUid, justText) {
+            var formData = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("show", justText);
+
+            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/text");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+
+                if (0 === jsonRsp.status) {
+                    alert("Ok.");
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send(formData);
+        }
+        
         window.onload = function() {
             var elements    = document.getElementsByName("injectIp");
             var index       = 0;
@@ -15,6 +65,8 @@
             for(index = 0; index < elements.length; ++index) {
                 elements[index].innerHTML = elements[index].innerHTML.replace("{{ORIGIN}}", location.origin);
             }
+
+            getPluginInstances();
         };
     </script>
 </head>
@@ -67,6 +119,16 @@
         <li>LAMP-ID: The id of the lamp (starting with 0 from left).</li>
         <li>LAMP-STATE: <pre>on</pre> or <pre>off</pre></li>
     </ul>
+    <h3>Configuration</h3>
+    <form name="myForm" action="javascript:setText(pluginUid.options[pluginUid.selectedIndex].value, justText.value)">
+        <label for="pluginUid">Plugin UID:</label><br />
+        <select id="pluginUid" size="1">
+        </select>
+        <br />
+        <label for="justText">Target date:</label><br />
+        <input type="text" id="justText" name="justText" value="" size="20" />
+        <input name="submit" type="submit" value="Update"/>
+    </form>
 </div>
 <div class="footer">
     <hr />
