@@ -70,11 +70,14 @@ namespace Pin
     /** Pin number of user button */
     static const uint8_t    userButtonPinNo         = 4U;
 
-    /** Pin number of LDR in */
-    static const uint8_t    ldrInPinNo              = 34U;
+    /** Pin number of test pin */
+    static const uint8_t    testPinNo               = 23U;
 
     /** Pin number of LED matrix data out */
     static const uint8_t    ledMatrixDataOutPinNo   = 27U;
+
+    /** Pin number of LDR in */
+    static const uint8_t    ldrInPinNo              = 34U;    
 };
 
 /** Digital output pin: Onboard LED */
@@ -83,11 +86,14 @@ static const DOutPin<Pin::onBoardLedPinNo>              onBoardLedOut;
 /** Digital input pin: User button (input with pull-up) */
 static const DInPin<Pin::userButtonPinNo, INPUT_PULLUP> userButtonIn;
 
-/** Analog input pin: LDR in */
-static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
+/** Digital output pin: Test pin (only for debug purposes) */
+static const DOutPin<Pin::testPinNo>                    testPinOut;
 
 /** Digital output pin: LED matrix data out */
 static const DOutPin<Pin::ledMatrixDataOutPinNo>        ledMatrixDataOut;
+
+/** Analog input pin: LDR in */
+static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 
 /** ADC resolution in digits */
 static const uint16_t   adcResolution   = 4096U;
