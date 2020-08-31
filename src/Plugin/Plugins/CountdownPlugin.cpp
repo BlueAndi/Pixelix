@@ -216,6 +216,8 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 {
     lock();
 
+    LOG_INFO("New target date: %04u-%02u-%02u", targetDate.year, targetDate.month, targetDate.day);
+
     m_targetDate = targetDate;
 
     /* Always stores the configuration, otherwise it will be overwritten during
@@ -231,6 +233,8 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 void CountdownPlugin::setUnitDescription(const String& plural, const String& singular)
 {
     lock();
+
+    LOG_INFO("New unit description: \"%s\" / \"%s\"", plural.c_str(), singular.c_str());
 
     m_targetDateInformation.plural      = plural;
     m_targetDateInformation.singular    = singular;

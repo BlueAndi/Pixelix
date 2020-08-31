@@ -7,6 +7,58 @@
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
     <script>
+
+        var pluginName = "CountdownPlugin";
+
+        function getPluginInstances() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET", "/rest/api/v1/display/slots");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+                var index   = 0;
+
+                if (0 === jsonRsp.status) {
+
+                    for(index = 0; index < jsonRsp.data.slots.length; ++index) {
+                        if (jsonRsp.data.slots[index].name === pluginName) {
+
+                            var element = document.getElementById("pluginUid");
+                            var option  = document.createElement("option");
+
+                            option.value = jsonRsp.data.slots[index].uid;
+                            option.text = jsonRsp.data.slots[index].uid;
+                            element.add(option);
+                        }
+                    }
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send();
+        }
+
+        function setTargetDate(pluginUid, targetDate) {
+            var formData = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("day", targetDate.getDate());
+            formData.append("month", targetDate.getMonth() + 1);
+            formData.append("year", targetDate.getFullYear());
+
+            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/countdown");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+
+                if (0 === jsonRsp.status) {
+                    alert("Ok.");
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send(formData);
+        }
+
         window.onload = function() {
             var elements    = document.getElementsByName("injectIp");
             var index       = 0;
@@ -15,6 +67,8 @@
             for(index = 0; index < elements.length; ++index) {
                 elements[index].innerHTML = elements[index].innerHTML.replace("{{ORIGIN}}", location.origin);
             }
+
+            getPluginInstances();
         };
     </script>
 </head>
@@ -37,13 +91,23 @@
     <img src="/images/CountdownPlugin.jpg" alt="Screenshot" />
     <p>The plugin shows the remaining days until a configured target date.</p>
     <h3>REST API</h3>
-    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/&lt;PLUGIN-UID&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;</pre>
+    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>
         <li>DAY: The target date day.</li>
         <li>MONTH: The target date month.</li>
         <li>YEAR: The target date year (YYYY format, e.g. 2020)</li>
     </ul>
+    <h3>Configuration</h3>
+    <form name="targetDateForm" action="javascript:setTargetDate(pluginUid.options[pluginUid.selectedIndex].value, targetDate.valueAsDate)">
+        <label for="pluginUid">Plugin UID:</label><br />
+        <select id="pluginUid" size="1">
+        </select>
+        <br />
+        <label for="targetDate">Target date:</label><br />
+        <input type="date" id="targetDate" name="targetDate" value="2020-09-01" />
+        <input name="submit" type="submit" value="Update"/>
+    </form>
 </div>
 <div class="footer">
     <hr />
