@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>%PAGE_TITLE%</title>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="/style/style.css" />
+    <script>
+        window.onload = function() {
+            var elements    = document.getElementsByName("injectIp");
+            var index       = 0;
+            var text        = "";
+
+            for(index = 0; index < elements.length; ++index) {
+                elements[index].innerHTML = elements[index].innerHTML.replace("{{ORIGIN}}", location.origin);
+            }
+        };
+    </script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div class="topnav">
+    <a href="/">Home</a>
+    <a href="/dev.html">Development</a>
+    <a href="/display.html">Display</a>
+    <a href="/edit">Filesystem</a>
+    <a href="/network.html">Network</a>
+    <a href="/plugins.html" class="active">Plugins</a>
+    <a href="/settings.html">Settings</a>
+    <a href="/update.html">Update</a>
+</div>
+<div class="main">
+    <h2>SunrisePlugin</h2>
+    <img src="/images/SunrisePlugin.jpg" alt="Screenshot" />
+    <p>The plugin shows the current sunrise / sunset times for a configured location.</p>
+    <h3>REST API</h3>
+    <h4>Text</h4>
+    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/&lt;PLUGIN-UID&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+        <li>LONGITUDE: The longitude of the location.</li>
+        <li>LATITUDE: The latitude of the location.</li>
+    </ul>
+</div>
+<div class="footer">
+    <hr />
+    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>

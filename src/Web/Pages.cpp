@@ -41,6 +41,7 @@
 #include "LedMatrix.h"
 #include "DisplayMgr.h"
 #include "RestApi.h"
+#include "PluginMgr.h"
 
 #include <WiFi.h>
 #include <Esp.h>
@@ -68,6 +69,7 @@
  * Prototypes
  *****************************************************************************/
 
+static String fitToSpiffs(const String& path, const String& filenNameWithoutExt, const String& fileNameExtension);
 static bool isValidHostname(const String& hostname);
 static String getColoredText(const String& text);
 
@@ -80,6 +82,9 @@ static String indexPageProcessor(const String& var);
 
 static void networkPage(AsyncWebServerRequest* request);
 static String networkPageProcessor(const String& var);
+
+static void pluginsPage(AsyncWebServerRequest* request);
+static String pluginsPageProcessor(const String& var);
 
 static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDocument& jsonDoc);
 static void settingsPage(AsyncWebServerRequest* request);
@@ -102,13 +107,22 @@ static String devPageProcessor(const String& var);
  *****************************************************************************/
 
 /** Firmware binary filename, used for update. */
-static const char*      FIRMWARE_FILENAME           = "firmware.bin";
+static const char*      FIRMWARE_FILENAME               = "firmware.bin";
 
 /** Filesystem binary filename, used for update. */
-static const char*      FILESYSTEM_FILENAME         = "spiffs.bin";
+static const char*      FILESYSTEM_FILENAME             = "spiffs.bin";
+
+/** Path to the plugin webpages. */
+static const String     PLUGIN_PAGE_PATH                = "/plugins/";
+
+/** Plugin webpage file extension. */
+static const String     PLUGIN_PAGE_FILE_EXTENSION      = ".html";
+
+/** SPIFFS limits the max. filename length, which includes the path as well. */
+static const uint32_t   SPIFFS_FILENAME_LENGTH_LIMIT    = 32U;
 
 /** Flag used to signal any kind of file upload error. */
-static bool             gIsUploadError               = false;
+static bool             gIsUploadError                  = false;
 
 /** The SPIFFS editor instance. */
 static SPIFFSEditor     gSPIFFSEditor(SPIFFS);
@@ -131,23 +145,56 @@ static SPIFFSEditor     gSPIFFSEditor(SPIFFS);
 
 void Pages::init(AsyncWebServer& srv)
 {
+    const char* pluginName = nullptr;
+
     (void)srv.on("/", HTTP_GET, indexPage);
-    (void)srv.on("/dev", HTTP_GET, devPage);
-    (void)srv.on("/display", HTTP_GET, displayPage);
-    (void)srv.on("/network", HTTP_GET, networkPage);
-    (void)srv.on("/settings", HTTP_GET | HTTP_POST, settingsPage);
-    (void)srv.on("/update", HTTP_GET, updatePage);
-    (void)srv.on("/upload", HTTP_POST, uploadPage, uploadHandler);
+    (void)srv.on("/dev.html", HTTP_GET, devPage);
+    (void)srv.on("/display.html", HTTP_GET, displayPage);
+    (void)srv.on("/network.html", HTTP_GET, networkPage);
+    (void)srv.on("/plugins.html", HTTP_GET | HTTP_POST, pluginsPage);
+    (void)srv.on("/settings.html", HTTP_GET | HTTP_POST, settingsPage);
+    (void)srv.on("/update.html", HTTP_GET, updatePage);
+    (void)srv.on("/upload.html", HTTP_POST, uploadPage, uploadHandler);
 
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesytem for 1 hour.
      */
     (void)srv.serveStatic("/favicon.png", SPIFFS, "/favicon.png", "max-age=3600");
-    (void)srv.serveStatic("/style/", SPIFFS, "/style/", "max-age=3600");
+    (void)srv.serveStatic("/images/", SPIFFS, "/images/", "max-age=3600");
     (void)srv.serveStatic("/js/", SPIFFS, "/js/", "max-age=3600");
+    (void)srv.serveStatic("/style/", SPIFFS, "/style/", "max-age=3600");
 
     /* Add SPIFFS file editor to "/edit" */
     (void)srv.addHandler(&gSPIFFSEditor);
+
+    /* Add one page per plugin. */
+    pluginName = PluginMgr::getInstance().findFirst();
+    while(nullptr != pluginName)
+    {
+        String uri = fitToSpiffs(PLUGIN_PAGE_PATH, String(pluginName), PLUGIN_PAGE_FILE_EXTENSION);
+
+        (void)srv.on(   uri.c_str(),
+                        HTTP_GET,
+                        [uri](AsyncWebServerRequest* request)
+                        {
+                            if (nullptr == request)
+                            {
+                                return;
+                            }
+
+                            /* Force authentication! */
+                            if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+                            {
+                                /* Request DIGEST authentication */
+                                request->requestAuthentication();
+                                return;
+                            }
+
+                            request->send(SPIFFS, uri, "text/html", false, commonPageProcessor);
+                        });
+
+        pluginName = PluginMgr::getInstance().findNext();
+    }
 
     return;
 }
@@ -182,6 +229,23 @@ void Pages::error(AsyncWebServerRequest* request)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * SPIFFS full filename (path + filename + extension) is limited to 32 characters.
+ * This function reduces only the filename length and returns the full path.
+ * 
+ * @param[in] path                  Path, e.g. "/mypath/".
+ * @param[in] fileNameWithoutExt    Filename without extension, e.g. "myFile".
+ * @param[in] fileNameExtension     Filename extension, e.g. ".html"
+ * 
+ * @return Full path
+ */
+static String fitToSpiffs(const String& path, const String& filenNameWithoutExt, const String& fileNameExtension)
+{
+    String fileNameReduced = filenNameWithoutExt.substring(0, SPIFFS_FILENAME_LENGTH_LIMIT - path.length() - fileNameExtension.length() - 1U);
+
+    return path + fileNameReduced + fileNameExtension;
+}
 
 /**
  * Check the given hostname and returns whether it is valid or not.
@@ -572,6 +636,91 @@ static String networkPageProcessor(const String& var)
     else if (var == "MAC_ADDR")
     {
         result = WiFi.macAddress();
+    }
+    else
+    {
+        result = commonPageProcessor(var);
+    }
+
+    return result;
+}
+
+/**
+ * Plugins page to show plugins and configure instantiated plugins.
+ *
+ * @param[in] request   HTTP request
+ */
+static void pluginsPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    /* Change configuration of a plugin? */
+    if ((HTTP_POST == request->method()) &&
+        (0 < request->args()))
+    {
+        /* TODO */
+        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "plain/text", "Error");
+    }
+    else if (HTTP_GET == request->method())
+    {
+        request->send(SPIFFS, "/plugins.html", "text/html", false, pluginsPageProcessor);
+    }
+    else
+    {
+        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "plain/text", "Error");
+    }
+
+    return;
+}
+
+/**
+ * Processor for plugins page template.
+ * It is responsible for the data binding.
+ *
+ * @param[in] var   Name of variable in the template
+ */
+static String pluginsPageProcessor(const String& var)
+{
+    String  result;
+
+    if (var == "LIST_OF_PLUGINS")
+    {
+        const String    DELIMITER   = ", ";
+        const char*     pluginName  = PluginMgr::getInstance().findFirst();
+        bool            isFirst     = true;
+
+        while(nullptr != pluginName)
+        {
+            String uri = fitToSpiffs(PLUGIN_PAGE_PATH, String(pluginName), PLUGIN_PAGE_FILE_EXTENSION);
+
+            if (false == isFirst)
+            {
+                result += DELIMITER;
+            }
+            else
+            {
+                isFirst = false;
+            }
+
+            result += "{ name: \"";
+            result += pluginName;
+            result += "\", page: \"";
+            result += uri;
+            result += "\"}";
+
+            pluginName = PluginMgr::getInstance().findNext();
+        }
     }
     else
     {

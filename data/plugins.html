@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>%PAGE_TITLE%</title>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="/style/style.css" />
+    <script>
+        var plugins = [%LIST_OF_PLUGINS%];
+
+        window.onload = function() {
+
+            var pluginPagesList = document.getElementById("pluginPagesList");
+            var index           = 0;
+            var li              = null;
+            var a               = null;
+
+            for(index = 0; index < plugins.length; ++index) {
+                li = document.createElement("li");
+                a  = document.createElement("a");
+
+                a.setAttribute("href", plugins[index].page);
+                a.innerHTML = plugins[index].name;
+
+                li.appendChild(a);
+
+                pluginPagesList.appendChild(li);
+            }
+        };
+
+    </script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div class="topnav">
+    <a href="/">Home</a>
+    <a href="/dev.html">Development</a>
+    <a href="/display.html">Display</a>
+    <a href="/edit">Filesystem</a>
+    <a href="/network.html">Network</a>
+    <a href="/plugins.html" class="active">Plugins</a>
+    <a href="/settings.html">Settings</a>
+    <a href="/update.html">Update</a>
+</div>
+<div class="main">
+    <h2>Plugins</h2>
+    <p>This shows a alphabetic sorted list of all available plugins.</p>
+    <ul id="pluginPagesList">
+    </ul>
+</div>
+<div class="footer">
+    <hr />
+    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>

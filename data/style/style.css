@@ -8,6 +8,18 @@ h2 {
 h3 {
     color: #ffff00;
 }
+/* unvisited link */
+a:link {
+    color: white;
+}
+/* visited link */
+a:visited {
+    color: white;
+}
+/* mouse over link */
+a:hover {
+    color: red;
+}
 table {
     border-collapse: collapse;
 }

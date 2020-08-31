@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>%PAGE_TITLE%</title>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="/style/style.css" />
+    <script>
+        window.onload = function() {
+            var elements    = document.getElementsByName("injectIp");
+            var index       = 0;
+            var text        = "";
+
+            for(index = 0; index < elements.length; ++index) {
+                elements[index].innerHTML = elements[index].innerHTML.replace("{{ORIGIN}}", location.origin);
+            }
+        };
+    </script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div class="topnav">
+    <a href="/">Home</a>
+    <a href="/dev.html">Development</a>
+    <a href="/display.html">Display</a>
+    <a href="/edit">Filesystem</a>
+    <a href="/network.html">Network</a>
+    <a href="/plugins.html" class="active">Plugins</a>
+    <a href="/settings.html">Settings</a>
+    <a href="/update.html">Update</a>
+</div>
+<div class="main">
+    <h2>IconTextLampPlugin</h2>
+    <img src="/images/IconTextLampPlugin.jpg" alt="Screenshot" />
+    <p>The plugin shows a icon on left side, text on right side and lamps at the bottom.</p>
+    <p>Each part can be set separately via the REST API.</p>
+    <p>Show bitmap in the specified slot. Supported are bitmap files (.bmp) with:</p>
+    <ul>
+        <li>24 or 32 bits per pixel.</li>
+        <li>1 plane.</li>
+        <li>No compression.</li>
+    </ul>
+    <p>Note, if you are using _gimp_ to create bitmap files, please configure like:</p>
+    <ul>
+        <li>Compatibility options: Don't write color informations.</li>
+        <li>Extended options: Select 24 bit per pixel.</li>
+    </ul>
+    <h3>REST API</h3>
+    <h4>Text</h4>
+    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+        <li>TEXT: The text to show on the display.</li>
+    </ul>
+    <h4>Icon</h4>
+    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/&lt;PLUGIN-UID&gt;/bitmap</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+    </ul>
+    <h4>Lamp</h4>
+    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/&lt;PLUGIN-UID&gt;/lamp/&lt;LAMP-ID&gt;?set=&lt;LAMP-STATE&gt;</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+        <li>LAMP-ID: The id of the lamp (starting with 0 from left).</li>
+        <li>LAMP-STATE: <pre>on</pre> or <pre>off</pre></li>
+    </ul>
+</div>
+<div class="footer">
+    <hr />
+    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>
