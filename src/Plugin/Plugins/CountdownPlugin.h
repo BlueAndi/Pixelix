@@ -102,7 +102,6 @@ public:
         m_currentDate(),
         m_targetDate(),
         m_targetDateInformation(),
-        m_isUpdateAvailable(false),
         m_remainingDays(""),
         m_url(),
         m_callbackWebHandler(nullptr),
@@ -264,7 +263,6 @@ private:
     DateDMY                     m_currentDate;              /**< Date structure to hold the current date. */
     DateDMY                     m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
     TargetDayDescription        m_targetDateInformation;    /**< String used for configured additional target date information. */
-    bool                        m_isUpdateAvailable;        /**< Flag to indicate whether an update is available or not. */
     String                      m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
     String                      m_url;                      /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */

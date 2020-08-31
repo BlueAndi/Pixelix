@@ -158,21 +158,16 @@ void CountdownPlugin::update(IGfx& gfx)
 {
     lock();
 
-    if (true == m_isUpdateAvailable)
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
     {
-        gfx.fillScreen(ColorDef::BLACK);
+        m_iconCanvas->update(gfx);
+    }
 
-        if (nullptr != m_iconCanvas)
-        {
-            m_iconCanvas->update(gfx);
-        }
-
-        if (nullptr != m_textCanvas)
-        {
-            m_textCanvas->update(gfx);
-        }
-
-        m_isUpdateAvailable = false;
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
     }
 
     unlock();
@@ -460,8 +455,6 @@ void CountdownPlugin::calculateDifferenceInDays()
         }
 
         m_textWidget.setFormatStr(m_remainingDays);
-
-        m_isUpdateAvailable = true;
     }
 }
 
