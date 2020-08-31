@@ -73,10 +73,15 @@
 extern uint8_t WiFiUtil::getSignalQuality(int8_t rssi)
 {
     uint8_t         signalQuality   = 0U;
+    const int8_t    RSSI_INVALID    = 0;    // Invalid dBm value
     const int8_t    RSSI_HIGH       = -50;  // dBm
     const int8_t    RSSI_UNUSABLE   = -100; // dBm
 
-    if (RSSI_HIGH <= rssi)
+    if (RSSI_INVALID == rssi)
+    {
+        signalQuality = 0U;
+    }
+    else if (RSSI_HIGH <= rssi)
     {
         signalQuality = 100U;
     }
