@@ -231,7 +231,7 @@ static void handleSlots(AsyncWebServerRequest* request)
 {
     String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 512U;
+    const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     const size_t        MAX_USAGE       = 80U;
     size_t              usageInPercent  = 0U;
