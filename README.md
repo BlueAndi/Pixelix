@@ -38,7 +38,7 @@ I want to have a remote display to show multiple kind of information, running 24
 | - | - |
 | ![TimePlugin](./data/images/TimePlugin.jpg) | ![DatePlugin](./data/images/DatePlugin.jpg) |
 | ![IconTextLampPlugin](./data/images/IconTextLampPlugin.jpg) | ![IconTextPlugin](./data/images/IconTextPlugin.jpg) |
-| ![WifiStatusPlugin](./data/imagesWifiStatusPlugin.jpg) | ... |
+| ![WifiStatusPlugin](./data/images/WifiStatusPlugin.jpg) | ... |
 
 # Overview
 See [Overview.pdf](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/Overview.pdf).
