@@ -83,11 +83,10 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         }
         else
         {
-            LOG_INFO("iperf started: mode = %s-%s sip = %u.%u.%u.%u:%u, dip = %u.%u.%u.%u:%u, interval = %us, time = %us",
+            LOG_INFO("iperf started: mode = %s-%s sip = %u.%u.%u.%u:%u, interval = %us, time = %us",
                 (m_cfg.flag & IPERF_FLAG_TCP) ? "tcp" : "udp",
                 (m_cfg.flag & IPERF_FLAG_SERVER) ? "server" : "client",
                 m_cfg.sip & 0xffU, (m_cfg.sip >> 8) & 0xffU, (m_cfg.sip >> 16) & 0xffU, (m_cfg.sip >>24) & 0xffU, m_cfg.sport,
-                m_cfg.dip & 0xffU, (m_cfg.dip >> 8) & 0xffU, (m_cfg.dip >> 16) & 0xffU, (m_cfg.dip >>24) & 0xffU, m_cfg.dport,
                 m_cfg.interval, m_cfg.time);
 
             server->text(client->id(), "ACK");
