@@ -50,18 +50,18 @@
     </ul>
     <h3>REST API</h3>
     <h4>Text</h4>
-    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;</pre>
+    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>
         <li>TEXT: The text to show on the display.</li>
     </ul>
     <h4>Icon</h4>
-    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/&lt;PLUGIN-UID&gt;/bitmap</pre>
+    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>
     </ul>
     <h4>Lamp</h4>
-    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/&lt;PLUGIN-UID&gt;/lamp/&lt;LAMP-ID&gt;?set=&lt;LAMP-STATE&gt;</pre>
+    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamp/&lt;LAMP-ID&gt;?set=&lt;LAMP-STATE&gt;</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>
         <li>LAMP-ID: The id of the lamp (starting with 0 from left).</li>
