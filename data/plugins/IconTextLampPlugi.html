@@ -16,28 +16,35 @@
 
             xhr.open("GET", "/rest/api/v1/display/slots");
             xhr.onload = function() {
-                var jsonRsp = JSON.parse(xhr.response);
-                var index   = 0;
-                var cnt     = 0;
+                var jsonRsp     = JSON.parse(xhr.response);
+                var elemIndex   = 0;
+                var slotIndex   = 0;
+                var cnt         = 0;
+                var elements    = null;
+                var option      = null;
 
                 if (0 === jsonRsp.status) {
 
-                    for(index = 0; index < jsonRsp.data.slots.length; ++index) {
-                        if (jsonRsp.data.slots[index].name === pluginName) {
+                    var elements = document.getElementsByName("pluginUid");
 
-                            var element = document.getElementById("pluginUid");
-                            var option  = document.createElement("option");
+                    for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
-                            option.value = jsonRsp.data.slots[index].uid;
-                            option.text = jsonRsp.data.slots[index].uid;
-                            element.add(option);
+                        for(slotIndex = 0; slotIndex < jsonRsp.data.slots.length; ++slotIndex) {
+                            if (jsonRsp.data.slots[slotIndex].name === pluginName) {
 
-                            ++cnt;
+                                option          = document.createElement("option");
+                                option.value    = jsonRsp.data.slots[slotIndex].uid;
+                                option.text     = jsonRsp.data.slots[slotIndex].uid;
+                                elements[elemIndex].add(option);
+
+                                ++cnt;
+                            }
                         }
                     }
 
                     if (0 < cnt) {
-                        utils.enableForm("myForm", true);
+                        utils.enableForm("myFormIcon", true);
+                        utils.enableForm("myFormText", true);
                     }
 
                 } else {
@@ -45,6 +52,25 @@
                 }
             };
             xhr.send();
+        }
+
+        function setIcon(pluginUid, fileName) {
+            var formData = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("file", fileName);
+
+            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/bitmap");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+
+                if (0 === jsonRsp.status) {
+                    alert("Ok.");
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send(formData);
         }
 
         function setText(pluginUid, justText) {
@@ -75,7 +101,8 @@
                 elements[index].innerHTML = elements[index].innerHTML.replace("{{ORIGIN}}", location.origin);
             }
 
-            utils.enableForm("myForm", false);
+            utils.enableForm("myFormIcon", false);
+            utils.enableForm("myFormText", false);
             getPluginInstances();
         };
     </script>
@@ -130,13 +157,22 @@
         <li>LAMP-STATE: <pre>on</pre> or <pre>off</pre></li>
     </ul>
     <h3>Configuration</h3>
-    <form name="myForm" action="javascript:setText(pluginUid.options[pluginUid.selectedIndex].value, justText.value)">
+    <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
         <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUid" size="1">
+        <select id="pluginUidIcon" name="pluginUid" size="1">
         </select>
         <br />
-        <label for="justText">Text to show:</label><br />
-        <input type="text" id="justText" name="justText" value="" size="20" />
+        <label for="icon">Icon:</label><br />
+        <input id="icon" type="file" /><br />
+        <input name="submit" type="submit" value="Update"/>
+    </form>
+    <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
+        <label for="pluginUid">Plugin UID:</label><br />
+        <select id="pluginUidText" name="pluginUid" size="1">
+        </select>
+        <br />
+        <label for="justText">Text:</label><br />
+        <input type="text" id="justText" name="justText" value="" size="20" /><br />
         <input name="submit" type="submit" value="Update"/>
     </form>
 </div>

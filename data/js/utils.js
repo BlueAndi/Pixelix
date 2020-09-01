@@ -1,4 +1,4 @@
-var utils = utils | {};
+var utils = {};
 
 /* Enable/Disable all form elements. */
 utils.enableForm = function(formId, enableIt) {
@@ -9,4 +9,4 @@ utils.enableForm = function(formId, enableIt) {
     for (index = 0; index < elements.length; ++index) {
         elements[index].disabled = (false === enableIt) ? true : false;
     }
-}
+};

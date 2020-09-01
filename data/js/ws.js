@@ -1,6 +1,4 @@
-var pixelix = pixelix | {};
-
-pixelix = {
+var pixelix = {
     ws: {}
 };
 
