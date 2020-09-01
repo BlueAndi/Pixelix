@@ -358,7 +358,7 @@
             var displayCanvas = document.getElementById("canvas");
             ctx = displayCanvas.getContext("2d");
 
-            injectMenu("navbar", window.location.path);
+            injectMenu("navbar", window.location.pathname);
 
             wsClient = new pixelix.ws.Client();
             wsClient.connect({

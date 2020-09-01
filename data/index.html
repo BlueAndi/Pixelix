@@ -29,7 +29,7 @@
 
         window.onload = function() {
 
-            injectMenu("navbar", window.location.path);
+            injectMenu("navbar", window.location.pathname);
 
             ctxChartHeap    = document.getElementById('canvasChartHeap').getContext('2d');
             ctxChartFs      = document.getElementById('canvasChartFs').getContext('2d');

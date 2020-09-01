@@ -93,7 +93,7 @@
 
         window.onload = function() {
 
-            injectMenu("navbar", window.location.path);
+            injectMenu("navbar", window.location.pathname);
 
             wsClient = new pixelix.ws.Client();
             wsClient.connect({
