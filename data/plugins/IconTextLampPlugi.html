@@ -92,6 +92,25 @@
             xhr.send(formData);
         }
 
+        function setLamp(pluginUid, lampId, lampState) {
+            var formData = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("set", lampState);
+
+            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/lamp/" + lampId);
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+
+                if (0 === jsonRsp.status) {
+                    alert("Ok.");
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send(formData);
+        }
+
         window.onload = function() {
             var elements    = document.getElementsByName("injectIp");
             var index       = 0;
@@ -175,6 +194,28 @@
         <br />
         <label for="justText">Text:</label><br />
         <input type="text" id="justText" name="justText" value="" size="20" /><br />
+        <input name="submit" type="submit" value="Update"/>
+    </form>
+    <h4>Lamp</h4>
+    <form id="myFormLamp" action="javascript:setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampId.options[lampId.selectedIndex].value, lampState.options[lampState.selectedIndex].value)">
+        <label for="pluginUid">Plugin UID:</label><br />
+        <select id="pluginUidLamp" name="pluginUid" size="1">
+        </select>
+        <br />
+        <label for="lampId">Lamp:</label><br />
+        <select id="lampId" size="1">
+            <option value="0" selected>0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+        <br />
+        <label for="lampId">State:</label><br />
+        <select id="lampState" size="1">
+            <option value="off" selected>off</option>
+            <option value="on">on</option>
+        </select>
+        <br />
         <input name="submit" type="submit" value="Update"/>
     </form>
 </div>
