@@ -157,6 +157,7 @@
         <li>LAMP-STATE: <pre>on</pre> or <pre>off</pre></li>
     </ul>
     <h3>Configuration</h3>
+    <h4>Icon</h4>
     <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
         <label for="pluginUid">Plugin UID:</label><br />
         <select id="pluginUidIcon" name="pluginUid" size="1">
@@ -166,6 +167,7 @@
         <input id="icon" type="file" /><br />
         <input name="submit" type="submit" value="Update"/>
     </form>
+    <h4>Text</h4>
     <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
         <label for="pluginUid">Plugin UID:</label><br />
         <select id="pluginUidText" name="pluginUid" size="1">
