@@ -7,6 +7,57 @@
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
     <script>
+
+        var pluginName = "SunrisePlugin";
+
+        function getPluginInstances() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET", "/rest/api/v1/display/slots");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+                var index   = 0;
+
+                if (0 === jsonRsp.status) {
+
+                    for(index = 0; index < jsonRsp.data.slots.length; ++index) {
+                        if (jsonRsp.data.slots[index].name === pluginName) {
+
+                            var element = document.getElementById("pluginUid");
+                            var option  = document.createElement("option");
+
+                            option.value = jsonRsp.data.slots[index].uid;
+                            option.text = jsonRsp.data.slots[index].uid;
+                            element.add(option);
+                        }
+                    }
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send();
+        }
+
+        function setLocation(pluginUid, latitude, longitude) {
+            var formData = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("latitude", latitude);
+            formData.append("longitude", longitude);
+
+            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/location");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+
+                if (0 === jsonRsp.status) {
+                    alert("Ok.");
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send(formData);
+        }
+
         window.onload = function() {
             var elements    = document.getElementsByName("injectIp");
             var index       = 0;
@@ -15,6 +66,8 @@
             for(index = 0; index < elements.length; ++index) {
                 elements[index].innerHTML = elements[index].innerHTML.replace("{{ORIGIN}}", location.origin);
             }
+
+            getPluginInstances();
         };
     </script>
 </head>
@@ -44,6 +97,18 @@
         <li>LONGITUDE: The longitude of the location.</li>
         <li>LATITUDE: The latitude of the location.</li>
     </ul>
+    <h3>Configuration</h3>
+    <form name="myForm" action="javascript:setLocation(pluginUid.options[pluginUid.selectedIndex].value, latitude.value, longitude.value)">
+        <label for="pluginUid">Plugin UID:</label><br />
+        <select id="pluginUid" size="1">
+        </select>
+        <br />
+        <label for="location">Latitude:</label><br />
+        <input type="text" id="latitude" name="latitude" value="0" /><br />
+        <label for="location">Longitude:</label><br />
+        <input type="text" id="longitude" name="longitude" value="0" /><br />
+        <input name="submit" type="submit" value="Update"/>
+    </form>
 </div>
 <div class="footer">
     <hr />
