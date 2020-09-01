@@ -6,6 +6,7 @@
     <title>%PAGE_TITLE%</title>
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
+    <script src="/js/menu.js"></script>
     <script src="/js/utils.js"></script>
     <script>
 
@@ -68,14 +69,8 @@
         }
 
         window.onload = function() {
-            var elements    = document.getElementsByName("injectIp");
-            var index       = 0;
-            var text        = "";
-
-            for(index = 0; index < elements.length; ++index) {
-                elements[index].innerHTML = elements[index].innerHTML.replace("{{ORIGIN}}", location.origin);
-            }
-
+            injectMenu("navbar", "/plugins.html");
+            utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
             utils.enableForm("myForm", false);
             getPluginInstances();
         };
@@ -85,15 +80,7 @@
 <div class="header">
     %HEADER%
 </div>
-<div class="topnav">
-    <a href="/">Home</a>
-    <a href="/dev.html">Development</a>
-    <a href="/display.html">Display</a>
-    <a href="/edit">Filesystem</a>
-    <a href="/network.html">Network</a>
-    <a href="/plugins.html" class="active">Plugins</a>
-    <a href="/settings.html">Settings</a>
-    <a href="/update.html">Update</a>
+<div id="navbar" class="topnav">
 </div>
 <div class="main">
     <h2>SunrisePlugin</h2>
@@ -101,7 +88,7 @@
     <p>The plugin shows the current sunrise / sunset times for a configured location.</p>
     <h3>REST API</h3>
     <h4>Text</h4>
-    <pre name="injectIp">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</pre>
+    <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>
         <li>LONGITUDE: The longitude of the location.</li>

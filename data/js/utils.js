@@ -10,3 +10,12 @@ utils.enableForm = function(formId, enableIt) {
         elements[index].disabled = (false === enableIt) ? true : false;
     }
 };
+
+utils.injectOrigin = function(name, searchFor) {
+    var elements = document.getElementsByName(name);
+    var index   = 0;
+
+    for(index = 0; index < elements.length; ++index) {
+        elements[index].innerHTML = elements[index].innerHTML.replace(searchFor, location.origin);
+    }
+}
