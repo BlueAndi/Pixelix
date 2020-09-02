@@ -68,6 +68,7 @@
 #include "IconTextLampPlugin.h"
 #include "IconTextPlugin.h"
 #include "JustTextPlugin.h"
+#include "RainbowPlugin.h"
 #include "SunrisePlugin.h"
 #include "SysMsgPlugin.h"
 #include "TestPlugin.h"
@@ -356,6 +357,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
     pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
+    pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
     pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
