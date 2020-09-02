@@ -102,6 +102,17 @@ void JustTextPlugin::update(IGfx& gfx)
     return;
 }
 
+String JustTextPlugin::getText() const
+{
+    String formattedText;
+
+    lock();
+    formattedText = m_textWidget.getFormatStr();
+    unlock();
+
+    return formattedText;
+}
+
 void JustTextPlugin::setText(const String& formatText)
 {
     lock();
@@ -133,16 +144,18 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
         return;
     }
 
-    if (HTTP_POST != request->method())
+    if (HTTP_GET == request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
+        String      formattedText   = getText();
+
+        dataObj["text"] = formattedText;
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
-    else
+    else if (HTTP_POST == request->method())
     {
         /* "show" argument missing? */
         if (false == request->hasArg("show"))
@@ -166,7 +179,16 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
 
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    
     usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
     if (MAX_USAGE < usageInPercent)
     {
@@ -179,7 +201,7 @@ void JustTextPlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-void JustTextPlugin::lock()
+void JustTextPlugin::lock() const
 {
     if (nullptr != m_xMutex)
     {
@@ -189,7 +211,7 @@ void JustTextPlugin::lock()
     return;
 }
 
-void JustTextPlugin::unlock()
+void JustTextPlugin::unlock() const
 {
     if (nullptr != m_xMutex)
     {

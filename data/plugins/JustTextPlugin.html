@@ -44,7 +44,6 @@
                     }
 
                     if (0 < cnt) {
-                        utils.enableForm("myFormIcon", true);
                         utils.enableForm("myFormText", true);
                     }
 
@@ -93,7 +92,12 @@
     <img src="/images/JustTextPlugin.jpg" alt="Screenshot" />
     <p>The plugin shows only text on the whole display.</p>
     <h3>REST API</h3>
-    <h4>Text</h4>
+    <h4>Get text</h4>
+    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+    </ul>
+    <h4>Set text</h4>
     <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>

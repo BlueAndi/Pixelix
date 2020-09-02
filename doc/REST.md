@@ -211,14 +211,33 @@ $ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://1
 The plugin depended API.
 
 ### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/text
-Show text in the specified slot.
+Get/Set text in the specified slot.
 
 Detail:
+* Method: GET
+  * Get text.
+    * Arguments:
+      * N/A
 * Method: POST
-  * Arguments:
-    * show=`<text>`
+  * Set text.
+    * Arguments:
+      * show=`<text>`
 
 Example:
+```
+GET <base-uri>/rest/api/v1/display/uid/0/text
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "text": "Hello World!"
+    }
+}
+```
+
 ```
 POST <base-uri>/rest/api/v1/display/uid/0/text?show=Test
 ```
@@ -233,6 +252,7 @@ Result:
 
 Example with curl:
 ```
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/text
 $ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/text
 ```
 

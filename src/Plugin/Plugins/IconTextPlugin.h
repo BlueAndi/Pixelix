@@ -169,6 +169,13 @@ public:
     void update(IGfx& gfx);
 
     /**
+     * Get text.
+     * 
+     * @return Formatted text
+     */
+    String getText() const;
+
+    /**
      * Set text, which may contain format tags.
      *
      * @param[in] formatText    Text, which may contain format tags.
@@ -260,12 +267,12 @@ private:
     /**
      * Protect against concurrent access.
      */
-    void lock(void);
+    void lock(void) const;
 
     /**
      * Unprotect against concurrent access.
      */
-    void unlock(void);
+    void unlock(void) const;
 };
 
 /******************************************************************************
