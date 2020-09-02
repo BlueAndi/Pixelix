@@ -127,7 +127,7 @@ void RestApi::error(AsyncWebServerRequest* request)
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
     }
 
-    serializeJsonPretty(jsonDoc, content);
+    (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
     return;
@@ -215,7 +215,7 @@ static void handleStatus(AsyncWebServerRequest* request)
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
     }
 
-    serializeJsonPretty(jsonDoc, content);
+    (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
     return;
@@ -287,7 +287,7 @@ static void handleSlots(AsyncWebServerRequest* request)
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
     }
 
-    serializeJsonPretty(jsonDoc, content);
+    (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
     return;
@@ -487,7 +487,7 @@ static void handlePlugin(AsyncWebServerRequest* request)
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
     }
 
-    serializeJsonPretty(jsonDoc, content);
+    (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
     return;

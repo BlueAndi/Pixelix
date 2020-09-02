@@ -339,7 +339,7 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
         LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
     }
 
-    serializeJsonPretty(jsonDoc, content);
+    (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
 
     return;
