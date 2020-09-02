@@ -106,6 +106,8 @@ void SunrisePlugin::active(IGfx& gfx)
 {
     lock();
 
+    gfx.fillScreen(ColorDef::BLACK);
+
     if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
@@ -116,8 +118,7 @@ void SunrisePlugin::active(IGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(IMAGE_PATH);
-            gfx.fillScreen(ColorDef::BLACK);
-
+            
             m_iconCanvas->update(gfx);
         }
     }
@@ -130,16 +131,9 @@ void SunrisePlugin::active(IGfx& gfx)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
 
-            /* Move the text widget one line lower for better look. */
-            m_textWidget.move(0, 1);
-
-            m_textWidget.setFormatStr("\\calign?");
-
             m_textCanvas->update(gfx);
         }
     }
-
-    requestNewData();
 
     unlock();
 
@@ -191,6 +185,14 @@ void SunrisePlugin::start()
     }
 
     registerResponseCallback();
+    if (false == requestNewData())
+    {
+        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+    }
+    else
+    {
+        m_requestTimer.start(UPDATE_PERIOD);
+    }
 
     unlock();
 
@@ -200,6 +202,8 @@ void SunrisePlugin::start()
 void SunrisePlugin::stop()
 {
     lock();
+
+    m_requestTimer.stop();
 
     if (false != SPIFFS.remove(m_configurationFilename))
     {
@@ -211,17 +215,37 @@ void SunrisePlugin::stop()
     return;
 }
 
+void SunrisePlugin::process()
+{
+    if ((true == m_requestTimer.isTimerRunning()) &&
+        (true == m_requestTimer.isTimeout()))
+    {
+        if (false == requestNewData())
+        {
+            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+        }
+        else
+        {
+            m_requestTimer.start(UPDATE_PERIOD);
+        }
+    }
+}
+
 void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
 {
     lock();
 
-    m_longitude = longitude;
-    m_latitude  = latitude;
+    if ((longitude != m_longitude) ||
+        (latitude != m_latitude))
+    {
+        m_longitude = longitude;
+        m_latitude  = latitude;
 
-    /* Always stores the configuration, otherwise it will be overwritten during
-     * plugin activation.
-     */
-    (void)saveConfiguration();
+        /* Always stores the configuration, otherwise it will be overwritten during
+         * plugin activation.
+         */
+        (void)saveConfiguration();
+    }
 
     unlock();
 
@@ -295,31 +319,41 @@ void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-void SunrisePlugin::requestNewData()
+bool SunrisePlugin::requestNewData()
 {
-    String url = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+    bool    status  = false;
+    String  url     = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
 
     if (true == m_client.begin(url))
     {
-        (void)m_client.GET();
+        if (false == m_client.GET())
+        {
+            LOG_WARNING("GET %s failed.", url.c_str());
+        }
+        else
+        {
+            status = true;
+        }
     }
+
+    return status;
 }
 
 void SunrisePlugin::registerResponseCallback()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t              payloadSize     = 0U;
-        const char*         payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        size_t              payloadIndex    = 0U;
-        String              payloadStr;
-        const size_t        JSON_DOC_SIZE   = 768U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        const size_t        MAX_USAGE       = 80U;
-        size_t              usageInPercent  = 0U;
-        String              sunrise;
-        String              sunset;
-        JsonObject          results;
-        JsonObject          obj;
+        size_t                  payloadSize     = 0U;
+        const char*             payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        size_t                  payloadIndex    = 0U;
+        String                  payloadStr;
+        const size_t            JSON_DOC_SIZE   = 768U;
+        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
+        const size_t            MAX_USAGE       = 80U;
+        size_t                  usageInPercent  = 0U;
+        String                  sunrise;
+        String                  sunset;
+        JsonObject              results;
+        JsonObject              obj;
 
         while(payloadSize > payloadIndex)
         {
@@ -329,23 +363,29 @@ void SunrisePlugin::registerResponseCallback()
 
         m_httpResponseReceived = true;
 
-        deserializeJson(jsonDoc, payloadStr);
-        obj = jsonDoc.as<JsonObject>();
-        results = obj["results"];
-        sunrise = results["sunrise"].as<String>();
-        sunset = results["sunset"].as<String>();
-
-        sunrise = addCurrentTimezoneValues(sunrise);
-        sunset = addCurrentTimezoneValues(sunset);
-
-        m_relevantResponsePart = sunrise + " / " + sunset;
-
-        m_textWidget.setFormatStr(m_relevantResponsePart);
-
-        usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-        if (MAX_USAGE < usageInPercent)
+        if (DeserializationError::Ok != deserializeJson(jsonDoc, payloadStr))
         {
-            LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+            LOG_ERROR("Invalid JSON message received.");
+        }
+        else
+        {
+            obj     = jsonDoc.as<JsonObject>();
+            results = obj["results"];
+            sunrise = results["sunrise"].as<String>();
+            sunset  = results["sunset"].as<String>();
+
+            sunrise = addCurrentTimezoneValues(sunrise);
+            sunset  = addCurrentTimezoneValues(sunset);
+
+            m_relevantResponsePart = sunrise + " / " + sunset;
+
+            m_textWidget.setFormatStr(m_relevantResponsePart);
+
+            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+            if (MAX_USAGE < usageInPercent)
+            {
+                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+            }
         }
     });
 }

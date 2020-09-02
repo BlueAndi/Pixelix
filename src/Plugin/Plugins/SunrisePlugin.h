@@ -51,6 +51,7 @@
 #include <BitmapWidget.h>
 #include <stdint.h>
 #include <TextWidget.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -83,7 +84,7 @@ public:
         m_textCanvas(nullptr),
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
-        m_textWidget(),
+        m_textWidget("\\calign?"),
         m_longitude(),
         m_latitude(),
         m_configurationFilename(""),
@@ -91,11 +92,15 @@ public:
         m_relevantResponsePart(""),
         m_url(),
         m_callbackWebHandler(nullptr),
-        m_xMutex(nullptr)
+        m_xMutex(nullptr),
+        m_requestTimer()
     {
         /* Example data, used to generate the very first configuration file. */
         m_longitude = "2.295";
         m_latitude  = "48.858";
+
+        /* Move the text widget one line lower for better look. */
+        m_textWidget.move(0, 1);
 
         m_xMutex = xSemaphoreCreateMutex();
     }
@@ -187,6 +192,13 @@ public:
     void start() override;
 
     /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void);
+
+    /**
      * Set geo location.
      *
      * @param[in] longitude Longitude
@@ -199,22 +211,34 @@ private:
     /**
      * Icon width in pixels.
      */
-    static const int16_t ICON_WIDTH     = 8;
+    static const int16_t    ICON_WIDTH          = 8;
 
     /**
      * Icon height in pixels.
      */
-    static const int16_t ICON_HEIGHT    = 8;
+    static const int16_t    ICON_HEIGHT         = 8;
 
     /**
      * Image path within the SPIFFS.
      */
-    static const char*  IMAGE_PATH;
+    static const char*      IMAGE_PATH;
 
     /**
      * Configuration path within the SPIFFS.
      */
-    static const char* CONFIG_PATH;
+    static const char*      CONFIG_PATH;
+
+    /**
+     * Period in ms for requesting sunset/sunrise from server.
+     * This is used in case the last request to the server was successful.
+     */
+    static const uint32_t   UPDATE_PERIOD       = (30U * 60U * 1000U);
+
+    /**
+     * Short period in ms for requesting sunset/sunrise from server.
+     * This is used in case the request to the server failed.
+     */
+    static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
 
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -230,6 +254,7 @@ private:
     String                      m_url;                      /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    SimpleTimer                 m_requestTimer;             /**< Timer is used for cyclic sunrise/sunset http request. */
 
     /**
      * Instance specific web request handler, called by the static web request
@@ -241,8 +266,10 @@ private:
 
     /**
      * Request new data.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void requestNewData(void);
+    bool requestNewData(void);
 
     /**
      * Register callback function on response reception.

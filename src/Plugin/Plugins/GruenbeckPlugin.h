@@ -78,16 +78,19 @@ public:
         m_textCanvas(nullptr),
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
-        m_textWidget(),
+        m_textWidget("\\calign?"),
         m_ipAddress(""),
         m_url(""),
         m_configurationFilename(""),
         m_httpResponseReceived(false),
         m_relevantResponsePart(""),
-        m_requestDataTimer()
+        m_requestTimer()
     {
         /* Example address, used to generate the very first configuration file. */
         m_ipAddress = "192.168.0.16";
+
+        /* Move the text widget one line lower for better look. */
+        m_textWidget.move(0, 1);
     }
 
     /**
@@ -167,12 +170,12 @@ private:
     /**
      * Icon width in pixels.
      */
-    static const int16_t    ICON_WIDTH     = 8;
+    static const int16_t    ICON_WIDTH          = 8;
 
     /**
      * Icon height in pixels.
      */
-    static const int16_t    ICON_HEIGHT    = 8;
+    static const int16_t    ICON_HEIGHT         = 8;
 
     /**
      * Image path within the SPIFFS.
@@ -184,8 +187,17 @@ private:
      */
     static const char*      CONFIG_PATH;
 
-    /** Time to request new data period in ms */
-    static const uint32_t   UPDATE_PERIOD    = 60000U;
+    /**
+     * Period in ms for requesting data from server.
+     * This is used in case the last request to the server was successful.
+     */
+    static const uint32_t   UPDATE_PERIOD       = (60U * 1000U);
+
+    /**
+     * Short period in ms for requesting data from server.
+     * This is used in case the request to the server failed.
+     */
+    static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
 
     Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -197,12 +209,14 @@ private:
     bool                m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     String              m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient     m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer         m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
+    SimpleTimer         m_requestTimer;             /**< Timer, used for cyclic request of new data. */
 
     /**
      * Request new data.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void requestNewData(void);
+    bool requestNewData(void);
 
     /**
      * Register callback function on response reception.

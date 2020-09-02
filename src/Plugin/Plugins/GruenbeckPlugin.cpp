@@ -86,6 +86,8 @@ const char* GruenbeckPlugin::CONFIG_PATH    = "/configuration";
 
 void GruenbeckPlugin::active(IGfx& gfx)
 {
+    gfx.fillScreen(ColorDef::BLACK);
+
     if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
@@ -96,10 +98,13 @@ void GruenbeckPlugin::active(IGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(IMAGE_PATH);
-            gfx.fillScreen(ColorDef::BLACK);
 
             m_iconCanvas->update(gfx);
         }
+    }
+    else
+    {
+        m_iconCanvas->update(gfx);
     }
 
     if (nullptr == m_textCanvas)
@@ -110,24 +115,20 @@ void GruenbeckPlugin::active(IGfx& gfx)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
 
-            /* Move the text widget one line lower for better look. */
-            m_textWidget.move(0, 1);
-
-            m_textWidget.setFormatStr("\\calign?");
-         
             m_textCanvas->update(gfx);
         }
     }
-
-    requestNewData();
-    m_requestDataTimer.start(GruenbeckPlugin::UPDATE_PERIOD);
+    else
+    {
+        m_textCanvas->update(gfx);
+    }
         
     return;
 }
 
 void GruenbeckPlugin::inactive()
 {
-    m_requestDataTimer.stop();
+    /* Nothing to do */
     return;
 }
 
@@ -173,12 +174,22 @@ void GruenbeckPlugin::start()
     }
 
     registerResponseCallback();
+    if (false == requestNewData())
+    {
+        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+    }
+    else
+    {
+        m_requestTimer.start(UPDATE_PERIOD);
+    }
 
     return;
 }
 
 void GruenbeckPlugin::stop() 
 {
+    m_requestTimer.stop();
+
     if (false != SPIFFS.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
@@ -189,11 +200,17 @@ void GruenbeckPlugin::stop()
 
 void GruenbeckPlugin::process()
 {
-    if ((true == m_requestDataTimer.isTimerRunning()) &&
-        (true == m_requestDataTimer.isTimeout()))
+    if ((true == m_requestTimer.isTimerRunning()) &&
+        (true == m_requestTimer.isTimeout()))
     {
-        requestNewData();
-        m_requestDataTimer.restart();
+        if (false == requestNewData())
+        {
+            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+        }
+        else
+        {
+            m_requestTimer.start(UPDATE_PERIOD);
+        }
     }
 
     return;
@@ -207,16 +224,27 @@ void GruenbeckPlugin::process()
  * Private Methods
  *****************************************************************************/
 
-void GruenbeckPlugin::requestNewData()
+bool GruenbeckPlugin::requestNewData()
 {
-    String url = String("http://") + m_ipAddress + "/mux_http";
+    bool    status  = false;
+    String  url     = String("http://") + m_ipAddress + "/mux_http";
 
     if (true == m_client.begin(url))
     {
         m_client.addPar("id","42");
         m_client.addPar("show","D_Y_10_1~");
-        (void)m_client.POST();
+
+        if (false == m_client.POST())
+        {
+            LOG_WARNING("POST %s failed.", url.c_str());
+        }
+        else
+        {
+            status = true;
+        }
     }
+
+    return status;
 }
 
 void GruenbeckPlugin::registerResponseCallback()
