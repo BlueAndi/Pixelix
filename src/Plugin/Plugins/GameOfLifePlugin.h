@@ -46,7 +46,6 @@
 #include <stdint.h>
 #include "Plugin.hpp"
 #include <SimpleTimer.hpp>
-#include <Color.h>
 
 /******************************************************************************
  * Macros
