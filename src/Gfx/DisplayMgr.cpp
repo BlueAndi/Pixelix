@@ -807,6 +807,11 @@ void DisplayMgr::process()
             m_selectedPlugin->active(matrix);
             LOG_INFO("Slot %u (%s) now active.", m_selectedSlot, m_selectedPlugin->getName());
         }
+        /* No plugin is active, clear the display. */
+        else
+        {
+            matrix.clear();
+        }
     }
 
     /* Process all installed plugins. */
