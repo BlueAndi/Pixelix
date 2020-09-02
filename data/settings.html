@@ -26,7 +26,7 @@
                 formData.append(input.name, input.value);
             }
 
-            xhr.open("POST", "/settings");
+            xhr.open("POST", "/settings.html");
             xhr.onload = function() {
                 var jsonRsp = JSON.parse(xhr.response);
 
