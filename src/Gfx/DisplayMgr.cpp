@@ -804,12 +804,24 @@ void DisplayMgr::process()
                 m_slotTimer.start(duration);
             }
 
-            m_selectedPlugin->active(matrix);
+            if (nullptr != m_mainCanvas)
+            {
+                m_selectedPlugin->active(*m_mainCanvas);
+            }
+            else
+            {
+                m_selectedPlugin->active(matrix);
+            }
+
             LOG_INFO("Slot %u (%s) now active.", m_selectedSlot, m_selectedPlugin->getName());
         }
         /* No plugin is active, clear the display. */
         else
         {
+            if (nullptr != m_mainCanvas)
+            {
+                m_mainCanvas->fillScreen(ColorDef::BLACK);
+            }
             matrix.clear();
         }
     }
