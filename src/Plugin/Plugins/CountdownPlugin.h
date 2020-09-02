@@ -51,6 +51,7 @@
 #include <BitmapWidget.h>
 #include <stdint.h>
 #include <TextWidget.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -97,7 +98,7 @@ public:
         m_textCanvas(nullptr),
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
-        m_textWidget(),
+        m_textWidget("\\calign?"),
         m_configurationFilename(""),
         m_currentDate(),
         m_targetDate(),
@@ -105,7 +106,8 @@ public:
         m_remainingDays(""),
         m_url(),
         m_callbackWebHandler(nullptr),
-        m_xMutex(nullptr)
+        m_xMutex(nullptr),
+        m_cfgReloadTimer()
     {
         /* Example data, used to generate the very first configuration file. */
         m_targetDate.day                    = 29;
@@ -226,34 +228,41 @@ private:
     /**
      * Icon width in pixels.
      */
-    static const int16_t ICON_WIDTH     = 8;
+    static const int16_t    ICON_WIDTH     = 8;
 
     /**
      * Icon height in pixels.
      */
-    static const int16_t ICON_HEIGHT    = 8;
+    static const int16_t    ICON_HEIGHT    = 8;
 
     /**
      * Image path within the SPIFFS.
      */
-    static const char*  IMAGE_PATH;
+    static const char*      IMAGE_PATH;
 
     /**
      * Configuration path within the SPIFFS.
      */
-    static const char* CONFIG_PATH;
+    static const char*      CONFIG_PATH;
 
    /**
-     * Offste to translate the month of the tm struct (time.h)
-     * to a human readable value, since months since January are used (0-11).
-     */
-    static const int16_t TM_OFFSET_MONTH     = 1;
+    * Offset to translate the month of the tm struct (time.h)
+    * to a human readable value, since months since January are used (0-11).
+    */
+    static const int16_t    TM_OFFSET_MONTH = 1;
 
    /**
-     * Offste to translate the year of the tm struct (time.h)
-     * to a human readable value, since years since 1900 are used.
+    * Offset to translate the year of the tm struct (time.h)
+    * to a human readable value, since years since 1900 are used.
+    */
+    static const int16_t    TM_OFFSET_YEAR  = 1900;
+
+    /**
+     * The configuration in the persistent memory shall be cyclic loaded.
+     * This mechanism ensure that manual changes in the file are considered.
+     * This is the reload period in ms.
      */
-    static const int16_t TM_OFFSET_YEAR     = 1900;
+    static const uint32_t   CFG_RELOAD_PERIOD   = 30000U;
 
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -267,6 +276,7 @@ private:
     String                      m_url;                      /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    SimpleTimer                 m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
 
     /**
      * Instance specific web request handler, called by the static web request

@@ -104,9 +104,6 @@ void CountdownPlugin::active(IGfx& gfx)
 {
     lock();
 
-    /* Reload configuration, because it may be updated. */
-    (void)loadConfiguration();
-
     if (nullptr == m_iconCanvas)
     {
         m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
@@ -117,9 +114,6 @@ void CountdownPlugin::active(IGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(IMAGE_PATH);
-            gfx.fillScreen(ColorDef::BLACK);
-
-            m_iconCanvas->update(gfx);
         }
     }
 
@@ -130,17 +124,8 @@ void CountdownPlugin::active(IGfx& gfx)
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
-
-              /* Move the text widget one line lower for better look. */
-            m_textWidget.move(0, 1);
-
-            m_textWidget.setFormatStr("\\calign?");
-
-            m_textCanvas->update(gfx);
         }
     }
-
-    calculateDifferenceInDays();
 
     unlock();
 
@@ -149,14 +134,22 @@ void CountdownPlugin::active(IGfx& gfx)
 
 void CountdownPlugin::inactive()
 {
-    m_remainingDays.clear();
-
+    /* Nothing to do */
     return;
 }
 
 void CountdownPlugin::update(IGfx& gfx)
 {
     lock();
+
+    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
+        (true == m_cfgReloadTimer.isTimeout()))
+    {
+        (void)loadConfiguration();
+        calculateDifferenceInDays();
+
+        m_cfgReloadTimer.restart();
+    }
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -193,6 +186,10 @@ void CountdownPlugin::start()
         }
     }
 
+    calculateDifferenceInDays();
+
+    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+
     unlock();
 
     return;
@@ -201,6 +198,8 @@ void CountdownPlugin::start()
 void CountdownPlugin::stop()
 {
     lock();
+
+    m_cfgReloadTimer.stop();
 
     if (false != SPIFFS.remove(m_configurationFilename))
     {
@@ -216,14 +215,19 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 {
     lock();
 
-    LOG_INFO("New target date: %04u-%02u-%02u", targetDate.year, targetDate.month, targetDate.day);
+    if ((targetDate.day != m_targetDate.day) ||
+        (targetDate.month != m_targetDate.month) ||
+        (targetDate.year != m_targetDate.year))
+    {
+        LOG_INFO("New target date: %04u-%02u-%02u", targetDate.year, targetDate.month, targetDate.day);
 
-    m_targetDate = targetDate;
+        m_targetDate = targetDate;
 
-    /* Always stores the configuration, otherwise it will be overwritten during
-     * plugin activation.
-     */
-    (void)saveConfiguration();
+        /* Always stores the configuration, otherwise it will be overwritten during
+         * plugin activation.
+         */
+        (void)saveConfiguration();
+    }
 
     unlock();
 
@@ -234,15 +238,20 @@ void CountdownPlugin::setUnitDescription(const String& plural, const String& sin
 {
     lock();
 
-    LOG_INFO("New unit description: \"%s\" / \"%s\"", plural.c_str(), singular.c_str());
+    if ((plural != m_targetDateInformation.plural) ||
+        (singular != m_targetDateInformation.singular))
+    {
 
-    m_targetDateInformation.plural      = plural;
-    m_targetDateInformation.singular    = singular;
+        LOG_INFO("New unit description: \"%s\" / \"%s\"", plural.c_str(), singular.c_str());
 
-    /* Always stores the configuration, otherwise it will be overwritten during
-     * plugin activation.
-     */
-    (void)saveConfiguration();
+        m_targetDateInformation.plural      = plural;
+        m_targetDateInformation.singular    = singular;
+
+        /* Always stores the configuration, otherwise it will be overwritten during
+         * plugin activation.
+         */
+        (void)saveConfiguration();
+    }
 
     unlock();
 
@@ -441,7 +450,7 @@ void CountdownPlugin::calculateDifferenceInDays()
             char remaining[10] = "";
 
             snprintf(remaining, sizeof(remaining), " %d", numberOfDays);
-            m_remainingDays += remaining;
+            m_remainingDays  = remaining;
             m_remainingDays += " ";
 
             if(numberOfDays > 1)
