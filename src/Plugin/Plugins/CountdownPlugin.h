@@ -293,7 +293,7 @@ private:
     void createConfigDirectory();
 
     /**
-     * Calculates the differnece between m_targetTime and m_currentTime in days.
+     * Calculates the difference between m_targetTime and m_currentTime in days.
      */
     void calculateDifferenceInDays(void);
 
