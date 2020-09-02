@@ -186,12 +186,6 @@ void InitState::entry(StateMachine& sm)
 
         /* Show some informations on the display. */
         showStartupInfoOnDisplay();
-
-        /* Load last plugin installation. */
-        PluginMgr::getInstance().load();
-
-        /* Welcome the user on the very first time. */
-        welcome();
     }
 
     /* Any error happened? */
@@ -280,6 +274,12 @@ void InitState::exit(StateMachine& sm)
     }
     else
     {
+        /* Load last plugin installation. */
+        PluginMgr::getInstance().load();
+
+        /* Welcome the user on the very first time. */
+        welcome();
+        
         /* Start webserver after the wifi access point is running.
          * If its done earlier, it will cause an exception because the LwIP stack
          * is not initialized.
