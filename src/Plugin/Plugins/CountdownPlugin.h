@@ -73,19 +73,71 @@ class CountdownPlugin : public Plugin
 public:
 
     /** Date data. */
-    typedef struct
+    struct DateDMY
     {
         uint8_t day;    /**< Day of month. */
         uint8_t month;  /**< Month of year. */
         uint16_t year;  /**< Year. */
-    } DateDMY;
+
+        /** Initialize structure. */
+        DateDMY() :
+            day(0U),
+            month(0U),
+            year(0U)
+        {
+        }
+
+        /** Destroy structure */
+        ~DateDMY()
+        {
+        }
+    } ;
 
     /** The target date description. */
-    typedef struct
+    struct TargetDayDescription
     {
         String plural;      /**< The description in plural form e.g. Days. */
         String singular;    /**< The description in singular form e.g. day */
-    } TargetDayDescription;
+
+        /** Initialize structure. */
+        TargetDayDescription() :
+            plural(),
+            singular()
+        {
+        }
+
+        /** Destroy structure. */
+        ~TargetDayDescription()
+        {
+        }
+
+        /**
+         * Initialize structure by assignment.
+         * 
+         * @param[in] desc  Target day description, which to assign.
+         */
+        TargetDayDescription(const TargetDayDescription& desc) :
+            plural(desc.plural),
+            singular(desc.singular)
+        {
+        }
+
+        /**
+         * Assign structure.
+         * 
+         * @param[in] desc  Target day description, which to assign.
+         */
+        TargetDayDescription& operator=(const TargetDayDescription& desc)
+        {
+            if (this != &desc)
+            {
+                plural      = desc.plural;
+                singular    = desc.singular;
+            }
+
+            return *this;
+        }
+    } ;
 
     /**
      * Constructs the plugin.
@@ -209,6 +261,13 @@ public:
     void start() override;
 
     /**
+     * Get current target date for countdown.
+     * 
+     * @return Target date
+     */
+    DateDMY getTargetDate() const;
+
+    /**
      * Set target date for countdown.
      *
      * @param[in] targetDate    Target date
@@ -216,12 +275,18 @@ public:
     void setTargetDate(const DateDMY& targetDate);
 
     /**
+     * Get the language depended strings for the unit.
+     * 
+     * @return Target day unit descriptions
+     */
+    TargetDayDescription getTargetDayDescription() const;
+
+    /**
      * Set language depended strings for the unit.
      *
-     * @param[in] plural    Unit in plural form, e.g. "days".
-     * @param[in] singular  Unit in singular form, e.g. "day".
+     * @param[in] targetDayDescription  Unit in plural and singular form, e.g. "days/day".
      */
-    void setUnitDescription(const String& plural, const String& singular);
+    void setTargetDayDescription(const TargetDayDescription& targetDayDescription);
 
 private:
 
@@ -320,12 +385,12 @@ private:
     /**
      * Protect against concurrent access.
      */
-    void lock(void);
+    void lock(void) const;
 
     /**
      * Unprotect against concurrent access.
      */
-    void unlock(void);
+    void unlock(void) const;
 };
 
 /******************************************************************************

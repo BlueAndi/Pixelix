@@ -211,6 +211,19 @@ void CountdownPlugin::stop()
     return;
 }
 
+CountdownPlugin::DateDMY CountdownPlugin::getTargetDate() const
+{
+    DateDMY targetDate;
+
+    lock();
+
+    targetDate = m_targetDate;
+
+    unlock();
+
+    return targetDate;
+}
+
 void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 {
     lock();
@@ -234,18 +247,29 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
     return;
 }
 
-void CountdownPlugin::setUnitDescription(const String& plural, const String& singular)
+CountdownPlugin::TargetDayDescription CountdownPlugin::getTargetDayDescription() const
+{
+    TargetDayDescription desc;
+
+    lock();
+
+    desc = m_targetDateInformation;
+
+    unlock();
+
+    return desc;
+}
+
+void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& targetDayDescription)
 {
     lock();
 
-    if ((plural != m_targetDateInformation.plural) ||
-        (singular != m_targetDateInformation.singular))
+    if ((targetDayDescription.plural != m_targetDateInformation.plural) ||
+        (targetDayDescription.singular != m_targetDateInformation.singular))
     {
+        LOG_INFO("New unit description: \"%s\" / \"%s\"", targetDayDescription.plural.c_str(), targetDayDescription.singular.c_str());
 
-        LOG_INFO("New unit description: \"%s\" / \"%s\"", plural.c_str(), singular.c_str());
-
-        m_targetDateInformation.plural      = plural;
-        m_targetDateInformation.singular    = singular;
+        m_targetDateInformation = targetDayDescription;
 
         /* Always stores the configuration, otherwise it will be overwritten during
          * plugin activation.
@@ -294,7 +318,9 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
         /* Target date missing? */
         if ((false == request->hasArg("day")) ||
             (false == request->hasArg("month")) ||
-            (false == request->hasArg("year")))
+            (false == request->hasArg("year")) ||
+            (false == request->hasArg("plural")) ||
+            (false == request->hasArg("singular")))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -305,14 +331,41 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
         }
         else
         {
-            DateDMY targetDate;
-            bool    isSuccessDay    = Util::strToUInt8(request->arg("day"), targetDate.day);
-            bool    isSuccessMonth  = Util::strToUInt8(request->arg("month"), targetDate.month);
-            bool    isSuccessYear   = Util::strToUInt16(request->arg("year"), targetDate.year);
+            DateDMY                 targetDate              = getTargetDate();
+            TargetDayDescription    targetDayDescription    = getTargetDayDescription();
+            bool                    isSuccess               = true;
 
-            if ((false == isSuccessDay) ||
-                (false == isSuccessMonth) ||
-                (false == isSuccessYear))
+            if ((true == isSuccess) &&
+                (true == request->hasArg("day")))
+            {
+                isSuccess = Util::strToUInt8(request->arg("day"), targetDate.day);
+            }
+
+            if ((true == isSuccess) &&
+                (true == request->hasArg("month")))
+            {
+                isSuccess = Util::strToUInt8(request->arg("month"), targetDate.month);
+            }
+
+            if ((true == isSuccess) &&
+                (true == request->hasArg("year")))
+            {
+                isSuccess = Util::strToUInt16(request->arg("year"), targetDate.year);
+            }
+
+            if ((true == isSuccess) &&
+                (true == request->hasArg("plural")))
+            {
+                targetDayDescription.plural = request->arg("plural");
+            }
+
+            if ((true == isSuccess) &&
+                (true == request->hasArg("singular")))
+            {
+                targetDayDescription.singular = request->arg("singular");
+            }
+
+            if (false == isSuccess)
             {
                 JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -324,6 +377,7 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
             else
             {
                 setTargetDate(targetDate);
+                setTargetDayDescription(targetDayDescription);
 
                 /* Prepare response */
                 (void)jsonDoc.createNestedObject("data");
@@ -503,7 +557,7 @@ uint32_t CountdownPlugin::dateToDays(CountdownPlugin::DateDMY date)
     return dateInDays;
 }
 
-void CountdownPlugin::lock()
+void CountdownPlugin::lock() const
 {
     if (nullptr != m_xMutex)
     {
@@ -513,7 +567,7 @@ void CountdownPlugin::lock()
     return;
 }
 
-void CountdownPlugin::unlock()
+void CountdownPlugin::unlock() const
 {
     if (nullptr != m_xMutex)
     {

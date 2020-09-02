@@ -309,10 +309,12 @@ Detail:
   * day=`<day>`
   * month=`<month>`
   * year=`<year>`
+  * plural=`<unit-plural>`
+  * singular=`<unit-singular>`
 
 Example:
 ```
-POST <base-uri>/rest/api/v1/display/uid/0/countdown?day=29;month=8;year=2019
+POST <base-uri>/rest/api/v1/display/uid/0/countdown?day=29;month=8;year=2019;plural=DAYS;singular=DAY
 ```
 
 Result:
@@ -325,7 +327,7 @@ Result:
 
 Example with curl:
 ```
-$ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/countdown
+$ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "plural=DAYS" -d "singular=DAY" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/countdown
 ```
 
 ### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location
