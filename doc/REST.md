@@ -356,15 +356,35 @@ $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "plural=DAYS
 ```
 
 ### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location
-Set the location of the SunrisePlugin plugin.
+Get/Set the location of the SunrisePlugin plugin.
 
 Detail:
+* Method: GET
+  * Get the location of the SunrisePlugin plugin.
+    * Arguments:
+      * N/A
 * Method: POST
-* Arguments:
-  * longitude=`<longitude>`
-  * latitude=`<latitude>`
+  * Set the location of the SunrisePlugin plugin.
+    * Arguments:
+      * longitude=`<longitude>`
+      * latitude=`<latitude>`
 
 Example:
+```
+GET <base-uri>/rest/api/v1/display/uid/0/location
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "longitude": "2.295",
+        "latitude": "48.858"
+    }
+}
+```
+
 ```
 POST <base-uri>/rest/api/v1/display/uid/0/location?longitude=2.295;latitude=48.858
 ```
@@ -379,6 +399,7 @@ Result:
 
 Example with curl:
 ```
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/location
 $ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/location
 ```
 

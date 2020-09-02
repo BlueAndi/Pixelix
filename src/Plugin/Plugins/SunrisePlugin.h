@@ -199,6 +199,14 @@ public:
     void process(void);
 
     /**
+     * Get geo location.
+     * 
+     * @param[out] longitude    Longitude
+     * @param[out] latitude     Latitude
+     */
+    void getLocation(String& longitude, String&latitude) const;
+
+    /**
      * Set geo location.
      *
      * @param[in] longitude Longitude
@@ -305,12 +313,12 @@ private:
     /**
      * Protect against concurrent access.
      */
-    void lock(void);
+    void lock(void) const;
 
     /**
      * Unprotect against concurrent access.
      */
-    void unlock(void);
+    void unlock(void) const;
 };
 
 /******************************************************************************

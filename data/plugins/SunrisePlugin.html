@@ -87,7 +87,12 @@
     <img src="/images/SunrisePlugin.jpg" alt="Screenshot" />
     <p>The plugin shows the current sunrise / sunset times for a configured location.</p>
     <h3>REST API</h3>
-    <h4>Text</h4>
+    <h4>Get location</h4>
+    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/location</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+    </ul>
+    <h4>Set location</h4>
     <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>

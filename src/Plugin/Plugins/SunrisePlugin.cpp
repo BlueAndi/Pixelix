@@ -231,6 +231,18 @@ void SunrisePlugin::process()
     }
 }
 
+void SunrisePlugin::getLocation(String& longitude, String&latitude) const
+{
+    lock();
+
+    longitude   = m_longitude;
+    latitude    = m_latitude;
+
+    unlock();
+
+    return;
+}
+
 void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
 {
     lock();
@@ -274,16 +286,22 @@ void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
         return;
     }
 
-    if (HTTP_POST != request->method())
+    if (HTTP_GET == request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+        String      longitude;
+        String      latitude;
+
+        getLocation(longitude, latitude);
+
+        dataObj["longitude"]    = longitude;
+        dataObj["latitude"]     = latitude;
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
-    else
+    else if (HTTP_POST == request->method())
     {
         /* Location missing? */
         if ((false == request->hasArg("longitude")) ||
@@ -305,6 +323,15 @@ void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
             jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
     usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
@@ -496,7 +523,7 @@ void SunrisePlugin::createConfigDirectory()
     }
 }
 
-void SunrisePlugin::lock()
+void SunrisePlugin::lock() const
 {
     if (nullptr != m_xMutex)
     {
@@ -506,7 +533,7 @@ void SunrisePlugin::lock()
     return;
 }
 
-void SunrisePlugin::unlock()
+void SunrisePlugin::unlock() const
 {
     if (nullptr != m_xMutex)
     {
