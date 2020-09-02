@@ -128,7 +128,7 @@ void DateTimePlugin::active(IGfx& gfx)
 
     m_durationCounter = 0U;
 
-    m_checkUpdateTimer.start(DateTimePlugin::CHECK_UPDATE_PERIOD);
+    m_checkUpdateTimer.start(CHECK_UPDATE_PERIOD);
 
     /* Force immediate date/time update on activation */
     updateDateTime(true);

@@ -110,7 +110,7 @@ void DatePlugin::active(IGfx& gfx)
 
     m_isUpdateAvailable = true;
 
-    m_checkDateUpdateTimer.start(DatePlugin::CHECK_DATE_UPDATE_PERIOD);
+    m_checkDateUpdateTimer.start(CHECK_DATE_UPDATE_PERIOD);
 
     /* Force immediate date update on activation */
     updateDate(true);
