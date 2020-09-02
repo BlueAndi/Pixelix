@@ -64,7 +64,7 @@ Get status information:
 
 Detail:
 * Method: GET
-* Arguments: N/A
+  * Arguments: N/A
 
 Example:
 ```
@@ -113,7 +113,7 @@ The plugins are listed in the ascending order of the slots.
 
 Detail:
 * Method: GET
-* Arguments: N/A
+  * Arguments: N/A
 
 Example:
 ```
@@ -215,8 +215,8 @@ Show text in the specified slot.
 
 Detail:
 * Method: POST
-* Arguments:
-  * show=`<text>`
+  * Arguments:
+    * show=`<text>`
 
 Example:
 ```
@@ -250,8 +250,8 @@ Note, if you are using _gimp_ to create bitmap files, please configure like:
 
 Detail:
 * Method: POST
-* Arguments:
-    * -
+  * Arguments:
+      * -
 
 Example:
 ```
@@ -301,18 +301,42 @@ $ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/di
 ```
 
 ### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown
-Set the target date of the CountdownPlugin plugin.
+Get/Set the target date and target day description of the CountdownPlugin plugin.
 
 Detail:
+* Method: GET
+  * Get target date and target day description.
+    * Arguments:
+      * N/A
 * Method: POST
-* Arguments:
-  * day=`<day>`
-  * month=`<month>`
-  * year=`<year>`
-  * plural=`<unit-plural>`
-  * singular=`<unit-singular>`
+  * Set target date and target day description. Note, every parameter is optional.
+  * Arguments:
+    * day=`<day>`
+    * month=`<month>`
+    * year=`<year>`
+    * plural=`<unit-plural>`
+    * singular=`<unit-singular>`
 
-Example:
+Examples:
+
+```
+GET <base-uri>/rest/api/v1/display/uid/0/countdown
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "day": 2,
+        "month": 9,
+        "year": 2020,
+        "plural": "DAYS",
+        "singular": "DAY"
+    }
+}
+```
+
 ```
 POST <base-uri>/rest/api/v1/display/uid/0/countdown?day=29;month=8;year=2019;plural=DAYS;singular=DAY
 ```
@@ -327,6 +351,7 @@ Result:
 
 Example with curl:
 ```
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/countdown
 $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "plural=DAYS" -d "singular=DAY" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/countdown
 ```
 

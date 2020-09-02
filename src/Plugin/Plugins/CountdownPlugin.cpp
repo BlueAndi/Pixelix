@@ -304,16 +304,23 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
         return;
     }
 
-    if (HTTP_POST != request->method())
+    if (HTTP_GET == request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        DateDMY                 targetDate              = getTargetDate();
+        TargetDayDescription    targetDayDescription    = getTargetDayDescription();
+        JsonObject              dataObj                 = jsonDoc.createNestedObject("data");
+
+        dataObj["day"]      = targetDate.day;
+        dataObj["month"]    = targetDate.month;
+        dataObj["year"]     = targetDate.year;
+        dataObj["plural"]   = targetDayDescription.plural;
+        dataObj["singular"] = targetDayDescription.singular;
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
-    else
+    else if (HTTP_POST == request->method())
     {
         /* Target date missing? */
         if ((false == request->hasArg("day")) ||
@@ -386,6 +393,16 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
             }
         }
     }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+
 
     usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
     if (MAX_USAGE < usageInPercent)

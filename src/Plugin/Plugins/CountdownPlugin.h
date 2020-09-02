@@ -91,7 +91,36 @@ public:
         ~DateDMY()
         {
         }
-    } ;
+
+        /**
+         * Initialize structure by assignment.
+         * 
+         * @param[in] desc  Target day description, which to assign.
+         */
+        DateDMY(const DateDMY& desc) :
+            day(desc.day),
+            month(desc.month),
+            year(desc.year)
+        {
+        }
+
+        /**
+         * Assign structure.
+         * 
+         * @param[in] desc  Target day description, which to assign.
+         */
+        DateDMY& operator=(const DateDMY& desc)
+        {
+            if (this != &desc)
+            {
+                day     = desc.day;
+                month   = desc.month;
+                year    = desc.year;
+            }
+
+            return *this;
+        }
+    };
 
     /** The target date description. */
     struct TargetDayDescription
@@ -137,7 +166,7 @@ public:
 
             return *this;
         }
-    } ;
+    };
 
     /**
      * Constructs the plugin.

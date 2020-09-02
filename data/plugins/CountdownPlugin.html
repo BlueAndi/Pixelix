@@ -90,6 +90,12 @@
     <img src="/images/CountdownPlugin.jpg" alt="Screenshot" />
     <p>The plugin shows the remaining days until a configured target date.</p>
     <h3>REST API</h3>
+    <h4>Get target date and target day description.</h4>
+    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+    </ul>
+    <h4>Set target day and target day desription.</h4>
     <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&lt;PLURAL&gt;&lt;SINGULAR&gt;</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>
