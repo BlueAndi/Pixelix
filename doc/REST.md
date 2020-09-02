@@ -14,6 +14,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Plugin depended](#plugin-depended)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/text](#endpoint-base-uridisplayuidplugin-uidtext)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/bitmap](#endpoint-base-uridisplayuidplugin-uidbitmap)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamps](#endpoint-base-uridisplayuidplugin-uidlamps)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamp/`<lamp-id>`](#endpoint-base-uridisplayuidplugin-uidlamplamp-id)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown](#endpoint-base-uridisplayuidplugin-uidcountdown)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location](#endpoint-base-uridisplayuidplugin-uidlocation)
@@ -288,6 +289,40 @@ Result:
 
 ```
 $ curl -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://192.168.2.166/rest/api/v1/display/uid/0/bitmap
+```
+
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamps
+Get the state of all lamps in the specified slot.
+
+Detail:
+* Method: GET
+* Arguments:
+  * N/A
+
+Example:
+```
+GET <base-uri>/rest/api/v1/display/uid/0/lamps
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "lamps": [{
+            "id": 0,
+            "state": "off"
+        }, {
+            "id": 1,
+            "state": "on"
+        }]
+    }
+}
+```
+
+Example with curl:
+```
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/lamps
 ```
 
 ### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamp/`<lamp-id>`

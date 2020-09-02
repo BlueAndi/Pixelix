@@ -148,6 +148,15 @@ void IconTextLampPlugin::registerWebInterface(AsyncWebServer& srv, const String&
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlText.c_str());
 
+    m_urlLamps = baseUri + "/lamps";
+    m_callbackWebHandlerLamps = &srv.on(m_urlLamps.c_str(),
+                                        [this](AsyncWebServerRequest *request)
+                                        {
+                                            this->webReqHandlerLamps(request);
+                                        });
+
+    LOG_INFO("[%s] Register: %s", getName(), m_urlLamps.c_str());
+
     m_urlLamp = baseUri + "/lamp/*";
     m_callbackWebHandlerLamp = &srv.on( m_urlLamp.c_str(),
                                         [this](AsyncWebServerRequest *request)
@@ -179,6 +188,15 @@ void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
     }
 
     m_callbackWebHandlerText = nullptr;
+
+    LOG_INFO("[%s] Unregister: %s", getName(), m_urlLamps.c_str());
+
+    if (false == srv.removeHandler(m_callbackWebHandlerLamps))
+    {
+        LOG_WARNING("Couldn't remove %s handler.", this->getName());
+    }
+
+    m_callbackWebHandlerLamps = nullptr;
 
     LOG_INFO("[%s] Unregister: %s", getName(), m_urlLamp.c_str());
 
@@ -263,6 +281,20 @@ bool IconTextLampPlugin::loadBitmap(const String& filename)
     return status;
 }
 
+bool IconTextLampPlugin::getLamp(uint8_t lampId) const
+{
+    bool lampState = false;
+
+    if (MAX_LAMPS > lampId)
+    {
+        lock();
+        lampState = m_lampWidgets[lampId].getOnState();
+        unlock();
+    }
+
+    return lampState;
+}
+
 void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
@@ -297,16 +329,18 @@ void IconTextLampPlugin::webReqHandlerText(AsyncWebServerRequest *request)
         return;
     }
 
-    if (HTTP_POST != request->method())
+    if (HTTP_GET == request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
+        String      formattedText   = getText();
+
+        dataObj["text"] = formattedText;
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
-    else
+    else if (HTTP_POST == request->method())
     {
         /* "show" argument missing? */
         if (false == request->hasArg("show"))
@@ -329,6 +363,15 @@ void IconTextLampPlugin::webReqHandlerText(AsyncWebServerRequest *request)
             jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
     usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
@@ -472,6 +515,61 @@ void IconTextLampPlugin::iconUploadHandler(AsyncWebServerRequest *request, const
     return;
 }
 
+void IconTextLampPlugin::webReqHandlerLamps(AsyncWebServerRequest *request)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = 0U;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET == request->method())
+    {
+        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+        JsonArray   lampArray   = dataObj.createNestedArray("lamps");
+        uint8_t     lampId  = 0U;
+
+        for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
+        {
+            bool        lampOnState = getLamp(lampId);
+            JsonObject  lampObj     = lampArray.createNestedObject();
+
+            lampObj["id"]       = lampId;
+            lampObj["state"]    = (false == lampOnState) ? String("off") : String("on");
+        }
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
 void IconTextLampPlugin::webReqHandlerLamp(AsyncWebServerRequest *request)
 {
     String              content;
@@ -488,10 +586,18 @@ void IconTextLampPlugin::webReqHandlerLamp(AsyncWebServerRequest *request)
 
     if (HTTP_GET == request->method())
     {
-        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
-        String      formattedText   = getText();
+        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+        JsonArray   lampArray   = dataObj.createNestedArray("lamps");
+        uint8_t     lampId  = 0U;
 
-        dataObj["text"] = formattedText;
+        for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
+        {
+            bool        lampOnState = getLamp(lampId);
+            JsonObject  lampObj     = lampArray.createNestedObject();
+
+            lampObj["id"]       = lampId;
+            lampObj["state"]    = (false == lampOnState) ? String("off") : String("on");
+        }
 
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);

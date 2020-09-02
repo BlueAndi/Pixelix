@@ -155,12 +155,17 @@
         <li>PLUGIN-UID: The plugin unique id.</li>
         <li>TEXT: The text to show on the display.</li>
     </ul>
-    <h4>Icon</h4>
+    <h4>Set icon</h4>
     <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>
     </ul>
-    <h4>Lamp</h4>
+    <h4>Get all lamp states</h4>
+    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamps</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+    </ul>
+    <h4>Set lamp state</h4>
     <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamp/&lt;LAMP-ID&gt;?set=&lt;LAMP-STATE&gt;</pre>
     <ul>
         <li>PLUGIN-UID: The plugin unique id.</li>

@@ -90,9 +90,11 @@ public:
         m_lampWidgets(),
         m_urlIcon(),
         m_urlText(),
+        m_urlLamps(),
         m_urlLamp(),
         m_callbackWebHandlerIcon(nullptr),
         m_callbackWebHandlerText(nullptr),
+        m_callbackWebHandlerLamps(nullptr),
         m_callbackWebHandlerLamp(nullptr),
         m_fd(),
         m_isUploadError(false),
@@ -214,6 +216,15 @@ public:
     bool loadBitmap(const String& filename);
 
     /**
+     * Get lamp state (true = on / false = off).
+     * 
+     * @param[in] lampId    Lamp id
+     * 
+     * @return Lamp state
+     */
+    bool getLamp(uint8_t lampId) const;
+
+    /**
      * Set lamp state.
      *
      * @param[in] lampId    Lamp id
@@ -249,12 +260,14 @@ private:
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     LampWidget                  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
-    String                      m_urlIcon;                  /**< REST API URL for updating the icon */
-    String                      m_urlText;                  /**< REST API URL for updating the text */
-    String                      m_urlLamp;                  /**< REST API URL for updating the lamps */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerIcon;   /**< Callback web handler for updating the icon */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerText;   /**< Callback web handler for updating the text */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerLamp;   /**< Callback web handler for updating the lamps */
+    String                      m_urlIcon;                  /**< REST API URL for updating the icon. */
+    String                      m_urlText;                  /**< REST API URL to get/set the text. */
+    String                      m_urlLamps;                 /**< REST API URL to get all lamp states. */
+    String                      m_urlLamp;                  /**< REST API URL for updating single lamps. */
+    AsyncCallbackWebHandler*    m_callbackWebHandlerIcon;   /**< Callback web handler for updating the icon. */
+    AsyncCallbackWebHandler*    m_callbackWebHandlerText;   /**< Callback web handler to get/set the text. */
+    AsyncCallbackWebHandler*    m_callbackWebHandlerLamps;  /**< Callback web handler to get all lamp states. */
+    AsyncCallbackWebHandler*    m_callbackWebHandlerLamp;   /**< Callback web handler for updating single lamps. */
     File                        m_fd;                       /**< File descriptor, used for bitmap file upload. */
     bool                        m_isUploadError;            /**< Flag to signal a upload error. */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
@@ -274,6 +287,14 @@ private:
      * @param[in] request   Web request
      */
     void webReqHandlerIcon(AsyncWebServerRequest *request);
+
+    /**
+     * Instance specific web request handler, called by the static web request
+     * handler. It will really handle the request.
+     *
+     * @param[in] request   Web request
+     */
+    void webReqHandlerLamps(AsyncWebServerRequest *request);
 
     /**
      * Instance specific web request handler, called by the static web request
