@@ -94,7 +94,7 @@ public:
 
         /**
          * Initialize structure by assignment.
-         * 
+         *
          * @param[in] desc  Target day description, which to assign.
          */
         DateDMY(const DateDMY& desc) :
@@ -106,7 +106,7 @@ public:
 
         /**
          * Assign structure.
-         * 
+         *
          * @param[in] desc  Target day description, which to assign.
          */
         DateDMY& operator=(const DateDMY& desc)
@@ -142,7 +142,7 @@ public:
 
         /**
          * Initialize structure by assignment.
-         * 
+         *
          * @param[in] desc  Target day description, which to assign.
          */
         TargetDayDescription(const TargetDayDescription& desc) :
@@ -153,7 +153,7 @@ public:
 
         /**
          * Assign structure.
-         * 
+         *
          * @param[in] desc  Target day description, which to assign.
          */
         TargetDayDescription& operator=(const TargetDayDescription& desc)
@@ -291,7 +291,7 @@ public:
 
     /**
      * Get current target date for countdown.
-     * 
+     *
      * @return Target date
      */
     DateDMY getTargetDate() const;
@@ -305,7 +305,7 @@ public:
 
     /**
      * Get the language depended strings for the unit.
-     * 
+     *
      * @return Target day unit descriptions
      */
     TargetDayDescription getTargetDayDescription() const;
@@ -403,13 +403,21 @@ private:
 
     /**
      * Counts the number of leap years.
+     *
+     * @param[in] date  Date
+     *
+     * @return Number of leap years.
      */
-    uint16_t countLeapYears(DateDMY date);
+    uint16_t countLeapYears(const DateDMY& date) const;
 
     /**
-     * Convert a given date in days starting from year 0.;
+     * Convert a given date in days starting from year 0.
+     *
+     * @param[in] date  Date
+     *
+     * @return Number of days since 0.
      */
-    uint32_t dateToDays(DateDMY date);
+    uint32_t dateToDays(const DateDMY& date) const;
 
     /**
      * Protect against concurrent access.

@@ -118,7 +118,7 @@ void SunrisePlugin::active(IGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(IMAGE_PATH);
-            
+
             m_iconCanvas->update(gfx);
         }
     }
@@ -417,7 +417,7 @@ void SunrisePlugin::registerResponseCallback()
     });
 }
 
-String SunrisePlugin::addCurrentTimezoneValues(String dateTimeString)
+String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) const
 {
     tm          timeInfo;
     char        timeBuffer[17]      = { 0 };

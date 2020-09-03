@@ -200,7 +200,7 @@ public:
 
     /**
      * Get geo location.
-     * 
+     *
      * @param[out] longitude    Longitude
      * @param[out] latitude     Latitude
      */
@@ -274,7 +274,7 @@ private:
 
     /**
      * Request new data.
-     * 
+     *
      * @return If successful it will return true otherwise false.
      */
     bool requestNewData(void);
@@ -292,7 +292,7 @@ private:
      *
      * @return A formatted (timezone adjusted) time string according to the configured time format.
      */
-    String addCurrentTimezoneValues(String dateTimeString);
+    String addCurrentTimezoneValues(const String& dateTimeString) const;
 
     /**
      * Saves current configuration to JSON file.

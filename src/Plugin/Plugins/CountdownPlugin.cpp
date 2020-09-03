@@ -542,7 +542,7 @@ void CountdownPlugin::calculateDifferenceInDays()
     }
 }
 
-uint16_t CountdownPlugin::countLeapYears(CountdownPlugin::DateDMY date)
+uint16_t CountdownPlugin::countLeapYears(const CountdownPlugin::DateDMY& date) const
 {
     uint16_t years = date.year;
 
@@ -556,7 +556,7 @@ uint16_t CountdownPlugin::countLeapYears(CountdownPlugin::DateDMY date)
     return years / 4U - years / 100U + years / 400U;
 }
 
-uint32_t CountdownPlugin::dateToDays(CountdownPlugin::DateDMY date)
+uint32_t CountdownPlugin::dateToDays(const CountdownPlugin::DateDMY& date) const
 {
     const uint8_t   monthDays[12]   = { 31U, 28U, 31U, 30U, 31U, 30U, 31U, 31U, 30U, 31U, 30U, 31U };
     uint32_t        dateInDays      = 0U;
