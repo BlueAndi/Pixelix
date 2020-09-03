@@ -23,7 +23,7 @@
             utils.enableForm("myFormText", false);
             utils.enableForm("myFormLamp", false);
         }
-        
+
         function getPluginInstances() {
             return utils.makeRequest({
                 method: "GET",
@@ -151,24 +151,28 @@
         window.onload = function() {
             injectMenu("navbar", "/plugins.html");
             utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
-            
+
             /* Disable all forms, until the plugin instances are loaded. */
             disableUI();
 
             /* Load all plugin instances. */
             getPluginInstances().then(function(cnt) {
-                var selectText = document.getElementById("pluginUidText");
-                var selectLamp = document.getElementById("pluginUidLamp");
+                var selectText      = document.getElementById("pluginUidText");
+                var selectLamp      = document.getElementById("pluginUidLamp");
+                var selectLampId    = document.getElementById("lampId");
 
                 if (0 < cnt) {
 
                     return getText(
                         selectText.options[selectText.selectedIndex].value,
                         "justText"
-                    ).getLampState(
-                        selectLamp.options[selectLamp.selectedIndex].value,
-                        "lampId"
-                    );
+                    ).then(function() {
+                        return getLamp(
+                            selectLamp.options[selectLamp.selectedIndex].value,
+                            selectLampId.options[selectLampId.selectedIndex].value,
+                            "lampState"
+                        );
+                    });
                 }
             });
         };
