@@ -18,6 +18,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/lamp/`<lamp-id>`](#endpoint-base-uridisplayuidplugin-uidlamplamp-id)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown](#endpoint-base-uridisplayuidplugin-uidcountdown)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location](#endpoint-base-uridisplayuidplugin-uidlocation)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/ipAddress](#endpoint-base-uridisplayuidplugin-uidipaddress)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -456,6 +457,52 @@ Example with curl:
 ```
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/location
 $ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/location
+```
+
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/ipAddress
+Get/Set the ip-address of the GruenbeckPlugin plugin.
+
+Detail:
+* Method: GET
+  * Get the ip-address.
+    * Arguments:
+      * N/A
+* Method: POST
+  * Set the ip-address.
+    * Arguments:
+      * set=`<ip-address>`
+
+Example:
+```
+GET <base-uri>/rest/api/v1/display/uid/0/ipAddress
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "ipAddress": "192.168.178.12"
+    }
+}
+```
+
+```
+POST <base-uri>/rest/api/v1/display/uid/0/ipAddress?set=192.168.178.12
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": null
+}
+```
+
+Example with curl:
+```
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
+$ curl -u luke:skywalker -d "set=192.168.178-12" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
 ```
 
 # Issues, Ideas And Bugs

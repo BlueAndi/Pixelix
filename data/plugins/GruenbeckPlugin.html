@@ -7,10 +7,72 @@
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
     <script src="/js/menu.js"></script>
+    <script src="/js/utils.js"></script>
     <script>
+        var pluginName = "GruenbeckPlugin";
+
+        function getPluginInstances() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET", "/rest/api/v1/display/slots");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+                var index   = 0;
+                var cnt     = 0;
+
+                if (0 === jsonRsp.status) {
+
+                    for(index = 0; index < jsonRsp.data.slots.length; ++index) {
+                        if (jsonRsp.data.slots[index].name === pluginName) {
+
+                            var element = document.getElementById("pluginUid");
+                            var option  = document.createElement("option");
+
+                            option.value = jsonRsp.data.slots[index].uid;
+                            option.text = jsonRsp.data.slots[index].uid;
+                            element.add(option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    if (0 < cnt) {
+                        utils.enableForm("myForm", true);
+                    }
+
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send();
+        }
+
+        function setIPAddress(pluginUid, ipAddress) {
+            var formData = new FormData();
+            var xhr = new XMLHttpRequest();
+
+            formData.append("set", ipAddress);
+
+            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress");
+            xhr.onload = function() {
+                var jsonRsp = JSON.parse(xhr.response);
+
+                if (0 === jsonRsp.status) {
+                    alert("Ok.");
+                } else {
+                    alert("Failed: " + jsonRsp.error.msg);
+                }
+            };
+            xhr.send(formData);
+        }
+
         window.onload = function() {
             injectMenu("navbar", "/plugins.html");
+            utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+            utils.enableForm("myForm", false);
+            getPluginInstances();
         };
+
     </script>
 </head>
 <body>
@@ -24,7 +86,25 @@
     <img src="/images/GruenbeckPlugin.jpg" alt="Screenshot" />
     <p>The plugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.</p>
     <h3>REST API</h3>
-    <pre>-</pre>
+    <h4>Get ip-address</h4>
+    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress</pre>
+    <h4>Set ip-address</h4>
+    <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress?set=&lt;IPADDRESS&gt;</pre>
+    <ul>
+        <li>PLUGIN-UID: The plugin unique id.</li>
+        <li>IPADDRESS: The ip-address for the Gruenbeck server.</li>
+    </ul>
+    <h3>Configuration</h3>
+    <h4>IP-address</h4>
+    <form id="myForm" action="javascript:setIPAddress(pluginUid.options[pluginUid.selectedIndex].value, ipAddress.value)">
+        <label for="pluginUid">Plugin UID:</label><br />
+        <select id="pluginUid" size="1">
+        </select>
+        <br />
+        <label for="ipAddress">IP-address of server:</label><br />
+        <input type="text" id="ipAddress" name="ipAddress" value="192.168.178.12" /><br />
+        <input name="submit" type="submit" value="Update"/>
+    </form>
 </div>
 <div class="footer">
     <hr />

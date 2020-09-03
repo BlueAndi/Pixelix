@@ -33,8 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "GruenbeckPlugin.h"
-
+#include "RestApi.h"
 #include "AsyncHttpClient.h"
+
 #include <ArduinoJson.h>
 #include <Logging.h>
 #include <SPIFFS.h>
@@ -83,6 +84,35 @@ const char* GruenbeckPlugin::CONFIG_PATH    = "/configuration";
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void GruenbeckPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+{
+    m_url = baseUri + "/ipAddress";
+
+    m_callbackWebHandler = &srv.on( m_url.c_str(),
+                                    [this](AsyncWebServerRequest *request)
+                                    {
+                                        this->webReqHandler(request);
+                                    });
+
+    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
+
+    return;
+}
+
+void GruenbeckPlugin::unregisterWebInterface(AsyncWebServer& srv)
+{
+    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
+
+    if (false == srv.removeHandler(m_callbackWebHandler))
+    {
+        LOG_WARNING("Couldn't remove %s handler.", getName());
+    }
+
+    m_callbackWebHandler = nullptr;
+
+    return;
+}
 
 void GruenbeckPlugin::active(IGfx& gfx)
 {
@@ -216,6 +246,27 @@ void GruenbeckPlugin::process()
     return;
 }
 
+String GruenbeckPlugin::getIPAddress() const
+{
+    String ipAddress;
+
+    lock();
+    ipAddress = m_ipAddress;
+    unlock();
+
+    return ipAddress;
+}
+
+void GruenbeckPlugin::setIPAddress(const String& ipAddress)
+{
+    lock();
+    m_ipAddress = ipAddress;
+    (void)saveConfiguration();
+    unlock();
+
+    return;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -223,6 +274,77 @@ void GruenbeckPlugin::process()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void GruenbeckPlugin::webReqHandler(AsyncWebServerRequest *request)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = 0U;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET == request->method())
+    {
+        String      ipAddress   = getIPAddress();
+        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+
+        dataObj["ipAddress"] = ipAddress;
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+    else if (HTTP_POST == request->method())
+    {
+        /* Argument missing? */
+        if (false == request->hasArg("set"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "Argument is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            String ipAddress = request->arg("set");
+
+            setIPAddress(ipAddress);
+
+            /* Prepare response */
+            (void)jsonDoc.createNestedObject("data");
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        }
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
 
 bool GruenbeckPlugin::requestNewData()
 {
@@ -334,6 +456,26 @@ void GruenbeckPlugin::createConfigDirectory()
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         } 
     }
+}
+
+void GruenbeckPlugin::lock() const
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void GruenbeckPlugin::unlock() const
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
+
+    return;
 }
 
 /******************************************************************************

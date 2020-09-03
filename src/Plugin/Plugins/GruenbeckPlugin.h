@@ -79,18 +79,22 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_ipAddress(""),
-        m_url(""),
+        m_ipAddress(),
         m_configurationFilename(""),
         m_httpResponseReceived(false),
         m_relevantResponsePart(""),
-        m_requestTimer()
+        m_requestTimer(),
+        m_url(),
+        m_callbackWebHandler(nullptr),
+        m_xMutex(nullptr)
     {
         /* Example address, used to generate the very first configuration file. */
         m_ipAddress = "192.168.0.16";
 
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        m_xMutex = xSemaphoreCreateMutex();
     }
 
     /**
@@ -109,6 +113,12 @@ public:
             delete m_textCanvas;
             m_textCanvas = nullptr;
         }
+
+        if (nullptr != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = nullptr;
+        }
     }
 
     /**
@@ -123,6 +133,21 @@ public:
     {
         return new GruenbeckPlugin(name, uid);
     }
+
+    /**
+     * Register web interface, e.g. REST API functionality.
+     *
+     * @param[in] srv       Webserver
+     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     */
+    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override;
+
+    /**
+     * Unregister web interface.
+     *
+     * @param[in] srv   Webserver
+     */
+    void unregisterWebInterface(AsyncWebServer& srv) override;
 
     /**
      * This method will be called in case the plugin is set active, which means
@@ -165,6 +190,20 @@ public:
      */
     void process(void);
 
+    /**
+     * Get ip-address.
+     * 
+     * @return IP-address
+     */
+    String getIPAddress() const;
+
+    /**
+     * Set ip-address.
+     * 
+     * @param[in] ipAddress IP-address
+     */
+    void setIPAddress(const String& ipAddress);
+
 private:
 
     /**
@@ -199,17 +238,27 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
 
-    Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget        m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
-    String              m_ipAddress;                /**< IP-address of the Gruenbeck server. */
-    String              m_url;                      /**< String used for POST request URL. */
-    String              m_configurationFilename;    /**< String used for specifying the configuration filename. */
-    bool                m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
-    String              m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
-    AsyncHttpClient     m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer         m_requestTimer;             /**< Timer, used for cyclic request of new data. */
+    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
+    String                      m_ipAddress;                /**< IP-address of the Gruenbeck server. */
+    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
+    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
+    String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
+    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
+    SimpleTimer                 m_requestTimer;             /**< Timer, used for cyclic request of new data. */
+    String                      m_url;                      /**< REST API URL */
+    AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
+    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+
+    /**
+     * Instance specific web request handler, called by the static web request
+     * handler. It will really handle the request.
+     *
+     * @param[in] request   Web request
+     */
+    void webReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Request new data.
@@ -238,6 +287,16 @@ private:
      * Otherwise nothing happens.
      */
     void createConfigDirectory();
+
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void) const;
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void) const;
 };
 
 /******************************************************************************
