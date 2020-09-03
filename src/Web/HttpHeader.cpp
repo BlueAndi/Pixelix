@@ -71,19 +71,19 @@ HttpHeader& HttpHeader::operator=(const HttpHeader& hdr)
 
 void HttpHeader::parse(const String& line)
 {
-    int index = line.indexOf(':');
+    int idx = line.indexOf(':');
 
-    if (0 <= index)
+    if (0 <= idx)
     {
-        m_name = line.substring(0, index);
-        m_value = line.substring(index + 2);
+        m_name = line.substring(0, idx);
+        m_value = line.substring(idx + 2);
 
         /* There may be CRLF at the end, which must be removed. */
-        index = m_value.indexOf("\r\n");
+        idx = m_value.indexOf("\r\n");
 
-        if (0 <= index)
+        if (0 <= idx)
         {
-            m_value.remove(index);
+            m_value.remove(idx);
         }
     }
 }
