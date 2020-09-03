@@ -219,12 +219,12 @@ String HttpResponse::getReasonPhrase() const
 String HttpResponse::getHeader(const String& name)
 {
     String                              value;
-    bool                                isFound = false;
     DLinkedListIterator<HttpHeader*>    it(m_headers);
 
     if (true == it.first())
     {
-        HttpHeader* hdr = nullptr;
+        HttpHeader* hdr     = nullptr;
+        bool        isFound = false;
 
         do
         {
