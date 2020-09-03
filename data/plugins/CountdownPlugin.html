@@ -12,70 +12,112 @@
 
         var pluginName = "CountdownPlugin";
 
-        function getPluginInstances() {
-            var xhr = new XMLHttpRequest();
+        function enableUI() {
+            utils.enableForm("myForm", true);
+        }
 
-            xhr.open("GET", "/rest/api/v1/display/slots");
-            xhr.onload = function() {
-                var jsonRsp = JSON.parse(xhr.response);
+        function disableUI() {
+            utils.enableForm("myForm", false);
+        }
+
+        function getPluginInstances() {
+            return utils.makeRequest({
+                method: "GET",
+                url: "/rest/api/v1/display/slots"
+            }).then(function(rsp) {
                 var index   = 0;
                 var cnt     = 0;
 
-                if (0 === jsonRsp.status) {
+                for(index = 0; index < rsp.data.slots.length; ++index) {
+                    if (rsp.data.slots[index].name === pluginName) {
 
-                    for(index = 0; index < jsonRsp.data.slots.length; ++index) {
-                        if (jsonRsp.data.slots[index].name === pluginName) {
+                        var element = document.getElementById("pluginUid");
+                        var option  = document.createElement("option");
 
-                            var element = document.getElementById("pluginUid");
-                            var option  = document.createElement("option");
+                        option.value = rsp.data.slots[index].uid;
+                        option.text = rsp.data.slots[index].uid;
+                        element.add(option);
 
-                            option.value = jsonRsp.data.slots[index].uid;
-                            option.text = jsonRsp.data.slots[index].uid;
-                            element.add(option);
-
-                            ++cnt;
-                        }
+                        ++cnt;
                     }
-
-                    if (0 < cnt) {
-                        utils.enableForm("myForm", true);
-                    }
-
-                } else {
-                    alert("Failed: " + jsonRsp.error.msg);
                 }
-            };
-            xhr.send();
+
+                /* Only if at least one dedicated plugin instance is available, enable all forms. */
+                if (0 < cnt) {
+                    enableUI();
+                }
+
+                return Promise.resolve(cnt);
+            }).catch(function(rsp) {
+                alert("Internal error.");
+                return Promise.resolve(0);
+            });
+        };
+
+        function getTargetDate(pluginUid, targetDateId, targetDayPluralId, targetDaySingularId) {
+            disableUI();
+            return utils.makeRequest({
+                method: "GET",
+                url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown"
+            }).then(function(rsp) {
+                var targetDateInput         = document.getElementById(targetDateId);
+                var targetDayPluralInput    = document.getElementById(targetDayPluralId);
+                var targetDaySingularInput  = document.getElementById(targetDaySingularId);
+
+                targetDateInput.valueAsDate     = new Date(rsp.data.year + "-" + rsp.data.month + "-" + rsp.data.day);
+                targetDayPluralInput.value      = rsp.data.plural;
+                targetDaySingularInput.value    = rsp.data.singular;
+
+            }).catch(function(rsp) {
+                alert("Internal error.");
+            }).finally(function() {
+                enableUI();
+            });
         }
 
         function setTargetDate(pluginUid, targetDate, targetDayPlural, targetDaySingular) {
-            var formData = new FormData();
-            var xhr = new XMLHttpRequest();
+            disableUI();
 
-            formData.append("day", targetDate.getDate());
-            formData.append("month", targetDate.getMonth() + 1);
-            formData.append("year", targetDate.getFullYear());
-            formData.append("plural", targetDayPlural);
-            formData.append("singular", targetDaySingular);
-
-            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/countdown");
-            xhr.onload = function() {
-                var jsonRsp = JSON.parse(xhr.response);
-
-                if (0 === jsonRsp.status) {
-                    alert("Ok.");
-                } else {
-                    alert("Failed: " + jsonRsp.error.msg);
+            return utils.makeRequest({
+                method: "POST",
+                url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
+                parameter: {
+                    day: targetDate.getDate(),
+                    month: targetDate.getMonth() + 1,
+                    year: targetDate.getFullYear(),
+                    plural: targetDayPlural,
+                    singular: targetDaySingular
                 }
-            };
-            xhr.send(formData);
+            }).then(function(rsp) {
+                alert("Ok.");
+            }).catch(function(rsp) {
+                alert("Failed.");
+            }).finally(function() {
+                enableUI();
+            });
         }
 
         window.onload = function() {
             injectMenu("navbar", "/plugins.html");
             utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
-            utils.enableForm("myForm", false);
-            getPluginInstances();
+            
+            /* Disable all forms, until the plugin instances are loaded. */
+            disableUI();
+
+            /* Load all plugin instances. */
+            getPluginInstances().then(function(cnt) {
+                var select = document.getElementById("pluginUid");
+
+                if (0 < cnt) {
+
+                    return getTargetDate(
+                        select.options[select.selectedIndex].value,
+                        "targetDate",
+                        "targetDayPlural",
+                        "targetDaySingular"
+                    );
+                }
+            });
         };
     </script>
 </head>
@@ -109,7 +151,7 @@
     <h4>Target Date</h4>
     <form id="myForm" action="javascript:setTargetDate(pluginUid.options[pluginUid.selectedIndex].value, targetDate.valueAsDate, targetDayPlural.value, targetDaySingular.value)">
         <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUid" size="1">
+        <select id="pluginUid" size="1" onChange="getTargetDate(pluginUid.options[pluginUid.selectedIndex].value, 'targetDate', 'targetDayPlural', 'targetDaySingular')">
         </select>
         <br />
         <label for="targetDate">Target date:</label><br />
