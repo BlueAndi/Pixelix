@@ -171,33 +171,33 @@ extern String Util::uint32ToHex(uint32_t value)
 extern uint32_t Util::hexToUInt32(const String& str)
 {
     uint32_t    value   = 0U;
-    uint32_t    index   = 0U;
+    uint32_t    idx     = 0U;
     bool        isError = false;
 
     if ((0U != str.startsWith("0x")) ||
         (0U != str.startsWith("0X")))
     {
-        index = 2U;
+        idx = 2U;
     }
 
-    while((str.length() > index) && (false == isError))
+    while((str.length() > idx) && (false == isError))
     {
         value *= 16U;
 
-        if (('0' <= str[index]) &&
-            ('9' >= str[index]))
+        if (('0' <= str[idx]) &&
+            ('9' >= str[idx]))
         {
-            value += static_cast<uint32_t>(str[index] - '0');
+            value += static_cast<uint32_t>(str[idx] - '0');
         }
-        else if (('a' <= str[index]) &&
-                 ('f' >= str[index]))
+        else if (('a' <= str[idx]) &&
+                 ('f' >= str[idx]))
         {
-            value += static_cast<uint32_t>(str[index] - 'a') + 10U;
+            value += static_cast<uint32_t>(str[idx] - 'a') + 10U;
         }
-        else if (('A' <= str[index]) &&
-                 ('F' >= str[index]))
+        else if (('A' <= str[idx]) &&
+                 ('F' >= str[idx]))
         {
-            value += static_cast<uint32_t>(str[index] - 'A') + 10U;
+            value += static_cast<uint32_t>(str[idx] - 'A') + 10U;
         }
         else
         {
@@ -205,7 +205,7 @@ extern uint32_t Util::hexToUInt32(const String& str)
             isError = true;
         }
 
-        ++index;
+        ++idx;
     }
 
     return value;
