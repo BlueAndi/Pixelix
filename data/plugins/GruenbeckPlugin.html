@@ -41,11 +41,6 @@
                     }
                 }
 
-                /* Only if at least one dedicated plugin instance is available, enable all forms. */
-                if (0 < cnt) {
-                    enableUI();
-                }
-
                 return Promise.resolve(cnt);
             }).catch(function(rsp) {
                 alert("Internal error.");

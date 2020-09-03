@@ -12,93 +12,120 @@
 
         var pluginName = "IconTextPlugin";
 
-        function getPluginInstances() {
-            var xhr = new XMLHttpRequest();
+        function enableUI() {
+            utils.enableForm("myFormIcon", true);
+            utils.enableForm("myFormText", true);
+        }
 
-            xhr.open("GET", "/rest/api/v1/display/slots");
-            xhr.onload = function() {
-                var jsonRsp     = JSON.parse(xhr.response);
+        function disableUI() {
+            utils.enableForm("myFormIcon", false);
+            utils.enableForm("myFormText", false);
+        }
+
+        function getPluginInstances() {
+            return utils.makeRequest({
+                method: "GET",
+                url: "/rest/api/v1/display/slots"
+            }).then(function(rsp) {
                 var elemIndex   = 0;
                 var slotIndex   = 0;
                 var cnt         = 0;
-                var elements    = null;
-                var option      = null;
+                var elements    = document.getElementsByName("pluginUid");
 
-                if (0 === jsonRsp.status) {
+                for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
-                    var elements = document.getElementsByName("pluginUid");
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                    for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+                            option          = document.createElement("option");
+                            option.value    = rsp.data.slots[slotIndex].uid;
+                            option.text     = rsp.data.slots[slotIndex].uid;
+                            elements[elemIndex].add(option);
 
-                        for(slotIndex = 0; slotIndex < jsonRsp.data.slots.length; ++slotIndex) {
-                            if (jsonRsp.data.slots[slotIndex].name === pluginName) {
-
-                                option          = document.createElement("option");
-                                option.value    = jsonRsp.data.slots[slotIndex].uid;
-                                option.text     = jsonRsp.data.slots[slotIndex].uid;
-                                elements[elemIndex].add(option);
-
-                                ++cnt;
-                            }
+                            ++cnt;
                         }
                     }
-
-                    if (0 < cnt) {
-                        utils.enableForm("myFormIcon", true);
-                        utils.enableForm("myFormText", true);
-                    }
-
-                } else {
-                    alert("Failed: " + jsonRsp.error.msg);
                 }
-            };
-            xhr.send();
-        }
+
+                return Promise.resolve(cnt);
+            }).catch(function(rsp) {
+                alert("Internal error.");
+                return Promise.resolve(0);
+            });
+        };
 
         function setIcon(pluginUid, fileName) {
-            var formData = new FormData();
-            var xhr = new XMLHttpRequest();
+            disableUI();
 
-            formData.append("file", fileName);
-
-            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/bitmap");
-            xhr.onload = function() {
-                var jsonRsp = JSON.parse(xhr.response);
-
-                if (0 === jsonRsp.status) {
-                    alert("Ok.");
-                } else {
-                    alert("Failed: " + jsonRsp.error.msg);
+            return utils.makeRequest({
+                method: "POST",
+                url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
+                parameter: {
+                    file: fileName
                 }
-            };
-            xhr.send(formData);
+            }).then(function(rsp) {
+                alert("Ok.");
+            }).catch(function(rsp) {
+                alert("Failed.");
+            }).finally(function() {
+                enableUI();
+            });
+        }
+
+        function getText(pluginUid, justTextId) {
+            disableUI();
+            return utils.makeRequest({
+                method: "GET",
+                url: "/rest/api/v1/display/uid/" + pluginUid + "/text"
+            }).then(function(rsp) {
+                var justTextInput = document.getElementById(justTextId);
+
+                justTextInput.value = rsp.data.text;
+
+            }).catch(function(rsp) {
+                alert("Internal error.");
+            }).finally(function() {
+                enableUI();
+            });
         }
 
         function setText(pluginUid, justText) {
-            var formData = new FormData();
-            var xhr = new XMLHttpRequest();
+            disableUI();
 
-            formData.append("show", justText);
-
-            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/text");
-            xhr.onload = function() {
-                var jsonRsp = JSON.parse(xhr.response);
-
-                if (0 === jsonRsp.status) {
-                    alert("Ok.");
-                } else {
-                    alert("Failed: " + jsonRsp.error.msg);
+            return utils.makeRequest({
+                method: "POST",
+                url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                parameter: {
+                    show: justText
                 }
-            };
-            xhr.send(formData);
+            }).then(function(rsp) {
+                alert("Ok.");
+            }).catch(function(rsp) {
+                alert("Failed.");
+            }).finally(function() {
+                enableUI();
+            });
         }
 
         window.onload = function() {
             injectMenu("navbar", "/plugins.html");
             utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
-            utils.enableForm("myFormIcon", false);
-            utils.enableForm("myFormText", false);
-            getPluginInstances();
+            
+            /* Disable all forms, until the plugin instances are loaded. */
+            disableUI();
+
+            /* Load all plugin instances. */
+            getPluginInstances().then(function(cnt) {
+                var selectText = document.getElementById("pluginUidText");
+
+                if (0 < cnt) {
+
+                    return getText(
+                        selectText.options[selectText.selectedIndex].value,
+                        "justText"
+                    );
+                }
+            });
         };
     </script>
 </head>
@@ -155,7 +182,7 @@
     <h4>Text</h4>
     <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
         <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUidText" name="pluginUid" size="1">
+        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
         </select>
         <br />
         <label for="justText">Text:</label><br />
