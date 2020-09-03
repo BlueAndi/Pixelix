@@ -12,67 +12,106 @@
 
         var pluginName = "SunrisePlugin";
 
-        function getPluginInstances() {
-            var xhr = new XMLHttpRequest();
+        function enableUI() {
+            utils.enableForm("myForm", true);
+        }
 
-            xhr.open("GET", "/rest/api/v1/display/slots");
-            xhr.onload = function() {
-                var jsonRsp = JSON.parse(xhr.response);
+        function disableUI() {
+            utils.enableForm("myForm", false);
+        }
+
+        function getPluginInstances() {
+            return utils.makeRequest({
+                method: "GET",
+                url: "/rest/api/v1/display/slots"
+            }).then(function(rsp) {
                 var index   = 0;
                 var cnt     = 0;
 
-                if (0 === jsonRsp.status) {
+                for(index = 0; index < rsp.data.slots.length; ++index) {
+                    if (rsp.data.slots[index].name === pluginName) {
 
-                    for(index = 0; index < jsonRsp.data.slots.length; ++index) {
-                        if (jsonRsp.data.slots[index].name === pluginName) {
+                        var element = document.getElementById("pluginUid");
+                        var option  = document.createElement("option");
 
-                            var element = document.getElementById("pluginUid");
-                            var option  = document.createElement("option");
+                        option.value = rsp.data.slots[index].uid;
+                        option.text = rsp.data.slots[index].uid;
+                        element.add(option);
 
-                            option.value = jsonRsp.data.slots[index].uid;
-                            option.text = jsonRsp.data.slots[index].uid;
-                            element.add(option);
-
-                            ++cnt;
-                        }
+                        ++cnt;
                     }
-
-                    if (0 < cnt) {
-                        utils.enableForm("myForm", true);
-                    }
-
-                } else {
-                    alert("Failed: " + jsonRsp.error.msg);
                 }
-            };
-            xhr.send();
+
+                /* Only if at least one dedicated plugin instance is available, enable all forms. */
+                if (0 < cnt) {
+                    enableUI();
+                }
+
+                return Promise.resolve(cnt);
+            }).catch(function(rsp) {
+                alert("Internal error.");
+                return Promise.resolve(0);
+            });
+        };
+
+        function getLocation(pluginUid, latitudeId, longitudeId) {
+            disableUI();
+            return utils.makeRequest({
+                method: "GET",
+                url: "/rest/api/v1/display/uid/" + pluginUid + "/location"
+            }).then(function(rsp) {
+                var latitudeInput   = document.getElementById(latitudeId);
+                var longitudeInput  = document.getElementById(longitudeId);
+
+                latitudeInput.value     = rsp.data.latitude;
+                longitudeInput.value    = rsp.data.longitude;
+
+            }).catch(function(rsp) {
+                alert("Internal error.");
+            }).finally(function() {
+                enableUI();
+            });
         }
 
         function setLocation(pluginUid, latitude, longitude) {
-            var formData = new FormData();
-            var xhr = new XMLHttpRequest();
+            disableUI();
 
-            formData.append("latitude", latitude);
-            formData.append("longitude", longitude);
-
-            xhr.open("POST", "/rest/api/v1/display/uid/" + pluginUid + "/location");
-            xhr.onload = function() {
-                var jsonRsp = JSON.parse(xhr.response);
-
-                if (0 === jsonRsp.status) {
-                    alert("Ok.");
-                } else {
-                    alert("Failed: " + jsonRsp.error.msg);
+            return utils.makeRequest({
+                method: "POST",
+                url: "/rest/api/v1/display/uid/" + pluginUid + "/location",
+                parameter: {
+                    latitude: latitude,
+                    longitude: longitude
                 }
-            };
-            xhr.send(formData);
+            }).then(function(rsp) {
+                alert("Ok.");
+            }).catch(function(rsp) {
+                alert("Failed.");
+            }).finally(function() {
+                enableUI();
+            });
         }
 
         window.onload = function() {
             injectMenu("navbar", "/plugins.html");
             utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
-            utils.enableForm("myForm", false);
-            getPluginInstances();
+            
+            /* Disable all forms, until the plugin instances are loaded. */
+            disableUI();
+
+            /* Load all plugin instances. */
+            getPluginInstances().then(function(cnt) {
+                var select = document.getElementById("pluginUid");
+
+                if (0 < cnt) {
+
+                    return getLocation(
+                        select.options[select.selectedIndex].value,
+                        "latitude",
+                        "longitude"
+                    );
+                }
+            });
         };
     </script>
 </head>
@@ -103,7 +142,7 @@
     <h4>Location</h4>
     <form id="myForm" action="javascript:setLocation(pluginUid.options[pluginUid.selectedIndex].value, latitude.value, longitude.value)">
         <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUid" size="1">
+        <select id="pluginUid" size="1" onChange="getLocation(pluginUid.options[pluginUid.selectedIndex].value, 'latitude', 'longitude')">
         </select>
         <br />
         <label for="location">Latitude:</label><br />
