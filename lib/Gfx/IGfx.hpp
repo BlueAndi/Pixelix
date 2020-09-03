@@ -94,7 +94,7 @@ public:
      *
      * @return Number of written characters.
      */
-    size_t write(uint8_t singleChar)
+    size_t write(uint8_t singleChar) override
     {
         drawChar(static_cast<char>(singleChar));
 
