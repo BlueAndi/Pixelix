@@ -602,6 +602,7 @@ DisplayMgr::DisplayMgr() :
     m_requestedPlugin(nullptr),
     m_slotTimer(),
     m_displayFadeState(FADE_IN),
+    m_mainCanvas(nullptr),
     m_fadeLinearEffect()
 {
 }
