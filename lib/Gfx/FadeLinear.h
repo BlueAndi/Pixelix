@@ -79,21 +79,21 @@ public:
 
     /**
      * Achieves a fade in effect. Call this method as long as the effect is not completed.
-     * 
+     *
      * @param[in] gfx   Graphics interface
-     * 
+     *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeIn(IGfx& gfx);
+    bool fadeIn(IGfx& gfx) override;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
-     * 
+     *
      * @param[in] gfx   Graphics interface
-     * 
+     *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeOut(IGfx& gfx);
+    bool fadeOut(IGfx& gfx) override;
 
     /**
      * Fading step per fadeIn/fadeOut call.
@@ -111,7 +111,7 @@ private:
         FADE_STATE_IN,          /**< Fading in is pending */
         FADE_STATE_OUT          /**< Fading out is pending */
     };
-    
+
     FadeState   m_state;        /**< Current fading state */
     uint8_t     m_intensity;    /**< Current color intensity [0; 255] - 0: min. bright / 255: max. bright */
 
