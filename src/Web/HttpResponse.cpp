@@ -119,34 +119,34 @@ void HttpResponse::clear()
 void HttpResponse::addStatusLine(const String& line)
 {
     const char* SP          = " ";
-    int         index       = 0;
+    int         idx         = 0;
     int         begin       = 0;
     String      statusCode;
 
     /* Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF */
 
     /* HTTP-Version */
-    index           = line.indexOf(SP);
-    m_httpVersion   = line.substring(begin, index);
+    idx             = line.indexOf(SP);
+    m_httpVersion   = line.substring(begin, idx);
 
     /* Overstep all spaces */
-    while(('\0' != line[index]) && (' ' == line[index]))
+    while(('\0' != line[idx]) && (' ' == line[idx]))
     {
-        ++index;
+        ++idx;
     }
-    begin = index;
+    begin = idx;
 
     /* Status-Code */
-    index           = line.indexOf(SP, begin);
-    statusCode      = line.substring(begin, index);
+    idx             = line.indexOf(SP, begin);
+    statusCode      = line.substring(begin, idx);
     m_statusCode    = statusCode.toInt();
 
     /* Overstep all spaces */
-    while(('\0' != line[index]) && (' ' == line[index]))
+    while(('\0' != line[idx]) && (' ' == line[idx]))
     {
-        ++index;
+        ++idx;
     }
-    begin = index;
+    begin = idx;
 
     /* Reason-Phrase */
     m_reasonPhrase  = line.substring(begin);
