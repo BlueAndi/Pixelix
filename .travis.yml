@@ -36,7 +36,7 @@ install:
     - platformio update
 script:
     - platformio run --environment esp32doit-devkit-v1
-    - platformio check --environment esp32doit-devkit-v1
+    - platformio check --environment esp32doit-devkit-v1 --skip-packages
     - platformio test --environment native
     - cd ./doc/doxygen;
     - doxygen --version
