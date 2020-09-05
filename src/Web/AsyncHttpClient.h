@@ -166,14 +166,14 @@ public:
      *
      * @param[in] onResponse    Callback
      */
-    void regOnResponse(OnResponse onResponse);
+    void regOnResponse(const OnResponse& onResponse);
 
     /**
      * Register callback function on closed connection.
      *
      * @param[in] onClosed  Callback
      */
-    void regOnClosed(OnClosed onClosed);
+    void regOnClosed(const OnClosed& onClosed);
 
     /**
      * Send GET request to host.

@@ -313,12 +313,12 @@ void AsyncHttpClient::addPar(const String& name, const String& value)
     }
 }
 
-void AsyncHttpClient::regOnResponse(OnResponse onResponse)
+void AsyncHttpClient::regOnResponse(const OnResponse& onResponse)
 {
     m_onRspCallback = onResponse;
 }
 
-void AsyncHttpClient::regOnClosed(OnClosed onClosed)
+void AsyncHttpClient::regOnClosed(const OnClosed& onClosed)
 {
     m_onClosedCallback = onClosed;
 }
