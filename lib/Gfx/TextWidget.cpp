@@ -317,13 +317,13 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
     /* Alignment right? */
     else if (true == formatStr.startsWith("ralign"))
     {
-        String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
-        uint16_t    textWidth   = 0U;
-        uint16_t    textHeight  = 0U;
-
         if ((false == noAction) &&
             (nullptr != gfx))
         {
+            String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
+            uint16_t    textWidth   = 0U;
+            uint16_t    textHeight  = 0U;
+
             if (true == gfx->getTextBoundingBox(text.c_str(), textWidth, textHeight))
             {
                 gfx->setTextCursorPos(gfx->getWidth() - textWidth, gfx->getTextCursorPosY());
@@ -336,13 +336,13 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
     /* Alignment center? */
     else if (true == formatStr.startsWith("calign"))
     {
-        String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
-        uint16_t    textWidth   = 0U;
-        uint16_t    textHeight  = 0U;
-
         if ((false == noAction) &&
             (nullptr != gfx))
         {
+            String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
+            uint16_t    textWidth   = 0U;
+            uint16_t    textHeight  = 0U;
+
             if (true == gfx->getTextBoundingBox(text.c_str(), textWidth, textHeight))
             {
                 gfx->setTextCursorPos(gfx->getTextCursorPosX() + (gfx->getWidth() - gfx->getTextCursorPosX() - textWidth) / 2, gfx->getTextCursorPosY());

@@ -497,13 +497,14 @@ void CountdownPlugin::createConfigDirectory()
 
 void CountdownPlugin::calculateDifferenceInDays()
 {
-    tm          currentTime;
-    uint32_t    currentDateInDays   = 0U;
-    uint32_t    targetDateInDays    = 0U;
-    int32_t     numberOfDays        = 0;
+    tm currentTime;
 
     if (false != ClockDrv::getInstance().getTime(&currentTime))
     {
+        uint32_t    currentDateInDays   = 0U;
+        uint32_t    targetDateInDays    = 0U;
+        int32_t     numberOfDays        = 0;
+
         m_currentDate.day = currentTime.tm_mday;
         m_currentDate.month = currentTime.tm_mon;
         m_currentDate.year = currentTime.tm_year;

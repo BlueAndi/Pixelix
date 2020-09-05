@@ -375,8 +375,6 @@ void SunrisePlugin::registerResponseCallback()
         String                  payloadStr;
         const size_t            JSON_DOC_SIZE   = 768U;
         DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        const size_t            MAX_USAGE       = 80U;
-        size_t                  usageInPercent  = 0U;
         String                  sunrise;
         String                  sunset;
         JsonObject              results;
@@ -396,6 +394,9 @@ void SunrisePlugin::registerResponseCallback()
         }
         else
         {
+            const size_t    MAX_USAGE       = 80U;
+            size_t          usageInPercent  = 0U;
+
             obj     = jsonDoc.as<JsonObject>();
             results = obj["results"];
             sunrise = results["sunrise"].as<String>();

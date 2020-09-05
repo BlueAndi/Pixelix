@@ -277,7 +277,6 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
 void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen)
 {
     size_t      msgIndex    = 0U;
-    uint8_t     index       = 0U;
     String      cmd;
     String      par;
     WsCmd*      wsCmd       = nullptr;
@@ -307,8 +306,9 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
     /* Command string not empty? */
     if (0 < cmd.length())
     {
+        uint8_t index = 0U;
+
         /* Find command object */
-        index = 0U;
         while((nullptr == wsCmd) && (index < UTIL_ARRAY_NUM(gWsCommands)))
         {
             if (cmd == gWsCommands[index]->getCmd())

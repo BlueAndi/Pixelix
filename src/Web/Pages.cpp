@@ -973,7 +973,6 @@ static void settingsPage(AsyncWebServerRequest* request)
     {
         bool                isError         = false;
         KeyValue**          list            = Settings::getInstance().getList();
-        uint8_t             index           = 0U;
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         String              rsp;
@@ -990,6 +989,8 @@ static void settingsPage(AsyncWebServerRequest* request)
         }
         else
         {
+            uint8_t index = 0U;
+
             while((index < Settings::KEY_VALUE_PAIR_NUM) && (false == isError))
             {
                 KeyValue* parameter = list[index];

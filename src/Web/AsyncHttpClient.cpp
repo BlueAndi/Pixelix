@@ -132,7 +132,6 @@ bool AsyncHttpClient::begin(const String& url)
 {
     bool    status  = true;
     int     index   = url.indexOf(':');
-    int     begin   = 0;
 
     if (0 > index)
     {
@@ -141,6 +140,8 @@ bool AsyncHttpClient::begin(const String& url)
     }
     else
     {
+        int begin = 0;
+
         /* Get protocol http or https */
         String protocol = url.substring(begin, index);
         begin = index + 3; /* Overstep '://' too. */
