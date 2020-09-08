@@ -89,6 +89,7 @@ public:
 
     /**
      * Parse all necessary parameters from URL and prepare for sending requests.
+     * Note, calling this will clear user defined headers and URL encoded parameters.
      *
      * @param[in] url   URL
      *
@@ -150,6 +151,11 @@ public:
     void addHeader(const String& name, const String& value);
 
     /**
+     * Clear user defined request headers.
+     */
+    void clearHeader();
+
+    /**
      * Add parameter to request (application/x-www-form-urlencoded).
      *
      * Note: Don't use a user payload for the request, because it
@@ -160,6 +166,11 @@ public:
      * @param[in] value Parameter value
      */
     void addPar(const String& name, const String& value);
+
+    /**
+     * Clear URL encoded parameters.
+     */
+    void clearPar();
 
     /**
      * Register callback function on response reception.

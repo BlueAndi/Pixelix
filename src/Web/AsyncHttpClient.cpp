@@ -142,6 +142,8 @@ bool AsyncHttpClient::begin(const String& url)
     {
         int begin = 0;
 
+        clear();
+
         /* Get protocol http or https */
         String protocol = url.substring(begin, index);
         begin = index + 3; /* Overstep '://' too. */
@@ -298,6 +300,11 @@ void AsyncHttpClient::addHeader(const String& name, const String& value)
     }
 }
 
+void AsyncHttpClient::clearHeader()
+{
+    m_headers.clear();
+}
+
 void AsyncHttpClient::addPar(const String& name, const String& value)
 {
     /* Name must be given, value could be empty. */
@@ -312,6 +319,11 @@ void AsyncHttpClient::addPar(const String& name, const String& value)
         m_urlEncodedPars += "=";
         m_urlEncodedPars += urlEncode(value);
     }
+}
+
+void AsyncHttpClient::clearPar()
+{
+    m_urlEncodedPars.clear();
 }
 
 void AsyncHttpClient::regOnResponse(const OnResponse& onResponse)
