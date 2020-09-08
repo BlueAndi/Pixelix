@@ -739,6 +739,8 @@ void AsyncHttpClient::clear()
     m_headers.clear();
     m_urlEncodedPars.clear();
 
+    m_isReqOpen = false;
+
     m_rspPart = RESPONSE_PART_STATUS_LINE;
     m_rsp.clear();
     m_rspLine.clear();
