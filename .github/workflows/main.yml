@@ -15,6 +15,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install platformio
+        platformio update
     - name: Compile target esp32doit-devkit-v1
       run: platformio run --environment esp32doit-devkit-v1
     - name: Check target esp32doit-devkit-v1
@@ -27,4 +28,4 @@ jobs:
       uses: mattnotmitt/doxygen-action@v1.1.0
       with:
         working-directory: './doc/doxygen'
-        doxyfile-path: './doc/doxygen/Doxyfile'
+        doxyfile-path: './doc/doxygen'
