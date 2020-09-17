@@ -28,4 +28,4 @@ jobs:
       uses: mattnotmitt/doxygen-action@v1.1.0
       with:
         working-directory: './doc/doxygen'
-        doxyfile-path: './doc/doxygen'
+        doxyfile-path: './Doxyfile'
