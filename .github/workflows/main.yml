@@ -23,8 +23,8 @@ jobs:
       run: platformio test --environment native
     - name: Set up graphviz
       uses: ts-graphviz/setup-graphviz@v1
-    - name: Set up doxygen
+    - name: Set up doxygen and generate documentation
       uses: mattnotmitt/doxygen-action@v1.1.0
       with:
-        working-directory: '.'
-        doxyfile-path: './doc/doxygen'
+        working-directory: './doc/doxygen'
+        doxyfile-path: './doc/doxygen/Doxyfile'
