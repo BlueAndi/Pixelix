@@ -1,0 +1,37 @@
+name: PlatformIO CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python
+      uses: actions/setup-python@v1
+    - name: Set up graphviz
+      uses: ts-graphviz/setup-graphviz@v1
+    - name: Set up doxygen
+      uses: mattnotmitt/doxygen-action@v1.1.0
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+    - name: Compile target esp32doit-devkit-v1
+      run: platformio run --environment esp32doit-devkit-v1
+    - name: Check target esp32doit-devkit-v1
+      run: platformio check --environment esp32doit-devkit-v1 --skip-packages
+    - name: Run tests on native platform
+      run: platformio test --environment native
+    - name: Generate documentation
+      run: cd ./doc/doxygen && doxygen --version && doxygen Doxyfile
+    - name: Check for documentation errors
+      run: |
+        if [[ -s doxygen_warnings.txt ]]; then
+            echo "Please fix doxygen warnings:"
+            echo ""
+            cat doxygen_warnings.txt
+            exit -1
+        fi
