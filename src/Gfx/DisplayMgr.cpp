@@ -800,6 +800,7 @@ void DisplayMgr::process()
             m_selectedPlugin    = m_slots[m_selectedSlot].getPlugin();
             duration            = m_slots[m_selectedSlot].getDuration();
 
+            /* If plugin shall not be infinite active, start the slot timer. */
             if (0U != duration)
             {
                 m_slotTimer.start(duration);
