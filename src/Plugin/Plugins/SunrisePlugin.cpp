@@ -405,9 +405,12 @@ void SunrisePlugin::registerResponseCallback()
             sunrise = addCurrentTimezoneValues(sunrise);
             sunset  = addCurrentTimezoneValues(sunset);
 
-            m_relevantResponsePart = sunrise + " / " + sunset;
+            lock();
 
+            m_relevantResponsePart = sunrise + " / " + sunset;
             m_textWidget.setFormatStr(m_relevantResponsePart);
+
+            unlock();
 
             usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
             if (MAX_USAGE < usageInPercent)

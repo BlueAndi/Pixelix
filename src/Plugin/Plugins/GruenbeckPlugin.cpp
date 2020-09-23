@@ -49,14 +49,14 @@
  *****************************************************************************/
 
 /* Structure of response-payload for requesting D_Y_10_1
- * 
- * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data> 
- * 
+ *
+ * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
+ *
  * <data><code>ok</code><D_Y_10_1>  = 31 bytes
  * XYZ                              = 3 byte (relevant data)
  * </D_Y_10_1></data>               = 18 bytes
  */
- 
+
 /* Startindex of relevant data. */
 #define START_INDEX_OF_RELEVANT_DATA (31U)
 
@@ -152,7 +152,7 @@ void GruenbeckPlugin::active(IGfx& gfx)
     {
         m_textCanvas->update(gfx);
     }
-        
+
     return;
 }
 
@@ -216,7 +216,7 @@ void GruenbeckPlugin::start()
     return;
 }
 
-void GruenbeckPlugin::stop() 
+void GruenbeckPlugin::stop()
 {
     m_requestTimer.stop();
 
@@ -376,14 +376,17 @@ void GruenbeckPlugin::registerResponseCallback()
         const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
         size_t      payloadIndex    = 0U;
         String      payloadString;
-       
+
         while(payloadSize > payloadIndex)
         {
             payloadString += payload[payloadIndex];
             ++payloadIndex;
         }
+
+        lock();
         m_relevantResponsePart = payloadString.substring(START_INDEX_OF_RELEVANT_DATA, END_INDEX_OF_RELEVANT_DATA);
         m_httpResponseReceived = true;
+        unlock();
     });
 }
 
@@ -432,14 +435,14 @@ bool GruenbeckPlugin::loadConfiguration()
         if (DeserializationError::Ok != error)
         {
             LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
-            status = false;   
+            status = false;
         }
         else
         {
             JsonObject obj = jsonDoc.as<JsonObject>();
 
             m_ipAddress = obj["gruenbeckIP"].as<String>();
-        }        
+        }
 
         fd.close();
     }
@@ -454,7 +457,7 @@ void GruenbeckPlugin::createConfigDirectory()
         if (false == SPIFFS.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
-        } 
+        }
     }
 }
 
