@@ -133,7 +133,13 @@ bool AsyncHttpClient::begin(const String& url)
     bool    status  = true;
     int     index   = url.indexOf(':');
 
-    if (0 > index)
+    /* If a response is pending, abort. */
+    if (true == m_isReqOpen)
+    {
+        status = false;
+    }
+    /* The URL must contain the protocol. */
+    else if (0 > index)
     {
         LOG_ERROR("Failed to parse protocol.");
         status = false;
@@ -447,7 +453,7 @@ void AsyncHttpClient::onConnect(AsyncClient* client)
 void AsyncHttpClient::onDisconnect(AsyncClient* client)
 {
     UTIL_NOT_USED(client);
-    
+
     LOG_INFO("Disconnected.");
     clear();
     notifyClosed();
