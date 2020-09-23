@@ -116,6 +116,8 @@ void GruenbeckPlugin::unregisterWebInterface(AsyncWebServer& srv)
 
 void GruenbeckPlugin::active(IGfx& gfx)
 {
+    lock();
+
     gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr == m_iconCanvas)
@@ -153,6 +155,8 @@ void GruenbeckPlugin::active(IGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
+    unlock();
+
     return;
 }
 
@@ -164,6 +168,8 @@ void GruenbeckPlugin::inactive()
 
 void GruenbeckPlugin::update(IGfx& gfx)
 {
+    lock();
+
     if (false != m_httpResponseReceived)
     {
         m_textWidget.setFormatStr("\\calign" + m_relevantResponsePart + "%");
@@ -184,11 +190,15 @@ void GruenbeckPlugin::update(IGfx& gfx)
         m_httpResponseReceived = false;
     }
 
+    unlock();
+
     return;
 }
 
 void GruenbeckPlugin::start()
 {
+    lock();
+
     m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
 
     /* Try to load configuration. If there is no configuration available, a default configuration
@@ -213,17 +223,23 @@ void GruenbeckPlugin::start()
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
+    unlock();
+
     return;
 }
 
 void GruenbeckPlugin::stop()
 {
+    lock();
+
     m_requestTimer.stop();
 
     if (false != SPIFFS.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
+
+    unlock();
 
     return;
 }
