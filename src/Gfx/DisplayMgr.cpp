@@ -656,24 +656,29 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
 
 void DisplayMgr::fadeInOut()
 {
-    if ((nullptr != m_selectedPlugin) &&
-        (nullptr != m_mainCanvas))
+    if (nullptr != m_mainCanvas)
     {
         /* Handle fading */
         switch(m_displayFadeState)
         {
         /* No fading at all */
         case FADE_IDLE:
-            m_selectedPlugin->update(*m_mainCanvas);
+            if (nullptr != m_selectedPlugin)
+            {
+                m_selectedPlugin->update(*m_mainCanvas);
+            }
             break;
 
         /* Fade new display content in */
         case FADE_IN:
-            m_selectedPlugin->update(*m_mainCanvas);
-
-            if (true == m_fadeLinearEffect.fadeIn(*m_mainCanvas))
+            if (nullptr != m_selectedPlugin)
             {
-                m_displayFadeState = FADE_IDLE;
+                m_selectedPlugin->update(*m_mainCanvas);
+
+                if (true == m_fadeLinearEffect.fadeIn(*m_mainCanvas))
+                {
+                    m_displayFadeState = FADE_IDLE;
+                }
             }
             break;
 
@@ -706,7 +711,7 @@ void DisplayMgr::process()
     /* Plugin requested to choose? */
     if (nullptr != m_requestedPlugin)
     {
-        /* Plugin must be enabled. */
+        /* Requested plugin must be enabled, otherwise it won't be scheduled. */
         if (false == m_requestedPlugin->isEnabled())
         {
             LOG_WARNING("Requested plugin %s (uid %u) in slot %u is disabled.",
@@ -715,10 +720,10 @@ void DisplayMgr::process()
                 getSlotIdByPluginUID(m_requestedPlugin->getUID()));
             m_requestedPlugin = nullptr;
         }
-        /* Plugin selected? */
+        /* Requested plugin is enabled, is currently a plugin selected? */
         else if (nullptr != m_selectedPlugin)
         {
-            /* Remove selected plugin, which forces to select the requested one. */
+            /* Remove selected plugin, which forces to select the requested one in the next step. */
             m_selectedPlugin->inactive();
             m_selectedPlugin = nullptr;
         }
@@ -729,7 +734,7 @@ void DisplayMgr::process()
         }
     }
 
-    /* Plugin selected? */
+    /* Any plugin selected? */
     if (nullptr != m_selectedPlugin)
     {
         m_selectedSlot = getSlotIdByPluginUID(m_selectedPlugin->getUID());
@@ -777,8 +782,12 @@ void DisplayMgr::process()
         }
     }
 
-    /* No plugin selected? */
-    if (nullptr == m_selectedPlugin)
+    /* If no plugin is selected, choose the next one except the previous
+     * display content is still fading out. Wait till its faded out, then
+     * activate the next plugin.
+     */
+    if ((nullptr == m_selectedPlugin) &&
+        (FADE_OUT != m_displayFadeState))
     {
         /* Plugin requested to choose? */
         if (nullptr != m_requestedPlugin)
@@ -839,18 +848,22 @@ void DisplayMgr::process()
         }
     }
 
-    /* Update display */
-    if (nullptr != m_selectedPlugin)
+    /* Update display (main canvas available) */
+    if (nullptr != m_mainCanvas)
     {
-        if (nullptr != m_mainCanvas)
-        {
-            fadeInOut();
-            m_mainCanvas->updateFromBuffer(matrix);
-        }
-        else
-        {
-            m_selectedPlugin->update(matrix);
-        }
+        fadeInOut();
+        m_mainCanvas->updateFromBuffer(matrix);
+    }
+    /* Update display (main canvas not available) */
+    else if (nullptr != m_selectedPlugin)
+    {
+        m_selectedPlugin->update(matrix);
+    }
+    /* No plugin selected. */
+    else
+    {
+        /* Nothing to do. */
+        ;
     }
 
     delay(1U);
