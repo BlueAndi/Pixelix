@@ -4,25 +4,25 @@ title System State Machine
 
 InitState: /entry: Initialize HAL and slot layouts.
 InitState: /do: Get button state.
+InitState: /exit: Start wifi network
+InitState: /exit: Start mDNS
+InitState: /exit: Start web- and update server.
 
 APState: /entry: Setup access point.
-APState: /entry: Start web- and update server.
 APState: /do: Handle client requests.
 APState: /do: Handle update.
-APState: /exit: Stop web- and update server.
-APState: /exit: Shutdown access point.
+APState: /exit: Disconnect all wifi connections.
 
 IdleState: /do: Wait for manual reset.
 
 ConnectingState: /entry: Get remote wifi SSID and passphrase.
 ConnectingState: /do: Connect every 30 s to remote wifi network.
 
-ConnectedState: /entry: Start web- and update server.
 ConnectedState: /entry: Show hostname.
 ConnectedState: /entry: Enable slot routing on the display.
 ConnectedState: /do: Handle client requests.
 ConnectedState: /do: Handle update.
-ConnectedState: /exit: Stop web- and update server.
+ConnectedState: /exit: Disconnect all wifi connections.
 
 ErrorState: /do: Wait for manual reset.
 
@@ -30,8 +30,8 @@ RestartState: /entry: Unmount filesystem
 RestartState: /do: Restart
 
 [*] --> InitState: Power up
-InitState --> APState: [Button pressed]
-InitState -> ConnectingState: [Button released]
+InitState --> APState: [Button pressed]\nSet wifi access point mode
+InitState -> ConnectingState: [Button released]\nSet wifi station mode
 APState --> ErrorState: [Failed to start\nwifi access point]
 APState --> RestartState: [Update received]
 ConnectingState --> IdleState: [Remote wifi SSID or\npassword missing]
