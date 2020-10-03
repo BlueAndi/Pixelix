@@ -135,7 +135,7 @@ bool DisplayMgr::begin()
                                             "displayTask",
                                             TASK_STACKE_SIZE,
                                             this,
-                                            3,
+                                            TASK_PRIORITY,
                                             &m_taskHandle,
                                             TASK_RUN_CORE);
 
