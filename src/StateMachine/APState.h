@@ -27,9 +27,9 @@
 /**
  * @brief  System state: AP
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup sys_states
- * 
+ *
  * @{
  */
 
@@ -46,6 +46,7 @@
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <IPAddress.h>
+#include <DNSServer.h>
 
 /******************************************************************************
  * Macros
@@ -64,7 +65,7 @@ public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
     static APState& getInstance()
@@ -74,21 +75,21 @@ public:
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm);
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm);
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm);
@@ -108,15 +109,21 @@ public:
     /** Access point subnet mask */
     static const IPAddress  SUBNET;
 
+    /** DNS port */
+    static const uint16_t   DNS_PORT;
+
 private:
 
     /** Access point state instance */
     static APState    m_instance;
 
+    DNSServer   m_dnsServer;    /**< DNS server, used for captive portal. */
+
     /**
      * Constructs the state.
      */
-    APState()
+    APState() :
+        m_dnsServer()
     {
     }
 
@@ -126,7 +133,7 @@ private:
     ~APState()
     {
     }
-    
+
     APState(const APState& state);
     APState& operator=(const APState& state);
 

@@ -175,9 +175,6 @@ void InitState::entry(StateMachine& sm)
             settings->close();
         }
 
-        /* Initialize webserver. SPIFFS must be mounted before! */
-        MyWebServer::init();
-
         /* Don't store the wifi configuration in the NVS.
          * This seems to cause a reset after a client connected to the access point.
          * https://github.com/espressif/arduino-esp32/issues/2025#issuecomment-503415364
@@ -274,25 +271,30 @@ void InitState::exit(StateMachine& sm)
     }
     else
     {
-        /* Load last plugin installation. */
-        PluginMgr::getInstance().load();
+        /* Initialize webserver. SPIFFS must be mounted before! */
+        MyWebServer::init(m_isApModeRequested);
+        MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
 
-        /* Welcome the user on the very first time. */
-        welcome();
-        
+        /* Do some stuff only in wifi station mode. */
+        if (false == m_isApModeRequested)
+        {
+            /* Load last plugin installation. */
+            PluginMgr::getInstance().load();
+
+            /* Welcome the user on the very first time. */
+            welcome();
+
+            /* Start over-the-air update server. */
+            UpdateMgr::getInstance().begin();
+            MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
+        }
+
         /* Start webserver after the wifi access point is running.
          * If its done earlier, it will cause an exception because the LwIP stack
          * is not initialized.
          * The LwIP stack is initialized with wifiLowLevelInit()!
          */
         MyWebServer::begin();
-
-        /* Start over-the-air update server. */
-        UpdateMgr::getInstance().begin();
-
-        /* Add MDNS services */
-        MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
-        MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
     }
 
     return;

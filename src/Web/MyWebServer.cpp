@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "MyWebServer.h"
 #include "WebConfig.h"
+#include "CaptivePortal.h"
 #include "Pages.h"
 #include "RestApi.h"
 #include "WebSocket.h"
@@ -79,16 +80,23 @@ static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
  * External Functions
  *****************************************************************************/
 
-void MyWebServer::init()
+void MyWebServer::init(bool initCaptivePortal)
 {
-    /* Register all web pages */
-    Pages::init(gWebServer);
-    RestApi::init(gWebServer);
+    if (false == initCaptivePortal)
+    {
+        /* Register all web pages */
+        Pages::init(gWebServer);
+        RestApi::init(gWebServer);
 
-    gWebServer.onNotFound(error);
+        gWebServer.onNotFound(error);
 
-    /* Register websocket */
-    WebSocketSrv::getInstance().init(gWebServer);
+        /* Register websocket */
+        WebSocketSrv::getInstance().init(gWebServer);
+    }
+    else
+    {
+        CaptivePortal::init(gWebServer);
+    }
 
     return;
 }
@@ -120,7 +128,7 @@ AsyncWebServer& MyWebServer::getInstance()
 
 /**
  * Common error handler used in case a requested path was not found.
- * 
+ *
  * @param[in] request   Web request
  */
 static void error(AsyncWebServerRequest* request)

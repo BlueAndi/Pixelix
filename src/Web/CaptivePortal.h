@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Web server
+ * @brief  Captive portal web page
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup web
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MYWEBSERVER_H__
-#define __MYWEBSERVER_H__
+#ifndef __CAPTIVE_PORTAL_H__
+#define __CAPTIVE_PORTAL_H__
 
 /******************************************************************************
  * Compile Switches
@@ -46,8 +46,8 @@
 #include <ESPAsyncWebServer.h>
 #include <stdint.h>
 
-/** Web server */
-namespace MyWebServer
+/** Captive portal pages */
+namespace CaptivePortal
 {
 
 /******************************************************************************
@@ -59,39 +59,25 @@ namespace MyWebServer
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
- *****************************************************************************/
-
-/******************************************************************************
  * Functions
  *****************************************************************************/
 
 /**
- * Initialize web server.
+ * Initialize captive portal web pages and register them on the web server.
  *
- * @param[in] initCaptivePortal Initialize captive portal or normal webpages.
+ * @param[in] srv   Web server
  */
-void init(bool initCaptivePortal);
+void init(AsyncWebServer& srv);
 
 /**
- * Start web server, which is running in a separate task.
- */
-void begin(void);
-
-/**
- * Stop web server and its task.
- */
-void end(void);
-
-/**
- * Get webserver instance.
+ * Is restart requested by captive portal?
  *
- * @return Webserver instance.
+ * @return If restart is requested it will return true otherwise false.
  */
-AsyncWebServer& getInstance(void);
+bool isRestartRequested();
 
 }
 
-#endif  /* __MYWEBSERVER_H__ */
+#endif  /* __CAPTIVE_PORTAL_H__ */
 
 /** @} */

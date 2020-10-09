@@ -122,20 +122,27 @@ bool UpdateMgr::init()
 
 void UpdateMgr::begin()
 {
-    /* Start over-the-air server */
-    ArduinoOTA.begin();
+    if (true == m_isInitialized)
+    {
+        /* Start over-the-air server */
+        ArduinoOTA.begin();
 
-    LOG_INFO(String("OTA hostname: ") + ArduinoOTA.getHostname());
-    LOG_INFO(String("Sketch size: ") + ESP.getSketchSize() + " bytes");
-    LOG_INFO(String("Free size: ") + ESP.getFreeSketchSpace() + " bytes");
+        LOG_INFO(String("OTA hostname: ") + ArduinoOTA.getHostname());
+        LOG_INFO(String("Sketch size: ") + ESP.getSketchSize() + " bytes");
+        LOG_INFO(String("Free size: ") + ESP.getFreeSketchSpace() + " bytes");
+    }
 
     return;
 }
 
 void UpdateMgr::end()
 {
-    /* Stop over-the-air server */
-    ArduinoOTA.end();
+    if (true == m_isInitialized)
+    {
+        /* Stop over-the-air server */
+        ArduinoOTA.end();
+    }
+
     return;
 }
 
@@ -151,22 +158,26 @@ void UpdateMgr::process()
 
 void UpdateMgr::beginProgress()
 {
-    /* Stop display manager */
-    DisplayMgr::getInstance().end();
+    if (true == m_isInitialized)
+    {
+        /* Stop display manager */
+        DisplayMgr::getInstance().end();
 
-    m_updateIsRunning   = true;
-    m_progress          = UINT8_MAX; // Force update
-    m_textWidget.setFormatStr("Update");
+        m_updateIsRunning   = true;
+        m_progress          = UINT8_MAX; // Force update
+        m_textWidget.setFormatStr("Update");
 
-    /* Show user update status */
-    updateProgress(0U);
+        /* Show user update status */
+        updateProgress(0U);
+    }
 
     return;
 }
 
 void UpdateMgr::updateProgress(uint8_t progress)
 {
-    if (m_progress != progress)
+    if ((true == m_isInitialized) &&
+        (m_progress != progress))
     {
         m_progress = progress;
 
@@ -198,10 +209,13 @@ void UpdateMgr::updateProgress(uint8_t progress)
 
 void UpdateMgr::endProgress()
 {
-    /* Start display manager */
-    if (false == DisplayMgr::getInstance().begin())
+    if (true == m_isInitialized)
     {
-        LOG_WARNING("Couldn't initialize display manager again.");
+        /* Start display manager */
+        if (false == DisplayMgr::getInstance().begin())
+        {
+            LOG_WARNING("Couldn't initialize display manager again.");
+        }
     }
 
     return;

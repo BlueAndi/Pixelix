@@ -36,15 +36,14 @@
 #include <Arduino.h>
 #include "SysMsg.h"
 #include "MyWebServer.h"
-#include "UpdateMgr.h"
 #include "Settings.h"
+#include "CaptivePortal.h"
 
 #include "ErrorState.h"
 #include "RestartState.h"
 
 #include <WiFi.h>
 #include <Logging.h>
-#include <string.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -77,6 +76,9 @@ const IPAddress APState::GATEWAY(192U, 168U, 4U, 1U);
 
 /* Set access point subnet mask */
 const IPAddress APState::SUBNET(255U, 255U, 255U, 0U);
+
+/* Set DNS port */
+const uint16_t  APState::DNS_PORT                       = 53U;
 
 /* Access point state instance */
 APState         APState::m_instance;
@@ -167,14 +169,25 @@ void APState::entry(StateMachine& sm)
     /* Wifi access point successful up. */
     else
     {
-        /* Show SSID and ip address */
         String infoStr = "SSID: ";
         infoStr += wifiApSSID;
-        infoStr += " IP: ";
-        infoStr += WiFi.softAPIP().toString();
+
+        /* Start DNS and redirect to webserver. */
+        if (false == m_dnsServer.start(DNS_PORT, "*", WiFi.softAPIP()))
+        {
+            LOG_WARNING("Couldn't start DNS.");
+
+            /* DNS couldn't be started, show IP of webserver too. */
+            infoStr += " IP: ";
+            infoStr += WiFi.softAPIP().toString();
+        }
+        else
+        {
+            m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+        }
 
         LOG_INFO(infoStr);
-        SysMsg::getInstance().show(infoStr, infoStr.length() * 600U);
+        SysMsg::getInstance().show(infoStr);
     }
 
     return;
@@ -182,13 +195,9 @@ void APState::entry(StateMachine& sm)
 
 void APState::process(StateMachine& sm)
 {
-    /* Handle update, there may be one in the background. */
-    UpdateMgr::getInstance().process();
+    m_dnsServer.processNextRequest();
 
-    /* Restart requested by update manager? This may happen after a successful received
-     * new firmware or filesystem binary.
-     */
-    if (true == UpdateMgr::getInstance().isRestartRequested())
+    if (true == CaptivePortal::isRestartRequested())
     {
         sm.setState(RestartState::getInstance());
     }
@@ -202,6 +211,9 @@ void APState::exit(StateMachine& sm)
 
     /* Disconnect all connections */
     (void)WiFi.softAPdisconnect();
+
+    /* Stop DNS */
+    m_dnsServer.stop();
 
     return;
 }

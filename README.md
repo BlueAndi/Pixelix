@@ -44,8 +44,8 @@ I want to have a remote display to show multiple kind of information, running 24
 See [Overview.pdf](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/Overview.pdf).
 
 # Very First Startup
-If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will then start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID and the IP of the webserver.
-Connect to it and configure via webinterface the wifi station SSID and passphrase. Restart and voila!
+If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
+Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Restart and voila!
 
 # Requirements
 See [requirements](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/REQUIREMENTS.md).

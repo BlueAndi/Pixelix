@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>%PAGE_TITLE%</title>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="/style/style.css" />
+    <script>
+        function store() {
+            var formData    = new FormData();
+            var xhr         = new XMLHttpRequest();
+            var ssid        = document.getElementById("ssid");
+            var passphrase  = document.getElementById("passphrase");
+
+            formData.append("ssid", ssid.value);
+            formData.append("passphrase", passphrase.value);
+
+            xhr.open("POST", "/");
+            xhr.onload = function() {
+                alert(xhr.response);
+            };
+            xhr.send(formData);
+        }
+
+        function restart() {
+            var formData    = new FormData();
+            var xhr         = new XMLHttpRequest();
+
+            formData.append("restart", "now");
+
+            xhr.open("POST", "/");
+            xhr.onload = function() {
+                alert(xhr.response);
+            };
+            xhr.send(formData);
+        }
+    </script>
+</head>
+<body>
+<div class="header">
+    %HEADER%
+</div>
+<div id="navbar" class="topnav">
+</div>
+<div class="main">
+    <h2>Captive Portal</h2>
+    <h3>Wifi network configuration</h3>
+    <p>
+        <label for="ssid">SSID:</label><br />
+        <input type="text" id="ssid" name="ssid" value="%SSID%" /><br />
+        <label for="passphrase">Passphrase:</label><br />
+        <input type="password" id="passphrase" name="passphrase" value="%PASSPHRASE%" /><br />
+        <input type="button" value="Store configuration" onclick="store()" />
+    </p>
+    <h3>Restart</h3>
+    <p>
+        <input type="button" value="Restart now" onclick="restart()" />
+    </p>
+</div>
+<div class="footer">
+    <hr />
+    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
+</div>
+</body>
+</html>
