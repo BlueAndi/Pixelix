@@ -10,18 +10,18 @@ node "ESP32" {
         component "Tmr Svc\n(prio 1)" as tmrSvcTask
         component "mdns\n(prio 1)" as mdnsTask
         component "tiT\n(prio 18)\nLwIP TCP/IP task" as tiTTask
+        component "async_tcp\n(prio 3)" as asyncTcpTask
         component "eventTask\n(prio 20)" as eventTask
         component "esp_timer\n(prio 22)" as espTimerTask
         component "wifi\n(prio 23)" as wifiTask
         component "ipc0\n(prio 24)\nInter-Processor Call task" as ipc0Task
     }
-    
+
     node "Core 1\n(Application CPU, APP_CPU)" as appCpu {
-    
+
         component "IDLE1\n(prio 0)" as idle0Task
         component "loopTask\n(prio 1)" as loopTask
         component "buttonTask\n(prio 1)" as buttonTask
-        component "async_tcp\n(prio 3)" as asyncTcpTask
         component "displayTask\n(prio 4)" as displayTask
         component "network_event\n(prio 19)" as networkEventTask
         component "ipc1\n(prio 24)\nInter-Processor Call task" as ipc1Task
