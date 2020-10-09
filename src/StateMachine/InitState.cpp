@@ -224,8 +224,6 @@ void InitState::exit(StateMachine& sm)
     wifi_mode_t wifiMode = WIFI_MODE_NULL;
     String      hostname;
 
-    UTIL_NOT_USED(sm);
-
     /* Get hostname. */
     if (false == Settings::getInstance().open(true))
     {
