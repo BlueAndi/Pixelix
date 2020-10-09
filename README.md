@@ -85,7 +85,7 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 1. Load workspace in VSCode.
 2. Change to PlatformIO toolbar.
 3. _Project Tasks -> Build_ or via hotkey ctrl-alt-b
-4. Running tests with _Project Tasks -> env:native -> Test_
+4. Running tests with _Project Tasks -> env:native -> Advanced -> Test_
 
 ## Update of the device
 
@@ -95,7 +95,7 @@ Set the following in the _platformio.ini_ configuration file:
 * Clear _upload_port_.
 * Clear _upload_flags_.
 
-Build and upload the software via _Project Tasks -> Upload_ and the filesystem via _Project Tasks -> Upload File System image_.
+Build and upload the software via _Project Tasks -> General -> Upload All_ and the filesystem via _Project Tasks -> env:esp32doit-devkit-v1 -> Platform -> Upload File System Image_.
 
 ### Update over-the-air via espota
 Set the following in the _platformio.ini_ configuration file:
@@ -103,14 +103,15 @@ Set the following in the _platformio.ini_ configuration file:
 * Set _upload_port_ to the device ip-address.
 * Set _upload_flags_ to _--port=3232_ and set the password via _--auth=XXX_.
 
-Build and upload the software via _Project Tasks -> Upload_ and the filesystem via _Project Tasks -> Upload File System image_.
+Build and upload the software via _Project Tasks -> General -> Upload All_ and the filesystem via _Project Tasks -> env:esp32doit-devkit-v1 -> Platform -> Upload File System Image_.
 
 ### Update over-the-air via browser
-1. Build and the software via _Project Tasks -> Build_ and the filesystem via _Project Tasks -> Upload File System image_.
-2. Connect to the device.
-3. Open browser add enter ip address of the device.
-4. Jump to Update site.
-5. Select firmware binary (firmware.bin) or filesystem binary (spiffs.bin) and click on upload.
+1. Build the software via _Project Tasks -> General -> Build All_
+2. Build the filesystem via _Project Tasks -> env:esp32doit-devkit-v1 -> Platform -> Upload File System Image_.
+3. Connect to the device.
+4. Open browser add enter ip address of the device.
+5. Jump to Update site.
+6. Select firmware binary (firmware.bin) or filesystem binary (spiffs.bin) and click on upload.
 
 ## Used Libraries
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.
