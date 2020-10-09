@@ -89,7 +89,9 @@ void SysMsg::show(const String& msg, uint32_t duration)
 
         m_plugin->enable();
         m_plugin->show(msg);
-        DisplayMgr::getInstance().setSlotDuration(slotId, duration);
+
+        /* Set slot duration and avoid storing it in the persistent memory every time. */
+        DisplayMgr::getInstance().setSlotDuration(slotId, duration, false);
 
         /* Schedule plugin immediately */
         DisplayMgr::getInstance().activatePlugin(m_plugin);

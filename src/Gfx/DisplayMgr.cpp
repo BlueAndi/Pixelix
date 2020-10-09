@@ -520,7 +520,7 @@ uint32_t DisplayMgr::getSlotDuration(uint8_t slotId)
     return duration;
 }
 
-bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration)
+bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration, bool store)
 {
     bool status = false;
 
@@ -533,7 +533,10 @@ bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration)
             m_slots[slotId].setDuration(duration);
 
             /* Save slot configuration */
-            save();
+            if (true == store)
+            {
+                save();
+            }
         }
 
         unlock();
@@ -720,12 +723,35 @@ void DisplayMgr::process()
                 getSlotIdByPluginUID(m_requestedPlugin->getUID()));
             m_requestedPlugin = nullptr;
         }
-        /* Requested plugin is enabled, is currently a plugin selected? */
+        /* Requested plugin is enabled. Is currently a plugin selected? */
         else if (nullptr != m_selectedPlugin)
         {
-            /* Remove selected plugin, which forces to select the requested one in the next step. */
-            m_selectedPlugin->inactive();
-            m_selectedPlugin = nullptr;
+            /* If the selected plugin is the same as the requested plugin,
+             * keep it to avoid a fade in/out sequence. But restart the
+             * slot duration timer, because the duration may have changed.
+             */
+            if (m_requestedPlugin == m_selectedPlugin)
+            {
+                uint32_t duration = m_slots[m_selectedSlot].getDuration();
+
+                m_requestedPlugin = nullptr;
+
+                /* If plugin shall not be infinite active, start the slot timer. */
+                if (0U == duration)
+                {
+                    m_slotTimer.stop();
+                }
+                else
+                {
+                    m_slotTimer.start(duration);
+                }
+            }
+            else
+            {
+                /* Remove selected plugin, which forces to select the requested one in the next step. */
+                m_selectedPlugin->inactive();
+                m_selectedPlugin = nullptr;
+            }
         }
         else
         {

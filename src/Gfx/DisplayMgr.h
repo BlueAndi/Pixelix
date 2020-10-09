@@ -212,14 +212,15 @@ public:
     uint32_t getSlotDuration(uint8_t slotId);
 
     /**
-     * Get slot duration in ms, how long the given plugin will be shown.
+     * Set slot duration in ms, how long the given plugin will be shown.
      *
      * @param[in] slotId    Slot id
      * @param[in] duration  Duration in ms
+     * @param[in] store     Store duration persistent (default: true)
      *
      * @return Duration in ms
      */
-    bool setSlotDuration(uint8_t slotId, uint32_t duration);
+    bool setSlotDuration(uint8_t slotId, uint32_t duration, bool store = true);
 
     /**
      * Get access to copy of framebuffer.
