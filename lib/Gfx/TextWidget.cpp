@@ -60,17 +60,20 @@
  *****************************************************************************/
 
 /* Initialize text widget type. */
-const char*                 TextWidget::WIDGET_TYPE     = "text";
+const char*                 TextWidget::WIDGET_TYPE         = "text";
 
 /* Initialize default font */
-const GFXfont*              TextWidget::DEFAULT_FONT    = &TomThumb;
+const GFXfont*              TextWidget::DEFAULT_FONT        = &TomThumb;
 
 /* Initialize keyword list */
-TextWidget::KeywordHandler  TextWidget::m_keywordHandlers[]    =
+TextWidget::KeywordHandler  TextWidget::m_keywordHandlers[] =
 {
     &TextWidget::handleColor,
     &TextWidget::handleAlignment
 };
+
+/* Set default scroll pause in ms. */
+uint32_t                    TextWidget::m_scrollPause       = TextWidget::DEFAULT_SCROLL_PAUSE;
 
 /******************************************************************************
  * Public Methods
@@ -129,7 +132,7 @@ void TextWidget::update(IGfx& gfx)
             m_scrollOffset = ((-1) * gfx.getWidth()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
         }
 
-        m_scrollTimer.start(DEFAULT_SCROLL_PAUSE);
+        m_scrollTimer.start(m_scrollPause);
     }
 
     return;

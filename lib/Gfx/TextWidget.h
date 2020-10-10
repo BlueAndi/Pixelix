@@ -27,7 +27,7 @@
 /**
  * @brief  Text Widget
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup gfx
  *
  * @{
@@ -60,11 +60,11 @@
 /**
  * A text widget, showing a colored string.
  * The text has a given color, which can be changed.
- * 
+ *
  * Different keywords in the string are supported, e.g. for coloring or alignment.
  * Each keyword starts with a '\\', otherwise its treated as just text.
  * Example: "\\#FF0000H#FFFFFFello!" contains a red "H" and a white "ello!".
- * 
+ *
  * Keywords:
  * - "\\#RRGGBB": Change text color; RRGGBB in hex
  * - "\\lalign" : Alignment left
@@ -94,7 +94,7 @@ public:
     /**
      * Constructs a text widget with the given string and its color.
      * If there is no color given, it will be default color.
-     * 
+     *
      * @param[in] str   String, which may contain format tags.
      * @param[in] color Color of the string
      */
@@ -113,7 +113,7 @@ public:
 
     /**
      * Constructs a text widget by copying another one.
-     * 
+     *
      * @param[in] widget Widget, which to copy
      */
     TextWidget(const TextWidget& widget) :
@@ -138,7 +138,7 @@ public:
 
     /**
      * Assign the content of a text widget.
-     * 
+     *
      * @param[in] widget Widget, which to assign
      */
     TextWidget& operator=(const TextWidget& widget)
@@ -160,7 +160,7 @@ public:
 
     /**
      * Update/Draw the text widget.
-     * 
+     *
      * @param[in] gfx Graphics interface
      */
     void update(IGfx& gfx) override;
@@ -168,7 +168,7 @@ public:
     /**
      * Set the text string. It can contain format tags like:
      * - "#RRGGBB" Color information in RGB888 format
-     * 
+     *
      * @param[in] formatStr String, which may contain format tags
      */
     void setFormatStr(const String& formatStr)
@@ -179,13 +179,13 @@ public:
             m_formatStr             = formatStr;
             m_checkScrollingNeed    = true;
         }
-        
+
         return;
     }
 
     /**
      * Get the text string, which may contain format tags.
-     * 
+     *
      * @return String, which may contain format tags.
      */
     String getFormatStr() const
@@ -195,7 +195,7 @@ public:
 
     /**
      * Get the text string, without format tags.
-     * 
+     *
      * @return String
      */
     String getStr() const
@@ -205,7 +205,7 @@ public:
 
     /**
      * Set the text color of the string.
-     * 
+     *
      * @param[in] color Text color
      */
     void setTextColor(const Color& color)
@@ -216,7 +216,7 @@ public:
 
     /**
      * Get the text color of the string.
-     * 
+     *
      * @return Text color
      */
     const Color& getTextColor() const
@@ -226,7 +226,7 @@ public:
 
     /**
      * Set font.
-     * 
+     *
      * @param[in] font  New font to set
      */
     void setFont(const GFXfont* font)
@@ -239,7 +239,7 @@ public:
 
     /**
      * Get font.
-     * 
+     *
      * @return If a font is set, it will be returned otherwise nullptr.
      */
     const GFXfont* getFont() const
@@ -247,9 +247,30 @@ public:
         return m_font;
     }
 
+    /**
+     * Change scroll speed of all text widgets by changing the pause between each movement.
+     *
+     * @param[in] pause Scroll pause in ms
+     *
+     * @return If successful set, it will return true otherwise false.
+     */
+    static bool setScrollPause(uint32_t pause)
+    {
+        bool status = false;
+
+        if ((MIN_SCROLL_PAUSE <= pause) &&
+            (MAX_SCROLL_PAUSE >= pause))
+        {
+            m_scrollPause = pause;
+            status = true;
+        }
+
+        return status;
+    }
+
     /** Default text color */
     static const uint32_t   DEFAULT_TEXT_COLOR      = ColorDef::WHITE;
-    
+
     /** Widget type string */
     static const char*      WIDGET_TYPE;
 
@@ -257,7 +278,13 @@ public:
     static const GFXfont*   DEFAULT_FONT;
 
     /** Default pause between character scrolling in ms */
-    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 100U;
+    static const uint32_t   DEFAULT_SCROLL_PAUSE    = 80U;
+
+    /** Minimal scroll pause in ms */
+    static const uint32_t   MIN_SCROLL_PAUSE        = 20U;
+
+    /** Maximal scroll pause in ms */
+    static const uint32_t   MAX_SCROLL_PAUSE        = 500U;
 
 private:
 
@@ -274,21 +301,22 @@ private:
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
 
     static KeywordHandler   m_keywordHandlers[];    /**< List of all supported keyword handlers. */
+    static uint32_t         m_scrollPause;          /**< Pause in ms, between each scroll movement. */
 
     /**
      * Remove format tags from string.
-     * 
+     *
      * @param[in] formatStr String which contains format tags
-     * 
+     *
      * @return String without format tags
      */
     String removeFormatTags(const String& formatStr) const;
- 
+
     /**
      * Show formatted text.
      * Format tags:
      * - #RRGGBB Color in HTML form (RGB888)
-     * 
+     *
      * @param[in] gfx       Graphics, used to draw the characters
      * @param[in] formatStr String which contains format tags
      */
@@ -296,24 +324,24 @@ private:
 
     /**
      * Handles the keyword for color changes.
-     * 
+     *
      * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
      * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
      * @param[in] formatStr String which may contain keywords.
      * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
-     * 
+     *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
     bool handleColor(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
 
     /**
      * Handles the keyword for alignment changes.
-     * 
+     *
      * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
      * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
      * @param[in] formatStr String which may contain keywords.
      * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
-     * 
+     *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
     bool handleAlignment(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;

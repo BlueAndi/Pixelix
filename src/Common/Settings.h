@@ -49,6 +49,7 @@
 #include "KeyValueBool.h"
 #include "KeyValueUInt8.h"
 #include "KeyValueInt32.h"
+#include "KeyValueUInt32.h"
 #include "KeyValueJson.h"
 
 /******************************************************************************
@@ -234,6 +235,16 @@ public:
     }
 
     /**
+     * Get scrolling pause.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt32& getScrollPause()
+    {
+        return m_scrollPause;
+    }
+
+    /**
      * Get a list of all key value pairs.
      *
      * @return List of key value pairs.
@@ -255,7 +266,7 @@ public:
     }
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 14U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 15U;
 
 private:
 
@@ -278,6 +289,7 @@ private:
     KeyValueBool    m_dateFormatCtrl;       /**< Date format control */
     KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
     KeyValueJson    m_slotConfig;           /**< Display slot configuration */
+    KeyValueUInt32  m_scrollPause;          /**< Text scroll pause */
 
     /**
      * Constructs the settings instance.
