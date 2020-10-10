@@ -233,11 +233,11 @@ void Pages::error(AsyncWebServerRequest* request)
 /**
  * SPIFFS full filename (path + filename + extension) is limited to 32 characters.
  * This function reduces only the filename length and returns the full path.
- * 
+ *
  * @param[in] path                  Path, e.g. "/mypath/".
  * @param[in] fileNameWithoutExt    Filename without extension, e.g. "myFile".
  * @param[in] fileNameExtension     Filename extension, e.g. ".html"
- * 
+ *
  * @return Full path
  */
 static String fitToSpiffs(const String& path, const String& filenNameWithoutExt, const String& fileNameExtension)
@@ -501,27 +501,27 @@ static String indexPageProcessor(const String& var)
         case FM_QIO:
             result = "QUIO";
             break;
-        
+
         case FM_QOUT:
             result = "QOUT";
             break;
-        
+
         case FM_DIO:
             result = "DIO";
             break;
-        
+
         case FM_DOUT:
             result = "DOUT";
             break;
-        
+
         case FM_FAST_READ:
             result = "FAST_READ";
             break;
-        
+
         case FM_SLOW_READ:
             result = "SLOW_READ";
             break;
-        
+
         case FM_UNKNOWN:
             /* fallthrough */
 
@@ -1227,6 +1227,14 @@ static void uploadPage(AsyncWebServerRequest* request)
     }
     else
     {
+        /* Trigger restart after the client has disconnected. */
+        request->onDisconnect(
+            []()
+            {
+                UpdateMgr::getInstance().reqRestart();
+            }
+        );
+
         request->send(HttpStatus::STATUS_CODE_OK, "text/plain", "Ok");
     }
 
@@ -1341,8 +1349,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
                     UpdateMgr::getInstance().updateProgress(100U);
                     UpdateMgr::getInstance().endProgress();
 
-                    /* Request a restart */
-                    UpdateMgr::getInstance().reqRestart();
+                    /* Restart is requested in upload page handler, see uploadPage(). */
                 }
             }
         }
