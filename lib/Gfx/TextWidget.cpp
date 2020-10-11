@@ -112,7 +112,8 @@ void TextWidget::update(IGfx& gfx)
             }
         }
 
-        m_checkScrollingNeed = false;
+        m_checkScrollingNeed    = false;
+        m_scrollingCnt          = 0U;
     }
 
     /* Move cursor to right position */
@@ -127,9 +128,12 @@ void TextWidget::update(IGfx& gfx)
     {
         /* Text scrolls completly out, until it starts from the beginning again. */
         ++m_scrollOffset;
-        if (m_textWidth < m_scrollOffset)
+        if (static_cast<int32_t>(m_textWidth) < static_cast<int32_t>(m_scrollOffset))
         {
             m_scrollOffset = ((-1) * gfx.getWidth()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
+
+            /* Here we know that the text was once complete scrolled through the display. */
+            ++m_scrollingCnt;
         }
 
         m_scrollTimer.start(m_scrollPause);

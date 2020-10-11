@@ -85,6 +85,7 @@ public:
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
+        m_scrollingCnt(0U),
         m_textWidth(0U),
         m_scrollOffset(0),
         m_scrollTimer()
@@ -105,6 +106,7 @@ public:
         m_font(DEFAULT_FONT),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
+        m_scrollingCnt(0U),
         m_textWidth(0U),
         m_scrollOffset(0),
         m_scrollTimer()
@@ -123,6 +125,7 @@ public:
         m_font(widget.m_font),
         m_checkScrollingNeed(widget.m_checkScrollingNeed),
         m_isScrollingEnabled(widget.m_isScrollingEnabled),
+        m_scrollingCnt(widget.m_scrollingCnt),
         m_textWidth(widget.m_textWidth),
         m_scrollOffset(widget.m_scrollOffset),
         m_scrollTimer(widget.m_scrollTimer)
@@ -150,6 +153,7 @@ public:
             m_font                  = widget.m_font;
             m_checkScrollingNeed    = widget.m_checkScrollingNeed;
             m_isScrollingEnabled    = widget.m_isScrollingEnabled;
+            m_scrollingCnt          = widget.m_scrollingCnt;
             m_textWidth             = widget.m_textWidth;
             m_scrollOffset          = widget.m_scrollOffset;
             m_scrollTimer           = widget.m_scrollTimer;
@@ -268,6 +272,27 @@ public:
         return status;
     }
 
+    /**
+     * Get scrolling informations.
+     *
+     * @param[out] isScrollingEnabled   Is scrolling enabled or not?
+     * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
+     *
+     * @return If scroll information is ready, it will return true otherwise false.
+     */
+    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
+    {
+        bool status = (true == m_checkScrollingNeed) ? false : true;
+
+        if (true == status)
+        {
+            isScrollingEnabled  = m_isScrollingEnabled;
+            scrollingCnt        = m_scrollingCnt;
+        }
+
+        return status;
+    }
+
     /** Default text color */
     static const uint32_t   DEFAULT_TEXT_COLOR      = ColorDef::WHITE;
 
@@ -296,6 +321,7 @@ private:
     const GFXfont*  m_font;                 /**< Current font */
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
     bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
+    uint32_t        m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
     uint16_t        m_textWidth;            /**< Text width in pixel */
     int16_t         m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
