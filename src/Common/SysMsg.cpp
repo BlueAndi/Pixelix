@@ -74,6 +74,11 @@ bool SysMsg::init()
     if (nullptr != m_plugin)
     {
         uint8_t slotId = DisplayMgr::getInstance().getSlotIdByPluginUID(m_plugin->getUID());
+
+        /* Set infinite slot duration, because the system message plugin will enable/disable
+         * itself.
+         */
+        DisplayMgr::getInstance().setSlotDuration(slotId, 0U, false);
         DisplayMgr::getInstance().lockSlot(slotId);
         status = true;
     }
@@ -81,23 +86,37 @@ bool SysMsg::init()
     return status;
 }
 
-void SysMsg::show(const String& msg, uint32_t duration)
+void SysMsg::show(const String& msg, uint32_t duration, uint32_t max, bool blocking)
 {
     if (nullptr != m_plugin)
     {
-        uint8_t slotId = DisplayMgr::getInstance().getSlotIdByPluginUID(m_plugin->getUID());
-
-        m_plugin->enable();
-        m_plugin->show(msg);
-
-        /* Set slot duration and avoid storing it in the persistent memory every time. */
-        DisplayMgr::getInstance().setSlotDuration(slotId, duration, false);
+        m_plugin->show(msg, duration, max);
 
         /* Schedule plugin immediately */
         DisplayMgr::getInstance().activatePlugin(m_plugin);
+
+        if (true == blocking)
+        {
+            while(true == m_plugin->isEnabled())
+            {
+                delay(1U);
+            }
+        }
     }
 
     return;
+}
+
+bool SysMsg::isReady() const
+{
+    bool isReady = false;
+
+    if (nullptr != m_plugin)
+    {
+        isReady = (false == m_plugin->isEnabled()) ? true : false;
+    }
+
+    return isReady;
 }
 
 /******************************************************************************

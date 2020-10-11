@@ -350,8 +350,7 @@ void UpdateMgr::onError(ota_error_t error)
          */
         if (true == m_instance.m_updateIsRunning)
         {
-            SysMsg::getInstance().show(infoStr);
-            delay(infoStr.length() * 600U);
+            SysMsg::getInstance().show(infoStr, 4000U, 2U, true);
 
             /* Request a restart */
             m_instance.reqRestart();

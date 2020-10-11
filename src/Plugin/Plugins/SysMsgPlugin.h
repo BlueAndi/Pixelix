@@ -47,6 +47,7 @@
 #include "Plugin.hpp"
 
 #include <TextWidget.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -72,7 +73,11 @@ public:
      */
     SysMsgPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
-        m_textWidget()
+        m_textWidget(),
+        m_timer(),
+        m_duration(0U),
+        m_max(0U),
+        m_isInit(true)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -99,20 +104,6 @@ public:
     }
 
     /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void active(IGfx& gfx) override;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() override;
-
-    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
@@ -123,13 +114,19 @@ public:
     /**
      * Show message.
      *
-     * @param[in] msg   Message to show
+     * @param[in] msg       Message to show
+     * @param[in] duration  Duration in ms, how long a non-scrolling text shall be shown.
+     * @param[in] max       Maximum number how often a scrolling text shall be shown.
      */
-    void show(const String& msg);
+    void show(const String& msg, uint32_t duration, uint32_t max);
 
 private:
 
     TextWidget  m_textWidget;   /**< Text widget, used for showing the text. */
+    SimpleTimer m_timer;        /**< Timer used to observer minimum duration */
+    uint32_t    m_duration;     /**< Duration in ms, how long a non-scrolling text shall be shown. */
+    uint32_t    m_max;          /**< Maximum number how often a scrolling text shall be shown. */
+    bool        m_isInit;       /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
 
 };
 

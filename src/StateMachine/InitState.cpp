@@ -97,9 +97,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Set system message show duration in ms */
-const uint32_t  InitState::SYS_MSG_WAIT_TIME    = 3000U;
-
 /* Initialization state instance */
 InitState       InitState::m_instance;
 
@@ -282,6 +279,13 @@ void InitState::exit(StateMachine& sm)
         /* Do some stuff only in wifi station mode. */
         if (false == m_isApModeRequested)
         {
+            /* In the next step the plugins are loaded and would be automatically be shown.
+             * To avoid this until the connection establishment takes place, show the following
+             * message infinite.
+             */
+            SysMsg::getInstance().show("...");
+            delay(500U); /* Just to avoid a short splash */
+
             /* Load last plugin installation. */
             PluginMgr::getInstance().load();
 
@@ -330,20 +334,16 @@ void InitState::showStartupInfoOnDisplay()
     SysMsg& sysMsg = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X");
-    delay(SYS_MSG_WAIT_TIME);
+    sysMsg.show("\\calign\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X", 3000U, 2U, true);
 
     /* Clear and wait */
-    sysMsg.show("");
-    delay(SYS_MSG_WAIT_TIME / 2U);
+    sysMsg.show("", 500U, 0U, true);
 
     /* Show sw version (short) */
-    sysMsg.show(Version::SOFTWARE_SHORT);
-    delay(SYS_MSG_WAIT_TIME);
+    sysMsg.show(String("\\calign") + Version::SOFTWARE_SHORT, 3000U, 2U, true);
 
     /* Clear and wait */
-    sysMsg.show("");
-    delay(SYS_MSG_WAIT_TIME / 2U);
+    sysMsg.show("", 500U, 0U, true);
 
     return;
 }
@@ -401,6 +401,7 @@ void InitState::welcome()
 
         settings.close();
     }
+
     return;
 }
 

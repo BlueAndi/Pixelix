@@ -125,13 +125,7 @@ void ConnectingState::process(StateMachine& sm)
         infoStr += ".";
 
         LOG_INFO(infoStr);
-        SysMsg::getInstance().show(infoStr);
-
-        /* Ensure that the user can read the message, otherwise the connection
-         * establishment may be too fast to be able to read it on the display.
-         */
-        delay(infoStr.length() * 600U);
-        SysMsg::getInstance().show("", 500U);
+        SysMsg::getInstance().show(infoStr, 2000U, 1U, true);
 
         /* Remote wifi network informations are available, try to establish a connection. */
         status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());

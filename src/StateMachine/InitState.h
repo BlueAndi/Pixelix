@@ -94,9 +94,6 @@ public:
      */
     void exit(StateMachine& sm);
 
-    /** Wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME;
-
 private:
 
     /** Initialization state instance */

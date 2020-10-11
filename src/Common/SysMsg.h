@@ -84,9 +84,18 @@ public:
      * Show message with the given duration. If the duration is infinite, it will be shown infinite.
      *
      * @param[in] msg       Message to show
-     * @param[in] duration  Duration in ms, how long the message shall be shown.
+     * @param[in] duration  Duration in ms, how long a non-scrolling message shall be shown.
+     * @param[in] max       How often shall a scrolling message be shown.
+     * @param[in] blocking  If false, function will return immediately, otherwise waits till end.
      */
-    void show(const String& msg, uint32_t duration = 0U);
+    void show(const String& msg, uint32_t duration = 0U, uint32_t max = 0U, bool blocking = false);
+
+    /**
+     * Is the system message handler ready for the next message?
+     *
+     * @return If system message is ready, it will return true otherwise false.
+     */
+    bool isReady() const;
 
 private:
 

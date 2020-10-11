@@ -58,30 +58,70 @@
  * Public Methods
  *****************************************************************************/
 
-void SysMsgPlugin::active(IGfx& gfx)
-{
-    UTIL_NOT_USED(gfx);
-    return;
-}
-
-void SysMsgPlugin::inactive()
-{
-    disable();
-
-    return;
-}
-
 void SysMsgPlugin::update(IGfx& gfx)
 {
+    bool        isScrollingEnabled  = false;
+    uint32_t    scrollingCnt        = 0U;
+    bool        status              = false;
+
     gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
 
+    status = m_textWidget.getScrollInfo(isScrollingEnabled, scrollingCnt);
+
+    /* In initialization phase? */
+    if (true == m_isInit)
+    {
+        m_timer.stop();
+
+        /* Is the scroll info ready? */
+        if (true == status)
+        {
+            /* Start timer if text doesn't scroll and shall not be shown infinite. */
+            if ((false == isScrollingEnabled) &&
+                (0U < m_duration))
+            {
+                m_timer.start(m_duration);
+            }
+
+            m_isInit = false;
+        }
+    }
+    /* Is timer running for non-scrolled text? */
+    else if (true == m_timer.isTimerRunning())
+    {
+        /* Disable plugin after duration. */
+        if (true == m_timer.isTimeout())
+        {
+            disable();
+        }
+    }
+    /* Shall scrolling text be shown a specific number of times? */
+    else if (0U < m_max)
+    {
+        /* Disable plugin after specific number of times, the text was shown. */
+        if (m_max <= scrollingCnt)
+        {
+            disable();
+        }
+    }
+    else
+    {
+        /* Show infinite */
+        ;
+    }
+
     return;
 }
 
-void SysMsgPlugin::show(const String& msg)
+void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
 {
     m_textWidget.setFormatStr(msg);
+    m_duration  = duration;
+    m_max       = max;
+    m_isInit    = true;
+
+    enable();
 
     return;
 }
