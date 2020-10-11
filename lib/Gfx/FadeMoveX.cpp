@@ -25,29 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  Fade in/out effect by moving the old content out and the new one in.
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "ConnectedState.h"
-#include "SysMsg.h"
-#include "UpdateMgr.h"
-#include "MyWebServer.h"
-#include "Settings.h"
-#include "ClockDrv.h"
-#include "ButtonDrv.h"
-#include "DisplayMgr.h"
-
-#include "ConnectingState.h"
-#include "RestartState.h"
-#include "ErrorState.h"
-
-#include <Arduino.h>
-#include <WiFi.h>
-#include <Logging.h>
+#include "FadeMoveX.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -69,100 +54,61 @@
  * Local Variables
  *****************************************************************************/
 
-/* Connected state instance */
-ConnectedState  ConnectedState::m_instance;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void ConnectedState::entry(StateMachine& sm)
+void FadeMoveX::init()
 {
-    String infoStr = "Hostname: ";
-    String hostname;
-    String infoStringIp = "IP: ";
-
-    LOG_INFO("Connected.");
-
-    /* Get hostname. */
-    if (false == Settings::getInstance().open(true))
-    {
-        LOG_WARNING("Use default hostname.");
-        hostname = Settings::getInstance().getHostname().getDefault();
-    }
-    else
-    {
-        hostname = Settings::getInstance().getHostname().getValue();
-        Settings::getInstance().close();
-    }
-
-    /* Set hostname. Note, wifi must be connected somehow. */
-    if (false == WiFi.setHostname(hostname.c_str()))
-    {
-        String errorStr = "Can't set AP hostname.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
-    }
-    else
-    {
-        /* Start the ClockDriver */
-        ClockDrv::getInstance().init();
-
-        /* Show hostname and IP. */
-        infoStr += WiFi.getHostname(); /* Don't believe its the same as set before. */
-        infoStr += " IP: ";
-        infoStr += WiFi.localIP().toString();
-        SysMsg::getInstance().show(infoStr, infoStr.length() * 600U);
-
-        LOG_INFO(infoStr);
-    }
-
-    return;
+    m_state = FADE_STATE_INIT;
 }
 
-void ConnectedState::process(StateMachine& sm)
+bool FadeMoveX::fadeIn(IGfx& gfx, IGfx& prev, IGfx& next)
 {
-    ButtonDrv::State    buttonState = ButtonDrv::getInstance().getState();
+    (void)prev;
 
-    /* Handle update, there may be one in the background. */
-    UpdateMgr::getInstance().process();
+    gfx.copy(next);
 
-    /* Restart requested by update manager? This may happen after a successful received
-     * new firmware or filesystem binary.
-     */
-    if (true == UpdateMgr::getInstance().isRestartRequested())
-    {
-        sm.setState(RestartState::getInstance());
-    }
-    /* Connection lost? */
-    else if (false == WiFi.isConnected())
-    {
-        LOG_INFO("Connection lost.");
-
-        sm.setState(ConnectingState::getInstance());
-    }
-
-    /* Connect to a remote wifi network? */
-    if (ButtonDrv::STATE_TRIGGERED == buttonState)
-    {
-        DisplayMgr::getInstance().activateNextSlot();
-    }
-
-    return;
+    return true;
 }
 
-void ConnectedState::exit(StateMachine& sm)
+bool FadeMoveX::fadeOut(IGfx& gfx, IGfx& prev, IGfx& next)
 {
-    UTIL_NOT_USED(sm);
+    bool    isFinished  = false;
+    int16_t x           = 0;
+    int16_t y           = 0;
 
-    /* Disconnect all connections */
-    (void)WiFi.disconnect();
+    if (FADE_STATE_OUT != m_state)
+    {
+        m_state     = FADE_STATE_OUT;
+        m_xOffset   = 0;
+    }
 
-    return;
+    for(x = 0; x < (gfx.getWidth() - m_xOffset); ++x)
+    {
+        for(y = 0; y < gfx.getHeight(); ++y)
+        {
+            gfx.drawPixel(x, y, prev.getColor(x + m_xOffset, y));
+        }
+    }
+
+    for(x = gfx.getWidth() - m_xOffset; x < gfx.getWidth(); ++x)
+    {
+        for(y = 0; y < gfx.getHeight(); ++y)
+        {
+            gfx.drawPixel(x, y, next.getColor((x + m_xOffset) - gfx.getWidth(), y));
+        }
+    }
+
+    ++m_xOffset;
+
+    if (gfx.getWidth() <= m_xOffset)
+    {
+        m_state     = FADE_STATE_INIT;
+        isFinished  = true;
+    }
+
+    return isFinished;
 }
 
 /******************************************************************************

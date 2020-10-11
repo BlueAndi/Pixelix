@@ -78,22 +78,31 @@ public:
     }
 
     /**
+     * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
+     */
+    void init() override;
+
+    /**
      * Achieves a fade in effect. Call this method as long as the effect is not completed.
      *
-     * @param[in] gfx   Graphics interface
+     * @param[in] gfx   Graphics interface to display
+     * @param[in] prev  Graphics interface to previous framebuffer
+     * @param[in] next  Graphics interface to next framebuffer
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeIn(IGfx& gfx) override;
+    bool fadeIn(IGfx& gfx, IGfx& prev, IGfx& next) override;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
      *
-     * @param[in] gfx   Graphics interface
+     * @param[in] gfx   Graphics interface to display
+     * @param[in] prev  Graphics interface to previous framebuffer
+     * @param[in] next  Graphics interface to next framebuffer
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeOut(IGfx& gfx) override;
+    bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) override;
 
     /**
      * Fading step per fadeIn/fadeOut call.
@@ -114,7 +123,6 @@ private:
 
     FadeState   m_state;        /**< Current fading state */
     uint8_t     m_intensity;    /**< Current color intensity [0; 255] - 0: min. bright / 255: max. bright */
-
 };
 
 /******************************************************************************

@@ -48,6 +48,7 @@
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <FadeLinear.h>
+#include <FadeMoveX.h>
 
 #include "Board.h"
 #include "IPluginMaintenance.hpp"
@@ -170,6 +171,11 @@ public:
      * @param[in] plugin    Plugin which to activate
      */
     void activatePlugin(IPluginMaintenance* plugin);
+
+    /**
+     * Activate next slot.
+     */
+    void activateNextSlot();
 
     /**
      * Move plugin to a different slot.
@@ -301,13 +307,24 @@ private:
         FADE_OUT        /**< Fade out */
     };
 
+    /** Frame buffer ids */
+    enum FbId
+    {
+        FB_ID_0 = 0,    /**< 1. frame buffer */
+        FB_ID_1,        /**< 2. frame buffer */
+        FB_ID_MAX       /**< Number of frame buffers */
+    };
+
     /**
      * A plugin change (inactive -> active) will fade the display content of
      * the old plugin out and from the new plugin in.
      */
     FadeState           m_displayFadeState;
-    Canvas*             m_mainCanvas;           /**< Main canvas over the whole display. */
-    FadeLinear          m_fadeLinearEffect;     /**< Linear fade effect */
+    Canvas*             m_currCanvas;               /**< Points to the current canvas, used to update the display. */
+    Canvas*             m_framebuffers[FB_ID_MAX];  /**< Two framebuffers, which will contain the old and the new plugin content. */
+    FadeLinear          m_fadeLinearEffect;         /**< Linear fade effect. */
+    FadeMoveX           m_fadeMoveXEffect;          /**< Moving along x-axis fade effect. */
+    IFadeEffect*        m_fadeEffect;               /**< The fade effect itself. */
 
     /**
      * Construct LED matrix.
@@ -333,11 +350,16 @@ private:
     uint8_t nextSlot(uint8_t slotId);
 
     /**
-     * Fade display content in/out on the main canvas, depended on the
-     * current display fading state. Note, this updates only the main canvas,
-     * but not the LED matrix.
+     * Start fade effect.
      */
-    void fadeInOut();
+    void startFadeOut();
+
+    /**
+     * Fade display content in/out.
+     *
+     * @param[in] dst   Destination display
+     */
+    void fadeInOut(IGfx& dst);
 
     /**
      * Process the slots. This shall be called periodically in

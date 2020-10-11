@@ -170,7 +170,7 @@ public:
     /**
      * Dim color to black.
      * A dim ratio of 255 means no change.
-     * 
+     *
      * Note, the base colors may be destroyed, depends on the color type.
      *
      * @param[in] x     x-coordinate
@@ -178,6 +178,25 @@ public:
      * @param[in] ratio Dim ration [0; 255]
      */
     virtual void dimPixel(int16_t x, int16_t y, uint8_t ratio) = 0;
+
+    /**
+     * Copy framebuffer content.
+     *
+     * @param[in] gfx   Graphics interface of framebuffer source
+     */
+    void copy(const BaseGfx<TColor>& gfx)
+    {
+        int16_t x   = 0;
+        int16_t y   = 0;
+
+        for(y = 0; y < m_height; ++y)
+        {
+            for(x = 0; x < m_width; ++x)
+            {
+                drawPixel(x, y, gfx.getColor(x, y));
+            }
+        }
+    }
 
     /**
      * Draw vertical line.

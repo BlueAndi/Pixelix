@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Basic fade effect interface
+ * @brief  Fade in/out effect by moving the old content out and the new one in.
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BASE_IFADEEFFECT_HPP__
-#define __BASE_IFADEEFFECT_HPP__
+#ifndef __FADE_MOVE_X_H__
+#define __FADE_MOVE_X_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IGfx.hpp>
+#include <stdint.h>
+#include <IFadeEffect.hpp>
 
 /******************************************************************************
  * Macros
@@ -54,32 +55,34 @@
  *****************************************************************************/
 
 /**
- * Base fade effect interface, used to fade display content in or out.
- * The effect will fade in/out from one framebuffer to another and draws the
- * result directly to the display.
+ * A simple fade in/out effect, which moves the old content and out and the
+ * new content in. The movement is along the x-axis into the direction of
+ * the negative x-coordinates.
  */
-class IFadeEffect
+class FadeMoveX : public IFadeEffect
 {
 public:
 
     /**
-     * Constructs the fade effect interface.
+     * Constructs the fade effect.
      */
-    IFadeEffect()
+    FadeMoveX() :
+        m_state(FADE_STATE_INIT),
+        m_xOffset(0)
     {
     }
 
     /**
-     * Destroys the fade effect interface.
+     * Destroys the fade effect instance.
      */
-    virtual ~IFadeEffect()
+    ~FadeMoveX()
     {
     }
 
     /**
      * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
      */
-    virtual void init() = 0;
+    void init() override;
 
     /**
      * Achieves a fade in effect. Call this method as long as the effect is not completed.
@@ -90,7 +93,7 @@ public:
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    virtual bool fadeIn(IGfx& gfx, IGfx& prev, IGfx& next) = 0;
+    bool fadeIn(IGfx& gfx, IGfx& prev, IGfx& next) override;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
@@ -101,9 +104,19 @@ public:
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    virtual bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) = 0;
+    bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) override;
 
 private:
+
+    /** Fading states. */
+    enum FadeState
+    {
+        FADE_STATE_INIT = 0,    /**< Initialize fadeing */
+        FADE_STATE_OUT          /**< Fading out is pending */
+    };
+
+    FadeState   m_state;        /**< Current fading state */
+    int16_t     m_xOffset;      /**< Current x-offset regarding movement */
 
 };
 
@@ -111,6 +124,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BASE_IFADEEFFECT_HPP__ */
+#endif  /* __FADE_MOVE_X_H__ */
 
 /** @} */

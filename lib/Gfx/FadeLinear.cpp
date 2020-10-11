@@ -58,10 +58,18 @@
  * Public Methods
  *****************************************************************************/
 
-bool FadeLinear::fadeIn(IGfx& gfx)
+void FadeLinear::init()
+{
+    m_state = FADE_STATE_INIT;
+}
+
+bool FadeLinear::fadeIn(IGfx& gfx, IGfx& prev, IGfx& next)
 {
     bool isFinished = false;
 
+    (void)prev;
+
+    /* Copy next framebuffer initial to display once and fade it smooth in. */
     if (FADE_STATE_IN != m_state)
     {
         m_intensity = Color::MIN_BRIGHT;
@@ -70,23 +78,28 @@ bool FadeLinear::fadeIn(IGfx& gfx)
 
     if ((Color::MAX_BRIGHT - FADING_STEP) <= m_intensity)
     {
-        gfx.dimScreen(Color::MAX_BRIGHT);
+        next.dimScreen(Color::MAX_BRIGHT);
         m_state     = FADE_STATE_INIT;
         isFinished  = true;
     }
     else
     {
-        gfx.dimScreen(m_intensity);
+        next.dimScreen(m_intensity);
         m_intensity += FADING_STEP;
     }
+
+    gfx.copy(next);
 
     return isFinished;
 }
 
-bool FadeLinear::fadeOut(IGfx& gfx)
+bool FadeLinear::fadeOut(IGfx& gfx, IGfx& prev, IGfx& next)
 {
     bool isFinished = false;
 
+    (void)next;
+
+    /* Copy previous framebuffer initial to display once and fade it smooth out. */
     if (FADE_STATE_OUT != m_state)
     {
         m_intensity = Color::MAX_BRIGHT;
@@ -95,15 +108,17 @@ bool FadeLinear::fadeOut(IGfx& gfx)
 
     if ((Color::MIN_BRIGHT + FADING_STEP) >= m_intensity)
     {
-        gfx.dimScreen(Color::MIN_BRIGHT);
+        prev.dimScreen(Color::MIN_BRIGHT);
         m_state     = FADE_STATE_INIT;
         isFinished  = true;
     }
     else
     {
-        gfx.dimScreen(m_intensity);
+        prev.dimScreen(m_intensity);
         m_intensity -= FADING_STEP;
     }
+
+    gfx.copy(prev);
 
     return isFinished;
 }
