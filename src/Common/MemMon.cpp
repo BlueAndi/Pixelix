@@ -93,9 +93,10 @@ void MemMon::process()
             LOG_WARNING("Largest heap block which can be allocated is %u byte.", minFreeHeapBlock);
         }
 
-        if (true == heap_caps_check_integrity_all(true))
+        /* Any heap corrupt? */
+        if (false == heap_caps_check_integrity_all(true))
         {
-            /* TODO Reset!? */
+            LOG_FATAL("----- Heap corrupt! ------");
         }
     }
 }
