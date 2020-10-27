@@ -143,16 +143,14 @@ ButtonDrv::State ButtonDrv::getState()
 
 void ButtonDrv::buttonTask(void *parameters)
 {
-    ButtonDrv*  buttonDrv   = reinterpret_cast<ButtonDrv*>(parameters);
-    uint32_t    cycleCnt    = 0U;
-    uint8_t     buttonValue = Board::userButtonIn.read();
+    ButtonDrv* buttonDrv = reinterpret_cast<ButtonDrv*>(parameters);
 
     /* The ISR shall notify about on change to determine whether the
      * pin state is stable or not.
      */
     attachInterruptArg( Board::userButtonIn.getPinNo(),
                         isrButton,
-                        &buttonDrv->m_buttonTaskHandle,
+                        buttonDrv->m_buttonTaskHandle,
                         CHANGE);
 
     LOG_INFO("ButtonDrv task is ready.");
@@ -163,13 +161,8 @@ void ButtonDrv::buttonTask(void *parameters)
      */
     for(;;)
     {
-        /* Is button pin value unstable? */
-        if (0U < ulTaskNotifyTake(pdTRUE, 0U))
-        {
-            cycleCnt = 0U;
-        }
-        /* Button didn't trigger during a complete debounce time period? */
-        else if ((BUTTON_DEBOUNCE_TIME / BUTTON_TASK_PERIOD) <= cycleCnt)
+        /* Is button pin value stable? */
+        if (0U == ulTaskNotifyTake(pdTRUE, BUTTON_DEBOUNCE_TIME))
         {
             /* Button state is stable, update it if applicable. */
             if (pdTRUE != xSemaphoreTake(buttonDrv->m_semaphore, portMAX_DELAY))
@@ -178,6 +171,8 @@ void ButtonDrv::buttonTask(void *parameters)
             }
             else
             {
+                uint8_t buttonValue = Board::userButtonIn.read();
+
                 /* If the button state is unknown, just check and set. */
                 if (STATE_UNKNOWN == buttonDrv->m_state)
                 {
@@ -222,16 +217,7 @@ void ButtonDrv::buttonTask(void *parameters)
                     LOG_FATAL("Can't give semaphore back.");
                 }
             }
-
-            cycleCnt = 0U;
         }
-        else
-        {
-            buttonValue = Board::userButtonIn.read();
-            ++cycleCnt;
-        }
-
-        delay(BUTTON_TASK_PERIOD);
     }
 
     return;
@@ -247,16 +233,24 @@ void ButtonDrv::buttonTask(void *parameters)
 
 /**
  * Button ISR which is called on change (falling- or rising-edge).
- * 
+ *
  * @param[in] arg   Trigger counter for the button.
  */
 static void IRAM_ATTR isrButton(void* arg)
 {
-    TaskHandle_t* taskHandle = reinterpret_cast<TaskHandle_t*>(arg);
+    TaskHandle_t    taskHandle                  = reinterpret_cast<TaskHandle_t>(arg);
+    BaseType_t      xHigherPriorityTaskWoken    = pdFALSE;
 
-    if (nullptr != taskHandle)
+    vTaskNotifyGiveFromISR(taskHandle, &xHigherPriorityTaskWoken);
+
+    /* If xHigherPriorityTaskWoken is now set to pdTRUE then a context switch
+     * should be performed to ensure the interrupt returns directly to the highest
+     * priority task. The macro used for this purpose is dependent on the port in
+     * use and may be called portEND_SWITCHING_ISR().
+     */
+    if (pdTRUE == xHigherPriorityTaskWoken)
     {
-        vTaskNotifyGiveFromISR(*taskHandle, nullptr);
+        portYIELD_FROM_ISR();
     }
 
     return;
