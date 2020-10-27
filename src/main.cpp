@@ -71,10 +71,13 @@ static LogSinkPrinter   gLogSinkSerial("Serial", &Serial);
 static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
 
 /** Serial interface baudrate. */
-static const uint32_t   SERIAL_BAUDRATE = 115200U;
+static const uint32_t   SERIAL_BAUDRATE     = 115200U;
 
 /** Buffer for esp_log_write() method output. */
 static char             gLogPrintBuffer[512U];
+
+/** Task period in ms of the loop() task. */
+static const uint32_t   LOOP_TASK_PERIOD    = 40U;
 
 /******************************************************************************
  * External functions
@@ -129,6 +132,9 @@ void loop()
 
     /* Memory monitor */
     MemMon::getInstance().process();
+
+    /* Schedule other tasks with same or lower priority. */
+    delay(LOOP_TASK_PERIOD);
 
     return;
 }
