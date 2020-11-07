@@ -100,7 +100,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/status
 ```
 
@@ -165,7 +165,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/slots
 ```
 
@@ -203,7 +203,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -d "list=" -X GET http://192.168.2.166/rest/api/v1/plugin
 $ curl -u luke:skywalker -d "install=JustTextPlugin" -X POST http://192.168.2.166/rest/api/v1/plugin
 $ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://192.168.2.166/rest/api/v1/plugin
@@ -253,7 +253,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/text
 $ curl -u luke:skywalker -d "show=Hi" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/text
 ```
@@ -288,7 +288,7 @@ Result:
 }
 ```
 
-```
+```bash
 $ curl -H "Content-Type: multipart/form-data" -F "data=@test.bmp" http://192.168.2.166/rest/api/v1/display/uid/0/bitmap
 ```
 
@@ -322,7 +322,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/lamps
 ```
 
@@ -352,7 +352,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/lamp/0
 ```
 
@@ -406,7 +406,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/countdown
 $ curl -u luke:skywalker -d "day=29" -d "month=8" -d "year=2019" -d "plural=DAYS" -d "singular=DAY" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/countdown
 ```
@@ -454,7 +454,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/location
 $ curl -u luke:skywalker -d "longitude=2.295" -d "latitude=48.858" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/location
 ```
@@ -500,7 +500,7 @@ Result:
 ```
 
 Example with curl:
-```
+```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
 $ curl -u luke:skywalker -d "set=192.168.178-12" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
 ```
