@@ -159,6 +159,9 @@ public:
 
     /**
      * Non-trivial handler.
+     * This is important to control the HTTP body parsing. In case of a non-trivial
+     * handler, the webserver will parse the body and provides encoded parameters to
+     * the request handler.
      */
     bool isRequestHandlerTrivial() override
     {
