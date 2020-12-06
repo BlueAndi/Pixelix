@@ -6,7 +6,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![Release](https://img.shields.io/github/release/BlueAndi/esp-rgb-led-matrix.svg)](https://github.com/BlueAndi/esp-rgb-led-matrix/releases)
 [![Build Status](https://github.com/BlueAndi/esp-rgb-led-matrix/workflows/PlatformIO%20CI/badge.svg?branch=master)](https://github.com/BlueAndi/esp-rgb-led-matrix/actions?query=workflow%3A%22PlatformIO+CI%22)
 
-![pixelix](./doc/images/pixelix.gif)
+[![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/0.jpg)](https://www.youtube.com/watch?v=dik8Rm6f3o0 "Pixelix")
 
 - [Pixelix](#pixelix)
 - [Motivation](#motivation)
