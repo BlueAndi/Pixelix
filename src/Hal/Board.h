@@ -39,7 +39,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Io.h"
+#include "Io.hpp"
 
 /******************************************************************************
  * Compiler Switches
@@ -77,7 +77,7 @@ namespace Pin
     static const uint8_t    ledMatrixDataOutPinNo   = 27U;
 
     /** Pin number of LDR in */
-    static const uint8_t    ldrInPinNo              = 34U;    
+    static const uint8_t    ldrInPinNo              = 34U;
 };
 
 /** Digital output pin: Onboard LED */
