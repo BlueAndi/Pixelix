@@ -350,19 +350,22 @@ bool SunrisePlugin::requestNewData()
 {
     bool    status  = false;
     String  url     = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+    wl_status_t connectionStatus    = WiFi.status();
 
-    if (true == m_client.begin(url))
+    if (WL_CONNECTED == connectionStatus)
     {
-        if (false == m_client.GET())
+        if (true == m_client.begin(url))
         {
-            LOG_WARNING("GET %s failed.", url.c_str());
-        }
-        else
-        {
-            status = true;
+            if (false == m_client.GET())
+            {
+                LOG_WARNING("GET %s failed.", url.c_str());
+            }
+            else
+            {
+                status = true;
+            }
         }
     }
-
     return status;
 }
 

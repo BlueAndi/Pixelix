@@ -366,20 +366,29 @@ bool GruenbeckPlugin::requestNewData()
 {
     bool    status  = false;
     String  url     = String("http://") + m_ipAddress + "/mux_http";
+    wl_status_t connectionStatus    = WiFi.status();
 
-    if (true == m_client.begin(url))
+    if (WL_CONNECTED == connectionStatus)
     {
-        m_client.addPar("id","42");
-        m_client.addPar("show","D_Y_10_1~");
-
-        if (false == m_client.POST())
+        if (true == m_client.begin(url))
         {
-            LOG_WARNING("POST %s failed.", url.c_str());
+            m_client.addPar("id","42");
+            m_client.addPar("show","D_Y_10_1~");
+
+            if (false == m_client.POST())
+            {
+                LOG_WARNING("POST %s failed.", url.c_str());
+            }
+            else
+            {
+                status = true;
+            }
         }
         else
         {
-            status = true;
+            LOG_ERROR("Requesting new data failed");
         }
+        
     }
 
     return status;

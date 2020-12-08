@@ -84,7 +84,7 @@ public:
         m_textCanvas(nullptr),
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
-        m_textWidget("\\calign?"),
+        m_textWidget("?"),
         m_longitude(),
         m_latitude(),
         m_configurationFilename(""),
