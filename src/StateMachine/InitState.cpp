@@ -334,7 +334,7 @@ void InitState::showStartupInfoOnDisplay()
     SysMsg& sysMsg = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\calign\\#FFFFFF.:\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X\\#FFFFFF.:", 3000U, 2U, true);
+    sysMsg.show("\\calign\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X", 3000U, 2U, true);
 
     /* Clear and wait */
     sysMsg.show("", 500U, 0U, true);
