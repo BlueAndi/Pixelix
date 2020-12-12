@@ -1,6 +1,8 @@
 # PIXELIX
 ![PIXELIX](./images/LogoBlack.png)
 
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
+
 - [PIXELIX](#pixelix)
 - [Software Update](#software-update)
   - [Update via USB](#update-via-usb)
