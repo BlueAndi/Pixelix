@@ -84,9 +84,18 @@ void GameOfLifePlugin::active(IGfx& gfx)
             generateInitialPattern(m_activeGrid);
         }
     }
+    else
+    {
+        /* It may happen that the slot duration is lower than the force restart period.
+         * To avoid that the game of life doesn't change anymore, a new pattern shall
+         * be generated every time the plugin is activated.
+         */
+        generateInitialPattern(m_activeGrid);
+    }
 
-    /* Clear display */
+    /* Show generated initial cell grid. */
     gfx.fillScreen(ColorDef::BLACK);
+    update(gfx, m_activeGrid);
 
     m_displayTimer.start(DISPLAY_PERIOD);
     m_forceRestartTimer.start(FORCE_RESTART_PERIOD);
@@ -142,8 +151,9 @@ void GameOfLifePlugin::update(IGfx& gfx)
         m_restartTimer.stop();
     }
 
-    /* Grid is not stable. Let's play the game of life. */
-    if (true == m_displayTimer.isTimeout())
+    /* Let's play the game of life. */
+    if ((true == isInit) &&
+        (true == m_displayTimer.isTimeout()))
     {
         int32_t cellX           = 0;
         int32_t cellY           = 0;
@@ -151,12 +161,12 @@ void GameOfLifePlugin::update(IGfx& gfx)
         bool    isStable        = true;
 
         /* Note: The active grid is the one, where we look how the current state of
-        * every cell is. This is the grid, which is shown on the display right now.
-        * The next time cycle of the game will be drawn now on the inactive grid,
-        * which will be then shown at the end of this routine.
-        *
-        * After that the active grid will be inactive and vice versa.
-        */
+         * every cell is. This is the grid, which is shown on the display right now.
+         * The next time cycle of the game will be drawn now on the inactive grid,
+         * which will be then shown at the end of this routine.
+         *
+         * After that the active grid will be inactive and vice versa.
+         */
 
         /* Handle active grid */
         for(cellY = 0; cellY < m_height; ++cellY)
@@ -168,11 +178,11 @@ void GameOfLifePlugin::update(IGfx& gfx)
                 bool    newState        = false;
 
                 /* Rules:
-                * 1. Any live cell with fewer than two live neighbours dies, as if by underpopulation.
-                * 2. Any live cell with two or three live neighbours lives on to the next generation.
-                * 3. Any live cell with more than three live neighbours dies, as if by overpopulation.
-                * 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-                */
+                 * 1. Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+                 * 2. Any live cell with two or three live neighbours lives on to the next generation.
+                 * 3. Any live cell with more than three live neighbours dies, as if by overpopulation.
+                 * 4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+                 */
 
                 /* Dead? */
                 if (false == cellState)
@@ -419,13 +429,13 @@ uint8_t GameOfLifePlugin::countAliveNeighbours(uint8_t gridId, int16_t x, int16_
 
     for(dY = 0; dY < MAX_Y; ++dY)
     {
-        int32_t neighbourY = (y - 1) + dY;
+        int16_t neighbourY = (y - 1) + dY;
 
         for(dX = 0; dX < MAX_X; ++dX)
         {
-            int32_t neighbourX = (x - 1) + dX;
+            int16_t neighbourX = (x - 1) + dX;
 
-            if ((x != neighbourX) &&
+            if ((x != neighbourX) ||
                 (y != neighbourY))
             {
                 if (true == getCellState(gridId, neighbourX, neighbourY))

@@ -320,7 +320,8 @@ void InitState::exit(StateMachine& sm)
 void InitState::showStartupInfoOnSerial()
 {
     LOG_INFO("PIXELIX starts up ...");
-    LOG_INFO(String("SW version: ") + Version::SOFTWARE);
+    LOG_INFO(String("SW version: ") + Version::SOFTWARE_VER);
+    LOG_INFO(String("SW revision: ") + Version::SOFTWARE_REV);
     LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
     LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
@@ -341,7 +342,7 @@ void InitState::showStartupInfoOnDisplay()
     sysMsg.show("", 500U, 0U, true);
 
     /* Show sw version (short) */
-    sysMsg.show(String("\\calign") + Version::SOFTWARE_SHORT, 3000U, 2U, true);
+    sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, 3000U, 2U, true);
 
     /* Clear and wait */
     sysMsg.show("", 500U, 0U, true);

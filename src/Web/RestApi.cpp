@@ -196,7 +196,8 @@ static void handleStatus(AsyncWebServerRequest* request)
         hwObj["chipRev"]        = ESP.getChipRevision();
         hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
 
-        swObj["version"]        = Version::SOFTWARE;
+        swObj["version"]        = Version::SOFTWARE_VER;
+        swObj["revision"]       = Version::SOFTWARE_REV;
         swObj["espSdkVersion"]  = ESP.getSdkVersion();
 
         internalRamObj["heapSize"]      = ESP.getHeapSize();

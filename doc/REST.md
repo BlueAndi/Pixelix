@@ -1,9 +1,9 @@
-# Pixelix
-Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
+# PIXELIX
+![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [Pixelix](#pixelix)
+- [PIXELIX](#pixelix)
 - [REST API](#rest-api)
   - [Version](#version)
   - [In general](#in-general)
@@ -84,6 +84,7 @@ Result:
         },
         "software": {
             "version": "v0.1.0",
+            "revision": "ebb5a05faba9af13ae614dab682866c0cbf12fc9",
             "espSdkVersion": "xx",
             "internalRam": {
                 "heapSize": 496,

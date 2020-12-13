@@ -1,9 +1,9 @@
-# Pixelix
-Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
+# PIXELIX
+![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [Pixelix](#pixelix)
+- [PIXELIX](#pixelix)
 - [Websocket API](#websocket-api)
   - [Get display pixel colors](#get-display-pixel-colors)
   - [Get slots information](#get-slots-information)
