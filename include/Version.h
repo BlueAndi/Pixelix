@@ -57,14 +57,23 @@ namespace Version
  * Macros
  *****************************************************************************/
 
-#ifndef GIT_REV
+#ifndef SW_VERSION
 
 /**
- * GIT revision number (SHA-1) to identify the software revision.
+ * Software version number.
  */
-#define GIT_REV "Unknown"
+#define SW_VERSION  "Unknown"
 
-#endif  /* GIT_REV */
+#endif  /* SW_VERSION */
+
+#ifndef SW_REV
+
+/**
+ * Software revision number (git SHA-1).
+ */
+#define SW_REV      "Unknown"
+
+#endif  /* SW_REV */
 
 /** Stringizing the value. */
 #define Q(x) #x
@@ -81,10 +90,13 @@ namespace Version
  *****************************************************************************/
 
     /** Software revision */
-    static const char   SOFTWARE[]          = QUOTE(GIT_REV);
+    static const char   SOFTWARE_REV[]          = QUOTE(SW_REV);
 
     /** Software revision short */
-    static const char   SOFTWARE_SHORT[]    = QUOTE(GIT_REV_SHORT);
+    static const char   SOFTWARE_REV_SHORT[]    = QUOTE(SW_REV_SHORT);
+
+    /** Software version */
+    static const char   SOFTWARE_VER[]          = QUOTE(SW_VERSION);
 }
 
 #endif  /* __VERSION_H__ */

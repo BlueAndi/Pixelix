@@ -84,6 +84,7 @@ Result:
         },
         "software": {
             "version": "v0.1.0",
+            "revision": "ebb5a05faba9af13ae614dab682866c0cbf12fc9",
             "espSdkVersion": "xx",
             "internalRam": {
                 "heapSize": 496,

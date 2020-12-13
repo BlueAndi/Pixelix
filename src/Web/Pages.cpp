@@ -462,7 +462,11 @@ static String indexPageProcessor(const String& var)
     /* ----- Software Versions ----- */
     else if (var == "VERSION")
     {
-        result = Version::SOFTWARE;
+        result = Version::SOFTWARE_VER;
+    }
+    else if (var == "REVISION")
+    {
+        result = Version::SOFTWARE_REV;
     }
     else if (var == "ESP_SDK_VERSION")
     {
