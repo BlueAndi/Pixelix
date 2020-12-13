@@ -84,6 +84,14 @@ void GameOfLifePlugin::active(IGfx& gfx)
             generateInitialPattern(m_activeGrid);
         }
     }
+    else
+    {
+        /* It may happen that the slot duration is lower than the force restart period.
+         * To avoid that the game of life doesn't change anymore, a new pattern shall
+         * be generated every time the plugin is activated.
+         */
+        generateInitialPattern(m_activeGrid);
+    }
 
     /* Clear display */
     gfx.fillScreen(ColorDef::BLACK);
