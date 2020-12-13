@@ -93,8 +93,9 @@ void GameOfLifePlugin::active(IGfx& gfx)
         generateInitialPattern(m_activeGrid);
     }
 
-    /* Clear display */
+    /* Show generated initial cell grid. */
     gfx.fillScreen(ColorDef::BLACK);
+    update(gfx, m_activeGrid);
 
     m_displayTimer.start(DISPLAY_PERIOD);
     m_forceRestartTimer.start(FORCE_RESTART_PERIOD);
@@ -428,13 +429,13 @@ uint8_t GameOfLifePlugin::countAliveNeighbours(uint8_t gridId, int16_t x, int16_
 
     for(dY = 0; dY < MAX_Y; ++dY)
     {
-        int32_t neighbourY = (y - 1) + dY;
+        int16_t neighbourY = (y - 1) + dY;
 
         for(dX = 0; dX < MAX_X; ++dX)
         {
-            int32_t neighbourX = (x - 1) + dX;
+            int16_t neighbourX = (x - 1) + dX;
 
-            if ((x != neighbourX) &&
+            if ((x != neighbourX) ||
                 (y != neighbourY))
             {
                 if (true == getCellState(gridId, neighbourX, neighbourY))
