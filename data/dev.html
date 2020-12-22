@@ -47,7 +47,7 @@
             cell.innerHTML = evt.text;
         }
 
-        function toggle() {
+        function toggleLog() {
             var bLog = document.getElementById("bLog");
 
             wsClient.setLog({
@@ -77,6 +77,14 @@
 
         function startIperf() {
             wsClient.startIperf().then(function(rsp) {
+                var bIperf = document.getElementById("bIperf");
+
+                if (false == rsp.isEnabled) {
+                    bIperf.value = "Enable";
+                } else {
+                    bIperf.value = "Disable";
+                }
+
                 alert("Ok.");
             }).catch(function(err) {
                 alert("Error.");
@@ -85,10 +93,28 @@
 
         function stopIperf() {
             wsClient.stopIperf().then(function(rsp) {
+                var bIperf = document.getElementById("bIperf");
+
+                if (false == rsp.isEnabled) {
+                    bIperf.value = "Enable";
+                } else {
+                    bIperf.value = "Disable";
+                }
+
                 alert("Ok.");
             }).catch(function(err) {
                 alert("Error.");
             });
+        }
+
+        function toggleIperf() {
+            var bIperf = document.getElementById("bIperf");
+
+            if ("Enable" === bIperf.value) {
+                startIperf();
+            } else {
+                stopIperf();
+            }
         }
 
         window.onload = function() {
@@ -114,6 +140,15 @@
                     bLog.value = "Disable";
                 }
 
+                return wsClient.getIperf();
+            }).then(function(rsp) {
+                var bIperf = document.getElementById("bIperf");
+
+                if (false == rsp.isEnabled) {
+                    bIperf.value = "Enable";
+                } else {
+                    bIperf.value = "Disable";
+                }
             }).catch(function(err) {
                 if ("undefined" !== typeof err) {
                     console.error(err);
@@ -138,10 +173,9 @@
     <h3>System Reset</h3>
     <input type="button" value="Reset" onclick="reset();" />
     <h3>Performance Measurement</h3>
-    <input type="button" value="Start iperf" onclick="startIperf();" />
-    <input type="button" value="Stop iperf" onclick="stopIperf();" />
+    <input id="bIperf" type="button" value="Enable" onclick="toggleIperf();" />
     <h3>Logging</h3>
-    <input id="bLog" type="button" value="Enable" onclick="toggle();" />
+    <input id="bLog" type="button" value="Enable" onclick="toggleLog();" />
     <p>Note, only the last 40 messages are show.</p>
     <div style="border: yellow 5px solid; padding: 10px">
         <font size="2" face="Courier New" >

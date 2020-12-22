@@ -74,6 +74,25 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     {
         server->text(client->id(), "NACK;\"Parameter invalid.\"");
     }
+    /* Get iperf status? */
+    else if (CMD_STATUS == m_cmd)
+    {
+        String      rsp         = "ACK";
+        const char  DELIMITER   = ';';
+
+        rsp += DELIMITER;
+
+        if (false == m_isIperfRunning)
+        {
+            rsp += "0";
+        }
+        else
+        {
+            rsp += "1";
+        }
+        
+        server->text(client->id(), rsp);
+    }
     /* Start iperf? */
     else if (CMD_START == m_cmd)
     {
@@ -89,7 +108,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
                 m_cfg.sip & 0xffU, (m_cfg.sip >> 8) & 0xffU, (m_cfg.sip >> 16) & 0xffU, (m_cfg.sip >>24) & 0xffU, m_cfg.sport,
                 m_cfg.interval, m_cfg.time);
 
-            server->text(client->id(), "ACK");
+            server->text(client->id(), "ACK;1");
         }
     }
     /* Stop iperf? */
@@ -102,7 +121,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         else
         {
             LOG_INFO("iperf stopped.");
-            server->text(client->id(), "ACK");
+            server->text(client->id(), "ACK;0");
         }
     }
     else
@@ -112,7 +131,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
     m_isError   = false;
     m_parCnt    = 0U;
-    m_cmd       = CMD_UNKNOWN;
+    m_cmd       = CMD_STATUS;
 
     setCfgDefault();
 

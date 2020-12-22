@@ -168,6 +168,7 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 rsp.uid = parseInt(data[1]);
                 this.pendingCmd.resolve(rsp);
             } else if ("IPERF" === this.pendingCmd.name) {
+                rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
                 this.pendingCmd.resolve(rsp);
             } else if ("LOG" === this.pendingCmd.name) {
                 rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
@@ -445,6 +446,21 @@ pixelix.ws.Client.prototype.setSlotDuration = function(options) {
             this._sendCmd({
                 name: "SLOT_DURATION",
                 par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getIperf = function(options) {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "IPERF",
+                par: null,
                 resolve: resolve,
                 reject: reject
             });
