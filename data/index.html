@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>%PAGE_TITLE%</title>
+    <title>$PAGE_TITLE$</title>
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
     <script src="/js/menu.js"></script>
@@ -14,8 +14,8 @@
         var chartHeap       = null;
         var chartFs         = null;
 
-        var availableHeapSizeInPercent  = Math.round(%AVAILABLE_HEAP_SIZE% * 100 / %HEAP_SIZE%);
-        var availableFsSizeInPercent    = Math.round((%FS_SIZE% - %USED_FS_SIZE%) * 100 / %FS_SIZE%);
+        var availableHeapSizeInPercent  = Math.round($AVAILABLE_HEAP_SIZE$ * 100 / $HEAP_SIZE$);
+        var availableFsSizeInPercent    = Math.round(($FS_SIZE$ - $USED_FS_SIZE$) * 100 / $FS_SIZE$);
 
         window.chartColors = {
             red: 'rgb(255, 99, 132)',
@@ -36,7 +36,7 @@
             chartHeap       = new Chart(ctxChartHeap, {
                 type: 'pie',
                 data: {
-                    labels: ['Heap used in %%', 'Heap available in %%'],
+                    labels: ['Heap used in %', 'Heap available in %'],
                     datasets: [{
                         data: [
                             100 - availableHeapSizeInPercent,
@@ -54,7 +54,7 @@
             chartFs         = new Chart(ctxChartFs, {
                 type: 'pie',
                 data: {
-                    labels: ['Filessystem used size in %%', 'Filesystem available size in %%'],
+                    labels: ['Filessystem used size in %', 'Filesystem available size in %'],
                     datasets: [{
                         data: [
                             100 - availableFsSizeInPercent,
@@ -74,7 +74,7 @@
 </head>
 <body>
 <div class="header">
-    %HEADER%
+    $HEADER$
 </div>
 <div id ="navbar" class="topnav">
 </div>
@@ -85,54 +85,54 @@
     <table>
         <tr>
             <td>ESP type:</td>
-            <td>%ESP_TYPE%</td>
+            <td>$ESP_TYPE$</td>
         </tr>
         <tr>
             <td>ESP Chip Rev.:</td>
-            <td>%ESP_CHIP_REV%</td>
+            <td>$ESP_CHIP_REV$</td>
         </tr>
         <tr>
             <td>ESP Chip ID:</td>
-            <td>%ESP_CHIP_ID%</td>
+            <td>$ESP_CHIP_ID$</td>
         </tr>
         <tr>
             <td>ESP CPU Freq.:</td>
-            <td>%ESP_CPU_FREQ% MHz</td>
+            <td>$ESP_CPU_FREQ$ MHz</td>
         </tr>
         <tr>
             <td>Flash Chip Mode:</td>
-            <td>%FLASH_CHIP_MODE%</td>
+            <td>$FLASH_CHIP_MODE$</td>
         </tr>
         <tr>
             <td>Flash Chip Size :</td>
-            <td>%FLASH_CHIP_SIZE% MByte</td>
+            <td>$FLASH_CHIP_SIZE$ MByte</td>
         </tr>
         <tr>
             <td>Flash Chip Speed:</td>
-            <td>%FLASH_CHIP_SPEED% MHz</td>
+            <td>$FLASH_CHIP_SPEED$ MHz</td>
         </tr>
     </table>
     <h3>Software Versions</h3>
     <table>
         <tr>
             <td>Version:</td>
-            <td>%VERSION%</td>
+            <td>$VERSION$</td>
         </tr>
         <tr>
             <td>Revision:</td>
-            <td>%REVISION%</td>
+            <td>$REVISION$</td>
         </tr>
         <tr>
             <td>ESP SDK Version:</td>
-            <td>%ESP_SDK_VERSION%</td>
+            <td>$ESP_SDK_VERSION$</td>
         </tr>
         <tr>
             <td>Arduino IDF Version:</td>
-            <td>%ARDUINO_IDF_BRANCH%</td>
+            <td>$ARDUINO_IDF_BRANCH$</td>
         </tr>
         <tr>
             <td>LwIP Version:</td>
-            <td>%LWIP_VERSION%</td>
+            <td>$LWIP_VERSION$</td>
         </tr>
     </table>
     <h3>Software Status</h3>
@@ -140,11 +140,11 @@
     <table>
         <tr>
             <td>Heap Size:</td>
-            <td>%HEAP_SIZE% byte</td>
+            <td>$HEAP_SIZE$ byte</td>
         </tr>
         <tr>
             <td>Available Heap Size:</td>
-            <td>%AVAILABLE_HEAP_SIZE% byte</td>
+            <td>$AVAILABLE_HEAP_SIZE$ byte</td>
         </tr>
         <canvas id="canvasChartHeap" width="240" height="240"></canvas>
     </table>
@@ -152,11 +152,11 @@
     <table>
         <tr>
             <td>Filesystem size:</td>
-            <td>%FS_SIZE% byte</td>
+            <td>$FS_SIZE$ byte</td>
         </tr>
         <tr>
             <td>Used filesystem size:</td>
-            <td>%USED_FS_SIZE% byte</td>
+            <td>$USED_FS_SIZE$ byte</td>
         </tr>
         <canvas id="canvasChartFs" width="240" height="240"></canvas>
     </table>

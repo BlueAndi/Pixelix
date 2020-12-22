@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>%PAGE_TITLE%</title>
+    <title>$PAGE_TITLE$</title>
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
     <script src="/js/menu.js"></script>
@@ -44,7 +44,7 @@
             if (true === evt.lengthComputable) {
                 progress = Math.ceil(evt.loaded * 100 / evt.total);
             }
-            document.getElementById("progress").innerHTML = "Progress: " + progress + "%%";
+            document.getElementById("progress").innerHTML = "Progress: " + progress + "%";
         }
 
         function upload() {
@@ -52,14 +52,14 @@
             var formData = new FormData();
             var fileSize = file.size;
 
-            document.getElementById("progress").innerHTML = "Progress: 0%%";
+            document.getElementById("progress").innerHTML = "Progress: 0%";
 
             if ("undefined" === typeof file) {
 
                 alert("No file selected.");
 
-            } else if (("%FIRMWARE_FILENAME%" !== file.name) &&
-                       ("%FILESYSTEM_FILENAME%" !== file.name)) {
+            } else if (("$FIRMWARE_FILENAME$" !== file.name) &&
+                       ("$FILESYSTEM_FILENAME$" !== file.name)) {
 
                 alert("Unknown file: " + file.name);
 
@@ -93,18 +93,18 @@
 </head>
 <body>
 <div class="header">
-    %HEADER%
+    $HEADER$
 </div>
 <div id="navbar" class="topnav">
 </div>
 <div class="main">
     <h2>Update</h2>
-    <p>Upload <u>%FIRMWARE_FILENAME%</u> file for software update or <u>%FILESYSTEM_FILENAME%</u> for updating the filesystem.</p>
+    <p>Upload <u>$FIRMWARE_FILENAME$</u> file for software update or <u>$FILESYSTEM_FILENAME$</u> for updating the filesystem.</p>
     <p>
         <input type="file" name="file" id="inputFile" accept=".bin" /><br />
         <input type="button" value="Update" onclick="upload();" />
     </p>
-    <div id="progress">Progress: 0%%</div>
+    <div id="progress">Progress: 0%</div>
 </div>
 <div class="footer">
     <hr />
