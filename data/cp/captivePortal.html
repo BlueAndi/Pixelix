@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>%PAGE_TITLE%</title>
+    <title>$PAGE_TITLE$</title>
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
     <script>
@@ -39,7 +39,7 @@
 </head>
 <body>
 <div class="header">
-    %HEADER%
+    $HEADER$
 </div>
 <div id="navbar" class="topnav">
 </div>
@@ -48,9 +48,9 @@
     <h3>Wifi network configuration</h3>
     <p>
         <label for="ssid">SSID:</label><br />
-        <input type="text" id="ssid" name="ssid" value="%SSID%" /><br />
+        <input type="text" id="ssid" name="ssid" value="$SSID$" /><br />
         <label for="passphrase">Passphrase:</label><br />
-        <input type="password" id="passphrase" name="passphrase" value="%PASSPHRASE%" /><br />
+        <input type="password" id="passphrase" name="passphrase" value="$PASSPHRASE$" /><br />
         <input type="button" value="Store configuration" onclick="store()" />
     </p>
     <h3>Restart</h3>

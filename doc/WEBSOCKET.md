@@ -20,7 +20,9 @@
   - [Enable/Disable logging](#enabledisable-logging)
     - [Is logging enabled?](#is-logging-enabled)
     - [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
-  - [Start/Stop iperf server](#startstop-iperf-server)
+  - [Enable/Disable iperf](#enabledisable-iperf)
+    - [Is iperf enabled?](#is-iperf-enabled)
+    - [Start/Stop iperf server](#startstop-iperf-server)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -184,7 +186,19 @@ Event: If logging is enabled, a event will be automatically be sent for every lo
 * ```<line>```: Line number if in the file where the log message comes from.
 * ```<text>```: Logged text, emphasized in "".
 
-## Start/Stop iperf server
+## Enable/Disable iperf
+
+### Is iperf enabled?
+Command: ```IPERF```
+
+Response:
+* Successful:
+  * ```ACK;<is-enabled>```
+  * ```<is-enabled>```: 0 means disabled and 1 enabled
+* Failed:
+  * ```NACK```
+
+### Start/Stop iperf server
 Command: ```IPERF;<CMD>;<OPTIONS>```
 
 Parameter:
@@ -196,7 +210,8 @@ Parameter:
 
 Response:
 * Successful:
-  * ```ACK```
+  * ```ACK;<is-enabled>```
+  * ```<is-enabled>```: 0 means disabled and 1 enabled
 * Failed:
   * ```NACK```
 

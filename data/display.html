@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>%PAGE_TITLE%</title>
+    <title>$PAGE_TITLE$</title>
     <link rel="shortcut icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/style/style.css" />
     <script src="/js/menu.js"></script>
@@ -20,7 +20,7 @@
             float: left;
         }
         div.locked {
-            background-image: repeating-linear-gradient(45deg, #ccc 0%%, #ccc 2%%, red 2%%, red 4%%, #ccc 4%%);
+            background-image: repeating-linear-gradient(45deg, #ccc 0%, #ccc 2%, red 2%, red 4%, #ccc 4%);
         }
         p.dragableSlot {
             border: 2px solid red;
@@ -306,7 +306,7 @@
         }
 
         function updateBrightness() {
-            document.getElementById("brightness").innerHTML = "" + (brightness * 100 / 255).toFixed(2) + " %%";
+            document.getElementById("brightness").innerHTML = "" + (brightness * 100 / 255).toFixed(2) + " %";
             document.getElementById("sliderBrightness").value = brightness;
         }
 
@@ -362,10 +362,10 @@
 
             wsClient = new pixelix.ws.Client();
             wsClient.connect({
-                protocol: "%WS_PROTOCOL%",
+                protocol: "$WS_PROTOCOL$",
                 hostname: location.hostname,
-                port: %WS_PORT%,
-                endpoint: "%WS_ENDPOINT%",
+                port: $WS_PORT$,
+                endpoint: "$WS_ENDPOINT$",
                 onClosed: onClosed,
             }).then(function(rsp) {
                 return wsClient.getPlugins();
@@ -407,7 +407,7 @@
 </head>
 <body>
 <div class="header">
-    %HEADER%
+    $HEADER$
 </div>
 <div id="navbar" class="topnav">
 </div>

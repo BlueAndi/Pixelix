@@ -72,8 +72,9 @@ public:
         WsCmd("IPERF"),
         m_isError(false),
         m_parCnt(0U),
-        m_cmd(CMD_UNKNOWN),
-        m_cfg()
+        m_cmd(CMD_STATUS),
+        m_cfg(),
+        m_isIperfRunning(false)
     {
         setCfgDefault();
     }
@@ -105,15 +106,16 @@ private:
     /** iperf commands */
     enum Cmd
     {
-        CMD_UNKNOWN = 0,    /**< Unknown command */
-        CMD_START,          /**< Start iperf */
-        CMD_STOP            /**< Stop iperf */
+        CMD_STATUS = 0, /**< Get iperf status */
+        CMD_START,      /**< Start iperf */
+        CMD_STOP        /**< Stop iperf */
     };
 
-    bool        m_isError;  /**< Any error happened during parameter reception? */
-    uint8_t     m_parCnt;   /**< Number of received parameters */
-    Cmd         m_cmd;      /**< iperf command */
-    iperf_cfg_t m_cfg;      /**< iperf configuration */
+    bool        m_isError;          /**< Any error happened during parameter reception? */
+    uint8_t     m_parCnt;           /**< Number of received parameters */
+    Cmd         m_cmd;              /**< iperf command */
+    iperf_cfg_t m_cfg;              /**< iperf configuration */
+    bool        m_isIperfRunning;   /**< Is iperf running or not? */
 
     WsCmdIperf(const WsCmdIperf& cmd);
     WsCmdIperf& operator=(const WsCmdIperf& cmd);
