@@ -46,12 +46,12 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/display.html">Display</a>
                         </li>
-                        <li class="nav-item dropdown active">
-                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins <span class="sr-only">(current)</span></a>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins</a>
                             <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
                                 <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
                                 <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
-                                <a class="dropdown-item active" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
                                 <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
                                 <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
                                 <a class="dropdown-item" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
@@ -80,7 +80,7 @@
                             </div>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/about.html">About</a>
+                            <a class="nav-link active" href="/about.html">About <span class="sr-only">(current)</span></a>
                         </li>
                     </ul>
                 </div>
@@ -90,13 +90,23 @@
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
             <div class="container">
-                <h1 class="mt-5">DateTimePlugin</h1>
-                <p><img src="/images/DateTimePlugin1.jpg" alt="Screenshot" /></p>
-                <p><img src="/images/DateTimePlugin2.jpg" alt="Screenshot" /></p>
-                <p>The plugin shows the current time and date. First the time is shown for half of the slot duration and after it the date.</p>
-                <p>Below the day of the week is shown, starting from the left with Monday.</p>            
-                <h2 class="mt-1">REST API</h2>
-                <pre class="text-light"><code>-</code></pre>
+                <h1 class="mt-5">About</h1>
+                <p>Author: <a href="https://github.com/BlueAndi">BlueAndi</a></p>
+                <p>Project: <a href="https://github.com/BlueAndi/esp-rgb-led-matrix">PIXELIX</a></p>
+                <p>Thanks to all contributors:</p>
+                <ul>
+                    <li><a href="https://github.com/0ooYoo0">0ooYoo0</a></li>
+                    <li><a href="https://github.com/PabluskiNC">PabluskiNC</a></li>
+                </ul>
+                <p>Used third party libraries:</p>
+                <ul>
+                    <li><a href="https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino">ESP Arduino Framework</a></li>
+                    <li><a href="https://github.com/Makuna/NeoPixelBus">NeoPixelBux</a></li>
+                    <li><a href="https://github.com/me-no-dev/ESPAsyncWebServer">ESPAsyncWebServer</a></li>
+                    <li><a href="https://getbootstrap.com/">Boostrap</a></li>
+                    <li><a href="https://popper.js.org/">POPPER JS</a></li>
+                    <li><a href="https://jquery.com/">jQuery</a></li>
+                </ul>
             </div>
         </main>
   

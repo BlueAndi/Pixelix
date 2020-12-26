@@ -49,7 +49,6 @@
 #include <Update.h>
 #include <Logging.h>
 #include <Util.h>
-#include <SPIFFSEditor.h>
 #include <ArduinoJson.h>
 #include <lwip/init.h>
 
@@ -71,36 +70,19 @@
 
 static String fitToSpiffs(const String& path, const String& filenNameWithoutExt, const String& fileNameExtension);
 static bool isValidHostname(const String& hostname);
-static String getColoredText(const String& text);
 
-static String commonPageProcessor(const String& var);
-
-static String errorPageProcessor(const String& var);
+static String tmplPageProcessor(const String& var);
 
 static void indexPage(AsyncWebServerRequest* request);
-static String indexPageProcessor(const String& var);
-
-static void networkPage(AsyncWebServerRequest* request);
-static String networkPageProcessor(const String& var);
-
-static void pluginsPage(AsyncWebServerRequest* request);
-static String pluginsPageProcessor(const String& var);
-
+static void infoPage(AsyncWebServerRequest* request);
 static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDocument& jsonDoc);
 static void settingsPage(AsyncWebServerRequest* request);
-static String settingsPageProcessor(const String& var);
-
 static void updatePage(AsyncWebServerRequest* request);
-static String updatePageProcessor(const String& var);
-
 static void uploadPage(AsyncWebServerRequest* request);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
-
 static void displayPage(AsyncWebServerRequest* request);
-static String displayPageProcessor(const String& var);
-
-static void devPage(AsyncWebServerRequest* request);
-static String devPageProcessor(const String& var);
+static void aboutPage(AsyncWebServerRequest* request);
+static void debugPage(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
@@ -124,9 +106,6 @@ static const uint32_t   SPIFFS_FILENAME_LENGTH_LIMIT    = 32U;
 /** Flag used to signal any kind of file upload error. */
 static bool             gIsUploadError                  = false;
 
-/** The SPIFFS editor instance. */
-static SPIFFSEditor     gSPIFFSEditor(SPIFFS);
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -147,14 +126,21 @@ void Pages::init(AsyncWebServer& srv)
 {
     const char* pluginName = nullptr;
 
-    (void)srv.on("/", HTTP_GET, indexPage);
-    (void)srv.on("/dev.html", HTTP_GET, devPage);
+    (void)srv.on("/about.html", HTTP_GET, aboutPage);
+    (void)srv.on("/debug.html", HTTP_GET, debugPage);
     (void)srv.on("/display.html", HTTP_GET, displayPage);
-    (void)srv.on("/network.html", HTTP_GET, networkPage);
-    (void)srv.on("/plugins.html", HTTP_GET | HTTP_POST, pluginsPage);
+    (void)srv.on("/index.html", HTTP_GET, indexPage);
+    (void)srv.on("/info.html", HTTP_GET, infoPage);
     (void)srv.on("/settings.html", HTTP_GET | HTTP_POST, settingsPage);
     (void)srv.on("/update.html", HTTP_GET, updatePage);
     (void)srv.on("/upload.html", HTTP_POST, uploadPage, uploadHandler);
+
+    (void)srv.on("/", [](AsyncWebServerRequest* request) {
+        if (nullptr != request)
+        {
+            request->redirect("/index.html");
+        }
+    });
 
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesytem for 1 hour.
@@ -163,9 +149,6 @@ void Pages::init(AsyncWebServer& srv)
     (void)srv.serveStatic("/images/", SPIFFS, "/images/", "max-age=3600");
     (void)srv.serveStatic("/js/", SPIFFS, "/js/", "max-age=3600");
     (void)srv.serveStatic("/style/", SPIFFS, "/style/", "max-age=3600");
-
-    /* Add SPIFFS file editor to "/edit" */
-    (void)srv.addHandler(&gSPIFFSEditor);
 
     /* Add one page per plugin. */
     pluginName = PluginMgr::getInstance().findFirst();
@@ -190,7 +173,7 @@ void Pages::init(AsyncWebServer& srv)
                                 return;
                             }
 
-                            request->send(SPIFFS, uri, "text/html", false, commonPageProcessor);
+                            request->send(SPIFFS, uri, "text/html", false, tmplPageProcessor);
                         });
 
         pluginName = PluginMgr::getInstance().findNext();
@@ -221,7 +204,7 @@ void Pages::error(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/error.html", "text/html", false, errorPageProcessor);
+    request->send(SPIFFS, "/error.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -314,122 +297,15 @@ static bool isValidHostname(const String& hostname)
 }
 
 /**
- * Get text in color format (HTML).
- *
- * @param[in] text  Text
- *
- * @return Text in color format (HTML).
- */
-static String getColoredText(const String& text)
-{
-    String      result;
-    uint8_t     index       = 0;
-    uint8_t     colorIndex  = 0;
-    const char* colors[]    =
-    {
-        "#FF0000",
-        "#FFFF00",
-        "#00FF00",
-        "#00FFFF",
-        "#0000FF",
-        "#FF00FF"
-    };
-
-    for(index = 0; index < text.length(); ++index)
-    {
-        result += "<span style=\"color:";
-        result += colors[colorIndex];
-        result += "\">";
-        result += text[index];
-        result += "</span>";
-
-        ++colorIndex;
-        if (UTIL_ARRAY_NUM(colors) <= colorIndex)
-        {
-            colorIndex = 0;
-        }
-    }
-
-    return result;
-}
-
-/**
  * Processor for page template, containing the common part, which is available
  * in every page. It is responsible for the data binding.
  *
  * @param[in] var   Name of variable in the template
  */
-static String commonPageProcessor(const String& var)
+static String tmplPageProcessor(const String& var)
 {
-    String  result;
+    String  result = var;
 
-    if (var == "PAGE_TITLE")
-    {
-        result = WebConfig::PROJECT_TITLE;
-    }
-    else if (var == "HEADER")
-    {
-        result += "<h1>";
-        result += ".:";
-        result += getColoredText(WebConfig::PROJECT_TITLE);
-        result += ":.";
-        result += "</h1>\r\n";
-    }
-    else
-    {
-        ;
-    }
-
-    return result;
-}
-
-/**
- * Processor for error page template.
- * It is responsible for the data binding.
- *
- * @param[in] var   Name of variable in the template
- */
-static String errorPageProcessor(const String& var)
-{
-    return commonPageProcessor(var);
-}
-
-/**
- * Index page on root path ("/").
- *
- * @param[in] request   HTTP request
- */
-static void indexPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    request->send(SPIFFS, "/index.html", "text/html", false, indexPageProcessor);
-
-    return;
-}
-
-/**
- * Processor for index page template.
- * It is responsible for the data binding.
- *
- * @param[in] var   Name of variable in the template
- */
-static String indexPageProcessor(const String& var)
-{
-    String  result;
-
-    /* ----- ESP ----- */
     if (var =="ESP_TYPE")
     {
 #if defined(ESP32)
@@ -542,163 +418,7 @@ static String indexPageProcessor(const String& var)
     {
         result = ESP.getFlashChipSpeed() / (1000U * 1000U);
     }
-    /* ----- Common stuff ----- */
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
-}
-
-/**
- * Network page, shows all information regarding the network.
- *
- * @param[in] request   HTTP request
- */
-static void networkPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    request->send(SPIFFS, "/network.html", "text/html", false, networkPageProcessor);
-
-    return;
-}
-
-/**
- * Processor for network page template.
- * It is responsible for the data binding.
- *
- * @param[in] var   Name of variable in the template
- */
-static String networkPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "SSID")
-    {
-        if (true == Settings::getInstance().open(true))
-        {
-            result = Settings::getInstance().getWifiSSID().getValue();
-            Settings::getInstance().close();
-        }
-    }
-    else if (var == "RSSI")
-    {
-        /* Only in station mode it makes sense to retrieve the RSSI.
-         * Otherwise keep it -100 dbm.
-         */
-        if (WIFI_MODE_STA == WiFi.getMode())
-        {
-            result = WiFi.RSSI();
-        }
-        else
-        {
-            result = "-100";
-        }
-    }
-    else if (var == "HOSTNAME")
-    {
-        const char* hostname = nullptr;
-
-        if (WIFI_MODE_AP == WiFi.getMode())
-        {
-            hostname = WiFi.softAPgetHostname();
-        }
-        else
-        {
-            hostname = WiFi.getHostname();
-        }
-
-        if (nullptr != hostname)
-        {
-            result = hostname;
-        }
-    }
-    else if (var == "IPV4")
-    {
-        if (WIFI_MODE_AP == WiFi.getMode())
-        {
-            result = WiFi.softAPIP().toString();
-        }
-        else
-        {
-            result = WiFi.localIP().toString();
-        }
-    }
-    else if (var == "MAC_ADDR")
-    {
-        result = WiFi.macAddress();
-    }
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
-}
-
-/**
- * Plugins page to show plugins and configure instantiated plugins.
- *
- * @param[in] request   HTTP request
- */
-static void pluginsPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    /* Change configuration of a plugin? */
-    if ((HTTP_POST == request->method()) &&
-        (0 < request->args()))
-    {
-        /* TODO */
-        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "plain/text", "Error");
-    }
-    else if (HTTP_GET == request->method())
-    {
-        request->send(SPIFFS, "/plugins.html", "text/html", false, pluginsPageProcessor);
-    }
-    else
-    {
-        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "plain/text", "Error");
-    }
-
-    return;
-}
-
-/**
- * Processor for plugins page template.
- * It is responsible for the data binding.
- *
- * @param[in] var   Name of variable in the template
- */
-static String pluginsPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "LIST_OF_PLUGINS")
+    else if (var == "LIST_OF_PLUGINS")
     {
         const String    DELIMITER   = ", ";
         const char*     pluginName  = PluginMgr::getInstance().findFirst();
@@ -726,12 +446,176 @@ static String pluginsPageProcessor(const String& var)
             pluginName = PluginMgr::getInstance().findNext();
         }
     }
+    else if (var == "SETTINGS_DATA")
+    {
+        if (true == Settings::getInstance().open(true))
+        {
+            KeyValue**          list            = Settings::getInstance().getList();
+            uint8_t             index           = 0U;
+            const size_t        JSON_DOC_SIZE   = 4096U;
+            DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+            const size_t        MAX_USAGE       = 80U;
+            size_t              usageInPercent  = 0U;
+
+            result.clear();
+            for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
+            {
+                KeyValue*   parameter   = list[index];
+                JsonObject  jsonSetting = jsonDoc.createNestedObject();
+                JsonObject  jsonInput   = jsonSetting.createNestedObject("input");
+
+                jsonSetting["title"]    = parameter->getName();
+                jsonInput["name"]       = parameter->getKey();
+
+                switch(parameter->getValueType())
+                {
+                case KeyValue::TYPE_STRING:
+                    {
+                        KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
+                        jsonInput["type"]       = "text";
+                        jsonInput["value"]      = kvStr->getValue();
+                        jsonInput["size"]       = kvStr->getMaxLength();
+                        jsonInput["minlength"]  = kvStr->getMinLength();
+                        jsonInput["maxlength"]  = kvStr->getMaxLength();
+                    }
+                    break;
+
+                case KeyValue::TYPE_BOOL:
+                    {
+                        KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
+                        jsonInput["type"]       = "checkbox";
+                        jsonInput["value"]      = kvBool->getKey();
+
+                        if (true == kvBool->getValue())
+                        {
+                            jsonInput["checked"] = "checked";
+                        }
+                    }
+                    break;
+
+                case KeyValue::TYPE_UINT8:
+                    {
+                        KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(parameter);
+                        jsonInput["type"]   = "number";
+                        jsonInput["value"]  = kvUInt8->getValue();
+                        jsonInput["min"]    = kvUInt8->getMin();
+                        jsonInput["max"]    = kvUInt8->getMax();
+                    }
+                    break;
+
+                case KeyValue::TYPE_INT32:
+                {
+                    KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
+                    jsonInput["type"]   = "number";
+                    jsonInput["value"]  = kvInt32->getValue();
+                    jsonInput["min"]    = kvInt32->getMin();
+                    jsonInput["max"]    = kvInt32->getMax();
+                }
+                break;
+
+                case KeyValue::TYPE_JSON:
+                    {
+                        KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
+                        jsonInput["type"]       = "text";
+                        jsonInput["value"]      = kvJson->getValue();
+                        jsonInput["size"]       = kvJson->getMaxLength();
+                        jsonInput["minlength"]  = kvJson->getMinLength();
+                        jsonInput["maxlength"]  = kvJson->getMaxLength();
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            Settings::getInstance().close();
+
+            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+            if (MAX_USAGE < usageInPercent)
+            {
+                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+            }
+
+            (void)serializeJson(jsonDoc, result);
+        }
+    }
+    else if (var == "FIRMWARE_FILENAME")
+    {
+        result = FIRMWARE_FILENAME;
+    }
+    else if (var == "FILESYSTEM_FILENAME")
+    {
+        result = FILESYSTEM_FILENAME;
+    }
+    else if (var == "WS_PROTOCOL")
+    {
+        result = WebConfig::WEBSOCKET_PROTOCOL;
+    }
+    else if (var == "WS_PORT")
+    {
+        result = WebConfig::WEBSOCKET_PORT;
+    }
+    else if (var == "WS_ENDPOINT")
+    {
+        result = WebConfig::WEBSOCKET_PATH;
+    }
     else
     {
-        result = commonPageProcessor(var);
+        ;
     }
 
     return result;
+}
+
+/**
+ * Index page on root path ("/").
+ *
+ * @param[in] request   HTTP request
+ */
+static void indexPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/index.html", "text/html", false, tmplPageProcessor);
+
+    return;
+}
+
+/**
+ * Info page shows general informations.
+ *
+ * @param[in] request   HTTP request
+ */
+static void infoPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/info.html", "text/html", false, tmplPageProcessor);
+
+    return;
 }
 
 /**
@@ -1033,7 +917,7 @@ static void settingsPage(AsyncWebServerRequest* request)
     }
     else if (HTTP_GET == request->method())
     {
-        request->send(SPIFFS, "/settings.html", "text/html", false, settingsPageProcessor);
+        request->send(SPIFFS, "/settings.html", "text/html", false, tmplPageProcessor);
     }
     else
     {
@@ -1041,117 +925,6 @@ static void settingsPage(AsyncWebServerRequest* request)
     }
 
     return;
-}
-
-/**
- * Processor for settings page template.
- * It is responsible for the data binding.
- *
- * @param[in] var   Name of variable in the template
- */
-static String settingsPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "DATA")
-    {
-        if (true == Settings::getInstance().open(true))
-        {
-            KeyValue**          list            = Settings::getInstance().getList();
-            uint8_t             index           = 0U;
-            const size_t        JSON_DOC_SIZE   = 4096U;
-            DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-            const size_t        MAX_USAGE       = 80U;
-            size_t              usageInPercent  = 0U;
-
-            for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
-            {
-                KeyValue*   parameter   = list[index];
-                JsonObject  jsonSetting = jsonDoc.createNestedObject();
-                JsonObject  jsonInput   = jsonSetting.createNestedObject("input");
-
-                jsonSetting["title"]    = parameter->getName();
-                jsonInput["name"]       = parameter->getKey();
-
-                switch(parameter->getValueType())
-                {
-                case KeyValue::TYPE_STRING:
-                    {
-                        KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
-                        jsonInput["type"]       = "text";
-                        jsonInput["value"]      = kvStr->getValue();
-                        jsonInput["size"]       = kvStr->getMaxLength();
-                        jsonInput["minlength"]  = kvStr->getMinLength();
-                        jsonInput["maxlength"]  = kvStr->getMaxLength();
-                    }
-                    break;
-
-                case KeyValue::TYPE_BOOL:
-                    {
-                        KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
-                        jsonInput["type"]       = "checkbox";
-                        jsonInput["value"]      = kvBool->getKey();
-
-                        if (true == kvBool->getValue())
-                        {
-                            jsonInput["checked"] = "checked";
-                        }
-                    }
-                    break;
-
-                case KeyValue::TYPE_UINT8:
-                    {
-                        KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(parameter);
-                        jsonInput["type"]   = "number";
-                        jsonInput["value"]  = kvUInt8->getValue();
-                        jsonInput["min"]    = kvUInt8->getMin();
-                        jsonInput["max"]    = kvUInt8->getMax();
-                    }
-                    break;
-
-                case KeyValue::TYPE_INT32:
-                {
-                    KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
-                    jsonInput["type"]   = "number";
-                    jsonInput["value"]  = kvInt32->getValue();
-                    jsonInput["min"]    = kvInt32->getMin();
-                    jsonInput["max"]    = kvInt32->getMax();
-                }
-                break;
-
-                case KeyValue::TYPE_JSON:
-                    {
-                        KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
-                        jsonInput["type"]       = "text";
-                        jsonInput["value"]      = kvJson->getValue();
-                        jsonInput["size"]       = kvJson->getMaxLength();
-                        jsonInput["minlength"]  = kvJson->getMinLength();
-                        jsonInput["maxlength"]  = kvJson->getMaxLength();
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-            }
-
-            Settings::getInstance().close();
-
-            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-            if (MAX_USAGE < usageInPercent)
-            {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
-            }
-
-            (void)serializeJson(jsonDoc, result);
-        }
-    }
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
 }
 
 /**
@@ -1174,35 +947,9 @@ static void updatePage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/update.html", "text/html", false, updatePageProcessor);
+    request->send(SPIFFS, "/update.html", "text/html", false, tmplPageProcessor);
 
     return;
-}
-
-/**
- * Processor for update page template.
- * It is responsible for the data binding.
- *
- * @param[in] var   Name of variable in the template
- */
-static String updatePageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "FIRMWARE_FILENAME")
-    {
-        result = FIRMWARE_FILENAME;
-    }
-    else if (var == "FILESYSTEM_FILENAME")
-    {
-        result = FILESYSTEM_FILENAME;
-    }
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
 }
 
 /**
@@ -1397,47 +1144,17 @@ static void displayPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/display.html", "text/html", false, displayPageProcessor);
+    request->send(SPIFFS, "/display.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
 
 /**
- * Processor for display page template.
- * It is responsible for the data binding.
- *
- * @param[in] var   Name of variable in the template
- */
-static String displayPageProcessor(const String& var)
-{
-    String  result;
-
-    if (var == "WS_PROTOCOL")
-    {
-        result = WebConfig::WEBSOCKET_PROTOCOL;
-    }
-    else if (var == "WS_PORT")
-    {
-        result = WebConfig::WEBSOCKET_PORT;
-    }
-    else if (var == "WS_ENDPOINT")
-    {
-        result = WebConfig::WEBSOCKET_PATH;
-    }
-    else
-    {
-        result = commonPageProcessor(var);
-    }
-
-    return result;
-}
-
-/**
- * Development page, showing the log output on demand.
+ * About page, showing the log output on demand.
  *
  * @param[in] request   HTTP request
  */
-static void devPage(AsyncWebServerRequest* request)
+static void aboutPage(AsyncWebServerRequest* request)
 {
     if (nullptr == request)
     {
@@ -1452,37 +1169,32 @@ static void devPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/dev.html", "text/html", false, devPageProcessor);
+    request->send(SPIFFS, "/about.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
 
 /**
- * Processor for development page template.
- * It is responsible for the data binding.
+ * Debug page, showing the log output on demand.
  *
- * @param[in] var   Name of variable in the template
+ * @param[in] request   HTTP request
  */
-static String devPageProcessor(const String& var)
+static void debugPage(AsyncWebServerRequest* request)
 {
-    String  result;
-
-    if (var == "WS_PROTOCOL")
+    if (nullptr == request)
     {
-        result = WebConfig::WEBSOCKET_PROTOCOL;
-    }
-    else if (var == "WS_PORT")
-    {
-        result = WebConfig::WEBSOCKET_PORT;
-    }
-    else if (var == "WS_ENDPOINT")
-    {
-        result = WebConfig::WEBSOCKET_PATH;
-    }
-    else
-    {
-        result = commonPageProcessor(var);
+        return;
     }
 
-    return result;
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/debug.html", "text/html", false, tmplPageProcessor);
+
+    return;
 }

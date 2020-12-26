@@ -1,455 +1,528 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>$PAGE_TITLE$</title>
-    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
-    <link rel="stylesheet" href="/style/style.css" />
-    <script src="/js/menu.js"></script>
-    <style>
-        div.divSlot {
-            height: 8em;
-            width: 12em;
-            border: 2px solid #666666;
-            background-color: #ccc;
-            margin-right: 5px;
-            border-radius: 10px;
-            box-shadow: inset 0 0 3px #000;
-            text-align: center;
-            float: left;
-        }
-        div.locked {
-            background-image: repeating-linear-gradient(45deg, #ccc 0%, #ccc 2%, red 2%, red 4%, #ccc 4%);
-        }
-        p.dragableSlot {
-            border: 2px solid red;
-            padding: 4px 4px 4px 4px;
-            background-color: #666666;
-            margin: 1em 1em 1em 1em;
-            width: auto;
-        }
-        /* Prevent the text contents of draggable elements from being selectable. */
-        [draggable] {
-            -moz-user-select: none;
-            -khtml-user-select: none;
-            -webkit-user-select: none;
-            user-select: none;
-            cursor: move;
-            /* Required to make elements draggable in old WebKit */
-            -khtml-user-drag: element;
-            -webkit-user-drag: element;
-        }
-        .divSlot header {
-            color: #fff;
-            background: red;
-            text-shadow: #000 0 1px;
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-        }
-    </style>
-    <script src="/js/ws.js"></script>
-    <script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
-    <script src="/js/dragDropTouch.js"></script>
-    <script>
-        var matrixWidth         = 32;   // LED matrix width in number of LEDs
-        var matrixHeight        = 8;    // LED matrix height in number of LEDs
-        var ctx                 = null; // Canvas context
-        var pixelWidth          = 10;   // Width of a single LED in pixels
-        var pixelHeight         = 10;   // Height of a single LED in pixels
-        var timerId             = 0;    // Timer id
-        var period              = 400;  // Display refresh period in ms
-        var wsClient            = null; // Websocket client
-        var plugins             = [];   // List of all available plugins
-        var autoBrightnessCtrl  = false;// Is automatic brightness control enabled or disabled?
-        var brightness          = 0;    // Brightness [0; 255]
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        function onClosed() {
-            window.clearTimeout(timerId);
-            return;
-        }
-
-        function plot(x, y, color) {
-            if (null !== ctx) {
-                ctx.lineWidth = "1";
-                ctx.strokeStyle = color;
-                ctx.fillStyle = color;
-                ctx.fillRect(x * pixelWidth + x + 1, y * pixelHeight + y + 1, pixelWidth, pixelHeight);
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css">
+        <link rel="stylesheet" type="text/css" href="/style/style.css">
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
             }
-        }
 
-        function getDisplayContent() {
-            wsClient.getDisplayContent().then(function(rsp) {
-                var x       = 0;
-                var y       = 0;
-                var index   = 0;
-                var color   = 0;
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                    font-size: 3.5rem;
+                }
+            }
 
-                document.getElementById("slotId").innerHTML = "Slot: " + rsp.slotId;
+            div.divSlot {
+                height: 10em;
+                width: 12em;
+                border: 2px solid #666666;
+                background-color: #ccc;
+                margin-right: 5px;
+                border-radius: 10px;
+                box-shadow: inset 0 0 3px #000;
+                text-align: center;
+                float: left;
+            }
+            div.locked {
+                background-image: repeating-linear-gradient(45deg, #ccc 0%, #ccc 2%, red 2%, red 4%, #ccc 4%);
+            }
+            p.dragableSlot {
+                border: 2px solid red;
+                padding: 4px 4px 4px 4px;
+                background-color: #666666;
+                margin: 1em 1em 1em 1em;
+                width: auto;
+            }
+            /* Prevent the text contents of draggable elements from being selectable. */
+            [draggable] {
+                -moz-user-select: none;
+                -khtml-user-select: none;
+                -webkit-user-select: none;
+                user-select: none;
+                cursor: move;
+                /* Required to make elements draggable in old WebKit */
+                -khtml-user-drag: element;
+                -webkit-user-drag: element;
+            }
+            .divSlot header {
+                color: #fff;
+                background: red;
+                text-shadow: #000 0 1px;
+                padding: 5px;
+                border-bottom: 1px solid #ddd;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+            }
+        </style>
 
-                /* Handle display data */
-                for(y = 0; y < matrixHeight; ++y) {
-                    for(x = 0; x < matrixWidth; ++x) {
-                        if (rsp.data.length > index) {
-                            color   = parseInt(rsp.data[index]);
-                            red     = (color & 0xff0000) >> 16;
-                            green   = (color & 0x00ff00) >> 8;
-                            blue    = (color & 0x0000ff) >> 0;
-                            plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
-                            ++index;
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/index.html">Home <span class="sr-only">(current)</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/display.html">Display</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins</a>
+                            <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
+                                <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
+                                <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextLampPlugi.html">IconTextLamp Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextPlugin.html">IconText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/JustTextPlugin.html">JustText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/RainbowPlugin.html">Rainbow Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SunrisePlugin.html">Sunrise Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
+                                <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/settings.html">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/update.html">Update</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="developmentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Development</a>
+                            <div class="dropdown-menu" aria-labelledby="developmentDropdown">
+                                <a class="dropdown-item" href="/info.html">Info</a>
+                                <a class="dropdown-item" href="/debug.html">Debug</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">Display</h1>
+                <p>Slot: <span id="slotId">-</span></p>
+                <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
+                <p>Note, you can move the plugins with drag'n drop to other slots.</p>
+                <div id="divSlots">
+                </div>
+                <p style="clear: both;"><br /></p>
+                <p>
+                    <select id="pluginToInstall" size="1">
+                    </select>
+                    <br />
+                    <button class="btn btn-light" type="button" onclick="install()" disabled>Install</button>
+                </p>
+                <p>
+                    <ul class="list-group">
+                        <li class="list-group-item text-dark">Automatic brightness control: <span id="autoBrightnessCtrl">?</span> <button id="bAutoBrightnessCtrl" type="button" onclick="changeAutoBrightnessCtrl()" disabled>?</button></li>
+                        <li class="list-group-item text-dark">Brightness: <span id="brightness">?</span> <input type="range" id="sliderBrightness" min="0" max="255" onchange="changeBrightness()" disabled /></li>
+                    </ul>
+                </p>
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</span>
+            </div>
+        </footer>
+
+        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/popper.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <!-- Pixelix websocket library -->
+        <script type="text/javascript" src="/js/ws.js"></script>
+        <script type="text/javascript" src="/js/dragDropTouch.js"></script>
+        <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+
+        <!-- Custom javascript -->
+        <script>
+            var matrixWidth         = 32;   // LED matrix width in number of LEDs
+            var matrixHeight        = 8;    // LED matrix height in number of LEDs
+            var ctx                 = null; // Canvas context
+            var pixelWidth          = 10;   // Width of a single LED in pixels
+            var pixelHeight         = 10;   // Height of a single LED in pixels
+            var timerId             = 0;    // Timer id
+            var period              = 400;  // Display refresh period in ms
+            var wsClient            = null; // Websocket client
+            var plugins             = [];   // List of all available plugins
+            var autoBrightnessCtrl  = false;// Is automatic brightness control enabled or disabled?
+            var brightness          = 0;    // Brightness [0; 255]
+
+            /* Disable all UI elements. */
+            function disableUI() {
+                $("main :button").prop("disabled", true);
+                $("main :input").prop("disabled", true);
+            }
+
+            /* Enable all UI elements. */
+            function enableUI() {
+                $("main :button").prop("disabled", false);
+                $("main :input").prop("disabled", false);
+            }
+
+            /* If websocket connection is unexpectedly closed, clean up. */
+            function wsOnClosed() {
+                disableUI();
+                window.clearTimeout(timerId);
+                return;
+            }
+
+            function plot(x, y, color) {
+                if (null !== ctx) {
+                    ctx.lineWidth = "1";
+                    ctx.strokeStyle = color;
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x * pixelWidth + x + 1, y * pixelHeight + y + 1, pixelWidth, pixelHeight);
+                }
+            }
+
+            function getDisplayContent() {
+                wsClient.getDisplayContent().then(function(rsp) {
+                    var x       = 0;
+                    var y       = 0;
+                    var index   = 0;
+                    var color   = 0;
+
+                    $("#slotId").text(rsp.slotId);
+
+                    /* Handle display data */
+                    for(y = 0; y < matrixHeight; ++y) {
+                        for(x = 0; x < matrixWidth; ++x) {
+                            if (rsp.data.length > index) {
+                                color   = parseInt(rsp.data[index]);
+                                red     = (color & 0xff0000) >> 16;
+                                green   = (color & 0x00ff00) >> 8;
+                                blue    = (color & 0x0000ff) >> 0;
+                                plot(x, y, "rgb(" + red + ", " + green + ", " + blue + ")");
+                                ++index;
+                            }
                         }
                     }
-                }
-            }).catch(function(err) {
-                if ("undefined" !== typeof err) {
-                    console.error(err);
-                }
-            }).finally(function() {
-                timerId = window.setTimeout(getDisplayContent, period);
-            });
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                }).finally(function() {
+                    /* Start next update timer. */
+                    timerId = window.setTimeout(getDisplayContent, period);
+                });
 
-            return;
-        }
-
-        function install() {
-            var element = document.getElementById("pluginToInstall");
-            var pluginIndex = parseInt(element.options[element.selectedIndex].value);
-            var pluginName = plugins[pluginIndex];
-
-            return wsClient.install({
-                pluginName: pluginName
-            }).then(function(rsp) {
-                return updateSlotInfo();
-            }).catch(function(err) {
-                if ("undefined" !== typeof err) {
-                    console.error(err);
-                }
-                alert("Install " + pluginName + " failed.");
-            });
-        }
-
-        function uninstall(slotId) {
-            return wsClient.uninstall({
-                slotId: slotId
-            }).then(function(rsp) {
-                return updateSlotInfo();
-            }).catch(function(err) {
-                if ("undefined" !== typeof err) {
-                    console.error(err);
-                }
-                alert("Uninstall slot " + slotId + " failed.");
-            });
-        }
-
-        function move(uid, slotId) {
-            return wsClient.move({
-                uid: uid,
-                slotId: slotId
-            }).then(function(rsp) {
-            }).catch(function(err) {
-                if ("undefined" !== typeof err) {
-                    console.error(err);
-                }
-                alert("Moving failed.");
-            }).finally(function() {
-                return updateSlotInfo();
-            });
-        }
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-        }
-
-        function drag(ev) {
-            var src = document.getElementById(ev.target.id);
-            src.style.opacity = "0.4";
-            ev.dataTransfer.setData("src", ev.target.id);
-        }
-
-        function onDragEnd(ev) {
-            var src = document.getElementById(ev.target.id);
-            src.removeAttribute("style");
-        }
-
-        function drop(ev) {
-            ev.preventDefault();
-            var data = ev.dataTransfer.getData("src");
-            var src = document.getElementById(data);
-            var srcParent = src.parentNode;
-            var dst = ev.currentTarget.lastElementChild;
-            var dstParent = dst.parentNode;
-
-            if ("uninstall" == dstParent.id) {
-                uninstall(parseInt(srcParent.id));
-            } else if (src.id != dst.id) {
-                ev.currentTarget.replaceChild(src, dst);
-                srcParent.appendChild(dst);
-
-                move(parseInt(data), parseInt(dstParent.id));
+                return;
             }
-        }
 
-        function setDuration(slotId) {
-            var element = document.getElementById("duration" + slotId);
-            var duration = parseInt(element.value) * 1000;
-            return wsClient.setSlotDuration({
-                slotId: slotId,
-                duration: duration
-            }).then(function(rsp) {
-            }).catch(function(err) {
-                if ("undefined" !== typeof err) {
-                    console.error(err);
+            function install() {
+                var pluginIndex = parseInt($("#pluginToInstall").val());
+                var pluginName  = plugins[pluginIndex];
+
+                disableUI();
+
+                return wsClient.install({
+                    pluginName: pluginName
+                }).then(function(rsp) {
+                    return updateSlotInfo();
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Install " + pluginName + " failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function uninstall(slotId) {
+                disableUI();
+
+                return wsClient.uninstall({
+                    slotId: slotId
+                }).then(function(rsp) {
+                    return updateSlotInfo();
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Uninstall slot " + slotId + " failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function move(uid, slotId) {
+                return wsClient.move({
+                    uid: uid,
+                    slotId: slotId
+                }).then(function(rsp) {
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Moving failed.");
+                }).finally(function() {
+                    return updateSlotInfo();
+                });
+            }
+
+            function allowDrop(ev) {
+                ev.preventDefault();
+            }
+
+            function drag(ev) {
+                $("#" + ev.target.id).css("opacity", "0.4");
+                ev.dataTransfer.setData("src", ev.target.id);
+            }
+
+            function onDragEnd(ev) {
+                $("#" + ev.target.id).removeAttr("style");
+            }
+
+            function drop(ev) {
+                ev.preventDefault();
+                var data = ev.dataTransfer.getData("src");
+                var src = document.getElementById(data);
+                var srcParent = src.parentNode;
+                var dst = ev.currentTarget.lastElementChild;
+                var dstParent = dst.parentNode;
+
+                if ("uninstall" == dstParent.id) {
+                    uninstall(parseInt(srcParent.id));
+                } else if (src.id != dst.id) {
+                    ev.currentTarget.replaceChild(src, dst);
+                    srcParent.appendChild(dst);
+
+                    move(parseInt(data), parseInt(dstParent.id));
                 }
-                alert("Set duration failed.");
-            }).finally(function() {
-                return updateSlotInfo();
-            });
-        }
+            }
 
-        function updateSlotInfo() {
-            return wsClient.getSlots().then(function(rsp) {
-                var element = document.getElementById("slots");
-                var index = 0;
-                var row = null;
-                var cell = null;
+            function setDuration(slotId) {
+                var duration = parseInt($("#duration" + slotId).val()) * 1000;
+                return wsClient.setSlotDuration({
+                    slotId: slotId,
+                    duration: duration
+                }).then(function(rsp) {
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Set duration failed.");
+                }).finally(function() {
+                    return updateSlotInfo();
+                });
+            }
 
-                var divSlots = document.getElementById("divSlots");
-                var divSlot = null;
-                var dragableSlot = null;
-                var htmlStr = "";
+            function updateSlotInfo() {
+                return wsClient.getSlots().then(function(rsp) {
+                    var element = document.getElementById("slots");
+                    var index = 0;
+                    var row = null;
+                    var cell = null;
 
-                divSlots.innerHTML = "";
-                for(index = 0; index < rsp.slots.length; ++index) {
+                    var divSlots = document.getElementById("divSlots");
+                    var divSlot = null;
+                    var dragableSlot = null;
+                    var htmlStr = "";
+
+                    divSlots.innerHTML = "";
+                    for(index = 0; index < rsp.slots.length; ++index) {
+                        divSlot = document.createElement("div");
+
+                        if (false == rsp.slots[index].isLocked) {
+                            divSlot.setAttribute("class", "divSlot");
+                            divSlot.setAttribute("ondragover", "allowDrop(event)");
+                            divSlot.setAttribute("ondrop", "drop(event)");
+                        } else {
+                            divSlot.setAttribute("class", "divSlot locked");
+                        }
+
+                        divSlot.setAttribute("id", index);
+                        htmlStr  = "<header>";
+                        htmlStr += "Slot " + index + "<br />";
+                        htmlStr += "<input id=\"duration" + index + "\" type=\"number\" value=\"" + (rsp.slots[index].duration / 1000) + "\" min=\"1\" max=\"3600000\" onchange=\"setDuration(" + index + ")\"/>"
+                        htmlStr += "[s]";
+                        htmlStr += "</header>";
+                        divSlot.innerHTML = htmlStr;
+                        divSlots.appendChild(divSlot);
+
+                        dragableSlot = document.createElement("p");
+                        dragableSlot.setAttribute("class", "dragableSlot");
+
+                        if ((false == rsp.slots[index].isLocked) &&
+                            (0 < rsp.slots[index].name.length)) {
+                            dragableSlot.setAttribute("draggable", "true");
+                            dragableSlot.setAttribute("ondragstart", "drag(event)");
+                            dragableSlot.setAttribute("ondragend", "onDragEnd(event)");
+                        }
+
+                        if (0 == rsp.slots[index].name.length) {
+                            dragableSlot.setAttribute("id", "A" + index);
+                            dragableSlot.innerHTML = "-<br />UID -";
+                        } else {
+                            dragableSlot.setAttribute("id", rsp.slots[index].uid);
+                            dragableSlot.innerHTML = rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid;
+                        }
+                        divSlot.appendChild(dragableSlot);
+                    }
+
                     divSlot = document.createElement("div");
-
-                    if (false == rsp.slots[index].isLocked) {
-                        divSlot.setAttribute("class", "divSlot");
-                        divSlot.setAttribute("ondragover", "allowDrop(event)");
-                        divSlot.setAttribute("ondrop", "drop(event)");
-                    } else {
-                        divSlot.setAttribute("class", "divSlot locked");
-                    }
-
-                    divSlot.setAttribute("id", index);
-                    htmlStr  = "<header>";
-                    htmlStr += "Slot " + index + "<br />";
-                    htmlStr += "<input id=\"duration" + index + "\" type=\"number\" value=\"" + (rsp.slots[index].duration / 1000) + "\" min=\"1\" max=\"3600000\" onchange=\"setDuration(" + index + ")\"/>"
-                    htmlStr += "[s]";
-                    htmlStr += "</header>";
-                    divSlot.innerHTML = htmlStr;
+                    divSlot.setAttribute("class", "divSlot");
+                    divSlot.setAttribute("ondragover", "allowDrop(event)");
+                    divSlot.setAttribute("ondrop", "drop(event)");
+                    divSlot.setAttribute("id", "uninstall");
+                    divSlot.innerHTML = "<header>Uninstall</header>";
                     divSlots.appendChild(divSlot);
-
-                    dragableSlot = document.createElement("p");
-                    dragableSlot.setAttribute("class", "dragableSlot");
-
-                    if ((false == rsp.slots[index].isLocked) &&
-                        (0 < rsp.slots[index].name.length)) {
-                        dragableSlot.setAttribute("draggable", "true");
-                        dragableSlot.setAttribute("ondragstart", "drag(event)");
-                        dragableSlot.setAttribute("ondragend", "onDragEnd(event)");
-                    }
-
-                    if (0 == rsp.slots[index].name.length) {
-                        dragableSlot.setAttribute("id", "A" + index);
-                        dragableSlot.innerHTML = "-<br />UID -";
-                    } else {
-                        dragableSlot.setAttribute("id", rsp.slots[index].uid);
-                        dragableSlot.innerHTML = rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid;
-                    }
-                    divSlot.appendChild(dragableSlot);
-                }
-
-                divSlot = document.createElement("div");
-                divSlot.setAttribute("class", "divSlot");
-                divSlot.setAttribute("ondragover", "allowDrop(event)");
-                divSlot.setAttribute("ondrop", "drop(event)");
-                divSlot.setAttribute("id", "uninstall");
-                divSlot.innerHTML = "<header>Uninstall</header>";
-                divSlots.appendChild(divSlot);
-
-                while(1 < element.rows.length) {
-                    element.deleteRow(-1);
-                }
-
-                for(index = 0; index < rsp.slots.length; ++index) {
-                    row = element.insertRow(-1);
-                    cell = row.insertCell(-1);
-                    cell.innerHTML = index;
-                    cell = row.insertCell(-1);
-                    if (0 === rsp.slots[index].name.length) {
-                        cell.innerHTML = "-";
-                    } else {
-                        cell.innerHTML = rsp.slots[index].name;
-                    }
-                    cell = row.insertCell(-1);
-                    if (0 === rsp.slots[index].name.length) {
-                        cell.innerHTML = "-";
-                    } else {
-                        cell.innerHTML = rsp.slots[index].uid;
-                    }
-                    cell = row.insertCell(-1);
-                    if (false === rsp.slots[index].isLocked) {
-                        cell.innerHTML = "false";
-                    } else {
-                        cell.innerHTML = "true";
-                    }
-                    cell = row.insertCell(-1);
-                    cell.innerHTML = rsp.slots[index].duration;
-                    cell = row.insertCell(-1);
-                    if (0 < rsp.slots[index].name.length) {
-                        cell.innerHTML = "<input type=\"button\" value=\"Uninstall\" onclick=\"uninstall(" + index + ")\" />";
-                    }
-                }
-            });
-        }
-
-        function updateBrightness() {
-            document.getElementById("brightness").innerHTML = "" + (brightness * 100 / 255).toFixed(2) + " %";
-            document.getElementById("sliderBrightness").value = brightness;
-        }
-
-        function changeBrightness() {
-            wsClient.setBrightness({
-                brightness: parseInt(document.getElementById("sliderBrightness").value)
-            }).then(function(rsp) {
-                brightness = rsp.brightness;
-                autoBrightnessCtrl = rsp.automaticBrightnessControl;
-                updateAutoBrightnessCtrl();
-                updateBrightness();
-            }).catch(function(err) {
-                if ("undefined" !== typeof err) {
-                    console.error(err);
-                }
-                alert("Changing brightness failed.");
-                updateBrightness();
-            });
-        }
-
-        function updateAutoBrightnessCtrl() {
-            if (false === autoBrightnessCtrl) {
-                document.getElementById("autoBrightnessCtrl").innerHTML = "Disabled";
-                document.getElementById("bAutoBrightnessCtrl").value = "Enable";
-            } else {
-                document.getElementById("autoBrightnessCtrl").innerHTML = "Enabled";
-                document.getElementById("bAutoBrightnessCtrl").value = "Disable";
+                });
             }
-        }
 
-        function changeAutoBrightnessCtrl() {
-            wsClient.setBrightness({
-                brightness: brightness,
-                automaticBrightnessControl: (false == autoBrightnessCtrl) ? true : false
-            }).then(function(rsp) {
-                brightness = rsp.brightness;
-                autoBrightnessCtrl = rsp.automaticBrightnessControl;
-                updateAutoBrightnessCtrl();
-                updateBrightness();
-            }).catch(function(err) {
-                if ("undefined" !== typeof err) {
-                    console.error(err);
+            function updateBrightness() {
+                $("#brightness").text((brightness * 100 / 255).toFixed(2));
+                $("#sliderBrightness").val(brightness);
+            }
+
+            function changeBrightness() {
+                disableUI();
+
+                wsClient.setBrightness({
+                    brightness: parseInt(document.getElementById("sliderBrightness").value)
+                }).then(function(rsp) {
+                    brightness = rsp.brightness;
+                    autoBrightnessCtrl = rsp.automaticBrightnessControl;
+                    updateAutoBrightnessCtrl();
+                    updateBrightness();
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Changing brightness failed.");
+                    updateBrightness();
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function updateAutoBrightnessCtrl() {
+                if (false === autoBrightnessCtrl) {
+                    $("#autoBrightnessCtrl").text("Disabled");
+                    $("#bAutoBrightnessCtrl").text("Enable");
+                } else {
+                    $("#autoBrightnessCtrl").text("Enabled");
+                    $("#bAutoBrightnessCtrl").text("Disable");
                 }
-                alert("Changing automatic brightness control failed.");
+            }
+
+            function changeAutoBrightnessCtrl() {
+                wsClient.setBrightness({
+                    brightness: brightness,
+                    automaticBrightnessControl: (false == autoBrightnessCtrl) ? true : false
+                }).then(function(rsp) {
+                    brightness = rsp.brightness;
+                    autoBrightnessCtrl = rsp.automaticBrightnessControl;
+                    updateAutoBrightnessCtrl();
+                    updateBrightness();
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Changing automatic brightness control failed.");
+                });
+            }
+
+            /* Execute after page is ready. */
+            $(document).ready(function() {
+                var displayCanvas = document.getElementById("canvas");
+                ctx = displayCanvas.getContext("2d");
+
+                wsClient = new pixelix.ws.Client();
+
+                /* Connect to pixelix */
+                wsClient.connect({
+                    protocol: "~WS_PROTOCOL~",
+                    hostname: location.hostname,
+                    port: parseInt("~WS_PORT~"),
+                    endpoint: "~WS_ENDPOINT~",
+                    onClosed: wsOnClosed
+                }).then(function(rsp) {
+                    /* Get list of available plugins */
+                    return wsClient.getPlugins();
+                }).then(function(rsp) {
+                    var index = 0;
+
+                    /* Store plugin list */
+                    plugins = rsp.plugins;
+
+                    /* Update plugin dropdown list */
+                    for(index = 0; index < plugins.length; ++index) {
+                        $("<option>").val(index).text(plugins[index]).appendTo("#pluginToInstall");
+                    }
+
+                    /* Update the slot informations, shown to user. */
+                    return updateSlotInfo();
+                }).then(function(rsp) {
+                    /* Get brightness information */
+                    return wsClient.getBrightness();
+                }).then(function(rsp) {
+                    brightness          = rsp.brightness;
+                    autoBrightnessCtrl  = rsp.automaticBrightnessControl;
+                    updateAutoBrightnessCtrl();
+                    updateBrightness();
+                }).then(function(rsp) {
+                    /* Request display content periodically. */
+                    timerId = window.setTimeout(getDisplayContent, period);
+
+                    /* UI is enabled at least. */
+                    enableUI();
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                });
             });
-        }
 
-        window.onload = function() {
-            var displayCanvas = document.getElementById("canvas");
-            ctx = displayCanvas.getContext("2d");
+            /* If the page is left, there shall be no message shown regarding
+             * unexpected websocket lost.
+             */
+             $(window).bind("beforeunload", function() {
+                isPageUnload = true;
 
-            injectMenu("navbar", window.location.pathname);
-
-            wsClient = new pixelix.ws.Client();
-            wsClient.connect({
-                protocol: "$WS_PROTOCOL$",
-                hostname: location.hostname,
-                port: $WS_PORT$,
-                endpoint: "$WS_ENDPOINT$",
-                onClosed: onClosed,
-            }).then(function(rsp) {
-                return wsClient.getPlugins();
-            }).then(function(rsp) {
-                var element = document.getElementById("pluginToInstall");
-                var option = null;
-                var index = 0;
-
-                plugins = rsp.plugins;
-
-                for(index = 0; index < plugins.length; ++index) {
-                    option = document.createElement("option");
-                    option.value = index;
-                    option.text = plugins[index];
-                    element.add(option);
-                }
-
-                return updateSlotInfo();
-            }).then(function(rsp) {
-                return wsClient.getBrightness();
-            }).then(function(rsp) {
-                brightness = rsp.brightness;
-                autoBrightnessCtrl = rsp.automaticBrightnessControl;
-                updateAutoBrightnessCtrl();
-                updateBrightness();
-            }).then(function(rsp) {
-                timerId = window.setTimeout(getDisplayContent, period);
-            }).catch(function(err) {
-                if ("undefined" !== typeof err) {
-                    console.error(err);
+                if (null !== wsClient) {
+                    wsClient.disconnect();
                 }
             });
-        };
-
-        window.onbeforeunload = function() {
-            wsClient.disconnect();
-        };
-    </script>
-</head>
-<body>
-<div class="header">
-    $HEADER$
-</div>
-<div id="navbar" class="topnav">
-</div>
-<div class="main">
-    <h2>Display</h2>
-    <p id="slotId">Slot: -</p>
-    <canvas id="canvas" width="353" height="89" style="border: 1px solid #000000; background-color: black;"></canvas>
-    <p></p>
-    <p>Note, you can move the plugins with drag'n drop to other slots.</p>
-    <div id="divSlots">
-    </div>
-    <p style="clear: both;"><br /></p>
-    <table id="slots">
-        <tr>
-            <th>Slot</th><th>Installed plugin</th><th>Plugin UID</th><th>Is locked?</th><th>Duration [ms]</th><th>Action</th>
-        </tr>
-    </table>
-    <p></p>
-    <p>
-        <select id="pluginToInstall" size="1">
-        </select>
-        <br />
-        <input type="button" value="Install" onclick="install()" />
-    </p>
-    <table border="0">
-        <tr>
-            <td>Automatic brightness control:</td>
-            <td id="autoBrightnessCtrl"></td>
-            <td><input id="bAutoBrightnessCtrl" type="button" value="" onclick="changeAutoBrightnessCtrl()" /></td>
-        </tr>
-        <tr>
-            <td>Brightness:</td>
-            <td id="brightness"></td>
-            <td>
-                <input type="range" id="sliderBrightness" min="0" max="255" onchange="changeBrightness()" />
-            </td>
-        </tr>
-    </table>
-</div>
-<div class="footer">
-    <hr />
-    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
-</div>
-</body>
+        </script>
+    </body>
 </html>

@@ -1,166 +1,253 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>$PAGE_TITLE$</title>
-    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
-    <link rel="stylesheet" href="/style/style.css" />
-    <script src="/js/menu.js"></script>
-    <script src="/js/utils.js"></script>
-    <script>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        var pluginName = "CountdownPlugin";
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css">
+        <link rel="stylesheet" type="text/css" href="/style/style.css">
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
 
-        function enableUI() {
-            utils.enableForm("myForm", true);
-        }
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                    font-size: 3.5rem;
+                }
+            }
+        </style>
 
-        function disableUI() {
-            utils.enableForm("myForm", false);
-        }
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/display.html">Display</a>
+                        </li>
+                        <li class="nav-item dropdown active">
+                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins <span class="sr-only">(current)</span></a>
+                            <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
+                                <a class="dropdown-item active" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
+                                <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextLampPlugi.html">IconTextLamp Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextPlugin.html">IconText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/JustTextPlugin.html">JustText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/RainbowPlugin.html">Rainbow Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SunrisePlugin.html">Sunrise Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
+                                <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/settings.html">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/update.html">Update</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="developmentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Development</a>
+                            <div class="dropdown-menu" aria-labelledby="developmentDropdown">
+                                <a class="dropdown-item" href="/info.html">Info</a>
+                                <a class="dropdown-item" href="/debug.html">Debug</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
 
-        function getPluginInstances() {
-            return utils.makeRequest({
-                method: "GET",
-                url: "/rest/api/v1/display/slots"
-            }).then(function(rsp) {
-                var index   = 0;
-                var cnt     = 0;
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">CountdownPlugin</h1>
+                <p><img src="/images/CountdownPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin shows the remaining days until a configured target date.</p>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get target date and target day description.</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                </ul>
+                <h3 class="mt-1">Set target day and target day desription.</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&plural=&lt;PLURAL&gt;&singular=&lt;SINGULAR&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>DAY: The target date day.</li>
+                    <li>MONTH: The target date month.</li>
+                    <li>YEAR: The target date year (YYYY format, e.g. 2020)</li>
+                    <li>PLURAL: The unit in plural form, e.g. DAYS.</li>
+                    <li>SINGULAR: The unit in singular form, e.g. DAY.</li>
+                </ul>
+                <h3 class="mt-2">Configuration</h3>
+                <h3 class="mt-1">Target Date</h3>
+                <form id="myForm" action="javascript:setTargetDate(pluginUid.options[pluginUid.selectedIndex].value, targetDate.valueAsDate, targetDayPlural.value, targetDaySingular.value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUid" size="1" onChange="getTargetDate(pluginUid.options[pluginUid.selectedIndex].value, 'targetDate', 'targetDayPlural', 'targetDaySingular')">
+                    </select>
+                    <br />
+                    <label for="targetDate">Target date:</label><br />
+                    <input type="date" id="targetDate" name="targetDate" value="2020-09-01" /><br />
+                    <label for="targetDayPlural">Target day in plural form:</label><br />
+                    <input type="text" id="targetDayPlural" name="targetDayPlural" value="DAYS" /><br />
+                    <label for="targetDaySingular">Target day in singular form:</label><br />
+                    <input type="text" id="targetDaySingular" name="targetDaySingular" value="DAY" /><br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>            
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</span>
+            </div>
+        </footer>
 
-                for(index = 0; index < rsp.data.slots.length; ++index) {
-                    if (rsp.data.slots[index].name === pluginName) {
+        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/popper.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <!-- Standard utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
 
-                        var element = document.getElementById("pluginUid");
-                        var option  = document.createElement("option");
+        <script>
 
-                        option.value = rsp.data.slots[index].uid;
-                        option.text = rsp.data.slots[index].uid;
-                        element.add(option);
-
-                        ++cnt;
+            var pluginName = "CountdownPlugin";
+    
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+    
+            function getPluginInstances() {
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/slots"
+                }).then(function(rsp) {
+                    var index   = 0;
+                    var cnt     = 0;
+    
+                    for(index = 0; index < rsp.data.slots.length; ++index) {
+                        if (rsp.data.slots[index].name === pluginName) {
+    
+                            var element = document.getElementById("pluginUid");
+                            var option  = document.createElement("option");
+    
+                            option.value = rsp.data.slots[index].uid;
+                            option.text = rsp.data.slots[index].uid;
+                            element.add(option);
+    
+                            ++cnt;
+                        }
                     }
-                }
+    
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+    
+            function getTargetDate(pluginUid, targetDateId, targetDayPluralId, targetDaySingularId) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown"
+                }).then(function(rsp) {
+                    var targetDateInput         = document.getElementById(targetDateId);
+                    var targetDayPluralInput    = document.getElementById(targetDayPluralId);
+                    var targetDaySingularInput  = document.getElementById(targetDaySingularId);
+    
+                    targetDateInput.valueAsDate     = new Date(rsp.data.year + "-" + rsp.data.month + "-" + rsp.data.day);
+                    targetDayPluralInput.value      = rsp.data.plural;
+                    targetDaySingularInput.value    = rsp.data.singular;
+    
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+    
+            function setTargetDate(pluginUid, targetDate, targetDayPlural, targetDaySingular) {
+                disableUI();
+    
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
+                    parameter: {
+                        day: targetDate.getDate(),
+                        month: targetDate.getMonth() + 1,
+                        year: targetDate.getFullYear(),
+                        plural: targetDayPlural,
+                        singular: targetDaySingular
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
 
-                return Promise.resolve(cnt);
-            }).catch(function(rsp) {
-                alert("Internal error.");
-                return Promise.resolve(0);
+            $(document).ready(function() {
+
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+    
+                    if (0 < cnt) {
+    
+                        return getTargetDate(
+                            select.options[select.selectedIndex].value,
+                            "targetDate",
+                            "targetDayPlural",
+                            "targetDaySingular"
+                        );
+                    }
+                });
             });
-        };
-
-        function getTargetDate(pluginUid, targetDateId, targetDayPluralId, targetDaySingularId) {
-            disableUI();
-            return utils.makeRequest({
-                method: "GET",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown"
-            }).then(function(rsp) {
-                var targetDateInput         = document.getElementById(targetDateId);
-                var targetDayPluralInput    = document.getElementById(targetDayPluralId);
-                var targetDaySingularInput  = document.getElementById(targetDaySingularId);
-
-                targetDateInput.valueAsDate     = new Date(rsp.data.year + "-" + rsp.data.month + "-" + rsp.data.day);
-                targetDayPluralInput.value      = rsp.data.plural;
-                targetDaySingularInput.value    = rsp.data.singular;
-
-            }).catch(function(rsp) {
-                alert("Internal error.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        function setTargetDate(pluginUid, targetDate, targetDayPlural, targetDaySingular) {
-            disableUI();
-
-            return utils.makeRequest({
-                method: "POST",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
-                parameter: {
-                    day: targetDate.getDate(),
-                    month: targetDate.getMonth() + 1,
-                    year: targetDate.getFullYear(),
-                    plural: targetDayPlural,
-                    singular: targetDaySingular
-                }
-            }).then(function(rsp) {
-                alert("Ok.");
-            }).catch(function(rsp) {
-                alert("Failed.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        window.onload = function() {
-            injectMenu("navbar", "/plugins.html");
-            utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
-            
-            /* Disable all forms, until the plugin instances are loaded. */
-            disableUI();
-
-            /* Load all plugin instances. */
-            getPluginInstances().then(function(cnt) {
-                var select = document.getElementById("pluginUid");
-
-                if (0 < cnt) {
-
-                    return getTargetDate(
-                        select.options[select.selectedIndex].value,
-                        "targetDate",
-                        "targetDayPlural",
-                        "targetDaySingular"
-                    );
-                }
-            });
-        };
-    </script>
-</head>
-<body>
-<div class="header">
-    $HEADER$
-</div>
-<div id="navbar" class="topnav">
-</div>
-<div class="main">
-    <h2>CountdownPlugin</h2>
-    <img src="/images/CountdownPlugin.jpg" alt="Screenshot" />
-    <p>The plugin shows the remaining days until a configured target date.</p>
-    <h3>REST API</h3>
-    <h4>Get target date and target day description.</h4>
-    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown</pre>
-    <ul>
-        <li>PLUGIN-UID: The plugin unique id.</li>
-    </ul>
-    <h4>Set target day and target day desription.</h4>
-    <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&plural=&lt;PLURAL&gt;&singular=&lt;SINGULAR&gt;</pre>
-    <ul>
-        <li>PLUGIN-UID: The plugin unique id.</li>
-        <li>DAY: The target date day.</li>
-        <li>MONTH: The target date month.</li>
-        <li>YEAR: The target date year (YYYY format, e.g. 2020)</li>
-        <li>PLURAL: The unit in plural form, e.g. DAYS.</li>
-        <li>SINGULAR: The unit in singular form, e.g. DAY.</li>
-    </ul>
-    <h3>Configuration</h3>
-    <h4>Target Date</h4>
-    <form id="myForm" action="javascript:setTargetDate(pluginUid.options[pluginUid.selectedIndex].value, targetDate.valueAsDate, targetDayPlural.value, targetDaySingular.value)">
-        <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUid" size="1" onChange="getTargetDate(pluginUid.options[pluginUid.selectedIndex].value, 'targetDate', 'targetDayPlural', 'targetDaySingular')">
-        </select>
-        <br />
-        <label for="targetDate">Target date:</label><br />
-        <input type="date" id="targetDate" name="targetDate" value="2020-09-01" /><br />
-        <label for="targetDayPlural">Target day in plural form:</label><br />
-        <input type="text" id="targetDayPlural" name="targetDayPlural" value="DAYS" /><br />
-        <label for="targetDaySingular">Target day in singular form:</label><br />
-        <input type="text" id="targetDaySingular" name="targetDaySingular" value="DAY" /><br />
-        <input name="submit" type="submit" value="Update"/>
-    </form>
-</div>
-<div class="footer">
-    <hr />
-    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
-</div>
-</body>
+        </script>
+    </body>
 </html>

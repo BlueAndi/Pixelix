@@ -49,6 +49,9 @@ For more information, see the [documentation](./doc/README.md).
 * [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.
 * [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (RMT).
 * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) - Webserver.
+* [Bootstrap](https://getbootstrap.com/) - CSS Framework.
+* [POPPER JS](https://popper.js.org/) - POPPER JS
+* [jQuery](https://jquery.com/) - Javascript librariy for DOM handling.
 
 # FAQ
 
