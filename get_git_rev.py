@@ -68,3 +68,4 @@ env.Append(BUILD_FLAGS=[ softwareVersion, softwareRevision, softwareRevisionShor
 print("Software version       : " + getVersion())
 print("Software revision long : " + getGitRevisionHash())
 print("Software revision short: " + getGitRevisionShortHash())
+print("Software branch        : " + getCurrentGitBranch())
