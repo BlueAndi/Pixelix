@@ -141,7 +141,7 @@
                             </tr>
                             <tr>
                                 <td>Available Heap Size</td>
-                                <td>~AVAILABLE_HEAP_SIZE~ byte</td>
+                                <td>~HEAP_SIZE_AVAILABLE~ byte</td>
                             </tr>
                         </tbody>
                     </table>
@@ -238,7 +238,7 @@
                             </tr>
                             <tr>
                                 <td>Used Filesystem Size</td>
-                                <td>~USED_FS_SIZE~ byte</td>
+                                <td>~FS_SIZE_USED~ byte</td>
                             </tr>
                         </tbody>
                     </table>
@@ -268,10 +268,10 @@
             var ctxChartFs          = null;
             var chartHeap           = null;
             var chartFs             = null;
-            var availableHeapSize   = parseInt("~AVAILABLE_HEAP_SIZE~");
+            var availableHeapSize   = parseInt("~HEAP_SIZE_AVAILABLE~");
             var heapSize            = parseInt("~HEAP_SIZE~");
             var filesystemSize      = parseInt("~FS_SIZE~");
-            var usedFilesystemSize  = parseInt("~USED_FS_SIZE~");
+            var usedFilesystemSize  = parseInt("~FS_SIZE_USED~");
 
             if (isNaN(availableHeapSize)) {
                 availableHeapSize = 0

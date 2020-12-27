@@ -64,6 +64,15 @@
  * Types and classes
  *****************************************************************************/
 
+/**
+ * This type defines a template keyword to function.
+ */
+struct TmplKeyWordFunc
+{
+    const char* keyword;        /**< Keyword */
+    String      (*func)(void);  /**< Function to call */
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -73,6 +82,9 @@ static bool isValidHostname(const String& hostname);
 
 static String tmplPageProcessor(const String& var);
 
+static void aboutPage(AsyncWebServerRequest* request);
+static void debugPage(AsyncWebServerRequest* request);
+static void displayPage(AsyncWebServerRequest* request);
 static void indexPage(AsyncWebServerRequest* request);
 static void infoPage(AsyncWebServerRequest* request);
 static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDocument& jsonDoc);
@@ -80,9 +92,14 @@ static void settingsPage(AsyncWebServerRequest* request);
 static void updatePage(AsyncWebServerRequest* request);
 static void uploadPage(AsyncWebServerRequest* request);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
-static void displayPage(AsyncWebServerRequest* request);
-static void aboutPage(AsyncWebServerRequest* request);
-static void debugPage(AsyncWebServerRequest* request);
+
+namespace tmpl
+{
+    static String getEspChipId();
+    static String getEspType();
+    static String getFlashChipMode();
+    static String getSettingsData();
+};
 
 /******************************************************************************
  * Local Variables
@@ -105,6 +122,36 @@ static const uint32_t   SPIFFS_FILENAME_LENGTH_LIMIT    = 32U;
 
 /** Flag used to signal any kind of file upload error. */
 static bool             gIsUploadError                  = false;
+
+/**
+ * List of all used template keywords and the function how to retrieve the information.
+ * The list is alphabetic sorted in ascending order.
+ */
+static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
+{
+    "ARDUINO_IDF_BRANCH",   []() -> String { return CONFIG_ARDUINO_IDF_BRANCH; },
+    "ESP_CHIP_ID",          tmpl::getEspChipId,
+    "ESP_CHIP_REV",         []() -> String { return String(ESP.getChipRevision()); },
+    "ESP_CPU_FREQ",         []() -> String { return String(ESP.getCpuFreqMHz()); },
+    "ESP_SDK_VERSION",      []() -> String { return ESP.getSdkVersion(); },
+    "ESP_TYPE",             tmpl::getEspType,
+    "FILESYSTEM_FILENAME",  []() -> String { return FILESYSTEM_FILENAME; },
+    "FIRMWARE_FILENAME",    []() -> String { return FIRMWARE_FILENAME; },
+    "FLASH_CHIP_MODE",      tmpl::getFlashChipMode,
+    "FLASH_CHIP_SIZE",      []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); },
+    "FLASH_CHIP_SPEED",     []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); },
+    "FS_SIZE",              []() -> String { return String(SPIFFS.totalBytes()); },
+    "FS_SIZE_USED",         []() -> String { return String(SPIFFS.usedBytes()); },
+    "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
+    "HEAP_SIZE_AVAILABLE",  []() -> String { return String(ESP.getFreeHeap()); },
+    "LWIP_VERSION",         []() -> String { return LWIP_VERSION_STRING; },
+    "REVISION",             []() -> String { return Version::SOFTWARE_REV; },
+    "SETTINGS_DATA",        tmpl::getSettingsData,
+    "VERSION",              []() -> String { return Version::SOFTWARE_VER; },
+    "WS_ENDPOINT",          []() -> String { return WebConfig::WEBSOCKET_PATH; },
+    "WS_PORT",              []() -> String { return String(WebConfig::WEBSOCKET_PORT); },
+    "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; }
+};
 
 /******************************************************************************
  * Public Methods
@@ -304,268 +351,97 @@ static bool isValidHostname(const String& hostname)
  */
 static String tmplPageProcessor(const String& var)
 {
-    String  result = var;
+    String  result  = var;
+    uint8_t index   = 0U;
+    bool    isFound = false;
 
-    if (var =="ESP_TYPE")
+    while ((index < UTIL_ARRAY_NUM(gTmplKeyWordToFunc)) && (false == isFound))
     {
-#if defined(ESP32)
-        result = "ESP32";
-#elif defined(ESP32S2)
-        result = "ESP32S2";
-#else
-        result ="UNKNOWN";
-#endif
-    }
-    else if (var == "ESP_CHIP_REV")
-    {
-        result = ESP.getChipRevision();
-    }
-    else if (var == "ESP_CHIP_ID")
-    {
-        uint64_t    chipId      = ESP.getEfuseMac();
-        uint32_t    highPart    = (chipId >> 32U) & 0x0000ffffU;
-        uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
-        char        chipIdStr[13];
-
-        snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
-
-        result = chipIdStr;
-    }
-    else if (var == "ESP_CPU_FREQ")
-    {
-        result = ESP.getCpuFreqMHz();
-    }
-    /* ----- Software Versions ----- */
-    else if (var == "VERSION")
-    {
-        result = Version::SOFTWARE_VER;
-    }
-    else if (var == "REVISION")
-    {
-        result = Version::SOFTWARE_REV;
-    }
-    else if (var == "ESP_SDK_VERSION")
-    {
-        result = ESP.getSdkVersion();
-    }
-    else if (var == "ARDUINO_IDF_BRANCH")
-    {
-        result = CONFIG_ARDUINO_IDF_BRANCH;
-    }
-    else if (var == "LWIP_VERSION")
-    {
-        result = LWIP_VERSION_STRING;
-    }
-    /* ----- Software Status ----- */
-    else if (var == "HEAP_SIZE")
-    {
-        result = ESP.getHeapSize();
-    }
-    else if (var == "AVAILABLE_HEAP_SIZE")
-    {
-        result = ESP.getFreeHeap();
-    }
-    else if (var == "FS_SIZE")
-    {
-        result = SPIFFS.totalBytes();
-    }
-    else if (var == "USED_FS_SIZE")
-    {
-        result = SPIFFS.usedBytes();
-    }
-    /* ----- Flash ----- */
-    else if (var == "FLASH_CHIP_MODE")
-    {
-        switch(ESP.getFlashChipMode())
+        if (var == gTmplKeyWordToFunc[index].keyword)
         {
-        case FM_QIO:
-            result = "QUIO";
-            break;
-
-        case FM_QOUT:
-            result = "QOUT";
-            break;
-
-        case FM_DIO:
-            result = "DIO";
-            break;
-
-        case FM_DOUT:
-            result = "DOUT";
-            break;
-
-        case FM_FAST_READ:
-            result = "FAST_READ";
-            break;
-
-        case FM_SLOW_READ:
-            result = "SLOW_READ";
-            break;
-
-        case FM_UNKNOWN:
-            /* fallthrough */
-
-        default:
-            result = "UNKNOWN";
-            break;
+            result  = gTmplKeyWordToFunc[index].func();
+            isFound = true;
         }
-    }
-    else if (var == "FLASH_CHIP_SIZE")
-    {
-        result = ESP.getFlashChipSize() / (1024U * 1024U);
-    }
-    else if (var == "FLASH_CHIP_SPEED")
-    {
-        result = ESP.getFlashChipSpeed() / (1000U * 1000U);
-    }
-    else if (var == "LIST_OF_PLUGINS")
-    {
-        const String    DELIMITER   = ", ";
-        const char*     pluginName  = PluginMgr::getInstance().findFirst();
-        bool            isFirst     = true;
 
-        while(nullptr != pluginName)
-        {
-            String uri = fitToSpiffs(PLUGIN_PAGE_PATH, String(pluginName), PLUGIN_PAGE_FILE_EXTENSION);
-
-            if (false == isFirst)
-            {
-                result += DELIMITER;
-            }
-            else
-            {
-                isFirst = false;
-            }
-
-            result += "{ name: \"";
-            result += pluginName;
-            result += "\", page: \"";
-            result += uri;
-            result += "\"}";
-
-            pluginName = PluginMgr::getInstance().findNext();
-        }
-    }
-    else if (var == "SETTINGS_DATA")
-    {
-        if (true == Settings::getInstance().open(true))
-        {
-            KeyValue**          list            = Settings::getInstance().getList();
-            uint8_t             index           = 0U;
-            const size_t        JSON_DOC_SIZE   = 4096U;
-            DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-            const size_t        MAX_USAGE       = 80U;
-            size_t              usageInPercent  = 0U;
-
-            result.clear();
-            for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
-            {
-                KeyValue*   parameter   = list[index];
-                JsonObject  jsonSetting = jsonDoc.createNestedObject();
-                JsonObject  jsonInput   = jsonSetting.createNestedObject("input");
-
-                jsonSetting["title"]    = parameter->getName();
-                jsonInput["name"]       = parameter->getKey();
-
-                switch(parameter->getValueType())
-                {
-                case KeyValue::TYPE_STRING:
-                    {
-                        KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
-                        jsonInput["type"]       = "text";
-                        jsonInput["value"]      = kvStr->getValue();
-                        jsonInput["size"]       = kvStr->getMaxLength();
-                        jsonInput["minlength"]  = kvStr->getMinLength();
-                        jsonInput["maxlength"]  = kvStr->getMaxLength();
-                    }
-                    break;
-
-                case KeyValue::TYPE_BOOL:
-                    {
-                        KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
-                        jsonInput["type"]       = "checkbox";
-                        jsonInput["value"]      = kvBool->getKey();
-
-                        if (true == kvBool->getValue())
-                        {
-                            jsonInput["checked"] = "checked";
-                        }
-                    }
-                    break;
-
-                case KeyValue::TYPE_UINT8:
-                    {
-                        KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(parameter);
-                        jsonInput["type"]   = "number";
-                        jsonInput["value"]  = kvUInt8->getValue();
-                        jsonInput["min"]    = kvUInt8->getMin();
-                        jsonInput["max"]    = kvUInt8->getMax();
-                    }
-                    break;
-
-                case KeyValue::TYPE_INT32:
-                {
-                    KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
-                    jsonInput["type"]   = "number";
-                    jsonInput["value"]  = kvInt32->getValue();
-                    jsonInput["min"]    = kvInt32->getMin();
-                    jsonInput["max"]    = kvInt32->getMax();
-                }
-                break;
-
-                case KeyValue::TYPE_JSON:
-                    {
-                        KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
-                        jsonInput["type"]       = "text";
-                        jsonInput["value"]      = kvJson->getValue();
-                        jsonInput["size"]       = kvJson->getMaxLength();
-                        jsonInput["minlength"]  = kvJson->getMinLength();
-                        jsonInput["maxlength"]  = kvJson->getMaxLength();
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-            }
-
-            Settings::getInstance().close();
-
-            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-            if (MAX_USAGE < usageInPercent)
-            {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
-            }
-
-            (void)serializeJson(jsonDoc, result);
-        }
-    }
-    else if (var == "FIRMWARE_FILENAME")
-    {
-        result = FIRMWARE_FILENAME;
-    }
-    else if (var == "FILESYSTEM_FILENAME")
-    {
-        result = FILESYSTEM_FILENAME;
-    }
-    else if (var == "WS_PROTOCOL")
-    {
-        result = WebConfig::WEBSOCKET_PROTOCOL;
-    }
-    else if (var == "WS_PORT")
-    {
-        result = WebConfig::WEBSOCKET_PORT;
-    }
-    else if (var == "WS_ENDPOINT")
-    {
-        result = WebConfig::WEBSOCKET_PATH;
-    }
-    else
-    {
-        ;
+        ++index;
     }
 
     return result;
+}
+
+/**
+ * About page, showing the log output on demand.
+ *
+ * @param[in] request   HTTP request
+ */
+static void aboutPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/about.html", "text/html", false, tmplPageProcessor);
+
+    return;
+}
+
+/**
+ * Debug page, showing the log output on demand.
+ *
+ * @param[in] request   HTTP request
+ */
+static void debugPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/debug.html", "text/html", false, tmplPageProcessor);
+
+    return;
+}
+
+/**
+ * Display page, showing current display content.
+ *
+ * @param[in] request   HTTP request
+ */
+static void displayPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/display.html", "text/html", false, tmplPageProcessor);
+
+    return;
 }
 
 /**
@@ -1125,76 +1001,196 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
 }
 
 /**
- * Display page, showing current display content.
- *
- * @param[in] request   HTTP request
+ * Functions which are called for the corresponding template keyword.
  */
-static void displayPage(AsyncWebServerRequest* request)
+namespace tmpl
 {
-    if (nullptr == request)
+    /**
+     * Get ESP chip id.
+     * 
+     * @return ESP chip id
+     */
+    static String getEspChipId()
     {
-        return;
+        String      result;
+        uint64_t    chipId      = ESP.getEfuseMac();
+        uint32_t    highPart    = (chipId >> 32U) & 0x0000ffffU;
+        uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
+        char        chipIdStr[13];
+
+        snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
+
+        result = chipIdStr;
+
+        return result;
     }
 
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    /**
+     * Get ESP type.
+     * 
+     * @return ESP type
+     */
+    static String getEspType()
     {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
+        String result;
+
+#if defined(ESP32)
+        result = "ESP32";
+#elif defined(ESP32S2)
+        result = "ESP32S2";
+#else
+        result ="UNKNOWN";
+#endif
+        return result;
     }
 
-    request->send(SPIFFS, "/display.html", "text/html", false, tmplPageProcessor);
-
-    return;
-}
-
-/**
- * About page, showing the log output on demand.
- *
- * @param[in] request   HTTP request
- */
-static void aboutPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
+    /**
+     * Get flash chip mode.
+     * 
+     * @return Flash chip mode.
+     */
+    static String getFlashChipMode()
     {
-        return;
+        String result;
+
+        switch(ESP.getFlashChipMode())
+        {
+        case FM_QIO:
+            result = "QUIO";
+            break;
+
+        case FM_QOUT:
+            result = "QOUT";
+            break;
+
+        case FM_DIO:
+            result = "DIO";
+            break;
+
+        case FM_DOUT:
+            result = "DOUT";
+            break;
+
+        case FM_FAST_READ:
+            result = "FAST_READ";
+            break;
+
+        case FM_SLOW_READ:
+            result = "SLOW_READ";
+            break;
+
+        case FM_UNKNOWN:
+            /* fallthrough */
+
+        default:
+            result = "UNKNOWN";
+            break;
+        }
+        
+        return result;
     }
 
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    /**
+     * Get all settings.
+     * 
+     * @return Settings data
+     */
+    static String getSettingsData()
     {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
+        String result;
+
+        if (true == Settings::getInstance().open(true))
+        {
+            KeyValue**          list            = Settings::getInstance().getList();
+            uint8_t             index           = 0U;
+            const size_t        JSON_DOC_SIZE   = 4096U;
+            DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+            const size_t        MAX_USAGE       = 80U;
+            size_t              usageInPercent  = 0U;
+
+            result.clear();
+            for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
+            {
+                KeyValue*   parameter   = list[index];
+                JsonObject  jsonSetting = jsonDoc.createNestedObject();
+                JsonObject  jsonInput   = jsonSetting.createNestedObject("input");
+
+                jsonSetting["title"]    = parameter->getName();
+                jsonInput["name"]       = parameter->getKey();
+
+                switch(parameter->getValueType())
+                {
+                case KeyValue::TYPE_STRING:
+                    {
+                        KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
+                        jsonInput["type"]       = "text";
+                        jsonInput["value"]      = kvStr->getValue();
+                        jsonInput["size"]       = kvStr->getMaxLength();
+                        jsonInput["minlength"]  = kvStr->getMinLength();
+                        jsonInput["maxlength"]  = kvStr->getMaxLength();
+                    }
+                    break;
+
+                case KeyValue::TYPE_BOOL:
+                    {
+                        KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
+                        jsonInput["type"]       = "checkbox";
+                        jsonInput["value"]      = kvBool->getKey();
+
+                        if (true == kvBool->getValue())
+                        {
+                            jsonInput["checked"] = "checked";
+                        }
+                    }
+                    break;
+
+                case KeyValue::TYPE_UINT8:
+                    {
+                        KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(parameter);
+                        jsonInput["type"]   = "number";
+                        jsonInput["value"]  = kvUInt8->getValue();
+                        jsonInput["min"]    = kvUInt8->getMin();
+                        jsonInput["max"]    = kvUInt8->getMax();
+                    }
+                    break;
+
+                case KeyValue::TYPE_INT32:
+                {
+                    KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(parameter);
+                    jsonInput["type"]   = "number";
+                    jsonInput["value"]  = kvInt32->getValue();
+                    jsonInput["min"]    = kvInt32->getMin();
+                    jsonInput["max"]    = kvInt32->getMax();
+                }
+                break;
+
+                case KeyValue::TYPE_JSON:
+                    {
+                        KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
+                        jsonInput["type"]       = "text";
+                        jsonInput["value"]      = kvJson->getValue();
+                        jsonInput["size"]       = kvJson->getMaxLength();
+                        jsonInput["minlength"]  = kvJson->getMinLength();
+                        jsonInput["maxlength"]  = kvJson->getMaxLength();
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            Settings::getInstance().close();
+
+            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+            if (MAX_USAGE < usageInPercent)
+            {
+                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+            }
+
+            (void)serializeJson(jsonDoc, result);
+        }
+
+        return result;
     }
-
-    request->send(SPIFFS, "/about.html", "text/html", false, tmplPageProcessor);
-
-    return;
-}
-
-/**
- * Debug page, showing the log output on demand.
- *
- * @param[in] request   HTTP request
- */
-static void debugPage(AsyncWebServerRequest* request)
-{
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
-    request->send(SPIFFS, "/debug.html", "text/html", false, tmplPageProcessor);
-
-    return;
-}
+};
