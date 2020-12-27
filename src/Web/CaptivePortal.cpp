@@ -171,46 +171,6 @@ public:
 private:
 
     /**
-     * Get text in color format (HTML).
-     *
-     * @param[in] text  Text
-     *
-     * @return Text in color format (HTML).
-     */
-    static String getColoredText(const String& text)
-    {
-        String      result;
-        uint8_t     index       = 0;
-        uint8_t     colorIndex  = 0;
-        const char* colors[]    =
-        {
-            "#FF0000",
-            "#FFFF00",
-            "#00FF00",
-            "#00FFFF",
-            "#0000FF",
-            "#FF00FF"
-        };
-
-        for(index = 0; index < text.length(); ++index)
-        {
-            result += "<span style=\"color:";
-            result += colors[colorIndex];
-            result += "\">";
-            result += text[index];
-            result += "</span>";
-
-            ++colorIndex;
-            if (UTIL_ARRAY_NUM(colors) <= colorIndex)
-            {
-                colorIndex = 0;
-            }
-        }
-
-        return result;
-    }
-
-    /**
      * Processor for index page template.
      * It is responsible for the data binding.
      *
