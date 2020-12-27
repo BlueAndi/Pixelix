@@ -63,7 +63,7 @@ softwareRevision        = "-DSW_REV=" + getGitRevisionHash()
 softwareRevisionShort   = "-DSW_REV_SHORT=" + getGitRevisionShortHash()
 softwareBranch          = "-DSW_BRANCH=" + getCurrentGitBranch()
 
-env.Append(BUILD_FLAGS=[ softwareVersion, softwareRevision, softwareRevisionShort ])
+env.Append(BUILD_FLAGS=[ softwareVersion, softwareRevision, softwareRevisionShort, softwareBranch ])
 
 print("Software version       : " + getVersion())
 print("Software revision long : " + getGitRevisionHash())
