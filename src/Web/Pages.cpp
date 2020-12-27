@@ -98,7 +98,11 @@ namespace tmpl
     static String getEspChipId();
     static String getEspType();
     static String getFlashChipMode();
+    static String getHostname();
+    static String getIPAddress();
+    static String getRSSI();
     static String getSettingsData();
+    static String getSSID();
 };
 
 /******************************************************************************
@@ -144,8 +148,13 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "FS_SIZE_USED",         []() -> String { return String(SPIFFS.usedBytes()); },
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
     "HEAP_SIZE_AVAILABLE",  []() -> String { return String(ESP.getFreeHeap()); },
+    "HOSTNAME",             tmpl::getHostname,
+    "IPV4",                 tmpl::getIPAddress,
     "LWIP_VERSION",         []() -> String { return LWIP_VERSION_STRING; },
+    "MAC_ADDR",             []() -> String { return WiFi.macAddress(); },
+    "RSSI",                 tmpl::getRSSI,
     "SETTINGS_DATA",        tmpl::getSettingsData,
+    "SSID",                 tmpl::getSSID,
     "SW_BRANCH",            []() -> String { return Version::SOFTWARE_BRANCH; },
     "SW_REVISION",          []() -> String { return Version::SOFTWARE_REV; },
     "SW_VERSION",           []() -> String { return Version::SOFTWARE_VER; },
@@ -1092,6 +1101,78 @@ namespace tmpl
     }
 
     /**
+     * Get hostname, depended on current WiFi mode.
+     * 
+     * @return Hostname
+     */
+    static String getHostname()
+    {
+        String      result;
+        const char* hostname = nullptr;
+
+        if (WIFI_MODE_AP == WiFi.getMode())
+        {
+            hostname = WiFi.softAPgetHostname();
+        }
+        else
+        {
+            hostname = WiFi.getHostname();
+        }
+
+        if (nullptr != hostname)
+        {
+            result = hostname;
+        }
+
+        return result;
+    }
+
+    /**
+     * Get IP address, depended on WiFi mode.
+     * 
+     * @return IPv4
+     */
+    static String getIPAddress()
+    {
+        String result;
+
+        if (WIFI_MODE_AP == WiFi.getMode())
+        {
+            result = WiFi.softAPIP().toString();
+        }
+        else
+        {
+            result = WiFi.localIP().toString();
+        }
+
+        return result;
+    }
+
+    /**
+     * Get wifi RSSI.
+     * 
+     * @return WiFi station SSID
+     */
+    static String getRSSI()
+    {
+        String result;
+
+        /* Only in station mode it makes sense to retrieve the RSSI.
+         * Otherwise keep it -100 dbm.
+         */
+        if (WIFI_MODE_STA == WiFi.getMode())
+        {
+            result = WiFi.RSSI();
+        }
+        else
+        {
+            result = "-100";
+        }
+
+        return result;
+    }
+
+    /**
      * Get all settings.
      * 
      * @return Settings data
@@ -1190,6 +1271,24 @@ namespace tmpl
             }
 
             (void)serializeJson(jsonDoc, result);
+        }
+
+        return result;
+    }
+
+    /**
+     * Get wifi station SSID.
+     * 
+     * @return WiFi station SSID
+     */
+    static String getSSID()
+    {
+        String result;
+
+        if (true == Settings::getInstance().open(true))
+        {
+            result = Settings::getInstance().getWifiSSID().getValue();
+            Settings::getInstance().close();
         }
 
         return result;
