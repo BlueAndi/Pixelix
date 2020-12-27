@@ -1,281 +1,369 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>$PAGE_TITLE$</title>
-    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
-    <link rel="stylesheet" href="/style/style.css" />
-    <script src="/js/menu.js"></script>
-    <script src="/js/utils.js"></script>
-    <script>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        var pluginName = "IconTextLampPlugin";
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css">
+        <link rel="stylesheet" type="text/css" href="/style/style.css">
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
 
-        function enableUI() {
-            utils.enableForm("myFormIcon", true);
-            utils.enableForm("myFormText", true);
-            utils.enableForm("myFormLamp", true);
-        }
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                    font-size: 3.5rem;
+                }
+            }
+        </style>
 
-        function disableUI() {
-            utils.enableForm("myFormIcon", false);
-            utils.enableForm("myFormText", false);
-            utils.enableForm("myFormLamp", false);
-        }
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/display.html">Display</a>
+                        </li>
+                        <li class="nav-item dropdown active">
+                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins <span class="sr-only">(current)</span></a>
+                            <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
+                                <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
+                                <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
+                                <a class="dropdown-item active" href="/plugins/IconTextLampPlugi.html">IconTextLamp Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextPlugin.html">IconText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/JustTextPlugin.html">JustText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/RainbowPlugin.html">Rainbow Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SunrisePlugin.html">Sunrise Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
+                                <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/settings.html">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/update.html">Update</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="developmentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Development</a>
+                            <div class="dropdown-menu" aria-labelledby="developmentDropdown">
+                                <a class="dropdown-item" href="/info.html">Info</a>
+                                <a class="dropdown-item" href="/debug.html">Debug</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
 
-        function getPluginInstances() {
-            return utils.makeRequest({
-                method: "GET",
-                url: "/rest/api/v1/display/slots"
-            }).then(function(rsp) {
-                var elemIndex   = 0;
-                var slotIndex   = 0;
-                var cnt         = 0;
-                var elements    = document.getElementsByName("pluginUid");
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">IconTextLampPlugin</h1>
+                <p><img src="/images/IconTextLampPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin shows a icon on left side, text on right side and lamps at the bottom.</p>
+                <p>Each part can be set separately via the REST API.</p>
+                <p>Show bitmap in the specified slot. Supported are bitmap files (.bmp) with:</p>
+                <ul>
+                    <li>24 or 32 bits per pixel.</li>
+                    <li>1 plane.</li>
+                    <li>No compression.</li>
+                </ul>
+                <p>Note, if you are using _gimp_ to create bitmap files, please configure like:</p>
+                <ul>
+                    <li>Compatibility options: Don't write color informations.</li>
+                    <li>Extended options: Select 24 bit per pixel.</li>
+                </ul>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get text</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                </ul>
+                <h3 class="mt-1">Set text</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>TEXT: The text to show on the display.</li>
+                </ul>
+                <h3 class="mt-1">Set icon</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                </ul>
+                <h3 class="mt-1">Get all lamp states</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamps</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                </ul>
+                <h3 class="mt-1">Set lamp state</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamp/&lt;LAMP-ID&gt;?set=&lt;LAMP-STATE&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>LAMP-ID: The id of the lamp (starting with 0 from left).</li>
+                    <li>LAMP-STATE: <code>on</code> or <code>off</code></li>
+                </ul>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Icon</h3>
+                <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUidIcon" name="pluginUid" size="1">
+                    </select>
+                    <br />
+                    <label for="icon">Icon:</label><br />
+                    <input id="icon" type="file" /><br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Text</h3>
+                <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
+                    </select>
+                    <br />
+                    <label for="justText">Text:</label><br />
+                    <input type="text" id="justText" name="justText" value="" size="20" /><br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Lamp</h3>
+                <form id="myFormLamp" action="javascript:setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampId.options[lampId.selectedIndex].value, lampState.options[lampState.selectedIndex].value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUidLamp" name="pluginUid" size="1">
+                    </select>
+                    <br />
+                    <label for="lampId">Lamp:</label><br />
+                    <select id="lampId" size="1" onChange="getLamp(pluginUidText.options[pluginUidText.selectedIndex].value, lampId.options[lampId.selectedIndex].value, 'lampState')">
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                    <br />
+                    <label for="lampState">State:</label><br />
+                    <select id="lampState" size="1">
+                        <option value="off" selected>off</option>
+                        <option value="on">on</option>
+                    </select>
+                    <br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>          
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
 
-                for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/popper.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <!-- Standard utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
 
-                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
-                        if (rsp.data.slots[slotIndex].name === pluginName) {
+        <script>
 
-                            option          = document.createElement("option");
-                            option.value    = rsp.data.slots[slotIndex].uid;
-                            option.text     = rsp.data.slots[slotIndex].uid;
-                            elements[elemIndex].add(option);
+            var pluginName = "IconTextLampPlugin";
 
-                            ++cnt;
+            function enableUI() {
+                utils.enableForm("myFormIcon", true);
+                utils.enableForm("myFormText", true);
+                utils.enableForm("myFormLamp", true);
+            }
+
+            function disableUI() {
+                utils.enableForm("myFormIcon", false);
+                utils.enableForm("myFormText", false);
+                utils.enableForm("myFormLamp", false);
+            }
+
+            function getPluginInstances() {
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/slots"
+                }).then(function(rsp) {
+                    var elemIndex   = 0;
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var elements    = document.getElementsByName("pluginUid");
+
+                    for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+
+                        for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                            if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                                option          = document.createElement("option");
+                                option.value    = rsp.data.slots[slotIndex].uid;
+                                option.text     = rsp.data.slots[slotIndex].uid;
+                                elements[elemIndex].add(option);
+
+                                ++cnt;
+                            }
                         }
                     }
-                }
 
-                return Promise.resolve(cnt);
-            }).catch(function(rsp) {
-                alert("Internal error.");
-                return Promise.resolve(0);
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+
+            function setIcon(pluginUid, fileName) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
+                    parameter: {
+                        file: fileName
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getText(pluginUid, justTextId) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text"
+                }).then(function(rsp) {
+                    var justTextInput = document.getElementById(justTextId);
+
+                    justTextInput.value = rsp.data.text;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setText(pluginUid, justText) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    parameter: {
+                        show: justText
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getLamp(pluginUid, lampId, lampStateId) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/lamps"
+                }).then(function(rsp) {
+                    var selectLampState = document.getElementById(lampStateId);
+
+                    if ("off" == rsp.data.lamps[lampId].state) {
+                        selectLampState.selectedIndex = 0;
+                    } else {
+                        selectLampState.selectedIndex = 1;
+                    }
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setLamp(pluginUid, lampId, lampState) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/lamp/" + lampId,
+                    parameter: {
+                        set: lampState
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var selectText      = document.getElementById("pluginUidText");
+                    var selectLamp      = document.getElementById("pluginUidLamp");
+                    var selectLampId    = document.getElementById("lampId");
+
+                    if (0 < cnt) {
+
+                        return getText(
+                            selectText.options[selectText.selectedIndex].value,
+                            "justText"
+                        ).then(function() {
+                            return getLamp(
+                                selectLamp.options[selectLamp.selectedIndex].value,
+                                selectLampId.options[selectLampId.selectedIndex].value,
+                                "lampState"
+                            );
+                        });
+                    }
+                });
             });
-        };
-
-        function setIcon(pluginUid, fileName) {
-            disableUI();
-
-            return utils.makeRequest({
-                method: "POST",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
-                parameter: {
-                    file: fileName
-                }
-            }).then(function(rsp) {
-                alert("Ok.");
-            }).catch(function(rsp) {
-                alert("Failed.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        function getText(pluginUid, justTextId) {
-            disableUI();
-            return utils.makeRequest({
-                method: "GET",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/text"
-            }).then(function(rsp) {
-                var justTextInput = document.getElementById(justTextId);
-
-                justTextInput.value = rsp.data.text;
-
-            }).catch(function(rsp) {
-                alert("Internal error.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        function setText(pluginUid, justText) {
-            disableUI();
-
-            return utils.makeRequest({
-                method: "POST",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
-                parameter: {
-                    show: justText
-                }
-            }).then(function(rsp) {
-                alert("Ok.");
-            }).catch(function(rsp) {
-                alert("Failed.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        function getLamp(pluginUid, lampId, lampStateId) {
-            disableUI();
-            return utils.makeRequest({
-                method: "GET",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/lamps"
-            }).then(function(rsp) {
-                var selectLampState = document.getElementById(lampStateId);
-
-                if ("off" == rsp.data.lamps[lampId].state) {
-                    selectLampState.selectedIndex = 0;
-                } else {
-                    selectLampState.selectedIndex = 1;
-                }
-
-            }).catch(function(rsp) {
-                alert("Internal error.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        function setLamp(pluginUid, lampId, lampState) {
-            disableUI();
-
-            return utils.makeRequest({
-                method: "POST",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/lamp/" + lampId,
-                parameter: {
-                    set: lampState
-                }
-            }).then(function(rsp) {
-                alert("Ok.");
-            }).catch(function(rsp) {
-                alert("Failed.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        window.onload = function() {
-            injectMenu("navbar", "/plugins.html");
-            utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
-
-            /* Disable all forms, until the plugin instances are loaded. */
-            disableUI();
-
-            /* Load all plugin instances. */
-            getPluginInstances().then(function(cnt) {
-                var selectText      = document.getElementById("pluginUidText");
-                var selectLamp      = document.getElementById("pluginUidLamp");
-                var selectLampId    = document.getElementById("lampId");
-
-                if (0 < cnt) {
-
-                    return getText(
-                        selectText.options[selectText.selectedIndex].value,
-                        "justText"
-                    ).then(function() {
-                        return getLamp(
-                            selectLamp.options[selectLamp.selectedIndex].value,
-                            selectLampId.options[selectLampId.selectedIndex].value,
-                            "lampState"
-                        );
-                    });
-                }
-            });
-        };
-    </script>
-</head>
-<body>
-<div class="header">
-    $HEADER$
-</div>
-<div id="navbar" class="topnav">
-</div>
-<div class="main">
-    <h2>IconTextLampPlugin</h2>
-    <img src="/images/IconTextLampPlugin.jpg" alt="Screenshot" />
-    <p>The plugin shows a icon on left side, text on right side and lamps at the bottom.</p>
-    <p>Each part can be set separately via the REST API.</p>
-    <p>Show bitmap in the specified slot. Supported are bitmap files (.bmp) with:</p>
-    <ul>
-        <li>24 or 32 bits per pixel.</li>
-        <li>1 plane.</li>
-        <li>No compression.</li>
-    </ul>
-    <p>Note, if you are using _gimp_ to create bitmap files, please configure like:</p>
-    <ul>
-        <li>Compatibility options: Don't write color informations.</li>
-        <li>Extended options: Select 24 bit per pixel.</li>
-    </ul>
-    <h3>REST API</h3>
-    <h4>Get text</h4>
-    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</pre>
-    <ul>
-        <li>PLUGIN-UID: The plugin unique id.</li>
-    </ul>
-    <h4>Set text</h4>
-    <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;</pre>
-    <ul>
-        <li>PLUGIN-UID: The plugin unique id.</li>
-        <li>TEXT: The text to show on the display.</li>
-    </ul>
-    <h4>Set icon</h4>
-    <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap</pre>
-    <ul>
-        <li>PLUGIN-UID: The plugin unique id.</li>
-    </ul>
-    <h4>Get all lamp states</h4>
-    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamps</pre>
-    <ul>
-        <li>PLUGIN-UID: The plugin unique id.</li>
-    </ul>
-    <h4>Set lamp state</h4>
-    <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamp/&lt;LAMP-ID&gt;?set=&lt;LAMP-STATE&gt;</pre>
-    <ul>
-        <li>PLUGIN-UID: The plugin unique id.</li>
-        <li>LAMP-ID: The id of the lamp (starting with 0 from left).</li>
-        <li>LAMP-STATE: <pre>on</pre> or <pre>off</pre></li>
-    </ul>
-    <h3>Configuration</h3>
-    <h4>Icon</h4>
-    <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
-        <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUidIcon" name="pluginUid" size="1">
-        </select>
-        <br />
-        <label for="icon">Icon:</label><br />
-        <input id="icon" type="file" /><br />
-        <input name="submit" type="submit" value="Update"/>
-    </form>
-    <h4>Text</h4>
-    <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
-        <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
-        </select>
-        <br />
-        <label for="justText">Text:</label><br />
-        <input type="text" id="justText" name="justText" value="" size="20" /><br />
-        <input name="submit" type="submit" value="Update"/>
-    </form>
-    <h4>Lamp</h4>
-    <form id="myFormLamp" action="javascript:setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampId.options[lampId.selectedIndex].value, lampState.options[lampState.selectedIndex].value)">
-        <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUidLamp" name="pluginUid" size="1">
-        </select>
-        <br />
-        <label for="lampId">Lamp:</label><br />
-        <select id="lampId" size="1" onChange="getLamp(pluginUidText.options[pluginUidText.selectedIndex].value, lampId.options[lampId.selectedIndex].value, 'lampState')">
-            <option value="0" selected>0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-        </select>
-        <br />
-        <label for="lampState">State:</label><br />
-        <select id="lampState" size="1">
-            <option value="off" selected>off</option>
-            <option value="on">on</option>
-        </select>
-        <br />
-        <input name="submit" type="submit" value="Update"/>
-    </form>
-</div>
-<div class="footer">
-    <hr />
-    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
-</div>
-</body>
+        </script>
+    </body>
 </html>

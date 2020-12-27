@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css">
+        <link rel="stylesheet" type="text/css" href="/style/style.css">
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                    font-size: 3.5rem;
+                }
+            }
+        </style>
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/display.html">Display</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins</a>
+                            <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
+                                <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
+                                <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextLampPlugi.html">IconTextLamp Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextPlugin.html">IconText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/JustTextPlugin.html">JustText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/RainbowPlugin.html">Rainbow Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SunrisePlugin.html">Sunrise Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
+                                <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/settings.html">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/update.html">Update</a>
+                        </li>
+                        <li class="nav-item dropdown active">
+                            <a class="nav-link dropdown-toggle" href="#" id="developmentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Development</a>
+                            <div class="dropdown-menu" aria-labelledby="developmentDropdown">
+                                <a class="dropdown-item" href="/info.html">Info</a>
+                                <a class="dropdown-item active" href="/debug.html">Debug <span class="sr-only">(current)</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">Debug</h1>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item" role="presentation"><a class="nav-link active" id="logging-tab" data-toggle="tab" role="tab" href="#logging"  aria-controls="logging" aria-selected="true">Logging</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="measurement-tab" data-toggle="tab" role="tab" href="#measurement" aria-controls="measurement" aria-selected="false">Measurement</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="reset-tab" data-toggle="tab" role="tab" href="#reset" aria-controls="reset" aria-selected="false">Reset</a></li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="logging" role="tabpanel" aria-labelledby="logging-tab">
+                        <p>Start/Stop logging:</p>
+                        <p>
+                            <button class="btn btn-light" id="buttonLog" type="button" onclick="toggleLogging();" disabled>Start</button>
+                        </p>
+                        <p>Note, only the last 40 messages are shown.</p>
+                        <div class="table-responsive">
+                            <table class="table table-striped" id="loggingOutput">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th scope="col">Timestamp</th>
+                                        <th scope="col">Level</th>
+                                        <th scope="col">Filename</th>
+                                        <th scope="col">Line</th>
+                                        <th scope="col">Text</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-light">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="measurement" role="tabpanel" aria-labelledby="measurement-tab">
+                        <p>Measure the performance with iperf.</p>
+                        <p>Start/Stop the iperf server:</p>
+                        <p>
+                            <button class="btn btn-light" id="buttonMeasurement" type="button" onclick="toggleMeasurement();" disabled>Start</button>
+                        </p>
+                    </div>
+                    <div class="tab-pane fade" id="reset" role="tabpanel" aria-labelledby="reset-tab">
+                        <p>Reset the system now: </p>
+                        <p><button class="btn btn-light" type="button" onclick="reset();" disabled>Reset</button></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/popper.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <!-- Pixelix websocket library -->
+        <script type="text/javascript" src="/js/ws.js"></script>
+        <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+    
+        <!-- Custom javascript -->
+        <script>
+            var wsClient                = null;     /* Websocket client */
+            var maxLogs                 = 40;       /* Max. number of stored log messages */
+            var isPageUnload            = false;
+            var isLoggingEnabled        = false;
+            var isMeasurementEnabled    = false;
+
+            /* If websocket connection is unexpectedly closed, alert the user. */
+            function wsOnClosed() {
+                disableUI();
+
+                if (false === isPageUnload) {
+                    alert("Websocket connection closed.");
+                }
+            }
+
+            /* Handle every websocket event. */
+            function wsOnEvent(evt) {
+                var row = "";
+                var rowCount = $("#loggingOutput > tbody tr").length;
+
+                if (maxLogs < rowCount) {
+                    $("#loggingOutput > tbody").deleteRow(1);
+                }
+
+                row += "<tr><td>";
+                row += evt.timestamp;
+                row += "</td><td>"
+                row += pixelix.ws.getLogLevelStr(evt.level);
+                row += "</td><td>"
+                row += evt.filename;
+                row += "</td><td>"
+                row += evt.line;
+                row += "</td><td>"
+                row += evt.text;
+
+                $("#loggingOutput > tbody").append(row);
+            }
+
+            /* Disable all UI elements. */
+            function disableUI() {
+                $("main :button").prop("disabled", true);
+            }
+
+            /* Enable all UI elements. */
+            function enableUI() {
+                $("main :button").prop("disabled", false);
+            }
+
+            /* Toggle logging */
+            function toggleLogging() {
+                disableUI();
+
+                wsClient.setLog({
+                    enable: (false === isLoggingEnabled) ? true : false
+                }).then(function(rsp) {
+                    isLoggingEnabled = rsp.isEnabled;
+                    if (false == rsp.isEnabled) {
+                        $("#buttonLog").text("Start");
+                    } else {
+                        $("#buttonLog").text("Stop");
+                    }
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            /* Reset device */
+            function reset() {
+                disableUI();
+
+                wsClient.reset().then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(err) {
+                    alert("Error.");
+                });
+            }
+
+            /* Toggle logging */
+            function toggleMeasurement() {
+                disableUI();
+
+                wsClient.setIperf({
+                    enable: (false === isMeasurementEnabled) ? true : false
+                }).then(function(rsp) {
+                    isMeasurementEnabled = rsp.isEnabled;
+                    if (false == rsp.isEnabled) {
+                        $("#buttonMeasurement").text("Start");
+                    } else {
+                        $("#buttonMeasurement").text("Stop");
+                    }
+                    alert("Ok.");
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            /* Execute after page is ready. */
+            $(document).ready(function() {
+                wsClient = new pixelix.ws.Client();
+
+                /* Connect to pixelix */
+                wsClient.connect({
+                    protocol: "~WS_PROTOCOL~",
+                    hostname: location.hostname,
+                    port: parseInt("~WS_PORT~"),
+                    endpoint: "~WS_ENDPOINT~",
+                    onClosed: wsOnClosed,
+                    onEvent: wsOnEvent
+                }).then(function() {
+                    /* Get current log status */
+                    return wsClient.getLog();
+                }).then(function(rsp) {
+                    isLoggingEnabled = rsp.isEnabled;
+
+                    /* Update logging button text, depended on status. */
+                    if (false === rsp.isEnabled) {
+                        $("#buttonLog").text("Start");
+                    } else {
+                        $("#buttonLog").text("Stop");
+                    }
+
+                    /* Get current iperf status */
+                    return wsClient.getIperf();
+                }).then(function(rsp) {
+                    isMeasurementEnabled = rsp.isEnabled;
+
+                    /* Update iperf button text, depended on status. */
+                    if (false === rsp.isEnabled) {
+                        $("#buttonMeasurement").text("Start");
+                    } else {
+                        $("#buttonMeasurement").text("Stop");
+                    }
+
+                    /* Enable UI at least. */
+                    enableUI();
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                });
+
+            });
+
+            /* If the page is left, there shall be no message shown regarding
+             * unexpected websocket lost.
+             */
+            $(window).bind("beforeunload", function() {
+                isPageUnload = true;
+
+                if (null !== wsClient) {
+                    wsClient.disconnect();
+                }
+            });
+        </script>
+    </body>
+</html>
