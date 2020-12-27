@@ -218,21 +218,9 @@ private:
      */
     static String captivePortalPageProcessor(const String& var)
     {
-        String  result;
+        String  result = var;
 
-        if (var == "PAGE_TITLE")
-        {
-            result = WebConfig::PROJECT_TITLE;
-        }
-        else if (var == "HEADER")
-        {
-            result  = "<h1>";
-            result += ".:";
-            result += getColoredText(WebConfig::PROJECT_TITLE);
-            result += ":.";
-            result += "</h1>\r\n";
-        }
-        else if (var == "SSID")
+        if (var == "SSID")
         {
             if (true == Settings::getInstance().open(true))
             {
