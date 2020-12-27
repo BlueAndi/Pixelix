@@ -94,8 +94,8 @@
                 <p>Upload <u>~FIRMWARE_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
                 <div class="input-group">
                     <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="file01">
-                        <label class="custom-file-label" for="file01">Choose file</label>
+                        <input type="file" class="custom-file-input" id="inputFile">
+                        <label class="custom-file-label" for="inputFile">Choose file</label>
                     </div>
                     <div class="input-group-append">
                         <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
@@ -122,6 +122,16 @@
 
         <!-- Custom javascript -->
         <script>
+
+            /* Disable all UI elements. */
+            function disableUI() {
+                $("main :button").prop("disabled", true);
+            }
+
+            /* Enable all UI elements. */
+            function enableUI() {
+                $("main :button").prop("disabled", false);
+            }
 
             function makeRequest(options) {
                 var xhr = new XMLHttpRequest();
@@ -161,6 +171,7 @@
                 }
 
                 $("#progressBar").css("width", progress + "%").attr("aria-valuenow", progress);
+                $("#progressBar").text(progress + "%");
             }
 
             function upload() {
@@ -181,6 +192,8 @@
 
                 } else {
 
+                    disableUI();
+
                     formData.append("file", file);
 
                     makeRequest({
@@ -196,6 +209,8 @@
                             } else {
                                 alert("Upload successful.");
                             }
+
+                            enableUI();
                         },
                         onProgress: updateProgress
                     });
@@ -204,6 +219,11 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
+
+                $("#inputFile").on("change", function(){
+                    var fileName = $(this).val().split("\\").pop();
+                    $(this).next(".custom-file-label").addClass("selected").html(fileName);
+                });
             });
         </script>
     </body>
