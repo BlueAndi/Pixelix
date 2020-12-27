@@ -21,12 +21,12 @@ def anyLocalChange():
 
     return anyLocalChange
 
-def anyUnpushedCommit():
+def anyUnpushedCommit(upstream):
     anyUnpushedCommit = False
     result = ""
 
     try:
-        result = subprocess.check_output(['git', 'cherry', '-v'], stderr=subprocess.STDOUT).decode('ascii').strip()
+        result = subprocess.check_output(['git', 'cherry', '-v', upstream], stderr=subprocess.STDOUT).decode('ascii').strip()
     except:
         pass
 
@@ -44,7 +44,7 @@ def getVersion():
             data = json.load(jsonFile)
             version = data["version"]
 
-        if (True == anyUnpushedCommit()):
+        if (True == anyUnpushedCommit("origin/" + branchName)):
             version = version + ":uc"
 
         if (True == anyLocalChange()):
