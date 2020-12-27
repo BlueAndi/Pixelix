@@ -9,6 +9,9 @@ def getGitRevisionHash():
 def getGitRevisionShortHash():
     return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
 
+def getCurrentGitBranch():
+    return subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
+
 def anyLocalChange():
     anyLocalChange = False
     result = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no']).decode('ascii').strip()
@@ -20,7 +23,12 @@ def anyLocalChange():
 
 def anyUnpushedCommit():
     anyUnpushedCommit = False
-    result = subprocess.check_output(['git', 'cherry', '-v']).decode('ascii').strip()
+    result = ""
+
+    try:
+        result = subprocess.check_output(['git', 'cherry', '-v'], stderr=subprocess.STDOUT).decode('ascii').strip()
+    except:
+        pass
 
     if (0 < len(result)):
         anyUnpushedCommit = True
@@ -29,6 +37,7 @@ def anyUnpushedCommit():
 
 def getVersion():
     version = "vX.X.X"
+    branchName = getCurrentGitBranch()
 
     try:
         with open("version.json") as jsonFile:
@@ -40,6 +49,10 @@ def getVersion():
 
         if (True == anyLocalChange()):
             version = version + ":lc"
+
+        if (branchName != "master"):
+            version = version + ":b"
+
     except:
         pass
 
@@ -48,6 +61,7 @@ def getVersion():
 softwareVersion         = "-DSW_VERSION=" + getVersion()
 softwareRevision        = "-DSW_REV=" + getGitRevisionHash()
 softwareRevisionShort   = "-DSW_REV_SHORT=" + getGitRevisionShortHash()
+softwareBranch          = "-DSW_BRANCH=" + getCurrentGitBranch()
 
 env.Append(BUILD_FLAGS=[ softwareVersion, softwareRevision, softwareRevisionShort ])
 

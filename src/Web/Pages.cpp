@@ -145,9 +145,10 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
     "HEAP_SIZE_AVAILABLE",  []() -> String { return String(ESP.getFreeHeap()); },
     "LWIP_VERSION",         []() -> String { return LWIP_VERSION_STRING; },
-    "REVISION",             []() -> String { return Version::SOFTWARE_REV; },
     "SETTINGS_DATA",        tmpl::getSettingsData,
-    "VERSION",              []() -> String { return Version::SOFTWARE_VER; },
+    "SW_BRANCH",            []() -> String { return Version::SOFTWARE_BRANCH; },
+    "SW_REVISION",          []() -> String { return Version::SOFTWARE_REV; },
+    "SW_VERSION",           []() -> String { return Version::SOFTWARE_VER; },
     "WS_ENDPOINT",          []() -> String { return WebConfig::WEBSOCKET_PATH; },
     "WS_PORT",              []() -> String { return String(WebConfig::WEBSOCKET_PORT); },
     "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; }

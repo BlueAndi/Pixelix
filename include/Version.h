@@ -75,6 +75,24 @@ namespace Version
 
 #endif  /* SW_REV */
 
+#ifndef SW_REV_SHORT
+
+/**
+ * Software revision number (git SHA-1) in short.
+ */
+#define SW_REV_SHORT    "Unknown"
+
+#endif  /* SW_REV_SHORT */
+
+#ifndef SW_BRANCH
+
+/**
+ * Software branch, the software was built from.
+ */
+#define SW_BRANCH "Unknown"
+
+#endif  /* SW_BRANCH */
+
 /** Stringizing the value. */
 #define Q(x) #x
 
@@ -97,6 +115,9 @@ namespace Version
 
     /** Software version */
     static const char   SOFTWARE_VER[]          = QUOTE(SW_VERSION);
+
+    /** Software branch, the software was built from. */
+    static const char   SOFTWARE_BRANCH[]       = QUOTE(SW_BRANCH);
 }
 
 #endif  /* __VERSION_H__ */
