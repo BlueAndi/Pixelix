@@ -20,6 +20,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Where to change panel topology?](#where-to-change-panel-topology)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
+- [Contribution](#contribution)
 
 # Motivation
 I want to have a remote display to show multiple kind of information, running 24/7 reliable. Connected over wifi to the local network, it can be controlled via REST API or websocket.
@@ -46,9 +47,12 @@ Connect to the captive portal and configure via webinterface the wifi station SS
 For more information, see the [documentation](./doc/README.md).
 
 # Used Libraries
-* [Arduino](https://docs.platformio.org/en/latest/frameworks/arduino.html#framework-arduino) - ESP framework.
-* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (RMT).
-* [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) - Webserver.
+* [Arduino](https://github.com/platformio/platform-espressif32) - ESP32 Arduino framework - Apache-2.0 License.
+* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (RMT) - LGPL-3.0 License.
+* [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) - Webserver - LGPL-2.1 License.
+* [Bootstrap](https://getbootstrap.com/) - CSS Framework - MIT License.
+* [POPPER JS](https://popper.js.org/) - POPPER JS - MIT License.
+* [jQuery](https://jquery.com/) - Javascript librariy for DOM handling - MIT License.
 
 # FAQ
 
@@ -62,3 +66,8 @@ If you have further ideas or you found some bugs, great! Create a [issue](https:
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

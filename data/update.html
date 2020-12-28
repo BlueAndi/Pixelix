@@ -1,114 +1,231 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>$PAGE_TITLE$</title>
-    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
-    <link rel="stylesheet" href="/style/style.css" />
-    <script src="/js/menu.js"></script>
-    <script>
-        function makeRequest(options) {
-            var xhr = new XMLHttpRequest();
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-            xhr.open(options.method, options.url);
-
-            if ("function" === typeof options.onProgress) {
-                xhr.upload.onprogress = options.onProgress;
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css">
+        <link rel="stylesheet" type="text/css" href="/style/style.css">
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
             }
 
-            xhr.onload = function() {
-                if (200 === xhr.status) {
-                    options.onDone(null, xhr.response);
-                } else {
-                    options.onDone(xhr.response, null);
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                    font-size: 3.5rem;
                 }
-            };
+            }
+        </style>
 
-            xhr.onerror = function() {
-                options.onDone(xhr.response);
-            };
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/index.html">Home <span class="sr-only">(current)</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/display.html">Display</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins</a>
+                            <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
+                                <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
+                                <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextLampPlugi.html">IconTextLamp Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextPlugin.html">IconText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/JustTextPlugin.html">JustText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/RainbowPlugin.html">Rainbow Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SunrisePlugin.html">Sunrise Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
+                                <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/settings.html">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/update.html">Update</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="developmentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Development</a>
+                            <div class="dropdown-menu" aria-labelledby="developmentDropdown">
+                                <a class="dropdown-item" href="/info.html">Info</a>
+                                <a class="dropdown-item" href="/debug.html">Debug</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
 
-            if ("undefined" !== typeof options.headers) {
-                Object.keys(options.headers).forEach(function(key) {
-                    xhr.setRequestHeader(key, options.headers[key]);
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">Update</h1>
+                <p>Upload <u>~FIRMWARE_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
+                <div class="input-group">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="inputFile">
+                        <label class="custom-file-label" for="inputFile">Choose file</label>
+                    </div>
+                    <div class="input-group-append">
+                        <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
+                    </div>
+                </div>
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/popper.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+
+        <!-- Custom javascript -->
+        <script>
+
+            /* Disable all UI elements. */
+            function disableUI() {
+                $("main :button").prop("disabled", true);
+            }
+
+            /* Enable all UI elements. */
+            function enableUI() {
+                $("main :button").prop("disabled", false);
+            }
+
+            function makeRequest(options) {
+                var xhr = new XMLHttpRequest();
+
+                xhr.open(options.method, options.url);
+
+                if ("function" === typeof options.onProgress) {
+                    xhr.upload.onprogress = options.onProgress;
+                }
+
+                xhr.onload = function() {
+                    if (200 === xhr.status) {
+                        options.onDone(null, xhr.response);
+                    } else {
+                        options.onDone(xhr.response, null);
+                    }
+                };
+
+                xhr.onerror = function() {
+                    options.onDone(xhr.response);
+                };
+
+                if ("undefined" !== typeof options.headers) {
+                    Object.keys(options.headers).forEach(function(key) {
+                        xhr.setRequestHeader(key, options.headers[key]);
+                    });
+                }
+
+                xhr.send(options.params);
+            }
+
+            function updateProgress(evt) {
+                var progress = 0;
+
+                if (true === evt.lengthComputable) {
+                    progress = Math.ceil(evt.loaded * 100 / evt.total);
+                }
+
+                $("#progressBar").css("width", progress + "%").attr("aria-valuenow", progress);
+                $("#progressBar").text(progress + "%");
+            }
+
+            function upload() {
+                var file = document.getElementById("inputFile").files[0];
+                var formData = new FormData();
+                var fileSize = file.size;
+
+                $("#progressBar").css("width", "0%").attr("aria-valuenow", 0);
+
+                if ("undefined" === typeof file) {
+
+                    alert("No file selected.");
+
+                } else if (("~FIRMWARE_FILENAME~" !== file.name) &&
+                        ("~FILESYSTEM_FILENAME~" !== file.name)) {
+
+                    alert("Unknown file: " + file.name);
+
+                } else {
+
+                    disableUI();
+
+                    formData.append("file", file);
+
+                    makeRequest({
+                        method: "POST",
+                        url: "/upload.html",
+                        params: formData,
+                        headers: {
+                            "X-File-Size": fileSize
+                        },
+                        onDone: function(err, data) {
+                            if (null !== err) {
+                                alert(err);
+                            } else {
+                                alert("Upload successful.");
+                            }
+
+                            enableUI();
+                        },
+                        onProgress: updateProgress
+                    });
+                }
+            }
+
+            /* Execute after page is ready. */
+            $(document).ready(function() {
+
+                $("#inputFile").on("change", function(){
+                    var fileName = $(this).val().split("\\").pop();
+                    $(this).next(".custom-file-label").addClass("selected").html(fileName);
                 });
-            }
-
-            xhr.send(options.params);
-        }
-
-        function updateProgress(evt) {
-            var progress = 0;
-
-            if (true === evt.lengthComputable) {
-                progress = Math.ceil(evt.loaded * 100 / evt.total);
-            }
-            document.getElementById("progress").innerHTML = "Progress: " + progress + "%";
-        }
-
-        function upload() {
-            var file = document.getElementById("inputFile").files[0];
-            var formData = new FormData();
-            var fileSize = file.size;
-
-            document.getElementById("progress").innerHTML = "Progress: 0%";
-
-            if ("undefined" === typeof file) {
-
-                alert("No file selected.");
-
-            } else if (("$FIRMWARE_FILENAME$" !== file.name) &&
-                       ("$FILESYSTEM_FILENAME$" !== file.name)) {
-
-                alert("Unknown file: " + file.name);
-
-            } else {
-
-                formData.append("file", file);
-
-                makeRequest({
-                    method: "POST",
-                    url: "/upload.html",
-                    params: formData,
-                    headers: {
-                        "X-File-Size": fileSize
-                    },
-                    onDone: function(err, data) {
-                        if (null !== err) {
-                            alert(err);
-                        } else {
-                            alert("Upload successful.");
-                        }
-                    },
-                    onProgress: updateProgress
-                });
-            }
-        }
-
-        window.onload = function() {
-            injectMenu("navbar", window.location.pathname);
-        };
-    </script>
-</head>
-<body>
-<div class="header">
-    $HEADER$
-</div>
-<div id="navbar" class="topnav">
-</div>
-<div class="main">
-    <h2>Update</h2>
-    <p>Upload <u>$FIRMWARE_FILENAME$</u> file for software update or <u>$FILESYSTEM_FILENAME$</u> for updating the filesystem.</p>
-    <p>
-        <input type="file" name="file" id="inputFile" accept=".bin" /><br />
-        <input type="button" value="Update" onclick="upload();" />
-    </p>
-    <div id="progress">Progress: 0%</div>
-</div>
-<div class="footer">
-    <hr />
-    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
-</div>
-</body>
+            });
+        </script>
+    </body>
 </html>

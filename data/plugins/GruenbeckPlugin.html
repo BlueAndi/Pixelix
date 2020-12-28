@@ -1,144 +1,233 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>$PAGE_TITLE$</title>
-    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
-    <link rel="stylesheet" href="/style/style.css" />
-    <script src="/js/menu.js"></script>
-    <script src="/js/utils.js"></script>
-    <script>
-        var pluginName = "GruenbeckPlugin";
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        function enableUI() {
-            utils.enableForm("myForm", true);
-        }
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css">
+        <link rel="stylesheet" type="text/css" href="/style/style.css">
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
 
-        function disableUI() {
-            utils.enableForm("myForm", false);
-        }
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                    font-size: 3.5rem;
+                }
+            }
+        </style>
 
-        function getPluginInstances() {
-            return utils.makeRequest({
-                method: "GET",
-                url: "/rest/api/v1/display/slots"
-            }).then(function(rsp) {
-                var index   = 0;
-                var cnt     = 0;
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/display.html">Display</a>
+                        </li>
+                        <li class="nav-item dropdown active">
+                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins <span class="sr-only">(current)</span></a>
+                            <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
+                                <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
+                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
+                                <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
+                                <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
+                                <a class="dropdown-item active" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextLampPlugi.html">IconTextLamp Plugin</a>
+                                <a class="dropdown-item" href="/plugins/IconTextPlugin.html">IconText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/JustTextPlugin.html">JustText Plugin</a>
+                                <a class="dropdown-item" href="/plugins/RainbowPlugin.html">Rainbow Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SunrisePlugin.html">Sunrise Plugin</a>
+                                <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
+                                <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
+                                <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/settings.html">Settings</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/update.html">Update</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="developmentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Development</a>
+                            <div class="dropdown-menu" aria-labelledby="developmentDropdown">
+                                <a class="dropdown-item" href="/info.html">Info</a>
+                                <a class="dropdown-item" href="/debug.html">Debug</a>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/about.html">About</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
 
-                for(index = 0; index < rsp.data.slots.length; ++index) {
-                    if (rsp.data.slots[index].name === pluginName) {
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">GruenbeckPlugin</h1>
+                <p><img src="/images/GruenbeckPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.</p>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get ip-address</h3>
+                <pre name="injectOrigin"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress</code></pre>
+                <h3 class="mt-1">Set ip-address</h3>
+                <pre name="injectOrigin"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress?set=&lt;IPADDRESS&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>IPADDRESS: The ip-address for the Gruenbeck server.</li>
+                </ul>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">IP-address</h3>
+                <form id="myForm" action="javascript:setIPAddress(pluginUid.options[pluginUid.selectedIndex].value, ipAddress.value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUid" size="1" onChange="getIPAddress(pluginUid.options[pluginUid.selectedIndex].value, 'ipAddress')">
+                    </select>
+                    <br />
+                    <label for="ipAddress">IP-address of server:</label><br />
+                    <input type="text" id="ipAddress" name="ipAddress" value="192.168.178.12" /><br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>       
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
 
-                        var element = document.getElementById("pluginUid");
-                        var option  = document.createElement("option");
+        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/popper.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <!-- Standard utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
 
-                        option.value = rsp.data.slots[index].uid;
-                        option.text = rsp.data.slots[index].uid;
-                        element.add(option);
+        <script>
 
-                        ++cnt;
+            var pluginName = "GruenbeckPlugin";
+    
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+    
+            function getPluginInstances() {
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/slots"
+                }).then(function(rsp) {
+                    var index   = 0;
+                    var cnt     = 0;
+    
+                    for(index = 0; index < rsp.data.slots.length; ++index) {
+                        if (rsp.data.slots[index].name === pluginName) {
+    
+                            var element = document.getElementById("pluginUid");
+                            var option  = document.createElement("option");
+    
+                            option.value = rsp.data.slots[index].uid;
+                            option.text = rsp.data.slots[index].uid;
+                            element.add(option);
+    
+                            ++cnt;
+                        }
                     }
-                }
+    
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+    
+            function getIPAddress(pluginUid, ipAddressId) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress"
+                }).then(function(rsp) {
+                    var ipAddressInput = document.getElementById(ipAddressId);
 
-                return Promise.resolve(cnt);
-            }).catch(function(rsp) {
-                alert("Internal error.");
-                return Promise.resolve(0);
+                    ipAddressInput.value = rsp.data.ipAddress;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setIPAddress(pluginUid, ipAddress) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress",
+                    parameter: {
+                        set: ipAddress
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+
+                        return getIPAddress(
+                            select.options[select.selectedIndex].value,
+                            "ipAddress"
+                        );
+                    }
+                });
             });
-        };
-
-        function getIPAddress(pluginUid, ipAddressId) {
-            disableUI();
-            return utils.makeRequest({
-                method: "GET",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress"
-            }).then(function(rsp) {
-                var ipAddressInput = document.getElementById(ipAddressId);
-
-                ipAddressInput.value = rsp.data.ipAddress;
-
-            }).catch(function(rsp) {
-                alert("Internal error.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        function setIPAddress(pluginUid, ipAddress) {
-            disableUI();
-
-            return utils.makeRequest({
-                method: "POST",
-                url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress",
-                parameter: {
-                    set: ipAddress
-                }
-            }).then(function(rsp) {
-                alert("Ok.");
-            }).catch(function(rsp) {
-                alert("Failed.");
-            }).finally(function() {
-                enableUI();
-            });
-        }
-
-        window.onload = function() {
-            injectMenu("navbar", "/plugins.html");
-            utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
-            
-            /* Disable all forms, until the plugin instances are loaded. */
-            disableUI();
-
-            /* Load all plugin instances. */
-            getPluginInstances().then(function(cnt) {
-                var select = document.getElementById("pluginUid");
-
-                if (0 < cnt) {
-
-                    return getIPAddress(
-                        select.options[select.selectedIndex].value,
-                        "ipAddress"
-                    );
-                }
-            });
-        };
-    </script>
-</head>
-<body>
-<div class="header">
-    $HEADER$
-</div>
-<div id="navbar" class="topnav">
-</div>
-<div class="main">
-    <h2>GruenbeckPlugin</h2>
-    <img src="/images/GruenbeckPlugin.jpg" alt="Screenshot" />
-    <p>The plugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.</p>
-    <h3>REST API</h3>
-    <h4>Get ip-address</h4>
-    <pre name="injectOrigin">GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress</pre>
-    <h4>Set ip-address</h4>
-    <pre name="injectOrigin">POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress?set=&lt;IPADDRESS&gt;</pre>
-    <ul>
-        <li>PLUGIN-UID: The plugin unique id.</li>
-        <li>IPADDRESS: The ip-address for the Gruenbeck server.</li>
-    </ul>
-    <h3>Configuration</h3>
-    <h4>IP-address</h4>
-    <form id="myForm" action="javascript:setIPAddress(pluginUid.options[pluginUid.selectedIndex].value, ipAddress.value)">
-        <label for="pluginUid">Plugin UID:</label><br />
-        <select id="pluginUid" size="1" onChange="getIPAddress(pluginUid.options[pluginUid.selectedIndex].value, 'ipAddress')">
-        </select>
-        <br />
-        <label for="ipAddress">IP-address of server:</label><br />
-        <input type="text" id="ipAddress" name="ipAddress" value="192.168.178.12" /><br />
-        <input name="submit" type="submit" value="Update"/>
-    </form>
-</div>
-<div class="footer">
-    <hr />
-    <p>(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</p>
-</div>
-</body>
+        </script>
+    </body>
 </html>
