@@ -117,12 +117,12 @@
             function store(id) {
                 var formData    = new FormData();
                 var xhr         = new XMLHttpRequest();
-                var input       = document.getElementById(id);
+                var input       = $("#" + id);
 
-                if ("checkbox" === input.type) {
-                    formData.append(input.name, input.checked);
+                if ("checkbox" === input.attr("type")) {
+                    formData.append(input.attr("name"), input.is(":checked"));
                 } else {
-                    formData.append(input.name, input.value);
+                    formData.append(input.attr("name"), input.val());
                 }
 
                 xhr.open("POST", "/settings.html");
@@ -143,7 +143,7 @@
                 var keyIndex    = 0;
                 var keys        = null;
                 var label       = null;
-                var formGroup   = $("<div>").attr("class", "form-group");
+                var formGroup   = null;
                 var inputField  = null;
                 var button      = null;
 
@@ -152,14 +152,16 @@
 
                     label = $("<label>").attr("for", "for-" + index).attr("class", "form-label").text(data[index].title);
 
-                    inputField = $("<input>").attr("class", "form-control").attr("id", "for-" + index).attr("placeholder", "");
+                    inputField = $("<input>").attr("class", "form-control").attr("id", "setting-" + index).attr("placeholder", "");
                     for(keyIndex = 0; keyIndex < keys.length; ++keyIndex) {
                         $(inputField).attr(keys[keyIndex], data[index].input[keys[keyIndex]]);
                     }
 
-                    button = $("<button>").attr("class", "btn btn-default").attr("onclick", "store(" + index + ");").text("Store");
+                    button = $("<button>").attr("class", "btn btn-primary").attr("onclick", "store(\"setting-" + index + "\");").text("Store");
 
-                    $("#settings").append(label).append(formGroup).append(inputField).append(button).append($("br"));
+                    formGroup = $("<div>").attr("class", "form-group").append(label).append(inputField).append(button);
+
+                    $("#settings").append(formGroup);
                 }
             });
         </script>
