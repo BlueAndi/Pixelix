@@ -62,6 +62,8 @@
 
 /**
  * Shows the current state of VOLUMIO and the title of the played music.
+ * If the VOLUMIO server is offline, the plugin gets automatically disabled,
+ * otherwise enabled.
  *
  * Change VOLUMIO host address via REST API:
  * Text: POST \c "<base-uri>/host?set=<host-address>"
@@ -87,6 +89,7 @@ public:
         m_urlIcon(),
         m_urlText(),
         m_requestTimer(),
+        m_offlineTimer(),
         m_url(),
         m_callbackWebHandler(nullptr),
         m_xMutex(nullptr),
@@ -252,6 +255,12 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
 
+    /**
+     * Period in ms after which the plugin gets automatically disabled if no new
+     * data is available.
+     */
+    static const uint32_t   OFFLINE_PERIOD      = (60U * 1000U);
+
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
@@ -261,7 +270,8 @@ private:
     String                      m_urlIcon;                  /**< REST API URL for updating the icon */
     String                      m_urlText;                  /**< REST API URL for updating the text */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer                 m_requestTimer;             /**< Timer, used for cyclic request of new data. */
+    SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
+    SimpleTimer                 m_offlineTimer;             /**< Timer used for offline detection. */
     String                      m_url;                      /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */

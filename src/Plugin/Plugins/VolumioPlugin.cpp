@@ -107,6 +107,8 @@ void VolumioPlugin::start()
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
+    m_offlineTimer.start(OFFLINE_PERIOD);
+
     unlock();
 
     return;
@@ -116,6 +118,7 @@ void VolumioPlugin::stop()
 {
     lock();
 
+    m_offlineTimer.stop();
     m_requestTimer.stop();
 
     if (false != SPIFFS.remove(m_configurationFilename))
@@ -145,6 +148,17 @@ void VolumioPlugin::process()
         {
             m_requestTimer.start(UPDATE_PERIOD);
         }
+    }
+
+    /* If VOLUMIO is offline, disable the plugin. */
+    if ((true == m_offlineTimer.isTimerRunning()) &&
+        (true == m_offlineTimer.isTimeout()))
+    {
+        disable();
+    }
+    else
+    {
+        enable();
     }
 
     return;
@@ -450,6 +464,9 @@ void VolumioPlugin::initHttpClient()
                 }
 
                 m_textWidget.setFormatStr(title);
+
+                /* Feed the offline timer to avoid that the plugin gets disabled. */
+                m_offlineTimer.restart();
 
                 unlock();
             }
