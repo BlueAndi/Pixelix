@@ -40,14 +40,14 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <ul class="navbar-nav mr-auto">
-                        <li class="nav-item active">
-                            <a class="nav-link" href="/index.html">Home <span class="sr-only">(current)</span></a>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/index.html">Home</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/display.html">Display</a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins</a>
+                        <li class="nav-item dropdown active">
+                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins <span class="sr-only">(current)</span></a>
                             <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
                                 <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
                                 <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
@@ -63,7 +63,7 @@
                                 <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
                                 <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
                                 <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
-                                <a class="dropdown-item" href="/plugins/VolumioPlugin.html">Volumio Plugin</a>
+                                <a class="dropdown-item active" href="/plugins/VolumioPlugin.html">Volumio Plugin</a>
                                 <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
                             </div>
                         </li>
@@ -91,10 +91,29 @@
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
             <div class="container">
-                <h1 class="mt-5">Error</h1>
-                <div class="alert alert-danger" role="alert">
-                    <p>Invalid page requested!</p>
-                </div>
+                <h1 class="mt-5">VolumioPlugin</h1>
+                <p><img src="/images/VolumioPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin shows the current VOLUMIO state as icon and the played title.</p>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get VOLUMIO host address</h3>
+                <pre name="injectOrigin"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/host</code></pre>
+                <h3 class="mt-1">Set VOLUMIO host address</h3>
+                <pre name="injectOrigin"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/host?set=&lt;HOST-ADDRESS&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>HOST-ADDRESS: The host address of the VOLUMIO server.</li>
+                </ul>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Host Address</h3>
+                <form id="myForm" action="javascript:setHost(pluginUid.options[pluginUid.selectedIndex].value, host.value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUid" size="1" onChange="getHost(pluginUid.options[pluginUid.selectedIndex].value, 'host')">
+                    </select>
+                    <br />
+                    <label for="host">Host address of server:</label><br />
+                    <input type="text" id="host" name="host" value="volumio.fritz.box" /><br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>       
             </div>
         </main>
   
@@ -111,5 +130,105 @@
         <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/popper.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <!-- Standard utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+
+        <script>
+
+            var pluginName = "VolumioPlugin";
+    
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+    
+            function getPluginInstances() {
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/slots"
+                }).then(function(rsp) {
+                    var index   = 0;
+                    var cnt     = 0;
+    
+                    for(index = 0; index < rsp.data.slots.length; ++index) {
+                        if (rsp.data.slots[index].name === pluginName) {
+    
+                            var element = document.getElementById("pluginUid");
+                            var option  = document.createElement("option");
+    
+                            option.value = rsp.data.slots[index].uid;
+                            option.text = rsp.data.slots[index].uid;
+                            element.add(option);
+    
+                            ++cnt;
+                        }
+                    }
+    
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+    
+            function getHost(pluginUid, hostId) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/host"
+                }).then(function(rsp) {
+                    var hostInput = document.getElementById(hostId);
+
+                    hostInput.value = rsp.data.host;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setHost(pluginUid, host) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/host",
+                    parameter: {
+                        set: host
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+
+                        return getHost(
+                            select.options[select.selectedIndex].value,
+                            "host"
+                        );
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
