@@ -65,6 +65,8 @@
 AsyncHttpClient::AsyncHttpClient() :
     m_tcpClient(),
     m_onRspCallback(nullptr),
+    m_onClosedCallback(),
+    m_onErrorCallback(),
     m_hostname(),
     m_port(0U),
     m_base64Authorization(),
@@ -342,6 +344,11 @@ void AsyncHttpClient::regOnClosed(const OnClosed& onClosed)
     m_onClosedCallback = onClosed;
 }
 
+void AsyncHttpClient::regOnError(const OnError& onError)
+{
+    m_onErrorCallback = onError;
+}
+
 bool AsyncHttpClient::GET()
 {
     bool status = false;
@@ -464,6 +471,7 @@ void AsyncHttpClient::onError(AsyncClient* client, int8_t error)
     UTIL_NOT_USED(client);
 
     LOG_WARNING("Error occurred: %d", error);
+    notifyError();
     disconnect();
 }
 
@@ -1107,6 +1115,14 @@ void AsyncHttpClient::notifyClosed()
     if (nullptr != m_onClosedCallback)
     {
         m_onClosedCallback();
+    }
+}
+
+void AsyncHttpClient::notifyError()
+{
+    if (nullptr != m_onErrorCallback)
+    {
+        m_onErrorCallback();
     }
 }
 

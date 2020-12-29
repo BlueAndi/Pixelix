@@ -78,6 +78,11 @@ public:
     typedef std::function<void()> OnClosed;
 
     /**
+     * Prototype of HTTP response callback in case a error happened.
+     */
+    typedef std::function<void()> OnError;
+
+    /**
      * Constructs a http client.
      */
     AsyncHttpClient();
@@ -187,6 +192,13 @@ public:
     void regOnClosed(const OnClosed& onClosed);
 
     /**
+     * Register callback function on error.
+     *
+     * @param[in] onError   Callback
+     */
+    void regOnError(const OnError& onError);
+    
+    /**
      * Send GET request to host.
      *
      * @return If request is successful sent, it will return true otherwise false.
@@ -253,6 +265,7 @@ private:
     AsyncClient     m_tcpClient;            /**< Asynchronous TCP client */
     OnResponse      m_onRspCallback;        /**< Callback which to call for a complete response. */
     OnClosed        m_onClosedCallback;     /**< Callback which to call for a closed connection. */
+    OnError         m_onErrorCallback;      /**< Callback which to call for a connection error. */
     String          m_hostname;             /**< Server hostname */
     uint16_t        m_port;                 /**< Server port */
     String          m_base64Authorization;  /**< Authorization BASE64 encoded */
@@ -438,6 +451,13 @@ private:
      * registered or not.
      */
     void notifyClosed();
+
+    /**
+     * This method will be called if a error happened and notifies the
+     * application, depended on whether a application callback function is
+     * registered or not.
+     */
+    void notifyError();
 
     /**
      * URL encode string (RFC1738 section 2.2)
