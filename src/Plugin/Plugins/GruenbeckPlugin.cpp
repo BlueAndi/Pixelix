@@ -213,8 +213,8 @@ void GruenbeckPlugin::start()
         }
     }
 
-    registerResponseCallback();
-    if (false == requestNewData())
+    initHttpClient();
+    if (false == startHttpRequest())
     {
         /* If a request fails, show a '?' */
         m_textWidget.setFormatStr("\\calign?");
@@ -252,7 +252,7 @@ void GruenbeckPlugin::process()
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
-        if (false == requestNewData())
+        if (false == startHttpRequest())
         {
             /* If a request fails, show a '?' */
             m_textWidget.setFormatStr("\\calign?");
@@ -368,7 +368,7 @@ void GruenbeckPlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-bool GruenbeckPlugin::requestNewData()
+bool GruenbeckPlugin::startHttpRequest()
 {
     bool status  = false;
 
@@ -395,7 +395,7 @@ bool GruenbeckPlugin::requestNewData()
     return status;
 }
 
-void GruenbeckPlugin::registerResponseCallback()
+void GruenbeckPlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
         size_t      payloadSize     = 0U;

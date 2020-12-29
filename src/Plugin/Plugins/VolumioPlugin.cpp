@@ -93,8 +93,8 @@ void VolumioPlugin::start()
         }
     }
 
-    registerResponseCallback();
-    if (false == requestNewData())
+    initHttpClient();
+    if (false == startHttpRequest())
     {
         /* If a request fails, show standard icon and a '?' */
         m_bitmapWidget.load(IMAGE_PATH_STD_ICON);
@@ -133,7 +133,7 @@ void VolumioPlugin::process()
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
-        if (false == requestNewData())
+        if (false == startHttpRequest())
         {
             /* If a request fails, show standard icon and a '?' */
             m_bitmapWidget.load(IMAGE_PATH_STD_ICON);
@@ -352,7 +352,7 @@ void VolumioPlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-bool VolumioPlugin::requestNewData()
+bool VolumioPlugin::startHttpRequest()
 {
     bool status = false;
 
@@ -376,7 +376,7 @@ bool VolumioPlugin::requestNewData()
     return status;
 }
 
-void VolumioPlugin::registerResponseCallback()
+void VolumioPlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
         size_t              payloadSize             = 0U;

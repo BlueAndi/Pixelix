@@ -283,12 +283,12 @@ private:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool requestNewData(void);
+    bool startHttpRequest(void);
 
     /**
      * Register callback function on response reception.
      */
-    void registerResponseCallback(void);
+    void initHttpClient(void);
 
     /**
      * Saves current configuration to JSON file.

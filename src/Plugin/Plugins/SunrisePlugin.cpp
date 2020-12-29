@@ -184,8 +184,8 @@ void SunrisePlugin::start()
         }
     }
 
-    registerResponseCallback();
-    if (false == requestNewData())
+    initHttpClient();
+    if (false == startHttpRequest())
     {
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
     }
@@ -220,7 +220,7 @@ void SunrisePlugin::process()
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
-        if (false == requestNewData())
+        if (false == startHttpRequest())
         {
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
         }
@@ -346,7 +346,7 @@ void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-bool SunrisePlugin::requestNewData()
+bool SunrisePlugin::startHttpRequest()
 {
     bool    status  = false;
     String  url     = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
@@ -366,7 +366,7 @@ bool SunrisePlugin::requestNewData()
     return status;
 }
 
-void SunrisePlugin::registerResponseCallback()
+void SunrisePlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
         size_t                  payloadSize     = 0U;
