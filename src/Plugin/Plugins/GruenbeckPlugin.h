@@ -86,7 +86,8 @@ public:
         m_requestTimer(),
         m_url(),
         m_callbackWebHandler(nullptr),
-        m_xMutex(nullptr)
+        m_xMutex(nullptr),
+        m_isConnectionError(false)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -248,6 +249,7 @@ private:
     String                      m_url;                      /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    bool                        m_isConnectionError;        /**< Is connection error happened? */
 
     /**
      * Instance specific web request handler, called by the static web request

@@ -216,6 +216,9 @@ void GruenbeckPlugin::start()
     registerResponseCallback();
     if (false == requestNewData())
     {
+        /* If a request fails, show a '?' */
+        m_textWidget.setFormatStr("\\calign?");
+
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
     }
     else
@@ -251,6 +254,9 @@ void GruenbeckPlugin::process()
     {
         if (false == requestNewData())
         {
+            /* If a request fails, show a '?' */
+            m_textWidget.setFormatStr("\\calign?");
+
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
         }
         else
@@ -364,21 +370,25 @@ void GruenbeckPlugin::webReqHandler(AsyncWebServerRequest *request)
 
 bool GruenbeckPlugin::requestNewData()
 {
-    bool    status  = false;
-    String  url     = String("http://") + m_ipAddress + "/mux_http";
+    bool status  = false;
 
-    if (true == m_client.begin(url))
+    if (0 < m_ipAddress.length())
     {
-        m_client.addPar("id","42");
-        m_client.addPar("show","D_Y_10_1~");
+        String url = String("http://") + m_ipAddress + "/mux_http";
 
-        if (false == m_client.POST())
+        if (true == m_client.begin(url))
         {
-            LOG_WARNING("POST %s failed.", url.c_str());
-        }
-        else
-        {
-            status = true;
+            m_client.addPar("id","42");
+            m_client.addPar("show","D_Y_10_1~");
+
+            if (false == m_client.POST())
+            {
+                LOG_WARNING("POST %s failed.", url.c_str());
+            }
+            else
+            {
+                status = true;
+            }
         }
     }
 
@@ -402,6 +412,29 @@ void GruenbeckPlugin::registerResponseCallback()
         lock();
         m_relevantResponsePart = payloadString.substring(START_INDEX_OF_RELEVANT_DATA, END_INDEX_OF_RELEVANT_DATA);
         m_httpResponseReceived = true;
+        unlock();
+    });
+
+    m_client.regOnClosed([this]() {
+        LOG_INFO("Connection closed.");
+
+        lock();
+        if (true == m_isConnectionError)
+        {
+            /* If a request fails, show a '?' */
+            m_textWidget.setFormatStr("\\calign?");
+
+            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+        }
+        m_isConnectionError = false;
+        unlock();
+    });
+
+    m_client.regOnError([this]() {
+        LOG_WARNING("Connection error happened.");
+
+        lock();
+        m_isConnectionError = true;
         unlock();
     });
 }
