@@ -61,12 +61,10 @@
  *****************************************************************************/
 
 /**
- * Shows a icon (bitmap) on the left side in 8 x 8 and text on the right side.
- * If the text is too long for the display width, it automatically scrolls.
+ * Shows the current state of VOLUMIO and the title of the played music.
  *
- * Change icon or text via REST API:
- * Icon: POST \c "<base-uri>/bitmap" with multipart/form-data file upload.
- * Text: POST \c "<base-uri>/text?show=<text>"
+ * Change VOLUMIO host address via REST API:
+ * Text: POST \c "<base-uri>/host?set=<host-address>"
  */
 class VolumioPlugin : public Plugin
 {
