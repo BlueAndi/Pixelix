@@ -19,6 +19,7 @@
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown](#endpoint-base-uridisplayuidplugin-uidcountdown)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location](#endpoint-base-uridisplayuidplugin-uidlocation)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/ipAddress](#endpoint-base-uridisplayuidplugin-uidipaddress)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/host](#endpoint-base-uridisplayuidplugin-uidhost)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -503,7 +504,53 @@ Result:
 Example with curl:
 ```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
-$ curl -u luke:skywalker -d "set=192.168.178-12" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
+$ curl -u luke:skywalker -d "set=192.168.178" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
+```
+
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/host
+Get/Set the host address of the VolumioPlugin plugin.
+
+Detail:
+* Method: GET
+  * Get the host address.
+    * Arguments:
+      * N/A
+* Method: POST
+  * Set the host address.
+    * Arguments:
+      * set=`<host-address>`
+
+Example:
+```
+GET <base-uri>/rest/api/v1/display/uid/0/host
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "host": "volumio.fritz.box"
+    }
+}
+```
+
+```
+POST <base-uri>/rest/api/v1/display/uid/0/host?set=volumio.fritz.box
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": null
+}
+```
+
+Example with curl:
+```bash
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/host
+$ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/host
 ```
 
 # Issues, Ideas And Bugs
