@@ -1102,9 +1102,13 @@ void DisplayMgr::load()
                 LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
             }
 
-            if (DeserializationError::Ok != error)
+            if (DeserializationError::Ok != error.code())
             {
                 LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+            }
+            else if (false == jsonDoc["slots"].is<JsonArray>())
+            {
+                LOG_WARNING("Invalid JSON format.");
             }
             else
             {
@@ -1113,14 +1117,17 @@ void DisplayMgr::load()
 
                 for(JsonObject jsonSlot: jsonSlots)
                 {
-                    uint32_t duration = jsonSlot["duration"];
-
-                    m_slots[slotId].setDuration(duration);
-
-                    ++slotId;
-                    if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                    if (true == jsonSlot["duration"].is<uint32_t>())
                     {
-                        break;
+                        uint32_t duration = jsonSlot["duration"].as<uint32_t>();
+
+                        m_slots[slotId].setDuration(duration);
+
+                        ++slotId;
+                        if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                        {
+                            break;
+                        }
                     }
                 }
             }

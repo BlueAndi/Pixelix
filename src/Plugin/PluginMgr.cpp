@@ -192,9 +192,13 @@ void PluginMgr::load()
                 LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
             }
 
-            if (DeserializationError::Ok != error)
+            if (DeserializationError::Ok != error.code())
             {
                 LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+            }
+            else if (false == jsonDoc["slots"].is<JsonArray>())
+            {
+                LOG_WARNING("Invalid JSON format.");
             }
             else
             {
@@ -203,27 +207,31 @@ void PluginMgr::load()
 
                 for(JsonObject jsonSlot: jsonSlots)
                 {
-                    String      name    = jsonSlot["name"];
-                    uint16_t    uid     = jsonSlot["uid"];
-
-                    if (false == name.isEmpty())
+                    if ((true == jsonSlot["name"].is<String>()) &&
+                        (true == jsonSlot["uid"].is<uint16_t>()))
                     {
-                        IPluginMaintenance* plugin = install(name, uid, slotId);
+                        String      name    = jsonSlot["name"].as<String>();
+                        uint16_t    uid     = jsonSlot["uid"].as<uint16_t>();
 
-                        if (nullptr == plugin)
+                        if (false == name.isEmpty())
                         {
-                            LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
-                        }
-                        else
-                        {
-                            plugin->enable();
-                        }
-                    }
+                            IPluginMaintenance* plugin = install(name, uid, slotId);
 
-                    ++slotId;
-                    if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
-                    {
-                        break;
+                            if (nullptr == plugin)
+                            {
+                                LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                            }
+                            else
+                            {
+                                plugin->enable();
+                            }
+                        }
+
+                        ++slotId;
+                        if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                        {
+                            break;
+                        }
                     }
                 }
             }

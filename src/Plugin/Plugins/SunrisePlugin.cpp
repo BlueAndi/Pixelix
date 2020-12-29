@@ -378,7 +378,7 @@ void SunrisePlugin::registerResponseCallback()
         String                  sunrise;
         String                  sunset;
         JsonObject              results;
-        JsonObject              obj;
+        DeserializationError    error;
 
         while(payloadSize > payloadIndex)
         {
@@ -388,17 +388,18 @@ void SunrisePlugin::registerResponseCallback()
 
         m_httpResponseReceived = true;
 
-        if (DeserializationError::Ok != deserializeJson(jsonDoc, payloadStr))
+        error = deserializeJson(jsonDoc, payloadStr);
+
+        if (DeserializationError::Ok != error.code())
         {
-            LOG_ERROR("Invalid JSON message received.");
+            LOG_ERROR("Invalid JSON message received: %s", error.c_str());
         }
         else
         {
             const size_t    MAX_USAGE       = 80U;
             size_t          usageInPercent  = 0U;
 
-            obj     = jsonDoc.as<JsonObject>();
-            results = obj["results"];
+            results = jsonDoc["results"];
             sunrise = results["sunrise"].as<String>();
             sunset  = results["sunset"].as<String>();
 
@@ -497,17 +498,15 @@ bool SunrisePlugin::loadConfiguration()
         DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
         DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
 
-        if (DeserializationError::Ok != error)
+        if (DeserializationError::Ok != error.code())
         {
-            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+            LOG_WARNING("Failed to load file %s: %s", m_configurationFilename.c_str(), error.c_str());
             status = false;
         }
         else
         {
-            JsonObject obj = jsonDoc.as<JsonObject>();
-
-            m_longitude = obj["longitude"].as<String>();
-            m_latitude  = obj["latitude"].as<String>();
+            m_longitude = jsonDoc["longitude"].as<String>();
+            m_latitude  = jsonDoc["latitude"].as<String>();
         }
 
         fd.close();

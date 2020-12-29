@@ -79,18 +79,15 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_ipAddress(),
-        m_configurationFilename(""),
+        m_ipAddress("192.168.0.16"),
+        m_configurationFilename(),
         m_httpResponseReceived(false),
-        m_relevantResponsePart(""),
+        m_relevantResponsePart(),
         m_requestTimer(),
         m_url(),
         m_callbackWebHandler(nullptr),
         m_xMutex(nullptr)
     {
-        /* Example address, used to generate the very first configuration file. */
-        m_ipAddress = "192.168.0.16";
-
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 

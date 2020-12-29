@@ -462,20 +462,18 @@ bool CountdownPlugin::loadConfiguration()
         DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
         DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
 
-        if (DeserializationError::Ok != error)
+        if (DeserializationError::Ok != error.code())
         {
-            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+            LOG_WARNING("Failed to load file %s: %s", m_configurationFilename.c_str(), error.c_str());
             status = false;
         }
         else
         {
-            JsonObject obj = jsonDoc.as<JsonObject>();
-
-            m_targetDate.day                    = obj["day"];
-            m_targetDate.month                  = obj["month"];
-            m_targetDate.year                   = obj["year"];
-            m_targetDateInformation.plural      = obj["descriptionPlural"].as<String>();
-            m_targetDateInformation.singular    = obj["descriptionSingular"].as<String>();
+            m_targetDate.day                    = jsonDoc["day"].as<uint8_t>();
+            m_targetDate.month                  = jsonDoc["month"].as<uint8_t>();
+            m_targetDate.year                   = jsonDoc["year"].as<uint16_t>();
+            m_targetDateInformation.plural      = jsonDoc["descriptionPlural"].as<String>();
+            m_targetDateInformation.singular    = jsonDoc["descriptionSingular"].as<String>();
         }
 
         fd.close();

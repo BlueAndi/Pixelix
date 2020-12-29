@@ -448,16 +448,14 @@ bool GruenbeckPlugin::loadConfiguration()
         DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
         DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
 
-        if (DeserializationError::Ok != error)
+        if (DeserializationError::Ok != error.code())
         {
-            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+            LOG_WARNING("Failed to load file %s: %s", m_configurationFilename.c_str(), error.c_str());
             status = false;
         }
         else
         {
-            JsonObject obj = jsonDoc.as<JsonObject>();
-
-            m_ipAddress = obj["gruenbeckIP"].as<String>();
+            m_ipAddress = jsonDoc["gruenbeckIP"].as<String>();
         }
 
         fd.close();
