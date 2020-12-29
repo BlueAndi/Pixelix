@@ -237,6 +237,11 @@ private:
     static const char*      IMAGE_PATH_PLAY_ICON;
 
     /**
+     * Image path within the filesystem to "pause" icon.
+     */
+    static const char*      IMAGE_PATH_PAUSE_ICON;
+
+    /**
      * Configuration path within the SPIFFS.
      */
     static const char*      CONFIG_PATH;

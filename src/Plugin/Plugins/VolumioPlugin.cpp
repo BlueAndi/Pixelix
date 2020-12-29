@@ -60,16 +60,19 @@
  *****************************************************************************/
 
 /* Initialize image path for standard icon. */
-const char* VolumioPlugin::IMAGE_PATH_STD_ICON  = "/images/volumio.bmp";
+const char* VolumioPlugin::IMAGE_PATH_STD_ICON      = "/images/volumio.bmp";
 
 /* Initialize image path for "stop" icon. */
-const char* VolumioPlugin::IMAGE_PATH_STOP_ICON = "/images/volumioStop.bmp";
+const char* VolumioPlugin::IMAGE_PATH_STOP_ICON     = "/images/volumioStop.bmp";
 
 /* Initialize image path for "play" icon. */
-const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON = "/images/volumioPlay.bmp";
+const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/images/volumioPlay.bmp";
+
+/* Initialize image path for "pause" icon. */
+const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/images/volumioPause.bmp";
 
 /* Initialize configuration path. */
-const char* VolumioPlugin::CONFIG_PATH          = "/configuration";
+const char* VolumioPlugin::CONFIG_PATH              = "/configuration";
 
 /******************************************************************************
  * Public Methods
@@ -417,25 +420,64 @@ void VolumioPlugin::initHttpClient()
         {
             if (false == jsonDoc["status"].is<String>())
             {
-                LOG_WARNING("JSON status is no string.");
+                LOG_WARNING("JSON status type missmatch or missing.");
             }
             else if (false == jsonDoc["title"].is<String>())
             {
-                LOG_WARNING("JSON title is no string.");
+                LOG_WARNING("JSON title type missmatch or missing.");
             }
             else if (false == jsonDoc["seek"].is<uint32_t>())
             {
-                LOG_WARNING("JSON seek is no uint32_t.");
+                LOG_WARNING("JSON seek type missmatch or missing.");
+            }
+            else if (false == jsonDoc["service"].is<String>())
+            {
+                LOG_WARNING("JSON service type missmatch or missing.");
             }
             else
             {
                 String      status      = jsonDoc["status"].as<String>();
+                String      artist;
                 String      title       = jsonDoc["title"].as<String>();
                 uint32_t    seekValue   = jsonDoc["seek"].as<uint32_t>();
+                String      service     = jsonDoc["service"].as<String>();
+                String      infoOnDisplay;
+
+                /* Artist may exist */
+                if (true == jsonDoc["artist"].is<String>())
+                {
+                    artist = jsonDoc["artist"].as<String>();
+                }
 
                 if (true == title.isEmpty())
                 {
                     title = "\\calign-";
+                }
+
+                if (service == "mpd")
+                {
+                    if (true == artist.isEmpty())
+                    {
+                        infoOnDisplay = title;
+                    }
+                    else
+                    {
+                        infoOnDisplay = artist + " - " + title;
+                    }
+                }
+                else if (service == "webradio")
+                {
+                    /* If stopped, the title contains the radio station name,
+                     * otherwise the title contains the music and the artist
+                     * the radio station name.
+                     * 
+                     * Therefore show only the title in any case.
+                     */
+                    infoOnDisplay = title;
+                }
+                else
+                {
+                    infoOnDisplay = title;
                 }
 
                 lock();
@@ -458,12 +500,16 @@ void VolumioPlugin::initHttpClient()
                 {
                     (void)m_bitmapWidget.load(IMAGE_PATH_PLAY_ICON);
                 }
+                else if (status == "pause")
+                {
+                    (void)m_bitmapWidget.load(IMAGE_PATH_PAUSE_ICON);
+                }
                 else
                 {
                     (void)m_bitmapWidget.load(IMAGE_PATH_STD_ICON);
                 }
 
-                m_textWidget.setFormatStr(title);
+                m_textWidget.setFormatStr(infoOnDisplay);
 
                 /* Feed the offline timer to avoid that the plugin gets disabled. */
                 m_offlineTimer.restart();
