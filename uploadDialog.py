@@ -46,7 +46,7 @@ class App(tk.Frame):
         inputPort = tk.Entry(self, textvariable=self._port)
 
         labelPassword = tk.Label(self, text="Password:", anchor="w")
-        inputPassword = tk.Entry(self, textvariable=self._password)
+        inputPassword = tk.Entry(self, textvariable=self._password, show="*")
 
         labelIpAddress.pack(fill="x", expand=False)
         inputIpAddress.pack(fill="x", expand=True)
@@ -93,3 +93,4 @@ def beforeUpload(source, target, env):
         print("Aborted. Using upload parameters from platform.ini")
 
 env.AddPreAction("upload", beforeUpload)
+env.AddPreAction("uploadfs", beforeUpload)
