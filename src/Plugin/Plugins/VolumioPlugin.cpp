@@ -161,16 +161,6 @@ void VolumioPlugin::process()
         LOG_INFO("VOLUMIO not present, going offline.");
         disable();
     }
-    /* Enable plugin again, if necessary. */
-    else if (false == isEnabled())
-    {
-        LOG_INFO("VOLUMIO back again, going online.");
-        enable();
-    }
-    else
-    {
-        ;
-    }
 
     return;
 }
@@ -558,6 +548,13 @@ void VolumioPlugin::initHttpClient()
 
                 /* Feed the offline timer to avoid that the plugin gets disabled. */
                 m_offlineTimer.restart();
+
+                /* Enable plugin again, if necessary. */
+                if (false == isEnabled())
+                {
+                    LOG_INFO("VOLUMIO back again, going online.");
+                    enable();
+                }
 
                 unlock();
             }
