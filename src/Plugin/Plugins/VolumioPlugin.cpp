@@ -263,14 +263,14 @@ void VolumioPlugin::update(IGfx& gfx)
     {
         int16_t     tcX         = 0;
         int16_t     tcY         = 0;
-        uint16_t    posWidth    = m_textCanvas.getWidth() * m_pos / 100U;
+        uint16_t    posWidth    = m_textCanvas->getWidth() * m_pos / 100U;
         Color       posColor(ColorDef::RED);
 
-        m_textCanvas.getPos(tcX, tcY);
+        m_textCanvas->getPos(tcX, tcY);
         m_textCanvas->update(gfx);
 
         /* Draw a nice line to represent the current music position. */
-        gfx.drawHLine(tcX, m_textCanvas.getHeight() - 1, posWidth, posColor);
+        gfx.drawHLine(tcX, m_textCanvas->getHeight() - 1, posWidth, posColor);
     }
 
     unlock();
