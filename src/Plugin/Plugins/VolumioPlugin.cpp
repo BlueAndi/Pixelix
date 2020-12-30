@@ -155,13 +155,21 @@ void VolumioPlugin::process()
 
     /* If VOLUMIO is offline, disable the plugin. */
     if ((true == m_offlineTimer.isTimerRunning()) &&
-        (true == m_offlineTimer.isTimeout()))
+        (true == m_offlineTimer.isTimeout()) &&
+        (true == isEnabled()))
     {
+        LOG_INFO("VOLUMIO not present, going offline.");
         disable();
+    }
+    /* Enable plugin again, if necessary. */
+    else if (false == isEnabled())
+    {
+        LOG_INFO("VOLUMIO back again, going online.");
+        enable();
     }
     else
     {
-        enable();
+        ;
     }
 
     return;
@@ -495,12 +503,19 @@ void VolumioPlugin::initHttpClient()
                 {
                     uint32_t duration = jsonDoc["duration"].as<uint32_t>();
 
-                    pos = seekValue / duration;
-                    pos /= 10U;
-
-                    if (100U < pos)
+                    if (0U == duration)
                     {
-                        pos = 100U;
+                        pos = 0U;
+                    }
+                    else
+                    {
+                        pos = seekValue / duration;
+                        pos /= 10U;
+
+                        if (100U < pos)
+                        {
+                            pos = 100U;
+                        }
                     }
                 }
                 else
