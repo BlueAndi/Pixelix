@@ -94,7 +94,8 @@ public:
         m_callbackWebHandler(nullptr),
         m_xMutex(nullptr),
         m_isConnectionError(false),
-        m_lastSeekValue(0U)
+        m_lastSeekValue(0U),
+        m_pos(0U)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -282,6 +283,7 @@ private:
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
     bool                        m_isConnectionError;        /**< Is connection error happened? */
     uint32_t                    m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
+    uint8_t                     m_pos;                      /**< Current music position in percent. */
 
     /**
      * Instance specific web request handler, called by the static web request

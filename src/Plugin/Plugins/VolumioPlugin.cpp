@@ -261,7 +261,16 @@ void VolumioPlugin::update(IGfx& gfx)
 
     if (nullptr != m_textCanvas)
     {
+        int16_t     tcX         = 0;
+        int16_t     tcY         = 0;
+        uint16_t    posWidth    = m_textCanvas.getWidth() * m_pos / 100U;
+        Color       posColor(ColorDef::RED);
+
+        m_textCanvas.getPos(tcX, tcY);
         m_textCanvas->update(gfx);
+
+        /* Draw a nice line to represent the current music position. */
+        gfx.drawHLine(tcX, m_textCanvas.getHeight() - 1, posWidth, posColor);
     }
 
     unlock();
@@ -436,12 +445,13 @@ void VolumioPlugin::initHttpClient()
             }
             else
             {
-                String      status      = jsonDoc["status"].as<String>();
+                String      status          = jsonDoc["status"].as<String>();
                 String      artist;
-                String      title       = jsonDoc["title"].as<String>();
-                uint32_t    seekValue   = jsonDoc["seek"].as<uint32_t>();
-                String      service     = jsonDoc["service"].as<String>();
+                String      title           = jsonDoc["title"].as<String>();
+                uint32_t    seekValue       = jsonDoc["seek"].as<uint32_t>();
+                String      service         = jsonDoc["service"].as<String>();
                 String      infoOnDisplay;
+                uint32_t    pos             = 0U;
 
                 /* Artist may exist */
                 if (true == jsonDoc["artist"].is<String>())
@@ -480,6 +490,24 @@ void VolumioPlugin::initHttpClient()
                     infoOnDisplay = title;
                 }
 
+                /* Determine position */
+                if (true == jsonDoc["duration"].is<uint32_t>())
+                {
+                    uint32_t duration = jsonDoc["duration"].as<uint32_t>();
+
+                    pos = seekValue / duration;
+                    pos /= 10U;
+
+                    if (100U < pos)
+                    {
+                        pos = 100U;
+                    }
+                }
+                else
+                {
+                    pos = 0U;
+                }
+
                 lock();
 
                 /* Workaround for a VOLUMIO bug, which provides a wrong status. */
@@ -510,6 +538,8 @@ void VolumioPlugin::initHttpClient()
                 }
 
                 m_textWidget.setFormatStr(infoOnDisplay);
+
+                m_pos = static_cast<uint8_t>(pos);
 
                 /* Feed the offline timer to avoid that the plugin gets disabled. */
                 m_offlineTimer.restart();
