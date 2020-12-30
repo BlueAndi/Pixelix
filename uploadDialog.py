@@ -22,6 +22,7 @@
 
 import tkinter as tk
 from tkinter import ttk
+import json
 
 Import("env")
 
@@ -29,15 +30,14 @@ class App(tk.Frame):
     def __init__(self, parent=None):
         super(App, self).__init__(parent)
 
+        self._FILENAME  = "upload.json"
         self._parent    = parent
         self._ipAddress = tk.StringVar()
         self._port      = tk.IntVar()
         self._password  = tk.StringVar()
         self._isAborted = True
 
-        self._ipAddress.set("192.168.2.166")
-        self._port.set(3232)
-        self._password.set("maytheforcebewithyou")
+        self._load(self._FILENAME)
 
         labelIpAddress = tk.Label(self, text="IP-Address:", anchor="w")
         inputIpAddress = tk.Entry(self, textvariable=self._ipAddress)
@@ -58,7 +58,41 @@ class App(tk.Frame):
         buttonUpload = tk.Button(self, text="Upload", command=self._upload)
         buttonUpload.pack(fill="x", expand=False)
 
+    def _load(self, fileName):
+        try:
+            with open(fileName) as jsonFile:
+                data = json.load(jsonFile)
+                
+                if ("ipAddress" in data):
+                    self._ipAddress.set(data["ipAddress"])
+
+                if ("port" in data):
+                    self._port.set(data["port"])
+
+                if ("password" in data):
+                    self._password.set(data["password"])
+        except:
+            self._ipAddress.set("192.168.x.x")
+            self._port.set(3232)
+            self._password.set("maytheforcebewithyou")
+            pass
+
+    def _save(self, fileName):
+        data = {}
+        data["ipAddress"]   = self._ipAddress.get()
+        data["port"]        = self._port.get()
+        data["password"]    = self._password.get()
+
+        json.dumps(data)
+
+        try:
+            with open(fileName, "w") as jsonFile:
+                json.dump(data, jsonFile, indent=4)
+        except:
+            pass
+
     def _upload(self):
+        self._save(self._FILENAME)
         self._isAborted = False
         self._parent.quit()
 
