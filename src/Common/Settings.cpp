@@ -199,7 +199,7 @@ static bool             DEFAULT_TIME_FORMAT_CTRL        = true;
 static bool             DEFAULT_DATE_FORMAT_CTRL        = true;
 
 /** Max. number of display slots default value */
-static uint8_t          DEFAULT_MAX_SLOTS               = 5U;
+static uint8_t          DEFAULT_MAX_SLOTS               = 8U;
 
 /** Display slot configuration default value */
 static const char*      DEFAULT_SLOT_CONFIG             = "";
