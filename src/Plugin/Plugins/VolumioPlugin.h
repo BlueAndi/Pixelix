@@ -61,7 +61,7 @@
  *****************************************************************************/
 
 /**
- * Shows the current state of VOLUMIO and the title of the played music.
+ * Shows the current state of VOLUMIO and the artist/title of the played music.
  * If the VOLUMIO server is offline, the plugin gets automatically disabled,
  * otherwise enabled.
  *
