@@ -85,8 +85,8 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_longitude(),
-        m_latitude(),
+        m_longitude("2.295"), /* Example data */
+        m_latitude("48.858"), /* Example data */
         m_configurationFilename(""),
         m_httpResponseReceived(false),
         m_relevantResponsePart(""),
@@ -95,10 +95,6 @@ public:
         m_xMutex(nullptr),
         m_requestTimer()
     {
-        /* Example data, used to generate the very first configuration file. */
-        m_longitude = "2.295";
-        m_latitude  = "48.858";
-
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
