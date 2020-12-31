@@ -371,8 +371,7 @@ void SunrisePlugin::initHttpClient()
     m_client.regOnResponse([this](const HttpResponse& rsp){
         size_t                  payloadSize     = 0U;
         const char*             payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        size_t                  payloadIndex    = 0U;
-        String                  payloadStr;
+        std::unique_ptr<char>   payloadStr(new char[payloadSize + 1]);
         const size_t            JSON_DOC_SIZE   = 768U;
         DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
         String                  sunrise;
@@ -380,15 +379,12 @@ void SunrisePlugin::initHttpClient()
         JsonObject              results;
         DeserializationError    error;
 
-        while(payloadSize > payloadIndex)
-        {
-            payloadStr += payload[payloadIndex];
-            ++payloadIndex;
-        }
+        memcpy(payloadStr.get(), payload, payloadSize);
+        payloadStr.get()[payloadSize] = '\0';
 
         m_httpResponseReceived = true;
 
-        error = deserializeJson(jsonDoc, payloadStr);
+        error = deserializeJson(jsonDoc, payloadStr.get());
 
         if (DeserializationError::Ok != error.code())
         {
