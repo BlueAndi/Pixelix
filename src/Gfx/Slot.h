@@ -102,7 +102,7 @@ public:
      *
      * @return Duration in ms
      */
-    uint32_t getDuration() const;
+    uint32_t getDuration() const final;
 
     /**
      * Set duration in ms, how long the plugin shall be active.

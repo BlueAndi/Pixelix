@@ -63,13 +63,6 @@ class IFadeEffect
 public:
 
     /**
-     * Constructs the fade effect interface.
-     */
-    IFadeEffect()
-    {
-    }
-
-    /**
      * Destroys the fade effect interface.
      */
     virtual ~IFadeEffect()
@@ -102,6 +95,15 @@ public:
      * @return If the effect is complete, it will return true otherwise false.
      */
     virtual bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) = 0;
+
+protected:
+
+    /**
+     * Constructs the fade effect interface.
+     */
+    IFadeEffect()
+    {
+    }
 
 private:
 

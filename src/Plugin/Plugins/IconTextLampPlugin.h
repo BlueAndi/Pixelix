@@ -152,13 +152,13 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) override;
+    void active(IGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
      * it won't be shown on the display anymore.
      */
-    void inactive() override;
+    void inactive() final;
 
     /**
      * Register web interface, e.g. REST API functionality.
@@ -166,14 +166,14 @@ public:
      * @param[in] srv       Webserver
      * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override;
+    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
 
     /**
      * Unregister web interface.
      *
      * @param[in] srv   Webserver
      */
-    void unregisterWebInterface(AsyncWebServer& srv) override;
+    void unregisterWebInterface(AsyncWebServer& srv) final;
 
     /**
      * Update the display.
@@ -181,7 +181,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx);
+    void update(IGfx& gfx) final;
 
     /**
      * Get text.

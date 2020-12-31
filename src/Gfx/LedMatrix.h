@@ -175,7 +175,7 @@ private:
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color in RGB888 format
      */
-    void drawPixel(int16_t x, int16_t y, const Color& color)
+    void drawPixel(int16_t x, int16_t y, const Color& color) final
     {
         if ((0 <= x) &&
             (Board::LedMatrix::width > x) &&
@@ -200,7 +200,7 @@ private:
      * @param[in] y     y-coordinate
      * @param[in] ratio Dim ration [0; 255]
      */
-    void dimPixel(int16_t x, int16_t y, uint8_t ratio)
+    void dimPixel(int16_t x, int16_t y, uint8_t ratio) final
     {
         if ((0 <= x) &&
             (Board::LedMatrix::width > x) &&
