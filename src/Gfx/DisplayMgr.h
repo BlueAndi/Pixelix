@@ -78,7 +78,9 @@ public:
      */
     static DisplayMgr& getInstance()
     {
-        return m_instance;
+        static DisplayMgr instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -265,9 +267,6 @@ public:
     static const uint8_t        BRIGHTNESS_DEFAULT  = (UINT8_MAX * 40U) / 100U;
 
 private:
-
-    /** Display manager instance */
-    static DisplayMgr   m_instance;
 
     /** Mutex to lock/unlock display update. */
     SemaphoreHandle_t   m_xMutex;

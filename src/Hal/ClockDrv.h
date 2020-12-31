@@ -68,7 +68,9 @@ public:
      */
     static ClockDrv& getInstance()
     {
-        return m_instance;
+        static ClockDrv instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -104,9 +106,6 @@ public:
     static const int16_t NTP_DAYLIGHT_OFFSET_SEC    = 3600;
 
 private:
-
-    /** ClockDrv instance. */
-    static ClockDrv m_instance;
 
     /** Flag indicating a initialized clock driver. */
     bool m_isClockDrvInitialized;

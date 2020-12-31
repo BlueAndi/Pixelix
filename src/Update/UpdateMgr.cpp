@@ -71,9 +71,6 @@
 /* Set over-the-air update password */
 const char* UpdateMgr::OTA_PASSWORD = "maytheforcebewithyou";
 
-/* Instance of the update manager. */
-UpdateMgr   UpdateMgr::m_instance;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -270,7 +267,7 @@ void UpdateMgr::onStart()
 
     LOG_INFO(infoStr);
 
-    m_instance.beginProgress();
+    getInstance().beginProgress();
 
     return;
 }
@@ -279,16 +276,16 @@ void UpdateMgr::onEnd()
 {
     String  infoStr = "Update successful finished.";
 
-    m_instance.m_updateIsRunning = false;
+    getInstance().m_updateIsRunning = false;
 
     LOG_INFO(infoStr);
 
-    m_instance.endProgress();
+    getInstance().endProgress();
 
     /* Note, there is no need here to start the webserver or the display
      * manager again, because we request a restart of the system now.
      */
-    m_instance.reqRestart();
+    getInstance().reqRestart();
 
     return;
 }
@@ -297,7 +294,7 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 {
     const uint32_t  PROGRESS_PERCENT    = (progress * 100U) / total;
 
-    m_instance.updateProgress(PROGRESS_PERCENT);
+    getInstance().updateProgress(PROGRESS_PERCENT);
 
     return;
 }
@@ -339,25 +336,25 @@ void UpdateMgr::onError(ota_error_t error)
     if (false == SPIFFS.begin())
     {
         LOG_FATAL("Couldn't mount filesystem.");
-        m_instance.reqRestart();
+        getInstance().reqRestart();
     }
     else
     {
-        m_instance.endProgress();
+        getInstance().endProgress();
 
         /* Reset only if the error happened during update.
          * Security note: This avoids a reset in case the authentication failed.
          */
-        if (true == m_instance.m_updateIsRunning)
+        if (true == getInstance().m_updateIsRunning)
         {
             SysMsg::getInstance().show(infoStr, 4000U, 2U, true);
 
             /* Request a restart */
-            m_instance.reqRestart();
+            getInstance().reqRestart();
         }
     }
 
-    m_instance.m_updateIsRunning = false;
+    getInstance().m_updateIsRunning = false;
 
     return;
 }

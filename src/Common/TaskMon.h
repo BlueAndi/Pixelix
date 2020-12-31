@@ -69,7 +69,9 @@ public:
      */
     static TaskMon& getInstance()
     {
-        return m_instance;
+        static TaskMon instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -82,9 +84,7 @@ public:
 
 private:
 
-    static TaskMon  m_instance; /**< Task monitor instance */
-
-    SimpleTimer     m_timer;    /**< Timer used for cyclic processing. */
+    SimpleTimer m_timer;    /**< Timer used for cyclic processing. */
 
     /**
      * Constructs the task monitor.

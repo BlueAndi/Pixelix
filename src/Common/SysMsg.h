@@ -69,7 +69,9 @@ public:
      */
     static SysMsg& getInstance()
     {
-        return m_instance;
+        static SysMsg instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -98,8 +100,6 @@ public:
     bool isReady() const;
 
 private:
-
-    static SysMsg   m_instance; /**< System message handler instance */
 
     SysMsgPlugin*   m_plugin;   /**< Plugin, used to show system messages */
 

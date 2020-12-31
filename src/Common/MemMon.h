@@ -69,7 +69,9 @@ public:
      */
     static MemMon& getInstance()
     {
-        return m_instance;
+        static MemMon instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -88,9 +90,7 @@ public:
 
 private:
 
-    static MemMon  m_instance; /**< Memory monitor instance */
-
-    SimpleTimer     m_timer;    /**< Timer used for cyclic processing. */
+    SimpleTimer m_timer;    /**< Timer used for cyclic processing. */
 
     /**
      * Constructs the memory monitor.

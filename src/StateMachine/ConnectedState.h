@@ -69,7 +69,9 @@ public:
      */
     static ConnectedState& getInstance()
     {
-        return m_instance;
+        static ConnectedState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -94,9 +96,6 @@ public:
     void exit(StateMachine& sm);
 
 private:
-
-    /** Connected state instance */
-    static ConnectedState  m_instance;
 
     /**
      * Constructs the state.

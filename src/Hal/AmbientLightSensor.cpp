@@ -85,9 +85,6 @@ const float     AmbientLightSensor::LIMIT_LOW           = 1.0F;
 /* Set upper limit for light luminance normalization in lux. */
 const float     AmbientLightSensor::LIMIT_HIGH          = 100000.0F;
 
-/* Initialize ambient light sensor */
-AmbientLightSensor AmbientLightSensor::m_instance;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/

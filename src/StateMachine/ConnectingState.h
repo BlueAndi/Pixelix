@@ -70,7 +70,9 @@ public:
      */
     static ConnectingState& getInstance()
     {
-        return m_instance;
+        static ConnectingState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -105,17 +107,14 @@ public:
 
 private:
 
-    /** Connecting state instance */
-    static ConnectingState  m_instance;
-
     /** Remote wifi SSID */
-    String                  m_wifiSSID;
+    String      m_wifiSSID;
 
     /** Remote wifi passphrase */
-    String                  m_wifiPassphrase;
+    String      m_wifiPassphrase;
 
     /** Timer, used for retry mechanism. */
-    SimpleTimer             m_retryTimer;
+    SimpleTimer m_retryTimer;
 
     /**
      * Constructs the state.

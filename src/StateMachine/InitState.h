@@ -70,7 +70,9 @@ public:
      */
     static InitState& getInstance()
     {
-        return m_instance;
+        static InitState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -95,9 +97,6 @@ public:
     void exit(StateMachine& sm);
 
 private:
-
-    /** Initialization state instance */
-    static InitState    m_instance;
 
     bool    m_isApModeRequested;    /**< Is wifi AP mode requested? */
 

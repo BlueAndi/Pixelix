@@ -72,7 +72,9 @@ public:
      */
     static LedMatrix& getInstance()
     {
-        return m_instance;
+        static LedMatrix instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -145,9 +147,6 @@ public:
     Color getColor(int16_t x, int16_t y) const;
 
 private:
-
-    /** LedMatrix instance */
-    static LedMatrix    m_instance;
 
     /** Pixel representation of the LED matrix */
     NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod>  m_strip;

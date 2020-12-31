@@ -70,7 +70,9 @@ public:
      */
     static APState& getInstance()
     {
-        return m_instance;
+        static APState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -113,9 +115,6 @@ public:
     static const uint16_t   DNS_PORT;
 
 private:
-
-    /** Access point state instance */
-    static APState    m_instance;
 
     DNSServer   m_dnsServer;    /**< DNS server, used for captive portal. */
 
