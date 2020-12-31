@@ -84,7 +84,7 @@ public:
      *
      * @return Value type
      */
-    Type getValueType() const
+    Type getValueType() const final
     {
         return TYPE_BOOL;
     }
@@ -94,7 +94,7 @@ public:
      *
      * @return User friendly name
      */
-    const char* getName() const
+    const char* getName() const final
     {
         return m_name;
     }
@@ -104,7 +104,7 @@ public:
      *
      * @return Key
      */
-    const char* getKey() const
+    const char* getKey() const final
     {
         return m_key;
     }

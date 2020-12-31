@@ -124,7 +124,7 @@ public:
      *
      * @return Name of the sink.
      */
-    const String& getName() const
+    const String& getName() const final
     {
         return m_name;
     }
@@ -134,7 +134,7 @@ public:
      *
      * @param[in] msg   Log message
      */
-    void send(const Logging::Msg& msg);
+    void send(const Logging::Msg& msg) final;
 
     /** The maximum size of the whole log message. */
     static const uint16_t LOG_MESSAGE_BUFFER_SIZE = Logging::MESSAGE_BUFFER_SIZE + 10u /* timestamp */ + 8u /* log level */ + 20u /* filename */ + 5u /* line */ + 6u /* others */;
