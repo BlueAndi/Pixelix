@@ -48,21 +48,6 @@
  * Macros
  *****************************************************************************/
 
-/* Structure of response-payload for requesting D_Y_10_1
- *
- * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
- *
- * <data><code>ok</code><D_Y_10_1>  = 31 bytes
- * XYZ                              = 3 byte (relevant data)
- * </D_Y_10_1></data>               = 18 bytes
- */
-
-/* Startindex of relevant data. */
-#define START_INDEX_OF_RELEVANT_DATA (31U)
-
-/* Endindex of relevant data. */
-#define END_INDEX_OF_RELEVANT_DATA (34u)
-
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -402,6 +387,21 @@ void GruenbeckPlugin::initHttpClient()
         const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
         size_t      payloadIndex    = 0U;
         String      payloadString;
+
+        /* Structure of response-payload for requesting D_Y_10_1
+         *
+         * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
+         *
+         * <data><code>ok</code><D_Y_10_1>  = 31 bytes
+         * XYZ                              = 3 byte (relevant data)
+         * </D_Y_10_1></data>               = 18 bytes
+         */
+
+        /* Start index of relevant data */
+        const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
+
+        /* End index of relevant data */
+        const uint32_t  END_INDEX_OF_RELEVANT_DATA      = 34U;
 
         while(payloadSize > payloadIndex)
         {
