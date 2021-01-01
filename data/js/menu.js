@@ -43,6 +43,9 @@ menu.data = [{
         "title": "Sunrise Plugin",
         "hyperRef": "/plugins/SunrisePlugin.html"
     }, {
+        "title": "ShellyPlugS Plugin",
+        "hyperRef": "/plugins/ShellyPlugSPlugin.html"
+    }, {
         "title": "SysMsg Plugin",
         "hyperRef": "/plugins/SysMsgPlugin.html"
     }, {
