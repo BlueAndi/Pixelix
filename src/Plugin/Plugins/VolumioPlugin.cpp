@@ -38,6 +38,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <SPIFFS.h>
+#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -588,24 +589,20 @@ void VolumioPlugin::initHttpClient()
 
 bool VolumioPlugin::saveConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "w");
+    bool                status                  = true;
+    JsonFile            jsonFile(SPIFFS);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    jsonDoc["host"] = m_volumioHost;
+    
+    if (false == jsonFile.save(m_configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to save file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-
-        jsonDoc["host"] = m_volumioHost;
-
-        (void)serializeJson(jsonDoc, fd);
-        fd.close();
-
         LOG_INFO("File %s saved.", m_configurationFilename.c_str());
     }
 
@@ -614,36 +611,24 @@ bool VolumioPlugin::saveConfiguration()
 
 bool VolumioPlugin::loadConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+    bool                status                  = true;
+    JsonFile            jsonFile(SPIFFS);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    if (false == jsonFile.load(m_configurationFilename, jsonDoc))
     {
         LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
         status = false;
     }
+    else if (false == jsonDoc["host"].is<String>())
+    {
+        LOG_WARNING("Host not found or invalid type.");
+        status = false;
+    }
     else
     {
-        const size_t            JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("Failed to load file %s: %s", m_configurationFilename.c_str(), error.c_str());
-            status = false;
-        }
-        else if (false == jsonDoc["host"].is<String>())
-        {
-            LOG_WARNING("Host not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_volumioHost = jsonDoc["host"].as<String>();
-        }
-
-        fd.close();
+        m_volumioHost = jsonDoc["host"].as<String>();
     }
 
     return status;
