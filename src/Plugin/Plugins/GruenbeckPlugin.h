@@ -215,12 +215,12 @@ private:
     static const int16_t    ICON_HEIGHT         = 8;
 
     /**
-     * Image path within the SPIFFS.
+     * Image path within the filesystem.
      */
     static const char*      IMAGE_PATH;
 
     /**
-     * Configuration path within the SPIFFS.
+     * Configuration path within the filesystem.
      */
     static const char*      CONFIG_PATH;
 

@@ -64,8 +64,8 @@
 /**
  * Shows the current sunrise / sunset times for a configured location.
  *
- * At the first installation a json document is generated to the SPIFFS /configuration/UUID.json
- * where the longitude and latidude have to be configured.
+ * At the first installation a json document is generated to the /configuration/UUID.json
+ * in the filesystem, where the longitude and latidude have to be configured.
  *
  * Powered by sunrise-sunset.org!
  */
@@ -223,12 +223,12 @@ private:
     static const int16_t    ICON_HEIGHT         = 8;
 
     /**
-     * Image path within the SPIFFS.
+     * Image path within the filesystem.
      */
     static const char*      IMAGE_PATH;
 
     /**
-     * Configuration path within the SPIFFS.
+     * Configuration path within the filesystem.
      */
     static const char*      CONFIG_PATH;
 

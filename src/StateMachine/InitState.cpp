@@ -270,7 +270,7 @@ void InitState::exit(StateMachine& sm)
     }
     else
     {
-        /* Initialize webserver. SPIFFS must be mounted before! */
+        /* Initialize webserver. The filesystem must be mounted before! */
         MyWebServer::init(m_isApModeRequested);
         MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
 

@@ -243,7 +243,7 @@ private:
     static const char*      IMAGE_PATH_PAUSE_ICON;
 
     /**
-     * Configuration path within the SPIFFS.
+     * Configuration path within the filesystem.
      */
     static const char*      CONFIG_PATH;
 

@@ -246,7 +246,7 @@ void UpdateMgr::onStart()
 {
     String infoStr = "Update ";
 
-    /* Stop webserver, before SPIFFS may be unmounted. */
+    /* Stop webserver, before filesystem may be unmounted. */
     MyWebServer::end();
 
     /* Shall the firmware be updated? */
