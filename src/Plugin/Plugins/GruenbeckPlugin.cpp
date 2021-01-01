@@ -49,21 +49,6 @@
  * Macros
  *****************************************************************************/
 
-/* Structure of response-payload for requesting D_Y_10_1
- *
- * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
- *
- * <data><code>ok</code><D_Y_10_1>  = 31 bytes
- * XYZ                              = 3 byte (relevant data)
- * </D_Y_10_1></data>               = 18 bytes
- */
-
-/* Startindex of relevant data. */
-#define START_INDEX_OF_RELEVANT_DATA (31U)
-
-/* Endindex of relevant data. */
-#define END_INDEX_OF_RELEVANT_DATA (34u)
-
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -399,19 +384,38 @@ bool GruenbeckPlugin::startHttpRequest()
 void GruenbeckPlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t      payloadSize     = 0U;
-        const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        size_t      payloadIndex    = 0U;
-        String      payloadString;
+        /* Structure of response-payload for requesting D_Y_10_1
+         *
+         * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
+         *
+         * <data><code>ok</code><D_Y_10_1>  = 31 bytes
+         * XYZ                              = 3 byte (relevant data)
+         * </D_Y_10_1></data>               = 18 bytes
+         */
 
-        while(payloadSize > payloadIndex)
+        /* Start index of relevant data */
+        const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
+
+        /* Length of relevant data */
+        const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
+
+        size_t          payloadSize                     = 0U;
+        const char*     payload                         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        char            restCapacity[RELEVANT_DATA_LENGTH + 1];
+
+        if (payloadSize <= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
         {
-            payloadString += payload[payloadIndex];
-            ++payloadIndex;
+            memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
+            restCapacity[RELEVANT_DATA_LENGTH] = '\0';
+        }
+        else
+        {
+            restCapacity[0] = '?';
+            restCapacity[1] = '\0';
         }
 
         lock();
-        m_relevantResponsePart = payloadString.substring(START_INDEX_OF_RELEVANT_DATA, END_INDEX_OF_RELEVANT_DATA);
+        m_relevantResponsePart = restCapacity;
         m_httpResponseReceived = true;
         unlock();
     });

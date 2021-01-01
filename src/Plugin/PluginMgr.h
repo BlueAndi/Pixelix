@@ -72,7 +72,9 @@ public:
      */
     static PluginMgr& getInstance()
     {
-        return m_instance;
+        static PluginMgr instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -139,8 +141,6 @@ public:
     void save();
 
 private:
-
-    static PluginMgr    m_instance; /**< Plugin manager instance */
 
     /**
      * Plugin registry entry.

@@ -68,17 +68,6 @@ class BaseGfxPen
 public:
 
     /**
-     * Constructs a base graphics pen.
-     */
-    BaseGfxPen(BaseGfx& gfx) :
-        m_gfx(gfx),
-        m_color(),
-        m_x(0),
-        m_y(0)
-    {
-    }
-
-    /**
      * Destroys a graphics pen.
      */
     ~BaseGfxPen()
@@ -164,6 +153,17 @@ protected:
     TColor              m_color;    /**< Pen color */
     int16_t             m_x;        /**< Pen x-coordinate */
     int16_t             m_y;        /**< Pen y-coordinate */
+
+    /**
+     * Constructs a base graphics pen.
+     */
+    BaseGfxPen(BaseGfx& gfx) :
+        m_gfx(gfx),
+        m_color(),
+        m_x(0),
+        m_y(0)
+    {
+    }
 };
 
 /******************************************************************************

@@ -80,9 +80,6 @@ const IPAddress APState::SUBNET(255U, 255U, 255U, 0U);
 /* Set DNS port */
 const uint16_t  APState::DNS_PORT                       = 53U;
 
-/* Access point state instance */
-APState         APState::m_instance;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/

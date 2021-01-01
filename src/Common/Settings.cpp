@@ -54,9 +54,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize settings instance */
-Settings Settings::m_instance;
-
 /** Settings namespace used for preferences */
 static const char*  PREF_NAMESPACE                  = "settings";
 

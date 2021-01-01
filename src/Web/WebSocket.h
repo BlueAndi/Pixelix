@@ -71,7 +71,9 @@ public:
      */
     static WebSocketSrv& getInstance()
     {
-        return m_instance;
+        static WebSocketSrv instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -83,9 +85,7 @@ public:
 
 private:
 
-    static WebSocketSrv m_instance;     /**< Websocket instance */
-
-    AsyncWebSocket      m_webSocket;    /**< Websocket */
+    AsyncWebSocket  m_webSocket;    /**< Websocket */
 
     /**
      * Constructs the websocket server.

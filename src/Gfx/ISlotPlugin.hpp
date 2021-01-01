@@ -61,13 +61,6 @@ class ISlotPlugin
 public:
 
     /**
-     * Constructs the interface.
-     */
-    ISlotPlugin()
-    {
-    }
-
-    /**
      * Destroys the interface.
      */
     virtual ~ISlotPlugin()
@@ -80,6 +73,15 @@ public:
      * @return Duration in ms
      */
     virtual uint32_t getDuration() const = 0;
+
+protected:
+
+    /**
+     * Constructs the interface.
+     */
+    ISlotPlugin()
+    {
+    }
 };
 
 /******************************************************************************

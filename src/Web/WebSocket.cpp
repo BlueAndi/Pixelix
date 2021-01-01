@@ -69,9 +69,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize the websocket server instance. */
-WebSocketSrv    WebSocketSrv::m_instance;
-
 /** Websocket get display command */
 static WsCmdGetDisp         gWsCmdGetDisp;
 
@@ -159,27 +156,27 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     {
     /* Client connected */
     case WS_EVT_CONNECT:
-        m_instance.onConnect(server, client, reinterpret_cast<AsyncWebServerRequest*>(arg));
+        getInstance().onConnect(server, client, reinterpret_cast<AsyncWebServerRequest*>(arg));
         break;
 
     /* Client disconnected */
     case WS_EVT_DISCONNECT:
-        m_instance.onDisconnect(server, client);
+        getInstance().onDisconnect(server, client);
         break;
 
     /* Pong received */
     case WS_EVT_PONG:
-        m_instance.onPong(server, client, data, len);
+        getInstance().onPong(server, client, data, len);
         break;
 
     /* Remote error */
     case WS_EVT_ERROR:
-        m_instance.onError(server, client, *reinterpret_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
+        getInstance().onError(server, client, *reinterpret_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
         break;
 
     /* Data */
     case WS_EVT_DATA:
-        m_instance.onData(server, client, reinterpret_cast<AwsFrameInfo*>(arg), data, len);
+        getInstance().onData(server, client, reinterpret_cast<AwsFrameInfo*>(arg), data, len);
         break;
 
     default:

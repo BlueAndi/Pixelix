@@ -71,13 +71,6 @@ public:
     typedef IPluginMaintenance* (*CreateFunc)(const String& name, uint16_t uid);
 
     /**
-     * Constructs the interface.
-     */
-    IPluginMaintenance()
-    {
-    }
-
-    /**
      * Destroys the interface.
      */
     virtual ~IPluginMaintenance()
@@ -186,6 +179,15 @@ public:
      * @param[in] gfx   Display graphics interface
      */
     virtual void update(IGfx& gfx) = 0;
+
+protected:
+
+    /**
+     * Constructs the interface.
+     */
+    IPluginMaintenance()
+    {
+    }
 
 };
 

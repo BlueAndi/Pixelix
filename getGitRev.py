@@ -65,6 +65,10 @@ def getVersion():
         with open("version.json") as jsonFile:
             data = json.load(jsonFile)
             version = data["version"]
+            revision = data["revision"]
+
+        if (revision != getGitRevisionHash()):
+            version = version + ":dev"
 
         if (True == anyUnpushedCommit("origin/" + branchName)):
             version = version + ":uc"

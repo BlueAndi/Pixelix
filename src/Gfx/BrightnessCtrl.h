@@ -69,7 +69,9 @@ public:
      */
     static BrightnessCtrl& getInstance()
     {
-        return m_instance;
+        static BrightnessCtrl instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -171,9 +173,6 @@ private:
         AMBIENT_LIGHT_DIRECTION_BRIGTHER = 0,   /**< Its getting brighter. */
         AMBIENT_LIGHT_DIRECTION_DARKER          /**< Its getting darker. */
     };
-
-    /** Brightness controller instance */
-    static BrightnessCtrl   m_instance;
 
     /** Timer, used for automatic brightness adjustment. */
     SimpleTimer             m_autoBrightnessTimer;

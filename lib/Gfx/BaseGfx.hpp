@@ -68,41 +68,9 @@ class BaseGfx
 public:
 
     /**
-     * Constructs the base graphics functionality.
-     *
-     * @param[in] width     Canvas width in pixel
-     * @param[in] height    Canvas height in pixel
-     */
-    BaseGfx(uint16_t width, uint16_t height) :
-        m_width(width),
-        m_height(height),
-        m_cursorX(0),
-        m_cursorY(0),
-        m_textColor(0U),
-        m_isTextWrapEnabled(false),
-        m_font(nullptr)
-    {
-    }
-
-    /**
      * Destroys the base graphics functionality object.
      */
     virtual ~BaseGfx()
-    {
-    }
-
-    /**
-     * Constructs the base graphics functionality by copying one.
-     *
-     * @param[in] gfx   Base gfx which to copy
-     */
-    BaseGfx(const BaseGfx& gfx) :
-        m_width(gfx.m_width),
-        m_height(gfx.m_height),
-        m_cursorX(gfx.m_cursorX),
-        m_cursorY(gfx.m_cursorY),
-        m_isTextWrapEnabled(gfx.m_isTextWrapEnabled),
-        m_font(gfx.m_font)
     {
     }
 
@@ -712,6 +680,40 @@ protected:
     TColor          m_textColor;            /**< Text color */
     bool            m_isTextWrapEnabled;    /**< Is text wrap around enabled or not? */
     const GFXfont*  m_font;                 /**< Current selected font */
+
+    /**
+     * Constructs the base graphics functionality.
+     *
+     * @param[in] width     Canvas width in pixel
+     * @param[in] height    Canvas height in pixel
+     */
+    BaseGfx(uint16_t width, uint16_t height) :
+        m_width(width),
+        m_height(height),
+        m_cursorX(0),
+        m_cursorY(0),
+        m_textColor(0U),
+        m_isTextWrapEnabled(false),
+        m_font(nullptr)
+    {
+    }
+
+    /**
+     * Constructs the base graphics functionality by copying one.
+     *
+     * @param[in] gfx   Base gfx which to copy
+     */
+    BaseGfx(const BaseGfx& gfx) :
+        m_width(gfx.m_width),
+        m_height(gfx.m_height),
+        m_cursorX(gfx.m_cursorX),
+        m_cursorY(gfx.m_cursorY),
+        m_isTextWrapEnabled(gfx.m_isTextWrapEnabled),
+        m_font(gfx.m_font)
+    {
+    }
+
+private:
 
     /* Default constructor not allowed. */
     BaseGfx();

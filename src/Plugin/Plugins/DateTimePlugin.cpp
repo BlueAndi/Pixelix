@@ -163,6 +163,19 @@ void DateTimePlugin::update(IGfx& gfx)
     return;
 }
 
+void DateTimePlugin::process()
+{
+    if ((true == m_checkUpdateTimer.isTimerRunning()) &&
+        (true == m_checkUpdateTimer.isTimeout()))
+    {
+        updateDateTime(false);
+
+        m_checkUpdateTimer.restart();
+    }
+
+    return;
+}
+
 void DateTimePlugin::setText(const String& formatText)
 {
     m_textWidget.setFormatStr(formatText);
@@ -175,19 +188,6 @@ void DateTimePlugin::setLamp(uint8_t lampId, bool state)
     if (MAX_LAMPS > lampId)
     {
         m_lampWidgets[lampId].setOnState(state);
-    }
-
-    return;
-}
-
-void DateTimePlugin::process()
-{
-    if ((true == m_checkUpdateTimer.isTimerRunning()) &&
-        (true == m_checkUpdateTimer.isTimeout()))
-    {
-        updateDateTime(false);
-
-        m_checkUpdateTimer.restart();
     }
 
     return;

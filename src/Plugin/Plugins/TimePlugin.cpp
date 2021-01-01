@@ -106,13 +106,6 @@ void TimePlugin::update(IGfx& gfx)
     return;
 }
 
-void TimePlugin::setText(const String& formatText)
-{
-    m_textWidget.setFormatStr(formatText);
-
-    return;
-}
-
 void TimePlugin::process()
 {
     if ((true == m_checkTimeUpdateTimer.isTimerRunning()) &&
@@ -122,6 +115,13 @@ void TimePlugin::process()
 
         m_checkTimeUpdateTimer.restart();
     }
+
+    return;
+}
+
+void TimePlugin::setText(const String& formatText)
+{
+    m_textWidget.setFormatStr(formatText);
 
     return;
 }

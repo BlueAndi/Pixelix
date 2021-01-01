@@ -72,13 +72,6 @@ public:
     };
 
     /**
-     * Constructs a key value pair.
-     */
-    KeyValue()
-    {
-    }
-
-    /**
      * Destroys a key value pair.
      */
     virtual ~KeyValue()
@@ -105,6 +98,15 @@ public:
      * @return Key
      */
     virtual const char* getKey() const = 0;
+
+protected:
+
+    /**
+     * Constructs a key value pair.
+     */
+    KeyValue()
+    {
+    }
 
 };
 

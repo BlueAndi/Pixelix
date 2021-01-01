@@ -80,7 +80,7 @@ public:
      *
      * @return Value type
      */
-    Type getValueType() const
+    Type getValueType() const final
     {
         return TYPE_UINT8;
     }

@@ -70,7 +70,9 @@ public:
      */
     static UpdateMgr& getInstance()
     {
-        return m_instance;
+        static UpdateMgr instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -152,9 +154,6 @@ public:
     static const uint8_t SLOT_ID = 1U;
 
 private:
-
-    /** Instance of the update manager. */
-    static UpdateMgr    m_instance;
 
     /** Is the over-the-air update initialized? */
     bool                m_isInitialized;

@@ -125,7 +125,7 @@ public:
      *
      * @return Name of the sink.
      */
-    const String& getName() const
+    const String& getName() const final
     {
         return m_name;
     }
@@ -135,7 +135,7 @@ public:
      *
      * @param[in] msg   Log message
      */
-    void send(const Logging::Msg& msg);
+    void send(const Logging::Msg& msg) final;
 
 private:
 

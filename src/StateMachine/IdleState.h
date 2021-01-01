@@ -68,7 +68,9 @@ public:
      */
     static IdleState& getInstance()
     {
-        return m_instance;
+        static IdleState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -96,9 +98,6 @@ public:
     static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
 
 private:
-
-    /** Idle state instance */
-    static IdleState    m_instance;
 
     /**
      * Constructs the state.

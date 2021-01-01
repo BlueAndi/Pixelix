@@ -74,7 +74,9 @@ public:
      */
     static Settings& getInstance()
     {
-        return m_instance;
+        static Settings instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -269,8 +271,6 @@ public:
     static const uint8_t KEY_VALUE_PAIR_NUM = 15U;
 
 private:
-
-    static Settings m_instance;     /**< Settings instance */
 
     Preferences     m_preferences;                      /**< Persistent storage */
     KeyValue*       m_keyValueList[KEY_VALUE_PAIR_NUM]; /**< List of all key value pairs */

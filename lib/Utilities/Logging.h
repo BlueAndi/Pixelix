@@ -137,7 +137,9 @@ public:
      */
     static Logging& getInstance()
     {
-        return m_instance;
+        static Logging instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -230,9 +232,6 @@ public:
     static const uint8_t MAX_SINKS = 2U;
 
 private:
-
-    /** Logging  instance. */
-    static Logging m_instance;
 
     /** The current log level. */
     LogLevel    m_currentLogLevel;

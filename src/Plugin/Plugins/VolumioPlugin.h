@@ -144,20 +144,20 @@ public:
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
      */
-    void start() override;
+    void start() final;
 
     /**
      * Stop the plugin.
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
-    void stop() override;
+    void stop() final;
 
     /**
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
      */
-    void process(void);
+    void process(void) final;
     
     /**
      * This method will be called in case the plugin is set active, which means
@@ -165,13 +165,13 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) override;
+    void active(IGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
      * it won't be shown on the display anymore.
      */
-    void inactive() override;
+    void inactive() final;
 
     /**
      * Register web interface, e.g. REST API functionality.
@@ -179,14 +179,14 @@ public:
      * @param[in] srv       Webserver
      * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override;
+    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
 
     /**
      * Unregister web interface.
      *
      * @param[in] srv   Webserver
      */
-    void unregisterWebInterface(AsyncWebServer& srv) override;
+    void unregisterWebInterface(AsyncWebServer& srv) final;
 
     /**
      * Update the display.
@@ -194,7 +194,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx);
+    void update(IGfx& gfx) final;
 
     /**
      * Get VOLUMIO host address.

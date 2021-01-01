@@ -67,7 +67,9 @@ public:
      */
     static ButtonDrv&   getInstance()
     {
-        return m_instance;
+        static ButtonDrv instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /** Status return values */
@@ -103,8 +105,6 @@ public:
     State getState();
 
 private:
-
-    static ButtonDrv    m_instance;         /**< Button driver instance */
 
     TaskHandle_t        m_buttonTaskHandle; /**< Button task handle */
     State               m_state;            /**< Current button state */

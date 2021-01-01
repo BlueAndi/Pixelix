@@ -68,7 +68,9 @@ public:
      */
     static ErrorState& getInstance()
     {
-        return m_instance;
+        static ErrorState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -96,9 +98,6 @@ public:
     static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
 
 private:
-
-    /** Error state instance */
-    static ErrorState    m_instance;
 
     /**
      * Constructs the state.

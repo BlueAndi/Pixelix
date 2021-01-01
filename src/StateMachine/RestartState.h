@@ -69,7 +69,9 @@ public:
      */
     static RestartState& getInstance()
     {
-        return m_instance;
+        static RestartState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -97,9 +99,6 @@ private:
 
     /** Wait timer in ms, after that all services will be stopped. */
     const uint32_t  WAIT_TILL_STOP_SVC  = 500U;
-
-    /** Restart state instance */
-    static RestartState m_instance;
 
     /** Wait timer */
     SimpleTimer m_timer;

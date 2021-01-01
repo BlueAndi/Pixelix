@@ -59,9 +59,6 @@ static void IRAM_ATTR isrButton(void* arg);
  * Local Variables
  *****************************************************************************/
 
-/* Instantiate the button driver singleton. */
-ButtonDrv ButtonDrv::m_instance;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
