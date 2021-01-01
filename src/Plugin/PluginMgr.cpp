@@ -281,7 +281,7 @@ void PluginMgr::save()
             LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
         }
 
-        serializeJson(jsonDoc, installation);
+        (void)serializeJson(jsonDoc, installation);
 
         settings.getPluginInstallation().setValue(installation);
         settings.close();

@@ -1169,7 +1169,7 @@ void DisplayMgr::save()
                 LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
             }
 
-            serializeJson(jsonDoc, config);
+            (void)serializeJson(jsonDoc, config);
 
             settings.getDisplaySlotConfig().setValue(config);
             settings.close();
