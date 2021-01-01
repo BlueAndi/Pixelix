@@ -42,6 +42,7 @@
 #include <ArduinoJson.h>
 #include <Logging.h>
 #include <SPIFFS.h>
+#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -184,8 +185,8 @@ void ShellyPlugSPlugin::start()
         }
     }
 
-    registerResponseCallback();
-    if (false == requestNewData())
+    initHttpClient();
+    if (false == startHttpRequest())
     {
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
     }
@@ -220,7 +221,7 @@ void ShellyPlugSPlugin::process()
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
-        if (false == requestNewData())
+        if (false == startHttpRequest())
         {
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
         }
@@ -335,7 +336,7 @@ void ShellyPlugSPlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-bool ShellyPlugSPlugin::requestNewData()
+bool ShellyPlugSPlugin::startHttpRequest()
 {
     bool    status  = false;
     String  url     = String("http://") + m_ipAddress + "/meter/0/";
@@ -358,38 +359,38 @@ bool ShellyPlugSPlugin::requestNewData()
 
     return status;
 }
-void ShellyPlugSPlugin::registerResponseCallback()
+void ShellyPlugSPlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
         size_t                  payloadSize     = 0U;
         const char*             payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        size_t                  payloadIndex    = 0U;
-        String                  payloadStr;
+        std::unique_ptr<char>   payloadStr(new char[payloadSize + 1]);
         const size_t            JSON_DOC_SIZE   = 768U;
         DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        String                  power;
-        JsonObject              results;
-        JsonObject              obj;
+        DeserializationError    error;
 
-        while(payloadSize > payloadIndex)
-        {
-            payloadStr += payload[payloadIndex];
-            ++payloadIndex;
-        }
+        memcpy(payloadStr.get(), payload, payloadSize);
+        payloadStr.get()[payloadSize] = '\0';
 
         m_httpResponseReceived = true;
 
-        if (DeserializationError::Ok != deserializeJson(jsonDoc, payloadStr))
+        error = deserializeJson(jsonDoc, payloadStr.get());
+
+        if (DeserializationError::Ok != error.code())
         {
-            LOG_ERROR("Invalid JSON message received.");
+            LOG_WARNING("JSON parse error: %s", error.c_str());
+        }
+        else if (false == jsonDoc["power"].is<String>())
+        {
+            LOG_WARNING("JSON power type missmatch or missing.");
         }
         else
         {
             const size_t    MAX_USAGE       = 80U;
             size_t          usageInPercent  = 0U;
+            String          power;
 
-            obj     = jsonDoc.as<JsonObject>();
-            power = obj["power"].as<String>();
+            power = jsonDoc["power"].as<String>();
             
             lock();
 
@@ -409,24 +410,20 @@ void ShellyPlugSPlugin::registerResponseCallback()
 
 bool ShellyPlugSPlugin::saveConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "w");
+    bool                status                  = true;
+    JsonFile            jsonFile(SPIFFS);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    jsonDoc["shellyPlugSIP"] = m_ipAddress;
+    
+    if (false == jsonFile.save(m_configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to save file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-
-        jsonDoc["shellyPlugSIP"] = m_ipAddress;
-
-        (void)serializeJson(jsonDoc, fd);
-        fd.close();
-
         LOG_INFO("File %s saved.", m_configurationFilename.c_str());
     }
 
@@ -435,33 +432,24 @@ bool ShellyPlugSPlugin::saveConfiguration()
 
 bool ShellyPlugSPlugin::loadConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+    bool                status                  = true;
+    JsonFile            jsonFile(SPIFFS);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    if (false == jsonFile.load(m_configurationFilename, jsonDoc))
     {
         LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
         status = false;
     }
+    else if (false == jsonDoc["shellyPlugSIP"].is<String>())
+    {
+        LOG_WARNING("shellyPlugSIP not found or invalid type.");
+        status = false;
+    }
     else
     {
-        const size_t            JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
-
-        if (DeserializationError::Ok != error)
-        {
-            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
-            status = false;
-        }
-        else
-        {
-            JsonObject obj = jsonDoc.as<JsonObject>();
-
-            m_ipAddress = obj["shellyPlugSIP"].as<String>();
-        }
-
-        fd.close();
+        m_ipAddress = jsonDoc["shellyPlugSIP"].as<String>();
     }
 
     return status;
