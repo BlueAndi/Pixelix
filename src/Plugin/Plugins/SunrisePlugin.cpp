@@ -370,18 +370,25 @@ bool SunrisePlugin::startHttpRequest()
 void SunrisePlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                  payloadSize     = 0U;
-        const char*             payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t            JSON_DOC_SIZE   = 768U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        String                  sunrise;
-        String                  sunset;
-        JsonObject              results;
-        DeserializationError    error;
+        size_t                          payloadSize             = 0U;
+        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        const size_t                    JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
+        const size_t                    FILTER_SIZE             = 128U;
+        StaticJsonDocument<FILTER_SIZE> filter;
+        DeserializationError            error;
 
         m_httpResponseReceived = true;
 
-        error = deserializeJson(jsonDoc, payload, payloadSize);
+        filter["results"]["sunrise"]    = true;
+        filter["results"]["sunset"]     = true;
+
+        if (true == filter.overflowed())
+        {
+            LOG_ERROR("Less memory for filter available.");
+        }
+        
+        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
 
         if (DeserializationError::Ok != error.code())
         {
@@ -391,7 +398,10 @@ void SunrisePlugin::initHttpClient()
         {
             const size_t    MAX_USAGE       = 80U;
             size_t          usageInPercent  = 0U;
-
+            String          sunrise;
+            String          sunset;
+            JsonObject      results;
+            
             results = jsonDoc["results"];
             sunrise = results["sunrise"].as<String>();
             sunset  = results["sunset"].as<String>();

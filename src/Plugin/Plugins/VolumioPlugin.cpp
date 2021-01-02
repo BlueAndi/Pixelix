@@ -404,13 +404,27 @@ bool VolumioPlugin::startHttpRequest()
 void VolumioPlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                  payloadSize             = 0U;
-        const char*             payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t            JSON_DOC_SIZE           = 1024U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error;
+        size_t                          payloadSize             = 0U;
+        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        const size_t                    JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
+        const size_t                    FILTER_SIZE             = 128U;
+        StaticJsonDocument<FILTER_SIZE> filter;
+        DeserializationError            error;
 
-        error = deserializeJson(jsonDoc, payload, payloadSize);
+        filter["artist"]    = true;
+        filter["duration"]  = true;
+        filter["seek"]      = true;
+        filter["service"]   = true;
+        filter["status"]    = true;
+        filter["title"]     = true;
+        
+        if (true == filter.overflowed())
+        {
+            LOG_ERROR("Less memory for filter available.");
+        }
+
+        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
 
         if (DeserializationError::Ok != error.code())
         {
