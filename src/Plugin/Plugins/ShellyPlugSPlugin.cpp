@@ -411,6 +411,10 @@ void ShellyPlugSPlugin::initHttpClient()
             }
         }
     });
+
+    m_client.regOnError([this]() {
+        LOG_WARNING("Connection error happened.");
+    });
 }
 
 bool ShellyPlugSPlugin::saveConfiguration()
