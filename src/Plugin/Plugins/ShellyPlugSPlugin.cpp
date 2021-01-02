@@ -396,12 +396,10 @@ void ShellyPlugSPlugin::initHttpClient()
             String          power;
 
             power = jsonDoc["power"].as<String>();
+            power += " W";
             
             lock();
-
-            m_relevantResponsePart = power + " W ";
-            m_textWidget.setFormatStr(m_relevantResponsePart);
-
+            m_textWidget.setFormatStr(power);
             unlock();
 
             usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
