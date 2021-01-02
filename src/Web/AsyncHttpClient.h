@@ -467,6 +467,15 @@ private:
      * @return URL encoded string
      */
     String urlEncode(const String& str);
+
+    /**
+     * Convert LwIP error id to user friendly information.
+     * 
+     * @param[in] error LwIP error id
+     * 
+     * @return User friendly error information. May be nullptr in case of unknown error id.
+     */
+    const char* errorToStr(int8_t error);
 };
 
 /******************************************************************************
