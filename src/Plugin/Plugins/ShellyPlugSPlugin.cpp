@@ -385,7 +385,7 @@ void ShellyPlugSPlugin::initHttpClient()
         {
             LOG_WARNING("JSON parse error: %s", error.c_str());
         }
-        else if (false == jsonDoc["power"].is<String>())
+        else if (false == jsonDoc["power"].is<float>())
         {
             LOG_WARNING("JSON power type missmatch or missing.");
         }
