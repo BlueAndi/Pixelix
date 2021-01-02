@@ -60,6 +60,15 @@
  * Prototypes
  *****************************************************************************/
 
+/* Workaround: strptime is available in libc, but the prototype is not available
+ * in time.h
+ * Therefore we define the prototype here. Should be removed, if time.h is
+ * hopefully updated in the next IDF release.
+ */
+char *_EXFUN(strptime,  (const char *__restrict,
+                        const char *__restrict,
+                        struct tm *__restrict));
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -387,7 +396,7 @@ void SunrisePlugin::initHttpClient()
         {
             LOG_ERROR("Less memory for filter available.");
         }
-        
+
         error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
 
         if (DeserializationError::Ok != error.code())
