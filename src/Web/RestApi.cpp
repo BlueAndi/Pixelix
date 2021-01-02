@@ -66,6 +66,7 @@
 static void handleStatus(AsyncWebServerRequest* request);
 static void handleSlots(AsyncWebServerRequest* request);
 static void handlePlugin(AsyncWebServerRequest* request);
+static void handleButton(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
@@ -92,6 +93,7 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/status", handleStatus);
     (void)srv.on("/rest/api/v1/display/slots", handleSlots);
     (void)srv.on("/rest/api/v1/plugin", handlePlugin);
+    (void)srv.on("/rest/api/v1/button", handleButton);
 
     return;
 }
@@ -480,6 +482,60 @@ static void handlePlugin(AsyncWebServerRequest* request)
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+
+    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
+    if (MAX_USAGE < usageInPercent)
+    {
+        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * Trigger virtual user button.
+ * GET \c "/api/v1/button"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleButton(AsyncWebServerRequest* request)
+{
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    const size_t        MAX_USAGE       = 80U;
+    size_t              usageInPercent  = 0U;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        JsonObject  dataObj = jsonDoc.createNestedObject("data");
+
+        UTIL_NOT_USED(dataObj);
+        DisplayMgr::getInstance().activateNextSlot();
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
     usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();

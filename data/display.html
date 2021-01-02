@@ -98,6 +98,9 @@
                 </div>
                 <p style="clear: both;"><br /></p>
                 <p>
+                    <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
+                </p>
+                <p>
                     <select id="pluginToInstall" size="1">
                     </select>
                     <br />
@@ -241,6 +244,21 @@
                         console.error(err);
                     }
                     alert("Uninstall slot " + slotId + " failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function nextSlot() {
+                disableUI();
+
+                return wsClient.triggerButton().then(function(rsp) {
+                    /* Nothing to do */
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Failed.");
                 }).finally(function() {
                     enableUI();
                 });
