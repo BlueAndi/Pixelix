@@ -90,9 +90,12 @@ bool JsonFile::save(const String& fileName, JsonDocument& doc)
     if (true == fd)
     {
         WriteBufferingStream    bufferedStream(fd, CHUNK_SIZE);
+        size_t                  write   = measureJsonPretty(doc);
         
-        (void)serializeJsonPretty(doc, bufferedStream);
-        isSuccessful = true;
+        if (write == serializeJsonPretty(doc, bufferedStream))
+        {
+            isSuccessful = true;
+        }
 
         bufferedStream.flush();
         fd.close();
