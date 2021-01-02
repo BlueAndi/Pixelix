@@ -163,6 +163,8 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 rsp.brightness = parseInt(data[0]);
                 rsp.automaticBrightnessControl = (1 === parseInt(data[1])) ? true : false;
                 this.pendingCmd.resolve(rsp);
+            } else if ("BUTTON" === this.pendingCmd.name) {
+                this.pendingCmd.resolve(rsp);
             } else if ("INSTALL" === this.pendingCmd.name) {
                 rsp.slotId = parseInt(data[0]);
                 rsp.uid = parseInt(data[1]);
@@ -519,6 +521,21 @@ pixelix.ws.Client.prototype.stopIperf = function(options) {
             this._sendCmd({
                 name: "IPERF",
                 par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.triggerButton = function() {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "BUTTON",
+                par: null,
                 resolve: resolve,
                 reject: reject
             });

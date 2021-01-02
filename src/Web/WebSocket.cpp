@@ -45,6 +45,7 @@
 #include "WsCmdMove.h"
 #include "WsCmdSlotDuration.h"
 #include "WsCmdIperf.h"
+#include "WsCmdButton.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -102,6 +103,9 @@ static WsCmdSlotDuration    gWsCmdSlotDuration;
 /** Websocket iperf command */
 static WsCmdIperf           gWsCmdIperf;
 
+/** Websocket control virtual button command */
+static WsCmdButton          gWsCmdButton;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
@@ -115,7 +119,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdLog,
     &gWsCmdMove,
     &gWsCmdSlotDuration,
-    &gWsCmdIperf
+    &gWsCmdIperf,
+    &gWsCmdButton
 };
 
 /******************************************************************************

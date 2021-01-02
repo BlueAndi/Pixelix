@@ -11,6 +11,7 @@
     - [Endpoint `<base-uri>`/status](#endpoint-base-uristatus)
     - [Endpoint `<base-uri>`/display/slots](#endpoint-base-uridisplayslots)
     - [Endpoint `<base-uri>`/plugin](#endpoint-base-uriplugin)
+    - [Endpoint `<base-uri>`/button](#endpoint-base-uributton)
   - [Plugin depended](#plugin-depended)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/text](#endpoint-base-uridisplayuidplugin-uidtext)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/bitmap](#endpoint-base-uridisplayuidplugin-uidbitmap)
@@ -209,6 +210,33 @@ Example with curl:
 $ curl -u luke:skywalker -d "list=" -X GET http://192.168.2.166/rest/api/v1/plugin
 $ curl -u luke:skywalker -d "install=JustTextPlugin" -X POST http://192.168.2.166/rest/api/v1/plugin
 $ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://192.168.2.166/rest/api/v1/plugin
+```
+
+### Endpoint `<base-uri>`/button
+Trigger the virtual user button.
+
+Detail:
+* Method: GET
+  * Arguments: N/A
+
+Example:
+```
+GET <base-uri>/rest/api/v1/button
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        }
+    }
+}
+```
+
+Example with curl:
+```bash
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/button
 ```
 
 ## Plugin depended
