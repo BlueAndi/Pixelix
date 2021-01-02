@@ -406,15 +406,11 @@ void VolumioPlugin::initHttpClient()
     m_client.regOnResponse([this](const HttpResponse& rsp){
         size_t                  payloadSize             = 0U;
         const char*             payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        std::unique_ptr<char>   payloadStr(new char[payloadSize + 1]);
         const size_t            JSON_DOC_SIZE           = 1024U;
         DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
         DeserializationError    error;
 
-        memcpy(payloadStr.get(), payload, payloadSize);
-        payloadStr.get()[payloadSize] = '\0';
-
-        error = deserializeJson(jsonDoc, payloadStr.get());
+        error = deserializeJson(jsonDoc, payload, payloadSize);
 
         if (DeserializationError::Ok != error.code())
         {
