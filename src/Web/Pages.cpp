@@ -85,6 +85,7 @@ static String tmplPageProcessor(const String& var);
 static void aboutPage(AsyncWebServerRequest* request);
 static void debugPage(AsyncWebServerRequest* request);
 static void displayPage(AsyncWebServerRequest* request);
+static void editPage(AsyncWebServerRequest* request);
 static void indexPage(AsyncWebServerRequest* request);
 static void infoPage(AsyncWebServerRequest* request);
 static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDocument& jsonDoc);
@@ -186,6 +187,7 @@ void Pages::init(AsyncWebServer& srv)
     (void)srv.on("/about.html", HTTP_GET, aboutPage);
     (void)srv.on("/debug.html", HTTP_GET, debugPage);
     (void)srv.on("/display.html", HTTP_GET, displayPage);
+    (void)srv.on("/edit.html", HTTP_GET, editPage);
     (void)srv.on("/index.html", HTTP_GET, indexPage);
     (void)srv.on("/info.html", HTTP_GET, infoPage);
     (void)srv.on("/settings.html", HTTP_GET | HTTP_POST, settingsPage);
@@ -450,6 +452,31 @@ static void displayPage(AsyncWebServerRequest* request)
     }
 
     request->send(SPIFFS, "/display.html", "text/html", false, tmplPageProcessor);
+
+    return;
+}
+
+/**
+ * File edit page.
+ *
+ * @param[in] request   HTTP request
+ */
+static void editPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(SPIFFS, "/edit.html", "text/html", false, tmplPageProcessor);
 
     return;
 }

@@ -877,21 +877,15 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     /* Begin of upload? */
     if (0 == index)
     {
-        const String& path = request->arg("path");
+        fd = fs.open(filename, "w");
 
-        /* At least the root directory ("/") must be given. */
-        if (true == path.isEmpty())
+        if (false == fd)
         {
             isError = true;
         }
         else
         {
-            fd = fs.open(path, "w");
-
-            if (false == fd)
-            {
-                isError = true;
-            }
+            LOG_INFO("Receiving file %s.", filename.c_str());
         }
     }
 
@@ -900,9 +894,17 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         (void)fd.write(data, len);
     }
 
-    if ((true == final) ||
-        (true == isError))
+    if ((true == final) &&
+        (false == isError))
+    {        
+        LOG_INFO("File %s successful written.", filename.c_str());
+
+        fd.close();
+    }
+    else if (true == isError)
     {
+        LOG_INFO("File %s upload aborted.", filename.c_str());
+
         fd.close();
     }
 

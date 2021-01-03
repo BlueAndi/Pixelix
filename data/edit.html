@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css">
+        <link rel="stylesheet" type="text/css" href="/style/style.css">
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                    font-size: 3.5rem;
+                }
+            }
+
+            #editor { 
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+            }
+        </style>
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="mt-1">File Editor</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        <h2 class="mt-1">Files</h2>
+                        <ul id="files"></ul>
+                    </div>
+                    <div class="col-9">
+                        <div id="editor"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2021 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/popper.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <!-- The high performance code editor Ace. -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" referrerpolicy="origin"></script>
+
+        <!-- Custom javascript -->
+        <script>
+            var editor          = null;
+            var selectedFile    = "";
+
+            function listFiles(page) {
+                return new Promise(function(resolve, reject) {
+                    var xhr             = new XMLHttpRequest();
+                    var encodedParams   = "";
+
+                    encodedParams += "?dir=" + encodeURIComponent("/");
+                    encodedParams += "&page=" + page;
+
+                    xhr.open("GET", "/rest/api/v1/fs" + encodedParams);
+                    xhr.onload = function() {
+                        var jsonRsp = JSON.parse(xhr.response);
+
+                        if (0 === jsonRsp.status) {
+                            resolve(jsonRsp);
+                        } else {
+                            reject();
+                        }
+                    };
+                    xhr.send();
+                });
+            }
+
+            function readFile(filename) {
+                return new Promise(function(resolve, reject) {
+                    var xhr             = new XMLHttpRequest();
+                    var encodedParams   = "";
+
+                    encodedParams += "?path=" + encodeURIComponent(filename);
+
+                    xhr.open("GET", "/rest/api/v1/fs/file" + encodedParams);
+                    xhr.onload = function() {
+                        resolve(xhr.response);
+                    };
+                    xhr.send();
+                });
+            }
+
+            function writeFile(filename, content) {
+                return new Promise(function(resolve, reject) {
+                    var formData    = new FormData();
+                    var xhr         = new XMLHttpRequest();
+
+                    formData.append("file", new Blob([content], { type: "text/plain" }), filename);
+
+                    xhr.open("POST", "/rest/api/v1/fs/file");
+                    xhr.onload = function() {
+                        var jsonRsp = JSON.parse(xhr.response);
+
+                        if (0 === jsonRsp.status) {
+                            resolve(jsonRsp);
+                        } else {
+                            reject();
+                        }
+                    };
+                    xhr.send(formData);
+                });
+            }
+
+            function sortUL(selector) {
+                var $ul = $(selector);
+
+                $ul.find('li').sort(function (a, b) {
+                    var upA = $(a).text().toUpperCase();
+                    var upB = $(b).text().toUpperCase();
+                    return (upA < upB) ? -1 : (upA > upB) ? 1 : 0;
+                }).appendTo(selector);
+            };
+
+            function listAllFilesHelper(id, par) {
+                var page = par.page;
+
+                ++par.page;
+
+                return listFiles(page).then(function(rsp) {
+                    var index       = 0;
+                    var promise     = null;
+                    var hyperRef    = null;
+                    var listItem    = null;
+                    var fileId      = "";
+
+                    for(index = 0; index < rsp.data.length; ++index) {
+                        fileId      = "file" + index;
+                        hyperRef    = $("<a>")
+                                    .attr("href", "#")
+                                    .attr("onclick", "selectFile(\"" + fileId + "\")")
+                                    .text(rsp.data[index].name);
+
+                        listItem    = $("<li>")
+                                    .attr("id", fileId);
+
+                        $(listItem).append(hyperRef);
+                        $("#" + id).append(listItem);
+                        sortUL("#" + id);
+                    }
+
+                    if (0 < rsp.data.length) {
+                        promise = listAllFilesHelper(id, par);
+                    } else {
+                        promise = Promise.resolve();
+                    }
+
+                    return promise;
+                }).catch(function() {
+                    return Promise.reject();
+                });
+            }
+
+            function listAllFiles(id) {
+                var par = {
+                    page: 0
+                };
+
+                return listAllFilesHelper(id, par).catch(function() {
+                });
+            }
+
+            function selectFile(id) {
+                var filename = $("#" + id).text();
+
+                selectedFile = filename;
+
+                return readFile(filename).then(function(rsp) {
+                    editor.setValue(rsp);
+                }).catch(function() {
+
+                });
+            }
+
+            $(document).ready(function() {
+                menu.create("menu");
+
+                editor = ace.edit("editor");
+                editor.setTheme("ace/theme/textmate");
+                editor.session.setUseSoftTabs(true);
+                editor.session.setTabSize(4);
+                editor.setShowPrintMargin(false);
+                editor.setHighlightActiveLine(true);
+                editor.setAutoScrollEditorIntoView(true);
+                editor.setOption("minLines", 2);
+                editor.setOption("maxLines", 100);
+                editor.commands.addCommand({
+                    name: "saveCommand",
+                    bindKey: {
+                        win: "Ctrl-S",
+                        mac: "Command-S"
+                    },
+                    exec: function(editor) {
+                        writeFile(selectedFile, editor.getValue());
+                    },
+                    readOnly: false
+                });
+
+                listAllFiles("files");
+            });
+        </script>
+    </body>
+</html>

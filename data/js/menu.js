@@ -76,6 +76,9 @@ menu.data = [{
     }, {
         "title": "Debug",
         "hyperRef": "/debug.html"
+    }, {
+        "title": "File Editor",
+        "hyperRef": "/edit.html"
     }]
 }, {
     "title": "About",
