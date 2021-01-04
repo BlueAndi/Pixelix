@@ -67,12 +67,13 @@
                         <ul class="nav nav-pills flex-column" id="files"></ul>
                     </div>
                     <div class="col-9">
-                        <div id="editor"></div>
+                        <div class="collapse show" id="editor"></div>
+                        <div class="collapse" id="preview"></div>
                     </div>
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -207,10 +208,9 @@
                                             .attr("onclick", "editFile(\"" + itemId + "\")")
                                             .text("Edit");
                         var $actionPreview  = $("<a>")
-                                            .attr("class", "dropdown-item disabled")
+                                            .attr("class", "dropdown-item")
                                             .attr("href", "#")
-                                            .attr("tabindex", "-1")
-                                            .attr("aria-disabled", "true")
+                                            .attr("onclick", "previewFile(\"" + itemId + "\")")
                                             .text("Preview");
                         var $actionRemove   = $("<a>")
                                             .attr("class", "dropdown-item")
@@ -252,6 +252,8 @@
                 loadedFile = filename;
                 editor.setValue("");
                 setEditorMode(filename);
+                $("#editor").collapse("show");
+                $("#preview").collapse("hide");
 
                 return restClient.readFile(filename).then(function(rsp) {
                     /* Fill content in, remove selection and
@@ -261,6 +263,21 @@
                 }).catch(function(rsp) {
                     alert(rsp.error.msg);
                 });
+            }
+
+            function previewFile(id) {
+                var filename    = $("#" + id).text();
+                var $image      = $("<img>")
+                                    .attr("src", filename)
+                                    .attr("alt", filename);
+
+                loadedFile = "";
+                editor.setValue("");
+
+                $("#preview").empty();
+                $("#preview").append($image);
+                $("#editor").collapse("hide");
+                $("#preview").collapse("show");
             }
 
             function removeFile(id) {
