@@ -1,6 +1,6 @@
-var pixelix = {
-    ws: {}
-};
+var pixelix = window.pixelix || {};
+
+pixelix.ws = {};
 
 pixelix.ws.getLogLevelStr = function(logLevel) {
     var str = "";

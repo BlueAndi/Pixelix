@@ -87,6 +87,10 @@
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
         <!-- The high performance code editor Ace. -->
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" referrerpolicy="origin"></script>
 
@@ -94,102 +98,59 @@
         <script>
             var editor      = null;
             var loadedFile  = "";
-
-            function listFiles(page) {
-                return new Promise(function(resolve, reject) {
-                    var xhr             = new XMLHttpRequest();
-                    var encodedParams   = "";
-
-                    encodedParams += "?dir=" + encodeURIComponent("/");
-                    encodedParams += "&page=" + page;
-
-                    xhr.open("GET", "/rest/api/v1/fs" + encodedParams);
-                    xhr.onload = function() {
-                        var jsonRsp = JSON.parse(xhr.response);
-
-                        if (0 === jsonRsp.status) {
-                            resolve(jsonRsp);
-                        } else {
-                            reject();
-                        }
-                    };
-                    xhr.send();
-                });
-            }
-
-            function readFile(filename) {
-                return new Promise(function(resolve, reject) {
-                    var xhr             = new XMLHttpRequest();
-                    var encodedParams   = "";
-
-                    encodedParams += "?path=" + encodeURIComponent(filename);
-
-                    xhr.open("GET", "/rest/api/v1/fs/file" + encodedParams);
-                    xhr.onload = function() {
-                        resolve(xhr.response);
-                    };
-                    xhr.send();
-                });
-            }
-
-            function writeFile(filename, content) {
-                return new Promise(function(resolve, reject) {
-                    var formData    = new FormData();
-                    var xhr         = new XMLHttpRequest();
-
-                    formData.append("file", new Blob([content], { type: "text/plain" }), filename);
-
-                    xhr.open("POST", "/rest/api/v1/fs/file");
-                    xhr.onload = function() {
-                        var jsonRsp = JSON.parse(xhr.response);
-
-                        if (0 === jsonRsp.status) {
-                            resolve(jsonRsp);
-                        } else {
-                            reject();
-                        }
-                    };
-                    xhr.send(formData);
-                });
-            }
-
-            function writeFile(filename, content) {
-                return new Promise(function(resolve, reject) {
-                    var formData    = new FormData();
-                    var xhr         = new XMLHttpRequest();
-
-                    formData.append("path", filename);
-
-                    xhr.open("DELETE", "/rest/api/v1/fs/file");
-                    xhr.onload = function() {
-                        var jsonRsp = JSON.parse(xhr.response);
-
-                        if (0 === jsonRsp.status) {
-                            resolve(jsonRsp);
-                        } else {
-                            reject();
-                        }
-                    };
-                    xhr.send(formData);
-                });
-            }
-
-            function sortUL(selector) {
-                var $ul = $(selector);
-
-                $ul.find("li").sort(function (a, b) {
-                    var upA = $(a).text().toUpperCase();
-                    var upB = $(b).text().toUpperCase();
-                    return (upA < upB) ? -1 : (upA > upB) ? 1 : 0;
-                }).appendTo(selector);
-            };
+            var restClient  = new pixelix.rest.Client();
+            var supportedFileTypes = [{
+                name: "bmp",
+                lang: null,
+                type: "image"
+            }, {
+                name: "css",
+                lang: "css",
+                type: "text"
+            }, {
+                name: "gif",
+                lang: null,
+                type: "image"
+            }, {
+                name: "htm",
+                lang: "html",
+                type: "text"
+            }, {
+                name: "html",
+                lang: "html",
+                type: "text"
+            }, {
+                name: "jpg",
+                lang: null,
+                type: "image"
+            }, {
+                name: "js",
+                lang: "javascript",
+                type: "text"
+            }, {
+                name: "json",
+                lang: "json",
+                type: "text"
+            }, {
+                name: "png",
+                lang: null,
+                type: "png"
+            }, {
+                name: "txt",
+                lang: "plain_text",
+                type: "text"
+            }, {
+                name: "xml",
+                lang: "xml",
+                type: "text"
+            }];
 
             function listAllFilesHelper(par) {
                 var page = par.page;
 
                 ++par.page;
 
-                return listFiles(page).then(function(rsp) {
+                return restClient.listFiles("/", page).then(function(rsp) {
                     if (0 < rsp.data.length) {
                         par.data = par.data.concat(rsp.data);
                         promise = listAllFilesHelper(par);
@@ -198,8 +159,8 @@
                     }
 
                     return promise;
-                }).catch(function() {
-                    return Promise.reject();
+                }).catch(function(rsp) {
+                    return Promise.reject(rsp);
                 });
             }
 
@@ -244,10 +205,16 @@
                                             .attr("href", "#")
                                             .attr("onclick", "removeFile(\"" + itemId + "\")")
                                             .text("Remove");
+                        var fileTypeInfo    = getFileTypeInfo(items[index].name);
 
-                        if (true == isTextFile((items[index].name))) {
-                            $($actions).append($actionEdit);
+                        if (null !== fileTypeInfo) {
+                            if ("text" === fileTypeInfo.type) {
+                                $($actions).append($actionEdit);
+                            } else if ("image" === fileTypeInfo.type) {
+                                $($actions).append("Preview");
+                            }
                         }
+
                         $($actions).append($actionRemove);
 
                         $($itemMenu).append($itemButton).append($actions);
@@ -260,8 +227,8 @@
                     for(index = 0; index < items.length; ++index) {                        
                         $("#" + id).append(generateItemMenu("file" + index, items[index]));
                     }
-                }).catch(function() {
-
+                }).catch(function(rsp) {
+                    alert(rsp.error.msg);
                 });
             }
 
@@ -272,91 +239,63 @@
                 editor.setValue("");
                 setEditorMode(filename);
 
-                return readFile(filename).then(function(rsp) {
+                return restClient.readFile(filename).then(function(rsp) {
                     /* Fill content in, remove selection and
                      * move cursor to the begin.
                      */
                     editor.setValue(rsp, -1);
                 }).catch(function() {
-
+                    alert(rsp.error.msg);
                 });
             }
 
             function removeFile(id) {
                 var filename = $("#" + id).text();
 
-                if (loadedFile === filename) {
-                    loadedFile = "";
-                    editor.setValue("");
-                }
+                return restClient.removeFile(filename).then(function(rsp) {
 
-                return removeFile(filename).then(function(rsp) {
+                    if (loadedFile === filename) {
+                        loadedFile = "";
+                        editor.setValue("");
+                    }
+                    $("#" + id).parent().remove();
 
+                    alert("File " + filename + " removed.");
                 }).catch(function() {
-
+                    alert(rsp.error.msg);
                 });
             }
 
-            var supportedTextFileTypes = [{
-                name: "css",
-                lang: "css"
-            }, {
-                name: "htm",
-                lang: "html"
-            }, {
-                name: "html",
-                lang: "html"
-            }, {
-                name: "js",
-                lang: "javascript"
-            }, {
-                name: "json",
-                lang: "json"
-            }, {
-                name: "txt",
-                lang: "plain_text"
-            }, {
-                name: "xml",
-                lang: "xml"
-            }];
-
-            function isTextFile(filename) {
-                var isTF    = false;
+            function getFileTypeInfo(filename) {
+                var info    = null;
                 var index   = 0;
 
-                while(supportedTextFileTypes.length > index) {
-                    if (true === filename.endsWith("." + supportedTextFileTypes[index].name))
+                while((supportedFileTypes.length > index) && (null === info)) {
+                    if (true === filename.endsWith("." + supportedFileTypes[index].name))
                     {
-                        isTF = true;
-                        break;
+                        info = supportedFileTypes[index];
                     }
                     ++index;
                 }
 
-                return isTF;
+                return info;
             }
 
             function setEditorMode(filename) {
-                var prefix  = "ace/mode/";
-                var mode    = prefix + "plain_text";
-                var index   = 0;
+                var prefix          = "ace/mode/";
+                var mode            = prefix + "plain_text";
+                var fileTypeInfo    = getFileTypeInfo(filename);
 
-                while(supportedTextFileTypes.length > index) {
-                    if (true === filename.endsWith("." + supportedTextFileTypes[index].name))
-                    {
-                        mode = prefix + supportedTextFileTypes[index].lang;
-                        break;
-                    }
-                    ++index;
+                if ((null !== fileTypeInfo) &&
+                    (null !== fileTypeInfo.lang))
+                {
+                    mode = prefix + fileTypeInfo.lang;
                 }
 
                 editor.getSession().setMode(mode);
             }
 
             $(document).ready(function() {
-                console.info("Bootstrap: " + $.fn.tooltip.Constructor.VERSION);
-                console.info("jQuery: " + jQuery.fn.jquery);
-
                 menu.create("menu");
 
                 ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12");
@@ -376,7 +315,7 @@
                         mac: "Command-S"
                     },
                     exec: function(editor) {
-                        writeFile(loadedFile, editor.getValue()).then(function() {
+                        restClient.writeFile(loadedFile, editor.getValue()).then(function() {
                             alert("Saved.");
                         });
                     },
