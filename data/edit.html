@@ -376,7 +376,9 @@
                         mac: "Command-S"
                     },
                     exec: function(editor) {
-                        writeFile(loadedFile, editor.getValue());
+                        writeFile(loadedFile, editor.getValue()).then(function() {
+                            alert("Saved.");
+                        });
                     },
                     readOnly: false
                 });
