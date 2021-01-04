@@ -193,8 +193,8 @@ void UpdateMgr::updateProgress(uint8_t progress)
          */
         while(false == LedMatrix::getInstance().isReady())
         {
-            /* Just wait. */
-            ;
+            /* Just wait and give other tasks a chance. */
+            delay(1U);
         }
 
         /* Show update status on console. */

@@ -68,61 +68,73 @@
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
 
         <!-- Custom javascript -->
         <script>
             var data = ~SETTINGS_DATA~;
 
             function store(id) {
+                var $input      = $("#" + id);
                 var formData    = new FormData();
-                var xhr         = new XMLHttpRequest();
-                var input       = $("#" + id);
 
-                if ("checkbox" === input.attr("type")) {
-                    formData.append(input.attr("name"), input.is(":checked"));
+                if ("checkbox" === $input.attr("type")) {
+                    formData.append($input.attr("name"), $input.is(":checked"));
                 } else {
-                    formData.append(input.attr("name"), input.val());
+                    formData.append($input.attr("name"), $input.val());
                 }
 
-                xhr.open("POST", "/settings.html");
-                xhr.onload = function() {
-                    var jsonRsp = JSON.parse(xhr.response);
-
-                    if (0 === jsonRsp.status) {
-                        alert("Info: " + jsonRsp.info);
-                    } else {
-                        alert("Error: " + jsonRsp.error);
-                    }
-                };
-                xhr.send(formData);
+                utils.makeRequest({
+                    method: "POST",
+                    url: "/settings.html",
+                    isJsonResponse: true,
+                    formData: formData
+                }).then(function(rsp) {
+                    alert("Info: Successful stored.");
+                }).catch(function(rsp) {
+                    alert("Error: " + jsonRsp.error.msg);
+                });
             }
 
             $(document).ready(function() {
                 var index       = 0;
                 var keyIndex    = 0;
                 var keys        = null;
-                var label       = null;
-                var formGroup   = null;
-                var inputField  = null;
-                var button      = null;
+                var $label      = null;
+                var $formGroup  = null;
+                var $inputField = null;
+                var $button     = null;
 
                 menu.create("menu");
 
                 for(index = 0; index < data.length; ++index) {
-                    keys = Object.keys(data[index].input);
-
-                    label = $("<label>").attr("for", "for-" + index).attr("class", "form-label").text(data[index].title);
-
-                    inputField = $("<input>").attr("class", "form-control").attr("id", "setting-" + index).attr("placeholder", "");
+                    keys        = Object.keys(data[index].input);
+                    $label      = $("<label>")
+                                .attr("for", "for-" + index)
+                                .attr("class", "form-label")
+                                .text(data[index].title);
+                    $inputField = $("<input>")
+                                .attr("class", "form-control")
+                                .attr("id", "setting-" + index)
+                                .attr("placeholder", "");
+                    
                     for(keyIndex = 0; keyIndex < keys.length; ++keyIndex) {
-                        $(inputField).attr(keys[keyIndex], data[index].input[keys[keyIndex]]);
+                        $($inputField).attr(keys[keyIndex], data[index].input[keys[keyIndex]]);
                     }
 
-                    button = $("<button>").attr("class", "btn btn-primary").attr("onclick", "store(\"setting-" + index + "\");").text("Store");
+                    $button     = $("<button>")
+                                .attr("class", "btn btn-primary")
+                                .attr("onclick", "store(\"setting-" + index + "\");")
+                                .text("Store");
 
-                    formGroup = $("<div>").attr("class", "form-group").append(label).append(inputField).append(button);
+                    $formGroup  = $("<div>")
+                                .attr("class", "form-group")
+                                .append($label)
+                                .append($inputField)
+                                .append($button);
 
-                    $("#settings").append(formGroup);
+                    $("#settings").append($formGroup);
                 }
             });
         </script>

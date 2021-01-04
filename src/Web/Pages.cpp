@@ -772,7 +772,6 @@ static void settingsPage(AsyncWebServerRequest* request)
     if ((HTTP_POST == request->method()) &&
         (0 < request->args()))
     {
-        bool                isError         = false;
         KeyValue**          list            = Settings::getInstance().getList();
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -782,15 +781,17 @@ static void settingsPage(AsyncWebServerRequest* request)
 
         if (false == Settings::getInstance().open(false))
         {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
             LOG_WARNING("Couldn't open settings.");
 
-            isError = true;
             jsonDoc["status"]   = 1;
-            jsonDoc["error"]    = "Internal error.";
+            errorObj["msg"]     = "Internal error.";
         }
         else
         {
-            uint8_t index = 0U;
+            bool    isError = false;
+            uint8_t index   = 0U;
 
             while((index < Settings::KEY_VALUE_PAIR_NUM) && (false == isError))
             {
@@ -810,12 +811,24 @@ static void settingsPage(AsyncWebServerRequest* request)
             }
 
             Settings::getInstance().close();
-        }
 
-        if (false == isError)
-        {
-            jsonDoc["status"]   = 0;
-            jsonDoc["info"]     = "Successful stored.";
+            if (true == isError)
+            {
+                JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                LOG_WARNING("Internal error.");
+
+                jsonDoc["status"]   = 1;
+                errorObj["msg"]     = "Internal error.";
+            }
+            else
+            {
+                JsonObject dataObj = jsonDoc.createNestedObject("data");
+
+                UTIL_NOT_USED(dataObj);
+
+                jsonDoc["status"] = 0;
+            }
         }
 
         usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();

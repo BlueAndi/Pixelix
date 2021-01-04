@@ -79,6 +79,8 @@
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
 
         <!-- Custom javascript -->
         <script>
@@ -93,36 +95,6 @@
                 $("main :button").prop("disabled", false);
             }
 
-            function makeRequest(options) {
-                var xhr = new XMLHttpRequest();
-
-                xhr.open(options.method, options.url);
-
-                if ("function" === typeof options.onProgress) {
-                    xhr.upload.onprogress = options.onProgress;
-                }
-
-                xhr.onload = function() {
-                    if (200 === xhr.status) {
-                        options.onDone(null, xhr.response);
-                    } else {
-                        options.onDone(xhr.response, null);
-                    }
-                };
-
-                xhr.onerror = function() {
-                    options.onDone(xhr.response);
-                };
-
-                if ("undefined" !== typeof options.headers) {
-                    Object.keys(options.headers).forEach(function(key) {
-                        xhr.setRequestHeader(key, options.headers[key]);
-                    });
-                }
-
-                xhr.send(options.params);
-            }
-
             function updateProgress(evt) {
                 var progress = 0;
 
@@ -135,9 +107,8 @@
             }
 
             function upload() {
-                var file = document.getElementById("inputFile").files[0];
-                var formData = new FormData();
-                var fileSize = file.size;
+                var file        = document.getElementById("inputFile").files[0];
+                var fileSize    = file.size;
 
                 $("#progressBar").css("width", "0%").attr("aria-valuenow", 0);
 
@@ -154,25 +125,22 @@
 
                     disableUI();
 
-                    formData.append("file", file);
-
-                    makeRequest({
+                    utils.makeRequest({
                         method: "POST",
                         url: "/upload.html",
-                        params: formData,
+                        parameter: {
+                            file: file
+                        },
                         headers: {
                             "X-File-Size": fileSize
                         },
-                        onDone: function(err, data) {
-                            if (null !== err) {
-                                alert(err);
-                            } else {
-                                alert("Upload successful.");
-                            }
-
-                            enableUI();
-                        },
                         onProgress: updateProgress
+                    }).then(function(rsp) {
+                        alert("Upload successful.");
+                    }).catch(function(rsp) {
+                        alert("Error: " + rsp);
+                    }).finally(function() {
+                        enableUI();
                     });
                 }
             }
@@ -181,7 +149,7 @@
             $(document).ready(function() {
                 menu.create("menu");
                 
-                $("#inputFile").on("change", function(){
+                $("#inputFile").on("change", function() {
                     var fileName = $(this).val().split("\\").pop();
                     $(this).next(".custom-file-label").addClass("selected").html(fileName);
                 });

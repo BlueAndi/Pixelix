@@ -58,13 +58,24 @@ utils.makeRequest = function(options) {
                         formData.append(key, options.parameter[key]);
                     }
                 }
+            }
 
-                if ("boolean" === typeof options.isJsonResponse) {
-                    isJsonResponse = options.isJsonResponse;
-                }
+            if ("boolean" === typeof options.isJsonResponse) {
+                isJsonResponse = options.isJsonResponse;
             }
 
             xhr.open(options.method, options.url + urlEncodedPar);
+
+            if ("undefined" !== typeof options.headers) {
+                Object.keys(options.headers).forEach(function(key) {
+                    xhr.setRequestHeader(key, options.headers[key]);
+                });
+            }
+            
+            if ("function" === typeof options.onProgress) {
+                xhr.upload.onprogress = options.onProgress;
+            }
+            
             xhr.onload = function() {
                 var jsonRsp = null;
 
@@ -88,6 +99,10 @@ utils.makeRequest = function(options) {
                         resolve(xhr.response);
                     }
                 }
+            };
+
+            xhr.onerror = function() {
+                reject("Timeout");
             };
 
             if (null === formData) {
