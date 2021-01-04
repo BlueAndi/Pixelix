@@ -177,7 +177,7 @@
                     var fileId      = "";
 
                     for(index = 0; index < rsp.data.length; ++index) {
-                        fileId      = "file" + index;
+                        fileId      = "file_p" + page + "_" + index;
                         hyperRef    = $("<a>")
                                     .attr("href", "#")
                                     .attr("onclick", "selectFile(\"" + fileId + "\")")
@@ -246,7 +246,7 @@
                 lang: "json"
             }, {
                 name: "txt",
-                lang: "plain"
+                lang: "plain_text"
             }, {
                 name: "xml",
                 lang: "xml"
@@ -270,7 +270,7 @@
 
             function setEditorMode(filename) {
                 var prefix  = "ace/mode/";
-                var mode    = prefix + "plain";
+                var mode    = prefix + "plain_text";
                 var index   = 0;
 
                 while(supportedTextFileTypes.length > index) {
