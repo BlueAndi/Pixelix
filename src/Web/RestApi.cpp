@@ -598,7 +598,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
         FS&             fs                  = SPIFFS;
         File            fdRoot              = fs.open(path, "r");
         JsonArray       jsonData            = jsonDoc.createNestedArray("data");
-        const uint32_t  DEFAULT_MAX_FILES   = 20U;
+        const uint32_t  DEFAULT_MAX_FILES   = 15U;
         uint32_t        count               = DEFAULT_MAX_FILES;
         uint32_t        page                = 0U;
         uint32_t        preCount            = page * count;
@@ -722,6 +722,8 @@ static void handleFileGet(AsyncWebServerRequest* request)
         const String&   path    = request->arg("path");
         FS&             fs      = SPIFFS;
         File            fd      = fs.open(path, "r");
+
+        LOG_INFO("File \"%s\" requested.", path.c_str());
 
         if (false == fd)
         {

@@ -89,12 +89,15 @@
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
-        <!-- Standard utilities -->
+        <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
 
         <script>
 
-            var pluginName = "VolumioPlugin";
+            var pluginName  = "VolumioPlugin";
+            var restClient  = new pixelix.rest.Client();
     
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -105,22 +108,19 @@
             }
     
             function getPluginInstances() {
-                return utils.makeRequest({
-                    method: "GET",
-                    url: "/rest/api/v1/display/slots"
-                }).then(function(rsp) {
-                    var index   = 0;
-                    var cnt     = 0;
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var $option     = null;
     
-                    for(index = 0; index < rsp.data.slots.length; ++index) {
-                        if (rsp.data.slots[index].name === pluginName) {
-    
-                            var element = document.getElementById("pluginUid");
-                            var option  = document.createElement("option");
-    
-                            option.value = rsp.data.slots[index].uid;
-                            option.text = rsp.data.slots[index].uid;
-                            element.add(option);
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(rsp.data.slots[slotIndex].uid);
+                            
+                            $("#pluginUid").append($option);
     
                             ++cnt;
                         }
@@ -137,7 +137,8 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/host"
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/host",
+                    isJsonResponse: true
                 }).then(function(rsp) {
                     var hostInput = document.getElementById(hostId);
 
@@ -156,6 +157,7 @@
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/host",
+                    isJsonResponse: true,
                     parameter: {
                         set: host
                     }

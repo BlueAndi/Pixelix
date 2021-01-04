@@ -152,12 +152,15 @@
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
-        <!-- Standard utilities -->
+        <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
 
         <script>
 
-            var pluginName = "IconTextLampPlugin";
+            var pluginName  = "IconTextLampPlugin";
+            var restClient  = new pixelix.rest.Client();
 
             function enableUI() {
                 utils.enableForm("myFormIcon", true);
@@ -172,24 +175,23 @@
             }
 
             function getPluginInstances() {
-                return utils.makeRequest({
-                    method: "GET",
-                    url: "/rest/api/v1/display/slots"
-                }).then(function(rsp) {
+                return restClient.getPluginInstances().then(function(rsp) {
                     var elemIndex   = 0;
                     var slotIndex   = 0;
                     var cnt         = 0;
                     var elements    = document.getElementsByName("pluginUid");
+                    var $option     = null;
 
                     for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
                         for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                             if (rsp.data.slots[slotIndex].name === pluginName) {
 
-                                option          = document.createElement("option");
-                                option.value    = rsp.data.slots[slotIndex].uid;
-                                option.text     = rsp.data.slots[slotIndex].uid;
-                                elements[elemIndex].add(option);
+                                $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(rsp.data.slots[slotIndex].uid);
+                                
+                                $(elements[elemIndex]).append($option);
 
                                 ++cnt;
                             }
@@ -209,6 +211,7 @@
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
+                    isJsonResponse: true,
                     parameter: {
                         file: fileName
                     }
@@ -225,7 +228,8 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text"
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    isJsonResponse: true
                 }).then(function(rsp) {
                     var justTextInput = document.getElementById(justTextId);
 
@@ -244,6 +248,7 @@
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    isJsonResponse: true,
                     parameter: {
                         show: justText
                     }
@@ -260,7 +265,8 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/lamps"
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/lamps",
+                    isJsonResponse: true
                 }).then(function(rsp) {
                     var selectLampState = document.getElementById(lampStateId);
 
@@ -283,6 +289,7 @@
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/lamp/" + lampId,
+                    isJsonResponse: true,
                     parameter: {
                         set: lampState
                     }

@@ -84,3 +84,10 @@ pixelix.rest.Client.prototype.removeFile = function(filename) {
     return promise;
 };
 
+pixelix.rest.Client.prototype.getPluginInstances = function() {
+    return utils.makeRequest({
+        method: "GET",
+        url: "/rest/api/v1/display/slots",
+        isJsonResponse: true
+    });
+};
