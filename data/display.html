@@ -137,17 +137,17 @@
 
         <!-- Custom javascript -->
         <script>
-            var matrixWidth         = 32;   // LED matrix width in number of LEDs
-            var matrixHeight        = 8;    // LED matrix height in number of LEDs
-            var ctx                 = null; // Canvas context
-            var pixelWidth          = 10;   // Width of a single LED in pixels
-            var pixelHeight         = 10;   // Height of a single LED in pixels
-            var timerId             = 0;    // Timer id
-            var period              = 400;  // Display refresh period in ms
-            var wsClient            = null; // Websocket client
-            var plugins             = [];   // List of all available plugins
-            var autoBrightnessCtrl  = false;// Is automatic brightness control enabled or disabled?
-            var brightness          = 0;    // Brightness [0; 255]
+            var matrixWidth         = 32;       // LED matrix width in number of LEDs
+            var matrixHeight        = 8;        // LED matrix height in number of LEDs
+            var ctx                 = null;     // Canvas context
+            var pixelWidth          = 10;       // Width of a single LED in pixels
+            var pixelHeight         = 10;       // Height of a single LED in pixels
+            var timerId             = 0;        // Timer id
+            var period              = 400;      // Display refresh period in ms
+            var wsClient            = new pixelix.ws.Client();
+            var plugins             = [];       // List of all available plugins
+            var autoBrightnessCtrl  = false;    // Is automatic brightness control enabled or disabled?
+            var brightness          = 0;        // Brightness [0; 255]
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -170,9 +170,9 @@
 
             function plot(x, y, color) {
                 if (null !== ctx) {
-                    ctx.lineWidth = "1";
+                    ctx.lineWidth   = "1";
                     ctx.strokeStyle = color;
-                    ctx.fillStyle = color;
+                    ctx.fillStyle   = color;
                     ctx.fillRect(x * pixelWidth + x + 1, y * pixelHeight + y + 1, pixelWidth, pixelHeight);
                 }
             }
@@ -293,6 +293,7 @@
 
             function drop(ev) {
                 ev.preventDefault();
+
                 var data = ev.dataTransfer.getData("src");
                 var src = document.getElementById(data);
                 var srcParent = src.parentNode;
@@ -311,6 +312,7 @@
 
             function setDuration(slotId) {
                 var duration = parseInt($("#duration" + slotId).val()) * 1000;
+
                 return wsClient.setSlotDuration({
                     slotId: slotId,
                     duration: duration
@@ -447,8 +449,6 @@
                 ctx = displayCanvas.getContext("2d");
 
                 menu.create("menu");
-
-                wsClient = new pixelix.ws.Client();
 
                 /* Connect to pixelix */
                 wsClient.connect({

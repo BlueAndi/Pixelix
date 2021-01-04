@@ -112,8 +112,8 @@
 
         <!-- Custom javascript -->
         <script>
-            var wsClient                = null;     /* Websocket client */
-            var maxLogs                 = 40;       /* Max. number of stored log messages */
+            var wsClient                = new pixelix.ws.Client();
+            var maxLogs                 = 40;   /* Max. number of stored log messages. */
             var isPageUnload            = false;
             var isLoggingEnabled        = false;
             var isMeasurementEnabled    = false;
@@ -129,25 +129,25 @@
 
             /* Handle every websocket event. */
             function wsOnEvent(evt) {
-                var row = "";
-                var rowCount = $("#loggingOutput > tbody tr").length;
+                var $row            = $("<tr>");
+                var $colTimestamp   = $("<td>").text(evt.timestamp);
+                var $colLogLevel    = $("<td>").text(pixelix.ws.getLogLevelStr(evt.level));
+                var $colFilename    = $("<td>").text(evt.filename);
+                var $colLine        = $("<td>").text(evt.line);
+                var $colText        = $("<td>").text(evt.text);
+                var rowCount        = $("#loggingOutput > tbody tr").length;
 
                 if (maxLogs < rowCount) {
                     $("#loggingOutput > tbody").deleteRow(1);
                 }
 
-                row += "<tr><td>";
-                row += evt.timestamp;
-                row += "</td><td>"
-                row += pixelix.ws.getLogLevelStr(evt.level);
-                row += "</td><td>"
-                row += evt.filename;
-                row += "</td><td>"
-                row += evt.line;
-                row += "</td><td>"
-                row += evt.text;
+                $($row).append($colTimestamp)
+                    .append($colLogLevel)
+                    .append($colFilename)
+                    .append($colLin)
+                    .append($colText);
 
-                $("#loggingOutput > tbody").append(row);
+                $("#loggingOutput > tbody").append($row);
             }
 
             /* Disable all UI elements. */
@@ -168,6 +168,7 @@
                     enable: (false === isLoggingEnabled) ? true : false
                 }).then(function(rsp) {
                     isLoggingEnabled = rsp.isEnabled;
+
                     if (false == rsp.isEnabled) {
                         $("#buttonLog").text("Start");
                     } else {
@@ -201,11 +202,13 @@
                     enable: (false === isMeasurementEnabled) ? true : false
                 }).then(function(rsp) {
                     isMeasurementEnabled = rsp.isEnabled;
+
                     if (false == rsp.isEnabled) {
                         $("#buttonMeasurement").text("Start");
                     } else {
                         $("#buttonMeasurement").text("Stop");
                     }
+
                     alert("Ok.");
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
@@ -220,8 +223,6 @@
             /* Execute after page is ready. */
             $(document).ready(function() {
                 menu.create("menu");
-                
-                wsClient = new pixelix.ws.Client();
 
                 /* Connect to pixelix */
                 wsClient.connect({
