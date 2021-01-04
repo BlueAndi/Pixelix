@@ -157,7 +157,7 @@
             function sortUL(selector) {
                 var $ul = $(selector);
 
-                $ul.find('li').sort(function (a, b) {
+                $ul.find("li").sort(function (a, b) {
                     var upA = $(a).text().toUpperCase();
                     var upB = $(b).text().toUpperCase();
                     return (upA < upB) ? -1 : (upA > upB) ? 1 : 0;
@@ -216,17 +216,79 @@
                 var filename = $("#" + id).text();
 
                 selectedFile = filename;
+                editor.setValue("");
+                setEditorMode(filename);
 
                 return readFile(filename).then(function(rsp) {
-                    editor.setValue(rsp);
+                    /* Fill content in, remove selection and
+                     * move cursor to the begin.
+                     */
+                    editor.setValue(rsp, -1);
                 }).catch(function() {
 
                 });
             }
 
+            var supportedTextFileTypes = [{
+                name: "css",
+                lang: "css"
+            }, {
+                name: "htm",
+                lang: "html"
+            }, {
+                name: "html",
+                lang: "html"
+            }, {
+                name: "js",
+                lang: "javascript"
+            }, {
+                name: "json",
+                lang: "json"
+            }, {
+                name: "txt",
+                lang: "plain"
+            }, {
+                name: "xml",
+                lang: "xml"
+            }];
+
+            function isTextFile(filename) {
+                var isTF    = false;
+                var index   = 0;
+
+                while(supportedTextFileTypes.length > index) {
+                    if (true === filename.endsWith("." + supportedTextFileTypes[index].name))
+                    {
+                        isTF = true;
+                        break;
+                    }
+                    ++index;
+                }
+
+                return isTF;
+            }
+
+            function setEditorMode(filename) {
+                var prefix  = "ace/mode/";
+                var mode    = prefix + "plain";
+                var index   = 0;
+
+                while(supportedTextFileTypes.length > index) {
+                    if (true === filename.endsWith("." + supportedTextFileTypes[index].name))
+                    {
+                        mode = prefix + supportedTextFileTypes[index].lang;
+                        break;
+                    }
+                    ++index;
+                }
+
+                editor.getSession().setMode(mode);
+            }
+
             $(document).ready(function() {
                 menu.create("menu");
 
+                ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12");
                 editor = ace.edit("editor");
                 editor.setTheme("ace/theme/textmate");
                 editor.session.setUseSoftTabs(true);
@@ -244,6 +306,22 @@
                     },
                     exec: function(editor) {
                         writeFile(selectedFile, editor.getValue());
+                    },
+                    readOnly: false
+                });
+                editor.commands.addCommand({
+                    name: "undoCommand",
+                    bindKey: {win: "Ctrl-Z",  mac: "Command-Z"},
+                    exec: function(editor) {
+                        editor.getSession().getUndoManager().undo(false);
+                    },
+                    readOnly: false
+                });
+                editor.commands.addCommand({
+                    name: "redoCommand",
+                    bindKey: {win: "Ctrl-Shift-Z",  mac: "Command-Shift-Z"},
+                    exec: function(editor) {
+                        editor.getSession().getUndoManager().redo(false);
                     },
                     readOnly: false
                 });
