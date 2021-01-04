@@ -64,7 +64,7 @@
                 <div class="row">
                     <div class="col-3">
                         <h2 class="mt-1">Files</h2>
-                        <ul id="files"></ul>
+                        <ul class="nav nav-pills flex-column" id="files"></ul>
                     </div>
                     <div class="col-9">
                         <div id="editor"></div>
@@ -92,8 +92,8 @@
 
         <!-- Custom javascript -->
         <script>
-            var editor          = null;
-            var selectedFile    = "";
+            var editor      = null;
+            var loadedFile  = "";
 
             function listFiles(page) {
                 return new Promise(function(resolve, reject) {
@@ -153,6 +153,27 @@
                 });
             }
 
+            function writeFile(filename, content) {
+                return new Promise(function(resolve, reject) {
+                    var formData    = new FormData();
+                    var xhr         = new XMLHttpRequest();
+
+                    formData.append("path", filename);
+
+                    xhr.open("DELETE", "/rest/api/v1/fs/file");
+                    xhr.onload = function() {
+                        var jsonRsp = JSON.parse(xhr.response);
+
+                        if (0 === jsonRsp.status) {
+                            resolve(jsonRsp);
+                        } else {
+                            reject();
+                        }
+                    };
+                    xhr.send(formData);
+                });
+            }
+
             function sortUL(selector) {
                 var $ul = $(selector);
 
@@ -163,37 +184,17 @@
                 }).appendTo(selector);
             };
 
-            function listAllFilesHelper(id, par) {
+            function listAllFilesHelper(par) {
                 var page = par.page;
 
                 ++par.page;
 
                 return listFiles(page).then(function(rsp) {
-                    var index       = 0;
-                    var promise     = null;
-                    var hyperRef    = null;
-                    var listItem    = null;
-                    var fileId      = "";
-
-                    for(index = 0; index < rsp.data.length; ++index) {
-                        fileId      = "file_p" + page + "_" + index;
-                        hyperRef    = $("<a>")
-                                    .attr("href", "#")
-                                    .attr("onclick", "selectFile(\"" + fileId + "\")")
-                                    .text(rsp.data[index].name);
-
-                        listItem    = $("<li>")
-                                    .attr("id", fileId);
-
-                        $(listItem).append(hyperRef);
-                        $("#" + id).append(listItem);
-                        sortUL("#" + id);
-                    }
-
                     if (0 < rsp.data.length) {
-                        promise = listAllFilesHelper(id, par);
+                        par.data = par.data.concat(rsp.data);
+                        promise = listAllFilesHelper(par);
                     } else {
-                        promise = Promise.resolve();
+                        promise = Promise.resolve(par.data);
                     }
 
                     return promise;
@@ -204,17 +205,70 @@
 
             function listAllFiles(id) {
                 var par = {
-                    page: 0
+                    page: 0,
+                    data: []
                 };
 
-                return listAllFilesHelper(id, par).catch(function() {
+                return listAllFilesHelper(par).then(function(items) {
+                    var index       = 0;
+                    var compareFunc = function(a, b) {
+                        if (a.name < b.name) {
+                            return -1;
+                        }
+                        if (a.name > b.name) {
+                            return 1;
+                        }
+                        return 0;
+                    };
+                    var generateItemMenu = function(itemId, item) {
+                        var $itemMenu       = $("<li>")
+                                            .attr("class", "nav-item dropdown")
+                        var $itemButton     = $("<a>")
+                                            .attr("href", "#")
+                                            .attr("role", "button")
+                                            .attr("class", "nav-link dropdown-toggle")
+                                            .attr("id", itemId)
+                                            .attr("data-toggle", "dropdown")
+                                            .attr("aria-haspopup", "true")
+                                            .attr("aria-expanded", "false")
+                                            .text(items[index].name);
+                        var $actions        = $("<div>")
+                                            .attr("class", "dropdown-menu");
+                        var $actionEdit     = $("<a>")
+                                            .attr("class", "dropdown-item")
+                                            .attr("href", "#")
+                                            .attr("onclick", "editFile(\"" + itemId + "\")")
+                                            .text("Edit");
+                        var $actionRemove   = $("<a>")
+                                            .attr("class", "dropdown-item")
+                                            .attr("href", "#")
+                                            .attr("onclick", "removeFile(\"" + itemId + "\")")
+                                            .text("Remove");
+
+                        if (true == isTextFile((items[index].name))) {
+                            $($actions).append($actionEdit);
+                        }
+                        $($actions).append($actionRemove);
+
+                        $($itemMenu).append($itemButton).append($actions);
+
+                        return $itemMenu;
+                    };
+
+                    items.sort(compareFunc);
+
+                    for(index = 0; index < items.length; ++index) {                        
+                        $("#" + id).append(generateItemMenu("file" + index, items[index]));
+                    }
+                }).catch(function() {
+
                 });
             }
 
-            function selectFile(id) {
+            function editFile(id) {
                 var filename = $("#" + id).text();
 
-                selectedFile = filename;
+                loadedFile = filename;
                 editor.setValue("");
                 setEditorMode(filename);
 
@@ -223,6 +277,21 @@
                      * move cursor to the begin.
                      */
                     editor.setValue(rsp, -1);
+                }).catch(function() {
+
+                });
+            }
+
+            function removeFile(id) {
+                var filename = $("#" + id).text();
+
+                if (loadedFile === filename) {
+                    loadedFile = "";
+                    editor.setValue("");
+                }
+
+                return removeFile(filename).then(function(rsp) {
+
                 }).catch(function() {
 
                 });
@@ -285,6 +354,9 @@
             }
 
             $(document).ready(function() {
+                console.info("Bootstrap: " + $.fn.tooltip.Constructor.VERSION);
+                console.info("jQuery: " + jQuery.fn.jquery);
+
                 menu.create("menu");
 
                 ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12");
@@ -304,7 +376,7 @@
                         mac: "Command-S"
                     },
                     exec: function(editor) {
-                        writeFile(selectedFile, editor.getValue());
+                        writeFile(loadedFile, editor.getValue());
                     },
                     readOnly: false
                 });
