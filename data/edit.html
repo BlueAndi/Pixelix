@@ -134,7 +134,7 @@
             }, {
                 name: "png",
                 lang: null,
-                type: "png"
+                type: "image"
             }, {
                 name: "txt",
                 lang: "plain_text",
@@ -192,26 +192,40 @@
                                             .attr("data-toggle", "dropdown")
                                             .attr("aria-haspopup", "true")
                                             .attr("aria-expanded", "false")
-                                            .text(items[index].name);
+                                            .text(item.name);
                         var $actions        = $("<div>")
                                             .attr("class", "dropdown-menu");
+                        var $actionSize     = $("<a>")
+                                            .attr("class", "dropdown-item disabled")
+                                            .attr("href", "#")
+                                            .attr("tabindex", "-1")
+                                            .attr("aria-disabled", "true")
+                                            .text((item.size / 1024).toFixed(2) + " kByte");
                         var $actionEdit     = $("<a>")
                                             .attr("class", "dropdown-item")
                                             .attr("href", "#")
                                             .attr("onclick", "editFile(\"" + itemId + "\")")
                                             .text("Edit");
+                        var $actionPreview  = $("<a>")
+                                            .attr("class", "dropdown-item disabled")
+                                            .attr("href", "#")
+                                            .attr("tabindex", "-1")
+                                            .attr("aria-disabled", "true")
+                                            .text("Preview");
                         var $actionRemove   = $("<a>")
                                             .attr("class", "dropdown-item")
                                             .attr("href", "#")
                                             .attr("onclick", "removeFile(\"" + itemId + "\")")
                                             .text("Remove");
-                        var fileTypeInfo    = getFileTypeInfo(items[index].name);
+                        var fileTypeInfo    = getFileTypeInfo(item.name);
+                        
+                        $($actions).append($actionSize);
 
                         if (null !== fileTypeInfo) {
                             if ("text" === fileTypeInfo.type) {
                                 $($actions).append($actionEdit);
                             } else if ("image" === fileTypeInfo.type) {
-                                $($actions).append("Preview");
+                                $($actions).append($actionPreview);
                             }
                         }
 
