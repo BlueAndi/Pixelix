@@ -951,6 +951,8 @@ static void handleFileDelete(AsyncWebServerRequest* request)
     {
         const String& path = request->arg("path");
 
+        LOG_INFO("File \"%s\" removal requested.", path.c_str());
+
         if (false == SPIFFS.remove(path))
         {
             JsonObject dataObj = jsonDoc.createNestedObject("data");

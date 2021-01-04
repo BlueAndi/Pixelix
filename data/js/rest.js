@@ -58,7 +58,7 @@ pixelix.rest.Client.prototype.writeFile = function(filename, content) {
         promise = utils.makeRequest({
             method: "POST",
             url: this._hostname + this._baseUri + "/fs/file",
-            isJsonResponse: false,
+            isJsonResponse: true,
             formData: formData
         });
     }
@@ -74,7 +74,7 @@ pixelix.rest.Client.prototype.removeFile = function(filename) {
         promise = utils.makeRequest({
             method: "DELETE",
             url: this._hostname + this._baseUri + "/fs/file",
-            isJsonResponse: false,
+            isJsonResponse: true,
             parameter: {
                 path: filename
             }

@@ -244,7 +244,7 @@
                      * move cursor to the begin.
                      */
                     editor.setValue(rsp, -1);
-                }).catch(function() {
+                }).catch(function(rsp) {
                     alert(rsp.error.msg);
                 });
             }
@@ -261,7 +261,7 @@
                     $("#" + id).parent().remove();
 
                     alert("File " + filename + " removed.");
-                }).catch(function() {
+                }).catch(function(rsp) {
                     alert(rsp.error.msg);
                 });
             }
