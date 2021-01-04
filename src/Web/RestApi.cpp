@@ -721,11 +721,10 @@ static void handleFileGet(AsyncWebServerRequest* request)
     {
         const String&   path    = request->arg("path");
         FS&             fs      = SPIFFS;
-        File            fd      = fs.open(path, "r");
 
         LOG_INFO("File \"%s\" requested.", path.c_str());
 
-        if (false == fd)
+        if (false == fs.exists(path))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -739,8 +738,7 @@ static void handleFileGet(AsyncWebServerRequest* request)
         }
         else
         {
-            request->send(fd, path, getContentType(path));
-            fd.close();
+            request->send(fs, path, getContentType(path));
         }
     }
 
