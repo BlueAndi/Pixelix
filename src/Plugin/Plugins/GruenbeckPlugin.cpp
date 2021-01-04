@@ -403,7 +403,7 @@ void GruenbeckPlugin::initHttpClient()
         const char*     payload                         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
         char            restCapacity[RELEVANT_DATA_LENGTH + 1];
 
-        if (payloadSize <= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
+        if (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
         {
             memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
             restCapacity[RELEVANT_DATA_LENGTH] = '\0';
