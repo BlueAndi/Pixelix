@@ -80,7 +80,7 @@ public:
     /**
      * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
      */
-    void init() override;
+    void init() final;
 
     /**
      * Achieves a fade in effect. Call this method as long as the effect is not completed.
@@ -91,7 +91,7 @@ public:
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeIn(IGfx& gfx, IGfx& prev, IGfx& next) override;
+    bool fadeIn(IGfx& gfx, IGfx& prev, IGfx& next) final;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
@@ -102,7 +102,7 @@ public:
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) override;
+    bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) final;
 
     /**
      * Fading step per fadeIn/fadeOut call.
