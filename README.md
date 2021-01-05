@@ -14,6 +14,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 - [Motivation](#motivation)
 - [Overview](#overview)
 - [Very First Startup](#very-first-startup)
+- [User Interface](#user-interface)
 - [Documentation](#documentation)
 - [Used Libraries](#used-libraries)
 - [FAQ](#faq)
@@ -40,7 +41,17 @@ I want to have a remote display to show multiple kind of information, running 24
 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
+
 Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Restart and voila!
+
+# User Interface
+* The user button activates always the next slot.
+* If the display is at a place, which is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
+* If a LDR is connected, the display brightness is automatically adapted.
+* The web interface provides the possibilty to install plugins, control their duration in the slots and etc.
+* Some plugin's spawn a dedicated REST API, see the web page of the plugin or have a look to the REST API documentation.
+
+Note, the websocket interface is currently only used as a service in the web interface.
 
 # Documentation
 
