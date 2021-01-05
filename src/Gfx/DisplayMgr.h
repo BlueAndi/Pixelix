@@ -49,6 +49,7 @@
 #include <SimpleTimer.hpp>
 #include <FadeLinear.h>
 #include <FadeMoveX.h>
+#include <FadeMoveY.h>
 
 #include "Board.h"
 #include "IPluginMaintenance.hpp"
@@ -179,6 +180,10 @@ public:
      */
     void activateNextSlot();
 
+    /**
+     * Activate next fade effect.
+     */
+    void activateNextFadeEffect();
     /**
      * Move plugin to a different slot.
      *
@@ -314,16 +319,26 @@ private:
         FB_ID_MAX       /**< Number of frame buffers */
     };
 
+    /** Fade effects */
+    enum FadeEffectIndex
+    {
+        LINEAR = 0,         /**< Linear dimming fade effect. */
+        MOVE_X,             /**< Moving fade effect into the direction of negative x-coordinates. */
+        MOVE_Y,             /**< Moving fade effect into the direction of negative y-coordinates. */
+        FADE_EFFECTS_MAX    /**< Number of fade effects. */
+    };
     /**
      * A plugin change (inactive -> active) will fade the display content of
      * the old plugin out and from the new plugin in.
      */
     FadeState           m_displayFadeState;
-    Canvas*             m_currCanvas;               /**< Points to the current canvas, used to update the display. */
-    Canvas*             m_framebuffers[FB_ID_MAX];  /**< Two framebuffers, which will contain the old and the new plugin content. */
-    FadeLinear          m_fadeLinearEffect;         /**< Linear fade effect. */
-    FadeMoveX           m_fadeMoveXEffect;          /**< Moving along x-axis fade effect. */
-    IFadeEffect*        m_fadeEffect;               /**< The fade effect itself. */
+    Canvas*             m_currCanvas;                   /**< Points to the current canvas, used to update the display. */
+    Canvas*             m_framebuffers[FB_ID_MAX];      /**< Two framebuffers, which will contain the old and the new plugin content. */
+    FadeLinear          m_fadeLinearEffect;             /**< Linear fade effect. */
+    FadeMoveX           m_fadeMoveXEffect;              /**< Moving along x-axis fade effect. */
+    FadeMoveY           m_fadeMoveYEffect;              /**< Moving along y-axis fade effect. */
+    IFadeEffect*        m_fadeEffect;                   /**< The fade effect itself. */
+    uint8_t             m_fadeEffectIndex;              /**< Fade effect index to determine the next fade effect. */
 
     /**
      * Construct LED matrix.

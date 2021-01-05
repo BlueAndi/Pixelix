@@ -453,13 +453,55 @@ void DisplayMgr::activateNextSlot()
         if (true == m_slotTimer.isTimerRunning())
         {
             m_slotTimer.start(0U);
-
-            m_fadeEffect = &m_fadeMoveXEffect;
         }
     }
 
     unlock();
 
+    return;
+}
+
+void DisplayMgr::activateNextFadeEffect()
+{
+    lock();
+
+    /* Avoid changing to next effect, if the there is a pending slot change. */
+    if (FADE_IDLE == m_displayFadeState)
+    {
+        m_fadeEffect = nullptr;
+
+        if ((uint8_t)FADE_EFFECTS_MAX == m_fadeEffectIndex)
+        {
+            m_fadeEffectIndex = 0u;
+        }
+
+        switch (m_fadeEffectIndex)
+        {
+            case (uint8_t)LINEAR:
+            {
+                m_fadeEffect = &m_fadeLinearEffect;
+                break;
+            }
+            case (uint8_t)MOVE_X:
+            {
+                m_fadeEffect = &m_fadeMoveXEffect;
+                break;
+            }
+            case (uint8_t)MOVE_Y:
+            {
+                m_fadeEffect = &m_fadeMoveYEffect;
+                break;
+            }
+            case (uint8_t)FADE_EFFECTS_MAX:
+            default:
+            break;
+        }
+
+        m_fadeEffectIndex++;
+
+    }
+
+   unlock();
     return;
 }
 
@@ -652,7 +694,9 @@ DisplayMgr::DisplayMgr() :
     m_framebuffers(),
     m_fadeLinearEffect(),
     m_fadeMoveXEffect(),
-    m_fadeEffect(&m_fadeLinearEffect)
+    m_fadeMoveYEffect(),
+    m_fadeEffect(&m_fadeLinearEffect),
+    m_fadeEffectIndex(1U)
 {
     uint8_t idx = 0U;
 
@@ -778,8 +822,6 @@ void DisplayMgr::fadeInOut(IGfx& dst)
             if (true == m_fadeEffect->fadeIn(dst, *prevFb, *m_currCanvas))
             {
                 m_displayFadeState = FADE_IDLE;
-
-                m_fadeEffect = &m_fadeLinearEffect;
             }
             break;
 
