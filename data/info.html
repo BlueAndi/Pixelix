@@ -102,7 +102,11 @@
                             </tr>
                             <tr>
                                 <td>Available Heap Size</td>
-                                <td>~HEAP_SIZE_AVAILABLE~ byte</td>
+                                <td id="availableHeapSize">~HEAP_SIZE_AVAILABLE~ byte</td>
+                            </tr>
+                            <tr>
+                                <td>Used Heap Size</td>
+                                <td id="usedHeapSize"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -194,8 +198,12 @@
                                 <td>~FS_SIZE~ byte</td>
                             </tr>
                             <tr>
+                                <td>Available Filesystem Size</td>
+                                <td id="availableFsSize"></td>
+                            </tr>
+                            <tr>
                                 <td>Used Filesystem Size</td>
-                                <td>~FS_SIZE_USED~ byte</td>
+                                <td id="usedFsSize">~FS_SIZE_USED~ byte</td>
                             </tr>
                         </tbody>
                     </table>
@@ -219,14 +227,10 @@
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
         <!-- chart.js -->
-        <script type="text/javascript" src="/js/chart.min.js"></script>
+        <script type="text/javascript" src="/js/rpie.js"></script>
 
         <!-- Custom javascript -->
         <script>
-            var ctxChartHeap        = null;
-            var ctxChartFs          = null;
-            var chartHeap           = null;
-            var chartFs             = null;
             var availableHeapSize   = parseInt("~HEAP_SIZE_AVAILABLE~");
             var heapSize            = parseInt("~HEAP_SIZE~");
             var filesystemSize      = parseInt("~FS_SIZE~");
@@ -263,49 +267,40 @@
 
             $(document).ready(function() {
                 menu.create("menu");
-                
-                ctxChartHeap    = document.getElementById("canvasChartHeap").getContext("2d");
-                ctxChartFs      = document.getElementById("canvasChartFs").getContext("2d");
 
                 /* Draw the chart, showing the current situation on the heap. */
-                chartHeap       = new Chart(ctxChartHeap, {
-                    type: "pie",
-                    data: {
-                        labels: ["Heap used in %", "Heap available in %"],
-                        datasets: [{
-                            data: [
-                                100 - availableHeapSizeInPercent,
-                                availableHeapSizeInPercent
-                            ],
-                            backgroundColor: [
-                                window.chartColors.red,
-                                window.chartColors.green
-                            ]
-                        }]
-                    }, options: {
-                        responsive: false
-                    }
+                generatePieGraph("canvasChartHeap", {
+                    animation: true,
+                    animationSpeed: 20,
+                    fillTextData: true,
+                    fillTextColor: "#fff",
+                    fillTextPosition: "inner",
+                    doughnutHoleColor: "#000",
+                    doughnutHoleSize: 20,
+                    offset: 1,
+                    values: [100 - availableHeapSizeInPercent, availableHeapSizeInPercent],
+                    colors: [window.chartColors.red, window.chartColors.green]
                 });
+                $("#availableHeapSize").css("background-color", window.chartColors.green);
+                $("#usedHeapSize").text("" + (heapSize - availableHeapSize) + " byte");
+                $("#usedHeapSize").css("background-color", window.chartColors.red);
 
                 /* Draw the chart, showing the current situation on the filesystem. */
-                chartFs         = new Chart(ctxChartFs, {
-                    type: "pie",
-                    data: {
-                        labels: ["Filessystem used size in %", "Filesystem available size in %"],
-                        datasets: [{
-                            data: [
-                                100 - availableFsSizeInPercent,
-                                availableFsSizeInPercent
-                            ],
-                            backgroundColor: [
-                                window.chartColors.red,
-                                window.chartColors.green
-                            ]
-                        }]
-                    }, options: {
-                        responsive: false
-                    }
+                generatePieGraph("canvasChartFs", {
+                    animation: true,
+                    animationSpeed: 20,
+                    fillTextData: true,
+                    fillTextColor: "#fff",
+                    fillTextPosition: "inner",
+                    doughnutHoleColor: "#000",
+                    doughnutHoleSize: 20,
+                    offset: 1,
+                    values: [100 - availableFsSizeInPercent, availableFsSizeInPercent],
+                    colors: [window.chartColors.red, window.chartColors.green]
                 });
+                $("#availableFsSize").text("" + (filesystemSize - usedFilesystemSize) + " byte");
+                $("#availableFsSize").css("background-color", window.chartColors.green);
+                $("#usedFsSize").css("background-color", window.chartColors.red);
             });
         </script>
     </body>
