@@ -83,7 +83,7 @@ public:
      *
      * @return If request can be handled, it will return true otherwise false.
      */
-    bool canHandle(AsyncWebServerRequest* request) override
+    bool canHandle(AsyncWebServerRequest* request) final
     {
         /* The captive portal handles every request. */
         return true;
@@ -94,7 +94,7 @@ public:
      *
      * @param[in] request   Web request, which to handle.
      */
-    void handleRequest(AsyncWebServerRequest* request) override
+    void handleRequest(AsyncWebServerRequest* request) final
     {
         if (nullptr == request)
         {
@@ -163,7 +163,7 @@ public:
      * handler, the webserver will parse the body and provides encoded parameters to
      * the request handler.
      */
-    bool isRequestHandlerTrivial() override
+    bool isRequestHandlerTrivial() final
     {
         return false;
     }
