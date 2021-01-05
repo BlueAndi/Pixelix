@@ -46,6 +46,7 @@
 #include "WsCmdSlotDuration.h"
 #include "WsCmdIperf.h"
 #include "WsCmdButton.h"
+#include "WsCmdEffect.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -106,6 +107,9 @@ static WsCmdIperf           gWsCmdIperf;
 /** Websocket control virtual button command */
 static WsCmdButton          gWsCmdButton;
 
+/** Websocket control fade effects */
+static WsCmdEffect          gWsCmdEffect;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
@@ -120,7 +124,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdMove,
     &gWsCmdSlotDuration,
     &gWsCmdIperf,
-    &gWsCmdButton
+    &gWsCmdButton,
+    &gWsCmdEffect
 };
 
 /******************************************************************************

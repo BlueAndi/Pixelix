@@ -165,6 +165,8 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this.pendingCmd.resolve(rsp);
             } else if ("BUTTON" === this.pendingCmd.name) {
                 this.pendingCmd.resolve(rsp);
+            } else if ("EFFECT" === this.pendingCmd.name) {
+                this.pendingCmd.resolve(rsp);
             } else if ("INSTALL" === this.pendingCmd.name) {
                 rsp.slotId = parseInt(data[0]);
                 rsp.uid = parseInt(data[1]);
@@ -535,6 +537,21 @@ pixelix.ws.Client.prototype.triggerButton = function() {
         } else {
             this._sendCmd({
                 name: "BUTTON",
+                par: null,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.nextEffect = function() {
+    return new Promise(function(resolve, reject) {
+        if (null === this.socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "EFFECT",
                 par: null,
                 resolve: resolve,
                 reject: reject
