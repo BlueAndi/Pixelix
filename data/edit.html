@@ -55,6 +55,20 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <div class="modal fade" id="savingModal" tabindex="-1" aria-labelledby="savingModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header text-dark">
+                            <h5 class="modal-title" id="savingModalLabel"></h5>
+                        </div>
+                        <div class="modal-body text-dark">
+                            <p>Please wait.</p>
+                        </div>
+                        <div class="modal-footer text-dark">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="container">
                 <div class="row">
                     <div class="col-12">
@@ -254,13 +268,19 @@
                 setEditorMode(filename);
                 $("#editor").collapse("show");
                 $("#preview").collapse("hide");
+                
+                $("#savingModalLabel").text("Loading ...");
+                $("#savingModal").modal("show");
 
                 return restClient.readFile(filename).then(function(rsp) {
                     /* Fill content in, remove selection and
                      * move cursor to the begin.
                      */
                     editor.setValue(rsp, -1);
+
+                    $("#savingModal").modal("hide");
                 }).catch(function(rsp) {
+                    $("#savingModal").modal("hide");
                     alert(rsp.error.msg);
                 });
             }
@@ -346,8 +366,10 @@
                         mac: "Command-S"
                     },
                     exec: function(editor) {
-                        restClient.writeFile(loadedFile, editor.getValue()).then(function() {
-                            alert("Saved.");
+                        $("#savingModalLabel").text("Saving ...");
+                        $("#savingModal").modal("show");
+                        restClient.writeFile(loadedFile, editor.getValue()).finally(function() {
+                            $("#savingModal").modal("hide");
                         });
                     },
                     readOnly: false
@@ -369,7 +391,11 @@
                     readOnly: false
                 });
 
-                listAllFiles("files");
+                $("#savingModalLabel").text("Loading ...");
+                $("#savingModal").modal("show");
+                listAllFiles("files").finally(function() {
+                    $("#savingModal").modal("hide");
+                });
             });
         </script>
     </body>
