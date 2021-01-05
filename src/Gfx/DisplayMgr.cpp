@@ -470,38 +470,30 @@ void DisplayMgr::activateNextFadeEffect()
     {
         m_fadeEffect = nullptr;
 
-        if ((uint8_t)FADE_EFFECTS_MAX == m_fadeEffectIndex)
-        {
-            m_fadeEffectIndex = 0u;
-        }
-
         switch (m_fadeEffectIndex)
         {
-            case (uint8_t)LINEAR:
+            case FADE_EFFECT_LINEAR:
             {
                 m_fadeEffect = &m_fadeLinearEffect;
+                m_fadeEffectIndex = FADE_EFFECT_MOVE_X;
                 break;
             }
-            case (uint8_t)MOVE_X:
+            case FADE_EFFECT_MOVE_X:
             {
                 m_fadeEffect = &m_fadeMoveXEffect;
+                m_fadeEffectIndex = FADE_EFFECT_MOVE_Y;
                 break;
             }
-            case (uint8_t)MOVE_Y:
+            case FADE_EFFECT_MOVE_Y:
             {
                 m_fadeEffect = &m_fadeMoveYEffect;
+                m_fadeEffectIndex = FADE_EFFECT_LINEAR;
                 break;
             }
-            case (uint8_t)FADE_EFFECTS_MAX:
-            default:
-            break;
         }
-
-        m_fadeEffectIndex++;
-
     }
 
-   unlock();
+    unlock();
     return;
 }
 
@@ -696,7 +688,7 @@ DisplayMgr::DisplayMgr() :
     m_fadeMoveXEffect(),
     m_fadeMoveYEffect(),
     m_fadeEffect(&m_fadeLinearEffect),
-    m_fadeEffectIndex(1U)
+    m_fadeEffectIndex(FADE_EFFECT_MOVE_X)
 {
     uint8_t idx = 0U;
 

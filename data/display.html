@@ -100,9 +100,9 @@
                 <p>
                     <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
                 </p>
-                 <p>
-                   <button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button>
-                     Currently available fade effects: Linear, MoveX, MoveY.
+                <p>
+                    <button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button>
+                    Currently available fade effects: Linear, MoveX, MoveY.
                 </p>
                 <p>
                     <select id="pluginToInstall" size="1">
@@ -110,7 +110,6 @@
                     <br />
                     <button class="btn btn-light" type="button" onclick="install()" disabled>Install</button>
                 </p>
-                
                 <p>
                     <ul class="list-group">
                         <li class="list-group-item text-dark">Automatic brightness control: <span id="autoBrightnessCtrl">?</span> <button id="bAutoBrightnessCtrl" type="button" onclick="changeAutoBrightnessCtrl()" disabled>?</button></li>
@@ -268,7 +267,7 @@
                 });
             }
             
-            function nextSlot() {
+                function nextSlot() {
                 disableUI();
 
                 return wsClient.triggerButton().then(function(rsp) {

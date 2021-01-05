@@ -184,6 +184,7 @@ public:
      * Activate next fade effect.
      */
     void activateNextFadeEffect();
+
     /**
      * Move plugin to a different slot.
      *
@@ -320,12 +321,11 @@ private:
     };
 
     /** Fade effects */
-    enum FadeEffectIndex
+    enum FadeEffect
     {
-        LINEAR = 0,         /**< Linear dimming fade effect. */
-        MOVE_X,             /**< Moving fade effect into the direction of negative x-coordinates. */
-        MOVE_Y,             /**< Moving fade effect into the direction of negative y-coordinates. */
-        FADE_EFFECTS_MAX    /**< Number of fade effects. */
+        FADE_EFFECT_LINEAR = 0,     /**< Linear dimming fade effect. */
+        FADE_EFFECT_MOVE_X,         /**< Moving fade effect into the direction of negative x-coordinates. */
+        FADE_EFFECT_MOVE_Y          /**< Moving fade effect into the direction of negative y-coordinates. */
     };
     /**
      * A plugin change (inactive -> active) will fade the display content of
@@ -338,7 +338,7 @@ private:
     FadeMoveX           m_fadeMoveXEffect;              /**< Moving along x-axis fade effect. */
     FadeMoveY           m_fadeMoveYEffect;              /**< Moving along y-axis fade effect. */
     IFadeEffect*        m_fadeEffect;                   /**< The fade effect itself. */
-    uint8_t             m_fadeEffectIndex;              /**< Fade effect index to determine the next fade effect. */
+    FadeEffect          m_fadeEffectIndex;              /**< Fade effect index to determine the next fade effect. */
 
     /**
      * Construct LED matrix.
