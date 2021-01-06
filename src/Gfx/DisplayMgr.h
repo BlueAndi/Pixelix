@@ -323,9 +323,10 @@ private:
     /** Fade effects */
     enum FadeEffect
     {
-        FADE_EFFECT_LINEAR = 0,     /**< Linear dimming fade effect. */
-        FADE_EFFECT_MOVE_X,         /**< Moving fade effect into the direction of negative x-coordinates. */
-        FADE_EFFECT_MOVE_Y          /**< Moving fade effect into the direction of negative y-coordinates. */
+        FADE_EFFECT_NO = 0, /**< No fade effect */
+        FADE_EFFECT_LINEAR, /**< Linear dimming fade effect. */
+        FADE_EFFECT_MOVE_X, /**< Moving fade effect into the direction of negative x-coordinates. */
+        FADE_EFFECT_MOVE_Y  /**< Moving fade effect into the direction of negative y-coordinates. */
     };
     /**
      * A plugin change (inactive -> active) will fade the display content of

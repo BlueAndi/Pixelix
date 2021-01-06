@@ -252,7 +252,7 @@
                 });
             }
 
-                function nextEffect() {
+            function nextEffect() {
                 disableUI();
 
                 return wsClient.nextEffect().then(function(rsp) {
@@ -267,7 +267,7 @@
                 });
             }
             
-                function nextSlot() {
+            function nextSlot() {
                 disableUI();
 
                 return wsClient.triggerButton().then(function(rsp) {
