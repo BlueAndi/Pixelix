@@ -1287,6 +1287,14 @@ static void testBitmapWidget()
     TEST_ASSERT_EQUAL_UINT16(BITMAP_WIDTH, width);
     TEST_ASSERT_EQUAL_UINT16(BITMAP_HEIGHT, height);
 
+    for(y = 0U; y < BITMAP_HEIGHT; ++y)
+    {
+        for(x = 0U; x < BITMAP_WIDTH; ++x)
+        {
+            TEST_ASSERT_EQUAL_UINT32(bitmap[x + y * BITMAP_WIDTH], bitmapPtr[x + y * BITMAP_WIDTH]);
+        }
+    }
+
     /* Draw bitmap and verify */
     bitmapWidget.update(testGfx);
     displayBuffer = testGfx.getBuffer();
