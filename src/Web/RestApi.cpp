@@ -121,8 +121,6 @@ void RestApi::error(AsyncWebServerRequest* request)
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     JsonObject          errorObj        = jsonDoc.createNestedObject("error");
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -134,10 +132,13 @@ void RestApi::error(AsyncWebServerRequest* request)
     errorObj["msg"]     = "Invalid path requested.";
     httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -162,8 +163,6 @@ static void handleStatus(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -223,10 +222,13 @@ static void handleStatus(AsyncWebServerRequest* request)
         httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -247,8 +249,6 @@ static void handleSlots(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -295,10 +295,13 @@ static void handleSlots(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -321,8 +324,6 @@ static void handlePlugin(AsyncWebServerRequest* request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -495,10 +496,13 @@ static void handlePlugin(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -519,8 +523,6 @@ static void handleButton(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -549,10 +551,13 @@ static void handleButton(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -574,8 +579,6 @@ static void handleFilesystem(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 2048U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -674,10 +677,13 @@ static void handleFilesystem(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -714,6 +720,15 @@ static void handleFileGet(AsyncWebServerRequest* request)
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
+        if (true == jsonDoc.overflowed())
+        {
+            LOG_ERROR("JSON document has less memory available.");
+        }
+        else
+        {
+            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+        }
+
         (void)serializeJsonPretty(jsonDoc, content);
         request->send(httpStatusCode, "application/json", content);
     }
@@ -732,6 +747,15 @@ static void handleFileGet(AsyncWebServerRequest* request)
             jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
             errorObj["msg"]     = String("Invalid path ") + path;
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+
+            if (true == jsonDoc.overflowed())
+            {
+                LOG_ERROR("JSON document has less memory available.");
+            }
+            else
+            {
+                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+            }
 
             (void)serializeJsonPretty(jsonDoc, content);
             request->send(httpStatusCode, "application/json", content);
@@ -817,8 +841,6 @@ static void handleFilePost(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -846,10 +868,13 @@ static void handleFilePost(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -930,8 +955,6 @@ static void handleFileDelete(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -975,10 +998,13 @@ static void handleFileDelete(AsyncWebServerRequest* request)
         }
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);

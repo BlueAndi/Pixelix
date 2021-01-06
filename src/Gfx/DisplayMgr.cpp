@@ -1125,12 +1125,14 @@ void DisplayMgr::load()
             const size_t            JSON_DOC_SIZE   = 512U;
             DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
             DeserializationError    error           = deserializeJson(jsonDoc, config);
-            const size_t            MAX_USAGE       = 80U;
-            size_t                  usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
-            if (MAX_USAGE < usageInPercent)
+            if (true == jsonDoc.overflowed())
             {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+                LOG_ERROR("JSON document has less memory available.");
+            }
+            else
+            {
+                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
             }
 
             if (DeserializationError::Ok != error.code())
@@ -1186,20 +1188,21 @@ void DisplayMgr::save()
             jsonSlot["duration"] = m_slots[slotId].getDuration();
         }
 
+        if (true == jsonDoc.overflowed())
+        {
+            LOG_ERROR("JSON document has less memory available.");
+        }
+        else
+        {
+            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+        }
+
         if (false == settings.open(false))
         {
             LOG_WARNING("Couldn't open filesystem.");
         }
         else
         {
-            const size_t    MAX_USAGE       = 80U;
-            size_t          usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-
-            if (MAX_USAGE < usageInPercent)
-            {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
-            }
-
             (void)serializeJson(jsonDoc, config);
 
             settings.getDisplaySlotConfig().setValue(config);
