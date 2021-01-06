@@ -231,7 +231,7 @@ public:
      *
      * @return Color in RGB888 format.
      */
-    Color getColor(int16_t x, int16_t y) const
+    Color getColor(int16_t x, int16_t y) const final
     {
         Color color;
 
@@ -302,7 +302,7 @@ private:
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
      */
-    void drawPixel(int16_t x, int16_t y, const Color& color)
+    void drawPixel(int16_t x, int16_t y, const Color& color) final
     {
         /* Don't draw outside the canvas. */
         if ((0 <= x) &&
@@ -340,7 +340,7 @@ private:
      * @param[in] y     y-coordinate
      * @param[in] ratio Dim ration [0; 255]
      */
-    void dimPixel(int16_t x, int16_t y, uint8_t ratio)
+    void dimPixel(int16_t x, int16_t y, uint8_t ratio) final
     {
         /* Don't draw outside the canvas. */
         if ((0 <= x) &&

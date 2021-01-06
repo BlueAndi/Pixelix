@@ -144,7 +144,7 @@ public:
      *
      * @return User friendly name
      */
-    const char* getName() const
+    const char* getName() const final
     {
         return m_name;
     }
@@ -154,7 +154,7 @@ public:
      *
      * @return Key
      */
-    const char* getKey() const
+    const char* getKey() const final
     {
         return m_key;
     }

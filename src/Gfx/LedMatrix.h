@@ -144,7 +144,7 @@ public:
      *
      * @return Color in RGB888 format.
      */
-    Color getColor(int16_t x, int16_t y) const;
+    Color getColor(int16_t x, int16_t y) const final;
 
 private:
 

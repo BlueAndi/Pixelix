@@ -90,7 +90,7 @@ public:
      *
      * @return Value
      */
-    int32_t getValue() const
+    int32_t getValue() const final
     {
         return m_pref.getInt(m_key, m_defValue);
     }
@@ -100,7 +100,7 @@ public:
      *
      * @param[in] value Value
      */
-    void setValue(int32_t value)
+    void setValue(int32_t value) final
     {
         m_pref.putInt(m_key, value);
     }

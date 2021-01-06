@@ -90,7 +90,7 @@ public:
      *
      * @return Value
      */
-    uint8_t getValue() const
+    uint8_t getValue() const final
     {
         return m_pref.getUChar(m_key, m_defValue);
     }
@@ -100,7 +100,7 @@ public:
      *
      * @param[in] value Value
      */
-    void setValue(uint8_t value)
+    void setValue(uint8_t value) final
     {
         m_pref.putUChar(m_key, value);
     }

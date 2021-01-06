@@ -180,7 +180,7 @@ private:
      *
      * @return Number of written bytes.
      */
-    size_t write(uint8_t data)
+    size_t write(uint8_t data) final
     {
         m_webSocket.textAll(&data, 1);
         return 1;
@@ -194,7 +194,7 @@ private:
      *
      * @return Number of written bytes.
      */
-    size_t write(const uint8_t* buffer, size_t size)
+    size_t write(const uint8_t* buffer, size_t size) final
     {
         m_webSocket.textAll(const_cast<uint8_t*>(buffer), size);
         return size;

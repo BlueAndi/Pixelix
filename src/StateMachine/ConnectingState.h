@@ -80,21 +80,21 @@ public:
      * 
      * @param[in] sm    Responsible state machine
      */
-    void entry(StateMachine& sm);
+    void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
      * 
      * @param[in] sm    Responsible state machine
      */
-    void process(StateMachine& sm);
+    void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
      * 
      * @param[in] sm    Responsible state machine
      */
-    void exit(StateMachine& sm);
+    void exit(StateMachine& sm) final;
 
     /** Retry delay after a failed connection attempt in ms. */
     static const uint32_t   RETRY_DELAY             = 30000U;

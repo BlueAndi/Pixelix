@@ -78,21 +78,21 @@ public:
      * 
      * @param[in] sm    Responsible state machine
      */
-    void entry(StateMachine& sm);
+    void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
      * 
      * @param[in] sm    Responsible state machine
      */
-    void process(StateMachine& sm);
+    void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
      * 
      * @param[in] sm    Responsible state machine
      */
-    void exit(StateMachine& sm);
+    void exit(StateMachine& sm) final;
 
     /** Short wait time for showing a system message in ms */
     static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
