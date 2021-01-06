@@ -60,6 +60,12 @@
                         <p>
                             <button class="btn btn-light" id="buttonLog" type="button" onclick="toggleLogging();" disabled>Start</button>
                         </p>
+                        <div class="btn-group" role="group" aria-label="Log Levels">
+                            <button type="button" class="btn btn-outline-info active" id="buttonInfo" aria-pressed="true">INFO</button>
+                            <button type="button" class="btn btn-outline-warning active" id="buttonWarning" aria-pressed="true">WARNING</button>
+                            <button type="button" class="btn btn-outline-danger active" id="buttonError" aria-pressed="true"">ERROR</button>
+                            <button type="button" class="btn btn-outline-danger active" id="buttonFatal" aria-pressed="true"">FATAL</button>
+                        </div>
                         <p>Note, only the last 40 messages are shown.</p>
                         <div class="table-responsive">
                             <table class="table table-striped" id="loggingOutput">
@@ -117,6 +123,17 @@
             var isPageUnload            = false;
             var isLoggingEnabled        = false;
             var isMeasurementEnabled    = false;
+            var filter                  = ["INFO", "WARNING", "ERROR", "FATAL"];
+
+            function toggleLogLevel(logLevel) {
+                var index = filter.indexOf(logLevel);
+                                
+                if (0 > index) {
+                    filter.push(logLevel);
+                } else {
+                    filter.splice(index, 1);
+                }
+            }
 
             /* If websocket connection is unexpectedly closed, alert the user. */
             function wsOnClosed() {
@@ -129,6 +146,8 @@
 
             /* Handle every websocket event. */
             function wsOnEvent(evt) {
+                var logLevel        = pixelix.ws.getLogLevelStr(evt.level);
+                var index           = filter.indexOf(logLevel);
                 var $row            = $("<tr>");
                 var $colTimestamp   = $("<td>").text(evt.timestamp);
                 var $colLogLevel    = $("<td>").text(pixelix.ws.getLogLevelStr(evt.level));
@@ -137,17 +156,20 @@
                 var $colText        = $("<td>").text(evt.text);
                 var rowCount        = $("#loggingOutput > tbody tr").length;
 
-                if (maxLogs < rowCount) {
-                    $("#loggingOutput > tbody").deleteRow(1);
+                if (0 <= index) {
+
+                    if (maxLogs < rowCount) {
+                        $("#loggingOutput > tbody").deleteRow(1);
+                    }
+
+                    $($row).append($colTimestamp)
+                        .append($colLogLevel)
+                        .append($colFilename)
+                        .append($colLine)
+                        .append($colText);
+
+                    $("#loggingOutput > tbody").append($row);
                 }
-
-                $($row).append($colTimestamp)
-                    .append($colLogLevel)
-                    .append($colFilename)
-                    .append($colLine)
-                    .append($colText);
-
-                $("#loggingOutput > tbody").append($row);
             }
 
             /* Disable all UI elements. */
@@ -223,6 +245,30 @@
             /* Execute after page is ready. */
             $(document).ready(function() {
                 menu.create("menu");
+
+                $("#buttonInfo").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
+
+                $("#buttonWarning").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
+
+                $("#buttonError").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
+
+                $("#buttonFatal").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
 
                 /* Connect to pixelix */
                 wsClient.connect({
