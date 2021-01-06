@@ -227,6 +227,8 @@ void SunrisePlugin::stop()
 
 void SunrisePlugin::process()
 {
+    lock();
+
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
@@ -239,6 +241,10 @@ void SunrisePlugin::process()
             m_requestTimer.start(UPDATE_PERIOD);
         }
     }
+
+    unlock();
+
+    return;
 }
 
 void SunrisePlugin::getLocation(String& longitude, String&latitude) const

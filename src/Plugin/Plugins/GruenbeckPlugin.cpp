@@ -235,6 +235,8 @@ void GruenbeckPlugin::stop()
 
 void GruenbeckPlugin::process()
 {
+    lock();
+
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
@@ -250,6 +252,8 @@ void GruenbeckPlugin::process()
             m_requestTimer.start(UPDATE_PERIOD);
         }
     }
+
+    unlock();
 
     return;
 }

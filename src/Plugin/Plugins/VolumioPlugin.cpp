@@ -137,6 +137,8 @@ void VolumioPlugin::stop()
 
 void VolumioPlugin::process()
 {
+    lock();
+
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
@@ -162,6 +164,8 @@ void VolumioPlugin::process()
         LOG_INFO("VOLUMIO not present, going offline.");
         disable();
     }
+
+    unlock();
 
     return;
 }

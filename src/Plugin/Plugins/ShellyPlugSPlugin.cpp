@@ -218,6 +218,8 @@ void ShellyPlugSPlugin::stop()
 
 void ShellyPlugSPlugin::process()
 {
+    lock();
+
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
@@ -230,6 +232,10 @@ void ShellyPlugSPlugin::process()
             m_requestTimer.start(UPDATE_PERIOD);
         }
     }
+
+    unlock();
+
+    return;
 }
 
 void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
