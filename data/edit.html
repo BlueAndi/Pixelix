@@ -55,14 +55,13 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
-            <div class="modal fade" id="savingModal" tabindex="-1" aria-labelledby="savingModalLabel" aria-hidden="true">
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header text-dark">
-                            <h5 class="modal-title" id="savingModalLabel"></h5>
+                            <h5 class="modal-title" id="modalTitle"></h5>
                         </div>
-                        <div class="modal-body text-dark">
-                            <p>Please wait.</p>
+                        <div class="modal-body text-dark" id="modalMessage">
                         </div>
                         <div class="modal-footer text-dark">
                         </div>
@@ -160,6 +159,33 @@
                 type: "text"
             }];
 
+            function showDialog(title, message) {
+                return new Promise(function(resolve, reject) {
+
+                    $("#modalTitle").text(title);
+                    $("#modalMessage").html(message);
+
+                    $("#modalDialog").on("shown.bs.modal", function() { 
+                        $("#modalDialog").off("shown.bs.modal");
+                        resolve();
+                    });
+
+                    $("#modalDialog").modal("show");
+                });
+            }
+
+            function hideDialog() {
+                return new Promise(function(resolve, reject) {
+
+                    $("#modalDialog").on("hidden.bs.modal", function() { 
+                        $("#modalDialog").off("hidden.bs.modal");
+                        resolve();
+                    });
+
+                    $("#modalDialog").modal("hide");
+                });
+            }
+
             function listAllFilesHelper(par) {
                 var page = par.page;
 
@@ -249,14 +275,22 @@
 
                         return $itemMenu;
                     };
+                    var promise     = null;
+                    var promises    = [];
 
                     items.sort(compareFunc);
 
-                    for(index = 0; index < items.length; ++index) {                        
-                        $("#" + id).append(generateItemMenu("file" + index, items[index]));
+                    for(index = 0; index < items.length; ++index) {      
+                        $itemMenu = generateItemMenu("file" + index, items[index]);
+                        promise = Promise.resolve($("#" + id).append($itemMenu).promise());
+                        promises.push(promise);
                     }
+
+                    return Promise.all(promises);
+
                 }).catch(function(rsp) {
                     alert(rsp.error.msg);
+                    return Promise.reject();
                 });
             }
 
@@ -269,19 +303,24 @@
                 $("#editor").collapse("show");
                 $("#preview").collapse("hide");
                 
-                $("#savingModalLabel").text("Loading ...");
-                $("#savingModal").modal("show");
-
-                return restClient.readFile(filename).then(function(rsp) {
+                return showDialog("Loading file", "<p>Please wait, its loading.</p>")
+                .then(function() {
+                    return restClient.readFile(filename);
+                })
+                .then(function(rsp) {
                     /* Fill content in, remove selection and
                      * move cursor to the begin.
                      */
                     editor.setValue(rsp, -1);
 
-                    $("#savingModal").modal("hide");
+                    return hideDialog();
                 }).catch(function(rsp) {
-                    $("#savingModal").modal("hide");
-                    alert(rsp.error.msg);
+                    var errorMsg = rsp.error.msg;
+
+                    return hideDialog().finally(function() {
+                        alert(errorMsg);
+                        return Promise.reject();
+                    });
                 });
             }
 
@@ -366,10 +405,10 @@
                         mac: "Command-S"
                     },
                     exec: function(editor) {
-                        $("#savingModalLabel").text("Saving ...");
-                        $("#savingModal").modal("show");
-                        restClient.writeFile(loadedFile, editor.getValue()).finally(function() {
-                            $("#savingModal").modal("hide");
+                        showDialog("Saving file", "<p>Please wait, its saving.</p>")
+                        .then(restClient.writeFile(loadedFile, editor.getValue()))
+                        .finally(function() {
+                            hideDialog();
                         });
                     },
                     readOnly: false
@@ -391,10 +430,12 @@
                     readOnly: false
                 });
 
-                $("#savingModalLabel").text("Loading ...");
-                $("#savingModal").modal("show");
-                listAllFiles("files").finally(function() {
-                    $("#savingModal").modal("hide");
+                showDialog("Loading ...", "<p>Please wait, file informations are loading.</p>")
+                .then(function() {
+                    return listAllFiles("files");
+                })
+                .finally(function() {
+                    hideDialog();
                 });
             });
         </script>
