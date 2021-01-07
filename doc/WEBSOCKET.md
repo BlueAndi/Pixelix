@@ -24,6 +24,7 @@
     - [Is iperf enabled?](#is-iperf-enabled)
     - [Start/Stop iperf server](#startstop-iperf-server)
   - [Trigger virtual user button](#trigger-virtual-user-button)
+  - [Switch to next fade effect](#switch-to-next-fade-effect)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
