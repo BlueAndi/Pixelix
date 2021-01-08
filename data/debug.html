@@ -166,7 +166,7 @@
                 if (0 <= index) {
 
                     if (maxLogs < rowCount) {
-                        $("#loggingOutput > tbody").deleteRow(1);
+                        $("#loggingOutput > tbody > tr:first-child").remove();
                     }
 
                     $($row).append($colTimestamp)
