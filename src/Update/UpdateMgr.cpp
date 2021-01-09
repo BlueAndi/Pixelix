@@ -34,10 +34,10 @@
  *****************************************************************************/
 #include "UpdateMgr.h"
 
-#include <SPIFFS.h>
 #include <Logging.h>
 #include <Esp.h>
 
+#include "FileSystem.h"
 #include "LedMatrix.h"
 #include "MyWebServer.h"
 #include "Settings.h"
@@ -262,7 +262,7 @@ void UpdateMgr::onStart()
         /* Close filesystem before continue.
          * Note, this needs a restart after update is finished.
          */
-        SPIFFS.end();
+        FILESYSTEM.end();
     }
 
     LOG_INFO(infoStr);
@@ -332,8 +332,8 @@ void UpdateMgr::onError(ota_error_t error)
 
     LOG_INFO(infoStr);
 
-    /* Mount SPIFFS, because it may be unmounted in case of failed filesystem update. */
-    if (false == SPIFFS.begin())
+    /* Mount filesystem, because it may be unmounted in case of failed filesystem update. */
+    if (false == FILESYSTEM.begin())
     {
         LOG_FATAL("Couldn't mount filesystem.");
         getInstance().reqRestart();

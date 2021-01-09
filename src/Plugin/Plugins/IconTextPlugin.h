@@ -46,10 +46,10 @@
 #include <stdint.h>
 #include "Plugin.hpp"
 
+#include <FS.h>
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
-#include <SPIFFS.h>
 
 /******************************************************************************
  * Macros

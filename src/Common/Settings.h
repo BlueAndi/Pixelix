@@ -28,7 +28,7 @@
  * @brief  Settings
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup utilities
+ * @addtogroup common
  *
  * @{
  */

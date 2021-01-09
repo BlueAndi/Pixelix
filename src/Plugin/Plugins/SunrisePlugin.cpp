@@ -37,11 +37,11 @@
 #include "Settings.h"
 #include "SunrisePlugin.h"
 #include "RestApi.h"
-
 #include "time.h"
+#include "FileSystem.h"
+
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <SPIFFS.h>
 #include <JsonFile.h>
 
 /******************************************************************************
@@ -127,7 +127,7 @@ void SunrisePlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load(IMAGE_PATH);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
 
             m_iconCanvas->update(gfx);
         }
@@ -215,7 +215,7 @@ void SunrisePlugin::stop()
 
     m_requestTimer.stop();
 
-    if (false != SPIFFS.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
@@ -478,7 +478,7 @@ String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) con
 bool SunrisePlugin::saveConfiguration()
 {
     bool                status                  = true;
-    JsonFile            jsonFile(SPIFFS);
+    JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
@@ -501,7 +501,7 @@ bool SunrisePlugin::saveConfiguration()
 bool SunrisePlugin::loadConfiguration()
 {
     bool                status                  = true;
-    JsonFile            jsonFile(SPIFFS);
+    JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
@@ -521,9 +521,9 @@ bool SunrisePlugin::loadConfiguration()
 
 void SunrisePlugin::createConfigDirectory()
 {
-    if (false == SPIFFS.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(CONFIG_PATH))
     {
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         }

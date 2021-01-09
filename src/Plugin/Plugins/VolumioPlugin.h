@@ -50,7 +50,6 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
-#include <SPIFFS.h>
 
 /******************************************************************************
  * Macros

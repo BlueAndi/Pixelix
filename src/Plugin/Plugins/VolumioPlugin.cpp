@@ -34,10 +34,10 @@
  *****************************************************************************/
 #include "VolumioPlugin.h"
 #include "RestApi.h"
+#include "FileSystem.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <SPIFFS.h>
 #include <JsonFile.h>
 
 /******************************************************************************
@@ -101,7 +101,7 @@ void VolumioPlugin::start()
     if (false == startHttpRequest())
     {
         /* If a request fails, show standard icon and a '?' */
-        m_bitmapWidget.load(IMAGE_PATH_STD_ICON);
+        m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
         m_textWidget.setFormatStr("\\calign?");
 
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -125,7 +125,7 @@ void VolumioPlugin::stop()
     m_offlineTimer.stop();
     m_requestTimer.stop();
 
-    if (false != SPIFFS.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
@@ -145,7 +145,7 @@ void VolumioPlugin::process()
         if (false == startHttpRequest())
         {
             /* If a request fails, show standard icon and a '?' */
-            m_bitmapWidget.load(IMAGE_PATH_STD_ICON);
+            m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
             m_textWidget.setFormatStr("\\calign?");
 
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -185,7 +185,7 @@ void VolumioPlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load icon from filesystem. */
-            (void)m_bitmapWidget.load(IMAGE_PATH_STD_ICON);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
 
             m_iconCanvas->update(gfx);
         }
@@ -539,19 +539,19 @@ void VolumioPlugin::initHttpClient()
 
                 if (status == "stop")
                 {
-                    (void)m_bitmapWidget.load(IMAGE_PATH_STOP_ICON);
+                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
                 }
                 else if (status == "play")
                 {
-                    (void)m_bitmapWidget.load(IMAGE_PATH_PLAY_ICON);
+                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
                 }
                 else if (status == "pause")
                 {
-                    (void)m_bitmapWidget.load(IMAGE_PATH_PAUSE_ICON);
+                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
                 }
                 else
                 {
-                    (void)m_bitmapWidget.load(IMAGE_PATH_STD_ICON);
+                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
                 }
 
                 m_textWidget.setFormatStr(infoOnDisplay);
@@ -580,7 +580,7 @@ void VolumioPlugin::initHttpClient()
         if (true == m_isConnectionError)
         {
             /* If a request fails, show standard icon and a '?' */
-            m_bitmapWidget.load(IMAGE_PATH_STD_ICON);
+            m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
             m_textWidget.setFormatStr("\\calign?");
 
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -601,7 +601,7 @@ void VolumioPlugin::initHttpClient()
 bool VolumioPlugin::saveConfiguration()
 {
     bool                status                  = true;
-    JsonFile            jsonFile(SPIFFS);
+    JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
@@ -623,7 +623,7 @@ bool VolumioPlugin::saveConfiguration()
 bool VolumioPlugin::loadConfiguration()
 {
     bool                status                  = true;
-    JsonFile            jsonFile(SPIFFS);
+    JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
@@ -647,9 +647,9 @@ bool VolumioPlugin::loadConfiguration()
 
 void VolumioPlugin::createConfigDirectory()
 {
-    if (false == SPIFFS.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(CONFIG_PATH))
     {
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         }

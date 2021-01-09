@@ -36,7 +36,6 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <SPIFFS.h>
 
 #include "Board.h"
 #include "ButtonDrv.h"
@@ -50,6 +49,7 @@
 #include "Settings.h"
 #include "PluginMgr.h"
 #include "WebConfig.h"
+#include "FileSystem.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -123,7 +123,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Mounting the filesystem. */
-    else if (false == SPIFFS.begin())
+    else if (false == FILESYSTEM.begin())
     {
         LOG_FATAL("Couldn't mount the filesystem.");
         isError = true;

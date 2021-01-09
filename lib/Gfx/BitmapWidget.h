@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <Widget.hpp>
+#include <FS.h>
 
 /******************************************************************************
  * Macros
@@ -170,11 +171,12 @@ public:
     /**
      * Load bitmap image from filesystem.
      *
+     * @param[in] fs        Filesystem
      * @param[in] filename  Filename with full path
      *
      * @return If successful loaded it will return true otherwise false.
      */
-    bool load(const String& filename);
+    bool load(FS& fs, const String& filename);
 
     #endif  /* NATIVE */
 

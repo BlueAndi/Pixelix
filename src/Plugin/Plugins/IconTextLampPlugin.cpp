@@ -34,10 +34,10 @@
  *****************************************************************************/
 #include "IconTextLampPlugin.h"
 #include "RestApi.h"
+#include "FileSystem.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <SPIFFS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -79,7 +79,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* If there is already a icon in the filesystem, load it. */
-            (void)m_bitmapWidget.load(getFileName());
+            (void)m_bitmapWidget.load(FILESYSTEM, getFileName());
         }
     }
 
@@ -275,7 +275,7 @@ bool IconTextLampPlugin::loadBitmap(const String& filename)
     bool status = false;
 
     lock();
-    status = m_bitmapWidget.load(filename);
+    status = m_bitmapWidget.load(FILESYSTEM, filename);
     unlock();
 
     return status;
@@ -471,9 +471,9 @@ void IconTextLampPlugin::iconUploadHandler(AsyncWebServerRequest *request, const
             /* All uploaded bitmaps shall be in a dedicated folder.
              * This folder may not be created yet.
              */
-            if (false == SPIFFS.exists(UPLOAD_PATH))
+            if (false == FILESYSTEM.exists(UPLOAD_PATH))
             {
-                if (false == SPIFFS.mkdir(UPLOAD_PATH))
+                if (false == FILESYSTEM.mkdir(UPLOAD_PATH))
                 {
                     LOG_ERROR("Couldn't create directory: %s", UPLOAD_PATH);
                     m_isUploadError = true;
@@ -481,7 +481,7 @@ void IconTextLampPlugin::iconUploadHandler(AsyncWebServerRequest *request, const
             }
 
             /* Create a new file and overwrite a existing one. */
-            m_fd = SPIFFS.open(getFileName(), "w");
+            m_fd = FILESYSTEM.open(getFileName(), "w");
 
             if (false == m_fd)
             {

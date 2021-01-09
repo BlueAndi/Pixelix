@@ -37,11 +37,11 @@
 #include "Settings.h"
 #include "ShellyPlugSPlugin.h"
 #include "RestApi.h"
-
 #include "time.h"
+#include "FileSystem.h"
+
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <SPIFFS.h>
 #include <JsonFile.h>
 
 /******************************************************************************
@@ -118,7 +118,7 @@ void ShellyPlugSPlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load(IMAGE_PATH);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
 
             m_iconCanvas->update(gfx);
         }
@@ -206,7 +206,7 @@ void ShellyPlugSPlugin::stop()
 
     m_requestTimer.stop();
 
-    if (false != SPIFFS.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
@@ -426,7 +426,7 @@ void ShellyPlugSPlugin::initHttpClient()
 bool ShellyPlugSPlugin::saveConfiguration()
 {
     bool                status                  = true;
-    JsonFile            jsonFile(SPIFFS);
+    JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
@@ -448,7 +448,7 @@ bool ShellyPlugSPlugin::saveConfiguration()
 bool ShellyPlugSPlugin::loadConfiguration()
 {
     bool                status                  = true;
-    JsonFile            jsonFile(SPIFFS);
+    JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
@@ -472,9 +472,9 @@ bool ShellyPlugSPlugin::loadConfiguration()
 
 void ShellyPlugSPlugin::createConfigDirectory()
 {
-    if (false == SPIFFS.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(CONFIG_PATH))
     {
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         }

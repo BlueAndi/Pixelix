@@ -38,10 +38,10 @@
 #include "Board.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
+#include "FileSystem.h"
 
 #include <Logging.h>
 #include <Util.h>
-#include <SPIFFS.h>
 #include <ESPmDNS.h>
 
 /******************************************************************************
@@ -94,7 +94,7 @@ void RestartState::process(StateMachine& sm)
         MDNS.end();
 
         /* Unmount filesystem */
-        SPIFFS.end();
+        FILESYSTEM.end();
 
         /* Stop display manager */
         DisplayMgr::getInstance().end();
