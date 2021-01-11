@@ -36,7 +36,7 @@
 #include "Settings.h"
 #include "WebConfig.h"
 #include "HttpStatus.h"
-#include "SPIFFS.h"
+#include "FileSystem.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -124,7 +124,7 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
     }
     else if (HTTP_GET == request->method())
     {
-        request->send(SPIFFS, "/cp/captivePortal.html", "text/html", false, captivePortalPageProcessor);
+        request->send(FILESYSTEM, "/cp/captivePortal.html", "text/html", false, captivePortalPageProcessor);
     }
     else
     {

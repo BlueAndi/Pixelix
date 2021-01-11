@@ -42,10 +42,10 @@
 #include "DisplayMgr.h"
 #include "RestApi.h"
 #include "PluginMgr.h"
+#include "FileSystem.h"
 
 #include <WiFi.h>
 #include <Esp.h>
-#include <SPIFFS.h>
 #include <Update.h>
 #include <Logging.h>
 #include <Util.h>
@@ -145,8 +145,8 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "FLASH_CHIP_MODE",      tmpl::getFlashChipMode,
     "FLASH_CHIP_SIZE",      []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); },
     "FLASH_CHIP_SPEED",     []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); },
-    "FS_SIZE",              []() -> String { return String(SPIFFS.totalBytes()); },
-    "FS_SIZE_USED",         []() -> String { return String(SPIFFS.usedBytes()); },
+    "FS_SIZE",              []() -> String { return String(FILESYSTEM.totalBytes()); },
+    "FS_SIZE_USED",         []() -> String { return String(FILESYSTEM.usedBytes()); },
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
     "HEAP_SIZE_AVAILABLE",  []() -> String { return String(ESP.getFreeHeap()); },
     "HOSTNAME",             tmpl::getHostname,
@@ -204,10 +204,10 @@ void Pages::init(AsyncWebServer& srv)
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesytem for 1 hour.
      */
-    (void)srv.serveStatic("/favicon.png", SPIFFS, "/favicon.png", "max-age=3600");
-    (void)srv.serveStatic("/images/", SPIFFS, "/images/", "max-age=3600");
-    (void)srv.serveStatic("/js/", SPIFFS, "/js/", "max-age=3600");
-    (void)srv.serveStatic("/style/", SPIFFS, "/style/", "max-age=3600");
+    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600");
+    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600");
+    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600");
+    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600");
 
     /* Add one page per plugin. */
     pluginName = PluginMgr::getInstance().findFirst();
@@ -232,7 +232,7 @@ void Pages::init(AsyncWebServer& srv)
                                 return;
                             }
 
-                            request->send(SPIFFS, uri, "text/html", false, tmplPageProcessor);
+                            request->send(FILESYSTEM, uri, "text/html", false, tmplPageProcessor);
                         });
 
         pluginName = PluginMgr::getInstance().findNext();
@@ -263,7 +263,7 @@ void Pages::error(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/error.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/error.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -401,7 +401,7 @@ static void aboutPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/about.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/about.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -426,7 +426,7 @@ static void debugPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/debug.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/debug.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -451,7 +451,7 @@ static void displayPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/display.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/display.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -476,7 +476,7 @@ static void editPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/edit.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/edit.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -501,7 +501,7 @@ static void indexPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/index.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/index.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -526,7 +526,7 @@ static void infoPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/info.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/info.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -843,7 +843,7 @@ static void settingsPage(AsyncWebServerRequest* request)
     }
     else if (HTTP_GET == request->method())
     {
-        request->send(SPIFFS, "/settings.html", "text/html", false, tmplPageProcessor);
+        request->send(FILESYSTEM, "/settings.html", "text/html", false, tmplPageProcessor);
     }
     else
     {
@@ -873,7 +873,7 @@ static void updatePage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/update.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/update.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -961,7 +961,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         if (U_SPIFFS == cmd)
         {
             /* Close filesystem before continue. */
-            SPIFFS.end();
+            FILESYSTEM.end();
         }
 
         /* Start update */
@@ -971,7 +971,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             gIsUploadError = true;
 
             /* Mount filesystem again, it may be unmounted in case of filesystem update.*/
-            if (false == SPIFFS.begin())
+            if (false == FILESYSTEM.begin())
             {
                 LOG_FATAL("Couldn't mount filesystem.");
             }
@@ -1033,7 +1033,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         else
         {
             /* Mount filesystem again, it may be unmounted in case of filesystem update. */
-            if (false == SPIFFS.begin())
+            if (false == FILESYSTEM.begin())
             {
                 LOG_FATAL("Couldn't mount filesystem.");
             }

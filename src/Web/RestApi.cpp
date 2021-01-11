@@ -40,13 +40,13 @@
 #include "Version.h"
 #include "PluginMgr.h"
 #include "WiFiUtil.h"
+#include "FileSystem.h"
 
 #include <Util.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
 #include <Esp.h>
 #include <Logging.h>
-#include <SPIFFS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -598,8 +598,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
     {
         const String&   path                = request->arg("dir");
         const String&   pageStr             = request->arg("page");
-        FS&             fs                  = SPIFFS;
-        File            fdRoot              = fs.open(path, "r");
+        File            fdRoot              = FILESYSTEM.open(path, "r");
         JsonArray       jsonData            = jsonDoc.createNestedArray("data");
         const uint32_t  DEFAULT_MAX_FILES   = 15U;
         uint32_t        count               = DEFAULT_MAX_FILES;
@@ -734,12 +733,11 @@ static void handleFileGet(AsyncWebServerRequest* request)
     }
     else
     {
-        const String&   path    = request->arg("path");
-        FS&             fs      = SPIFFS;
+        const String& path = request->arg("path");
 
         LOG_INFO("File \"%s\" requested.", path.c_str());
 
-        if (false == fs.exists(path))
+        if (false == FILESYSTEM.exists(path))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -762,7 +760,7 @@ static void handleFileGet(AsyncWebServerRequest* request)
         }
         else
         {
-            request->send(fs, path, getContentType(path));
+            request->send(FILESYSTEM, path, getContentType(path));
         }
     }
 
@@ -896,13 +894,12 @@ static void handleFilePost(AsyncWebServerRequest* request)
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
 {
     static File fd;
-    FS&         fs      = SPIFFS;
     bool        isError = false;
 
     /* Begin of upload? */
     if (0 == index)
     {
-        fd = fs.open(filename, "w");
+        fd = FILESYSTEM.open(filename, "w");
 
         if (false == fd)
         {
@@ -976,7 +973,7 @@ static void handleFileDelete(AsyncWebServerRequest* request)
 
         LOG_INFO("File \"%s\" removal requested.", path.c_str());
 
-        if (false == SPIFFS.remove(path))
+        if (false == FILESYSTEM.remove(path))
         {
             JsonObject dataObj = jsonDoc.createNestedObject("data");
 
