@@ -936,6 +936,13 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         AsyncWebHeader* header      = request->getHeader("X-File-Size");
         uint32_t        fileSize    = UPDATE_SIZE_UNKNOWN;
 
+        /* If there is a pending upload, abort it. */
+        if (true == Update.isRunning())
+        {
+            Update.abort();
+            LOG_WARNING("Pending upload aborted.");
+        }
+
         /* Upload firmware or filesystem? */
         int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
 
