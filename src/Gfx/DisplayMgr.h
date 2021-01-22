@@ -183,8 +183,12 @@ public:
     /**
      * Activate next fade effect.
      */
-    void activateNextFadeEffect();
+    void activateNextFadeEffect(uint8_t fadeEffect);
 
+    /**
+     * Get fade effect.
+     */
+    uint8_t getFadeEffect();
     /**
      * Move plugin to a different slot.
      *

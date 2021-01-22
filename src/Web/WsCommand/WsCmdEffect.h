@@ -65,7 +65,9 @@ public:
      */
     WsCmdEffect() :
         WsCmd("EFFECT"),
-        m_isError(false)
+        m_isError(false),
+        m_parCnt(0U),
+        m_fadeEffect(0U)
     {
     }
 
@@ -93,7 +95,9 @@ public:
 
 private:
 
-    bool    m_isError;  /**< Any error happened during parameter reception? */
+    bool    m_isError;      /**< Any error happened during parameter reception? */
+    uint8_t m_parCnt;       /**< Received number of parameters */
+    uint8_t m_fadeEffect;   /**< Fade effect */
 
     WsCmdEffect(const WsCmdEffect& cmd);
     WsCmdEffect& operator=(const WsCmdEffect& cmd);

@@ -237,7 +237,9 @@ Parameter:
 
 Response:
 * Successful:
-    * ```ACK```
+    * ```ACK;<fadeEffect>```
+    * ```<fadeEffect>```: ID of the fade effect
+
 * Failed:
     * ```NACK```
 

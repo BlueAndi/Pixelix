@@ -166,6 +166,7 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("BUTTON" === this.pendingCmd.name) {
                 this.pendingCmd.resolve(rsp);
             } else if ("EFFECT" === this.pendingCmd.name) {
+                rsp.fadeEffect = parseInt(data[0]);
                 this.pendingCmd.resolve(rsp);
             } else if ("INSTALL" === this.pendingCmd.name) {
                 rsp.slotId = parseInt(data[0]);
@@ -545,7 +546,29 @@ pixelix.ws.Client.prototype.triggerButton = function() {
     }.bind(this));
 };
 
-pixelix.ws.Client.prototype.nextEffect = function() {
+pixelix.ws.Client.prototype.setFadeEffect = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "";
+
+        if (null === this.socket) {
+            reject();
+        } else if ("number" !== typeof options.fadeEffect) {
+            reject();
+        } else {
+
+            par += options.fadeEffect;
+
+            this._sendCmd({
+                name: "EFFECT",
+                par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getFadeEffect = function() {
     return new Promise(function(resolve, reject) {
         if (null === this.socket) {
             reject();

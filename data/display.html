@@ -101,8 +101,8 @@
                     <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
                 </p>
                 <p>
+                    <p>Currently active fade effect: <span id="lableFadeEffect"> Linear</span></p>
                     <button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button>
-                    Currently available fade effects: Linear, MoveX, MoveY.
                 </p>
                 <p>
                     <select id="pluginToInstall" size="1">
@@ -152,6 +152,7 @@
             var plugins             = [];       // List of all available plugins
             var autoBrightnessCtrl  = false;    // Is automatic brightness control enabled or disabled?
             var brightness          = 0;        // Brightness [0; 255]
+            var currentFadeEffect   = 0         // Fade effect [1;3]
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -253,20 +254,36 @@
             }
 
             function nextEffect() {
-                disableUI();
-
-                return wsClient.nextEffect().then(function(rsp) {
-                    /* Nothing to do */
+               return wsClient.setFadeEffect({
+                fadeEffect:(currentFadeEffect == 3) ? 1: (currentFadeEffect + 1)
+            }).then(function(rsp) {
+                    currentFadeEffect = rsp.fadeEffect;
+                    updateFadeEffect();
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
                     alert("Failed.");
                 }).finally(function() {
-                    enableUI();
                 });
             }
             
+            function updateFadeEffect() {
+                /* Update label accordingly. */
+                if (1 == currentFadeEffect) {
+                    $("#lableFadeEffect").text("Linear");
+                }
+                else if (2 == currentFadeEffect) {
+                    $("#lableFadeEffect").text("MoveX");
+                }
+                else if (3 == currentFadeEffect) {
+                    $("#lableFadeEffect").text("MoveY");
+                }
+                else {
+                    $("#lableFadeEffect").text("No fade effect");
+                }
+            }
+
             function nextSlot() {
                 disableUI();
 
@@ -500,6 +517,12 @@
                     autoBrightnessCtrl  = rsp.automaticBrightnessControl;
                     updateAutoBrightnessCtrl();
                     updateBrightness();
+                }).then(function(rsp) {
+                    /* Get fadeEffect information */
+                    return wsClient.getFadeEffect();
+                }).then(function(rsp) {
+                    currentFadeEffect = rsp.fadeEffect;
+                    updateFadeEffect();
                 }).then(function(rsp) {
                     /* Request display content periodically. */
                     timerId = window.setTimeout(getDisplayContent, period);

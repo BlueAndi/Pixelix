@@ -461,9 +461,11 @@ void DisplayMgr::activateNextSlot()
     return;
 }
 
-void DisplayMgr::activateNextFadeEffect()
+void DisplayMgr::activateNextFadeEffect(uint8_t fadeEffect)
 {
     lock();
+
+    m_fadeEffectIndex = (DisplayMgr::FadeEffect) fadeEffect;
 
     /* Avoid changing to next effect, if the there is a pending slot change. */
     if (FADE_IDLE == m_displayFadeState)
@@ -472,17 +474,14 @@ void DisplayMgr::activateNextFadeEffect()
         {
         case FADE_EFFECT_LINEAR:
             m_fadeEffect = &m_fadeLinearEffect;
-            m_fadeEffectIndex = FADE_EFFECT_MOVE_X;
             break;
 
         case FADE_EFFECT_MOVE_X:
             m_fadeEffect = &m_fadeMoveXEffect;
-            m_fadeEffectIndex = FADE_EFFECT_MOVE_Y;
             break;
 
         case FADE_EFFECT_MOVE_Y:
             m_fadeEffect = &m_fadeMoveYEffect;
-            m_fadeEffectIndex = FADE_EFFECT_LINEAR;
             break;
 
         default:
@@ -495,6 +494,19 @@ void DisplayMgr::activateNextFadeEffect()
     unlock();
 
     return;
+}
+
+uint8_t DisplayMgr::getFadeEffect()
+{
+    uint8_t currentFadeEffect;
+
+    lock();
+
+    currentFadeEffect = m_fadeEffectIndex;
+    
+    unlock();
+    
+    return currentFadeEffect;
 }
 
 bool DisplayMgr::movePluginToSlot(IPluginMaintenance* plugin, uint8_t slotId)
