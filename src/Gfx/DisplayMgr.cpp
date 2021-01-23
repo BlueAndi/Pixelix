@@ -461,11 +461,18 @@ void DisplayMgr::activateNextSlot()
     return;
 }
 
-void DisplayMgr::activateNextFadeEffect(uint8_t fadeEffect)
+void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
 {
     lock();
 
-    m_fadeEffectIndex = (DisplayMgr::FadeEffect) fadeEffect;
+    if(fadeEffect > FADE_EFFECT_MOVE_Y )
+    {
+        m_fadeEffectIndex = FADE_EFFECT_LINEAR;
+    }
+    else
+    {
+        m_fadeEffectIndex = fadeEffect;
+    }
 
     /* Avoid changing to next effect, if the there is a pending slot change. */
     if (FADE_IDLE == m_displayFadeState)
@@ -496,9 +503,9 @@ void DisplayMgr::activateNextFadeEffect(uint8_t fadeEffect)
     return;
 }
 
-uint8_t DisplayMgr::getFadeEffect()
+DisplayMgr::FadeEffect DisplayMgr::getFadeEffect()
 {
-    uint8_t currentFadeEffect;
+    FadeEffect currentFadeEffect;
 
     lock();
 

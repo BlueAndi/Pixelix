@@ -100,10 +100,8 @@
                 <p>
                     <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
                 </p>
-                <p>
-                    <p>Currently active fade effect: <span id="lableFadeEffect"> Linear</span></p>
-                    <button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button>
-                </p>
+                <p>Currently active fade effect: <span id="lableFadeEffect"> Linear</span></p>
+                <button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button>
                 <p>
                     <select id="pluginToInstall" size="1">
                     </select>
@@ -255,7 +253,7 @@
 
             function nextEffect() {
                return wsClient.setFadeEffect({
-                fadeEffect:(currentFadeEffect == 3) ? 1: (currentFadeEffect + 1)
+                fadeEffect:(currentFadeEffect + 1)
             }).then(function(rsp) {
                     currentFadeEffect = rsp.fadeEffect;
                     updateFadeEffect();
@@ -270,13 +268,13 @@
             
             function updateFadeEffect() {
                 /* Update label accordingly. */
-                if (1 == currentFadeEffect) {
+                if (1 === currentFadeEffect) {
                     $("#lableFadeEffect").text("Linear");
                 }
-                else if (2 == currentFadeEffect) {
+                else if (2 === currentFadeEffect) {
                     $("#lableFadeEffect").text("MoveX");
                 }
-                else if (3 == currentFadeEffect) {
+                else if (3 === currentFadeEffect) {
                     $("#lableFadeEffect").text("MoveY");
                 }
                 else {

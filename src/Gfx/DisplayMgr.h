@@ -72,6 +72,15 @@ class DisplayMgr
 {
 public:
 
+    /** Fade effects */
+    enum FadeEffect
+    {
+        FADE_EFFECT_NO = 0, /**< No fade effect */
+        FADE_EFFECT_LINEAR, /**< Linear dimming fade effect. */
+        FADE_EFFECT_MOVE_X, /**< Moving fade effect into the direction of negative x-coordinates. */
+        FADE_EFFECT_MOVE_Y  /**< Moving fade effect into the direction of negative y-coordinates. */
+    };
+
     /**
      * Get LED matrix instance.
      *
@@ -182,13 +191,17 @@ public:
 
     /**
      * Activate next fade effect.
+     * 
+     * @param[in] fadeEffect fadeEffect to be activated.
      */
-    void activateNextFadeEffect(uint8_t fadeEffect);
+    void activateNextFadeEffect(FadeEffect fadeEffect);
 
     /**
      * Get fade effect.
+     * 
+     * @return the currently active fadeEffect.
      */
-    uint8_t getFadeEffect();
+    FadeEffect getFadeEffect();
     /**
      * Move plugin to a different slot.
      *
@@ -324,14 +337,6 @@ private:
         FB_ID_MAX       /**< Number of frame buffers */
     };
 
-    /** Fade effects */
-    enum FadeEffect
-    {
-        FADE_EFFECT_NO = 0, /**< No fade effect */
-        FADE_EFFECT_LINEAR, /**< Linear dimming fade effect. */
-        FADE_EFFECT_MOVE_X, /**< Moving fade effect into the direction of negative x-coordinates. */
-        FADE_EFFECT_MOVE_Y  /**< Moving fade effect into the direction of negative y-coordinates. */
-    };
     /**
      * A plugin change (inactive -> active) will fade the display content of
      * the old plugin out and from the new plugin in.

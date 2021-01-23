@@ -79,10 +79,10 @@ void WsCmdEffect::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         String rsp              = "ACK";
         const char  DELIMITER   = ';';
 
-    if (1U == m_parCnt)
-    {
-        DisplayMgr::getInstance().activateNextFadeEffect(m_fadeEffect);
-    }
+        if (1U == m_parCnt)
+        {
+            DisplayMgr::getInstance().activateNextFadeEffect((DisplayMgr::FadeEffect) m_fadeEffect);
+        }
 
         rsp += DELIMITER;
         rsp += DisplayMgr::getInstance().getFadeEffect();
@@ -104,6 +104,10 @@ void WsCmdEffect::setPar(const char* par)
             m_isError = true;
         }
          ++m_parCnt;
+    }
+    else
+    {
+        m_isError = true;
     }
     return;
 }
