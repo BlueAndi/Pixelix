@@ -81,7 +81,7 @@ void WsCmdEffect::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         if (1U == m_parCnt)
         {
-            DisplayMgr::getInstance().activateNextFadeEffect((DisplayMgr::FadeEffect) m_fadeEffect);
+            DisplayMgr::getInstance().activateNextFadeEffect(static_cast<DisplayMgr::FadeEffect>(m_fadeEffect));
         }
 
         rsp += DELIMITER;
