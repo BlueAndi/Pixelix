@@ -218,12 +218,15 @@ Trigger the virtual user button.
 Detail:
 * Method: GET
   * Arguments: N/A
+* Method: POST
+  * Set a fadeEffect:
+    * Arguments:
+      * fadeEffect=`<fadeEffectId>`
 
 Example:
 ```
 GET <base-uri>/rest/api/v1/button
 ```
-
 Result:
 ```json
 {
@@ -233,10 +236,26 @@ Result:
     }
 }
 ```
+```
+POST <base-uri>/rest/api/v1/button?fadeEffect=3
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+      "fadeEffect":3
+        }
+    }
+}
+```
+
 
 Example with curl:
 ```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/button
+$ curl -u luke:skywalker -d fadeEffect=3 -X POST http://192.168.2.166/rest/api/v1/button
 ```
 
 ## Plugin depended

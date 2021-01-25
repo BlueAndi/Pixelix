@@ -513,7 +513,8 @@ static void handlePlugin(AsyncWebServerRequest* request)
 
 /**
  * Trigger virtual user button.
- * GET \c "/api/v1/button"
+ * Activate next slot:              GET \c "/api/v1/button"
+ * Switch to the next FadeEffect:   POST \c "/api/v1/button?fadeEffect=<FadeEffectId>"
  *
  * @param[in] request   HTTP request
  */
@@ -529,16 +530,33 @@ static void handleButton(AsyncWebServerRequest* request)
         return;
     }
 
-    if (HTTP_GET != request->method())
+    if (HTTP_POST == request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        JsonObject  dataObj =jsonDoc.createNestedObject("data");
+        
+        /* Fade effect? */
+        if (false == request->hasArg("fadeEffect"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
 
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "fadeEffect is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            String effect = request->arg("fadeEffect");
+
+            DisplayMgr::getInstance().activateNextFadeEffect(static_cast<DisplayMgr::FadeEffect>(effect.toInt()));
+
+            /* Prepare response */
+            dataObj["fadeEffect"]   = effect.toInt();
+            jsonDoc["status"]       = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            httpStatusCode          = HttpStatus::STATUS_CODE_OK;
+        }
     }
-    else
+    else if (HTTP_GET == request->method())
     {
         JsonObject  dataObj = jsonDoc.createNestedObject("data");
 
@@ -549,6 +567,15 @@ static void handleButton(AsyncWebServerRequest* request)
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
 
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
     if (true == jsonDoc.overflowed())
