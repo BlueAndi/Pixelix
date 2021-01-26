@@ -474,29 +474,7 @@ void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
         m_fadeEffectIndex = fadeEffect;
     }
 
-    /* Avoid changing to next effect, if the there is a pending slot change. */
-    if (FADE_IDLE == m_displayFadeState)
-    {
-        switch (m_fadeEffectIndex)
-        {
-        case FADE_EFFECT_LINEAR:
-            m_fadeEffect = &m_fadeLinearEffect;
-            break;
-
-        case FADE_EFFECT_MOVE_X:
-            m_fadeEffect = &m_fadeMoveXEffect;
-            break;
-
-        case FADE_EFFECT_MOVE_Y:
-            m_fadeEffect = &m_fadeMoveYEffect;
-            break;
-
-        default:
-            m_fadeEffect = nullptr;
-            m_fadeEffectIndex = FADE_EFFECT_NO;
-            break;
-        }
-    }
+    m_fadeEffectUpdate = true;
 
     unlock();
 
@@ -707,7 +685,8 @@ DisplayMgr::DisplayMgr() :
     m_fadeMoveXEffect(),
     m_fadeMoveYEffect(),
     m_fadeEffect(&m_fadeLinearEffect),
-    m_fadeEffectIndex(FADE_EFFECT_MOVE_X)
+    m_fadeEffectIndex(FADE_EFFECT_LINEAR),
+    m_fadeEffectUpdate(false)
 {
     uint8_t idx = 0U;
 
@@ -1014,6 +993,32 @@ void DisplayMgr::process()
         }
     }
 
+    /* Avoid changing to next effect, if the there is a pending slot change. */
+    if ((false != m_fadeEffectUpdate) && (FADE_IDLE == m_displayFadeState))
+    {
+        switch (m_fadeEffectIndex)
+        {
+        case FADE_EFFECT_LINEAR:
+            m_fadeEffect = &m_fadeLinearEffect;
+            break;
+
+        case FADE_EFFECT_MOVE_X:
+            m_fadeEffect = &m_fadeMoveXEffect;
+            break;
+
+        case FADE_EFFECT_MOVE_Y:
+            m_fadeEffect = &m_fadeMoveYEffect;
+            break;
+
+        default:
+            m_fadeEffect = nullptr;
+            m_fadeEffectIndex = FADE_EFFECT_NO;
+            break;
+        }
+
+        m_fadeEffectUpdate = false;
+    }
+    
     /* Process all installed plugins. */
     for(index = 0U; index < m_maxSlots; ++index)
     {

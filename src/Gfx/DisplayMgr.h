@@ -349,6 +349,7 @@ private:
     FadeMoveY           m_fadeMoveYEffect;              /**< Moving along y-axis fade effect. */
     IFadeEffect*        m_fadeEffect;                   /**< The fade effect itself. */
     FadeEffect          m_fadeEffectIndex;              /**< Fade effect index to determine the next fade effect. */
+    bool                m_fadeEffectUpdate;             /**< Flag to indicate that the fadeEffect was updated. */
 
     /**
      * Construct LED matrix.

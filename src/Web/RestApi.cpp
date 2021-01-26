@@ -532,7 +532,7 @@ static void handleButton(AsyncWebServerRequest* request)
 
     if (HTTP_POST == request->method())
     {
-        JsonObject  dataObj =jsonDoc.createNestedObject("data");
+        JsonObject  dataObj = jsonDoc.createNestedObject("data");
         
         /* Fade effect? */
         if (false == request->hasArg("fadeEffect"))
@@ -562,11 +562,12 @@ static void handleButton(AsyncWebServerRequest* request)
 
         UTIL_NOT_USED(dataObj);
         DisplayMgr::getInstance().activateNextSlot();
+        DisplayMgr::FadeEffect currentFadeEffect = DisplayMgr::getInstance().getFadeEffect();
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        jsonDoc["status"]       = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        dataObj["fadeEffect"]   = currentFadeEffect;
+        httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
     else
     {
