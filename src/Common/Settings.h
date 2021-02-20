@@ -297,7 +297,7 @@ private:
     Settings();
 
     /**
-     * Destroys the i/o pin instance.
+     * Destroys the settings instance.
      */
     ~Settings();
 
