@@ -19,7 +19,7 @@ typedef struct {
     uint32_t total_len;
     uint32_t buffer_len;
     uint8_t *buffer;
-    uint32_t sockfd;
+    uint32_t sockfd; /* cppcheck-suppress unusedStructMember */
 } iperf_ctrl_t;
 
 typedef struct {
