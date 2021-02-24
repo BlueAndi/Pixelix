@@ -177,11 +177,11 @@ public:
      */
     void drawVLine(int16_t x, int16_t y, uint16_t height, const TColor& color)
     {
-        uint16_t index = 0U;
+        uint16_t idx = 0U;
 
-        for(index = 0U; index < height; ++index)
+        for(idx = 0U; idx < height; ++idx)
         {
-            drawPixel(x, y + index, color);
+            drawPixel(x, y + idx, color);
         }
     }
 
@@ -196,11 +196,11 @@ public:
      */
     void drawHLine(int16_t x, int16_t y, uint16_t width, const TColor& color)
     {
-        uint16_t index = 0U;
+        uint16_t idx = 0U;
 
-        for(index = 0U; index < width; ++index)
+        for(idx = 0U; idx < width; ++idx)
         {
-            drawPixel(x + index, y, color);
+            drawPixel(x + idx, y, color);
         }
     }
 
@@ -525,18 +525,18 @@ public:
      */
     void drawText(const char* text)
     {
-        size_t index = 0U;
+        size_t idx = 0U;
 
         if (nullptr == m_font)
         {
             return;
         }
 
-        while('\0' != text[index])
+        while('\0' != text[idx])
         {
-            drawChar(text[index]);
+            drawChar(text[idx]);
 
-            ++index;
+            ++idx;
         }
     }
 
@@ -605,18 +605,18 @@ public:
         if ((nullptr != text) &&
             (nullptr != m_font))
         {
-            size_t      index       = 0U;
+            size_t      idx         = 0U;
             uint16_t    lineWidth   = 0U;
 
             width   = 0U;
             height  = 0U;
 
-            while('\0' != text[index])
+            while('\0' != text[idx])
             {
                 uint16_t charWidth  = 0U;
                 uint16_t charHeight = 0U;
 
-                if ('\n' == text[index])
+                if ('\n' == text[idx])
                 {
                     if (width < lineWidth)
                     {
@@ -626,9 +626,9 @@ public:
                     lineWidth = 0U;
                     height += m_font->yAdvance;;
                 }
-                else if (true == getCharBoundingBox(text[index], charWidth, charHeight))
+                else if (true == getCharBoundingBox(text[idx], charWidth, charHeight))
                 {
-                    if (0U == index)
+                    if (0U == idx)
                     {
                         height += m_font->yAdvance;
                     }
@@ -657,7 +657,7 @@ public:
                     ;
                 }
 
-                ++index;
+                ++idx;
             }
 
             if (width < lineWidth)
