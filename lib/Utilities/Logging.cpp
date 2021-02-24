@@ -156,7 +156,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
         Msg             msg;
 
         va_start(args, format);
-        written = vsnprintf(buffer, MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, format, args);
+        written = vsnprintf(buffer, MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, format, args); /* NOLINT(clang-analyzer-valist.Uninitialized) */
         va_end(args);
 
         /* If buffer was too small or any other error happended, it shall be shown in the
