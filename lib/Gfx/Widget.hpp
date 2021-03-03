@@ -80,10 +80,13 @@ public:
     */
     Widget& operator=(const Widget& widget)
     {
-        m_type = widget.m_type;
-        m_posX = widget.m_posX;
-        m_posY = widget.m_posY;
-        /* m_name is not assigned! */
+        if (&widget != this)
+        {
+            m_type = widget.m_type;
+            m_posX = widget.m_posX;
+            m_posY = widget.m_posY;
+            /* m_name is not assigned! */
+        }
 
         return *this;
     }
