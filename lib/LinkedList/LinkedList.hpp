@@ -646,13 +646,16 @@ public:
      */
     DLinkedList& operator=(const DLinkedList& list)
     {
-        ListElement<T>* listElement = list.m_head;
-
-        clear();
-        while(nullptr != listElement)
+        if (&list != this)
         {
-            append(listElement->getElement());
-            listElement = listElement->getNext();
+            ListElement<T>* listElement = list.m_head;
+
+            clear();
+            while(nullptr != listElement)
+            {
+                append(listElement->getElement());
+                listElement = listElement->getNext();
+            }
         }
 
         return *this;

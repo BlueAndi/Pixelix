@@ -119,10 +119,13 @@ public:
      */
     LampWidget& operator=(const LampWidget& widget)
     {
-        m_isOn      = widget.m_isOn;
-        m_colorOff  = widget.m_colorOff;
-        m_colorOn   = widget.m_colorOn;
-        m_width     = widget.m_width;
+        if (&widget != this)
+        {
+            m_isOn      = widget.m_isOn;
+            m_colorOff  = widget.m_colorOff;
+            m_colorOn   = widget.m_colorOn;
+            m_width     = widget.m_width;
+        }
 
         return *this;
     }

@@ -36,7 +36,7 @@ jobs:
       run: platformio run --environment esp32doit-devkit-v1-usb
 
     - name: Perform static checks on target esp32doit-devkit-v1-usb
-      run: platformio check --environment esp32doit-devkit-v1-usb --skip-packages
+      run: platformio check --environment esp32doit-devkit-v1-usb
 
     - name: Perform static checks on native environment
       run: platformio check --environment test

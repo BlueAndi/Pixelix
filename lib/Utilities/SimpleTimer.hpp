@@ -99,10 +99,13 @@ public:
      */
     SimpleTimer& operator=(const SimpleTimer& sTimer)
     {
-        m_isRunning = sTimer.m_isRunning;
-        m_isTimeout = sTimer.m_isTimeout;
-        m_duration  = sTimer.m_duration;
-        m_start     = sTimer.m_start;
+        if (&sTimer != this)
+        {
+            m_isRunning = sTimer.m_isRunning;
+            m_isTimeout = sTimer.m_isTimeout;
+            m_duration  = sTimer.m_duration;
+            m_start     = sTimer.m_start;
+        }
 
         return *this;
     }

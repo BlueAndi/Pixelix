@@ -110,9 +110,12 @@ public:
      */
     ProgressBar& operator=(const ProgressBar& widget)
     {
-        m_progress  = widget.m_progress;
-        m_color     = widget.m_color;
-        m_algorithm = widget.m_algorithm;
+        if (&widget != this)
+        {
+            m_progress  = widget.m_progress;
+            m_color     = widget.m_color;
+            m_algorithm = widget.m_algorithm;
+        }
 
         return *this;
     }
