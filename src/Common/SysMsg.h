@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,7 +69,9 @@ public:
      */
     static SysMsg& getInstance()
     {
-        return m_instance;
+        static SysMsg instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -98,8 +100,6 @@ public:
     bool isReady() const;
 
 private:
-
-    static SysMsg   m_instance; /**< System message handler instance */
 
     SysMsgPlugin*   m_plugin;   /**< Plugin, used to show system messages */
 

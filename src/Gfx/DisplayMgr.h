@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +49,7 @@
 #include <SimpleTimer.hpp>
 #include <FadeLinear.h>
 #include <FadeMoveX.h>
+#include <FadeMoveY.h>
 
 #include "Board.h"
 #include "IPluginMaintenance.hpp"
@@ -71,6 +72,15 @@ class DisplayMgr
 {
 public:
 
+    /** Fade effects */
+    enum FadeEffect
+    {
+        FADE_EFFECT_NO = 0, /**< No fade effect */
+        FADE_EFFECT_LINEAR, /**< Linear dimming fade effect. */
+        FADE_EFFECT_MOVE_X, /**< Moving fade effect into the direction of negative x-coordinates. */
+        FADE_EFFECT_MOVE_Y  /**< Moving fade effect into the direction of negative y-coordinates. */
+    };
+
     /**
      * Get LED matrix instance.
      *
@@ -78,7 +88,9 @@ public:
      */
     static DisplayMgr& getInstance()
     {
-        return m_instance;
+        static DisplayMgr instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -178,6 +190,19 @@ public:
     void activateNextSlot();
 
     /**
+     * Activate next fade effect.
+     * 
+     * @param[in] fadeEffect fadeEffect to be activated.
+     */
+    void activateNextFadeEffect(FadeEffect fadeEffect);
+
+    /**
+     * Get fade effect.
+     * 
+     * @return the currently active fadeEffect.
+     */
+    FadeEffect getFadeEffect();
+    /**
      * Move plugin to a different slot.
      *
      * @param[in] plugin    Plugin, which to move
@@ -266,9 +291,6 @@ public:
 
 private:
 
-    /** Display manager instance */
-    static DisplayMgr   m_instance;
-
     /** Mutex to lock/unlock display update. */
     SemaphoreHandle_t   m_xMutex;
 
@@ -320,11 +342,14 @@ private:
      * the old plugin out and from the new plugin in.
      */
     FadeState           m_displayFadeState;
-    Canvas*             m_currCanvas;               /**< Points to the current canvas, used to update the display. */
-    Canvas*             m_framebuffers[FB_ID_MAX];  /**< Two framebuffers, which will contain the old and the new plugin content. */
-    FadeLinear          m_fadeLinearEffect;         /**< Linear fade effect. */
-    FadeMoveX           m_fadeMoveXEffect;          /**< Moving along x-axis fade effect. */
-    IFadeEffect*        m_fadeEffect;               /**< The fade effect itself. */
+    Canvas*             m_currCanvas;                   /**< Points to the current canvas, used to update the display. */
+    Canvas*             m_framebuffers[FB_ID_MAX];      /**< Two framebuffers, which will contain the old and the new plugin content. */
+    FadeLinear          m_fadeLinearEffect;             /**< Linear fade effect. */
+    FadeMoveX           m_fadeMoveXEffect;              /**< Moving along x-axis fade effect. */
+    FadeMoveY           m_fadeMoveYEffect;              /**< Moving along y-axis fade effect. */
+    IFadeEffect*        m_fadeEffect;                   /**< The fade effect itself. */
+    FadeEffect          m_fadeEffectIndex;              /**< Fade effect index to determine the next fade effect. */
+    bool                m_fadeEffectUpdate;             /**< Flag to indicate that the fadeEffect was updated. */
 
     /**
      * Construct LED matrix.

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -80,7 +80,7 @@ public:
      *
      * @return Value type
      */
-    Type getValueType() const
+    Type getValueType() const final
     {
         return TYPE_INT32;
     }
@@ -90,7 +90,7 @@ public:
      *
      * @return Value
      */
-    uint32_t getValue() const
+    uint32_t getValue() const final
     {
         return m_pref.getUInt(m_key, m_defValue);
     }
@@ -100,7 +100,7 @@ public:
      *
      * @param[in] value Value
      */
-    void setValue(uint32_t value)
+    void setValue(uint32_t value) final
     {
         m_pref.putUInt(m_key, value);
     }

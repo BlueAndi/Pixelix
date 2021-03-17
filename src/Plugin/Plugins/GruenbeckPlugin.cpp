@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,10 +35,11 @@
 #include "GruenbeckPlugin.h"
 #include "RestApi.h"
 #include "AsyncHttpClient.h"
+#include "FileSystem.h"
 
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <SPIFFS.h>
+#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -47,21 +48,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/* Structure of response-payload for requesting D_Y_10_1
- *
- * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
- *
- * <data><code>ok</code><D_Y_10_1>  = 31 bytes
- * XYZ                              = 3 byte (relevant data)
- * </D_Y_10_1></data>               = 18 bytes
- */
-
-/* Startindex of relevant data. */
-#define START_INDEX_OF_RELEVANT_DATA (31U)
-
-/* Endindex of relevant data. */
-#define END_INDEX_OF_RELEVANT_DATA (34u)
 
 /******************************************************************************
  * Types and classes
@@ -129,7 +115,7 @@ void GruenbeckPlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load(IMAGE_PATH);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
 
             m_iconCanvas->update(gfx);
         }
@@ -213,9 +199,12 @@ void GruenbeckPlugin::start()
         }
     }
 
-    registerResponseCallback();
-    if (false == requestNewData())
+    initHttpClient();
+    if (false == startHttpRequest())
     {
+        /* If a request fails, show a '?' */
+        m_textWidget.setFormatStr("\\calign?");
+
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
     }
     else
@@ -234,7 +223,7 @@ void GruenbeckPlugin::stop()
 
     m_requestTimer.stop();
 
-    if (false != SPIFFS.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
@@ -246,11 +235,16 @@ void GruenbeckPlugin::stop()
 
 void GruenbeckPlugin::process()
 {
+    lock();
+
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
-        if (false == requestNewData())
+        if (false == startHttpRequest())
         {
+            /* If a request fails, show a '?' */
+            m_textWidget.setFormatStr("\\calign?");
+
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
         }
         else
@@ -258,6 +252,8 @@ void GruenbeckPlugin::process()
             m_requestTimer.start(UPDATE_PERIOD);
         }
     }
+
+    unlock();
 
     return;
 }
@@ -297,8 +293,6 @@ void GruenbeckPlugin::webReqHandler(AsyncWebServerRequest *request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -350,10 +344,13 @@ void GruenbeckPlugin::webReqHandler(AsyncWebServerRequest *request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -362,14 +359,14 @@ void GruenbeckPlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-bool GruenbeckPlugin::requestNewData()
+bool GruenbeckPlugin::startHttpRequest()
 {
-    bool    status  = false;
-    String  url     = String("http://") + m_ipAddress + "/mux_http";
-    wl_status_t connectionStatus    = WiFi.status();
+    bool status  = false;
 
-    if (WL_CONNECTED == connectionStatus)
+    if (0 < m_ipAddress.length())
     {
+        String url = String("http://") + m_ipAddress + "/mux_http";
+
         if (true == m_client.begin(url))
         {
             m_client.addPar("id","42");
@@ -384,57 +381,90 @@ bool GruenbeckPlugin::requestNewData()
                 status = true;
             }
         }
-        else
-        {
-            LOG_ERROR("Requesting new data failed");
-        }
-        
     }
 
     return status;
 }
 
-void GruenbeckPlugin::registerResponseCallback()
+void GruenbeckPlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t      payloadSize     = 0U;
-        const char* payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        size_t      payloadIndex    = 0U;
-        String      payloadString;
+        /* Structure of response-payload for requesting D_Y_10_1
+         *
+         * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
+         *
+         * <data><code>ok</code><D_Y_10_1>  = 31 bytes
+         * XYZ                              = 3 byte (relevant data)
+         * </D_Y_10_1></data>               = 18 bytes
+         */
 
-        while(payloadSize > payloadIndex)
+        /* Start index of relevant data */
+        const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
+
+        /* Length of relevant data */
+        const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
+
+        size_t          payloadSize                     = 0U;
+        const char*     payload                         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        char            restCapacity[RELEVANT_DATA_LENGTH + 1];
+
+        if (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
         {
-            payloadString += payload[payloadIndex];
-            ++payloadIndex;
+            memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
+            restCapacity[RELEVANT_DATA_LENGTH] = '\0';
+        }
+        else
+        {
+            restCapacity[0] = '?';
+            restCapacity[1] = '\0';
         }
 
         lock();
-        m_relevantResponsePart = payloadString.substring(START_INDEX_OF_RELEVANT_DATA, END_INDEX_OF_RELEVANT_DATA);
+        m_relevantResponsePart = restCapacity;
         m_httpResponseReceived = true;
+        unlock();
+    });
+
+    m_client.regOnClosed([this]() {
+        LOG_INFO("Connection closed.");
+
+        lock();
+        if (true == m_isConnectionError)
+        {
+            /* If a request fails, show a '?' */
+            m_textWidget.setFormatStr("\\calign?");
+
+            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+        }
+        m_isConnectionError = false;
+        unlock();
+    });
+
+    m_client.regOnError([this]() {
+        LOG_WARNING("Connection error happened.");
+
+        lock();
+        m_isConnectionError = true;
         unlock();
     });
 }
 
 bool GruenbeckPlugin::saveConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "w");
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    jsonDoc["gruenbeckIP"] = m_ipAddress;
+    
+    if (false == jsonFile.save(m_configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to save file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-
-        jsonDoc["gruenbeckIP"] = m_ipAddress;
-
-        (void)serializeJson(jsonDoc, fd);
-        fd.close();
-
         LOG_INFO("File %s saved.", m_configurationFilename.c_str());
     }
 
@@ -443,33 +473,19 @@ bool GruenbeckPlugin::saveConfiguration()
 
 bool GruenbeckPlugin::loadConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    if (false == jsonFile.load(m_configurationFilename, jsonDoc))
     {
         LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t            JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
-
-        if (DeserializationError::Ok != error)
-        {
-            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
-            status = false;
-        }
-        else
-        {
-            JsonObject obj = jsonDoc.as<JsonObject>();
-
-            m_ipAddress = obj["gruenbeckIP"].as<String>();
-        }
-
-        fd.close();
+        m_ipAddress = jsonDoc["gruenbeckIP"].as<String>();
     }
 
     return status;
@@ -477,9 +493,9 @@ bool GruenbeckPlugin::loadConfiguration()
 
 void GruenbeckPlugin::createConfigDirectory()
 {
-    if (false == SPIFFS.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(CONFIG_PATH))
     {
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         }

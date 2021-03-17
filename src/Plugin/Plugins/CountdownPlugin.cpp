@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +36,11 @@
 #include "CountdownPlugin.h"
 #include "RestApi.h"
 #include "Util.h"
+#include "FileSystem.h"
 
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <SPIFFS.h>
+#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -113,7 +114,7 @@ void CountdownPlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load(IMAGE_PATH);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
         }
     }
 
@@ -201,7 +202,7 @@ void CountdownPlugin::stop()
 
     m_cfgReloadTimer.stop();
 
-    if (false != SPIFFS.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
@@ -296,8 +297,6 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -403,11 +402,13 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -418,28 +419,24 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
 
 bool CountdownPlugin::saveConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "w");
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    jsonDoc["day"]                  = m_targetDate.day;
+    jsonDoc["month"]                = m_targetDate.month;
+    jsonDoc["year"]                 = m_targetDate.year;
+    jsonDoc["descriptionPlural"]    = m_targetDateInformation.plural;
+    jsonDoc["descriptionSingular"]  = m_targetDateInformation.singular;
+    
+    if (false == jsonFile.save(m_configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to save file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-
-        jsonDoc["day"]                  = m_targetDate.day;
-        jsonDoc["month"]                = m_targetDate.month;
-        jsonDoc["year"]                 = m_targetDate.year;
-        jsonDoc["descriptionPlural"]    = m_targetDateInformation.plural;
-        jsonDoc["descriptionSingular"]  = m_targetDateInformation.singular;
-
-        (void)serializeJson(jsonDoc, fd);
-        fd.close();
-
         LOG_INFO("File %s saved.", m_configurationFilename.c_str());
     }
 
@@ -448,37 +445,23 @@ bool CountdownPlugin::saveConfiguration()
 
 bool CountdownPlugin::loadConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    if (false == jsonFile.load(m_configurationFilename, jsonDoc))
     {
         LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t            JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
-
-        if (DeserializationError::Ok != error)
-        {
-            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
-            status = false;
-        }
-        else
-        {
-            JsonObject obj = jsonDoc.as<JsonObject>();
-
-            m_targetDate.day                    = obj["day"];
-            m_targetDate.month                  = obj["month"];
-            m_targetDate.year                   = obj["year"];
-            m_targetDateInformation.plural      = obj["descriptionPlural"].as<String>();
-            m_targetDateInformation.singular    = obj["descriptionSingular"].as<String>();
-        }
-
-        fd.close();
+        m_targetDate.day                    = jsonDoc["day"].as<uint8_t>();
+        m_targetDate.month                  = jsonDoc["month"].as<uint8_t>();
+        m_targetDate.year                   = jsonDoc["year"].as<uint16_t>();
+        m_targetDateInformation.plural      = jsonDoc["descriptionPlural"].as<String>();
+        m_targetDateInformation.singular    = jsonDoc["descriptionSingular"].as<String>();
     }
 
     return status;
@@ -486,9 +469,9 @@ bool CountdownPlugin::loadConfiguration()
 
 void CountdownPlugin::createConfigDirectory()
 {
-    if (false == SPIFFS.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(CONFIG_PATH))
     {
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         }

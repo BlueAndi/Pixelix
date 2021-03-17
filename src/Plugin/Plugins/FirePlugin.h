@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -119,13 +119,13 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) override;
+    void active(IGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
      * it won't be shown on the display anymore.
      */
-    void inactive() override;
+    void inactive() final;
 
     /**
      * Update the display.
@@ -133,7 +133,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx);
+    void update(IGfx& gfx) final;
 
 private:
 

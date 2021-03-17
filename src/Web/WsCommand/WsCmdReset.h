@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -82,14 +82,14 @@ public:
      * @param[in] server    Websocket server
      * @param[in] client    Websocket client
      */
-    void execute(AsyncWebSocket* server, AsyncWebSocketClient* client) override;
+    void execute(AsyncWebSocket* server, AsyncWebSocketClient* client) final;
 
     /**
      * Set command parameter. Call this for each parameter, until executing it.
      *
      * @param[in] par   Parameter string
      */
-    void setPar(const char* par) override;
+    void setPar(const char* par) final;
 
 private:
 

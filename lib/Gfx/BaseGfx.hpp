@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,41 +68,9 @@ class BaseGfx
 public:
 
     /**
-     * Constructs the base graphics functionality.
-     *
-     * @param[in] width     Canvas width in pixel
-     * @param[in] height    Canvas height in pixel
-     */
-    BaseGfx(uint16_t width, uint16_t height) :
-        m_width(width),
-        m_height(height),
-        m_cursorX(0),
-        m_cursorY(0),
-        m_textColor(0U),
-        m_isTextWrapEnabled(false),
-        m_font(nullptr)
-    {
-    }
-
-    /**
      * Destroys the base graphics functionality object.
      */
     virtual ~BaseGfx()
-    {
-    }
-
-    /**
-     * Constructs the base graphics functionality by copying one.
-     *
-     * @param[in] gfx   Base gfx which to copy
-     */
-    BaseGfx(const BaseGfx& gfx) :
-        m_width(gfx.m_width),
-        m_height(gfx.m_height),
-        m_cursorX(gfx.m_cursorX),
-        m_cursorY(gfx.m_cursorY),
-        m_isTextWrapEnabled(gfx.m_isTextWrapEnabled),
-        m_font(gfx.m_font)
     {
     }
 
@@ -209,11 +177,11 @@ public:
      */
     void drawVLine(int16_t x, int16_t y, uint16_t height, const TColor& color)
     {
-        uint16_t index = 0U;
+        uint16_t idx = 0U;
 
-        for(index = 0U; index < height; ++index)
+        for(idx = 0U; idx < height; ++idx)
         {
-            drawPixel(x, y + index, color);
+            drawPixel(x, y + idx, color);
         }
     }
 
@@ -228,11 +196,11 @@ public:
      */
     void drawHLine(int16_t x, int16_t y, uint16_t width, const TColor& color)
     {
-        uint16_t index = 0U;
+        uint16_t idx = 0U;
 
-        for(index = 0U; index < width; ++index)
+        for(idx = 0U; idx < width; ++idx)
         {
-            drawPixel(x + index, y, color);
+            drawPixel(x + idx, y, color);
         }
     }
 
@@ -557,18 +525,18 @@ public:
      */
     void drawText(const char* text)
     {
-        size_t index = 0U;
+        size_t idx = 0U;
 
         if (nullptr == m_font)
         {
             return;
         }
 
-        while('\0' != text[index])
+        while('\0' != text[idx])
         {
-            drawChar(text[index]);
+            drawChar(text[idx]);
 
-            ++index;
+            ++idx;
         }
     }
 
@@ -637,18 +605,18 @@ public:
         if ((nullptr != text) &&
             (nullptr != m_font))
         {
-            size_t      index       = 0U;
+            size_t      idx         = 0U;
             uint16_t    lineWidth   = 0U;
 
             width   = 0U;
             height  = 0U;
 
-            while('\0' != text[index])
+            while('\0' != text[idx])
             {
                 uint16_t charWidth  = 0U;
                 uint16_t charHeight = 0U;
 
-                if ('\n' == text[index])
+                if ('\n' == text[idx])
                 {
                     if (width < lineWidth)
                     {
@@ -658,9 +626,9 @@ public:
                     lineWidth = 0U;
                     height += m_font->yAdvance;;
                 }
-                else if (true == getCharBoundingBox(text[index], charWidth, charHeight))
+                else if (true == getCharBoundingBox(text[idx], charWidth, charHeight))
                 {
-                    if (0U == index)
+                    if (0U == idx)
                     {
                         height += m_font->yAdvance;
                     }
@@ -689,7 +657,7 @@ public:
                     ;
                 }
 
-                ++index;
+                ++idx;
             }
 
             if (width < lineWidth)
@@ -712,6 +680,40 @@ protected:
     TColor          m_textColor;            /**< Text color */
     bool            m_isTextWrapEnabled;    /**< Is text wrap around enabled or not? */
     const GFXfont*  m_font;                 /**< Current selected font */
+
+    /**
+     * Constructs the base graphics functionality.
+     *
+     * @param[in] width     Canvas width in pixel
+     * @param[in] height    Canvas height in pixel
+     */
+    BaseGfx(uint16_t width, uint16_t height) :
+        m_width(width),
+        m_height(height),
+        m_cursorX(0),
+        m_cursorY(0),
+        m_textColor(0U),
+        m_isTextWrapEnabled(false),
+        m_font(nullptr)
+    {
+    }
+
+    /**
+     * Constructs the base graphics functionality by copying one.
+     *
+     * @param[in] gfx   Base gfx which to copy
+     */
+    BaseGfx(const BaseGfx& gfx) :
+        m_width(gfx.m_width),
+        m_height(gfx.m_height),
+        m_cursorX(gfx.m_cursorX),
+        m_cursorY(gfx.m_cursorY),
+        m_isTextWrapEnabled(gfx.m_isTextWrapEnabled),
+        m_font(gfx.m_font)
+    {
+    }
+
+private:
 
     /* Default constructor not allowed. */
     BaseGfx();

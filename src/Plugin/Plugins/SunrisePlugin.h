@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,8 +64,8 @@
 /**
  * Shows the current sunrise / sunset times for a configured location.
  *
- * At the first installation a json document is generated to the SPIFFS /configuration/UUID.json
- * where the longitude and latidude have to be configured.
+ * At the first installation a json document is generated to the /configuration/UUID.json
+ * in the filesystem, where the longitude and latidude have to be configured.
  *
  * Powered by sunrise-sunset.org!
  */
@@ -84,9 +84,9 @@ public:
         m_textCanvas(nullptr),
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
-        m_textWidget("?"),
-        m_longitude(),
-        m_latitude(),
+        m_textWidget("\\calign?"),
+        m_longitude("2.295"), /* Example data */
+        m_latitude("48.858"), /* Example data */
         m_configurationFilename(""),
         m_httpResponseReceived(false),
         m_relevantResponsePart(""),
@@ -95,10 +95,6 @@ public:
         m_xMutex(nullptr),
         m_requestTimer()
     {
-        /* Example data, used to generate the very first configuration file. */
-        m_longitude = "2.295";
-        m_latitude  = "48.858";
-
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
@@ -148,14 +144,14 @@ public:
      * @param[in] srv       Webserver
      * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override;
+    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
 
     /**
      * Unregister web interface.
      *
      * @param[in] srv   Webserver
      */
-    void unregisterWebInterface(AsyncWebServer& srv) override;
+    void unregisterWebInterface(AsyncWebServer& srv) final;
 
     /**
      * This method will be called in case the plugin is set active, which means
@@ -163,13 +159,13 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) override;
+    void active(IGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
      * it won't be shown on the display anymore.
      */
-    void inactive() override;
+    void inactive() final;
 
     /**
      * Update the display.
@@ -177,26 +173,26 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx);
+    void update(IGfx& gfx) final;
 
    /**
      * Stop the plugin.
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
-    void stop() override;
+    void stop() final;
 
     /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
      */
-    void start() override;
+    void start() final;
 
     /**
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
      */
-    void process(void);
+    void process(void) final;
 
     /**
      * Get geo location.
@@ -227,12 +223,12 @@ private:
     static const int16_t    ICON_HEIGHT         = 8;
 
     /**
-     * Image path within the SPIFFS.
+     * Image path within the filesystem.
      */
     static const char*      IMAGE_PATH;
 
     /**
-     * Configuration path within the SPIFFS.
+     * Configuration path within the filesystem.
      */
     static const char*      CONFIG_PATH;
 
@@ -277,12 +273,12 @@ private:
      *
      * @return If successful it will return true otherwise false.
      */
-    bool requestNewData(void);
+    bool startHttpRequest(void);
 
     /**
      * Register callback function on response reception.
      */
-    void registerResponseCallback(void);
+    void initHttpClient(void);
 
     /**
      * Add the daylight saving (if available) and GMT offset values to the given

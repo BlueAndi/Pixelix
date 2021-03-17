@@ -1,6 +1,6 @@
-var pixelix = {
-    ws: {}
-};
+var pixelix = window.pixelix || {};
+
+pixelix.ws = {};
 
 pixelix.ws.getLogLevelStr = function(logLevel) {
     var str = "";
@@ -33,40 +33,40 @@ pixelix.ws.getLogLevelStr = function(logLevel) {
 
 pixelix.ws.Client = function(options) {
 
-    this.socket     = null;
-    this.cmdQueue   = [];
-    this.pendingCmd = null;
-    this.onEvent    = null;
+    this._socket        = null;
+    this._cmdQueue      = [];
+    this._pendingCmd    = null;
+    this._onEvent       = null;
 
     this._sendCmdFromQueue = function() {
         var msg = "";
 
-        if (0 < this.cmdQueue.length) {
-            this.pendingCmd = this.cmdQueue.shift();
+        if (0 < this._cmdQueue.length) {
+            this._pendingCmd = this._cmdQueue.shift();
 
-            msg = this.pendingCmd.name;
+            msg = this._pendingCmd.name;
 
-            if (null !== this.pendingCmd.par) {
-                msg += ";" + this.pendingCmd.par;
+            if (null !== this._pendingCmd.par) {
+                msg += ";" + this._pendingCmd.par;
             }
 
             console.info("Websocket command: " + msg);
-            this.socket.send(msg);
+            this._socket.send(msg);
         }
     };
 
     this._sendCmd = function(cmd) {
 
-        this.cmdQueue.push(cmd);
+        this._cmdQueue.push(cmd);
 
-        if (null === this.pendingCmd) {
+        if (null === this._pendingCmd) {
             this._sendCmdFromQueue();
         }
     };
 
     this._sendEvt = function(evt) {
-        if (null !== this.onEvent) {
-            this.onEvent(evt);
+        if (null !== this._onEvent) {
+            this._onEvent(evt);
         }
     }
 };
@@ -84,28 +84,28 @@ pixelix.ws.Client.prototype.connect = function(options) {
         } else {
 
             if ("function" === typeof options.onEvent) {
-                this.onEvent = options.onEvent;
+                this._onEvent = options.onEvent;
             }
 
             try {
                 wsUrl = options.protocol + "://" + options.hostname + ":" + options.port + options.endpoint;
-                this.socket = new WebSocket(wsUrl);
+                this._socket = new WebSocket(wsUrl);
 
-                this.socket.onopen = function(openEvent) {
+                this._socket.onopen = function(openEvent) {
                     console.debug("Websocket opened.");
                     resolve(this);
                 }.bind(this);
 
-                this.socket.onclose = function(closeEvent) {
+                this._socket.onclose = function(closeEvent) {
                     console.debug("Websocket closed.");
                     if ("function" === typeof options.onClosed) {
                         options.onClosed();
                     }
 
-                    this.socket = null;
+                    this._socket = null;
                 };
 
-                this.socket.onmessage = function(messageEvent) {
+                this._socket.onmessage = function(messageEvent) {
                     console.debug("Websocket message: " + messageEvent.data);
                     this._onMessage(messageEvent.data);
                 }.bind(this);
@@ -113,9 +113,9 @@ pixelix.ws.Client.prototype.connect = function(options) {
             } catch (exception) {
                 console.error(exception);
 
-                if (null !== this.socket) {
-                    this.socket.close();
-                    this.socket = null;
+                if (null !== this._socket) {
+                    this._socket.close();
+                    this._socket = null;
                 }
 
                 reject();
@@ -126,10 +126,10 @@ pixelix.ws.Client.prototype.connect = function(options) {
 
 pixelix.ws.Client.prototype.disconnect = function(options) {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
-            this.socket.close();
+            this._socket.close();
             resolve();
         }
     }.bind(this));
@@ -149,44 +149,49 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
         rsp.text = data[4].substring(1, data[4].length - 1);
         this._sendEvt(rsp);
     } else {
-        if (null === this.pendingCmd) {
+        if (null === this._pendingCmd) {
             console.error("No pending command, but response received.");
         } else if ("ACK" === status) {
-            if ("GETDISP" === this.pendingCmd.name) {
+            if ("GETDISP" === this._pendingCmd.name) {
                 rsp.slotId = data.shift();
                 rsp.data = [];
                 for(index = 0; index < data.length; ++index) {
                     rsp.data.push(parseInt(data[index], 16));
                 }
-                this.pendingCmd.resolve(rsp);
-            } else if ("BRIGHTNESS" === this.pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("BRIGHTNESS" === this._pendingCmd.name) {
                 rsp.brightness = parseInt(data[0]);
                 rsp.automaticBrightnessControl = (1 === parseInt(data[1])) ? true : false;
-                this.pendingCmd.resolve(rsp);
-            } else if ("INSTALL" === this.pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("BUTTON" === this._pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("EFFECT" === this._pendingCmd.name) {
+                rsp.fadeEffect = parseInt(data[0]);
+                this._pendingCmd.resolve(rsp);
+            } else if ("INSTALL" === this._pendingCmd.name) {
                 rsp.slotId = parseInt(data[0]);
                 rsp.uid = parseInt(data[1]);
-                this.pendingCmd.resolve(rsp);
-            } else if ("IPERF" === this.pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("IPERF" === this._pendingCmd.name) {
                 rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
-                this.pendingCmd.resolve(rsp);
-            } else if ("LOG" === this.pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("LOG" === this._pendingCmd.name) {
                 rsp.isEnabled = (0 === parseInt(data[0])) ? false : true;
-                this.pendingCmd.resolve(rsp);
-            } else if ("MOVE" === this.pendingCmd.name) {
-                this.pendingCmd.resolve(rsp);
-            } else if ("PLUGINS" === this.pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("MOVE" === this._pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("PLUGINS" === this._pendingCmd.name) {
                 rsp.plugins = [];
                 for(index = 0; index < data.length; ++index) {
                     rsp.plugins.push(data[index].substring(1, data[index].length - 1));
                 }
-                this.pendingCmd.resolve(rsp);
-            } else if ("RESET" === this.pendingCmd.name) {
-                this.pendingCmd.resolve(rsp);
-            } else if ("SLOT_DURATION" === this.pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("RESET" === this._pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("SLOT_DURATION" === this._pendingCmd.name) {
                 rsp.duration = parseInt(data[0]);
-                this.pendingCmd.resolve(rsp);
-            } else if ("SLOTS" === this.pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
+            } else if ("SLOTS" === this._pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
                 rsp.slots = [];
                 for(index = 0; index < (data.length / 4); ++index) {
@@ -197,19 +202,19 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                         duration: parseInt(data[4 * index + 3])
                     });
                 }
-                this.pendingCmd.resolve(rsp);
-            } else if ("UNINSTALL" === this.pendingCmd.name) {
-                this.pendingCmd.resolve(rsp);
+                this._pendingCmd.resolve(rsp);
+            } else if ("UNINSTALL" === this._pendingCmd.name) {
+                this._pendingCmd.resolve(rsp);
             } else {
-                console.error("Unknown command: " + this.pendingCmd.name);
-                this.pendingCmd.reject();
+                console.error("Unknown command: " + this._pendingCmd.name);
+                this._pendingCmd.reject();
             }
         } else {
-            console.error("Command " + this.pendingCmd.name + " failed.");
-            this.pendingCmd.reject();
+            console.error("Command " + this._pendingCmd.name + " failed.");
+            this._pendingCmd.reject();
         }
 
-        this.pendingCmd = null;
+        this._pendingCmd = null;
     }
 
     this._sendCmdFromQueue();
@@ -219,7 +224,7 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
 
 pixelix.ws.Client.prototype.getDisplayContent = function() {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
@@ -234,7 +239,7 @@ pixelix.ws.Client.prototype.getDisplayContent = function() {
 
 pixelix.ws.Client.prototype.getSlots = function() {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
@@ -249,7 +254,7 @@ pixelix.ws.Client.prototype.getSlots = function() {
 
 pixelix.ws.Client.prototype.reset = function() {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
@@ -264,7 +269,7 @@ pixelix.ws.Client.prototype.reset = function() {
 
 pixelix.ws.Client.prototype.getBrightness = function() {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
@@ -281,7 +286,7 @@ pixelix.ws.Client.prototype.setBrightness = function(options) {
     return new Promise(function(resolve, reject) {
         var par = "";
 
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else if ("number" !== typeof options.brightness) {
             reject();
@@ -306,7 +311,7 @@ pixelix.ws.Client.prototype.setBrightness = function(options) {
 
 pixelix.ws.Client.prototype.getPlugins = function() {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
@@ -321,7 +326,7 @@ pixelix.ws.Client.prototype.getPlugins = function() {
 
 pixelix.ws.Client.prototype.install = function(options) {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else if ("string" !== typeof options.pluginName) {
             reject();
@@ -338,7 +343,7 @@ pixelix.ws.Client.prototype.install = function(options) {
 
 pixelix.ws.Client.prototype.uninstall = function(options) {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else if ("number" !== typeof options.slotId) {
             reject();
@@ -355,7 +360,7 @@ pixelix.ws.Client.prototype.uninstall = function(options) {
 
 pixelix.ws.Client.prototype.getLog = function(options) {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
@@ -370,7 +375,7 @@ pixelix.ws.Client.prototype.getLog = function(options) {
 
 pixelix.ws.Client.prototype.setLog = function(options) {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else if ("boolean" !== typeof options.enable) {
             reject();
@@ -389,7 +394,7 @@ pixelix.ws.Client.prototype.move = function(options) {
     return new Promise(function(resolve, reject) {
         var par = "";
 
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else if ("number" !== typeof options.uid) {
             reject();
@@ -413,7 +418,7 @@ pixelix.ws.Client.prototype.move = function(options) {
 
 pixelix.ws.Client.prototype.getSlotDuration = function(options) {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else if ("number" !== typeof options.slotId) {
             reject();
@@ -431,7 +436,7 @@ pixelix.ws.Client.prototype.getSlotDuration = function(options) {
 pixelix.ws.Client.prototype.setSlotDuration = function(options) {
     return new Promise(function(resolve, reject) {
         var par = "";
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else if ("number" !== typeof options.slotId) {
             reject();
@@ -455,7 +460,7 @@ pixelix.ws.Client.prototype.setSlotDuration = function(options) {
 
 pixelix.ws.Client.prototype.getIperf = function(options) {
     return new Promise(function(resolve, reject) {
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
@@ -471,7 +476,7 @@ pixelix.ws.Client.prototype.getIperf = function(options) {
 pixelix.ws.Client.prototype.startIperf = function(options) {
     return new Promise(function(resolve, reject) {
         var par = "START";
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
 
@@ -513,12 +518,64 @@ pixelix.ws.Client.prototype.stopIperf = function(options) {
     return new Promise(function(resolve, reject) {
         var par = "STOP";
 
-        if (null === this.socket) {
+        if (null === this._socket) {
             reject();
         } else {
             this._sendCmd({
                 name: "IPERF",
                 par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.triggerButton = function() {
+    return new Promise(function(resolve, reject) {
+        if (null === this._socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "BUTTON",
+                par: null,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.setFadeEffect = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "";
+
+        if (null === this._socket) {
+            reject();
+        } else if ("number" !== typeof options.fadeEffect) {
+            reject();
+        } else {
+
+            par += options.fadeEffect;
+
+            this._sendCmd({
+                name: "EFFECT",
+                par: par,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getFadeEffect = function() {
+    return new Promise(function(resolve, reject) {
+        if (null === this._socket) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "EFFECT",
+                par: null,
                 resolve: resolve,
                 reject: reject
             });

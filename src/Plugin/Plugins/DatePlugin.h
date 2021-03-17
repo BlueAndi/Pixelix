@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -120,12 +120,33 @@ public:
     }
 
     /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void active(IGfx& gfx) final;
+
+    /**
+     * This method will be called in case the plugin is set inactive, which means
+     * it won't be shown on the display anymore.
+     */
+    void inactive() final;
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx);
+    void update(IGfx& gfx) final;
+    
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;
 
     /**
      * Set text, which may contain format tags.
@@ -134,20 +155,6 @@ public:
      */
     void setText(const String& formatText);
 
-   /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void active(IGfx& gfx) override;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() override;
-
     /**
      * Set lamp state.
      *
@@ -155,13 +162,6 @@ public:
      * @param[in] state     Lamp state (true = on / false = off)
      */
     void setLamp(uint8_t lampId, bool state);
-
-    /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     */
-    void process(void) override;
 
 private:
 

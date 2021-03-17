@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,9 +53,6 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/* Initialize Logging instance */
-Logging Logging::m_instance;
 
 /******************************************************************************
  * Public Methods
@@ -159,7 +156,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
         Msg             msg;
 
         va_start(args, format);
-        written = vsnprintf(buffer, MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, format, args);
+        written = vsnprintf(buffer, MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN, format, args); /* NOLINT(clang-analyzer-valist.Uninitialized) */
         va_end(args);
 
         /* If buffer was too small or any other error happended, it shall be shown in the

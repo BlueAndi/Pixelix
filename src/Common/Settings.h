@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
  * @brief  Settings
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup utilities
+ * @addtogroup common
  *
  * @{
  */
@@ -74,7 +74,9 @@ public:
      */
     static Settings& getInstance()
     {
-        return m_instance;
+        static Settings instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -270,8 +272,6 @@ public:
 
 private:
 
-    static Settings m_instance;     /**< Settings instance */
-
     Preferences     m_preferences;                      /**< Persistent storage */
     KeyValue*       m_keyValueList[KEY_VALUE_PAIR_NUM]; /**< List of all key value pairs */
 
@@ -297,7 +297,7 @@ private:
     Settings();
 
     /**
-     * Destroys the i/o pin instance.
+     * Destroys the settings instance.
      */
     ~Settings();
 

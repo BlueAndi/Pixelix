@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -99,10 +99,13 @@ public:
      */
     SimpleTimer& operator=(const SimpleTimer& sTimer)
     {
-        m_isRunning = sTimer.m_isRunning;
-        m_isTimeout = sTimer.m_isTimeout;
-        m_duration  = sTimer.m_duration;
-        m_start     = sTimer.m_start;
+        if (&sTimer != this)
+        {
+            m_isRunning = sTimer.m_isRunning;
+            m_isTimeout = sTimer.m_isTimeout;
+            m_duration  = sTimer.m_duration;
+            m_start     = sTimer.m_start;
+        }
 
         return *this;
     }

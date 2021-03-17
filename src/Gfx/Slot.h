@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -102,7 +102,7 @@ public:
      *
      * @return Duration in ms
      */
-    uint32_t getDuration() const;
+    uint32_t getDuration() const final;
 
     /**
      * Set duration in ms, how long the plugin shall be active.

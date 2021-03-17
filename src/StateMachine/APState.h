@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,7 +70,9 @@ public:
      */
     static APState& getInstance()
     {
-        return m_instance;
+        static APState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -78,21 +80,21 @@ public:
      *
      * @param[in] sm    Responsible state machine
      */
-    void entry(StateMachine& sm);
+    void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
      *
      * @param[in] sm    Responsible state machine
      */
-    void process(StateMachine& sm);
+    void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
      *
      * @param[in] sm    Responsible state machine
      */
-    void exit(StateMachine& sm);
+    void exit(StateMachine& sm) final;
 
     /**
      * Minimum length of the passphrase. Don't change it, because
@@ -113,9 +115,6 @@ public:
     static const uint16_t   DNS_PORT;
 
 private:
-
-    /** Access point state instance */
-    static APState    m_instance;
 
     DNSServer   m_dnsServer;    /**< DNS server, used for captive portal. */
 

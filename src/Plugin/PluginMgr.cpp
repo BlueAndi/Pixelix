@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,9 +60,6 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/* Initialize plugin manager */
-PluginMgr   PluginMgr::m_instance;
 
 /******************************************************************************
  * Public Methods
@@ -184,17 +181,23 @@ void PluginMgr::load()
             const size_t            JSON_DOC_SIZE   = 1024U;
             DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
             DeserializationError    error           = deserializeJson(jsonDoc, installation);
-            const size_t            MAX_USAGE       = 80U;
-            size_t                  usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
-            if (MAX_USAGE < usageInPercent)
+            if (true == jsonDoc.overflowed())
             {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+                LOG_ERROR("JSON document has less memory available.");
+            }
+            else
+            {
+                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
             }
 
-            if (DeserializationError::Ok != error)
+            if (DeserializationError::Ok != error.code())
             {
                 LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+            }
+            else if (false == jsonDoc["slots"].is<JsonArray>())
+            {
+                LOG_WARNING("Invalid JSON format.");
             }
             else
             {
@@ -203,27 +206,31 @@ void PluginMgr::load()
 
                 for(JsonObject jsonSlot: jsonSlots)
                 {
-                    String      name    = jsonSlot["name"];
-                    uint16_t    uid     = jsonSlot["uid"];
-
-                    if (false == name.isEmpty())
+                    if ((true == jsonSlot["name"].is<String>()) &&
+                        (true == jsonSlot["uid"].is<uint16_t>()))
                     {
-                        IPluginMaintenance* plugin = install(name, uid, slotId);
+                        String      name    = jsonSlot["name"].as<String>();
+                        uint16_t    uid     = jsonSlot["uid"].as<uint16_t>();
 
-                        if (nullptr == plugin)
+                        if (false == name.isEmpty())
                         {
-                            LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
-                        }
-                        else
-                        {
-                            plugin->enable();
-                        }
-                    }
+                            IPluginMaintenance* plugin = install(name, uid, slotId);
 
-                    ++slotId;
-                    if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
-                    {
-                        break;
+                            if (nullptr == plugin)
+                            {
+                                LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                            }
+                            else
+                            {
+                                plugin->enable();
+                            }
+                        }
+
+                        ++slotId;
+                        if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -259,21 +266,22 @@ void PluginMgr::save()
         }
     }
 
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
     if (false == settings.open(false))
     {
         LOG_WARNING("Couldn't open filesystem.");
     }
     else
     {
-        const size_t    MAX_USAGE       = 80U;
-        size_t          usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-
-        if (MAX_USAGE < usageInPercent)
-        {
-            LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
-        }
-
-        serializeJson(jsonDoc, installation);
+        (void)serializeJson(jsonDoc, installation);
 
         settings.getPluginInstallation().setValue(installation);
         settings.close();

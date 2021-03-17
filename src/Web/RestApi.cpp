@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@
 #include "Version.h"
 #include "PluginMgr.h"
 #include "WiFiUtil.h"
+#include "FileSystem.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -66,6 +67,13 @@
 static void handleStatus(AsyncWebServerRequest* request);
 static void handleSlots(AsyncWebServerRequest* request);
 static void handlePlugin(AsyncWebServerRequest* request);
+static void handleButton(AsyncWebServerRequest* request);
+static void handleFilesystem(AsyncWebServerRequest* request);
+static void handleFileGet(AsyncWebServerRequest* request);
+static String getContentType(const String& filename);
+static void handleFilePost(AsyncWebServerRequest* request);
+static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
+static void handleFileDelete(AsyncWebServerRequest* request);
 
 /******************************************************************************
  * Local Variables
@@ -92,6 +100,11 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/status", handleStatus);
     (void)srv.on("/rest/api/v1/display/slots", handleSlots);
     (void)srv.on("/rest/api/v1/plugin", handlePlugin);
+    (void)srv.on("/rest/api/v1/button", handleButton);
+    (void)srv.on("/rest/api/v1/fs/file", HTTP_GET, handleFileGet);
+    (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
+    (void)srv.on("/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete);
+    (void)srv.on("/rest/api/v1/fs", handleFilesystem);
 
     return;
 }
@@ -108,8 +121,6 @@ void RestApi::error(AsyncWebServerRequest* request)
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     JsonObject          errorObj        = jsonDoc.createNestedObject("error");
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -121,10 +132,13 @@ void RestApi::error(AsyncWebServerRequest* request)
     errorObj["msg"]     = "Invalid path requested.";
     httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -149,8 +163,6 @@ static void handleStatus(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -210,10 +222,13 @@ static void handleStatus(AsyncWebServerRequest* request)
         httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -234,8 +249,6 @@ static void handleSlots(AsyncWebServerRequest* request)
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -282,10 +295,13 @@ static void handleSlots(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -308,8 +324,6 @@ static void handlePlugin(AsyncWebServerRequest* request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -482,10 +496,540 @@ static void handlePlugin(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * Trigger virtual user button.
+ * Activate next slot:              GET \c "/api/v1/button"
+ * Switch to the next FadeEffect:   POST \c "/api/v1/button?fadeEffect=<FadeEffectId>"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleButton(AsyncWebServerRequest* request)
+{
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST == request->method())
+    {
+        JsonObject  dataObj = jsonDoc.createNestedObject("data");
+        
+        /* Fade effect? */
+        if (false == request->hasArg("fadeEffect"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "fadeEffect is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            String effect = request->arg("fadeEffect");
+
+            DisplayMgr::getInstance().activateNextFadeEffect(static_cast<DisplayMgr::FadeEffect>(effect.toInt()));
+
+            /* Prepare response */
+            dataObj["fadeEffect"]   = effect.toInt();
+            jsonDoc["status"]       = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            httpStatusCode          = HttpStatus::STATUS_CODE_OK;
+        }
+    }
+    else if (HTTP_GET == request->method())
+    {
+        JsonObject  dataObj = jsonDoc.createNestedObject("data");
+
+        UTIL_NOT_USED(dataObj);
+        DisplayMgr::getInstance().activateNextSlot();
+        DisplayMgr::FadeEffect currentFadeEffect = DisplayMgr::getInstance().getFadeEffect();
+
+        /* Prepare response */
+        jsonDoc["status"]       = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        dataObj["fadeEffect"]   = currentFadeEffect;
+        httpStatusCode          = HttpStatus::STATUS_CODE_OK;
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * List files of given directory (?dir=<path>).
+ * 
+ * GET \c "/api/v1/fs"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleFilesystem(AsyncWebServerRequest* request)
+{
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 2048U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        const String&   path                = request->arg("dir");
+        const String&   pageStr             = request->arg("page");
+        File            fdRoot              = FILESYSTEM.open(path, "r");
+        JsonArray       jsonData            = jsonDoc.createNestedArray("data");
+        const uint32_t  DEFAULT_MAX_FILES   = 15U;
+        uint32_t        count               = DEFAULT_MAX_FILES;
+        uint32_t        page                = 0U;
+        uint32_t        preCount            = page * count;
+
+        if (false == pageStr.isEmpty())
+        {
+            if (true == Util::strToUInt32(pageStr, page))
+            {
+                preCount = page * count;
+            }
+        }
+
+        if (false == fdRoot)
+        {
+            LOG_WARNING("Invalid path.");
+        }
+        else
+        {
+            if (false == fdRoot.isDirectory())
+            {
+                LOG_WARNING("Requested path is not a directory.");
+            }
+            else
+            {
+                File fd = fdRoot.openNextFile();
+
+                while((true == fd) && (0U < count))
+                {
+                    /* Page handling */
+                    if (0U < preCount)
+                    {
+                        --preCount;
+                    }
+                    else
+                    {
+                        JsonObject jsonFile = jsonData.createNestedObject();
+
+                        jsonFile["name"] = String(fd.name());
+                        jsonFile["size"] = fd.size();
+
+                        if (true == fd.isDirectory())
+                        {
+                            jsonFile["type"] = "dir";
+                        }
+                        else
+                        {
+                            jsonFile["type"] = "file";
+                        }
+
+                        --count;
+                    }
+
+                    fd.close();
+
+                    if (0U < count)
+                    {
+                        fd = fdRoot.openNextFile();
+                    }
+                }
+            }
+
+            if (true == jsonDoc.overflowed())
+            {
+                LOG_WARNING("JSON document has less memory.");
+            }
+
+            fdRoot.close();
+        }
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * Read file from filesystem (?path=<path>).
+ * 
+ * GET \c "/api/v1/fs/file"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleFileGet(AsyncWebServerRequest* request)
+{
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+
+        if (true == jsonDoc.overflowed())
+        {
+            LOG_ERROR("JSON document has less memory available.");
+        }
+        else
+        {
+            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+        }
+
+        (void)serializeJsonPretty(jsonDoc, content);
+        request->send(httpStatusCode, "application/json", content);
+    }
+    else
+    {
+        const String& path = request->arg("path");
+
+        LOG_INFO("File \"%s\" requested.", path.c_str());
+
+        if (false == FILESYSTEM.exists(path))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = String("Invalid path ") + path;
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+
+            if (true == jsonDoc.overflowed())
+            {
+                LOG_ERROR("JSON document has less memory available.");
+            }
+            else
+            {
+                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+            }
+
+            (void)serializeJsonPretty(jsonDoc, content);
+            request->send(httpStatusCode, "application/json", content);
+        }
+        else
+        {
+            request->send(FILESYSTEM, path, getContentType(path));
+        }
+    }
+
+    return;
+}
+
+/**
+ * Get content type of file.
+ * 
+ * @param[in] filename  Name of file
+ * 
+ * @return The file specific content type.
+ */
+static String getContentType(const String& filename)
+{
+    String contentType = "text/plain";
+
+    if (filename.endsWith(".html"))
+    {
+        contentType = "text/html";
+    }
+    else if (filename.endsWith(".css"))
+    {
+        contentType = "text/css";
+    }
+    else if (filename.endsWith(".js"))
+    {
+        contentType = "application/javascript";
+    }
+    else if (filename.endsWith(".png"))
+    {
+        contentType = "image/png";
+    }
+    else if (filename.endsWith(".gif"))
+    {
+        contentType = "image/gif";
+    }
+    else if (filename.endsWith(".jpg"))
+    {
+        contentType = "image/jpeg";
+    }
+    else if (filename.endsWith(".ico"))
+    {
+        contentType = "image/x-icon";
+    }
+    else if (filename.endsWith(".xml"))
+    {
+        contentType = "text/xml";
+    }
+    else if (filename.endsWith(".pdf"))
+    {
+        contentType = "application/x-pdf";
+    }
+    else if (filename.endsWith(".zip"))
+    {
+        contentType = "application/x-zip";
+    }
+    else if (filename.endsWith(".gz"))
+    {
+        contentType = "application/x-gzip";
+    }
+
+    return contentType;
+}
+
+/**
+ * Write file to filesystem (?path=<path>).
+ * 
+ * POST \c "/api/v1/fs/file"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleFilePost(AsyncWebServerRequest* request)
+{
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        JsonObject dataObj = jsonDoc.createNestedObject("data");
+
+        UTIL_NOT_USED(dataObj);
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * File upload handler.
+ *
+ * @param[in] request   HTTP request.
+ * @param[in] filename  Name of the uploaded file.
+ * @param[in] index     Current file offset.
+ * @param[in] data      Next data part of file, starting at offset.
+ * @param[in] len       Data part size in byte.
+ * @param[in] final     Is final packet or not.
+ */
+static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+{
+    static File fd;
+    bool        isError = false;
+
+    /* Begin of upload? */
+    if (0 == index)
+    {
+        fd = FILESYSTEM.open(filename, "w");
+
+        if (false == fd)
+        {
+            isError = true;
+        }
+        else
+        {
+            LOG_INFO("Receiving file %s.", filename.c_str());
+        }
+    }
+
+    if (true == fd)
+    {
+        (void)fd.write(data, len);
+    }
+
+    if ((true == final) &&
+        (false == isError))
+    {        
+        LOG_INFO("File %s successful written.", filename.c_str());
+
+        fd.close();
+    }
+    else if (true == isError)
+    {
+        LOG_INFO("File %s upload aborted.", filename.c_str());
+
+        fd.close();
+    }
+
+    if (true == isError)
+    {
+        /* Inform client about abort.*/
+        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "text/plain", "Upload aborted.");
+    }
+
+    return;
+}
+
+/**
+ * Delete file from filesystem (?path=<path>).
+ * 
+ * DELETE \c "/api/v1/fs/file"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleFileDelete(AsyncWebServerRequest* request)
+{
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_DELETE != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        const String& path = request->arg("path");
+
+        LOG_INFO("File \"%s\" removal requested.", path.c_str());
+
+        if (false == FILESYSTEM.remove(path))
+        {
+            JsonObject dataObj = jsonDoc.createNestedObject("data");
+
+            UTIL_NOT_USED(dataObj);
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        }
+        else
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "Failed to remove file.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);

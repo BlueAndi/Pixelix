@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,6 +45,10 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <Widget.hpp>
+
+#ifndef NATIVE
+#include <FS.h>
+#endif  /* NATIVE */
 
 /******************************************************************************
  * Macros
@@ -170,11 +174,12 @@ public:
     /**
      * Load bitmap image from filesystem.
      *
+     * @param[in] fs        Filesystem
      * @param[in] filename  Filename with full path
      *
      * @return If successful loaded it will return true otherwise false.
      */
-    bool load(const String& filename);
+    bool load(FS& fs, const String& filename);
 
     #endif  /* NATIVE */
 

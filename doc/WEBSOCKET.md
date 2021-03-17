@@ -23,6 +23,8 @@
   - [Enable/Disable iperf](#enabledisable-iperf)
     - [Is iperf enabled?](#is-iperf-enabled)
     - [Start/Stop iperf server](#startstop-iperf-server)
+  - [Trigger virtual user button](#trigger-virtual-user-button)
+  - [Switch to next fade effect](#switch-to-next-fade-effect)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -214,6 +216,32 @@ Response:
   * ```<is-enabled>```: 0 means disabled and 1 enabled
 * Failed:
   * ```NACK```
+
+## Trigger virtual user button
+Command: ```BUTTON```
+
+Parameter:
+* N/A
+
+Response:
+* Successful:
+    * ```ACK```
+* Failed:
+    * ```NACK```
+
+## Switch to next fade effect
+Command: ```EFFECT```
+
+Parameter:
+* N/A
+
+Response:
+* Successful:
+    * ```ACK;<fadeEffect>```
+    * ```<fadeEffect>```: ID of the fade effect
+
+* Failed:
+    * ```NACK```
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

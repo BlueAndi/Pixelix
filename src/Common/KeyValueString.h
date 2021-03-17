@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,7 +86,7 @@ public:
      *
      * @return Value type
      */
-    Type getValueType() const
+    Type getValueType() const final
     {
         return TYPE_STRING;
     }
@@ -96,7 +96,7 @@ public:
      *
      * @return User friendly name
      */
-    const char* getName() const
+    const char* getName() const final
     {
         return m_name;
     }
@@ -106,7 +106,7 @@ public:
      *
      * @return Key
      */
-    const char* getKey() const
+    const char* getKey() const final
     {
         return m_key;
     }

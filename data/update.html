@@ -39,50 +39,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto">
-                        <li class="nav-item active">
-                            <a class="nav-link" href="/index.html">Home <span class="sr-only">(current)</span></a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/display.html">Display</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins</a>
-                            <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
-                                <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
-                                <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
-                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
-                                <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
-                                <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
-                                <a class="dropdown-item" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
-                                <a class="dropdown-item" href="/plugins/IconTextLampPlugi.html">IconTextLamp Plugin</a>
-                                <a class="dropdown-item" href="/plugins/IconTextPlugin.html">IconText Plugin</a>
-                                <a class="dropdown-item" href="/plugins/JustTextPlugin.html">JustText Plugin</a>
-                                <a class="dropdown-item" href="/plugins/RainbowPlugin.html">Rainbow Plugin</a>
-                                <a class="dropdown-item" href="/plugins/ShellyPlugSPlugin.html">Sunrise Plugin</a>
-                                <a class="dropdown-item" href="/plugins/SunrisePlugin.html">Sunrise Plugin</a>
-                                <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
-                                <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
-                                <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
-                                <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/settings.html">Settings</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/update.html">Update</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="developmentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Development</a>
-                            <div class="dropdown-menu" aria-labelledby="developmentDropdown">
-                                <a class="dropdown-item" href="/info.html">Info</a>
-                                <a class="dropdown-item" href="/debug.html">Debug</a>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/about.html">About</a>
-                        </li>
+                    <ul class="navbar-nav mr-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -112,15 +69,18 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2021 by Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
-        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
-        <script type="text/javascript" src="/js/popper.min.js"></script>
-        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
 
         <!-- Custom javascript -->
         <script>
@@ -135,36 +95,6 @@
                 $("main :button").prop("disabled", false);
             }
 
-            function makeRequest(options) {
-                var xhr = new XMLHttpRequest();
-
-                xhr.open(options.method, options.url);
-
-                if ("function" === typeof options.onProgress) {
-                    xhr.upload.onprogress = options.onProgress;
-                }
-
-                xhr.onload = function() {
-                    if (200 === xhr.status) {
-                        options.onDone(null, xhr.response);
-                    } else {
-                        options.onDone(xhr.response, null);
-                    }
-                };
-
-                xhr.onerror = function() {
-                    options.onDone(xhr.response);
-                };
-
-                if ("undefined" !== typeof options.headers) {
-                    Object.keys(options.headers).forEach(function(key) {
-                        xhr.setRequestHeader(key, options.headers[key]);
-                    });
-                }
-
-                xhr.send(options.params);
-            }
-
             function updateProgress(evt) {
                 var progress = 0;
 
@@ -177,9 +107,8 @@
             }
 
             function upload() {
-                var file = document.getElementById("inputFile").files[0];
-                var formData = new FormData();
-                var fileSize = file.size;
+                var file        = document.getElementById("inputFile").files[0];
+                var fileSize    = file.size;
 
                 $("#progressBar").css("width", "0%").attr("aria-valuenow", 0);
 
@@ -196,33 +125,31 @@
 
                     disableUI();
 
-                    formData.append("file", file);
-
-                    makeRequest({
+                    utils.makeRequest({
                         method: "POST",
                         url: "/upload.html",
-                        params: formData,
+                        parameter: {
+                            file: file
+                        },
                         headers: {
                             "X-File-Size": fileSize
                         },
-                        onDone: function(err, data) {
-                            if (null !== err) {
-                                alert(err);
-                            } else {
-                                alert("Upload successful.");
-                            }
-
-                            enableUI();
-                        },
                         onProgress: updateProgress
+                    }).then(function(rsp) {
+                        alert("Upload successful.");
+                    }).catch(function(rsp) {
+                        alert("Error: " + rsp);
+                    }).finally(function() {
+                        enableUI();
                     });
                 }
             }
 
             /* Execute after page is ready. */
             $(document).ready(function() {
-
-                $("#inputFile").on("change", function(){
+                menu.create("menu");
+                
+                $("#inputFile").on("change", function() {
                     var fileName = $(this).val().split("\\").pop();
                     $(this).next(".custom-file-label").addClass("selected").html(fileName);
                 });

@@ -39,50 +39,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <ul class="navbar-nav mr-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/index.html">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/display.html">Display</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="pluginsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Plugins</a>
-                            <div class="dropdown-menu" aria-labelledby="pluginsDropdown">
-                                <a class="dropdown-item" href="/plugins/CountdownPlugin.html">Countdown Plugin</a>
-                                <a class="dropdown-item" href="/plugins/DatePlugin.html">Date Plugin</a>
-                                <a class="dropdown-item" href="/plugins/DateTimePlugin.html">DateTime Plugin</a>
-                                <a class="dropdown-item" href="/plugins/FirePlugin.html">Fire Plugin</a>
-                                <a class="dropdown-item" href="/plugins/GameOfLifePlugin.html">GameOfLife Plugin</a>
-                                <a class="dropdown-item" href="/plugins/GruenbeckPlugin.html">Gruenbeck Plugin</a>
-                                <a class="dropdown-item" href="/plugins/IconTextLampPlugi.html">IconTextLamp Plugin</a>
-                                <a class="dropdown-item" href="/plugins/IconTextPlugin.html">IconText Plugin</a>
-                                <a class="dropdown-item" href="/plugins/JustTextPlugin.html">JustText Plugin</a>
-                                <a class="dropdown-item" href="/plugins/RainbowPlugin.html">Rainbow Plugin</a>
-                                <a class="dropdown-item" href="/plugins/ShellyPlugSPlugin.html">Sunrise Plugin</a>
-                                <a class="dropdown-item" href="/plugins/SunrisePlugin.html">Sunrise Plugin</a>
-                                <a class="dropdown-item" href="/plugins/SysMsgPlugin.html">SysMsg Plugin</a>
-                                <a class="dropdown-item" href="/plugins/TestPlugin.html">Test Plugin</a>
-                                <a class="dropdown-item" href="/plugins/TimePlugin.html">Time Plugin</a>
-                                <a class="dropdown-item" href="/plugins/WifiStatusPlugin.html">WifiStatus Plugin</a>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/settings.html">Settings</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/update.html">Update</a>
-                        </li>
-                        <li class="nav-item dropdown active">
-                            <a class="nav-link dropdown-toggle" href="#" id="developmentDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Development</a>
-                            <div class="dropdown-menu" aria-labelledby="developmentDropdown">
-                                <a class="dropdown-item" href="/info.html">Info</a>
-                                <a class="dropdown-item active" href="/debug.html">Debug <span class="sr-only">(current)</a>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/about.html">About</a>
-                        </li>
+                    <ul class="navbar-nav mr-auto" id="menu">
                     </ul>
                 </div>
             </nav>
@@ -99,10 +56,19 @@
                 </ul>
                 <div class="tab-content" id="myTabContent">
                     <div class="tab-pane fade show active" id="logging" role="tabpanel" aria-labelledby="logging-tab">
-                        <p>Start/Stop logging:</p>
-                        <p>
-                            <button class="btn btn-light" id="buttonLog" type="button" onclick="toggleLogging();" disabled>Start</button>
-                        </p>
+                        <br />
+                        <div class="btn-toolbar" role="toolbar" aria-label="Log Toolbar">
+                            <div class="btn-group mr-2" role="group" aria-label="Log Control">
+                                <button class="btn btn-light" id="buttonLog" type="button" onclick="toggleLogging();" disabled>Start</button>
+                                <button class="btn btn-light" type="button" onclick="clearLog();" disabled>Clear</button>
+                            </div>
+                            <div class="btn-group mr-2" role="group" aria-label="Log Levels">
+                                <button type="button" class="btn btn-outline-info active" id="buttonInfo" aria-pressed="true">INFO</button>
+                                <button type="button" class="btn btn-outline-warning active" id="buttonWarning" aria-pressed="true">WARNING</button>
+                                <button type="button" class="btn btn-outline-danger active" id="buttonError" aria-pressed="true"">ERROR</button>
+                                <button type="button" class="btn btn-outline-danger active" id="buttonFatal" aria-pressed="true"">FATAL</button>
+                            </div>
+                        </div>
                         <p>Note, only the last 40 messages are shown.</p>
                         <div class="table-responsive">
                             <table class="table table-striped" id="loggingOutput">
@@ -139,26 +105,42 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2020 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2021 by Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
-        <!-- jQuery, Popper.js, and Bootstrap JS -->
+        <!-- jQuery, and Bootstrap JS bundle -->
         <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
-        <script type="text/javascript" src="/js/popper.min.js"></script>
-        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix websocket library -->
         <script type="text/javascript" src="/js/ws.js"></script>
         <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
-    
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+
         <!-- Custom javascript -->
         <script>
-            var wsClient                = null;     /* Websocket client */
-            var maxLogs                 = 40;       /* Max. number of stored log messages */
+            var wsClient                = new pixelix.ws.Client();
+            var maxLogs                 = 40;   /* Max. number of stored log messages. */
             var isPageUnload            = false;
             var isLoggingEnabled        = false;
             var isMeasurementEnabled    = false;
+            var filter                  = ["INFO", "WARNING", "ERROR", "FATAL"];
+
+            function toggleLogLevel(logLevel) {
+                var index = filter.indexOf(logLevel);
+                                
+                if (0 > index) {
+                    filter.push(logLevel);
+                } else {
+                    filter.splice(index, 1);
+                }
+            }
+
+            function clearLog() {
+                $("#loggingOutput > tbody").empty();
+            }
 
             /* If websocket connection is unexpectedly closed, alert the user. */
             function wsOnClosed() {
@@ -171,25 +153,30 @@
 
             /* Handle every websocket event. */
             function wsOnEvent(evt) {
-                var row = "";
-                var rowCount = $("#loggingOutput > tbody tr").length;
+                var logLevel        = pixelix.ws.getLogLevelStr(evt.level);
+                var index           = filter.indexOf(logLevel);
+                var $row            = $("<tr>");
+                var $colTimestamp   = $("<td>").text(evt.timestamp);
+                var $colLogLevel    = $("<td>").text(pixelix.ws.getLogLevelStr(evt.level));
+                var $colFilename    = $("<td>").text(evt.filename);
+                var $colLine        = $("<td>").text(evt.line);
+                var $colText        = $("<td>").text(evt.text);
+                var rowCount        = $("#loggingOutput > tbody tr").length;
 
-                if (maxLogs < rowCount) {
-                    $("#loggingOutput > tbody").deleteRow(1);
+                if (0 <= index) {
+
+                    if (maxLogs < rowCount) {
+                        $("#loggingOutput > tbody > tr:first-child").remove();
+                    }
+
+                    $($row).append($colTimestamp)
+                        .append($colLogLevel)
+                        .append($colFilename)
+                        .append($colLine)
+                        .append($colText);
+
+                    $("#loggingOutput > tbody").append($row);
                 }
-
-                row += "<tr><td>";
-                row += evt.timestamp;
-                row += "</td><td>"
-                row += pixelix.ws.getLogLevelStr(evt.level);
-                row += "</td><td>"
-                row += evt.filename;
-                row += "</td><td>"
-                row += evt.line;
-                row += "</td><td>"
-                row += evt.text;
-
-                $("#loggingOutput > tbody").append(row);
             }
 
             /* Disable all UI elements. */
@@ -210,6 +197,7 @@
                     enable: (false === isLoggingEnabled) ? true : false
                 }).then(function(rsp) {
                     isLoggingEnabled = rsp.isEnabled;
+
                     if (false == rsp.isEnabled) {
                         $("#buttonLog").text("Start");
                     } else {
@@ -243,11 +231,13 @@
                     enable: (false === isMeasurementEnabled) ? true : false
                 }).then(function(rsp) {
                     isMeasurementEnabled = rsp.isEnabled;
+
                     if (false == rsp.isEnabled) {
                         $("#buttonMeasurement").text("Start");
                     } else {
                         $("#buttonMeasurement").text("Stop");
                     }
+
                     alert("Ok.");
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
@@ -261,7 +251,31 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
-                wsClient = new pixelix.ws.Client();
+                menu.create("menu");
+
+                $("#buttonInfo").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
+
+                $("#buttonWarning").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
+
+                $("#buttonError").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
+
+                $("#buttonFatal").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
 
                 /* Connect to pixelix */
                 wsClient.connect({

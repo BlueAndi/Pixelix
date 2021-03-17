@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,11 +37,12 @@
 #include "Settings.h"
 #include "ShellyPlugSPlugin.h"
 #include "RestApi.h"
-
 #include "time.h"
+#include "FileSystem.h"
+
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <SPIFFS.h>
+#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -117,7 +118,7 @@ void ShellyPlugSPlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load(IMAGE_PATH);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
 
             m_iconCanvas->update(gfx);
         }
@@ -184,8 +185,8 @@ void ShellyPlugSPlugin::start()
         }
     }
 
-    registerResponseCallback();
-    if (false == requestNewData())
+    initHttpClient();
+    if (false == startHttpRequest())
     {
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
     }
@@ -205,7 +206,7 @@ void ShellyPlugSPlugin::stop()
 
     m_requestTimer.stop();
 
-    if (false != SPIFFS.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
@@ -217,10 +218,12 @@ void ShellyPlugSPlugin::stop()
 
 void ShellyPlugSPlugin::process()
 {
+    lock();
+
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
-        if (false == requestNewData())
+        if (false == startHttpRequest())
         {
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
         }
@@ -229,6 +232,10 @@ void ShellyPlugSPlugin::process()
             m_requestTimer.start(UPDATE_PERIOD);
         }
     }
+
+    unlock();
+
+    return;
 }
 
 void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
@@ -270,8 +277,6 @@ void ShellyPlugSPlugin::webReqHandler(AsyncWebServerRequest *request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -294,7 +299,7 @@ void ShellyPlugSPlugin::webReqHandler(AsyncWebServerRequest *request)
     else if (HTTP_POST == request->method())
     {
         /* Argument missing? */
-        if (false == request->hasArg("ipAddress"))
+        if (false == request->hasArg("set"))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -305,7 +310,7 @@ void ShellyPlugSPlugin::webReqHandler(AsyncWebServerRequest *request)
         }
         else
         {
-            setIPAddress(request->arg("ipAddress"));
+            setIPAddress(request->arg("set"));
 
             /* Prepare response */
             (void)jsonDoc.createNestedObject("data");
@@ -323,10 +328,13 @@ void ShellyPlugSPlugin::webReqHandler(AsyncWebServerRequest *request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -335,7 +343,7 @@ void ShellyPlugSPlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-bool ShellyPlugSPlugin::requestNewData()
+bool ShellyPlugSPlugin::startHttpRequest()
 {
     bool    status  = false;
     String  url     = String("http://") + m_ipAddress + "/meter/0/";
@@ -358,75 +366,79 @@ bool ShellyPlugSPlugin::requestNewData()
 
     return status;
 }
-void ShellyPlugSPlugin::registerResponseCallback()
+void ShellyPlugSPlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                  payloadSize     = 0U;
-        const char*             payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        size_t                  payloadIndex    = 0U;
-        String                  payloadStr;
-        const size_t            JSON_DOC_SIZE   = 768U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        String                  power;
-        JsonObject              results;
-        JsonObject              obj;
-
-        while(payloadSize > payloadIndex)
-        {
-            payloadStr += payload[payloadIndex];
-            ++payloadIndex;
-        }
+        size_t                          payloadSize             = 0U;
+        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        const size_t                    JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
+        const size_t                    FILTER_SIZE             = 128U;
+        StaticJsonDocument<FILTER_SIZE> filter;
+        DeserializationError            error;
 
         m_httpResponseReceived = true;
 
-        if (DeserializationError::Ok != deserializeJson(jsonDoc, payloadStr))
+        filter["power"] = true;
+
+        if (true == filter.overflowed())
         {
-            LOG_ERROR("Invalid JSON message received.");
+            LOG_ERROR("Less memory for filter available.");
+        }
+        
+        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+        if (DeserializationError::Ok != error.code())
+        {
+            LOG_WARNING("JSON parse error: %s", error.c_str());
+        }
+        else if (false == jsonDoc["power"].is<float>())
+        {
+            LOG_WARNING("JSON power type missmatch or missing.");
         }
         else
         {
-            const size_t    MAX_USAGE       = 80U;
-            size_t          usageInPercent  = 0U;
+            String power;
 
-            obj     = jsonDoc.as<JsonObject>();
-            power = obj["power"].as<String>();
+            power = jsonDoc["power"].as<String>();
+            power += " W";
             
             lock();
-
-            m_relevantResponsePart = power + " W ";
-            m_textWidget.setFormatStr(m_relevantResponsePart);
-
+            m_textWidget.setFormatStr(power);
             unlock();
 
-            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-            if (MAX_USAGE < usageInPercent)
+            if (true == jsonDoc.overflowed())
             {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+                LOG_ERROR("JSON document has less memory available.");
+            }
+            else
+            {
+                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
             }
         }
+    });
+
+    m_client.regOnError([this]() {
+        LOG_WARNING("Connection error happened.");
     });
 }
 
 bool ShellyPlugSPlugin::saveConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "w");
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    jsonDoc["shellyPlugSIP"] = m_ipAddress;
+    
+    if (false == jsonFile.save(m_configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to save file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-
-        jsonDoc["shellyPlugSIP"] = m_ipAddress;
-
-        (void)serializeJson(jsonDoc, fd);
-        fd.close();
-
         LOG_INFO("File %s saved.", m_configurationFilename.c_str());
     }
 
@@ -435,33 +447,24 @@ bool ShellyPlugSPlugin::saveConfiguration()
 
 bool ShellyPlugSPlugin::loadConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    if (false == jsonFile.load(m_configurationFilename, jsonDoc))
     {
         LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
         status = false;
     }
+    else if (false == jsonDoc["shellyPlugSIP"].is<String>())
+    {
+        LOG_WARNING("shellyPlugSIP not found or invalid type.");
+        status = false;
+    }
     else
     {
-        const size_t            JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
-
-        if (DeserializationError::Ok != error)
-        {
-            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
-            status = false;
-        }
-        else
-        {
-            JsonObject obj = jsonDoc.as<JsonObject>();
-
-            m_ipAddress = obj["shellyPlugSIP"].as<String>();
-        }
-
-        fd.close();
+        m_ipAddress = jsonDoc["shellyPlugSIP"].as<String>();
     }
 
     return status;
@@ -469,9 +472,9 @@ bool ShellyPlugSPlugin::loadConfiguration()
 
 void ShellyPlugSPlugin::createConfigDirectory()
 {
-    if (false == SPIFFS.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(CONFIG_PATH))
     {
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         }

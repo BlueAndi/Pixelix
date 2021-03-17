@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -65,6 +65,8 @@
 AsyncHttpClient::AsyncHttpClient() :
     m_tcpClient(),
     m_onRspCallback(nullptr),
+    m_onClosedCallback(),
+    m_onErrorCallback(),
     m_hostname(),
     m_port(0U),
     m_base64Authorization(),
@@ -240,7 +242,15 @@ bool AsyncHttpClient::begin(const String& url)
                 LOG_INFO("Host: %s", m_hostname.c_str());
                 LOG_INFO("Port: %u", m_port);
                 LOG_INFO("URI: %s", m_uri.c_str());
-                LOG_INFO("Authorization: %s", auth.c_str());
+
+                if (true == auth.isEmpty())
+                {
+                    LOG_INFO("Authorization: -");
+                }
+                else
+                {
+                    LOG_INFO("Authorization: %s", auth.c_str());
+                }
             }
         }
 
@@ -340,6 +350,11 @@ void AsyncHttpClient::regOnResponse(const OnResponse& onResponse)
 void AsyncHttpClient::regOnClosed(const OnClosed& onClosed)
 {
     m_onClosedCallback = onClosed;
+}
+
+void AsyncHttpClient::regOnError(const OnError& onError)
+{
+    m_onErrorCallback = onError;
 }
 
 bool AsyncHttpClient::GET()
@@ -461,9 +476,19 @@ void AsyncHttpClient::onDisconnect(AsyncClient* client)
 
 void AsyncHttpClient::onError(AsyncClient* client, int8_t error)
 {
+    const char* errorDescription = errorToStr(error);
     UTIL_NOT_USED(client);
 
-    LOG_WARNING("Error occurred: %d", error);
+    if (nullptr != errorDescription)
+    {
+        LOG_WARNING("Error occurred: %d - %s", error, errorDescription);
+    }
+    else
+    {
+        LOG_WARNING("Error occurred: %d", error);
+    }
+
+    notifyError();
     disconnect();
 }
 
@@ -1110,6 +1135,14 @@ void AsyncHttpClient::notifyClosed()
     }
 }
 
+void AsyncHttpClient::notifyError()
+{
+    if (nullptr != m_onErrorCallback)
+    {
+        m_onErrorCallback();
+    }
+}
+
 String AsyncHttpClient::urlEncode(const String& str)
 {
     String      encodedStr;
@@ -1169,6 +1202,79 @@ String AsyncHttpClient::urlEncode(const String& str)
     }
 
     return encodedStr;
+}
+
+const char* AsyncHttpClient::errorToStr(int8_t error)
+{
+    const char* errorDescription = nullptr;
+
+    switch(error)
+    {
+    case ERR_MEM:
+        errorDescription = "Out of memory error.";
+        break;
+    
+    case ERR_BUF:
+        errorDescription = "Buffer error.";
+        break;
+
+    case ERR_TIMEOUT:
+        errorDescription = "Timeout error.";
+        break;
+
+    case ERR_RTE:
+        errorDescription = "Routing problem.";
+        break;
+
+    case ERR_INPROGRESS:
+        errorDescription = "Operatin in progress.";
+        break;
+
+    case ERR_VAL:
+        errorDescription = "Illegal value.";
+        break;
+
+    case ERR_WOULDBLOCK:
+        errorDescription = "Operation would block.";
+        break;
+
+    case ERR_USE:
+        errorDescription = "Address in use.";
+        break;
+
+    case ERR_ALREADY:
+        errorDescription = "Connection already established.";
+        break;
+
+    case ERR_CONN:
+        errorDescription = "Not connected.";
+        break;
+
+    case ERR_IF:
+        errorDescription = "Low-level netif error.";
+        break;
+
+    case ERR_ABRT:
+        errorDescription = "Connection aborted.";
+        break;
+
+    case ERR_RST:
+        errorDescription = "Connection reset.";
+        break;
+
+    case ERR_CLSD:
+        errorDescription = "Connection closed.";
+        break;
+
+    case ERR_ARG:
+        errorDescription = "Illegal argument.";
+        break;
+
+    default:
+        break;
+    }
+
+    return errorDescription;
 }
 
 /******************************************************************************

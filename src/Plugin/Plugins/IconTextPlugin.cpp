@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,10 +34,10 @@
  *****************************************************************************/
 #include "IconTextPlugin.h"
 #include "RestApi.h"
+#include "FileSystem.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <SPIFFS.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -79,7 +79,7 @@ void IconTextPlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* If there is already a icon in the filesystem, load it. */
-            (void)m_bitmapWidget.load(getFileName());
+            (void)m_bitmapWidget.load(FILESYSTEM, getFileName());
         }
     }
 
@@ -218,7 +218,7 @@ bool IconTextPlugin::loadBitmap(const String& filename)
     bool status = false;
 
     lock();
-    status = m_bitmapWidget.load(filename);
+    status = m_bitmapWidget.load(FILESYSTEM, filename);
     unlock();
 
     return status;
@@ -238,8 +238,6 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -291,10 +289,13 @@ void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -309,8 +310,6 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -354,10 +353,13 @@ void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -386,9 +388,9 @@ void IconTextPlugin::iconUploadHandler(AsyncWebServerRequest *request, const Str
             /* All uploaded bitmaps shall be in a dedicated folder.
              * This folder may not be created yet.
              */
-            if (false == SPIFFS.exists(UPLOAD_PATH))
+            if (false == FILESYSTEM.exists(UPLOAD_PATH))
             {
-                if (false == SPIFFS.mkdir(UPLOAD_PATH))
+                if (false == FILESYSTEM.mkdir(UPLOAD_PATH))
                 {
                     LOG_ERROR("Couldn't create directory: %s", UPLOAD_PATH);
                     m_isUploadError = true;
@@ -396,7 +398,7 @@ void IconTextPlugin::iconUploadHandler(AsyncWebServerRequest *request, const Str
             }
 
             /* Create a new file and overwrite a existing one. */
-            m_fd = SPIFFS.open(getFileName(), "w");
+            m_fd = FILESYSTEM.open(getFileName(), "w");
 
             if (false == m_fd)
             {

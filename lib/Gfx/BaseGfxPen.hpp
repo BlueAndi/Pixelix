@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,17 +66,6 @@ template < typename TColor >
 class BaseGfxPen
 {
 public:
-
-    /**
-     * Constructs a base graphics pen.
-     */
-    BaseGfxPen(BaseGfx& gfx) :
-        m_gfx(gfx),
-        m_color(),
-        m_x(0),
-        m_y(0)
-    {
-    }
 
     /**
      * Destroys a graphics pen.
@@ -164,6 +153,17 @@ protected:
     TColor              m_color;    /**< Pen color */
     int16_t             m_x;        /**< Pen x-coordinate */
     int16_t             m_y;        /**< Pen y-coordinate */
+
+    /**
+     * Constructs a base graphics pen.
+     */
+    BaseGfxPen(BaseGfx& gfx) :
+        m_gfx(gfx),
+        m_color(),
+        m_x(0),
+        m_y(0)
+    {
+    }
 };
 
 /******************************************************************************

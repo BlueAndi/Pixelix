@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css">
+        <link rel="stylesheet" type="text/css" href="/style/style.css">
+        <style>
+            .bd-placeholder-img {
+                font-size: 1.125rem;
+                text-anchor: middle;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+
+            @media (min-width: 768px) {
+                .bd-placeholder-img-lg {
+                    font-size: 3.5rem;
+                }
+            }
+
+            #editor { 
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+            }
+        </style>
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header text-dark">
+                            <h5 class="modal-title" id="modalTitle"></h5>
+                        </div>
+                        <div class="modal-body text-dark" id="modalMessage">
+                        </div>
+                        <div class="modal-footer text-dark">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="mt-1">File Editor</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        <h2 class="mt-1">Files</h2>
+                        <ul class="nav nav-pills flex-column" id="files"></ul>
+                    </div>
+                    <div class="col-9">
+                        <div class="collapse show" id="editor"></div>
+                        <div class="collapse" id="preview"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2021 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+        <!-- The high performance code editor Ace. -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" referrerpolicy="origin"></script>
+
+        <!-- Custom javascript -->
+        <script>
+            var editor      = null;
+            var loadedFile  = "";
+            var restClient  = new pixelix.rest.Client();
+            var supportedFileTypes = [{
+                name: "bmp",
+                lang: null,
+                type: "image"
+            }, {
+                name: "css",
+                lang: "css",
+                type: "text"
+            }, {
+                name: "gif",
+                lang: null,
+                type: "image"
+            }, {
+                name: "htm",
+                lang: "html",
+                type: "text"
+            }, {
+                name: "html",
+                lang: "html",
+                type: "text"
+            }, {
+                name: "jpg",
+                lang: null,
+                type: "image"
+            }, {
+                name: "js",
+                lang: "javascript",
+                type: "text"
+            }, {
+                name: "json",
+                lang: "json",
+                type: "text"
+            }, {
+                name: "png",
+                lang: null,
+                type: "image"
+            }, {
+                name: "txt",
+                lang: "plain_text",
+                type: "text"
+            }, {
+                name: "xml",
+                lang: "xml",
+                type: "text"
+            }];
+
+            function showDialog(title, message) {
+                return new Promise(function(resolve, reject) {
+
+                    $("#modalTitle").text(title);
+                    $("#modalMessage").html(message);
+
+                    $("#modalDialog").on("shown.bs.modal", function() { 
+                        $("#modalDialog").off("shown.bs.modal");
+                        resolve();
+                    });
+
+                    $("#modalDialog").modal("show");
+                });
+            }
+
+            function hideDialog() {
+                return new Promise(function(resolve, reject) {
+
+                    $("#modalDialog").on("hidden.bs.modal", function() { 
+                        $("#modalDialog").off("hidden.bs.modal");
+                        resolve();
+                    });
+
+                    $("#modalDialog").modal("hide");
+                });
+            }
+
+            function listAllFilesHelper(par) {
+                var page = par.page;
+
+                ++par.page;
+
+                return restClient.listFiles("/", page).then(function(rsp) {
+                    if (0 < rsp.data.length) {
+                        par.data = par.data.concat(rsp.data);
+                        promise = listAllFilesHelper(par);
+                    } else {
+                        promise = Promise.resolve(par.data);
+                    }
+
+                    return promise;
+                }).catch(function(rsp) {
+                    return Promise.reject(rsp);
+                });
+            }
+
+            function listAllFiles(id) {
+                var par = {
+                    page: 0,
+                    data: []
+                };
+
+                return listAllFilesHelper(par).then(function(items) {
+                    var index       = 0;
+                    var compareFunc = function(a, b) {
+                        if (a.name < b.name) {
+                            return -1;
+                        }
+                        if (a.name > b.name) {
+                            return 1;
+                        }
+                        return 0;
+                    };
+                    var generateItemMenu = function(itemId, item) {
+                        var $itemMenu       = $("<li>")
+                                            .attr("class", "nav-item dropdown")
+                        var $itemButton     = $("<a>")
+                                            .attr("href", "#")
+                                            .attr("role", "button")
+                                            .attr("class", "nav-link dropdown-toggle")
+                                            .attr("id", itemId)
+                                            .attr("data-toggle", "dropdown")
+                                            .attr("aria-haspopup", "true")
+                                            .attr("aria-expanded", "false")
+                                            .text(item.name);
+                        var $actions        = $("<div>")
+                                            .attr("class", "dropdown-menu");
+                        var $actionSize     = $("<a>")
+                                            .attr("class", "dropdown-item disabled")
+                                            .attr("href", "#")
+                                            .attr("tabindex", "-1")
+                                            .attr("aria-disabled", "true")
+                                            .text((item.size / 1024).toFixed(2) + " kByte");
+                        var $actionEdit     = $("<a>")
+                                            .attr("class", "dropdown-item")
+                                            .attr("href", "#")
+                                            .attr("onclick", "editFile(\"" + itemId + "\")")
+                                            .text("Edit");
+                        var $actionPreview  = $("<a>")
+                                            .attr("class", "dropdown-item")
+                                            .attr("href", "#")
+                                            .attr("onclick", "previewFile(\"" + itemId + "\")")
+                                            .text("Preview");
+                        var $actionRemove   = $("<a>")
+                                            .attr("class", "dropdown-item")
+                                            .attr("href", "#")
+                                            .attr("onclick", "removeFile(\"" + itemId + "\")")
+                                            .text("Remove");
+                        var fileTypeInfo    = getFileTypeInfo(item.name);
+                        
+                        $($actions).append($actionSize);
+
+                        if (null !== fileTypeInfo) {
+                            if ("text" === fileTypeInfo.type) {
+                                $($actions).append($actionEdit);
+                            } else if ("image" === fileTypeInfo.type) {
+                                $($actions).append($actionPreview);
+                            }
+                        }
+
+                        $($actions).append($actionRemove);
+
+                        $($itemMenu).append($itemButton).append($actions);
+
+                        return $itemMenu;
+                    };
+                    var promise     = null;
+                    var promises    = [];
+
+                    items.sort(compareFunc);
+
+                    for(index = 0; index < items.length; ++index) {      
+                        $itemMenu = generateItemMenu("file" + index, items[index]);
+                        promise = Promise.resolve($("#" + id).append($itemMenu).promise());
+                        promises.push(promise);
+                    }
+
+                    return Promise.all(promises);
+
+                }).catch(function(rsp) {
+                    alert(rsp.error.msg);
+                    return Promise.reject();
+                });
+            }
+
+            function editFile(id) {
+                var filename = $("#" + id).text();
+
+                loadedFile = filename;
+                editor.setValue("");
+                setEditorMode(filename);
+                $("#editor").collapse("show");
+                $("#preview").collapse("hide");
+                
+                return showDialog("Loading file", "<p>Please wait, its loading.</p>")
+                .then(function() {
+                    return restClient.readFile(filename);
+                })
+                .then(function(rsp) {
+                    /* Fill content in, remove selection and
+                     * move cursor to the begin.
+                     */
+                    editor.setValue(rsp, -1);
+
+                    return hideDialog();
+                }).catch(function(rsp) {
+                    var errorMsg = rsp.error.msg;
+
+                    return hideDialog().finally(function() {
+                        alert(errorMsg);
+                        return Promise.reject();
+                    });
+                });
+            }
+
+            function previewFile(id) {
+                var filename    = $("#" + id).text();
+                var $image      = $("<img>")
+                                    .attr("src", filename)
+                                    .attr("alt", filename);
+
+                loadedFile = "";
+                editor.setValue("");
+
+                $("#preview").empty();
+                $("#preview").append($image);
+                $("#editor").collapse("hide");
+                $("#preview").collapse("show");
+            }
+
+            function removeFile(id) {
+                var filename = $("#" + id).text();
+
+                return restClient.removeFile(filename).then(function(rsp) {
+
+                    if (loadedFile === filename) {
+                        loadedFile = "";
+                        editor.setValue("");
+                    }
+                    $("#" + id).parent().remove();
+
+                    alert("File " + filename + " removed.");
+                }).catch(function(rsp) {
+                    alert(rsp.error.msg);
+                });
+            }
+
+            function getFileTypeInfo(filename) {
+                var info    = null;
+                var index   = 0;
+
+                while((supportedFileTypes.length > index) && (null === info)) {
+                    if (true === filename.endsWith("." + supportedFileTypes[index].name))
+                    {
+                        info = supportedFileTypes[index];
+                    }
+                    ++index;
+                }
+
+                return info;
+            }
+
+            function setEditorMode(filename) {
+                var prefix          = "ace/mode/";
+                var mode            = prefix + "plain_text";
+                var fileTypeInfo    = getFileTypeInfo(filename);
+
+                if ((null !== fileTypeInfo) &&
+                    (null !== fileTypeInfo.lang))
+                {
+                    mode = prefix + fileTypeInfo.lang;
+                }
+
+                editor.getSession().setMode(mode);
+            }
+
+            $(document).ready(function() {
+                menu.create("menu");
+
+                ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12");
+                editor = ace.edit("editor");
+                editor.setTheme("ace/theme/textmate");
+                editor.session.setUseSoftTabs(true);
+                editor.session.setTabSize(4);
+                editor.setShowPrintMargin(false);
+                editor.setHighlightActiveLine(true);
+                editor.setAutoScrollEditorIntoView(true);
+                editor.setOption("minLines", 2);
+                editor.setOption("maxLines", 100);
+                editor.commands.addCommand({
+                    name: "saveCommand",
+                    bindKey: {
+                        win: "Ctrl-S",
+                        mac: "Command-S"
+                    },
+                    exec: function(editor) {
+                        showDialog("Saving file", "<p>Please wait, its saving.</p>")
+                        .then(restClient.writeFile(loadedFile, editor.getValue()))
+                        .finally(function() {
+                            hideDialog();
+                        });
+                    },
+                    readOnly: false
+                });
+                editor.commands.addCommand({
+                    name: "undoCommand",
+                    bindKey: {win: "Ctrl-Z",  mac: "Command-Z"},
+                    exec: function(editor) {
+                        editor.getSession().getUndoManager().undo(false);
+                    },
+                    readOnly: false
+                });
+                editor.commands.addCommand({
+                    name: "redoCommand",
+                    bindKey: {win: "Ctrl-Shift-Z",  mac: "Command-Shift-Z"},
+                    exec: function(editor) {
+                        editor.getSession().getUndoManager().redo(false);
+                    },
+                    readOnly: false
+                });
+
+                showDialog("Loading ...", "<p>Please wait, file informations are loading.</p>")
+                .then(function() {
+                    return listAllFiles("files");
+                })
+                .finally(function() {
+                    hideDialog();
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,16 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Print
- * @author Andreas Merkle <web@blue-andi.de>
+ * @brief  Websocket command to control fade effects
+ * @author Yann Le Glaz <yann_le@web.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Print.h"
+#include "WsCmdEffect.h"
+#include "DisplayMgr.h"
 
-#include <string.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -60,69 +61,55 @@
  * Public Methods
  *****************************************************************************/
 
-size_t Print::write(const uint8_t *buffer, size_t size)
+void WsCmdEffect::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 {
-    size_t n = 0;
-    while(size--) {
-        n += write(*buffer++);
+    if ((nullptr == server) ||
+        (nullptr == client))
+    {
+        return;
     }
-    return n;
-}
 
-size_t Print::write(const char *str)
-{
-    if(str == nullptr) {
-        return 0;
+    /* Any error happended? */
+    if (true == m_isError)
+    {
+        server->text(client->id(), "NACK;\"Parameter invalid.\"");
     }
-    return write((const uint8_t *) str, strlen(str));
-}
+    else
+    {
+        String rsp              = "ACK";
+        const char  DELIMITER   = ';';
 
-size_t Print::write(const char *buffer, size_t size)
-{
-    return write((const uint8_t *) buffer, size);
-}
-
-size_t Print::print(const String &s)
-{
-    return write(s.c_str(), s.length());
-}
-
-size_t Print::print(const char str[])
-{
-    return write(str);
-}
-
-size_t Print::print(char c)
-{
-    return write(c);
-}
-
-size_t Print::print(long n, int base)
-{
-    if(base == 0) {
-        return write(n);
-    } else if(base == 10) {
-        if(n < 0) {
-            int t = print('-');
-            n = -n;
-            return printNumber(n, 10) + t;
+        if (1U == m_parCnt)
+        {
+            DisplayMgr::getInstance().activateNextFadeEffect(static_cast<DisplayMgr::FadeEffect>(m_fadeEffect));
         }
-        return printNumber(n, 10);
-    } else {
-        return printNumber(n, base);
+
+        rsp += DELIMITER;
+        rsp += DisplayMgr::getInstance().getFadeEffect();
+
+        server->text(client->id(), rsp);
     }
+
+    m_isError = false;
+    m_parCnt = 0U;
+    return;
 }
 
-size_t Print::println()
+void WsCmdEffect::setPar(const char* par)
 {
-    return print("\r\n");
-}
-
-size_t Print::println(const String &s)
-{
-    size_t n = print(s);
-    n += println();
-    return n;
+    if (0U == m_parCnt)
+    {
+        if (false == Util::strToUInt8(String(par), m_fadeEffect))
+        {
+            m_isError = true;
+        }
+         ++m_parCnt;
+    }
+    else
+    {
+        m_isError = true;
+    }
+    return;
 }
 
 /******************************************************************************
@@ -132,28 +119,6 @@ size_t Print::println(const String &s)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-size_t Print::printNumber(unsigned long n, uint8_t base)
-{
-    char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
-    char *str = &buf[sizeof(buf) - 1];
-
-    *str = '\0';
-
-    // prevent crash if called with base == 1
-    if(base < 2) {
-        base = 10;
-    }
-
-    do {
-        unsigned long m = n;
-        n /= base;
-        char c = m - base * n;
-        *--str = c < 10 ? c + '0' : c + 'A' - 10;
-    } while(n);
-
-    return write(str);
-}
 
 /******************************************************************************
  * External Functions

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,9 @@ public:
      */
     static ButtonDrv&   getInstance()
     {
-        return m_instance;
+        static ButtonDrv instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /** Status return values */
@@ -103,8 +105,6 @@ public:
     State getState();
 
 private:
-
-    static ButtonDrv    m_instance;         /**< Button driver instance */
 
     TaskHandle_t        m_buttonTaskHandle; /**< Button task handle */
     State               m_state;            /**< Current button state */

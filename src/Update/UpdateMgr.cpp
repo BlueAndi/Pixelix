@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,10 +34,10 @@
  *****************************************************************************/
 #include "UpdateMgr.h"
 
-#include <SPIFFS.h>
 #include <Logging.h>
 #include <Esp.h>
 
+#include "FileSystem.h"
 #include "LedMatrix.h"
 #include "MyWebServer.h"
 #include "Settings.h"
@@ -70,9 +70,6 @@
 
 /* Set over-the-air update password */
 const char* UpdateMgr::OTA_PASSWORD = "maytheforcebewithyou";
-
-/* Instance of the update manager. */
-UpdateMgr   UpdateMgr::m_instance;
 
 /******************************************************************************
  * Public Methods
@@ -196,8 +193,8 @@ void UpdateMgr::updateProgress(uint8_t progress)
          */
         while(false == LedMatrix::getInstance().isReady())
         {
-            /* Just wait. */
-            ;
+            /* Just wait and give other tasks a chance. */
+            delay(1U);
         }
 
         /* Show update status on console. */
@@ -249,7 +246,7 @@ void UpdateMgr::onStart()
 {
     String infoStr = "Update ";
 
-    /* Stop webserver, before SPIFFS may be unmounted. */
+    /* Stop webserver, before filesystem may be unmounted. */
     MyWebServer::end();
 
     /* Shall the firmware be updated? */
@@ -265,12 +262,12 @@ void UpdateMgr::onStart()
         /* Close filesystem before continue.
          * Note, this needs a restart after update is finished.
          */
-        SPIFFS.end();
+        FILESYSTEM.end();
     }
 
     LOG_INFO(infoStr);
 
-    m_instance.beginProgress();
+    getInstance().beginProgress();
 
     return;
 }
@@ -279,16 +276,16 @@ void UpdateMgr::onEnd()
 {
     String  infoStr = "Update successful finished.";
 
-    m_instance.m_updateIsRunning = false;
+    getInstance().m_updateIsRunning = false;
 
     LOG_INFO(infoStr);
 
-    m_instance.endProgress();
+    getInstance().endProgress();
 
     /* Note, there is no need here to start the webserver or the display
      * manager again, because we request a restart of the system now.
      */
-    m_instance.reqRestart();
+    getInstance().reqRestart();
 
     return;
 }
@@ -297,7 +294,7 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
 {
     const uint32_t  PROGRESS_PERCENT    = (progress * 100U) / total;
 
-    m_instance.updateProgress(PROGRESS_PERCENT);
+    getInstance().updateProgress(PROGRESS_PERCENT);
 
     return;
 }
@@ -335,29 +332,29 @@ void UpdateMgr::onError(ota_error_t error)
 
     LOG_INFO(infoStr);
 
-    /* Mount SPIFFS, because it may be unmounted in case of failed filesystem update. */
-    if (false == SPIFFS.begin())
+    /* Mount filesystem, because it may be unmounted in case of failed filesystem update. */
+    if (false == FILESYSTEM.begin())
     {
         LOG_FATAL("Couldn't mount filesystem.");
-        m_instance.reqRestart();
+        getInstance().reqRestart();
     }
     else
     {
-        m_instance.endProgress();
+        getInstance().endProgress();
 
         /* Reset only if the error happened during update.
          * Security note: This avoids a reset in case the authentication failed.
          */
-        if (true == m_instance.m_updateIsRunning)
+        if (true == getInstance().m_updateIsRunning)
         {
             SysMsg::getInstance().show(infoStr, 4000U, 2U, true);
 
             /* Request a restart */
-            m_instance.reqRestart();
+            getInstance().reqRestart();
         }
     }
 
-    m_instance.m_updateIsRunning = false;
+    getInstance().m_updateIsRunning = false;
 
     return;
 }

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,6 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <SPIFFS.h>
 
 #include "Board.h"
 #include "ButtonDrv.h"
@@ -50,6 +49,7 @@
 #include "Settings.h"
 #include "PluginMgr.h"
 #include "WebConfig.h"
+#include "FileSystem.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -74,6 +74,7 @@
 #include "SysMsgPlugin.h"
 #include "TestPlugin.h"
 #include "TimePlugin.h"
+#include "VolumioPlugin.h"
 #include "WifiStatusPlugin.h"
 
 #include <lwip/init.h>
@@ -97,9 +98,6 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/* Initialization state instance */
-InitState       InitState::m_instance;
 
 /******************************************************************************
  * Public Methods
@@ -125,7 +123,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Mounting the filesystem. */
-    else if (false == SPIFFS.begin())
+    else if (false == FILESYSTEM.begin())
     {
         LOG_FATAL("Couldn't mount the filesystem.");
         isError = true;
@@ -273,7 +271,7 @@ void InitState::exit(StateMachine& sm)
     }
     else
     {
-        /* Initialize webserver. SPIFFS must be mounted before! */
+        /* Initialize webserver. The filesystem must be mounted before! */
         MyWebServer::init(m_isApModeRequested);
         MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
 
@@ -371,6 +369,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
     pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
     pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
+    pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
     pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
 
     return;

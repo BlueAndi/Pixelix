@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,20 +66,6 @@ class Plugin : public IPluginMaintenance
 public:
 
     /**
-     * Constructs the plugin.
-     * It is disabled by default.
-     *
-     * @param[in] name  Plugin name
-     * @param[in] uid   Unique id
-     */
-    Plugin(const String& name, uint16_t uid) :
-        m_uid(uid),
-        m_name(name),
-        m_isEnabled(false)
-    {
-    }
-
-    /**
      * Destroys the plugin.
      */
     virtual ~Plugin()
@@ -92,7 +78,7 @@ public:
      *
      * @param[in] slotInterf    Slot interface
      */
-    virtual void setSlot(const ISlotPlugin* slotInterf)
+    virtual void setSlot(const ISlotPlugin* slotInterf) override
     {
         UTIL_NOT_USED(slotInterf);
         return;
@@ -103,7 +89,7 @@ public:
      *
      * @return Unique id
      */
-    uint16_t getUID() const
+    uint16_t getUID() const  override
     {
         return m_uid;
     }
@@ -115,7 +101,7 @@ public:
      * @param[in] srv       Webserver
      * @param[in] baseUri   Base URI, use this and append plugin specific part.
      */
-    virtual void registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+    virtual void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override
     {
         UTIL_NOT_USED(srv);
         UTIL_NOT_USED(baseUri);
@@ -128,7 +114,7 @@ public:
      *
      * @param[in] srv   Webserver
      */
-    virtual void unregisterWebInterface(AsyncWebServer& srv)
+    virtual void unregisterWebInterface(AsyncWebServer& srv) override
     {
         UTIL_NOT_USED(srv);
         return;
@@ -139,7 +125,7 @@ public:
      *
      * @return Name of the plugin.
      */
-    const char* getName() const
+    const char* getName() const override
     {
         return m_name.c_str();
     }
@@ -149,7 +135,7 @@ public:
      *
      * @return If plugin is enabled, it will return true otherwise false.
      */
-    bool isEnabled() const
+    bool isEnabled() const override
     {
         return m_isEnabled;
     }
@@ -158,7 +144,7 @@ public:
      * Enable plugin.
      * Only a enabled plugin will be scheduled.
      */
-    void enable()
+    void enable() override
     {
         m_isEnabled = true;
         return;
@@ -169,7 +155,7 @@ public:
      * A disabled plugin won't be scheduled in the next cycle.
      * Note, calling this doesn't abort a active phase.
      */
-    void disable()
+    void disable() override
     {
         m_isEnabled = false;
         return;
@@ -179,7 +165,7 @@ public:
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
      */
-    virtual void start()
+    virtual void start() override
     {
         return;
     }
@@ -188,7 +174,7 @@ public:
      * Stop the plugin.
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
-    virtual void stop()
+    virtual void stop() override
     {
         return;
     }
@@ -198,7 +184,7 @@ public:
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
      */
-    virtual void process()
+    virtual void process() override
     {
         return;
     }
@@ -210,7 +196,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void active(IGfx& gfx)
+    virtual void active(IGfx& gfx) override
     {
         UTIL_NOT_USED(gfx);
         return;
@@ -221,7 +207,7 @@ public:
      * it won't be shown on the display anymore.
      * Overwrite it if your plugin needs to know this.
      */
-    virtual void inactive()
+    virtual void inactive() override
     {
         return;
     }
@@ -234,6 +220,22 @@ public:
      * @param[in] gfx   Display graphics interface
      */
     virtual void update(IGfx& gfx) = 0;
+
+protected:
+
+    /**
+     * Constructs the plugin.
+     * It is disabled by default.
+     *
+     * @param[in] name  Plugin name
+     * @param[in] uid   Unique id
+     */
+    Plugin(const String& name, uint16_t uid) :
+        m_uid(uid),
+        m_name(name),
+        m_isEnabled(false)
+    {
+    }
 
 private:
 

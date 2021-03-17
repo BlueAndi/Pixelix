@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,9 +60,6 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/* Initialize LED matrix instance. */
-DisplayMgr  DisplayMgr::m_instance;
 
 /******************************************************************************
  * Public Methods
@@ -456,14 +453,45 @@ void DisplayMgr::activateNextSlot()
         if (true == m_slotTimer.isTimerRunning())
         {
             m_slotTimer.start(0U);
-
-            m_fadeEffect = &m_fadeMoveXEffect;
         }
     }
 
     unlock();
 
     return;
+}
+
+void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
+{
+    lock();
+
+    if (FADE_EFFECT_MOVE_Y < fadeEffect)
+    {
+        m_fadeEffectIndex = FADE_EFFECT_LINEAR;
+    }
+    else
+    {
+        m_fadeEffectIndex = fadeEffect;
+    }
+
+    m_fadeEffectUpdate = true;
+
+    unlock();
+
+    return;
+}
+
+DisplayMgr::FadeEffect DisplayMgr::getFadeEffect()
+{
+    FadeEffect currentFadeEffect;
+
+    lock();
+
+    currentFadeEffect = m_fadeEffectIndex;
+    
+    unlock();
+    
+    return currentFadeEffect;
 }
 
 bool DisplayMgr::movePluginToSlot(IPluginMaintenance* plugin, uint8_t slotId)
@@ -655,7 +683,10 @@ DisplayMgr::DisplayMgr() :
     m_framebuffers(),
     m_fadeLinearEffect(),
     m_fadeMoveXEffect(),
-    m_fadeEffect(&m_fadeLinearEffect)
+    m_fadeMoveYEffect(),
+    m_fadeEffect(&m_fadeLinearEffect),
+    m_fadeEffectIndex(FADE_EFFECT_LINEAR),
+    m_fadeEffectUpdate(false)
 {
     uint8_t idx = 0U;
 
@@ -781,8 +812,6 @@ void DisplayMgr::fadeInOut(IGfx& dst)
             if (true == m_fadeEffect->fadeIn(dst, *prevFb, *m_currCanvas))
             {
                 m_displayFadeState = FADE_IDLE;
-
-                m_fadeEffect = &m_fadeLinearEffect;
             }
             break;
 
@@ -964,6 +993,32 @@ void DisplayMgr::process()
         }
     }
 
+    /* Avoid changing to next effect, if the there is a pending slot change. */
+    if ((false != m_fadeEffectUpdate) && (FADE_IDLE == m_displayFadeState))
+    {
+        switch (m_fadeEffectIndex)
+        {
+        case FADE_EFFECT_LINEAR:
+            m_fadeEffect = &m_fadeLinearEffect;
+            break;
+
+        case FADE_EFFECT_MOVE_X:
+            m_fadeEffect = &m_fadeMoveXEffect;
+            break;
+
+        case FADE_EFFECT_MOVE_Y:
+            m_fadeEffect = &m_fadeMoveYEffect;
+            break;
+
+        default:
+            m_fadeEffect = nullptr;
+            m_fadeEffectIndex = FADE_EFFECT_NO;
+            break;
+        }
+
+        m_fadeEffectUpdate = false;
+    }
+    
     /* Process all installed plugins. */
     for(index = 0U; index < m_maxSlots; ++index)
     {
@@ -1094,17 +1149,23 @@ void DisplayMgr::load()
             const size_t            JSON_DOC_SIZE   = 512U;
             DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
             DeserializationError    error           = deserializeJson(jsonDoc, config);
-            const size_t            MAX_USAGE       = 80U;
-            size_t                  usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
 
-            if (MAX_USAGE < usageInPercent)
+            if (true == jsonDoc.overflowed())
             {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+                LOG_ERROR("JSON document has less memory available.");
+            }
+            else
+            {
+                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
             }
 
-            if (DeserializationError::Ok != error)
+            if (DeserializationError::Ok != error.code())
             {
                 LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+            }
+            else if (false == jsonDoc["slots"].is<JsonArray>())
+            {
+                LOG_WARNING("Invalid JSON format.");
             }
             else
             {
@@ -1113,14 +1174,17 @@ void DisplayMgr::load()
 
                 for(JsonObject jsonSlot: jsonSlots)
                 {
-                    uint32_t duration = jsonSlot["duration"];
-
-                    m_slots[slotId].setDuration(duration);
-
-                    ++slotId;
-                    if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                    if (true == jsonSlot["duration"].is<uint32_t>())
                     {
-                        break;
+                        uint32_t duration = jsonSlot["duration"].as<uint32_t>();
+
+                        m_slots[slotId].setDuration(duration);
+
+                        ++slotId;
+                        if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -1148,21 +1212,22 @@ void DisplayMgr::save()
             jsonSlot["duration"] = m_slots[slotId].getDuration();
         }
 
+        if (true == jsonDoc.overflowed())
+        {
+            LOG_ERROR("JSON document has less memory available.");
+        }
+        else
+        {
+            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+        }
+
         if (false == settings.open(false))
         {
             LOG_WARNING("Couldn't open filesystem.");
         }
         else
         {
-            const size_t    MAX_USAGE       = 80U;
-            size_t          usageInPercent  = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-
-            if (MAX_USAGE < usageInPercent)
-            {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
-            }
-
-            serializeJson(jsonDoc, config);
+            (void)serializeJson(jsonDoc, config);
 
             settings.getDisplaySlotConfig().setValue(config);
             settings.close();

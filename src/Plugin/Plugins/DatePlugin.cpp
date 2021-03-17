@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -145,6 +145,19 @@ void DatePlugin::update(IGfx& gfx)
     return;
 }
 
+void DatePlugin::process()
+{
+    if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
+        (true == m_checkDateUpdateTimer.isTimeout()))
+    {
+        updateDate(false);
+
+        m_checkDateUpdateTimer.restart();
+    }
+
+    return;
+}
+
 void DatePlugin::setText(const String& formatText)
 {
     m_textWidget.setFormatStr(formatText);
@@ -157,19 +170,6 @@ void DatePlugin::setLamp(uint8_t lampId, bool state)
     if (MAX_LAMPS > lampId)
     {
         m_lampWidgets[lampId].setOnState(state);
-    }
-
-    return;
-}
-
-void DatePlugin::process()
-{
-    if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
-        (true == m_checkDateUpdateTimer.isTimeout()))
-    {
-        updateDate(false);
-
-        m_checkDateUpdateTimer.restart();
     }
 
     return;

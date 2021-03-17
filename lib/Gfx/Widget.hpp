@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,48 +64,6 @@ class Widget
 public:
 
     /**
-     * Constructs a widget at position (0, 0) in the canvas.
-     * 
-     * @param[in] type Widget type name
-     */
-    Widget(const char* type) :
-        m_type(type),
-        m_posX(0),
-        m_posY(0),
-        m_name()
-    {
-    }
-
-    /**
-     * Constructs a widget a the given position in the canvas.
-     * 
-     * @param[in] type  Widget type name
-     * @param[in] x     Upper left corner (x-coordinate) of the widget in a canvas.
-     * @param[in] y     Upper left corner (y-coordinate) of the widget in a canvas.
-    */
-    Widget(const char* type, int16_t x, int16_t y) :
-        m_type(type),
-        m_posX(x),
-        m_posY(y),
-        m_name()
-    {
-    }
-
-    /**
-     * Constructs a widget by copying a widget.
-     * Note, its name won't be assigned.
-     * 
-     * @param[in] widget The widget, which to copy.
-    */
-    Widget(const Widget& widget) :
-        m_type(widget.m_type),
-        m_posX(widget.m_posX),
-        m_posY(widget.m_posY),
-        m_name()
-    {
-    }
-
-    /**
      * Destroys a widget.
      */
     virtual ~Widget()
@@ -122,10 +80,13 @@ public:
     */
     Widget& operator=(const Widget& widget)
     {
-        m_type = widget.m_type;
-        m_posX = widget.m_posX;
-        m_posY = widget.m_posY;
-        /* m_name is not assigned! */
+        if (&widget != this)
+        {
+            m_type = widget.m_type;
+            m_posX = widget.m_posX;
+            m_posY = widget.m_posY;
+            /* m_name is not assigned! */
+        }
 
         return *this;
     }
@@ -223,6 +184,50 @@ protected:
     int16_t     m_posX; /**< Upper left corner (x-coordinate) of the widget in a canvas. */
     int16_t     m_posY; /**< Upper left corner (y-coordinate) of the widget in a canvas. */
     String      m_name; /**< Widget name for identification. */
+
+    /**
+     * Constructs a widget at position (0, 0) in the canvas.
+     * 
+     * @param[in] type Widget type name
+     */
+    Widget(const char* type) :
+        m_type(type),
+        m_posX(0),
+        m_posY(0),
+        m_name()
+    {
+    }
+
+    /**
+     * Constructs a widget a the given position in the canvas.
+     * 
+     * @param[in] type  Widget type name
+     * @param[in] x     Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y     Upper left corner (y-coordinate) of the widget in a canvas.
+    */
+    Widget(const char* type, int16_t x, int16_t y) :
+        m_type(type),
+        m_posX(x),
+        m_posY(y),
+        m_name()
+    {
+    }
+
+    /**
+     * Constructs a widget by copying a widget.
+     * Note, its name won't be assigned.
+     * 
+     * @param[in] widget The widget, which to copy.
+    */
+    Widget(const Widget& widget) :
+        m_type(widget.m_type),
+        m_posX(widget.m_posX),
+        m_posY(widget.m_posY),
+        m_name()
+    {
+    }
+
+private:
 
     /* Default constructor not allowed. */
     Widget();

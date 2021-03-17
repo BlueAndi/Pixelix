@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,6 @@
 
 #ifndef NATIVE
 
-#include <SPIFFS.h>
 #include <NeoPixelBus.h>
 #include <Color.h>
 #include <Logging.h>
@@ -143,12 +142,12 @@ void BitmapWidget::set(const Color* bitmap, uint16_t width, uint16_t height)
 
 #ifndef NATIVE
 
-bool BitmapWidget::load(const String& filename)
+bool BitmapWidget::load(FS& fs, const String& filename)
 {
     bool    status  = false;
     File    fd;
 
-    if (false == SPIFFS.exists(filename))
+    if (false == fs.exists(filename))
     {
         LOG_WARNING("File %s doesn't exists.", filename.c_str());
     }
@@ -156,7 +155,7 @@ bool BitmapWidget::load(const String& filename)
     {
         NeoBitmapFile<NeoGrbFeature, File>  neoFile;
 
-        fd = SPIFFS.open(filename, "r");
+        fd = fs.open(filename, "r");
 
         if (false == fd)
         {

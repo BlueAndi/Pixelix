@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,11 +37,12 @@
 #include "Settings.h"
 #include "SunrisePlugin.h"
 #include "RestApi.h"
-
 #include "time.h"
+#include "FileSystem.h"
+
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <SPIFFS.h>
+#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -58,6 +59,15 @@
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
+
+/* Workaround: strptime is available in libc, but the prototype is not available
+ * in time.h
+ * Therefore we define the prototype here. Should be removed, if time.h is
+ * hopefully updated in the next IDF release.
+ */
+char *_EXFUN(strptime,  (const char *__restrict,
+                        const char *__restrict,
+                        struct tm *__restrict));
 
 /******************************************************************************
  * Local Variables
@@ -117,7 +127,7 @@ void SunrisePlugin::active(IGfx& gfx)
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
             /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load(IMAGE_PATH);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
 
             m_iconCanvas->update(gfx);
         }
@@ -184,8 +194,8 @@ void SunrisePlugin::start()
         }
     }
 
-    registerResponseCallback();
-    if (false == requestNewData())
+    initHttpClient();
+    if (false == startHttpRequest())
     {
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
     }
@@ -205,7 +215,7 @@ void SunrisePlugin::stop()
 
     m_requestTimer.stop();
 
-    if (false != SPIFFS.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(m_configurationFilename))
     {
         LOG_INFO("File %s removed", m_configurationFilename.c_str());
     }
@@ -217,10 +227,12 @@ void SunrisePlugin::stop()
 
 void SunrisePlugin::process()
 {
+    lock();
+
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
     {
-        if (false == requestNewData())
+        if (false == startHttpRequest())
         {
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
         }
@@ -229,6 +241,10 @@ void SunrisePlugin::process()
             m_requestTimer.start(UPDATE_PERIOD);
         }
     }
+
+    unlock();
+
+    return;
 }
 
 void SunrisePlugin::getLocation(String& longitude, String&latitude) const
@@ -278,8 +294,6 @@ void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        MAX_USAGE       = 80U;
-    size_t              usageInPercent  = 0U;
 
     if (nullptr == request)
     {
@@ -334,10 +348,13 @@ void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-    if (MAX_USAGE < usageInPercent)
+    if (true == jsonDoc.overflowed())
     {
-        LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     (void)serializeJsonPretty(jsonDoc, content);
@@ -346,62 +363,60 @@ void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-bool SunrisePlugin::requestNewData()
+bool SunrisePlugin::startHttpRequest()
 {
     bool    status  = false;
     String  url     = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
-    wl_status_t connectionStatus    = WiFi.status();
 
-    if (WL_CONNECTED == connectionStatus)
+    if (true == m_client.begin(url))
     {
-        if (true == m_client.begin(url))
+        if (false == m_client.GET())
         {
-            if (false == m_client.GET())
-            {
-                LOG_WARNING("GET %s failed.", url.c_str());
-            }
-            else
-            {
-                status = true;
-            }
-        }
-    }
-    return status;
-}
-
-void SunrisePlugin::registerResponseCallback()
-{
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                  payloadSize     = 0U;
-        const char*             payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        size_t                  payloadIndex    = 0U;
-        String                  payloadStr;
-        const size_t            JSON_DOC_SIZE   = 768U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        String                  sunrise;
-        String                  sunset;
-        JsonObject              results;
-        JsonObject              obj;
-
-        while(payloadSize > payloadIndex)
-        {
-            payloadStr += payload[payloadIndex];
-            ++payloadIndex;
-        }
-
-        m_httpResponseReceived = true;
-
-        if (DeserializationError::Ok != deserializeJson(jsonDoc, payloadStr))
-        {
-            LOG_ERROR("Invalid JSON message received.");
+            LOG_WARNING("GET %s failed.", url.c_str());
         }
         else
         {
-            const size_t    MAX_USAGE       = 80U;
-            size_t          usageInPercent  = 0U;
+            status = true;
+        }
+    }
 
-            obj     = jsonDoc.as<JsonObject>();
-            results = obj["results"];
+    return status;
+}
+
+void SunrisePlugin::initHttpClient()
+{
+    m_client.regOnResponse([this](const HttpResponse& rsp){
+        size_t                          payloadSize             = 0U;
+        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+        const size_t                    JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
+        const size_t                    FILTER_SIZE             = 128U;
+        StaticJsonDocument<FILTER_SIZE> filter;
+        DeserializationError            error;
+
+        m_httpResponseReceived = true;
+
+        filter["results"]["sunrise"]    = true;
+        filter["results"]["sunset"]     = true;
+
+        if (true == filter.overflowed())
+        {
+            LOG_ERROR("Less memory for filter available.");
+        }
+
+        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+        if (DeserializationError::Ok != error.code())
+        {
+            LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+        }
+        else
+        {
+            String      sunrise;
+            String      sunset;
+            JsonObject  results;
+            
+            results = jsonDoc["results"];
             sunrise = results["sunrise"].as<String>();
             sunset  = results["sunset"].as<String>();
 
@@ -415,10 +430,13 @@ void SunrisePlugin::registerResponseCallback()
 
             unlock();
 
-            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-            if (MAX_USAGE < usageInPercent)
+            if (true == jsonDoc.overflowed())
             {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+                LOG_ERROR("JSON document has less memory available.");
+            }
+            else
+            {
+                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
             }
         }
     });
@@ -459,25 +477,21 @@ String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) con
 
 bool SunrisePlugin::saveConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "w");
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    jsonDoc["longitude"]    = m_longitude;
+    jsonDoc["latitude"]     = m_latitude;
+    
+    if (false == jsonFile.save(m_configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to create file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to save file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-
-        jsonDoc["longitude"]    = m_longitude;
-        jsonDoc["latitude"]     = m_latitude;
-
-        (void)serializeJson(jsonDoc, fd);
-        fd.close();
-
         LOG_INFO("File %s saved.", m_configurationFilename.c_str());
     }
 
@@ -486,34 +500,20 @@ bool SunrisePlugin::saveConfiguration()
 
 bool SunrisePlugin::loadConfiguration()
 {
-    bool    status  = true;
-    File    fd      = SPIFFS.open(m_configurationFilename, "r");
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
-    if (false == fd)
+    if (false == jsonFile.load(m_configurationFilename, jsonDoc))
     {
         LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
         status = false;
     }
     else
     {
-        const size_t            JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-        DeserializationError    error                   = deserializeJson(jsonDoc, fd.readString());
-
-        if (DeserializationError::Ok != error)
-        {
-            LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
-            status = false;
-        }
-        else
-        {
-            JsonObject obj = jsonDoc.as<JsonObject>();
-
-            m_longitude = obj["longitude"].as<String>();
-            m_latitude  = obj["latitude"].as<String>();
-        }
-
-        fd.close();
+        m_longitude = jsonDoc["longitude"].as<String>();
+        m_latitude  = jsonDoc["latitude"].as<String>();
     }
 
     return status;
@@ -521,9 +521,9 @@ bool SunrisePlugin::loadConfiguration()
 
 void SunrisePlugin::createConfigDirectory()
 {
-    if (false == SPIFFS.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(CONFIG_PATH))
     {
-        if (false == SPIFFS.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
         {
             LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
         }

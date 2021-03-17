@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,17 +69,6 @@ class IGfx : public PixelixGfx, public Print
 public:
 
     /**
-     * Constructs the graphics interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
-     */
-    IGfx(uint16_t width, uint16_t height) :
-        PixelixGfx(width, height)
-    {
-    }
-
-    /**
      * Destroys the graphics interface.
      */
     virtual ~IGfx()
@@ -94,11 +83,24 @@ public:
      *
      * @return Number of written characters.
      */
-    size_t write(uint8_t singleChar) override
+    size_t write(uint8_t singleChar) final
     {
         drawChar(static_cast<char>(singleChar));
 
         return 1U;
+    }
+
+protected:
+
+    /**
+     * Constructs the graphics interface.
+     *
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    IGfx(uint16_t width, uint16_t height) :
+        PixelixGfx(width, height)
+    {
     }
 
 private:

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,7 +71,9 @@ public:
      */
     static WebSocketSrv& getInstance()
     {
-        return m_instance;
+        static WebSocketSrv instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -83,9 +85,7 @@ public:
 
 private:
 
-    static WebSocketSrv m_instance;     /**< Websocket instance */
-
-    AsyncWebSocket      m_webSocket;    /**< Websocket */
+    AsyncWebSocket  m_webSocket;    /**< Websocket */
 
     /**
      * Constructs the websocket server.
@@ -180,7 +180,7 @@ private:
      *
      * @return Number of written bytes.
      */
-    size_t write(uint8_t data)
+    size_t write(uint8_t data) final
     {
         m_webSocket.textAll(&data, 1);
         return 1;
@@ -194,7 +194,7 @@ private:
      *
      * @return Number of written bytes.
      */
-    size_t write(const uint8_t* buffer, size_t size)
+    size_t write(const uint8_t* buffer, size_t size) final
     {
         m_webSocket.textAll(const_cast<uint8_t*>(buffer), size);
         return size;

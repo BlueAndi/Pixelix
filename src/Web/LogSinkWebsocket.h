@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -125,7 +125,7 @@ public:
      *
      * @return Name of the sink.
      */
-    const String& getName() const
+    const String& getName() const final
     {
         return m_name;
     }
@@ -135,7 +135,7 @@ public:
      *
      * @param[in] msg   Log message
      */
-    void send(const Logging::Msg& msg);
+    void send(const Logging::Msg& msg) final;
 
 private:
 

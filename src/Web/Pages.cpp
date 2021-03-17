@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,10 +42,10 @@
 #include "DisplayMgr.h"
 #include "RestApi.h"
 #include "PluginMgr.h"
+#include "FileSystem.h"
 
 #include <WiFi.h>
 #include <Esp.h>
-#include <SPIFFS.h>
 #include <Update.h>
 #include <Logging.h>
 #include <Util.h>
@@ -85,6 +85,7 @@ static String tmplPageProcessor(const String& var);
 static void aboutPage(AsyncWebServerRequest* request);
 static void debugPage(AsyncWebServerRequest* request);
 static void displayPage(AsyncWebServerRequest* request);
+static void editPage(AsyncWebServerRequest* request);
 static void indexPage(AsyncWebServerRequest* request);
 static void infoPage(AsyncWebServerRequest* request);
 static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDocument& jsonDoc);
@@ -144,8 +145,8 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "FLASH_CHIP_MODE",      tmpl::getFlashChipMode,
     "FLASH_CHIP_SIZE",      []() -> String { return String(ESP.getFlashChipSize() / (1024U * 1024U)); },
     "FLASH_CHIP_SPEED",     []() -> String { return String(ESP.getFlashChipSpeed() / (1000U * 1000U)); },
-    "FS_SIZE",              []() -> String { return String(SPIFFS.totalBytes()); },
-    "FS_SIZE_USED",         []() -> String { return String(SPIFFS.usedBytes()); },
+    "FS_SIZE",              []() -> String { return String(FILESYSTEM.totalBytes()); },
+    "FS_SIZE_USED",         []() -> String { return String(FILESYSTEM.usedBytes()); },
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
     "HEAP_SIZE_AVAILABLE",  []() -> String { return String(ESP.getFreeHeap()); },
     "HOSTNAME",             tmpl::getHostname,
@@ -186,6 +187,7 @@ void Pages::init(AsyncWebServer& srv)
     (void)srv.on("/about.html", HTTP_GET, aboutPage);
     (void)srv.on("/debug.html", HTTP_GET, debugPage);
     (void)srv.on("/display.html", HTTP_GET, displayPage);
+    (void)srv.on("/edit.html", HTTP_GET, editPage);
     (void)srv.on("/index.html", HTTP_GET, indexPage);
     (void)srv.on("/info.html", HTTP_GET, infoPage);
     (void)srv.on("/settings.html", HTTP_GET | HTTP_POST, settingsPage);
@@ -202,10 +204,10 @@ void Pages::init(AsyncWebServer& srv)
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesytem for 1 hour.
      */
-    (void)srv.serveStatic("/favicon.png", SPIFFS, "/favicon.png", "max-age=3600");
-    (void)srv.serveStatic("/images/", SPIFFS, "/images/", "max-age=3600");
-    (void)srv.serveStatic("/js/", SPIFFS, "/js/", "max-age=3600");
-    (void)srv.serveStatic("/style/", SPIFFS, "/style/", "max-age=3600");
+    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600");
+    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600");
+    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600");
+    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600");
 
     /* Add one page per plugin. */
     pluginName = PluginMgr::getInstance().findFirst();
@@ -230,7 +232,7 @@ void Pages::init(AsyncWebServer& srv)
                                 return;
                             }
 
-                            request->send(SPIFFS, uri, "text/html", false, tmplPageProcessor);
+                            request->send(FILESYSTEM, uri, "text/html", false, tmplPageProcessor);
                         });
 
         pluginName = PluginMgr::getInstance().findNext();
@@ -261,7 +263,7 @@ void Pages::error(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/error.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/error.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -399,7 +401,7 @@ static void aboutPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/about.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/about.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -424,7 +426,7 @@ static void debugPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/debug.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/debug.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -449,7 +451,32 @@ static void displayPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/display.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/display.html", "text/html", false, tmplPageProcessor);
+
+    return;
+}
+
+/**
+ * File edit page.
+ *
+ * @param[in] request   HTTP request
+ */
+static void editPage(AsyncWebServerRequest* request)
+{
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    /* Force authentication! */
+    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
+    {
+        /* Request DIGEST authentication */
+        request->requestAuthentication();
+        return;
+    }
+
+    request->send(FILESYSTEM, "/edit.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -474,7 +501,7 @@ static void indexPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/index.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/index.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -499,7 +526,7 @@ static void infoPage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/info.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/info.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -745,25 +772,24 @@ static void settingsPage(AsyncWebServerRequest* request)
     if ((HTTP_POST == request->method()) &&
         (0 < request->args()))
     {
-        bool                isError         = false;
         KeyValue**          list            = Settings::getInstance().getList();
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         String              rsp;
-        const size_t        MAX_USAGE       = 80U;
-        size_t              usageInPercent  = 0U;
 
         if (false == Settings::getInstance().open(false))
         {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
             LOG_WARNING("Couldn't open settings.");
 
-            isError = true;
             jsonDoc["status"]   = 1;
-            jsonDoc["error"]    = "Internal error.";
+            errorObj["msg"]     = "Internal error.";
         }
         else
         {
-            uint8_t index = 0U;
+            bool    isError = false;
+            uint8_t index   = 0U;
 
             while((index < Settings::KEY_VALUE_PAIR_NUM) && (false == isError))
             {
@@ -783,27 +809,41 @@ static void settingsPage(AsyncWebServerRequest* request)
             }
 
             Settings::getInstance().close();
+
+            if (true == isError)
+            {
+                JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                LOG_WARNING("Internal error.");
+
+                jsonDoc["status"]   = 1;
+                errorObj["msg"]     = "Internal error.";
+            }
+            else
+            {
+                JsonObject dataObj = jsonDoc.createNestedObject("data");
+
+                UTIL_NOT_USED(dataObj);
+
+                jsonDoc["status"] = 0;
+            }
         }
 
-        if (false == isError)
+        if (true == jsonDoc.overflowed())
         {
-            jsonDoc["status"]   = 0;
-            jsonDoc["info"]     = "Successful stored.";
+            LOG_ERROR("JSON document has less memory available.");
         }
-
-        usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-        if (MAX_USAGE < usageInPercent)
+        else
         {
-            LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
         }
 
         (void)serializeJson(jsonDoc, rsp);
-
         request->send(HttpStatus::STATUS_CODE_OK, "application/json", rsp);
     }
     else if (HTTP_GET == request->method())
     {
-        request->send(SPIFFS, "/settings.html", "text/html", false, tmplPageProcessor);
+        request->send(FILESYSTEM, "/settings.html", "text/html", false, tmplPageProcessor);
     }
     else
     {
@@ -833,7 +873,7 @@ static void updatePage(AsyncWebServerRequest* request)
         return;
     }
 
-    request->send(SPIFFS, "/update.html", "text/html", false, tmplPageProcessor);
+    request->send(FILESYSTEM, "/update.html", "text/html", false, tmplPageProcessor);
 
     return;
 }
@@ -896,6 +936,13 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         AsyncWebHeader* header      = request->getHeader("X-File-Size");
         uint32_t        fileSize    = UPDATE_SIZE_UNKNOWN;
 
+        /* If there is a pending upload, abort it. */
+        if (true == Update.isRunning())
+        {
+            Update.abort();
+            LOG_WARNING("Pending upload aborted.");
+        }
+
         /* Upload firmware or filesystem? */
         int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
 
@@ -921,7 +968,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         if (U_SPIFFS == cmd)
         {
             /* Close filesystem before continue. */
-            SPIFFS.end();
+            FILESYSTEM.end();
         }
 
         /* Start update */
@@ -931,7 +978,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             gIsUploadError = true;
 
             /* Mount filesystem again, it may be unmounted in case of filesystem update.*/
-            if (false == SPIFFS.begin())
+            if (false == FILESYSTEM.begin())
             {
                 LOG_FATAL("Couldn't mount filesystem.");
             }
@@ -993,7 +1040,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         else
         {
             /* Mount filesystem again, it may be unmounted in case of filesystem update. */
-            if (false == SPIFFS.begin())
+            if (false == FILESYSTEM.begin())
             {
                 LOG_FATAL("Couldn't mount filesystem.");
             }
@@ -1187,8 +1234,6 @@ namespace tmpl
             uint8_t             index           = 0U;
             const size_t        JSON_DOC_SIZE   = 4096U;
             DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-            const size_t        MAX_USAGE       = 80U;
-            size_t              usageInPercent  = 0U;
 
             result.clear();
             for(index = 0U; index < Settings::KEY_VALUE_PAIR_NUM; ++index)
@@ -1264,10 +1309,13 @@ namespace tmpl
 
             Settings::getInstance().close();
 
-            usageInPercent = (100U * jsonDoc.memoryUsage()) / jsonDoc.capacity();
-            if (MAX_USAGE < usageInPercent)
+            if (true == jsonDoc.overflowed())
             {
-                LOG_WARNING("JSON document uses %u%% of capacity.", usageInPercent);
+                LOG_ERROR("JSON document has less memory available.");
+            }
+            else
+            {
+                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
             }
 
             (void)serializeJson(jsonDoc, result);

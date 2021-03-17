@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,13 +69,6 @@ public:
      * IPluginMaintenance creation function, used by the plugin manager to create a plugin instance.
      */
     typedef IPluginMaintenance* (*CreateFunc)(const String& name, uint16_t uid);
-
-    /**
-     * Constructs the interface.
-     */
-    IPluginMaintenance()
-    {
-    }
 
     /**
      * Destroys the interface.
@@ -186,6 +179,15 @@ public:
      * @param[in] gfx   Display graphics interface
      */
     virtual void update(IGfx& gfx) = 0;
+
+protected:
+
+    /**
+     * Constructs the interface.
+     */
+    IPluginMaintenance()
+    {
+    }
 
 };
 

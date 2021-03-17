@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1286,6 +1286,14 @@ static void testBitmapWidget()
     bitmapPtr = bitmapWidget.get(width, height);
     TEST_ASSERT_EQUAL_UINT16(BITMAP_WIDTH, width);
     TEST_ASSERT_EQUAL_UINT16(BITMAP_HEIGHT, height);
+
+    for(y = 0U; y < BITMAP_HEIGHT; ++y)
+    {
+        for(x = 0U; x < BITMAP_WIDTH; ++x)
+        {
+            TEST_ASSERT_EQUAL_UINT32(bitmap[x + y * BITMAP_WIDTH], bitmapPtr[x + y * BITMAP_WIDTH]);
+        }
+    }
 
     /* Draw bitmap and verify */
     bitmapWidget.update(testGfx);

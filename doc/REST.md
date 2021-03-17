@@ -11,6 +11,7 @@
     - [Endpoint `<base-uri>`/status](#endpoint-base-uristatus)
     - [Endpoint `<base-uri>`/display/slots](#endpoint-base-uridisplayslots)
     - [Endpoint `<base-uri>`/plugin](#endpoint-base-uriplugin)
+    - [Endpoint `<base-uri>`/button](#endpoint-base-uributton)
   - [Plugin depended](#plugin-depended)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/text](#endpoint-base-uridisplayuidplugin-uidtext)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/bitmap](#endpoint-base-uridisplayuidplugin-uidbitmap)
@@ -19,6 +20,7 @@
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/countdown](#endpoint-base-uridisplayuidplugin-uidcountdown)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location](#endpoint-base-uridisplayuidplugin-uidlocation)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/ipAddress](#endpoint-base-uridisplayuidplugin-uidipaddress)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/host](#endpoint-base-uridisplayuidplugin-uidhost)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -208,6 +210,54 @@ Example with curl:
 $ curl -u luke:skywalker -d "list=" -X GET http://192.168.2.166/rest/api/v1/plugin
 $ curl -u luke:skywalker -d "install=JustTextPlugin" -X POST http://192.168.2.166/rest/api/v1/plugin
 $ curl -u luke:skywalker -d "uninstall=JustTextPlugin&slotId=1" -X POST http://192.168.2.166/rest/api/v1/plugin
+```
+
+### Endpoint `<base-uri>`/button
+Trigger the virtual user button.
+
+Detail:
+* Method: GET
+  * Arguments: N/A
+* Method: POST
+  * Set a fadeEffect:
+    * Arguments:
+      * fadeEffect=`<fadeEffectId>`
+
+Example:
+```
+GET <base-uri>/rest/api/v1/button
+```
+Result:
+
+```json
+{
+    "status": 0,
+    "data": {
+            "fadeEffect": 3
+        }
+    }
+}
+```
+```
+POST <base-uri>/rest/api/v1/button?fadeEffect=3
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+      "fadeEffect": 3
+        }
+    }
+}
+```
+
+
+Example with curl:
+```bash
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/button
+$ curl -u luke:skywalker -d "fadeEffect=3" -X POST http://192.168.2.166/rest/api/v1/button
 ```
 
 ## Plugin depended
@@ -503,7 +553,53 @@ Result:
 Example with curl:
 ```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
-$ curl -u luke:skywalker -d "set=192.168.178-12" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
+$ curl -u luke:skywalker -d "set=192.168.178" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/ipAddress
+```
+
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/host
+Get/Set the host address of the VolumioPlugin plugin.
+
+Detail:
+* Method: GET
+  * Get the host address.
+    * Arguments:
+      * N/A
+* Method: POST
+  * Set the host address.
+    * Arguments:
+      * set=`<host-address>`
+
+Example:
+```
+GET <base-uri>/rest/api/v1/display/uid/0/host
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "host": "volumio.fritz.box"
+    }
+}
+```
+
+```
+POST <base-uri>/rest/api/v1/display/uid/0/host?set=volumio.fritz.box
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": null
+}
+```
+
+Example with curl:
+```bash
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/host
+$ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/host
 ```
 
 # Issues, Ideas And Bugs

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,36 +25,36 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Arduino stuff for test
+ * @brief  Defines the filesystem.
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup test
+ * @addtogroup common
  *
  * @{
  */
 
-#ifndef __ARDUINO_H__
-#define __ARDUINO_H__
+#ifndef __FILESYSTEM_H__
+#define __FILESYSTEM_H__
 
 /******************************************************************************
  * Compile Switches
  *****************************************************************************/
 
+/**
+ * Defines SPIFFS as filesystem format (must be 1).
+ */
+#define FILESYSTEM_USE_SPIFFS   (1)
+
+#if FILESYSTEM_USE_SPIFFS
+#define FILESYSTEM              SPIFFS
+#endif  /* FILESYSTEM_USE_SPIFFS */
+
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
-#include <time.h>
-
-#include "WString.h"
-#include "Print.h"
+#if FILESYSTEM_USE_SPIFFS
+#include <SPIFFS.h>
+#endif  /* FILESYSTEM_USE_SPIFFS */
 
 /******************************************************************************
  * Macros
@@ -64,25 +64,10 @@
  * Types and Classes
  *****************************************************************************/
 
-/** Arduino boolean */
-typedef bool boolean;
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-static unsigned long millis()
-{
-    clock_t now = clock();
-
-    return (now * 1000UL) / CLOCKS_PER_SEC;
-}
-
-static uint32_t esp_log_timestamp(void)
-{
-    return millis();
-}
-
-#endif  /* __ARDUINO_H__ */
+#endif  /* __FILESYSTEM_H__ */
 
 /** @} */

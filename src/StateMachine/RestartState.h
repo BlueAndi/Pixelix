@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,7 +69,9 @@ public:
      */
     static RestartState& getInstance()
     {
-        return m_instance;
+        static RestartState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -77,29 +79,26 @@ public:
      *
      * @param[in] sm    Responsible state machine
      */
-    void entry(StateMachine& sm);
+    void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
      *
      * @param[in] sm    Responsible state machine
      */
-    void process(StateMachine& sm);
+    void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
      *
      * @param[in] sm    Responsible state machine
      */
-    void exit(StateMachine& sm);
+    void exit(StateMachine& sm) final;
 
 private:
 
     /** Wait timer in ms, after that all services will be stopped. */
     const uint32_t  WAIT_TILL_STOP_SVC  = 500U;
-
-    /** Restart state instance */
-    static RestartState m_instance;
 
     /** Wait timer */
     SimpleTimer m_timer;

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,7 +70,9 @@ public:
      */
     static ConnectingState& getInstance()
     {
-        return m_instance;
+        static ConnectingState instance; /* singleton idiom to force initialization in the first usage. */
+
+        return instance;
     }
 
     /**
@@ -78,21 +80,21 @@ public:
      * 
      * @param[in] sm    Responsible state machine
      */
-    void entry(StateMachine& sm);
+    void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
      * 
      * @param[in] sm    Responsible state machine
      */
-    void process(StateMachine& sm);
+    void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
      * 
      * @param[in] sm    Responsible state machine
      */
-    void exit(StateMachine& sm);
+    void exit(StateMachine& sm) final;
 
     /** Retry delay after a failed connection attempt in ms. */
     static const uint32_t   RETRY_DELAY             = 30000U;
@@ -105,17 +107,14 @@ public:
 
 private:
 
-    /** Connecting state instance */
-    static ConnectingState  m_instance;
-
     /** Remote wifi SSID */
-    String                  m_wifiSSID;
+    String      m_wifiSSID;
 
     /** Remote wifi passphrase */
-    String                  m_wifiPassphrase;
+    String      m_wifiPassphrase;
 
     /** Timer, used for retry mechanism. */
-    SimpleTimer             m_retryTimer;
+    SimpleTimer m_retryTimer;
 
     /**
      * Constructs the state.

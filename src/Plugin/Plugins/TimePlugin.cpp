@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -106,13 +106,6 @@ void TimePlugin::update(IGfx& gfx)
     return;
 }
 
-void TimePlugin::setText(const String& formatText)
-{
-    m_textWidget.setFormatStr(formatText);
-
-    return;
-}
-
 void TimePlugin::process()
 {
     if ((true == m_checkTimeUpdateTimer.isTimerRunning()) &&
@@ -122,6 +115,13 @@ void TimePlugin::process()
 
         m_checkTimeUpdateTimer.restart();
     }
+
+    return;
+}
+
+void TimePlugin::setText(const String& formatText)
+{
+    m_textWidget.setFormatStr(formatText);
 
     return;
 }

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2020 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,9 +53,6 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/* Initialize settings instance */
-Settings Settings::m_instance;
 
 /** Settings namespace used for preferences */
 static const char*  PREF_NAMESPACE                  = "settings";
@@ -199,7 +196,7 @@ static bool             DEFAULT_TIME_FORMAT_CTRL        = true;
 static bool             DEFAULT_DATE_FORMAT_CTRL        = true;
 
 /** Max. number of display slots default value */
-static uint8_t          DEFAULT_MAX_SLOTS               = 5U;
+static uint8_t          DEFAULT_MAX_SLOTS               = 8U;
 
 /** Display slot configuration default value */
 static const char*      DEFAULT_SLOT_CONFIG             = "";
