@@ -5,9 +5,9 @@ on:
   # Triggers the workflow on push events for all branches
   # Triggers the workflow on pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ master, PluginDevelopment ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, PluginDevelopment ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
