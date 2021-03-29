@@ -139,7 +139,6 @@ void DHTPlugin::update(IGfx& gfx)
 
     if (true == showPage)
     {
-        int16_t min = (gfx.getWidth() > gfx.getHeight()) ? gfx.getHeight() : gfx.getWidth();
 
         /* Clear display */
         gfx.fillScreen(ColorDef::BLACK);
