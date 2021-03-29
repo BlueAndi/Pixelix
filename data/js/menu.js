@@ -58,12 +58,6 @@ menu.data = [{
         "title": "Volumio Plugin",
         "hyperRef": "/plugins/VolumioPlugin.html"
     }, {
-        "title": "Weather Plugin",
-        "hyperRef": "/plugins/WeatherPlugin.html"
-    }, {
-        "title": "DHT Plugin",
-        "hyperRef": "/plugins/DHTPlugin.html"
-    }, {
         "title": "BTC Quote Plugin",
         "hyperRef": "/plugins/BTCQuotePlugin.html"
     }, {
