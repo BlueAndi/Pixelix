@@ -39,7 +39,6 @@
 /******************************************************************************
  * Compile Switches
  *****************************************************************************/
-#define DHTPIN 5U     // GPIO 5
 #define DHTTYPE DHT11   // DHT 11
 
 /******************************************************************************
@@ -47,6 +46,8 @@
  *****************************************************************************/
 #include <stdint.h>
 #include "Plugin.hpp"
+#include "Board.h"
+
 
 #include <SimpleTimer.hpp>
 #include <DHT.h>
@@ -89,7 +90,7 @@ public:
         m_page(0U),
         m_timer(),
         m_xMutex(nullptr),
-        m_dht(DHTPIN, DHTTYPE),
+        m_dht(Board::Pin::tempPinNo, DHTTYPE),
         m_humid(0),
         m_temp(0),
         m_last(0)
