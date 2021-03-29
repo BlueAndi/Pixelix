@@ -9,3 +9,4 @@ out
 firmware.map
 upload.json
 *.code-workspace
+platformio.ini

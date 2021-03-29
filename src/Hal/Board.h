@@ -64,6 +64,9 @@ namespace Board
 /** Pin number of all used pins. */
 namespace Pin
 {
+    /** Pin number of DHT 11 button */
+    static const uint8_t    tempPinNo               = 5U;
+
     /** Pin number of onboard LED */
     static const uint8_t    onBoardLedPinNo         = 2U;
 
@@ -94,6 +97,9 @@ static const DOutPin<Pin::ledMatrixDataOutPinNo>        ledMatrixDataOut;
 
 /** Analog input pin: LDR in */
 static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
+
+static const DInPin<Pin::tempPinNo, INPUT_PULLUP>              tempIn;
+
 
 /** ADC resolution in digits */
 static const uint16_t   adcResolution   = 4096U;
