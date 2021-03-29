@@ -75,9 +75,7 @@
 #include "TestPlugin.h"
 #include "TimePlugin.h"
 #include "VolumioPlugin.h"
-#include "WeatherPlugin.h"
 #include "BTCQuotePlugin.h"
-#include "DHTPlugin.h"
 #include "WifiStatusPlugin.h"
 
 #include <lwip/init.h>
@@ -373,9 +371,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
     pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
     pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
-    pluginMgr.registerPlugin("DHTPlugin", DHTPlugin::create);
     pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);
-    pluginMgr.registerPlugin("WeatherPlugin", WeatherPlugin::create);
     pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
 
     return;
