@@ -12,4 +12,4 @@ upload.json
 platformio.ini
 .clang_complete
 .gcc-flags.json
-.vscode\settings.json
+.vscode/settings.json
