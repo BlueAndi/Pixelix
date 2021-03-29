@@ -363,7 +363,7 @@ static bool isValidHostname(const String& hostname)
  */
 static String tmplPageProcessor(const String& var)
 {
-    String  result  = var;
+    String  result;
     uint8_t index   = 0U;
     bool    isFound = false;
 
@@ -376,6 +376,11 @@ static String tmplPageProcessor(const String& var)
         }
 
         ++index;
+    }
+
+    if (false == isFound)
+    {
+        result = var;
     }
 
     return result;
