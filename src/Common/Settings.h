@@ -167,23 +167,13 @@ public:
     }
 
     /**
-     * Get GMT offset.
+     * Get POSIX timezone string.
      *
-     * @return Key value pair
+     * @return POSIC timezone string
      */
-    KeyValueInt32& getGmtOffset()
+    KeyValueString& getTimezone()
     {
-        return m_gmtOffset;
-    }
-
-    /**
-     * Get state of daylight saving adjustment.
-     *
-     * @return Key value pair
-     */
-    KeyValueBool& getDaylightSavingAdjustment()
-    {
-        return m_isDaylightSaving;
+        return m_timezone;
     }
 
     /**
@@ -268,7 +258,7 @@ public:
     }
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 15U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 14U;
 
 private:
 
@@ -282,8 +272,7 @@ private:
     KeyValueString  m_hostname;             /**< Hostname */
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
     KeyValueJson    m_pluginInstallation;   /**< Plugin installation */
-    KeyValueInt32   m_gmtOffset;            /**< GMT offset */
-    KeyValueBool    m_isDaylightSaving;     /**< Daylight saving time switch */
+    KeyValueString  m_timezone;             /**< POSIX timezone string */
     KeyValueString  m_ntpServer;            /**< NTP server address */
     KeyValueBool    m_timeFormatCtrl;       /**< Time format control */
     KeyValueBool    m_dateFormatCtrl;       /**< Date format control */

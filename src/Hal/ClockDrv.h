@@ -102,9 +102,6 @@ public:
      */
     bool getDateFormat();
 
-    /** Daylight saving time offset in s */
-    static const int16_t NTP_DAYLIGHT_OFFSET_SEC    = 3600;
-
 private:
 
     /** Flag indicating a initialized clock driver. */

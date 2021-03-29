@@ -282,9 +282,10 @@ private:
 
     /**
      * Add the daylight saving (if available) and GMT offset values to the given
-     * dateTime string
+     * date/time string.
+     * sunrise-sunset.org API: https://sunrise-sunset.org/api
      *
-     * @param[in] dateTimeString dateTime string received via calling the sunrise-sunset.org API.
+     * @param[in] dateTimeString Date/Time string in UTC received via calling the sunrise-sunset.org API.
      *
      * @return A formatted (timezone adjusted) time string according to the configured time format.
      */

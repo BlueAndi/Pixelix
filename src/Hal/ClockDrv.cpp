@@ -67,10 +67,8 @@ void ClockDrv::init()
 {
     if (false == m_isClockDrvInitialized)
     {
-        int32_t     gmtOffset           = 0;
-        int16_t     daylightSavingValue = 0;
+        String      timezone;
         String      ntpServerAddress;
-        bool        isDaylightSaving    = false;
         struct tm   timeInfo            = { 0 };
 
         /* Get the GMT offset, daylight saving enabled/disabled and NTP server address from persistent memory. */
@@ -78,25 +76,18 @@ void ClockDrv::init()
         {
             LOG_WARNING("Use default values for NTP request.");
 
-            gmtOffset           = Settings::getInstance().getGmtOffset().getDefault();
-            isDaylightSaving    = Settings::getInstance().getDaylightSavingAdjustment().getDefault();
+            timezone            = Settings::getInstance().getTimezone().getDefault();
             ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getDefault();
             m_is24HourFormat    = Settings::getInstance().getTimeFormatAdjustment().getDefault();
             m_isDayMonthYear    = Settings::getInstance().getDateFormatAdjustment().getDefault();
         }
         else
         {
-            gmtOffset           = Settings::getInstance().getGmtOffset().getValue();
-            isDaylightSaving    = Settings::getInstance().getDaylightSavingAdjustment().getValue();
+            timezone            = Settings::getInstance().getTimezone().getValue();
             ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getValue();
             m_is24HourFormat    = Settings::getInstance().getTimeFormatAdjustment().getValue();
             m_isDayMonthYear    = Settings::getInstance().getDateFormatAdjustment().getValue();
             Settings::getInstance().close();
-        }
-
-        if (true == isDaylightSaving)
-        {
-            daylightSavingValue = NTP_DAYLIGHT_OFFSET_SEC;
         }
 
         /* Configure NTP:
@@ -106,7 +97,7 @@ void ClockDrv::init()
          * https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/system_time.html
          * https://github.com/espressif/esp-idf/issues/4386
          */
-        configTime(gmtOffset, daylightSavingValue, ntpServerAddress.c_str());
+        configTzTime(timezone.c_str(), ntpServerAddress.c_str());
 
         /* Wait for synchronization (default 5s) */
         if (false == getLocalTime(&timeInfo))

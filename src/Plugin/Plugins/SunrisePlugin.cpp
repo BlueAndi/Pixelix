@@ -444,33 +444,31 @@ void SunrisePlugin::initHttpClient()
 
 String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) const
 {
-    tm          timeInfo;
+    tm          gmTimeInfo;
+    tm*         lcTimeInfo          = nullptr;
+    tm          cvTimeInfo;
+    time_t      gmTime;
     char        timeBuffer[17]      = { 0 };
-    int16_t     gmtOffset           = 0;
-    int16_t     isDaylightSaving    = 0;
-    const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "%H:%M":"%I:%M %p";
+    const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "%H:%M" : "%I:%M %p";
     bool        isPM                = dateTimeString.endsWith("PM");
 
-    /* Get the GMT offset and daylight saving enabled/disabled from persistent memory. */
-    if (false == Settings::getInstance().open(true))
+    /* Convert date/time string to GMT time information */
+    (void)strptime(dateTimeString.c_str(), "%Y-%m-%dT%H:%M:%S", &gmTimeInfo);
+
+    /* Convert to local time */
+    gmTime = mktime(&gmTimeInfo);
+    lcTimeInfo = localtime(&gmTime);
+
+    /* Consider AM/PM */
+    cvTimeInfo = *lcTimeInfo;
+    
+    if (true == isPM)
     {
-        LOG_WARNING("Use default values.");
-        gmtOffset           = Settings::getInstance().getGmtOffset().getDefault();
-        isDaylightSaving    = Settings::getInstance().getDaylightSavingAdjustment().getDefault();
-    }
-    else
-    {
-        gmtOffset           = Settings::getInstance().getGmtOffset().getValue();
-        isDaylightSaving    = Settings::getInstance().getDaylightSavingAdjustment().getValue();
-        Settings::getInstance().close();
+        cvTimeInfo.tm_hour += 12;
     }
 
-    strptime(dateTimeString.c_str(), "%Y-%m-%dT%H:%M:%S" ,&timeInfo);
-    timeInfo.tm_hour += gmtOffset /3600;
-    timeInfo.tm_hour += isDaylightSaving;
-    timeInfo.tm_hour += isPM * 12;
-
-    strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeInfo);
+    /* Convert time information to user friendly string. */
+    (void)strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &cvTimeInfo);
 
     return timeBuffer;
 }
