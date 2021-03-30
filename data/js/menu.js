@@ -12,7 +12,7 @@ menu.data = [{
     "subMenu": [{
         "title": "BTC Quote Plugin",
         "hyperRef": "/plugins/BTCQuotePlugin.html"
-    },{
+    }, {
         "title": "Countdown Plugin",
         "hyperRef": "/plugins/CountdownPlugin.html"
     }, {

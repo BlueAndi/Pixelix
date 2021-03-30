@@ -83,7 +83,6 @@ public:
         m_textWidget("\\calign?"),
         m_httpResponseReceived(false),
         m_relevantResponsePart(""),
-        m_url(),
         m_xMutex(nullptr),
         m_requestTimer()
     {
@@ -206,9 +205,6 @@ private:
     bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer                 m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
-    String                      m_url;                      /**< REST API URL */
-    AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
     SimpleTimer                 m_requestTimer;             /**< Timer is used for cyclic weather http request. */
 
