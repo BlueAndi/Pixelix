@@ -34,7 +34,6 @@
  *****************************************************************************/
 #include "CaptivePortalHandler.h"
 #include "Settings.h"
-#include "WebConfig.h"
 #include "HttpStatus.h"
 #include "FileSystem.h"
 
@@ -66,14 +65,6 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
 {
     if (nullptr == request)
     {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
         return;
     }
 

@@ -137,6 +137,26 @@ public:
     }
 
     /**
+     * Get website login user account.
+     *
+     * @return Website login user account
+     */
+    KeyValueString& getWebLoginUser()
+    {
+        return m_webLoginUser;
+    }
+
+    /**
+     * Get website login user password.
+     *
+     * @return Website login user password
+     */
+    KeyValueString& getWebLoginPassword()
+    {
+        return m_webLoginPassword;
+    }
+
+    /**
      * Get hostname.
      *
      * @return Key value pair
@@ -258,7 +278,7 @@ public:
     }
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 14U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 16U;
 
 private:
 
@@ -269,6 +289,8 @@ private:
     KeyValueString  m_wifiPassphrase;       /**< Remote wifi network passphrase */
     KeyValueString  m_apSSID;               /**< Access point SSID */
     KeyValueString  m_apPassphrase;         /**< Access point passphrase */
+    KeyValueString  m_webLoginUser;         /**< Website login user account */
+    KeyValueString  m_webLoginPassword;     /**< Website login user password */
     KeyValueString  m_hostname;             /**< Hostname */
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
     KeyValueJson    m_pluginInstallation;   /**< Plugin installation */

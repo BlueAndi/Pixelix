@@ -58,12 +58,6 @@ static const uint32_t   WEBSERVER_PORT          = 80U;
 /** Project title, used by the web pages. */
 static const char       PROJECT_TITLE[]         = "PIXELIX";
 
-/** Web server login user */
-static const char       WEB_LOGIN_USER[]        = "luke";
-
-/** Web server login password */
-static const char       WEB_LOGIN_PASSWORD[]    = "skywalker";
-
 /** Websocket protocol */
 static const char       WEBSOCKET_PROTOCOL[]    = "ws";
 
