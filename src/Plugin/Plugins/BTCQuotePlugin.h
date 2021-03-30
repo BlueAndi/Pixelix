@@ -63,7 +63,7 @@
  * Loads the current exchange rate from Bitcoin to USD. If price is properly loaded,
  * it will be updated every 15 minutes.
  *
- * Powered by CoinDesk - https://www.coindesk.com/price/bitcoin">
+ * Powered by CoinDesk - https://www.coindesk.com/price/bitcoin
  */
 class BTCQuotePlugin : public Plugin
 {
