@@ -59,6 +59,7 @@
 #include <Util.h>
 #include <ESPmDNS.h>
 
+#include "BTCQuotePlugin.h"
 #include "CountdownPlugin.h"
 #include "DatePlugin.h"
 #include "DateTimePlugin.h"
@@ -354,6 +355,7 @@ void InitState::registerPlugins()
 
     /* Register in alphabetic order. */
 
+    pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);
     pluginMgr.registerPlugin("CountdownPlugin", CountdownPlugin::create);
     pluginMgr.registerPlugin("DatePlugin", DatePlugin::create);
     pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
