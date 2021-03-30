@@ -10,6 +10,9 @@ menu.data = [{
     "title": "Plugins",
     "hyperRef": "#",
     "subMenu": [{
+        "title": "BTC Quote Plugin",
+        "hyperRef": "/plugins/BTCQuotePlugin.html"
+    },{
         "title": "Countdown Plugin",
         "hyperRef": "/plugins/CountdownPlugin.html"
     }, {
