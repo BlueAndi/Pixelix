@@ -87,6 +87,7 @@ public:
         m_configurationFilename(),
         m_urlIcon(),
         m_urlText(),
+        m_client(),
         m_requestTimer(),
         m_offlineTimer(),
         m_url(),

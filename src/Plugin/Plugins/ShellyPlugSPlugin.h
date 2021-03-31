@@ -83,6 +83,7 @@ public:
         m_ipAddress("192.168.1.123"), /* Example data */
         m_configurationFilename(""),
         m_httpResponseReceived(false),
+        m_client(),
         m_url(),
         m_callbackWebHandler(nullptr),
         m_xMutex(nullptr),

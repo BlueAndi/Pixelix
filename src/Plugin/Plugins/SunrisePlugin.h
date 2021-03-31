@@ -90,6 +90,7 @@ public:
         m_configurationFilename(""),
         m_httpResponseReceived(false),
         m_relevantResponsePart(""),
+        m_client(),
         m_url(),
         m_callbackWebHandler(nullptr),
         m_xMutex(nullptr),

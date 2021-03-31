@@ -83,6 +83,7 @@ public:
         m_textWidget("\\calign?"),
         m_httpResponseReceived(false),
         m_relevantResponsePart(""),
+        m_client(),
         m_xMutex(nullptr),
         m_requestTimer()
     {
