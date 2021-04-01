@@ -60,8 +60,9 @@ class UploadModel():
     def getIPAddress(self):
         ipAddress = self.DEFAULT_IP_ADDRESS
 
-        if ("ipAddress" in self._dataJson):
-            ipAddress = self._dataJson["ipAddress"]
+        if (None != self._dataJson):
+            if ("ipAddress" in self._dataJson):
+                ipAddress = self._dataJson["ipAddress"]
         
         return ipAddress
 
@@ -71,8 +72,9 @@ class UploadModel():
     def getPort(self):
         port = self.DEFAULT_PORT
 
-        if ("port" in self._dataJson):
-            port = self._dataJson["port"]
+        if (None != self._dataJson):
+            if ("port" in self._dataJson):
+                port = self._dataJson["port"]
         
         return port
 
@@ -82,8 +84,9 @@ class UploadModel():
     def getPassword(self):
         password = self.DEFAULT_PASSWORD
 
-        if ("password" in self._dataJson):
-            password = self._dataJson["password"]
+        if (None != self._dataJson):
+            if ("password" in self._dataJson):
+                password = self._dataJson["password"]
         
         return password
 
