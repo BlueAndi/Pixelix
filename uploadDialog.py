@@ -21,32 +21,109 @@
 # SOFTWARE.
 
 import tkinter as tk
-from tkinter import ttk
 import json
 
 Import("env")
 
-class App(tk.Frame):
-    def __init__(self, parent=None):
-        super(App, self).__init__(parent)
+class UploadModel():
+    def __init__(self, fileName):
+        self._FILENAME          = fileName
+        self._dataJson          = self._load(self._FILENAME)
+        self.DEFAULT_IP_ADDRESS = "192.168.x.x"
+        self.DEFAULT_PORT       = 3232
+        self.DEFAULT_PASSWORD   = "maytheforcebewithyou"
 
-        self._FILENAME  = "upload.json"
-        self._parent    = parent
-        self._ipAddress = tk.StringVar()
-        self._port      = tk.IntVar()
-        self._password  = tk.StringVar()
-        self._isAborted = True
+    def _load(self, fileName):
+        dataJson = None
 
+        try:
+            with open(fileName) as jsonFile:
+                dataJson = json.load(jsonFile)                
+        except:
+            pass
+    
+        return dataJson
+
+    def _save(self, fileName):
+        try:
+            with open(fileName, "w") as jsonFile:
+                json.dump(self._dataJson, jsonFile, indent=4)
+        except:
+            pass
+
+    def load(self):
         self._load(self._FILENAME)
 
-        labelIpAddress = tk.Label(self, text="IP-Address:", anchor="w")
-        inputIpAddress = tk.Entry(self, textvariable=self._ipAddress)
+    def save(self):
+        self._save(self._FILENAME)
 
-        labelPort = tk.Label(self, text="Port:", anchor="w")
-        inputPort = tk.Entry(self, textvariable=self._port)
+    def getIPAddress(self):
+        ipAddress = self.DEFAULT_IP_ADDRESS
 
-        labelPassword = tk.Label(self, text="Password:", anchor="w")
-        inputPassword = tk.Entry(self, textvariable=self._password, show="*")
+        if ("ipAddress" in self._dataJson):
+            ipAddress = self._dataJson["ipAddress"]
+        
+        return ipAddress
+
+    def setIPAddress(self, ipAddress):
+        self._dataJson["ipAddress"] = ipAddress
+
+    def getPort(self):
+        port = self.DEFAULT_PORT
+
+        if ("port" in self._dataJson):
+            port = self._dataJson["port"]
+        
+        return port
+
+    def setPort(self, port):
+        self._dataJson["port"] = port
+
+    def getPassword(self):
+        password = self.DEFAULT_PASSWORD
+
+        if ("password" in self._dataJson):
+            password = self._dataJson["password"]
+        
+        return password
+
+    def setPassword(self, password):
+        self._dataJson["password"] = password
+
+class App(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+
+        self._uploadModel   = UploadModel("upload.json")
+        self._ipAddress     = tk.StringVar()
+        self._port          = tk.IntVar()
+        self._password      = tk.StringVar()
+        self._isAborted     = True
+
+    def _updateGUI(self):
+        self._ipAddress.set(self._uploadModel.getIPAddress())
+        self._port.set(self._uploadModel.getPort())
+        self._password.set(self._uploadModel.getPassword())
+
+    def _updateModel(self):
+        self._uploadModel.setIPAddress(self._ipAddress.get())
+        self._uploadModel.setPort(self._port.get())
+        self._uploadModel.setPassword(self._password.get())
+
+    def _setupGUI(self):
+
+        self.title("Upload Utility")
+
+        frame = tk.Frame(self)
+
+        labelIpAddress = tk.Label(frame, text="IP-Address:", anchor="w")
+        inputIpAddress = tk.Entry(frame, textvariable=self._ipAddress)
+
+        labelPort = tk.Label(frame, text="Port:", anchor="w")
+        inputPort = tk.Entry(frame, textvariable=self._port)
+
+        labelPassword = tk.Label(frame, text="Password:", anchor="w")
+        inputPassword = tk.Entry(frame, textvariable=self._password, show="*")
 
         labelIpAddress.pack(fill="x", expand=False)
         inputIpAddress.pack(fill="x", expand=True)
@@ -55,76 +132,39 @@ class App(tk.Frame):
         labelPassword.pack(fill="x", expand=False)
         inputPassword.pack(fill="x", expand=True)
 
-        buttonUpload = tk.Button(self, text="Upload", command=self._upload)
+        buttonUpload = tk.Button(frame, text="Upload", command=self._onUpload)
         buttonUpload.pack(fill="x", expand=False)
 
-    def _load(self, fileName):
-        try:
-            with open(fileName) as jsonFile:
-                data = json.load(jsonFile)
-                
-                if ("ipAddress" in data):
-                    self._ipAddress.set(data["ipAddress"])
+        frame.pack(fill="x", expand=True, padx=20, pady=20)
 
-                if ("port" in data):
-                    self._port.set(data["port"])
+        self._updateGUI()
+        self.update()
+        self.minsize(frame.winfo_width(), frame.winfo_height())
+        self.protocol("WM_DELETE_WINDOW", lambda: self.quit())
 
-                if ("password" in data):
-                    self._password.set(data["password"])
-        except:
-            self._ipAddress.set("192.168.x.x")
-            self._port.set(3232)
-            self._password.set("maytheforcebewithyou")
-            pass
+    def run(self):
+        self._setupGUI()
+        self.mainloop()
+        self._updateModel()
 
-    def _save(self, fileName):
-        data = {}
-        data["ipAddress"]   = self._ipAddress.get()
-        data["port"]        = self._port.get()
-        data["password"]    = self._password.get()
+        if (False == self._isAborted):
+            env.Replace(
+                UPLOAD_PORT=self._uploadModel.getIPAddress(),
+                UPLOAD_FLAGS=["--port=" + str(self._uploadModel.getPort()), "--auth=" + self._uploadModel.getPassword()]
+            )
+        else:
+            print("Aborted. Using upload parameters from platform.ini")
 
-        json.dumps(data)
+    def _onUpload(self):
+        self._updateModel()
+        self._uploadModel.save()
 
-        try:
-            with open(fileName, "w") as jsonFile:
-                json.dump(data, jsonFile, indent=4)
-        except:
-            pass
-
-    def _upload(self):
-        self._save(self._FILENAME)
         self._isAborted = False
-        self._parent.quit()
-
-    def isAborted(self):
-        return self._isAborted
-
-    def getIPAddress(self):
-        return self._ipAddress.get()
-
-    def getPort(self):
-        return self._port.get()
-
-    def getPassword(self):
-        return self._password.get()
+        self.quit()
 
 def beforeUpload(source, target, env):
-    root = tk.Tk()
-    main = App(root)
-    root.title("Upload Utility")
-    main.pack(fill="x", expand=True)
-    root.update()
-    root.minsize(root.winfo_width() * 2, root.winfo_height())
-    root.protocol("WM_DELETE_WINDOW", lambda: root.quit())
-    root.mainloop()
-    root.destroy()
-    if (False == main.isAborted()):
-        env.Replace(
-            UPLOAD_PORT=main.getIPAddress(),
-            UPLOAD_FLAGS=["--port=" + str(main.getPort()), "--auth=" + main.getPassword()]
-        )
-    else:
-        print("Aborted. Using upload parameters from platform.ini")
+    app = App()
+    app.run()
 
 env.AddPreAction("upload", beforeUpload)
 env.AddPreAction("uploadfs", beforeUpload)
