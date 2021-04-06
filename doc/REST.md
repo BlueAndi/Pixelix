@@ -21,6 +21,8 @@
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location](#endpoint-base-uridisplayuidplugin-uidlocation)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/ipAddress](#endpoint-base-uridisplayuidplugin-uidipaddress)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/host](#endpoint-base-uridisplayuidplugin-uidhost)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/apiKey](#endpoint-base-uridisplayuidplugin-uidapikey)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/cityId](#endpoint-base-uridisplayuidplugin-uidcityid)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -600,6 +602,98 @@ Example with curl:
 ```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/host
 $ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/host
+```
+
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/apiKey
+Get/Set the API key of the OpenWeatherPlugin plugin.
+
+Detail:
+* Method: GET
+  * Get the API key.
+    * Arguments:
+      * N/A
+* Method: POST
+  * Set the API key.
+    * Arguments:
+      * set=`<api-key>`
+
+Example:
+```
+GET <base-uri>/rest/api/v1/display/uid/0/apiKey
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "apiKey": "xyz"
+    }
+}
+```
+
+```
+POST <base-uri>/rest/api/v1/display/uid/0/apiKey?set=xyz
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": null
+}
+```
+
+Example with curl:
+```bash
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/apiKey
+$ curl -u luke:skywalker -d "set=xyz" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/apiKey
+```
+
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/cityId
+Get/Set the city id of the OpenWeatherPlugin plugin.
+
+Detail:
+* Method: GET
+  * Get the city id.
+    * Arguments:
+      * N/A
+* Method: POST
+  * Set the city id.
+    * Arguments:
+      * set=`<city-id>`
+
+Example:
+```
+GET <base-uri>/rest/api/v1/display/uid/0/cityId
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": {
+        "cityId": "2950159"
+    }
+}
+```
+
+```
+POST <base-uri>/rest/api/v1/display/uid/0/cityId?set=2950159
+```
+
+Result:
+```json
+{
+    "status": 0,
+    "data": null
+}
+```
+
+Example with curl:
+```bash
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/cityId
+$ curl -u luke:skywalker -d "set=2950159" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/cityId
 ```
 
 # Issues, Ideas And Bugs
