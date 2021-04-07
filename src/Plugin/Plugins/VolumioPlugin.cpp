@@ -101,7 +101,7 @@ void VolumioPlugin::start()
     if (false == startHttpRequest())
     {
         /* If a request fails, show standard icon and a '?' */
-        m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
         m_textWidget.setFormatStr("\\calign?");
 
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -145,7 +145,7 @@ void VolumioPlugin::process()
         if (false == startHttpRequest())
         {
             /* If a request fails, show standard icon and a '?' */
-            m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
             m_textWidget.setFormatStr("\\calign?");
 
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -580,7 +580,7 @@ void VolumioPlugin::initHttpClient()
         if (true == m_isConnectionError)
         {
             /* If a request fails, show standard icon and a '?' */
-            m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
             m_textWidget.setFormatStr("\\calign?");
 
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
