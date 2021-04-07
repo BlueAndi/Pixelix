@@ -95,7 +95,7 @@ void OpenWeatherPlugin::start()
     if (false == startHttpRequest())
     {
         /* If a request fails, show standard icon and a '?' */
-        m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
         m_textWidget.setFormatStr("\\calign?");
 
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -136,7 +136,7 @@ void OpenWeatherPlugin::process()
         if (false == startHttpRequest())
         {
             /* If a request fails, show standard icon and a '?' */
-            m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
             m_textWidget.setFormatStr("\\calign?");
 
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -476,10 +476,10 @@ bool OpenWeatherPlugin::startHttpRequest()
     {
         String url = OPEN_WEATHER_BASE_URI;
 
-        /* Get current weather information */
-        url += "/data/2.5/group?id=";
+        /* Get current weather information: https://openweathermap.org/current#cityid */
+        url += "/data/2.5/weather?id=";
         url += m_cityId;
-        url += "&units=metric&cnt=1&APPID=";
+        url += "&units=metric&APPID=";
         url += m_apiKey;
 
         if (true == m_client.begin(url))
@@ -510,8 +510,8 @@ void OpenWeatherPlugin::initHttpClient()
         DeserializationError            error;
 
         /* See https://openweathermap.org/current#current_JSON */
-        filter["main"]["temp"]      = true; /* Temperature */
-        filter["weather"]["icon"]   = true; /* Weather icon id, see https://openweathermap.org/weather-conditions */
+        filter["main"]["temp"]          = true; /* Temperature */
+        filter["weather"][0]["icon"]    = true; /* Weather icon id, see https://openweathermap.org/weather-conditions */
         
         if (true == filter.overflowed())
         {
@@ -530,14 +530,18 @@ void OpenWeatherPlugin::initHttpClient()
             {
                 LOG_WARNING("JSON temperature type missmatch or missing.");
             }
-            else if (false == jsonDoc["weather"]["icon"].is<String>())
+            else if (false == jsonDoc["weather"][0]["icon"].is<String>())
             {
                 LOG_WARNING("JSON weather icon id type missmatch or missing.");
             }
             else
             {
-                String  temperature     = jsonDoc["main"]["temp"].as<String>();
-                String  weatherIconId   = jsonDoc["weather"]["icon"].as<String>();
+                String  temperature     = jsonDoc["main"]["temp"].as<String>(); /* Use String here instead of float to use original precision. */
+                String  weatherIconId   = jsonDoc["weather"][0]["icon"].as<String>();
+
+                /* Add unit °C */
+                temperature += "\x8E";
+                temperature += "C";
 
                 lock();
 
@@ -556,7 +560,7 @@ void OpenWeatherPlugin::initHttpClient()
         if (true == m_isConnectionError)
         {
             /* If a request fails, show standard icon and a '?' */
-            m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
             m_textWidget.setFormatStr("\\calign?");
 
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
