@@ -51,9 +51,19 @@
 ** May 07, 2020: Increased readability by adapting the appearance of numbers 
 ** and uppercase letters.
 ** Yann Le Glaz (yann_le@web.de)
+**
+** Apr 07, 2021: Last character definition is now automatically set depended on
+** the TOMTHUMB_USE_EXTENDED define.
+** Andreas Merkle (web@blue-andi.de)
 */
 
-#define TOMTHUMB_USE_EXTENDED 0
+#define TOMTHUMB_USE_EXTENDED 1
+
+#if TOMTHUMB_USE_EXTENDED
+#define TOMTHUMB_LAST_CHAR_ID (0xEB)
+#else
+#define TOMTHUMB_LAST_CHAR_ID (0x7E)
+#endif
 
 const uint8_t TomThumbBitmaps[] PROGMEM = {
     0x00,                /* 0x20 space */
@@ -475,7 +485,11 @@ const GFXglyph TomThumbGlyphs[] PROGMEM = {
 #endif /* (TOMTHUMB_USE_EXTENDED) */
 };
 
-const GFXfont TomThumb PROGMEM = {
-    (uint8_t  *)TomThumbBitmaps,
-    (GFXglyph *)TomThumbGlyphs,
-    0x20, 0x7E, 6 };
+const GFXfont TomThumb PROGMEM =
+{
+    (uint8_t *)TomThumbBitmaps,
+    (GFXglyph*)TomThumbGlyphs,
+    0x20,
+    TOMTHUMB_LAST_CHAR_ID,
+    6
+};
