@@ -55,6 +55,10 @@
 ** Apr 07, 2021: Last character definition is now automatically set depended on
 ** the TOMTHUMB_USE_EXTENDED define.
 ** Andreas Merkle (web@blue-andi.de)
+**
+** Apr 09, 2021: Increased readability by adapting the appearance of the degree
+** symbol (0xB0) for better readability
+** Yann Le Glaz (yann_le@web.de)
 */
 
 #define TOMTHUMB_USE_EXTENDED 1
@@ -177,7 +181,7 @@ const uint8_t TomThumbBitmaps[] PROGMEM = {
     0xC0,                /* 0xAD softhyphen */
     0xDA, 0x80,            /* 0xAE registered */
     0xE0,                /* 0xAF macron */
-    0x55, 0x00,            /* 0xB0 degree */
+    0xC0, 0xC0, 0x00,    /* 0xB0 degree */
     0x5D, 0x0E,            /* 0xB1 plusminus */
     0xC9, 0x80,            /* 0xB2 twosuperior */
     0xEF, 0x80,            /* 0xB3 threesuperior */
@@ -388,7 +392,7 @@ const GFXglyph TomThumbGlyphs[] PROGMEM = {
     { 200, 2, 1, 3, 0, -3 }, /* 0xAD softhyphen */
     { 201, 3, 3, 4, 0, -5 }, /* 0xAE registered */
     { 203, 3, 1, 4, 0, -5 }, /* 0xAF macron */
-    { 204, 3, 3, 4, 0, -5 }, /* 0xB0 degree */
+    { 204, 8, 3, 4, 0, -5 }, /* 0xB0 degree */
     { 206, 3, 5, 4, 0, -5 }, /* 0xB1 plusminus */
     { 208, 3, 3, 4, 0, -5 }, /* 0xB2 twosuperior */
     { 210, 3, 3, 4, 0, -5 }, /* 0xB3 threesuperior */
