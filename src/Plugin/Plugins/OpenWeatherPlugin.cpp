@@ -63,6 +63,9 @@
 /* Initialize image path for standard icon. */
 const char* OpenWeatherPlugin::IMAGE_PATH_STD_ICON      = "/images/openweather.bmp";
 
+/* Initialize image path for the weather condition icons. */
+const char* OpenWeatherPlugin::IMAGE_PATH               = "/images/";
+
 /* Initialize configuration path. */
 const char* OpenWeatherPlugin::CONFIG_PATH              = "/configuration";
 
@@ -206,48 +209,29 @@ void OpenWeatherPlugin::inactive()
 
 void OpenWeatherPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
 {
-    m_urlApiKey = baseUri + "/apiKey";
+    m_urlWeather = baseUri + "/weather";
 
-    m_callbackWebHandlerApiKey = &srv.on( m_urlApiKey.c_str(),
+    m_callbackWebHandlerWeather = &srv.on( m_urlWeather.c_str(),
                                     [this](AsyncWebServerRequest *request)
                                     {
-                                        this->webReqHandlerApiKey(request);
+                                        this->webReqHandler(request);
                                     });
 
-    LOG_INFO("[%s] Register: %s", getName(), m_urlApiKey.c_str());
-
-    m_urlCityId = baseUri + "/cityId";
-
-    m_callbackWebHandlerCityId = &srv.on( m_urlCityId.c_str(),
-                                    [this](AsyncWebServerRequest *request)
-                                    {
-                                        this->webReqHandlerCityId(request);
-                                    });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_urlCityId.c_str());
+    LOG_INFO("[%s] Register: %s", getName(), m_urlWeather.c_str());
 
     return;
 }
 
 void OpenWeatherPlugin::unregisterWebInterface(AsyncWebServer& srv)
 {
-    LOG_INFO("[%s] Unregister: %s", getName(), m_urlCityId.c_str());
+    LOG_INFO("[%s] Unregister: %s", getName(), m_urlWeather.c_str());
 
-    if (false == srv.removeHandler(m_callbackWebHandlerCityId))
+    if (false == srv.removeHandler(m_callbackWebHandlerWeather))
     {
         LOG_WARNING("Couldn't remove %s handler.", getName());
     }
 
-    m_callbackWebHandlerCityId = nullptr;
-
-    LOG_INFO("[%s] Unregister: %s", getName(), m_urlApiKey.c_str());
-
-    if (false == srv.removeHandler(m_callbackWebHandlerApiKey))
-    {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
-    }
-
-    m_callbackWebHandlerApiKey = nullptr;
+    m_callbackWebHandlerWeather = nullptr;
 
     return;
 }
@@ -323,7 +307,7 @@ void OpenWeatherPlugin::setCityId(const String& cityId)
  * Private Methods
  *****************************************************************************/
 
-void OpenWeatherPlugin::webReqHandlerApiKey(AsyncWebServerRequest *request)
+void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
 {
     String              content;
     const size_t        JSON_DOC_SIZE   = 512U;
@@ -338,80 +322,11 @@ void OpenWeatherPlugin::webReqHandlerApiKey(AsyncWebServerRequest *request)
     if (HTTP_GET == request->method())
     {
         String      apiKey  = getApiKey();
+        String      cityId  = getCityId();
+
         JsonObject  dataObj = jsonDoc.createNestedObject("data");
 
         dataObj["apiKey"] = apiKey;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* Argument missing? */
-        if (false == request->hasArg("set"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Argument is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String apiKey = request->arg("set");
-
-            setApiKey(apiKey);
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
-
-void OpenWeatherPlugin::webReqHandlerCityId(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        String      cityId  = getCityId();
-        JsonObject  dataObj = jsonDoc.createNestedObject("data");
-
         dataObj["cityId"] = cityId;
 
         /* Prepare response */
@@ -421,7 +336,8 @@ void OpenWeatherPlugin::webReqHandlerCityId(AsyncWebServerRequest *request)
     else if (HTTP_POST == request->method())
     {
         /* Argument missing? */
-        if (false == request->hasArg("set"))
+        if ((false == request->hasArg("apiKey")) ||
+            (false == request->hasArg("cityId")))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
@@ -432,8 +348,10 @@ void OpenWeatherPlugin::webReqHandlerCityId(AsyncWebServerRequest *request)
         }
         else
         {
-            String cityId = request->arg("set");
+            String apiKey = request->arg("apiKey");
+            String cityId = request->arg("cityId");
 
+            setApiKey(apiKey);
             setCityId(cityId);
 
             /* Prepare response */
@@ -508,6 +426,7 @@ void OpenWeatherPlugin::initHttpClient()
         const size_t                    FILTER_SIZE             = 128U;
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
+        char                            formattedTemperature[5] = "";
 
         /* See https://openweathermap.org/current#current_JSON */
         filter["main"]["temp"]          = true; /* Temperature */
@@ -536,7 +455,9 @@ void OpenWeatherPlugin::initHttpClient()
             }
             else
             {
-                String  temperature     = jsonDoc["main"]["temp"].as<String>(); /* Use String here instead of float to use original precision. */
+                snprintf(formattedTemperature, sizeof(formattedTemperature), "%.1f", jsonDoc["main"]["temp"].as<float>());
+
+                String  temperature     = String(formattedTemperature);
                 String  weatherIconId   = jsonDoc["weather"][0]["icon"].as<String>();
 
                 /* Add unit °C */
@@ -545,8 +466,37 @@ void OpenWeatherPlugin::initHttpClient()
 
                 lock();
 
-                /* TODO Handle icon depended on weather icon id */
-                m_textWidget.setFormatStr(temperature);
+                /* Handle icon depended on weather icon id. */
+                if((weatherIconId == "03d") || (weatherIconId == "03n"))
+                {
+                    weatherIconId = "03";
+                }
+                else if((weatherIconId == "04d") || (weatherIconId == "04n"))
+                {
+                    weatherIconId = "04";
+                }
+                else if((weatherIconId == "09d") || (weatherIconId == "09n"))
+                {
+                    weatherIconId = "09";
+                }
+                else if((weatherIconId == "11d") || (weatherIconId == "11n"))
+                {
+                    weatherIconId = "11";
+                }
+                else if((weatherIconId == "13d") || (weatherIconId == "13n"))
+                {
+                    weatherIconId = "13";
+                }
+                else
+                {
+                    /* weatherIconId already matches the icon name. */
+                }
+
+                String weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
+
+                (void)m_bitmapWidget.load(FILESYSTEM, weatherConditionIcon);
+
+                m_textWidget.setFormatStr("\\calign" + temperature);
 
                 unlock();
             }

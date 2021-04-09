@@ -85,10 +85,8 @@ public:
         m_urlText(),
         m_client(),
         m_requestTimer(),
-        m_urlApiKey(),
-        m_urlCityId(),
-        m_callbackWebHandlerApiKey(nullptr),
-        m_callbackWebHandlerCityId(nullptr),
+        m_urlWeather(),
+        m_callbackWebHandlerWeather(nullptr),
         m_xMutex(nullptr),
         m_isConnectionError(false)
     {
@@ -238,6 +236,11 @@ private:
     static const char*      IMAGE_PATH_STD_ICON;
 
     /**
+     * Image path within the filesystem to weather condition icons.
+     */
+    static const char*      IMAGE_PATH;
+
+    /**
      * Configuration path within the filesystem.
      */
     static const char*      CONFIG_PATH;
@@ -272,10 +275,8 @@ private:
     String                      m_urlText;                  /**< REST API URL for updating the text */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
-    String                      m_urlApiKey;                /**< REST API URL for API key */
-    String                      m_urlCityId;                /**< REST API URL for city id */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerApiKey; /**< Callback web handler for API key */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerCityId; /**< Callback web handler for city id */
+    String                      m_urlWeather;               /**< REST API URL for weather data */
+    AsyncCallbackWebHandler*    m_callbackWebHandlerWeather; /**< Callback web handler for weather data */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
     bool                        m_isConnectionError;        /**< Is connection error happened? */
 
@@ -285,15 +286,7 @@ private:
      *
      * @param[in] request   Web request
      */
-    void webReqHandlerApiKey(AsyncWebServerRequest *request);
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandlerCityId(AsyncWebServerRequest *request);
+    void webReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Request new data.
