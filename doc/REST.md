@@ -21,8 +21,7 @@
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/location](#endpoint-base-uridisplayuidplugin-uidlocation)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/ipAddress](#endpoint-base-uridisplayuidplugin-uidipaddress)
     - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/host](#endpoint-base-uridisplayuidplugin-uidhost)
-    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/apiKey](#endpoint-base-uridisplayuidplugin-uidapikey)
-    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/cityId](#endpoint-base-uridisplayuidplugin-uidcityid)
+    - [Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/weather](#endpoint-base-uridisplayuidplugin-uidweather)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 
@@ -604,22 +603,22 @@ $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/h
 $ curl -u luke:skywalker -d "set=volumio.fritz.box" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/host
 ```
 
-### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/apiKey
-Get/Set the API key of the OpenWeatherPlugin plugin.
+### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/weather
+Get/Set the weather data needed by the OpenWeather plugin.
 
 Detail:
 * Method: GET
-  * Get the API key.
+  * Get the weather data.
     * Arguments:
       * N/A
 * Method: POST
-  * Set the API key.
+  * Set the weather data.
     * Arguments:
-      * set=`<api-key>`
+      * set=`<weather>`
 
 Example:
 ```
-GET <base-uri>/rest/api/v1/display/uid/0/apiKey
+GET <base-uri>/rest/api/v1/display/uid/0/weather
 ```
 
 Result:
@@ -627,13 +626,14 @@ Result:
 {
     "status": 0,
     "data": {
-        "apiKey": "xyz"
+        "apiKey": "xyz",
+        "cityId": "abc"
     }
 }
 ```
 
 ```
-POST <base-uri>/rest/api/v1/display/uid/0/apiKey?set=xyz
+POST <base-uri>/rest/api/v1/display/uid/0/weather?apyKey=xyz&cityId=abc
 ```
 
 Result:
@@ -646,55 +646,8 @@ Result:
 
 Example with curl:
 ```bash
-$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/apiKey
-$ curl -u luke:skywalker -d "set=xyz" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/apiKey
-```
-
-### Endpoint `<base-uri>`/display/uid/`<plugin-uid>`/cityId
-Get/Set the city id of the OpenWeatherPlugin plugin.
-
-Detail:
-* Method: GET
-  * Get the city id.
-    * Arguments:
-      * N/A
-* Method: POST
-  * Set the city id.
-    * Arguments:
-      * set=`<city-id>`
-
-Example:
-```
-GET <base-uri>/rest/api/v1/display/uid/0/cityId
-```
-
-Result:
-```json
-{
-    "status": 0,
-    "data": {
-        "cityId": "2950159"
-    }
-}
-```
-
-```
-POST <base-uri>/rest/api/v1/display/uid/0/cityId?set=2950159
-```
-
-Result:
-```json
-{
-    "status": 0,
-    "data": null
-}
-```
-
-Example with curl:
-```bash
-$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/cityId
-$ curl -u luke:skywalker -d "set=2950159" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/cityId
-```
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/weather
+$ curl -u luke:skywalker -d "apyKey=xyz" -d "cityId=abc" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/weather
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
