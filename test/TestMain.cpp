@@ -1648,13 +1648,13 @@ static void testLogging()
     /* Set LogLevel to LOGLEVEL_ERROR and trigger a LOG_INFO message. */
     Logging::getInstance().setLogLevel(Logging::LOGLEVEL_ERROR);
     LOG_INFO(TEST_STRING_1);
-    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "%s", "");
+    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "%s", "");
     printBuffer = myTestLogger.getBuffer();
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
     /* Check expected error log output, with type const char* string. */
     LOG_ERROR(TEST_STRING_1); lineNo = __LINE__;
-    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "ERROR: TestMain.cpp:%d %s\r\n", lineNo, TEST_STRING_1);
+    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "ERROR: TestMain.cpp:%d %s\r\n", lineNo, TEST_STRING_1);
     printBuffer = myTestLogger.getBuffer();
 
     /* Skip timestamp */
@@ -1672,7 +1672,7 @@ static void testLogging()
 
     /* Check expected error log output, with type const String string. */
     LOG_ERROR(TEST_STRING_2);  lineNo = __LINE__;
-    snprintf(expectedLogMessage, sizeof(expectedLogMessage), "ERROR: TestMain.cpp:%d %s\r\n", lineNo, TEST_STRING_2.c_str());
+    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "ERROR: TestMain.cpp:%d %s\r\n", lineNo, TEST_STRING_2.c_str());
     printBuffer = myTestLogger.getBuffer();
 
     /* Skip timestamp */
