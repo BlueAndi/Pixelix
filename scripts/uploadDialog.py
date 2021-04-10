@@ -33,6 +33,9 @@ class UploadModel():
         self.DEFAULT_PORT       = 3232
         self.DEFAULT_PASSWORD   = "maytheforcebewithyou"
 
+        if (None == self._dataJson):
+            self._setupModel()
+
     def _load(self, fileName):
         dataJson = None
 
@@ -50,6 +53,12 @@ class UploadModel():
                 json.dump(self._dataJson, jsonFile, indent=4)
         except:
             pass
+    
+    def _setupModel(self):
+        self._dataJson = dict()
+        self._dataJson["ipAddress"] = self.DEFAULT_IP_ADDRESS
+        self._dataJson["port"]      = self.DEFAULT_PORT
+        self._dataJson["password"]  = self.DEFAULT_PASSWORD
 
     def load(self):
         self._load(self._FILENAME)
