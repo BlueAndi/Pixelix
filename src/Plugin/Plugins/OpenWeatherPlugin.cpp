@@ -471,11 +471,19 @@ void OpenWeatherPlugin::initHttpClient()
                 temperatureStrResult += "\x8E";
                 temperatureStrResult += "C";
 
-                /* Handle icon depended on weather icon id by removing just the last character.
+                /* Handle icon depended on weather icon id.
                  * See https://openweathermap.org/weather-conditions
+                 * 
+                 * First check whether there is a specific icon available.
+                 * If not, check for a generic weather icon.
+                 * If this is not available too, use the standard OpenWeather icon.
                  */
-                weatherIconId.remove(weatherIconId.length() - 1U);
                 weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
+                if (false == FILESYSTEM.exists(weatherConditionIcon))
+                {
+                    weatherConditionIcon = IMAGE_PATH + weatherIconId.substring(0, weatherIconId.length() - 1);
+                    weatherConditionIcon + ".bmp";
+                }
 
                 lock();
 
