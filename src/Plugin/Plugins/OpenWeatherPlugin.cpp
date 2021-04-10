@@ -321,13 +321,10 @@ void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
 
     if (HTTP_GET == request->method())
     {
-        String      apiKey  = getApiKey();
-        String      cityId  = getCityId();
-
         JsonObject  dataObj = jsonDoc.createNestedObject("data");
 
-        dataObj["apiKey"] = apiKey;
-        dataObj["cityId"] = cityId;
+        dataObj["apiKey"] = getApiKey();
+        dataObj["cityId"] = getCityId();
 
         /* Prepare response */
         jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
@@ -335,8 +332,8 @@ void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
     }
     else if (HTTP_POST == request->method())
     {
-        /* Argument missing? */
-        if ((false == request->hasArg("apiKey")) ||
+        /* One argument must be available at least. */
+        if ((false == request->hasArg("apiKey")) &&
             (false == request->hasArg("cityId")))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -348,11 +345,17 @@ void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
         }
         else
         {
-            String apiKey = request->arg("apiKey");
-            String cityId = request->arg("cityId");
+            if (true == request->hasArg("apiKey"))
+            {
+                String apiKey = request->arg("apiKey");
+                setApiKey(apiKey);
+            }
 
-            setApiKey(apiKey);
-            setCityId(cityId);
+            if (true == request->hasArg("cityId"))
+            {
+                String cityId = request->arg("cityId");
+                setCityId(cityId);
+            }
 
             /* Prepare response */
             (void)jsonDoc.createNestedObject("data");
