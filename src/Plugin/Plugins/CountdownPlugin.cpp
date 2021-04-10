@@ -65,9 +65,6 @@
 /* Initialize image path. */
 const char* CountdownPlugin::IMAGE_PATH     = "/images/countdown.bmp";
 
-/* Initialize configuration path. */
-const char* CountdownPlugin::CONFIG_PATH    = "/configuration";
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -173,7 +170,7 @@ void CountdownPlugin::start()
 {
     lock();
 
-    m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
+    m_configurationFilename = String(Plugin::CONFIG_PATH) + "/" + getUID() + ".json";
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -469,11 +466,11 @@ bool CountdownPlugin::loadConfiguration()
 
 void CountdownPlugin::createConfigDirectory()
 {
-    if (false == FILESYSTEM.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(Plugin::CONFIG_PATH))
     {
-        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(Plugin::CONFIG_PATH))
         {
-            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
+            LOG_WARNING("Couldn't create directory: %s", Plugin::CONFIG_PATH);
         }
     }
 }

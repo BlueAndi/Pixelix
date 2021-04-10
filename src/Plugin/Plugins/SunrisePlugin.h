@@ -229,11 +229,6 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Configuration path within the filesystem.
-     */
-    static const char*      CONFIG_PATH;
-
-    /**
      * Period in ms for requesting sunset/sunrise from server.
      * This is used in case the last request to the server was successful.
      */

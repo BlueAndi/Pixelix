@@ -243,11 +243,6 @@ private:
     static const char*      IMAGE_PATH_PAUSE_ICON;
 
     /**
-     * Configuration path within the filesystem.
-     */
-    static const char*      CONFIG_PATH;
-
-    /**
      * Period in ms for requesting data from server.
      * This is used in case the last request to the server was successful.
      * The period is shorter than the UPDATE_PERIOD_SHORT, because if the music

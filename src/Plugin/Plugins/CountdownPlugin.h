@@ -334,11 +334,6 @@ private:
      */
     static const char*      IMAGE_PATH;
 
-    /**
-     * Configuration path within the filesystem.
-     */
-    static const char*      CONFIG_PATH;
-
    /**
     * Offset to translate the month of the tm struct (time.h)
     * to a human readable value, since months since January are used (0-11).

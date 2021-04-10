@@ -249,11 +249,6 @@ private:
      */
     static const uint8_t    MAX_LAMPS   = 4U;
 
-    /**
-     * Image upload path.
-     */
-    static const char*      UPLOAD_PATH;
-
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_lampCanvas;               /**< Canvas used for the lamp widget. */

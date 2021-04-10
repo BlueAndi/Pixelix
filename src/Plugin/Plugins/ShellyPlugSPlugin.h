@@ -220,11 +220,6 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Configuration path within the filesystem.
-     */
-    static const char*      CONFIG_PATH;
-
-    /**
      * Period in ms for requesting power consumption from the Shelly PlugS.
      * This is used in case the last request to the server was successful.
      */

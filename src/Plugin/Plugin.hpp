@@ -221,6 +221,11 @@ public:
      */
     virtual void update(IGfx& gfx) = 0;
 
+    /**
+     * Path where plugin specific configuration files shall be stored.
+     */
+    static constexpr const char*    CONFIG_PATH = "/configuration";
+
 protected:
 
     /**

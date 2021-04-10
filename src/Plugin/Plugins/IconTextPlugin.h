@@ -212,11 +212,6 @@ private:
      */
     static const uint16_t ICON_HEIGHT   = 8U;
 
-    /**
-     * Image upload path.
-     */
-    static const char*  UPLOAD_PATH;
-
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */

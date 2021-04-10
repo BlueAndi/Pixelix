@@ -66,9 +66,6 @@ const char* OpenWeatherPlugin::IMAGE_PATH_STD_ICON      = "/images/openWeather.b
 /* Initialize image path for the weather condition icons. */
 const char* OpenWeatherPlugin::IMAGE_PATH               = "/images/";
 
-/* Initialize configuration path. */
-const char* OpenWeatherPlugin::CONFIG_PATH              = "/configuration";
-
 /* Initialize OpenWeather base URI */
 const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "http://api.openweathermap.org";
 
@@ -80,7 +77,7 @@ void OpenWeatherPlugin::start()
 {
     lock();
 
-    m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
+    m_configurationFilename = String(Plugin::CONFIG_PATH) + "/" + getUID() + ".json";
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -580,11 +577,11 @@ bool OpenWeatherPlugin::loadConfiguration()
 
 void OpenWeatherPlugin::createConfigDirectory()
 {
-    if (false == FILESYSTEM.exists(CONFIG_PATH))
+    if (false == FILESYSTEM.exists(Plugin::CONFIG_PATH))
     {
-        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(Plugin::CONFIG_PATH))
         {
-            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
+            LOG_WARNING("Couldn't create directory: %s", Plugin::CONFIG_PATH);
         }
     }
 }

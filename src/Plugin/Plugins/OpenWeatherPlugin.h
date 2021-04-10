@@ -241,11 +241,6 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Configuration path within the filesystem.
-     */
-    static const char*      CONFIG_PATH;
-
-    /**
      * OpenWeather API base URI
      */
     static const char*      OPEN_WEATHER_BASE_URI;

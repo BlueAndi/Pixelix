@@ -59,9 +59,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize upload path. */
-const char* IconTextPlugin::UPLOAD_PATH = "/configuration";
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -388,11 +385,11 @@ void IconTextPlugin::iconUploadHandler(AsyncWebServerRequest *request, const Str
             /* All uploaded bitmaps shall be in a dedicated folder.
              * This folder may not be created yet.
              */
-            if (false == FILESYSTEM.exists(UPLOAD_PATH))
+            if (false == FILESYSTEM.exists(Plugin::CONFIG_PATH))
             {
-                if (false == FILESYSTEM.mkdir(UPLOAD_PATH))
+                if (false == FILESYSTEM.mkdir(Plugin::CONFIG_PATH))
                 {
-                    LOG_ERROR("Couldn't create directory: %s", UPLOAD_PATH);
+                    LOG_ERROR("Couldn't create directory: %s", Plugin::CONFIG_PATH);
                     m_isUploadError = true;
                 }
             }
@@ -436,7 +433,7 @@ void IconTextPlugin::iconUploadHandler(AsyncWebServerRequest *request, const Str
 
 String IconTextPlugin::getFileName()
 {
-    String filename = UPLOAD_PATH;
+    String filename = Plugin::CONFIG_PATH;
 
     filename += "/";
     filename += getUID();
