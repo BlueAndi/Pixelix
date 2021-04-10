@@ -180,7 +180,6 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_configurationFilename(""),
         m_currentDate(),
         m_targetDate(),
         m_targetDateInformation(),
@@ -357,7 +356,6 @@ private:
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
     DateDMY                     m_currentDate;              /**< Date structure to hold the current date. */
     DateDMY                     m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
     TargetDayDescription        m_targetDateInformation;    /**< String used for configured additional target date information. */
@@ -384,12 +382,6 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * If configuration directory doesn't exists, it will be created.
-     * Otherwise nothing happens.
-     */
-    void createConfigDirectory();
 
     /**
      * Calculates the difference between m_targetTime and m_currentTime in days.

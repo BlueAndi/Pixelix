@@ -37,6 +37,8 @@
 #include "MyWebServer.h"
 #include "RestApi.h"
 #include "Settings.h"
+#include "FileSystem.h"
+#include "Plugin.hpp"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
@@ -64,6 +66,11 @@
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void PluginMgr::begin()
+{
+    createPluginConfigDirectory();
+}
 
 void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
 {
@@ -295,6 +302,17 @@ void PluginMgr::save()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void PluginMgr::createPluginConfigDirectory()
+{
+    if (false == FILESYSTEM.exists(Plugin::CONFIG_PATH))
+    {
+        if (false == FILESYSTEM.mkdir(Plugin::CONFIG_PATH))
+        {
+            LOG_WARNING("Couldn't create directory: %s", Plugin::CONFIG_PATH);
+        }
+    }
+}
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint16_t uid, uint8_t slotId)
 {

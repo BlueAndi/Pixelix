@@ -78,6 +78,12 @@ public:
     }
 
     /**
+     * The plugin manager prepares everything for the plugins.
+     * Call this once before any other method is used.
+     */
+    void begin();
+
+    /**
      * Register a plugin.
      *
      * @param[in] name          Plugin name
@@ -177,6 +183,12 @@ private:
 
     PluginMgr(const PluginMgr& fab);
     PluginMgr& operator=(const PluginMgr& fab);
+
+    /**
+     * If configuration directory doesn't exists, it will be created.
+     * Otherwise nothing happens.
+     */
+    void createPluginConfigDirectory();
 
     /**
      * Create plugin with given UID and install it to the given slot.

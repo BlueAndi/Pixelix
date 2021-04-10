@@ -354,6 +354,9 @@ void InitState::registerPlugins()
 {
     PluginMgr&  pluginMgr = PluginMgr::getInstance();
 
+    /* Prepare everything for the plugins. */
+    pluginMgr.begin();
+
     /* Register in alphabetic order. */
 
     pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);

@@ -465,18 +465,6 @@ void IconTextLampPlugin::iconUploadHandler(AsyncWebServerRequest *request, const
         }
         else
         {
-            /* All uploaded bitmaps shall be in a dedicated folder.
-             * This folder may not be created yet.
-             */
-            if (false == FILESYSTEM.exists(Plugin::CONFIG_PATH))
-            {
-                if (false == FILESYSTEM.mkdir(Plugin::CONFIG_PATH))
-                {
-                    LOG_ERROR("Couldn't create directory: %s", Plugin::CONFIG_PATH);
-                    m_isUploadError = true;
-                }
-            }
-
             /* Create a new file and overwrite a existing one. */
             m_fd = FILESYSTEM.open(getFileName(), "w");
 

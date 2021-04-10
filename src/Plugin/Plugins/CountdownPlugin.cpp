@@ -170,17 +170,14 @@ void CountdownPlugin::start()
 {
     lock();
 
-    m_configurationFilename = String(Plugin::CONFIG_PATH) + "/" + getUID() + ".json";
-
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
      */
-    createConfigDirectory();
     if (false == loadConfiguration())
     {
         if (false == saveConfiguration())
         {
-            LOG_WARNING("Failed to create initial configuration file %s.", m_configurationFilename.c_str());
+            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
 
@@ -195,13 +192,15 @@ void CountdownPlugin::start()
 
 void CountdownPlugin::stop()
 {
+    String configurationFilename = getFullPathToConfiguration();
+
     lock();
 
     m_cfgReloadTimer.stop();
 
-    if (false != FILESYSTEM.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(configurationFilename))
     {
-        LOG_INFO("File %s removed", m_configurationFilename.c_str());
+        LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
     unlock();
@@ -420,6 +419,7 @@ bool CountdownPlugin::saveConfiguration()
     JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              configurationFilename   = getFullPathToConfiguration();
 
     jsonDoc["day"]                  = m_targetDate.day;
     jsonDoc["month"]                = m_targetDate.month;
@@ -427,14 +427,14 @@ bool CountdownPlugin::saveConfiguration()
     jsonDoc["descriptionPlural"]    = m_targetDateInformation.plural;
     jsonDoc["descriptionSingular"]  = m_targetDateInformation.singular;
     
-    if (false == jsonFile.save(m_configurationFilename, jsonDoc))
+    if (false == jsonFile.save(configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to save file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
         status = false;
     }
     else
     {
-        LOG_INFO("File %s saved.", m_configurationFilename.c_str());
+        LOG_INFO("File %s saved.", configurationFilename.c_str());
     }
 
     return status;
@@ -446,10 +446,11 @@ bool CountdownPlugin::loadConfiguration()
     JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              configurationFilename   = getFullPathToConfiguration();
 
-    if (false == jsonFile.load(m_configurationFilename, jsonDoc))
+    if (false == jsonFile.load(configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
     else
@@ -462,17 +463,6 @@ bool CountdownPlugin::loadConfiguration()
     }
 
     return status;
-}
-
-void CountdownPlugin::createConfigDirectory()
-{
-    if (false == FILESYSTEM.exists(Plugin::CONFIG_PATH))
-    {
-        if (false == FILESYSTEM.mkdir(Plugin::CONFIG_PATH))
-        {
-            LOG_WARNING("Couldn't create directory: %s", Plugin::CONFIG_PATH);
-        }
-    }
 }
 
 void CountdownPlugin::calculateDifferenceInDays()

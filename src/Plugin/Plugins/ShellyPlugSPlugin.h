@@ -81,7 +81,6 @@ public:
         m_bitmapWidget(),
         m_textWidget("?"),
         m_ipAddress("192.168.1.123"), /* Example data */
-        m_configurationFilename(""),
         m_httpResponseReceived(false),
         m_client(),
         m_url(),
@@ -236,7 +235,6 @@ private:
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_ipAddress;                /**< IP-address of the ShellyPlugS server. */
-    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
     bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     String                      m_url;                      /**< REST API URL */
@@ -273,12 +271,6 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * If configuration directory doesn't exists, it will be created.
-     * Otherwise nothing happens.
-     */
-    void createConfigDirectory();
 
     /**
      * Protect against concurrent access.

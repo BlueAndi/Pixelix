@@ -80,7 +80,6 @@ public:
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
         m_ipAddress("192.168.0.16"),
-        m_configurationFilename(),
         m_httpResponseReceived(false),
         m_relevantResponsePart(),
         m_client(),
@@ -237,7 +236,6 @@ private:
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_ipAddress;                /**< IP-address of the Gruenbeck server. */
-    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
     bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
@@ -276,12 +274,6 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * If configuration directory doesn't exists, it will be created.
-     * Otherwise nothing happens.
-     */
-    void createConfigDirectory();
 
     /**
      * Protect against concurrent access.

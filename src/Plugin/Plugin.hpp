@@ -242,6 +242,17 @@ protected:
     {
     }
 
+    /**
+     * Get full path (path + filename) to plugin instance specific configuration
+     * in JSON format.
+     * 
+     * @return Full path to configuration file
+     */
+    String getFullPathToConfiguration() const
+    {
+        return String(CONFIG_PATH) + "/" + getUID() + ".json";
+    }
+
 private:
 
     uint16_t    m_uid;          /**< Unique id */

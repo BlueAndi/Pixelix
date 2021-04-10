@@ -80,7 +80,6 @@ public:
         m_textWidget("\\calign?"),
         m_apiKey(),
         m_cityId(),
-        m_configurationFilename(),
         m_urlIcon(),
         m_urlText(),
         m_client(),
@@ -265,7 +264,6 @@ private:
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_apiKey;                   /**< OpenWeather API Key */
     String                      m_cityId;                   /**< OpenWeather city id */
-    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
     String                      m_urlIcon;                  /**< REST API URL for updating the icon */
     String                      m_urlText;                  /**< REST API URL for updating the text */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
@@ -304,12 +302,6 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * If configuration directory doesn't exists, it will be created.
-     * Otherwise nothing happens.
-     */
-    void createConfigDirectory();
 
     /**
      * Protect against concurrent access.
