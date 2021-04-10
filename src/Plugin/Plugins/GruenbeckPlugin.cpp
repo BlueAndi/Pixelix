@@ -445,7 +445,7 @@ void GruenbeckPlugin::initHttpClient()
     });
 }
 
-bool GruenbeckPlugin::saveConfiguration()
+bool GruenbeckPlugin::saveConfiguration() const
 {
     bool                status                  = true;
     JsonFile            jsonFile(FILESYSTEM);

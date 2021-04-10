@@ -413,7 +413,7 @@ void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
     return;
 }
 
-bool CountdownPlugin::saveConfiguration()
+bool CountdownPlugin::saveConfiguration() const
 {
     bool                status                  = true;
     JsonFile            jsonFile(FILESYSTEM);

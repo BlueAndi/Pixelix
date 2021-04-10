@@ -594,7 +594,7 @@ void VolumioPlugin::initHttpClient()
     });
 }
 
-bool VolumioPlugin::saveConfiguration()
+bool VolumioPlugin::saveConfiguration() const
 {
     bool                status                  = true;
     JsonFile            jsonFile(FILESYSTEM);

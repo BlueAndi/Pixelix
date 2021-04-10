@@ -419,7 +419,7 @@ void ShellyPlugSPlugin::initHttpClient()
     });
 }
 
-bool ShellyPlugSPlugin::saveConfiguration()
+bool ShellyPlugSPlugin::saveConfiguration() const
 {
     bool                status                  = true;
     JsonFile            jsonFile(FILESYSTEM);

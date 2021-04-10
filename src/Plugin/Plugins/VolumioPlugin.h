@@ -301,7 +301,7 @@ private:
     /**
      * Saves current configuration to JSON file.
      */
-    bool saveConfiguration();
+    bool saveConfiguration() const;
 
     /**
      * Load configuration from JSON file.

@@ -520,7 +520,7 @@ void OpenWeatherPlugin::initHttpClient()
     });
 }
 
-bool OpenWeatherPlugin::saveConfiguration()
+bool OpenWeatherPlugin::saveConfiguration() const
 {
     bool                status                  = true;
     JsonFile            jsonFile(FILESYSTEM);

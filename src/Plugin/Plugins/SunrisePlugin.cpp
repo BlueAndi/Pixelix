@@ -469,7 +469,7 @@ String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) con
     return timeBuffer;
 }
 
-bool SunrisePlugin::saveConfiguration()
+bool SunrisePlugin::saveConfiguration() const
 {
     bool                status                  = true;
     JsonFile            jsonFile(FILESYSTEM);
