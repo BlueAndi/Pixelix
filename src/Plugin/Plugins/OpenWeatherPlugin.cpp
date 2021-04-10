@@ -426,7 +426,6 @@ void OpenWeatherPlugin::initHttpClient()
         const size_t                    FILTER_SIZE             = 128U;
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
-        char                            formattedTemperature[5] = "";
 
         /* See https://openweathermap.org/current#current_JSON */
         filter["main"]["temp"]          = true; /* Temperature */
@@ -455,16 +454,19 @@ void OpenWeatherPlugin::initHttpClient()
             }
             else
             {
-                snprintf(formattedTemperature, sizeof(formattedTemperature), "%.1f", jsonDoc["main"]["temp"].as<float>());
+                float   temperature             = jsonDoc["main"]["temp"].as<float>();
+                String  weatherIconId           = jsonDoc["weather"][0]["icon"].as<String>();
+                char    tempReducedPrecison[5]  = { 0 };
+                String  temperatureStrResult    = "\\calign";
+                String  weatherConditionIcon;
 
-                String  temperature     = String(formattedTemperature);
-                String  weatherIconId   = jsonDoc["weather"][0]["icon"].as<String>();
+                /* Reduce temperature precision */
+                snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), "%.1f", temperature);
+                temperatureStrResult += tempReducedPrecison;
 
                 /* Add unit °C */
-                temperature += "\x8E";
-                temperature += "C";
-
-                lock();
+                temperatureStrResult += "\x8E";
+                temperatureStrResult += "C";
 
                 /* Handle icon depended on weather icon id. */
                 if((weatherIconId == "03d") || (weatherIconId == "03n"))
@@ -492,11 +494,13 @@ void OpenWeatherPlugin::initHttpClient()
                     /* weatherIconId already matches the icon name. */
                 }
 
-                String weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
+                weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
+
+                lock();
 
                 (void)m_bitmapWidget.load(FILESYSTEM, weatherConditionIcon);
 
-                m_textWidget.setFormatStr("\\calign" + temperature);
+                m_textWidget.setFormatStr(temperatureStrResult);
 
                 unlock();
             }
