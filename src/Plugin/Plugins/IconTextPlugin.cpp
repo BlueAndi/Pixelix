@@ -421,13 +421,7 @@ void IconTextPlugin::iconUploadHandler(AsyncWebServerRequest *request, const Str
 
 String IconTextPlugin::getFileName()
 {
-    String filename = Plugin::CONFIG_PATH;
-
-    filename += "/";
-    filename += getUID();
-    filename += ".bmp";
-
-    return filename;
+    return generateFullPath(".bmp");
 }
 
 void IconTextPlugin::lock() const

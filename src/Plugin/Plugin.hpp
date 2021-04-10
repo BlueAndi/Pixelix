@@ -243,6 +243,17 @@ protected:
     }
 
     /**
+     * Generate the full path for any plugin instance specific kind of configuration
+     * file.
+     *
+     * @return Full path
+     */
+    String generateFullPath(const String& extension) const
+    {
+        return String(CONFIG_PATH) + "/" + getUID() + extension;
+    }
+
+    /**
      * Get full path (path + filename) to plugin instance specific configuration
      * in JSON format.
      * 
@@ -250,7 +261,7 @@ protected:
      */
     String getFullPathToConfiguration() const
     {
-        return String(CONFIG_PATH) + "/" + getUID() + ".json";
+        return generateFullPath(".json");
     }
 
 private:

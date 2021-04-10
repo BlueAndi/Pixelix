@@ -663,13 +663,7 @@ void IconTextLampPlugin::webReqHandlerLamp(AsyncWebServerRequest *request)
 
 String IconTextLampPlugin::getFileName()
 {
-    String filename = Plugin::CONFIG_PATH;
-
-    filename += "/";
-    filename += getUID();
-    filename += ".bmp";
-
-    return filename;
+    return generateFullPath(".bmp");
 }
 
 void IconTextLampPlugin::lock() const
