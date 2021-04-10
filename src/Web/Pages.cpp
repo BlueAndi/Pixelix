@@ -225,6 +225,10 @@ void Pages::init(AsyncWebServer& srv)
         }
     });
 
+    /* Serve files with static content with disabled cache control. */
+    (void)srv.serveStatic("/configuration/", FILESYSTEM, "/configuration/")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesytem for 1 hour.
      */

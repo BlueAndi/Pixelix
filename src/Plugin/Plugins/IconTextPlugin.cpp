@@ -60,7 +60,7 @@
  *****************************************************************************/
 
 /* Initialize upload path. */
-const char* IconTextPlugin::UPLOAD_PATH = "/tmp";
+const char* IconTextPlugin::UPLOAD_PATH = "/configuration";
 
 /******************************************************************************
  * Public Methods
