@@ -481,8 +481,8 @@ void OpenWeatherPlugin::initHttpClient()
                 weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
                 if (false == FILESYSTEM.exists(weatherConditionIcon))
                 {
-                    weatherConditionIcon = IMAGE_PATH + weatherIconId.substring(0, weatherIconId.length() - 1);
-                    weatherConditionIcon + ".bmp";
+                    weatherConditionIcon  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
+                    weatherConditionIcon += ".bmp";
                 }
 
                 lock();
