@@ -61,7 +61,7 @@
  *****************************************************************************/
 
 /* Initialize image path for standard icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_STD_ICON      = "/images/openweather.bmp";
+const char* OpenWeatherPlugin::IMAGE_PATH_STD_ICON      = "/images/openWeather.bmp";
 
 /* Initialize image path for the weather condition icons. */
 const char* OpenWeatherPlugin::IMAGE_PATH               = "/images/";
@@ -468,37 +468,18 @@ void OpenWeatherPlugin::initHttpClient()
                 temperatureStrResult += "\x8E";
                 temperatureStrResult += "C";
 
-                /* Handle icon depended on weather icon id. */
-                if((weatherIconId == "03d") || (weatherIconId == "03n"))
-                {
-                    weatherIconId = "03";
-                }
-                else if((weatherIconId == "04d") || (weatherIconId == "04n"))
-                {
-                    weatherIconId = "04";
-                }
-                else if((weatherIconId == "09d") || (weatherIconId == "09n"))
-                {
-                    weatherIconId = "09";
-                }
-                else if((weatherIconId == "11d") || (weatherIconId == "11n"))
-                {
-                    weatherIconId = "11";
-                }
-                else if((weatherIconId == "13d") || (weatherIconId == "13n"))
-                {
-                    weatherIconId = "13";
-                }
-                else
-                {
-                    /* weatherIconId already matches the icon name. */
-                }
-
+                /* Handle icon depended on weather icon id by removing just the last character.
+                 * See https://openweathermap.org/weather-conditions
+                 */
+                weatherIconId.remove(weatherIconId.length() - 1U);
                 weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
 
                 lock();
 
-                (void)m_bitmapWidget.load(FILESYSTEM, weatherConditionIcon);
+                if (false == m_bitmapWidget.load(FILESYSTEM, weatherConditionIcon))
+                {
+                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                }
 
                 m_textWidget.setFormatStr(temperatureStrResult);
 
