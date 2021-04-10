@@ -1021,7 +1021,7 @@ namespace tmpl
         uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
         char        chipIdStr[13];
 
-        snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
+        (void)snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
 
         result = chipIdStr;
 

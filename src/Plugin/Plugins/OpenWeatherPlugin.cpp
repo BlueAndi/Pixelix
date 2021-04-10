@@ -461,7 +461,7 @@ void OpenWeatherPlugin::initHttpClient()
                 String  weatherConditionIcon;
 
                 /* Reduce temperature precision */
-                snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), "%.1f", temperature);
+                (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), "%.1f", temperature);
                 temperatureStrResult += tempReducedPrecison;
 
                 /* Add unit °C */

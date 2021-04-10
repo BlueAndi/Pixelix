@@ -504,7 +504,7 @@ void CountdownPlugin::calculateDifferenceInDays()
         {
             char remaining[10] = "";
 
-            snprintf(remaining, sizeof(remaining), " %d", numberOfDays);
+            (void)snprintf(remaining, sizeof(remaining), " %d", numberOfDays);
             m_remainingDays  = remaining;
             m_remainingDays += " ";
 
