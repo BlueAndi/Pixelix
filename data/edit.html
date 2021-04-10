@@ -242,6 +242,11 @@
                                             .attr("tabindex", "-1")
                                             .attr("aria-disabled", "true")
                                             .text((item.size / 1024).toFixed(2) + " kByte");
+                        var $actionDownload = $("<a>")
+                                            .attr("class", "dropdown-item")
+                                            .attr("href", item.name)
+                                            .attr("download", true)
+                                            .text("Download");
                         var $actionEdit     = $("<a>")
                                             .attr("class", "dropdown-item")
                                             .attr("href", "#")
@@ -260,6 +265,7 @@
                         var fileTypeInfo    = getFileTypeInfo(item.name);
                         
                         $($actions).append($actionSize);
+                        $($actions).append($actionDownload);
 
                         if (null !== fileTypeInfo) {
                             if ("text" === fileTypeInfo.type) {
