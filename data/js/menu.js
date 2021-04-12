@@ -55,6 +55,9 @@ menu.data = [{
         "title": "SysMsg Plugin",
         "hyperRef": "/plugins/SysMsgPlugin.html"
     }, {
+        "title": "TempHumid Plugin",
+        "hyperRef": "/plugins/TempHumidPlugin.html"
+    }, {
         "title": "Test Plugin",
         "hyperRef": "/plugins/TestPlugin.html"
     }, {

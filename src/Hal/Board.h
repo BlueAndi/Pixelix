@@ -78,6 +78,9 @@ namespace Pin
 
     /** Pin number of LDR in */
     static const uint8_t    ldrInPinNo              = 34U;
+
+    /** Pin number of dht sensor in */
+    static const uint8_t    dhtInPinNo              = 5U;
 };
 
 /** Digital output pin: Onboard LED */
@@ -94,6 +97,9 @@ static const DOutPin<Pin::ledMatrixDataOutPinNo>        ledMatrixDataOut;
 
 /** Analog input pin: LDR in */
 static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
+
+/** Digital input pin: DHT Sensor (input with pull-up) */
+static const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
 
 /** ADC resolution in digits */
 static const uint16_t   adcResolution   = 4096U;
