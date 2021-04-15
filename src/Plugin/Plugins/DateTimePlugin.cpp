@@ -204,7 +204,7 @@ void DateTimePlugin::setLamp(uint8_t lampId, bool state)
 void DateTimePlugin::updateDateTime(bool force)
 {
     struct tm   timeinfo = { 0 };
-    bool        showTime = ((0 == m_durationCounter) ? true : false);
+    bool        showTime = ((0U == m_durationCounter) ? true : false);
     bool        showDate = false;
     uint32_t    duration = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
 
@@ -215,7 +215,7 @@ void DateTimePlugin::updateDateTime(bool force)
     }
     else
     {
-        showDate = ((duration / (2 * MS_TO_SEC_DIVIDER) == m_durationCounter) ? true : false);
+        showDate = ((duration / (2U * MS_TO_SEC_DIVIDER) == m_durationCounter) ? true : false);
     }
 
     m_durationCounter++;
@@ -250,7 +250,7 @@ void DateTimePlugin::updateDateTime(bool force)
         /* If infinite duration was switch every 15s between time and date. */
         if (0U == duration)
         {
-            if ((2 * MAX_COUNTER_VALUE_FOR_DURATION_INFINITE) == m_durationCounter)
+            if ((2U * MAX_COUNTER_VALUE_FOR_DURATION_INFINITE) == m_durationCounter)
             {
                 m_durationCounter = 0U;
             }
