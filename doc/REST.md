@@ -626,14 +626,17 @@ Result:
 {
     "status": 0,
     "data": {
-        "apiKey": "xyz",
-        "cityId": "abc"
+        "apiKey": "yourApiKey",
+        "lat": "theLatitude",
+        "lon": "theLongitude",
+        "other": "theAdditionalInformation",
+        "units":"metricOrImperial"
     }
 }
 ```
 
 ```
-POST <base-uri>/rest/api/v1/display/uid/0/weather?apyKey=xyz&cityId=abc
+POST <base-uri>/rest/api/v1/display/uid/0/weather?apyKey=yourApiKey&lat=48.858&lon=2.295&other=0&units=metric
 ```
 
 Result:
@@ -647,7 +650,7 @@ Result:
 Example with curl:
 ```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/weather
-$ curl -u luke:skywalker -d "apyKey=xyz" -d "cityId=abc" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/weather
+$ curl -u luke:skywalker -d "apyKey=yourApiKey" -d "lat=theLatitude" -d "lon=theLongitude" -d "other=theAdditionalInformation" -d "units=metricOrImperial -X POST http://192.168.2.166/rest/api/v1/display/uid/0/weather
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
