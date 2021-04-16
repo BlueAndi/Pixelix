@@ -394,9 +394,24 @@ void ShellyPlugSPlugin::initHttpClient()
         }
         else
         {
-            String power;
+            float       powerRaw                = jsonDoc["power"].as<float>();
+            String      power;
+            const char* reducePrecision;
+            char        powerReducedPrecison[6] = { 0 };
 
-            power = jsonDoc["power"].as<String>();
+            if (powerRaw < 99.99)
+            {
+                reducePrecision = (powerRaw > 9.9) ? "%.1f" : "%.2f";
+            }
+            else
+            {
+                reducePrecision = "%.0f";
+            }
+            
+            (void)snprintf(powerReducedPrecison, sizeof(powerReducedPrecison), reducePrecision, powerRaw);
+
+            power = "\\calign";
+            power += powerReducedPrecison;
             power += " W";
             
             lock();
