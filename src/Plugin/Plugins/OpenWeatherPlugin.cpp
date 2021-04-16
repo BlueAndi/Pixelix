@@ -56,6 +56,7 @@
  * if DURATION_INFINITE was set for the plugin.
  */
 #define MAX_COUNTER_VALUE_FOR_DURATION_INFINITE (15U)
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -179,6 +180,7 @@ void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
     m_slotInterf = slotInterf;
     return;
 }
+
 void OpenWeatherPlugin::active(IGfx& gfx)
 {
     lock();
@@ -394,6 +396,7 @@ void OpenWeatherPlugin::setUnits(const String& units)
 
     return;
 }
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -401,23 +404,24 @@ void OpenWeatherPlugin::setUnits(const String& units)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
 String OpenWeatherPlugin::uvIndexToColor(float uvIndex)
 {
     String color;
 
-    if(0 <= uvIndex && 3 > uvIndex)
+    if ((0.0f <= uvIndex) && (3.0f > uvIndex))
     {
         color = "\\#c0ffa0"; 
     }
-    else if(3 <= uvIndex && 6 > uvIndex)
+    else if ((3.0f <= uvIndex) && (6.0f > uvIndex))
     {
         color = "\\#f8f140";
     }
-    else if(6 <= uvIndex && 8 > uvIndex)
+    else if ((6.0f <= uvIndex) && (8.0f > uvIndex))
     {
         color = "\\#f77820";
     }
-    else if(8 <= uvIndex && 11 > uvIndex)
+    else if ((8.0f <= uvIndex) && (11.0f > uvIndex))
     {
         color = "\\#d80020";
     }
@@ -431,7 +435,7 @@ String OpenWeatherPlugin::uvIndexToColor(float uvIndex)
 
 void OpenWeatherPlugin::updateDisplay(bool force)
 {
-    bool        showGeneralWeatherInformation = ((0 == m_durationCounter) ? true : false);
+    bool        showGeneralWeatherInformation = ((0U == m_durationCounter) ? true : false);
     bool        showAdditionalInformation = false;
     uint32_t    duration = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
     String      icon;
@@ -444,7 +448,7 @@ void OpenWeatherPlugin::updateDisplay(bool force)
     }
     else
     {
-        showAdditionalInformation = ((duration / (2 * MS_TO_SEC_DIVIDER) == m_durationCounter) ? true : false);
+        showAdditionalInformation = ((duration / (2U * MS_TO_SEC_DIVIDER) == m_durationCounter) ? true : false);
     }
 
     m_durationCounter++;
@@ -464,6 +468,7 @@ void OpenWeatherPlugin::updateDisplay(bool force)
         m_isUpdateAvailable = true;
 
     }
+
     if (false != showAdditionalInformation)
     {
         switch (m_additionalInformation)
@@ -472,18 +477,22 @@ void OpenWeatherPlugin::updateDisplay(bool force)
             text = m_currentUvIndex;
             icon = IMAGE_PATH_UVI_ICON;
             break;
+
         case HUMIDITY:
             text = m_currentHumidity;
             icon = IMAGE_PATH_HUMIDITY_ICON;
             break;
+
         case WIND:
             text = m_currentWindspeed;
             icon = IMAGE_PATH_WIND_ICON;
             break;
+
         case OFF:
             text = m_currentTemp;
             icon = m_currentWeatherIcon;
             break;
+
         default:
             break;
         }
@@ -500,7 +509,7 @@ void OpenWeatherPlugin::updateDisplay(bool force)
     /* If infinite duration was switch every 15s between general and additional information. */
     if (0U == duration)
     {
-        if ((2 * MAX_COUNTER_VALUE_FOR_DURATION_INFINITE) == m_durationCounter)
+        if ((2U * MAX_COUNTER_VALUE_FOR_DURATION_INFINITE) == m_durationCounter)
         {
             m_durationCounter = 0U;
         }
@@ -513,6 +522,7 @@ void OpenWeatherPlugin::updateDisplay(bool force)
         }
     }
 }
+
 void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
 {
     String              content;
@@ -529,7 +539,7 @@ void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
     {
         JsonObject  dataObj = jsonDoc.createNestedObject("data");
 
-        dataObj["apiKey"] = getApiKey();
+        dataObj["apiKey"]   = getApiKey();
         dataObj["lat"]      = getLatitude();
         dataObj["lon"]      = getLongitude();
         dataObj["other"]    = static_cast<int>(getAdditionalInformation());
@@ -819,6 +829,7 @@ bool OpenWeatherPlugin::saveConfiguration() const
     {
         LOG_INFO("File %s saved.", configurationFilename.c_str());
     }
+
     return status;
 }
 

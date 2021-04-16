@@ -346,6 +346,7 @@ private:
 
     /** Time for duration tick period in ms */
     static const uint32_t   DURATION_TICK_PERIOD     = 1000U;
+    
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
