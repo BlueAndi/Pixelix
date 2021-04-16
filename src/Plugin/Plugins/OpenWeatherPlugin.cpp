@@ -365,6 +365,7 @@ OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInfor
 
     return additionalInformation;
 }
+
 void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& additionalInformation)
 {
     lock();
@@ -624,12 +625,14 @@ bool OpenWeatherPlugin::startHttpRequest()
 {
     bool status = false;
 
-    if ((0 < m_apiKey.length()) &&
-        (0 < m_latitude.length()))
+    if ((0 < m_latitude.length()) &&
+        (0 < m_longitude.length()) &&
+        (0 < m_units.length()) &&
+        (0 < m_apiKey.length()))
     {
         String url = OPEN_WEATHER_BASE_URI;
 
-        /* Get current weather information: https://openweathermap.org/current#cityid */
+        /* Get current weather information: https://openweathermap.org/api/one-call-api */
         url += "/data/2.5/onecall?lat=";
         url += m_latitude;
         url += "&lon=";
@@ -668,7 +671,7 @@ void OpenWeatherPlugin::initHttpClient()
         JsonObject filter_current = filter.createNestedObject("current");
         DeserializationError            error;
 
-        /* See https://openweathermap.org/current#current_JSON */
+        /* See https://openweathermap.org/api/one-call-api for an example of API response. */
         filter_current["temp"]                  = true;
         filter_current["uvi"]                   = true;
         filter_current["humidity"]              = true;
@@ -716,7 +719,7 @@ void OpenWeatherPlugin::initHttpClient()
                 float   uvIndex                 = current["uvi"].as<float>();
                 int     humidity                = current["humidity"].as<int>();
                 float   windSpeed               = current["wind_speed"].as<float>();
-                char    tempReducedPrecison[5]  = { 0 };
+                char    tempReducedPrecison[6]  = { 0 };
                 char    windReducedPrecison[5]  = { 0 };
                 String  weatherConditionIcon;
 
@@ -725,8 +728,11 @@ void OpenWeatherPlugin::initHttpClient()
                 m_currentUvIndex += uvIndexToColor(uvIndex);
                 m_currentUvIndex += uvIndex;
 
+                const char* reducePrecision = (temperature < -9.9) ? "%.0f" : "%.1f";
+
                 /* Generate temperature string with reduced precision and add unit °C/°F. */
-                (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), "%.1f", temperature);
+                (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
+
                 m_currentTemp  = "\\calign";
                 m_currentTemp += tempReducedPrecison;
                 m_currentTemp += "\x8E";

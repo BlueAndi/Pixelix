@@ -247,14 +247,14 @@ public:
     void setLatitude(const String& latitude);
 
    /**
-     * Get the latitude.
+     * Get the longitude.
      * 
-     * @return latitude
+     * @return longitude
      */
     String getLongitude() const;
 
     /**
-     * Set the latitude.
+     * Set the longitude.
      * 
      * @param[in] longitude    The longitude
      */
