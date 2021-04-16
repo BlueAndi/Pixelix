@@ -587,7 +587,7 @@ void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
 
             if (true == request->hasArg("other"))
             {
-                OtherWeatherInformation other = static_cast<OtherWeatherInformation>(atoi(request->arg("other").c_str()));
+                OtherWeatherInformation other = static_cast<OtherWeatherInformation>(request->arg("other").toInt());
                 setAdditionalInformation(other);
             }
 
