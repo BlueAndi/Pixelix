@@ -336,17 +336,17 @@ private:
      * 
      * Note, the OpenWeather recommendation is no more than once in 10 minutes.
      */
-    static const uint32_t   UPDATE_PERIOD       = (10U * 60U * 1000U);
+    static const uint32_t   UPDATE_PERIOD           = (10U * 60U * 1000U);
 
     /**
      * Short period in ms for requesting data from server.
      * This is used in case the request to the server failed.
      */
-    static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
+    static const uint32_t   UPDATE_PERIOD_SHORT     = (10U * 1000U);
 
     /** Time for duration tick period in ms */
-    static const uint32_t   DURATION_TICK_PERIOD     = 1000U;
-    
+    static const uint32_t   DURATION_TICK_PERIOD    = 1000U;
+
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
@@ -373,7 +373,8 @@ private:
     bool                        m_configurationHasChanged;  /**< Flag to indicate whether the configuration has changed. */
     uint8_t                     m_durationCounter;          /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
     bool                        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
-     /**
+
+    /**
      * Updates the text and icon, which to be displayed.
      *
      * @param[in] force Force update.
