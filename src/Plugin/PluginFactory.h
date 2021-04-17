@@ -77,6 +77,9 @@ public:
 
     /**
      * Destroys the plugin factory.
+     * Please note, that if the factory is destroyed, all produced plugin objects
+     * will survive. This is a feature where a factory could live shorter than its
+     * produced plugin objects.
      */
     ~PluginFactory()
     {
