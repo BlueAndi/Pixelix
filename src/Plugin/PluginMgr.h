@@ -46,6 +46,7 @@
 #include <stdint.h>
 #include "IPluginMaintenance.hpp"
 #include "DisplayMgr.h"
+#include "PluginFactory.h"
 
 #include <LinkedList.hpp>
 
@@ -148,28 +149,13 @@ public:
 
 private:
 
-    /**
-     * Plugin registry entry.
-     */
-    struct PluginRegEntry
-    {
-        String                          name;       /**< Plugin name */
-        IPluginMaintenance::CreateFunc  createFunc; /**< Plugin creation function */
-    };
-
-    DLinkedList<PluginRegEntry*>            m_registry;     /**< Plugin registry */
-    DLinkedListIterator<PluginRegEntry*>    m_registryIter; /**< Plugin registry iterator. Exclusive use in findFirst() and findNext()! */
-    DLinkedList<IPluginMaintenance*>        m_plugins;      /**< List with all installed plugins */
-    PluginRegEntry*                         m_current;      /**< Current registry entry */
+    PluginFactory   m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
-        m_registry(),
-        m_registryIter(m_registry),
-        m_plugins(),
-        m_current(nullptr)
+        m_pluginFactory()
     {
     }
 
@@ -191,17 +177,6 @@ private:
     void createPluginConfigDirectory();
 
     /**
-     * Create plugin with given UID and install it to the given slot.
-     *
-     * @param[in] name      Plugin name
-     * @param[in] uid       Plugin UID
-     * @param[in] slotId    Slot id
-     *
-     * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
-     */
-    IPluginMaintenance* install(const String& name, uint16_t uid, uint8_t slotId);
-
-    /**
      * Install plugin to any available display slot.
      *
      * @param[in] plugin    Plugin, which to install
@@ -220,12 +195,6 @@ private:
      */
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
 
-    /**
-     * Generate a 16-bit unique id, for a plugin instance.
-     *
-     * @return Unique id
-     */
-    uint16_t generateUID();
 };
 
 /******************************************************************************

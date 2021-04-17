@@ -74,36 +74,35 @@ void PluginMgr::begin()
 
 void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
 {
-    PluginRegEntry* entry = new PluginRegEntry();
-
-    if (nullptr != entry)
-    {
-        entry->name         = name;
-        entry->createFunc   = createFunc;
-
-        if (false == m_registry.append(entry))
-        {
-            LOG_ERROR("Couldn't add %s to registry.", name.c_str());
-
-            delete entry;
-            entry = nullptr;
-        }
-        else
-        {
-            LOG_INFO("Plugin %s registered.", name.c_str());
-        }
-    }
-    else
-    {
-        LOG_ERROR("Couldn't add %s to registry.", name.c_str());
-    }
-
+    m_pluginFactory.registerPlugin(name, createFunc);
     return;
 }
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
 {
-    return install(name, generateUID(), slotId);
+    IPluginMaintenance* plugin  = m_pluginFactory.createPlugin(name);
+
+    if (nullptr != plugin)
+    {
+        if (DisplayMgr::SLOT_ID_INVALID == slotId)
+        {
+            if (false == installToAutoSlot(plugin))
+            {
+                m_pluginFactory.destroyPlugin(plugin);
+                plugin = nullptr;
+            }
+        }
+        else
+        {
+            if (false == installToSlot(plugin, slotId))
+            {
+                m_pluginFactory.destroyPlugin(plugin);
+                plugin = nullptr;
+            }
+        }
+    }
+
+    return plugin;
 }
 
 bool PluginMgr::uninstall(IPluginMaintenance* plugin)
@@ -112,21 +111,12 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
     if (nullptr != plugin)
     {
-        DLinkedListIterator<IPluginMaintenance*> it(m_plugins);
+        status = DisplayMgr::getInstance().uninstallPlugin(plugin);
 
-        if (false == it.find(plugin))
+        if (true == status)
         {
-            LOG_WARNING("Plugin 0x%X (%s) not found in list.", plugin, plugin->getName());
-        }
-        else
-        {
-            status = DisplayMgr::getInstance().uninstallPlugin(plugin);
-
-            if (true == status)
-            {
-                plugin->unregisterWebInterface(MyWebServer::getInstance());
-                it.remove();
-            }
+            plugin->unregisterWebInterface(MyWebServer::getInstance());
+            m_pluginFactory.destroyPlugin(plugin);
         }
     }
 
@@ -135,26 +125,12 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
 const char* PluginMgr::findFirst()
 {
-    const char* name = nullptr;
-
-    if (true == m_registryIter.first())
-    {
-        name = (*m_registryIter.current())->name.c_str();
-    }
-
-    return name;
+    return m_pluginFactory.findFirst();
 }
 
 const char* PluginMgr::findNext()
 {
-    const char* name = nullptr;
-
-    if (true == m_registryIter.next())
-    {
-        name = (*m_registryIter.current())->name.c_str();
-    }
-
-    return name;
+    return m_pluginFactory.findFirst();
 }
 
 String PluginMgr::getRestApiBaseUri(uint16_t uid)
@@ -221,7 +197,7 @@ void PluginMgr::load()
 
                         if (false == name.isEmpty())
                         {
-                            IPluginMaintenance* plugin = install(name, uid, slotId);
+                            IPluginMaintenance* plugin = install(name, slotId);
 
                             if (nullptr == plugin)
                             {
@@ -314,63 +290,6 @@ void PluginMgr::createPluginConfigDirectory()
     }
 }
 
-IPluginMaintenance* PluginMgr::install(const String& name, uint16_t uid, uint8_t slotId)
-{
-    IPluginMaintenance*                     plugin  = nullptr;
-    PluginRegEntry*                         entry   = nullptr;
-    DLinkedListIterator<PluginRegEntry*>    it(m_registry);
-
-    if (true == it.first())
-    {
-        bool isFound = false;
-
-        /* Find plugin in the registry */
-        entry = *it.current();
-
-        while((false == isFound) && (nullptr != entry))
-        {
-            if (name == entry->name)
-            {
-                isFound = true;
-            }
-            else if (false == it.next())
-            {
-                entry = nullptr;
-            }
-            else
-            {
-                entry = *it.current();
-            }
-        }
-
-        /* Plugin found? */
-        if ((true == isFound) &&
-            (nullptr != entry))
-        {
-            plugin = entry->createFunc(entry->name, uid);
-
-            if (DisplayMgr::SLOT_ID_INVALID == slotId)
-            {
-                if (false == installToAutoSlot(plugin))
-                {
-                    delete plugin;
-                    plugin = nullptr;
-                }
-            }
-            else
-            {
-                if (false == installToSlot(plugin, slotId))
-                {
-                    delete plugin;
-                    plugin = nullptr;
-                }
-            }
-        }
-    }
-
-    return plugin;
-}
-
 bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
 {
     bool status = false;
@@ -383,20 +302,11 @@ bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
         }
         else
         {
-            if (false == m_plugins.append(plugin))
-            {
-                LOG_ERROR("Couldn't append plugin %s.", plugin->getName());
+            String baseUri = getRestApiBaseUri(plugin->getUID());
 
-                (void)DisplayMgr::getInstance().uninstallPlugin(plugin);
-            }
-            else
-            {
-                String baseUri = getRestApiBaseUri(plugin->getUID());
+            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
 
-                plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
-
-                status = true;
-            }
+            status = true;
         }
     }
 
@@ -415,62 +325,15 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
         }
         else
         {
-            if (false == m_plugins.append(plugin))
-            {
-                LOG_ERROR("Couldn't append plugin %s.", plugin->getName());
+            String baseUri = getRestApiBaseUri(plugin->getUID());
 
-                (void)DisplayMgr::getInstance().uninstallPlugin(plugin);
-            }
-            else
-            {
-                String baseUri = getRestApiBaseUri(plugin->getUID());
+            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
 
-                plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
-
-                status = true;
-            }
+            status = true;
         }
     }
 
     return status;
-}
-
-uint16_t PluginMgr::generateUID()
-{
-    uint16_t                                        uid;
-    bool                                            isFound;
-    DLinkedListConstIterator<IPluginMaintenance*>   it(m_plugins);
-
-    do
-    {
-        isFound = false;
-        uid     = random(UINT16_MAX);
-
-        /* Ensure that UID is really unique. */
-        if (true == it.first())
-        {
-            const IPluginMaintenance* plugin = *it.current();
-
-            while((false == isFound) && (nullptr != plugin))
-            {
-                if (uid == plugin->getUID())
-                {
-                    isFound = true;
-                }
-                else if (false == it.next())
-                {
-                    plugin = nullptr;
-                }
-                else
-                {
-                    plugin = *it.current();
-                }
-            }
-        }
-    }
-    while(true == isFound);
-
-    return uid;
 }
 
 /******************************************************************************
