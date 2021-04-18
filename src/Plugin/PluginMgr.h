@@ -149,6 +149,9 @@ public:
 
 private:
 
+    /**
+     * Web handler data, which is necessary for the webserver handling.
+     */
     struct WebHandlerData
     {
         AsyncCallbackWebHandler*    webHandler; /**< Webhandler callback, necessary to remove it later again. */
@@ -165,6 +168,9 @@ private:
         IPluginMaintenance* plugin;                         /**< Plugin object, where this data record belongs to. */
         WebHandlerData      webHandlers[MAX_WEB_HANDLERS];  /**< Web data of the plugin, necessary to remove it later again. */
 
+        /**
+         * Initializes the plugin object data.
+         */
         PluginObjData() :
             plugin(nullptr),
             webHandlers()
@@ -206,8 +212,6 @@ private:
      */
     void createPluginConfigDirectory();
 
-    bool install(IPluginMaintenance* plugin, uint8_t slotId);
-
     /**
      * Install plugin.
      * If no slot id is given, the plugin will be installed in the next available slot.
@@ -238,12 +242,37 @@ private:
      */
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
 
+    /**
+     * Register all topics of the given plugin depended on the used communication
+     * networks.
+     * 
+     * @param[in] plugin    The plugin, which shall be handled.
+     */
     void registerTopics(IPluginMaintenance* plugin);
 
+    /**
+     * Register a single topic of the given plugin depended on the used communication
+     * networks.
+     * 
+     * @param[in] metaData  The plugin meta data, which shall be handled.
+     * @param[in] topic     The topic.
+     */
     void registerTopic(PluginObjData* metaData, const String& topic);
 
+    /**
+     * The web request handler handles all incoming HTTP requests for every plugin topic.
+     * 
+     * @param[in] request   The web request information from the client.
+     * @param[in] plugin    The responsible plugin, which is related to the request.
+     * @param[in] topic     The topic, which is requested.
+     */
     void webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic);
 
+    /**
+     * Unregister all topics depended on the used communication networks.
+     * 
+     * @param[in] plugin    The plugin, which topics to unregister.
+     */
     void unregisterTopics(IPluginMaintenance* plugin);
 };
 
