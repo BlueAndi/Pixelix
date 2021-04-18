@@ -80,25 +80,14 @@ void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFun
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
 {
-    IPluginMaintenance* plugin  = m_pluginFactory.createPlugin(name);
+    IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name);
 
     if (nullptr != plugin)
     {
-        if (DisplayMgr::SLOT_ID_INVALID == slotId)
+        if (false == install(plugin, slotId))
         {
-            if (false == installToAutoSlot(plugin))
-            {
-                m_pluginFactory.destroyPlugin(plugin);
-                plugin = nullptr;
-            }
-        }
-        else
-        {
-            if (false == installToSlot(plugin, slotId))
-            {
-                m_pluginFactory.destroyPlugin(plugin);
-                plugin = nullptr;
-            }
+            m_pluginFactory.destroyPlugin(plugin);
+            plugin = nullptr;
         }
     }
 
@@ -130,7 +119,7 @@ const char* PluginMgr::findFirst()
 
 const char* PluginMgr::findNext()
 {
-    return m_pluginFactory.findFirst();
+    return m_pluginFactory.findNext();
 }
 
 String PluginMgr::getRestApiBaseUri(uint16_t uid)
@@ -197,11 +186,18 @@ void PluginMgr::load()
 
                         if (false == name.isEmpty())
                         {
-                            IPluginMaintenance* plugin = install(name, slotId);
+                            IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name, uid);
 
                             if (nullptr == plugin)
                             {
+                                LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                            }
+                            else if (false == install(plugin, slotId))
+                            {
                                 LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+
+                                m_pluginFactory.destroyPlugin(plugin);
+                                plugin = nullptr;
                             }
                             else
                             {
@@ -290,6 +286,32 @@ void PluginMgr::createPluginConfigDirectory()
     }
 }
 
+bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
+{
+    bool isSuccessful = false;
+
+    if (nullptr != plugin)
+    {
+        if (DisplayMgr::SLOT_ID_INVALID == slotId)
+        {
+            isSuccessful = installToAutoSlot(plugin);
+        }
+        else
+        {
+            isSuccessful = installToSlot(plugin, slotId);
+        }
+
+        if (true == isSuccessful)
+        {
+            String baseUri = getRestApiBaseUri(plugin->getUID());
+
+            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
+        }
+    }
+
+    return isSuccessful;
+}
+
 bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
 {
     bool status = false;
@@ -302,10 +324,6 @@ bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
         }
         else
         {
-            String baseUri = getRestApiBaseUri(plugin->getUID());
-
-            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
-
             status = true;
         }
     }
@@ -325,10 +343,6 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
         }
         else
         {
-            String baseUri = getRestApiBaseUri(plugin->getUID());
-
-            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
-
             status = true;
         }
     }

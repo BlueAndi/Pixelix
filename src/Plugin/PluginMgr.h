@@ -177,6 +177,17 @@ private:
     void createPluginConfigDirectory();
 
     /**
+     * Install plugin.
+     * If no slot id is given, the plugin will be installed in the next available slot.
+     *
+     * @param[in] plugin    The plugin
+     * @param[in] slotId    Slot id
+     *
+     * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
+     */
+    bool install(IPluginMaintenance* plugin, uint8_t slotId);
+
+    /**
      * Install plugin to any available display slot.
      *
      * @param[in] plugin    Plugin, which to install
