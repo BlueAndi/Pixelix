@@ -163,7 +163,7 @@ private:
      */
     struct PluginObjData
     {
-        static const uint8_t MAX_WEB_HANDLERS = 4;  /**< Max. number of web handlers. */
+        static const uint8_t MAX_WEB_HANDLERS = 6U; /**< Max. number of web handlers. */
 
         IPluginMaintenance* plugin;                         /**< Plugin object, where this data record belongs to. */
         WebHandlerData      webHandlers[MAX_WEB_HANDLERS];  /**< Web data of the plugin, necessary to remove it later again. */

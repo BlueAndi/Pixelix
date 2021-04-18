@@ -402,7 +402,7 @@ void PluginMgr::registerTopic(PluginObjData* metaData, const String& topic)
 
     if (nullptr == webHandlerData)
     {
-        LOG_WARNING("[%u] No web handler available anymore.");
+        LOG_WARNING("[%s][%u] No web handler available anymore.", metaData->plugin->getName(), metaData->plugin->getUID());
     }
     else
     {
