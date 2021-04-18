@@ -48,6 +48,7 @@
 #include <HttpStatus.h>
 #include <ESPAsyncWebServer.h>
 #include <Util.h>
+#include <ArduinoJson.h>
 #include "ISlotPlugin.hpp"
 
 /******************************************************************************
@@ -91,6 +92,43 @@ public:
      * @return Unique id
      */
     virtual uint16_t getUID() const = 0;
+
+    /**
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
+     */
+    virtual void getTopics(JsonArray& topics) const = 0;
+
+    /**
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    virtual bool getTopic(const String& topic, JsonObject& value) const = 0;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    virtual bool setTopic(const String& topic, const JsonObject& value) = 0;
 
     /**
      * Register web interface, e.g. REST API functionality.

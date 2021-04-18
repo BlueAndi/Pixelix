@@ -80,25 +80,14 @@ void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFun
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
 {
-    IPluginMaintenance* plugin  = m_pluginFactory.createPlugin(name);
+    IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name);
 
     if (nullptr != plugin)
     {
-        if (DisplayMgr::SLOT_ID_INVALID == slotId)
+        if (false == install(plugin, slotId))
         {
-            if (false == installToAutoSlot(plugin))
-            {
-                m_pluginFactory.destroyPlugin(plugin);
-                plugin = nullptr;
-            }
-        }
-        else
-        {
-            if (false == installToSlot(plugin, slotId))
-            {
-                m_pluginFactory.destroyPlugin(plugin);
-                plugin = nullptr;
-            }
+            m_pluginFactory.destroyPlugin(plugin);
+            plugin = nullptr;
         }
     }
 
@@ -115,6 +104,7 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
+            unregisterTopics(plugin);
             plugin->unregisterWebInterface(MyWebServer::getInstance());
             m_pluginFactory.destroyPlugin(plugin);
         }
@@ -130,7 +120,7 @@ const char* PluginMgr::findFirst()
 
 const char* PluginMgr::findNext()
 {
-    return m_pluginFactory.findFirst();
+    return m_pluginFactory.findNext();
 }
 
 String PluginMgr::getRestApiBaseUri(uint16_t uid)
@@ -197,11 +187,18 @@ void PluginMgr::load()
 
                         if (false == name.isEmpty())
                         {
-                            IPluginMaintenance* plugin = install(name, slotId);
+                            IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name, uid);
 
                             if (nullptr == plugin)
                             {
+                                LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                            }
+                            else if (false == install(plugin, slotId))
+                            {
                                 LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+
+                                m_pluginFactory.destroyPlugin(plugin);
+                                plugin = nullptr;
                             }
                             else
                             {
@@ -290,6 +287,33 @@ void PluginMgr::createPluginConfigDirectory()
     }
 }
 
+bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
+{
+    bool isSuccessful = false;
+
+    if (nullptr != plugin)
+    {
+        if (DisplayMgr::SLOT_ID_INVALID == slotId)
+        {
+            isSuccessful = installToAutoSlot(plugin);
+        }
+        else
+        {
+            isSuccessful = installToSlot(plugin, slotId);
+        }
+
+        if (true == isSuccessful)
+        {
+            String baseUri = getRestApiBaseUri(plugin->getUID());
+
+            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
+            registerTopics(plugin);
+        }
+    }
+
+    return isSuccessful;
+}
+
 bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
 {
     bool status = false;
@@ -302,10 +326,6 @@ bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
         }
         else
         {
-            String baseUri = getRestApiBaseUri(plugin->getUID());
-
-            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
-
             status = true;
         }
     }
@@ -325,15 +345,220 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
         }
         else
         {
-            String baseUri = getRestApiBaseUri(plugin->getUID());
-
-            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
-
             status = true;
         }
     }
 
     return status;
+}
+
+void PluginMgr::registerTopics(IPluginMaintenance* plugin)
+{
+    if (nullptr != plugin)
+    {
+        const size_t        JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
+        JsonArray           topics          = topicsDoc.createNestedArray("topics");
+
+        /* Get topics from plugin. */
+        plugin->getTopics(topics);
+
+        /* Handle each topic */
+        if (0U < topics.size())
+        {
+            PluginObjData*  metaData = new PluginObjData();
+
+            if (nullptr != metaData)
+            {
+                metaData->plugin = plugin;
+
+                for (JsonVariant topic : topics)
+                {
+                    registerTopic(metaData, topic.as<String>());
+                }
+
+                m_pluginMeta.append(metaData);
+            }
+        }
+    }
+}
+
+void PluginMgr::registerTopic(PluginObjData* metaData, const String& topic)
+{
+    String          baseUri         = getRestApiBaseUri(metaData->plugin->getUID());
+    String          topicUri        = baseUri + topic;
+    uint8_t         idx             = 0U;
+    WebHandlerData* webHandlerData  = nullptr;
+
+    /* Find empty web handler slot */
+    for(idx = 0U; idx < PluginObjData::MAX_WEB_HANDLERS; ++idx)
+    {
+        if (nullptr == metaData->webHandlers[idx].webHandler)
+        {
+            webHandlerData = &metaData->webHandlers[idx];
+            break;
+        }
+    }
+
+    if (nullptr == webHandlerData)
+    {
+        LOG_WARNING("[%u] No web handler available anymore.");
+    }
+    else
+    {
+        webHandlerData->webHandler  = &MyWebServer::getInstance().on(
+                                        topicUri.c_str(),
+                                        [this, metaData, topic](AsyncWebServerRequest *request)
+                                        {
+                                            this->webReqHandler(request, metaData->plugin, topic);
+                                        });
+        webHandlerData->uri         = topicUri;
+
+        LOG_INFO("[%s][%u] Register: %s", metaData->plugin->getName(), metaData->plugin->getUID(), topicUri.c_str());
+    }
+}
+
+void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    JsonObject          dataObj         = jsonDoc.createNestedObject("data");
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+
+    if ((nullptr == request) || (nullptr == plugin))
+    {
+        return;
+    }
+
+    if (HTTP_GET == request->method())
+    {
+        if (false == plugin->getTopic(topic, dataObj))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            jsonDoc.remove("data");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "Requested topic not supported.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        }
+    }
+    else if (HTTP_POST == request->method())
+    {
+        DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
+        size_t              idx = 0U;
+
+        for(idx = 0U; idx < request->args(); ++idx)
+        {
+            jsonDocPar[request->argName(idx)] = request->arg(idx);
+        }
+
+        if (false == plugin->setTopic(topic, jsonDocPar.as<JsonObject>()))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            jsonDoc.remove("data");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "Requested topic not supported or invalid data.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        }
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        jsonDoc.remove("data");
+
+        /* Prepare response */
+        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+void PluginMgr::unregisterTopics(IPluginMaintenance* plugin)
+{
+    if (nullptr != plugin)
+    {
+        DLinkedListIterator<PluginObjData*> it(m_pluginMeta);
+
+        /* Walk through plugin meta and remove every topic.
+         * At the end, destroy the meta information.
+         */
+        if (true == it.first())
+        {
+            PluginObjData*  pluginMeta  = *it.current();
+            bool            isFound     = false;
+
+            while((false == isFound) && (nullptr != pluginMeta))
+            {
+                if (plugin == pluginMeta->plugin)
+                {
+                    isFound = true;
+                }
+                else if (false == it.next())
+                {
+                    pluginMeta = nullptr;
+                }
+                else
+                {
+                    pluginMeta = *it.current();
+                }
+            }
+
+            if ((true == isFound) &&
+                (nullptr != pluginMeta))
+            {
+                uint8_t idx = 0U;
+
+                for(idx = 0U; idx < PluginObjData::MAX_WEB_HANDLERS; ++idx)
+                {
+                    if (nullptr != pluginMeta->webHandlers[idx].webHandler)
+                    {
+                        LOG_INFO("[%s][%u] Unregister: %s", pluginMeta->plugin->getName(), pluginMeta->plugin->getUID(), pluginMeta->webHandlers[idx].uri.c_str());
+
+                        if (false == MyWebServer::getInstance().removeHandler(pluginMeta->webHandlers[idx].webHandler))
+                        {
+                            LOG_WARNING("Couldn't remove handler %u.", idx);
+                        }
+
+                        pluginMeta->webHandlers[idx].webHandler = nullptr;
+                    }
+                }
+
+                it.remove();
+                delete pluginMeta;
+            }
+        }
+    }
 }
 
 /******************************************************************************

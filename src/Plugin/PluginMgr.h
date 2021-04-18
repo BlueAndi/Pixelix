@@ -149,7 +149,37 @@ public:
 
 private:
 
-    PluginFactory   m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
+    struct WebHandlerData
+    {
+        AsyncCallbackWebHandler*    webHandler; /**< Webhandler callback, necessary to remove it later again. */
+        String                      uri;        /**< URI where the handler is registered. */
+    };
+
+    /**
+     * Plugin object specific data, used for plugin management.
+     */
+    struct PluginObjData
+    {
+        static const uint8_t MAX_WEB_HANDLERS = 4;  /**< Max. number of web handlers. */
+
+        IPluginMaintenance* plugin;                         /**< Plugin object, where this data record belongs to. */
+        WebHandlerData      webHandlers[MAX_WEB_HANDLERS];  /**< Web data of the plugin, necessary to remove it later again. */
+
+        PluginObjData() :
+            plugin(nullptr),
+            webHandlers()
+        {
+            uint8_t idx = 0U;
+
+            for(idx = 0U; idx < PluginObjData::MAX_WEB_HANDLERS; ++idx)
+            {
+                webHandlers[idx].webHandler = nullptr;
+            }
+        }
+    };
+
+    PluginFactory               m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
+    DLinkedList<PluginObjData*> m_pluginMeta;       /**< Plugin object management information. */
 
     /**
      * Constructs the plugin manager.
@@ -176,6 +206,8 @@ private:
      */
     void createPluginConfigDirectory();
 
+    bool install(IPluginMaintenance* plugin, uint8_t slotId);
+
     /**
      * Install plugin to any available display slot.
      *
@@ -195,6 +227,13 @@ private:
      */
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
 
+    void registerTopics(IPluginMaintenance* plugin);
+
+    void registerTopic(PluginObjData* metaData, const String& topic);
+
+    void webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic);
+
+    void unregisterTopics(IPluginMaintenance* plugin);
 };
 
 /******************************************************************************

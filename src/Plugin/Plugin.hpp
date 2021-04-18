@@ -95,6 +95,59 @@ public:
     }
 
     /**
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
+     */
+    virtual void getTopics(JsonArray& topics) const
+    {
+        UTIL_NOT_USED(topics);
+        return;
+    }
+
+    /**
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    virtual bool getTopic(const String& topic, JsonObject& value) const
+    {
+        UTIL_NOT_USED(topic);
+        UTIL_NOT_USED(value);
+
+        return false;
+    }
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    virtual bool setTopic(const String& topic, const JsonObject& value)
+    {
+        UTIL_NOT_USED(topic);
+        UTIL_NOT_USED(value);
+
+        return false;
+    }
+
+    /**
      * Register web interface, e.g. REST API functionality.
      * Overwrite it, if your plugin provides a web interface.
      *
