@@ -87,8 +87,6 @@ public:
         m_client(),
         m_requestTimer(),
         m_updateContentTimer(),
-        m_urlWeather(),
-        m_callbackWebHandlerWeather(nullptr),
         m_xMutex(nullptr),
         m_isConnectionError(false),
         m_currentTemp(""),
@@ -155,6 +153,43 @@ public:
     }
 
     /**
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
+     */
+    void getTopics(JsonArray& topics) const final;
+
+    /**
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool getTopic(const String& topic, JsonObject& value) const final;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setTopic(const String& topic, const JsonObject& value) final;
+
+    /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
      */
@@ -194,21 +229,6 @@ public:
      * it won't be shown on the display anymore.
      */
     void inactive() final;
-
-    /**
-     * Register web interface, e.g. REST API functionality.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
-     */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
-
-    /**
-     * Unregister web interface.
-     *
-     * @param[in] srv   Webserver
-     */
-    void unregisterWebInterface(AsyncWebServer& srv) final;
 
     /**
      * Update the display.
@@ -331,6 +351,11 @@ private:
     static const char*      OPEN_WEATHER_BASE_URI;
 
     /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*      TOPIC;
+
+    /**
      * Period in ms for requesting data from server.
      * This is used in case the last request to the server was successful.
      * 
@@ -360,8 +385,6 @@ private:
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
     SimpleTimer                 m_updateContentTimer;       /**< Timer used for duration ticks in [s]. */
-    String                      m_urlWeather;               /**< REST API URL for weather data */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerWeather; /**< Callback web handler for weather data */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
     bool                        m_isConnectionError;        /**< Is connection error happened? */
     String                      m_currentTemp;              /**< The current temperature. */
@@ -385,14 +408,6 @@ private:
      * Map the UV index value to a color corresponding the the icon.
     */
     String uvIndexToColor(float uvIndex);
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Request new data.

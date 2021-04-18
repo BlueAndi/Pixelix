@@ -72,9 +72,57 @@ const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/images/volumioPlay.bmp";
 /* Initialize image path for "pause" icon. */
 const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/images/volumioPause.bmp";
 
+/* Initialize plugin topic. */
+const char* VolumioPlugin::TOPIC                    = "/host";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void VolumioPlugin::getTopics(JsonArray& topics) const
+{
+    topics.add(TOPIC);
+}
+
+bool VolumioPlugin::getTopic(const String& topic, JsonObject& value) const
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        String  host    = getHost();
+
+        value["host"] = host;
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        String  host;
+
+        if (false == value["host"].isNull())
+        {
+            host = value["host"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            setHost(host);
+        }
+    }
+
+    return isSuccessful;
+}
+
 
 void VolumioPlugin::start()
 {
@@ -218,35 +266,6 @@ void VolumioPlugin::inactive()
     return;
 }
 
-void VolumioPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
-{
-    m_url = baseUri + "/host";
-
-    m_callbackWebHandler = &srv.on( m_url.c_str(),
-                                    [this](AsyncWebServerRequest *request)
-                                    {
-                                        this->webReqHandler(request);
-                                    });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
-
-    return;
-}
-
-void VolumioPlugin::unregisterWebInterface(AsyncWebServer& srv)
-{
-    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
-
-    if (false == srv.removeHandler(m_callbackWebHandler))
-    {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
-    }
-
-    m_callbackWebHandler = nullptr;
-
-    return;
-}
-
 void VolumioPlugin::update(IGfx& gfx)
 {
     lock();
@@ -305,78 +324,6 @@ void VolumioPlugin::setHost(const String& host)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void VolumioPlugin::webReqHandler(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        String      host    = getHost();
-        JsonObject  dataObj = jsonDoc.createNestedObject("data");
-
-        dataObj["host"] = host;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* Argument missing? */
-        if (false == request->hasArg("set"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Argument is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String host = request->arg("set");
-
-            setHost(host);
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
 
 bool VolumioPlugin::startHttpRequest()
 {

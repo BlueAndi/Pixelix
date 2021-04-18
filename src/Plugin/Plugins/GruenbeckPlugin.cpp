@@ -62,39 +62,57 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* GruenbeckPlugin::IMAGE_PATH     = "/images/gruenbeck.bmp";
+const char* GruenbeckPlugin::IMAGE_PATH = "/images/gruenbeck.bmp";
+
+/* Initialize plugin topic. */
+const char* GruenbeckPlugin::TOPIC      = "/ipAddress";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void GruenbeckPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+void GruenbeckPlugin::getTopics(JsonArray& topics) const
 {
-    m_url = baseUri + "/ipAddress";
-
-    m_callbackWebHandler = &srv.on( m_url.c_str(),
-                                    [this](AsyncWebServerRequest *request)
-                                    {
-                                        this->webReqHandler(request);
-                                    });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
-
-    return;
+    topics.add(TOPIC);
 }
 
-void GruenbeckPlugin::unregisterWebInterface(AsyncWebServer& srv)
+bool GruenbeckPlugin::getTopic(const String& topic, JsonObject& value) const
 {
-    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
+    bool isSuccessful = false;
 
-    if (false == srv.removeHandler(m_callbackWebHandler))
+    if (0U != topic.equals(TOPIC))
     {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
+        String  ipAddress   = getIPAddress();
+
+        value["ipAddress"] = ipAddress;
+
+        isSuccessful = true;
     }
 
-    m_callbackWebHandler = nullptr;
+    return isSuccessful;
+}
 
-    return;
+bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        String  ipAddress;
+
+        if (false == value["ipAddress"].isNull())
+        {
+            ipAddress = value["ipAddress"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            setIPAddress(ipAddress);
+        }
+    }
+
+    return isSuccessful;
 }
 
 void GruenbeckPlugin::active(IGfx& gfx)
@@ -282,78 +300,6 @@ void GruenbeckPlugin::setIPAddress(const String& ipAddress)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void GruenbeckPlugin::webReqHandler(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        String      ipAddress   = getIPAddress();
-        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
-
-        dataObj["ipAddress"] = ipAddress;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* Argument missing? */
-        if (false == request->hasArg("set"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Argument is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String ipAddress = request->arg("set");
-
-            setIPAddress(ipAddress);
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
 
 bool GruenbeckPlugin::startHttpRequest()
 {

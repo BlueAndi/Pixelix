@@ -87,9 +87,77 @@ const char* OpenWeatherPlugin::IMAGE_PATH               = "/images/";
 /* Initialize OpenWeather base URI */
 const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "http://api.openweathermap.org";
 
+/* Initialize plugin topic. */
+const char* OpenWeatherPlugin::TOPIC                    = "/weather";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void OpenWeatherPlugin::getTopics(JsonArray& topics) const
+{
+    topics.add(TOPIC);
+}
+
+bool OpenWeatherPlugin::getTopic(const String& topic, JsonObject& value) const
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        value["apiKey"]   = getApiKey();
+        value["lat"]      = getLatitude();
+        value["lon"]      = getLongitude();
+        value["other"]    = static_cast<int>(getAdditionalInformation());
+        value["units"]    = getUnits();
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        if (false == value["apiKey"].isNull())
+        {
+            setApiKey(value["apiKey"].as<String>());
+            isSuccessful = true;
+        }
+
+        if (false == value["lat"].isNull())
+        {
+            setLatitude(value["lat"].as<String>());
+            isSuccessful = true;
+        }
+        
+        if (false == value["lon"].isNull())
+        {
+            setLongitude(value["lon"].as<String>());
+            isSuccessful = true;
+        }
+
+        if (false == value["other"].isNull())
+        {
+            OtherWeatherInformation other = static_cast<OtherWeatherInformation>(value["other"].as<uint8_t>());
+
+            setAdditionalInformation(other);
+            isSuccessful = true;
+        }
+
+        if (false == value["units"].isNull())
+        {
+            setUnits(value["units"].as<String>());
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
 
 void OpenWeatherPlugin::start()
 {
@@ -242,35 +310,6 @@ void OpenWeatherPlugin::inactive()
     return;
 }
 
-void OpenWeatherPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
-{
-    m_urlWeather = baseUri + "/weather";
-
-    m_callbackWebHandlerWeather = &srv.on( m_urlWeather.c_str(),
-                                    [this](AsyncWebServerRequest *request)
-                                    {
-                                        this->webReqHandler(request);
-                                    });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_urlWeather.c_str());
-
-    return;
-}
-
-void OpenWeatherPlugin::unregisterWebInterface(AsyncWebServer& srv)
-{
-    LOG_INFO("[%s] Unregister: %s", getName(), m_urlWeather.c_str());
-
-    if (false == srv.removeHandler(m_callbackWebHandlerWeather))
-    {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
-    }
-
-    m_callbackWebHandlerWeather = nullptr;
-
-    return;
-}
-
 void OpenWeatherPlugin::update(IGfx& gfx)
 {
     lock();
@@ -311,7 +350,12 @@ String OpenWeatherPlugin::getApiKey() const
 void OpenWeatherPlugin::setApiKey(const String& apiKey)
 {
     lock();
-    m_apiKey = apiKey;
+
+    m_apiKey                    = apiKey;
+    m_configurationHasChanged   = true;
+
+    (void)saveConfiguration();
+    
     unlock();
 
     return;
@@ -331,7 +375,12 @@ String OpenWeatherPlugin::getLatitude() const
 void OpenWeatherPlugin::setLatitude(const String& latitude)
 {
     lock();
-    m_latitude = latitude;
+
+    m_latitude                  = latitude;
+    m_configurationHasChanged   = true;
+
+    (void)saveConfiguration();
+
     unlock();
 
     return;
@@ -351,7 +400,12 @@ String OpenWeatherPlugin::getLongitude() const
 void OpenWeatherPlugin::setLongitude(const String& longitude)
 {
     lock();
-    m_longitude = longitude;
+
+    m_longitude                 = longitude;
+    m_configurationHasChanged   = true;
+
+    (void)saveConfiguration();
+
     unlock();
 
     return;
@@ -371,7 +425,12 @@ OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInfor
 void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& additionalInformation)
 {
     lock();
-    m_additionalInformation = additionalInformation;
+
+    m_additionalInformation     = additionalInformation;
+    m_configurationHasChanged   = true;
+
+    (void)saveConfiguration();
+
     unlock();
 
     return;
@@ -391,7 +450,12 @@ String OpenWeatherPlugin::getUnits() const
 void OpenWeatherPlugin::setUnits(const String& units)
 {
     lock();
-    m_units = units;
+
+    m_units                     = units;
+    m_configurationHasChanged   = true;
+
+    (void)saveConfiguration();
+
     unlock();
 
     return;
@@ -521,114 +585,6 @@ void OpenWeatherPlugin::updateDisplay(bool force)
             m_durationCounter = 0U;
         }
     }
-}
-
-void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj = jsonDoc.createNestedObject("data");
-
-        dataObj["apiKey"]   = getApiKey();
-        dataObj["lat"]      = getLatitude();
-        dataObj["lon"]      = getLongitude();
-        dataObj["other"]    = static_cast<int>(getAdditionalInformation());
-        dataObj["units"]    = getUnits();
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* One argument must be available at least. */
-        if ((false == request->hasArg("apiKey")) &&
-            (false == request->hasArg("lat")) &&
-            (false == request->hasArg("lon")) &&
-            (false == request->hasArg("other")) &&
-            (false == request->hasArg("units")))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Argument is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            if (true == request->hasArg("apiKey"))
-            {
-                String apiKey = request->arg("apiKey");
-                setApiKey(apiKey);
-            }
-
-            if (true == request->hasArg("lat"))
-            {
-                String latitude = request->arg("lat");
-                setLatitude(latitude);
-            }
-            
-            if (true == request->hasArg("lon"))
-            {
-                String longitude = request->arg("lon");
-                setLongitude(longitude);
-            }
-
-            if (true == request->hasArg("other"))
-            {
-                OtherWeatherInformation other = static_cast<OtherWeatherInformation>(request->arg("other").toInt());
-                setAdditionalInformation(other);
-            }
-
-            if (true == request->hasArg("units"))
-            {
-                String units = request->arg("units");
-                setUnits(units);
-            }
-
-            (void)saveConfiguration();
-            m_configurationHasChanged = true;
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
 }
 
 bool OpenWeatherPlugin::startHttpRequest()
