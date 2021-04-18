@@ -95,12 +95,23 @@ public:
 
     /**
      * Create a plugin by name.
+     * The plugin UID is automatically generated.
      * 
      * @param[in] name  Plugin type name
      * 
      * @return If successful, it will return the plugin object pointer otherwise nullptr.
      */
     IPluginMaintenance* createPlugin(const String& name);
+
+    /**
+     * Create a plugin by name with given UID.
+     * 
+     * @param[in] name  Plugin type name
+     * @param[in] uid   Plugin UID
+     * 
+     * @return If successful, it will return the plugin object pointer otherwise nullptr.
+     */
+    IPluginMaintenance* createPlugin(const String& name, uint16_t uid);
 
     /**
      * Destroy plugin object.

@@ -91,6 +91,11 @@ void PluginFactory::registerPlugin(const String& name, IPluginMaintenance::Creat
 
 IPluginMaintenance* PluginFactory::createPlugin(const String& name)
 {
+    return createPlugin(name, generateUID());
+}
+
+IPluginMaintenance* PluginFactory::createPlugin(const String& name, uint16_t uid)
+{
     IPluginMaintenance*                     plugin  = nullptr;
     PluginRegEntry*                         entry   = nullptr;
     DLinkedListIterator<PluginRegEntry*>    itPluginReg(m_registry);
@@ -123,10 +128,13 @@ IPluginMaintenance* PluginFactory::createPlugin(const String& name)
         if ((true == isFound) &&
             (nullptr != entry))
         {
-            uint16_t uid = generateUID();
-
             /* Produce the plugin object. */
             plugin = entry->createFunc(entry->name, uid);
+
+            if (nullptr != plugin)
+            {
+                m_plugins.append(plugin);
+            }
         }
     }
 
