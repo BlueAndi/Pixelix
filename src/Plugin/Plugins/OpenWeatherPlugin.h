@@ -78,7 +78,7 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_apiKey("YOUR API-KEY"),
+        m_apiKey(""),
         m_latitude("48.858"),/* Example data */
         m_longitude("2.295"),/* Example data */
         m_additionalInformation(OFF),
