@@ -285,10 +285,10 @@ GET <base-uri>/rest/api/v1/display/uid/0/text
 Result:
 ```json
 {
-    "status": 0,
     "data": {
         "text": "Hello World!"
-    }
+    },
+    "status": 0
 }
 ```
 
@@ -299,8 +299,8 @@ POST <base-uri>/rest/api/v1/display/uid/0/text?show=Test
 Result:
 ```json
 {
-    "status": 0,
-    "data": null
+    "data": {},
+    "status": 0
 }
 ```
 
@@ -359,17 +359,27 @@ GET <base-uri>/rest/api/v1/display/uid/0/lamps
 
 Result:
 ```json
-{
-    "status": 0,
-    "data": {
-        "lamps": [{
-            "id": 0,
-            "state": "off"
-        }, {
-            "id": 1,
-            "state": "on"
-        }]
-    }
+  "data": {
+    "lamps": [
+      {
+        "id": 0,
+        "state": "off"
+      },
+      {
+        "id": 1,
+        "state": "off"
+      },
+      {
+        "id": 2,
+        "state": "off"
+      },
+      {
+        "id": 3,
+        "state": "off"
+      }
+    ]
+  },
+  "status": 0
 }
 ```
 
@@ -382,9 +392,14 @@ $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/l
 Set the state of a lamp in the specified slot.
 
 Detail:
+* Method: GET
+  * Get lamp state.
+    * Arguments:
+      * N/A
 * Method: POST
-* Arguments:
-  * set=`<lamp-state>`
+  * Set lamp state.
+    * Arguments:
+      * set=`<lamp-state>`
 
 Supported lamp states:
 * "off"
@@ -392,19 +407,35 @@ Supported lamp states:
 
 Example:
 ```
+GET <base-uri>/rest/api/v1/display/uid/0/lamp/0
+```
+
+Result:
+```json
+{
+  "data": {
+    "id": 0,
+    "state": "on"
+  },
+  "status": 0
+}
+```
+
+```
 POST <base-uri>/rest/api/v1/display/uid/0/lamp/0?set=on
 ```
 
 Result:
 ```json
 {
-    "status": 0,
-    "data": null
+  "data": {},
+  "status": 0
 }
 ```
 
 Example with curl:
 ```bash
+$ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/lamp/0
 $ curl -u luke:skywalker -d "set=on" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/lamp/0
 ```
 
@@ -434,14 +465,14 @@ GET <base-uri>/rest/api/v1/display/uid/0/countdown
 Result:
 ```json
 {
-    "status": 0,
     "data": {
         "day": 2,
         "month": 9,
         "year": 2020,
         "plural": "DAYS",
         "singular": "DAY"
-    }
+    },
+    "status": 0
 }
 ```
 
@@ -452,8 +483,8 @@ POST <base-uri>/rest/api/v1/display/uid/0/countdown?day=29;month=8;year=2019;plu
 Result:
 ```json
 {
-    "status": 0,
-    "data": null
+    "data": {},
+    "status": 0
 }
 ```
 
@@ -485,11 +516,11 @@ GET <base-uri>/rest/api/v1/display/uid/0/location
 Result:
 ```json
 {
-    "status": 0,
     "data": {
         "longitude": "2.295",
         "latitude": "48.858"
-    }
+    },
+    "status": 0
 }
 ```
 
@@ -500,8 +531,8 @@ POST <base-uri>/rest/api/v1/display/uid/0/location?longitude=2.295;latitude=48.8
 Result:
 ```json
 {
-    "status": 0,
-    "data": null
+    "data": {},
+    "status": 0
 }
 ```
 
@@ -532,10 +563,10 @@ GET <base-uri>/rest/api/v1/display/uid/0/ipAddress
 Result:
 ```json
 {
-    "status": 0,
     "data": {
         "ipAddress": "192.168.178.12"
-    }
+    },
+    "status": 0
 }
 ```
 
@@ -546,8 +577,8 @@ POST <base-uri>/rest/api/v1/display/uid/0/ipAddress?set=192.168.178.12
 Result:
 ```json
 {
-    "status": 0,
-    "data": null
+    "data": {},
+    "status": 0
 }
 ```
 
@@ -578,10 +609,10 @@ GET <base-uri>/rest/api/v1/display/uid/0/host
 Result:
 ```json
 {
-    "status": 0,
     "data": {
         "host": "volumio.fritz.box"
-    }
+    },
+    "status": 0
 }
 ```
 
@@ -592,8 +623,8 @@ POST <base-uri>/rest/api/v1/display/uid/0/host?set=volumio.fritz.box
 Result:
 ```json
 {
-    "status": 0,
-    "data": null
+    "data": {},
+    "status": 0
 }
 ```
 
@@ -624,14 +655,14 @@ GET <base-uri>/rest/api/v1/display/uid/0/weather
 Result:
 ```json
 {
-    "status": 0,
     "data": {
         "apiKey": "yourApiKey",
         "lat": "theLatitude",
         "lon": "theLongitude",
         "other": "theAdditionalInformation",
         "units":"metricOrImperial"
-    }
+    },
+    "status": 0
 }
 ```
 
@@ -642,15 +673,16 @@ POST <base-uri>/rest/api/v1/display/uid/0/weather?apyKey=yourApiKey&lat=48.858&l
 Result:
 ```json
 {
-    "status": 0,
-    "data": null
+    "data": {},
+    "status": 0
 }
 ```
 
 Example with curl:
 ```bash
 $ curl -u luke:skywalker -X GET http://192.168.2.166/rest/api/v1/display/uid/0/weather
-$ curl -u luke:skywalker -d "apyKey=yourApiKey" -d "lat=theLatitude" -d "lon=theLongitude" -d "other=theAdditionalInformation" -d "units=metricOrImperial -X POST http://192.168.2.166/rest/api/v1/display/uid/0/weather
+$ curl -u luke:skywalker -d "apyKey=yourApiKey" -d "lat=theLatitude" -d "lon=theLongitude" -d "other=theAdditionalInformation" -d "units=metricOrImperial" -X POST http://192.168.2.166/rest/api/v1/display/uid/0/weather
+```
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

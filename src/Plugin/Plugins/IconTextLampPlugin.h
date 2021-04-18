@@ -64,11 +64,6 @@
  * Shows a icon (bitmap) on the left side in 8 x 8, text on the right side and
  * under the text a bar with lamps.
  * If the text is too long for the display width, it automatically scrolls.
- *
- * Change icon, text or lamps via REST API:
- * Icon: POST \c "<base-uri>/bitmap" with multipart/form-data file upload.
- * Text: POST \c "<base-uri>/text?show=<text>"
- * Lamp: POST \c "<base-uri>/lamp/<lamp-id>?set=<on/off>"
  */
 class IconTextLampPlugin : public Plugin
 {
@@ -89,13 +84,7 @@ public:
         m_textWidget(),
         m_lampWidgets(),
         m_urlIcon(),
-        m_urlText(),
-        m_urlLamps(),
-        m_urlLamp(),
         m_callbackWebHandlerIcon(nullptr),
-        m_callbackWebHandlerText(nullptr),
-        m_callbackWebHandlerLamps(nullptr),
-        m_callbackWebHandlerLamp(nullptr),
         m_fd(),
         m_isUploadError(false),
         m_xMutex(nullptr)
@@ -145,6 +134,43 @@ public:
     {
         return new IconTextLampPlugin(name, uid);
     }
+
+    /**
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
+     */
+    void getTopics(JsonArray& topics) const final;
+
+    /**
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool getTopic(const String& topic, JsonObject& value) const final;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
      * This method will be called in case the plugin is set active, which means
@@ -235,6 +261,21 @@ public:
 private:
 
     /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*  TOPIC_TEXT;
+
+    /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*  TOPIC_LAMPS;
+
+    /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*  TOPIC_LAMP;
+
+    /**
      * Icon width in pixels.
      */
     static const uint16_t   ICON_WIDTH  = 8U;
@@ -256,13 +297,7 @@ private:
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     LampWidget                  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
     String                      m_urlIcon;                  /**< REST API URL for updating the icon. */
-    String                      m_urlText;                  /**< REST API URL to get/set the text. */
-    String                      m_urlLamps;                 /**< REST API URL to get all lamp states. */
-    String                      m_urlLamp;                  /**< REST API URL for updating single lamps. */
     AsyncCallbackWebHandler*    m_callbackWebHandlerIcon;   /**< Callback web handler for updating the icon. */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerText;   /**< Callback web handler to get/set the text. */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerLamps;  /**< Callback web handler to get all lamp states. */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerLamp;   /**< Callback web handler for updating single lamps. */
     File                        m_fd;                       /**< File descriptor, used for bitmap file upload. */
     bool                        m_isUploadError;            /**< Flag to signal a upload error. */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
@@ -273,31 +308,7 @@ private:
      *
      * @param[in] request   Web request
      */
-    void webReqHandlerText(AsyncWebServerRequest *request);
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
     void webReqHandlerIcon(AsyncWebServerRequest *request);
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandlerLamps(AsyncWebServerRequest *request);
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandlerLamp(AsyncWebServerRequest *request);
 
     /**
      * File upload handler.

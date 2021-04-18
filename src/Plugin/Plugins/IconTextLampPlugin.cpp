@@ -59,9 +59,142 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize plugin topic. */
+const char* IconTextLampPlugin::TOPIC_TEXT  = "/text";
+
+/* Initialize plugin topic. */
+const char* IconTextLampPlugin::TOPIC_LAMPS = "/lamps";
+
+/* Initialize plugin topic. */
+const char* IconTextLampPlugin::TOPIC_LAMP  = "/lamp";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void IconTextLampPlugin::getTopics(JsonArray& topics) const
+{
+    uint8_t lampId = 0U;
+
+    topics.add(TOPIC_TEXT);
+    topics.add(TOPIC_LAMPS);
+
+    for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
+    {
+        topics.add(String(TOPIC_LAMP) + "/" + lampId);
+    }
+}
+
+bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC_TEXT))
+    {
+        String  formattedText   = getText();
+
+        value["text"] = formattedText;
+
+        isSuccessful = true;
+    }
+    else if (0U != topic.equals(TOPIC_LAMPS))
+    {
+        JsonArray   lampArray   = value.createNestedArray("lamps");
+        uint8_t     lampId      = 0U;
+
+        for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
+        {
+            bool        lampOnState = getLamp(lampId);
+            JsonObject  lampObj     = lampArray.createNestedObject();
+
+            lampObj["id"]       = lampId;
+            lampObj["state"]    = (false == lampOnState) ? String("off") : String("on");
+        }
+
+        isSuccessful = true;
+    }
+    else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
+    {
+        uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
+        String      lampIdStr           = topic.substring(indexBeginLampId);
+        uint8_t     lampId              = MAX_LAMPS;
+        bool        status              = Util::strToUInt8(lampIdStr, lampId);
+
+        if ((true == status) &&
+            (MAX_LAMPS > lampId))
+        {
+            bool    lampState       = getLamp(lampId);
+            String  lampStateStr    = (false == lampState) ? "off" : "on";
+
+            value["id"]     = lampId;
+            value["state"]  = lampStateStr;
+
+            isSuccessful = true;
+        }
+    }
+    else
+    {
+        ;
+    }
+
+    return isSuccessful;
+}
+
+bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC_TEXT))
+    {
+        String  text;
+
+        if (false == value["show"].isNull())
+        {
+            text = value["show"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            setText(text);
+        }
+    }
+    else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
+    {
+        uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
+        String      lampIdStr           = topic.substring(indexBeginLampId);
+        uint8_t     lampId              = MAX_LAMPS;
+        bool        status              = Util::strToUInt8(lampIdStr, lampId);
+
+        if ((true == status) &&
+            (MAX_LAMPS > lampId) &&
+            (false == value["set"].isNull()))
+        {
+            String state = value["set"].as<String>();
+
+            if (state == "off")
+            {
+                setLamp(lampId, false);
+                isSuccessful = true;
+            }
+            else if (state == "on")
+            {
+                setLamp(lampId, true);
+                isSuccessful = true;
+            }
+            else
+            {
+                ;
+            }
+        }
+    }
+    else
+    {
+        ;
+    }
+
+    return isSuccessful;
+}
 
 void IconTextLampPlugin::active(IGfx& gfx)
 {
@@ -136,33 +269,6 @@ void IconTextLampPlugin::registerWebInterface(AsyncWebServer& srv, const String&
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlIcon.c_str());
 
-    m_urlText = baseUri + "/text";
-    m_callbackWebHandlerText = &srv.on( m_urlText.c_str(),
-                                        [this](AsyncWebServerRequest *request)
-                                        {
-                                            this->webReqHandlerText(request);
-                                        });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_urlText.c_str());
-
-    m_urlLamps = baseUri + "/lamps";
-    m_callbackWebHandlerLamps = &srv.on(m_urlLamps.c_str(),
-                                        [this](AsyncWebServerRequest *request)
-                                        {
-                                            this->webReqHandlerLamps(request);
-                                        });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_urlLamps.c_str());
-
-    m_urlLamp = baseUri + "/lamp/*";
-    m_callbackWebHandlerLamp = &srv.on( m_urlLamp.c_str(),
-                                        [this](AsyncWebServerRequest *request)
-                                        {
-                                            this->webReqHandlerLamp(request);
-                                        });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_urlLamp.c_str());
-
     return;
 }
 
@@ -176,33 +282,6 @@ void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
     }
 
     m_callbackWebHandlerIcon = nullptr;
-
-    LOG_INFO("[%s] Unregister: %s", getName(), m_urlText.c_str());
-
-    if (false == srv.removeHandler(m_callbackWebHandlerText))
-    {
-        LOG_WARNING("Couldn't remove %s handler.", this->getName());
-    }
-
-    m_callbackWebHandlerText = nullptr;
-
-    LOG_INFO("[%s] Unregister: %s", getName(), m_urlLamps.c_str());
-
-    if (false == srv.removeHandler(m_callbackWebHandlerLamps))
-    {
-        LOG_WARNING("Couldn't remove %s handler.", this->getName());
-    }
-
-    m_callbackWebHandlerLamps = nullptr;
-
-    LOG_INFO("[%s] Unregister: %s", getName(), m_urlLamp.c_str());
-
-    if (false == srv.removeHandler(m_callbackWebHandlerLamp))
-    {
-        LOG_WARNING("Couldn't remove %s handler.", this->getName());
-    }
-
-    m_callbackWebHandlerLamp = nullptr;
 
     return;
 }
@@ -311,78 +390,6 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void IconTextLampPlugin::webReqHandlerText(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
-        String      formattedText   = getText();
-
-        dataObj["text"] = formattedText;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* "show" argument missing? */
-        if (false == request->hasArg("show"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Show is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String text = request->arg("show");
-
-            setText(text);
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
 
 void IconTextLampPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
 {
@@ -498,165 +505,6 @@ void IconTextLampPlugin::iconUploadHandler(AsyncWebServerRequest *request, const
             m_fd.close();
         }
     }
-
-    return;
-}
-
-void IconTextLampPlugin::webReqHandlerLamps(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
-        JsonArray   lampArray   = dataObj.createNestedArray("lamps");
-        uint8_t     lampId  = 0U;
-
-        for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
-        {
-            bool        lampOnState = getLamp(lampId);
-            JsonObject  lampObj     = lampArray.createNestedObject();
-
-            lampObj["id"]       = lampId;
-            lampObj["state"]    = (false == lampOnState) ? String("off") : String("on");
-        }
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
-
-void IconTextLampPlugin::webReqHandlerLamp(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
-        JsonArray   lampArray   = dataObj.createNestedArray("lamps");
-        uint8_t     lampId  = 0U;
-
-        for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
-        {
-            bool        lampOnState = getLamp(lampId);
-            JsonObject  lampObj     = lampArray.createNestedObject();
-
-            lampObj["id"]       = lampId;
-            lampObj["state"]    = (false == lampOnState) ? String("off") : String("on");
-        }
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        uint32_t    indexBeginLampId    = m_urlLamp.length() - 1;
-        uint32_t    indexEndLampId      = request->url().indexOf("/", indexBeginLampId);
-        String      lampIdStr           = request->url().substring(indexBeginLampId, indexEndLampId);
-        uint8_t     lampId              = MAX_LAMPS;
-        bool        status              = Util::strToUInt8(lampIdStr, lampId);
-
-        /* Lamp id invalid? */
-        if ((false == status) ||
-            (MAX_LAMPS <= lampId))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Lamp id not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else if ((false == request->hasArg("set")) ||
-                 ((request->arg("set") != "off") &&
-                  (request->arg("set") != "on")))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Command not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            bool lampState = false;
-
-            if (request->arg("set") == "on")
-            {
-                lampState = true;
-            }
-
-            setLamp(lampId, lampState);
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
 
     return;
 }

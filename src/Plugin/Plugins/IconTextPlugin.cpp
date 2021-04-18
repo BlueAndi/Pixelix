@@ -59,9 +59,56 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize plugin topic. */
+const char* IconTextPlugin::TOPIC_TEXT  = "/text";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void IconTextPlugin::getTopics(JsonArray& topics) const
+{
+    topics.add(TOPIC_TEXT);
+}
+
+bool IconTextPlugin::getTopic(const String& topic, JsonObject& value) const
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC_TEXT))
+    {
+        String  formattedText   = getText();
+
+        value["text"] = formattedText;
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+bool IconTextPlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC_TEXT))
+    {
+        String  text;
+
+        if (false == value["show"].isNull())
+        {
+            text = value["show"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            setText(text);
+        }
+    }
+
+    return isSuccessful;
+}
 
 void IconTextPlugin::active(IGfx& gfx)
 {
@@ -120,15 +167,6 @@ void IconTextPlugin::registerWebInterface(AsyncWebServer& srv, const String& bas
 
     LOG_INFO("[%s] Register: %s", getName(), m_urlIcon.c_str());
 
-    m_urlText = baseUri + "/text";
-    m_callbackWebHandlerText = &srv.on( m_urlText.c_str(),
-                                        [this](AsyncWebServerRequest *request)
-                                        {
-                                            this->webReqHandlerText(request);
-                                        });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_urlText.c_str());
-
     return;
 }
 
@@ -142,15 +180,6 @@ void IconTextPlugin::unregisterWebInterface(AsyncWebServer& srv)
     }
 
     m_callbackWebHandlerIcon = nullptr;
-
-    LOG_INFO("[%s] Unregister: %s", getName(), m_urlText.c_str());
-
-    if (false == srv.removeHandler(m_callbackWebHandlerText))
-    {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
-    }
-
-    m_callbackWebHandlerText = nullptr;
 
     return;
 }
@@ -228,78 +257,6 @@ bool IconTextPlugin::loadBitmap(const String& filename)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void IconTextPlugin::webReqHandlerText(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
-        String      formattedText   = getText();
-
-        dataObj["text"] = formattedText;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* "show" argument missing? */
-        if (false == request->hasArg("show"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Show is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String text = request->arg("show");
-
-            setText(text);
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
 
 void IconTextPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
 {

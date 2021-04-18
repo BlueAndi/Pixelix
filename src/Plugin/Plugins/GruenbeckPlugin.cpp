@@ -100,9 +100,9 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
     {
         String  ipAddress;
 
-        if (false == value["ipAddress"].isNull())
+        if (false == value["set"].isNull())
         {
-            ipAddress = value["ipAddress"].as<String>();
+            ipAddress = value["set"].as<String>();
             isSuccessful = true;
         }
 
