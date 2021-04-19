@@ -81,7 +81,7 @@ const char* VolumioPlugin::TOPIC                    = "/host";
 
 void VolumioPlugin::getTopics(JsonArray& topics) const
 {
-    topics.add(TOPIC);
+    (void)topics.add(TOPIC);
 }
 
 bool VolumioPlugin::getTopic(const String& topic, JsonObject& value) const

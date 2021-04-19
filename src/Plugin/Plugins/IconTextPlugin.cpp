@@ -71,8 +71,8 @@ const char* IconTextPlugin::TOPIC_ICON  = "/bitmap";
 
 void IconTextPlugin::getTopics(JsonArray& topics) const
 {
-    topics.add(TOPIC_TEXT);
-    topics.add(TOPIC_ICON);
+    (void)topics.add(TOPIC_TEXT);
+    (void)topics.add(TOPIC_ICON);
 }
 
 bool IconTextPlugin::getTopic(const String& topic, JsonObject& value) const

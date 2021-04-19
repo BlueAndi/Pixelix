@@ -85,7 +85,7 @@ const char* SunrisePlugin::TOPIC        = "/location";
 
 void SunrisePlugin::getTopics(JsonArray& topics) const
 {
-    topics.add(TOPIC);
+    (void)topics.add(TOPIC);
 }
 
 bool SunrisePlugin::getTopic(const String& topic, JsonObject& value) const

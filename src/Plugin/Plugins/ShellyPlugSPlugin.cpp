@@ -76,7 +76,7 @@ const char* ShellyPlugSPlugin::TOPIC        = "/ipAddress";
 
 void ShellyPlugSPlugin::getTopics(JsonArray& topics) const
 {
-    topics.add(TOPIC);
+    (void)topics.add(TOPIC);
 }
 
 bool ShellyPlugSPlugin::getTopic(const String& topic, JsonObject& value) const

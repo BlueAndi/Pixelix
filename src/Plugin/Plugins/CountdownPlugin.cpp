@@ -74,7 +74,7 @@ const char* CountdownPlugin::TOPIC      = "/countdown";
 
 void CountdownPlugin::getTopics(JsonArray& topics) const
 {
-    topics.add(TOPIC);
+    (void)topics.add(TOPIC);
 }
 
 bool CountdownPlugin::getTopic(const String& topic, JsonObject& value) const

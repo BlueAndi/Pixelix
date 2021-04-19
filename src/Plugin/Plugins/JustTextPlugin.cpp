@@ -68,7 +68,7 @@ const char* JustTextPlugin::TOPIC_TEXT  = "/text";
 
 void JustTextPlugin::getTopics(JsonArray& topics) const
 {
-    topics.add(TOPIC_TEXT);
+    (void)topics.add(TOPIC_TEXT);
 }
 
 bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const

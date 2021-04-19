@@ -96,7 +96,7 @@ const char* OpenWeatherPlugin::TOPIC                    = "/weather";
 
 void OpenWeatherPlugin::getTopics(JsonArray& topics) const
 {
-    topics.add(TOPIC);
+    (void)topics.add(TOPIC);
 }
 
 bool OpenWeatherPlugin::getTopic(const String& topic, JsonObject& value) const

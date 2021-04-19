@@ -79,15 +79,15 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
 {
     uint8_t lampId = 0U;
 
-    topics.add(TOPIC_TEXT);
-    topics.add(TOPIC_LAMPS);
+    (void)topics.add(TOPIC_TEXT);
+    (void)topics.add(TOPIC_LAMPS);
 
     for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
     {
-        topics.add(String(TOPIC_LAMP) + "/" + lampId);
+        (void)topics.add(String(TOPIC_LAMP) + "/" + lampId);
     }
 
-    topics.add(TOPIC_ICON);
+    (void)topics.add(TOPIC_ICON);
 }
 
 bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const

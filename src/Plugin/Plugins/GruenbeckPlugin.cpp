@@ -73,7 +73,7 @@ const char* GruenbeckPlugin::TOPIC      = "/ipAddress";
 
 void GruenbeckPlugin::getTopics(JsonArray& topics) const
 {
-    topics.add(TOPIC);
+    (void)topics.add(TOPIC);
 }
 
 bool GruenbeckPlugin::getTopic(const String& topic, JsonObject& value) const
