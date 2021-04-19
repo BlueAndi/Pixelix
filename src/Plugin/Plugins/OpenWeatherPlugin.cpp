@@ -311,7 +311,15 @@ String OpenWeatherPlugin::getApiKey() const
 void OpenWeatherPlugin::setApiKey(const String& apiKey)
 {
     lock();
-    m_apiKey = apiKey;
+
+    if (apiKey != m_apiKey)
+    {
+        m_apiKey = apiKey;
+        m_configurationHasChanged = true;
+
+        (void)saveConfiguration();
+    }
+
     unlock();
 
     return;
@@ -331,7 +339,15 @@ String OpenWeatherPlugin::getLatitude() const
 void OpenWeatherPlugin::setLatitude(const String& latitude)
 {
     lock();
-    m_latitude = latitude;
+
+    if(latitude != m_latitude)
+    {
+        m_latitude = latitude;
+        m_configurationHasChanged = true;
+
+        (void)saveConfiguration();
+    }
+
     unlock();
 
     return;
@@ -351,7 +367,15 @@ String OpenWeatherPlugin::getLongitude() const
 void OpenWeatherPlugin::setLongitude(const String& longitude)
 {
     lock();
-    m_longitude = longitude;
+
+    if(longitude != m_longitude)
+    {
+        m_longitude = longitude;
+        m_configurationHasChanged = true;
+
+        (void)saveConfiguration();
+    }
+
     unlock();
 
     return;
@@ -371,7 +395,15 @@ OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInfor
 void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& additionalInformation)
 {
     lock();
-    m_additionalInformation = additionalInformation;
+
+    if(additionalInformation != m_additionalInformation)
+    {
+        m_additionalInformation = additionalInformation;
+        m_configurationHasChanged = true;
+
+        (void)saveConfiguration();
+    }
+
     unlock();
 
     return;
@@ -597,9 +629,6 @@ void OpenWeatherPlugin::webReqHandler(AsyncWebServerRequest *request)
                 setUnits(units);
             }
 
-            (void)saveConfiguration();
-            m_configurationHasChanged = true;
-
             /* Prepare response */
             (void)jsonDoc.createNestedObject("data");
             jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
@@ -738,7 +767,7 @@ void OpenWeatherPlugin::initHttpClient()
                 m_currentUvIndex += uvIndexToColor(uvIndex);
                 m_currentUvIndex += uvIndex;
 
-                const char* reducePrecision = (temperature < -9.9) ? "%.0f" : "%.1f";
+                const char* reducePrecision = (temperature < -9.9f) ? "%.0f" : "%.1f";
 
                 /* Generate temperature string with reduced precision and add unit °C/°F. */
                 (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
