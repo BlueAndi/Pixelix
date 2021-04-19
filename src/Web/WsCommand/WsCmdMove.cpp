@@ -36,6 +36,7 @@
 #include "PluginMgr.h"
 
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches

@@ -40,6 +40,7 @@
 
 #include <Logging.h>
 #include <ArduinoJson.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches

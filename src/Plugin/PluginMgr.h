@@ -49,6 +49,7 @@
 #include "PluginFactory.h"
 
 #include <LinkedList.hpp>
+#include <ESPAsyncWebServer.h>
 
 /******************************************************************************
  * Macros

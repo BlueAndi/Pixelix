@@ -45,8 +45,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <IGfx.hpp>
-#include <HttpStatus.h>
-#include <ESPAsyncWebServer.h>
 #include <Util.h>
 #include "IPluginMaintenance.hpp"
 
@@ -162,32 +160,6 @@ public:
         UTIL_NOT_USED(srcFilename);
         UTIL_NOT_USED(dstFilename);
         return false;
-    }
-
-    /**
-     * Register web interface, e.g. REST API functionality.
-     * Overwrite it, if your plugin provides a web interface.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
-     */
-    virtual void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override
-    {
-        UTIL_NOT_USED(srv);
-        UTIL_NOT_USED(baseUri);
-        return;
-    }
-
-    /**
-     * Unregister web interface.
-     * Overwrite it, if your plugin provides a web interface.
-     *
-     * @param[in] srv   Webserver
-     */
-    virtual void unregisterWebInterface(AsyncWebServer& srv) override
-    {
-        UTIL_NOT_USED(srv);
-        return;
     }
 
     /**

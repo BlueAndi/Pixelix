@@ -39,6 +39,7 @@
 #include "Settings.h"
 #include "FileSystem.h"
 #include "Plugin.hpp"
+#include "HttpStatus.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
@@ -105,7 +106,6 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
         if (true == status)
         {
             unregisterTopics(plugin);
-            plugin->unregisterWebInterface(MyWebServer::getInstance());
             m_pluginFactory.destroyPlugin(plugin);
         }
     }
@@ -306,7 +306,6 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
         {
             String baseUri = getRestApiBaseUri(plugin->getUID());
 
-            plugin->registerWebInterface(MyWebServer::getInstance(), baseUri);
             registerTopics(plugin);
         }
     }

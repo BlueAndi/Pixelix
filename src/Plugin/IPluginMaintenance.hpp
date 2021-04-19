@@ -45,9 +45,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <IGfx.hpp>
-#include <HttpStatus.h>
-#include <ESPAsyncWebServer.h>
-#include <Util.h>
 #include <ArduinoJson.h>
 #include "ISlotPlugin.hpp"
 
@@ -140,23 +137,6 @@ public:
      * @return If accepted it will return true otherwise false.
      */
     virtual bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) = 0;
-
-    /**
-     * Register web interface, e.g. REST API functionality.
-     * Overwrite it, if your plugin provides a web interface.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
-     */
-    virtual void registerWebInterface(AsyncWebServer& srv, const String& baseUri) = 0;
-
-    /**
-     * Unregister web interface.
-     * Overwrite it, if your plugin provides a web interface.
-     *
-     * @param[in] srv   Webserver
-     */
-    virtual void unregisterWebInterface(AsyncWebServer& srv) = 0;
 
     /**
      * Get the plugin name.
