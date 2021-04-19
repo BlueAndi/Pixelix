@@ -148,6 +148,23 @@ public:
     }
 
     /**
+     * Is a upload request accepted or rejected?
+     * 
+     * @param[in] topic         The topic which the upload belongs to.
+     * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
+     * @param[in] dstFilename   The destination filename, after storing the uploaded file.
+     * 
+     * @return If accepted it will return true otherwise false.
+     */
+    bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) override
+    {
+        UTIL_NOT_USED(topic);
+        UTIL_NOT_USED(srcFilename);
+        UTIL_NOT_USED(dstFilename);
+        return false;
+    }
+
+    /**
      * Register web interface, e.g. REST API functionality.
      * Overwrite it, if your plugin provides a web interface.
      *
@@ -298,6 +315,8 @@ protected:
     /**
      * Generate the full path for any plugin instance specific kind of configuration
      * file.
+     * 
+     * @param[in] extension Full path filename
      *
      * @return Full path
      */

@@ -154,8 +154,23 @@ private:
      */
     struct WebHandlerData
     {
-        AsyncCallbackWebHandler*    webHandler; /**< Webhandler callback, necessary to remove it later again. */
-        String                      uri;        /**< URI where the handler is registered. */
+        AsyncCallbackWebHandler*    webHandler;     /**< Webhandler callback, necessary to remove it later again. */
+        String                      uri;            /**< URI where the handler is registered. */
+        bool                        isUploadError;  /**< If upload error happened, it will be true otherwise false. */
+        String                      fullPath;       /**< Full path of uploaded file. If empty, there is no file available. */
+        File                        fd;             /**< Upload file descriptor */
+
+        /**
+         * Initialize the web handler data.
+         */
+        WebHandlerData() :
+            webHandler(nullptr),
+            uri(),
+            isUploadError(false),
+            fullPath(),
+            fd()
+        {
+        }
     };
 
     /**
@@ -163,7 +178,7 @@ private:
      */
     struct PluginObjData
     {
-        static const uint8_t MAX_WEB_HANDLERS = 6U; /**< Max. number of web handlers. */
+        static const uint8_t MAX_WEB_HANDLERS = 8U; /**< Max. number of web handlers. */
 
         IPluginMaintenance* plugin;                         /**< Plugin object, where this data record belongs to. */
         WebHandlerData      webHandlers[MAX_WEB_HANDLERS];  /**< Web data of the plugin, necessary to remove it later again. */
@@ -175,12 +190,6 @@ private:
             plugin(nullptr),
             webHandlers()
         {
-            uint8_t idx = 0U;
-
-            for(idx = 0U; idx < PluginObjData::MAX_WEB_HANDLERS; ++idx)
-            {
-                webHandlers[idx].webHandler = nullptr;
-            }
         }
     };
 
@@ -262,11 +271,27 @@ private:
     /**
      * The web request handler handles all incoming HTTP requests for every plugin topic.
      * 
-     * @param[in] request   The web request information from the client.
-     * @param[in] plugin    The responsible plugin, which is related to the request.
-     * @param[in] topic     The topic, which is requested.
+     * @param[in] request           The web request information from the client.
+     * @param[in] plugin            The responsible plugin, which is related to the request.
+     * @param[in] topic             The topic, which is requested.
+     * @param[in] webHandlerData    Plugin web handler data, which is related to this request.
      */
-    void webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic);
+    void webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
+
+    /**
+     * File upload handler.
+     *
+     * @param[in] request           HTTP request.
+     * @param[in] filename          Name of the uploaded file.
+     * @param[in] index             Current file offset.
+     * @param[in] data              Next data part of file, starting at offset.
+     * @param[in] len               Data part size in byte.
+     * @param[in] final             Is final packet or not.
+     * @param[in] plugin            The responsible plugin, which is related to the upload.
+     * @param[in] topic             The topic, which is requested.
+     * @param[in] webHandlerData    Plugin web handler data, which is related to this upload.
+     */
+    void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
 
     /**
      * Unregister all topics depended on the used communication networks.

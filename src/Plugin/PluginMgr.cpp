@@ -406,11 +406,18 @@ void PluginMgr::registerTopic(PluginObjData* metaData, const String& topic)
     }
     else
     {
+        IPluginMaintenance* plugin = metaData->plugin;
+
         webHandlerData->webHandler  = &MyWebServer::getInstance().on(
                                         topicUri.c_str(),
-                                        [this, metaData, topic](AsyncWebServerRequest *request)
+                                        HTTP_ANY,
+                                        [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request)
                                         {
-                                            this->webReqHandler(request, metaData->plugin, topic);
+                                            this->webReqHandler(request, plugin, topic, webHandlerData);
+                                        },
+                                        [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+                                        {
+                                            this->uploadHandler(request, filename, index, data, len, final, plugin, topic, webHandlerData);
                                         });
         webHandlerData->uri         = topicUri;
 
@@ -418,7 +425,7 @@ void PluginMgr::registerTopic(PluginObjData* metaData, const String& topic)
     }
 }
 
-void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic)
+void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
 {
     String              content;
     const size_t        JSON_DOC_SIZE   = 512U;
@@ -426,7 +433,9 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
     JsonObject          dataObj         = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
-    if ((nullptr == request) || (nullptr == plugin))
+    if ((nullptr == request) ||
+        (nullptr == plugin) ||
+        (nullptr == webHandlerData))
     {
         return;
     }
@@ -455,9 +464,17 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
         DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
         size_t              idx = 0U;
 
+        /* Add arguments */
         for(idx = 0U; idx < request->args(); ++idx)
         {
             jsonDocPar[request->argName(idx)] = request->arg(idx);
+        }
+
+        /* Add uploaded file */
+        if ((false == webHandlerData->isUploadError) &&
+            (false == webHandlerData->fullPath.isEmpty()))
+        {
+            jsonDocPar["fullPath"] = webHandlerData->fullPath;
         }
 
         if (false == plugin->setTopic(topic, jsonDocPar.as<JsonObject>()))
@@ -500,6 +517,62 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+void PluginMgr::uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
+{
+    /* Begin of upload? */
+    if (0 == index)
+    {
+        LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
+        webHandlerData->isUploadError = false;
+        webHandlerData->fullPath.clear();
+
+        /* Ask plugin, whether the upload is allowed or not. */
+        if (false == plugin->isUploadAccepted(topic, filename, webHandlerData->fullPath))
+        {
+            LOG_WARNING("[%s][%u] Upload not supported.", plugin->getName(), plugin->getUID());
+            webHandlerData->isUploadError = true;
+            webHandlerData->fullPath.clear();
+        }
+        else
+        {
+            /* Create a new file and overwrite a existing one. */
+            webHandlerData->fd = FILESYSTEM.open(webHandlerData->fullPath, "w");
+
+            if (false == webHandlerData->fd)
+            {
+                LOG_ERROR("Couldn't create file: %s", webHandlerData->fullPath.c_str());
+                webHandlerData->isUploadError = true;
+                webHandlerData->fullPath.clear();
+            }
+        }
+    }
+
+    if (false == webHandlerData->isUploadError)
+    {
+        /* If file is open, write data to it. */
+        if (true == webHandlerData->fd)
+        {
+            if (len != webHandlerData->fd.write(data, len))
+            {
+                LOG_ERROR("Less data written, upload aborted.");
+                webHandlerData->isUploadError = true;
+                webHandlerData->fullPath.clear();
+                webHandlerData->fd.close();
+            }
+        }
+
+        /* Upload finished? */
+        if (true == final)
+        {
+            LOG_INFO("Upload of %s finished.", filename.c_str());
+
+            webHandlerData->fd.close();
+        }
+    }
 
     return;
 }

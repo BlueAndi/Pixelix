@@ -68,6 +68,9 @@ const char* IconTextLampPlugin::TOPIC_LAMPS = "/lamps";
 /* Initialize plugin topic. */
 const char* IconTextLampPlugin::TOPIC_LAMP  = "/lamp";
 
+/* Initialize plugin topic. */
+const char* IconTextLampPlugin::TOPIC_ICON  = "/bitmap";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -83,6 +86,8 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
     {
         topics.add(String(TOPIC_LAMP) + "/" + lampId);
     }
+
+    topics.add(TOPIC_ICON);
 }
 
 bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -188,12 +193,39 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
             }
         }
     }
+    else if (0U != topic.equals(TOPIC_ICON))
+    {
+        if (false == value["fullPath"].isNull())
+        {
+            String fullPath = value["fullPath"].as<String>();
+
+            isSuccessful = loadBitmap(fullPath);
+        }
+    }
     else
     {
         ;
     }
 
     return isSuccessful;
+}
+
+bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename)
+{
+    bool isAccepted = false;
+
+    if (0U != topic.equals(TOPIC_ICON))
+    {
+        /* Accept upload of bitmap file. */
+        if (0U != srcFilename.endsWith(".bmp"))
+        {
+            dstFilename = getFileName();
+
+            isAccepted = true;
+        }
+    }
+
+    return isAccepted;
 }
 
 void IconTextLampPlugin::active(IGfx& gfx)
@@ -250,39 +282,6 @@ void IconTextLampPlugin::active(IGfx& gfx)
 void IconTextLampPlugin::inactive()
 {
     /* Nothing to do. */
-    return;
-}
-
-void IconTextLampPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
-{
-    m_urlIcon = baseUri + "/bitmap";
-    m_callbackWebHandlerIcon = &srv.on( m_urlIcon.c_str(),
-                                        HTTP_ANY,
-                                        [this](AsyncWebServerRequest *request)
-                                        {
-                                            this->webReqHandlerIcon(request);
-                                        },
-                                        [this](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
-                                        {
-                                            this->iconUploadHandler(request, filename, index, data, len, final);
-                                        });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_urlIcon.c_str());
-
-    return;
-}
-
-void IconTextLampPlugin::unregisterWebInterface(AsyncWebServer& srv)
-{
-    LOG_INFO("[%s] Unregister: %s", getName(), m_urlIcon.c_str());
-
-    if (false == srv.removeHandler(m_callbackWebHandlerIcon))
-    {
-        LOG_WARNING("Couldn't remove %s handler.", this->getName());
-    }
-
-    m_callbackWebHandlerIcon = nullptr;
-
     return;
 }
 
@@ -390,124 +389,6 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void IconTextLampPlugin::webReqHandlerIcon(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_POST != request->method())
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    /* Upload failed? */
-    else if (true == m_isUploadError)
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "Upload failed.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    /* Load bitmap file. */
-    else if (false == loadBitmap(getFileName()))
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "Incompatible file format.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-    else
-    {
-        /* Prepare response */
-        (void)jsonDoc.createNestedObject("data");
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
-
-void IconTextLampPlugin::iconUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
-{
-    UTIL_NOT_USED(filename);
-
-    /* Begin of upload? */
-    if (0 == index)
-    {
-        LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
-        m_isUploadError = false;
-
-        if (false == filename.endsWith(".bmp"))
-        {
-            LOG_ERROR("File is not a bitmap file.");
-            m_isUploadError = true;
-        }
-        else
-        {
-            /* Create a new file and overwrite a existing one. */
-            m_fd = FILESYSTEM.open(getFileName(), "w");
-
-            if (false == m_fd)
-            {
-                LOG_ERROR("Couldn't create file: %s", getFileName().c_str());
-                m_isUploadError = true;
-            }
-        }
-    }
-
-    if (false == m_isUploadError)
-    {
-        /* If file is open, write data to it. */
-        if (true == m_fd)
-        {
-            if (len != m_fd.write(data, len))
-            {
-                LOG_ERROR("Less data written, upload aborted.");
-                m_isUploadError = true;
-
-                m_fd.close();
-            }
-        }
-
-        /* Upload finished? */
-        if (true == final)
-        {
-            LOG_INFO("Upload of %s finished.", filename.c_str());
-
-            m_fd.close();
-        }
-    }
-
-    return;
-}
 
 String IconTextLampPlugin::getFileName()
 {

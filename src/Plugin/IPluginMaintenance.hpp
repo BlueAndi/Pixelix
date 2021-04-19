@@ -131,6 +131,17 @@ public:
     virtual bool setTopic(const String& topic, const JsonObject& value) = 0;
 
     /**
+     * Is a upload request accepted or rejected?
+     * 
+     * @param[in] topic         The topic which the upload belongs to.
+     * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
+     * @param[in] dstFilename   The destination filename, after storing the uploaded file.
+     * 
+     * @return If accepted it will return true otherwise false.
+     */
+    virtual bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) = 0;
+
+    /**
      * Register web interface, e.g. REST API functionality.
      * Overwrite it, if your plugin provides a web interface.
      *
