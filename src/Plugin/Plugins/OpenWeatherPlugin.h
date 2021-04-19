@@ -104,7 +104,8 @@ public:
 
         m_xMutex = xSemaphoreCreateMutex();
     }
-  /**
+
+    /**
      * Enumeration to choose an additional weather information to be displayed.
      */
     enum OtherWeatherInformation
