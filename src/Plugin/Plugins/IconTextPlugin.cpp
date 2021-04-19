@@ -145,6 +145,14 @@ bool IconTextPlugin::isUploadAccepted(const String& topic, const String& srcFile
     return isAccepted;
 }
 
+void IconTextPlugin::stop()
+{
+    if (false != FILESYSTEM.remove(getFileName()))
+    {
+        LOG_INFO("File %s removed", getFileName().c_str());
+    }
+}
+
 void IconTextPlugin::active(IGfx& gfx)
 {
     lock();

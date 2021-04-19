@@ -180,6 +180,11 @@ public:
     bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
 
     /**
+     * Stop the plugin.
+     */
+    void stop() final;
+    
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *

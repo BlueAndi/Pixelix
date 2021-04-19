@@ -228,6 +228,14 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
     return isAccepted;
 }
 
+void IconTextLampPlugin::stop()
+{
+    if (false != FILESYSTEM.remove(getFileName()))
+    {
+        LOG_INFO("File %s removed", getFileName().c_str());
+    }
+}
+
 void IconTextLampPlugin::active(IGfx& gfx)
 {
     lock();
