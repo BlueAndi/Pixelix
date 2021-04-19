@@ -649,15 +649,15 @@ void OpenWeatherPlugin::initHttpClient()
         DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
         const size_t                    FILTER_SIZE             = 128U;
         StaticJsonDocument<FILTER_SIZE> filter;
-        JsonObject filter_current = filter.createNestedObject("current");
+        JsonObject                      filterCurrent           = filter.createNestedObject("current");
         DeserializationError            error;
 
         /* See https://openweathermap.org/api/one-call-api for an example of API response. */
-        filter_current["temp"]                  = true;
-        filter_current["uvi"]                   = true;
-        filter_current["humidity"]              = true;
-        filter_current["wind_speed"]            = true;
-        filter_current["weather"][0]["icon"]    = true;
+        filterCurrent["temp"]                  = true;
+        filterCurrent["uvi"]                   = true;
+        filterCurrent["humidity"]              = true;
+        filterCurrent["wind_speed"]            = true;
+        filterCurrent["weather"][0]["icon"]    = true;
         
         if (true == filter.overflowed())
         {
