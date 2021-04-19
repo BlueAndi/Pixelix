@@ -373,8 +373,6 @@ void ShellyPlugSPlugin::initHttpClient()
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
 
-        m_httpResponseReceived = true;
-
         filter["power"] = true;
 
         if (true == filter.overflowed())

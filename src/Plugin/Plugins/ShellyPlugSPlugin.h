@@ -81,7 +81,6 @@ public:
         m_bitmapWidget(),
         m_textWidget("?"),
         m_ipAddress("192.168.1.123"), /* Example data */
-        m_httpResponseReceived(false),
         m_client(),
         m_url(),
         m_callbackWebHandler(nullptr),
@@ -235,7 +234,6 @@ private:
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_ipAddress;                /**< IP-address of the ShellyPlugS server. */
-    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     String                      m_url;                      /**< REST API URL */
     AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */

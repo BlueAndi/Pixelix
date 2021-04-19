@@ -390,8 +390,6 @@ void SunrisePlugin::initHttpClient()
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
 
-        m_httpResponseReceived = true;
-
         filter["results"]["sunrise"]    = true;
         filter["results"]["sunset"]     = true;
 

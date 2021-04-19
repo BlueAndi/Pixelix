@@ -87,7 +87,6 @@ public:
         m_textWidget("\\calign?"),
         m_longitude("2.295"), /* Example data */
         m_latitude("48.858"), /* Example data */
-        m_httpResponseReceived(false),
         m_relevantResponsePart(""),
         m_client(),
         m_url(),
@@ -245,7 +244,6 @@ private:
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_longitude;                /**< Longitude of sunrise location */
     String                      m_latitude;                 /**< Latitude of sunrise location */
-    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer                 m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
