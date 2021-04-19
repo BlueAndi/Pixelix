@@ -666,13 +666,14 @@ void OpenWeatherPlugin::initHttpClient()
 
         error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
 
-        JsonObject current = jsonDoc["current"];
         if (DeserializationError::Ok != error.code())
         {
             LOG_WARNING("JSON parse error: %s", error.c_str());
         }
         else
         {
+            JsonObject current = jsonDoc["current"];
+
             if (false == current["temp"].is<float>())
             {
                LOG_WARNING("JSON temperature type missmatch or missing.");
