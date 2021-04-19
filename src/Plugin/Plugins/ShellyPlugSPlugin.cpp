@@ -320,8 +320,6 @@ void ShellyPlugSPlugin::initHttpClient()
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
 
-        m_httpResponseReceived = true;
-
         filter["power"] = true;
 
         if (true == filter.overflowed())
@@ -346,9 +344,9 @@ void ShellyPlugSPlugin::initHttpClient()
             const char* reducePrecision;
             char        powerReducedPrecison[6] = { 0 };
 
-            if (powerRaw < 99.99)
+            if (powerRaw < 99.99f)
             {
-                reducePrecision = (powerRaw > 9.9) ? "%.1f" : "%.2f";
+                reducePrecision = (powerRaw > 9.9f) ? "%.1f" : "%.2f";
             }
             else
             {

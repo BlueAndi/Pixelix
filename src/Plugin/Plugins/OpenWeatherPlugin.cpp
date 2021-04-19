@@ -351,11 +351,14 @@ void OpenWeatherPlugin::setApiKey(const String& apiKey)
 {
     lock();
 
-    m_apiKey                    = apiKey;
-    m_configurationHasChanged   = true;
+    if (apiKey != m_apiKey)
+    {
+        m_apiKey = apiKey;
+        m_configurationHasChanged = true;
 
-    (void)saveConfiguration();
-    
+        (void)saveConfiguration();
+    }
+
     unlock();
 
     return;
@@ -376,10 +379,13 @@ void OpenWeatherPlugin::setLatitude(const String& latitude)
 {
     lock();
 
-    m_latitude                  = latitude;
-    m_configurationHasChanged   = true;
+    if(latitude != m_latitude)
+    {
+        m_latitude = latitude;
+        m_configurationHasChanged = true;
 
-    (void)saveConfiguration();
+        (void)saveConfiguration();
+    }
 
     unlock();
 
@@ -401,10 +407,13 @@ void OpenWeatherPlugin::setLongitude(const String& longitude)
 {
     lock();
 
-    m_longitude                 = longitude;
-    m_configurationHasChanged   = true;
+    if(longitude != m_longitude)
+    {
+        m_longitude = longitude;
+        m_configurationHasChanged = true;
 
-    (void)saveConfiguration();
+        (void)saveConfiguration();
+    }
 
     unlock();
 
@@ -426,10 +435,13 @@ void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& 
 {
     lock();
 
-    m_additionalInformation     = additionalInformation;
-    m_configurationHasChanged   = true;
+    if(additionalInformation != m_additionalInformation)
+    {
+        m_additionalInformation = additionalInformation;
+        m_configurationHasChanged = true;
 
-    (void)saveConfiguration();
+        (void)saveConfiguration();
+    }
 
     unlock();
 
@@ -451,10 +463,13 @@ void OpenWeatherPlugin::setUnits(const String& units)
 {
     lock();
 
-    m_units                     = units;
-    m_configurationHasChanged   = true;
+    if (units != m_units)
+    {
+        m_units                     = units;
+        m_configurationHasChanged   = true;
 
-    (void)saveConfiguration();
+        (void)saveConfiguration();
+    }
 
     unlock();
 
@@ -694,7 +709,7 @@ void OpenWeatherPlugin::initHttpClient()
                 m_currentUvIndex += uvIndexToColor(uvIndex);
                 m_currentUvIndex += uvIndex;
 
-                const char* reducePrecision = (temperature < -9.9) ? "%.0f" : "%.1f";
+                const char* reducePrecision = (temperature < -9.9f) ? "%.0f" : "%.1f";
 
                 /* Generate temperature string with reduced precision and add unit °C/°F. */
                 (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);

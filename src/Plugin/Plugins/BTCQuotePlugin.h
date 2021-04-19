@@ -81,7 +81,6 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_httpResponseReceived(false),
         m_relevantResponsePart(""),
         m_client(),
         m_xMutex(nullptr),
@@ -203,7 +202,6 @@ private:
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
