@@ -39,6 +39,8 @@
  * Compile Switches
  *****************************************************************************/
 #define DHTTYPE DHTesp::DHT11   // DHT 11 sensor
+#define DHTTYPE DHTesp::DHT11   // DHT 11 sensor
+
 
 /******************************************************************************
  * Includes
@@ -87,12 +89,14 @@ public:
         m_textWidget("\\calign?"),
         m_text(),
         m_page(0U),
+        m_pageTime(),
         m_timer(),
         m_xMutex(nullptr),
         m_dht(),
         m_humid(0),
         m_temp(0),
-        m_last(0)
+        m_last(0),
+        m_slotInterf(nullptr)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -138,18 +142,41 @@ public:
     }
 
     /**
+     * Set the slot interface, which the plugin can used to request information
+     * from the slot, it is plugged in.
+     *
+     * @param[in] slotInterf    Slot interface
+     */
+    void setSlot(const ISlotPlugin* slotInterf) final;
+
+    /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void active(IGfx& gfx) final;
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
      * @param[in] gfx   Display graphics interface
      */
     void update(IGfx& gfx) final;
-    
-    void active(IGfx& gfx) final;
 
+    /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     */
     void start() final;
-    
-    void process() final;    
+
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;    
 
     /**
      * Protect against concurrent access.
@@ -194,6 +221,7 @@ private:
     String                      m_text;
 
     uint8_t                     m_page;                     /**< Number of page, which to show */
+    unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default) */    
     SimpleTimer                 m_timer;                    /**< Timer for changing page */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
 
@@ -201,6 +229,8 @@ private:
     float                       m_humid;                    /**< last sensor humidity value*/
     float                       m_temp;                     /**< last sensor temperature value*/
     unsigned long               m_last;                     /**< last sensor read timestamp*/
+    const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
+
 };
 
 /******************************************************************************

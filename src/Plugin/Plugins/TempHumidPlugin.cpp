@@ -60,18 +60,33 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-/* Initialize image path for standard icon. */
+/* Initialize image path for temperature (scale) icon. */
 const char* TempHumidPlugin::IMAGE_PATH_TEMP_ICON      = "/images/temp.bmp";
 
-/* Initialize image path for "stop" icon. */
+/* Initialize image path for humidity (drop) icon. */
 const char* TempHumidPlugin::IMAGE_PATH_HUMID_ICON     = "/images/drop.bmp";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
+{
+    m_slotInterf = slotInterf;
+    return;
+}
+
 void TempHumidPlugin::active(IGfx& gfx)
 {
     lock();
+
+    // set time to show page - either 10s or slot_time / 4
+    // read here because otherwise we do not get config changes in slot_time
+    if (nullptr == m_slotInterf) {
+        m_pageTime = 10000U;
+    } else {
+        m_pageTime = m_slotInterf->getDuration() / 4;
+    }
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -117,13 +132,12 @@ void TempHumidPlugin::active(IGfx& gfx)
 
 void TempHumidPlugin::update(IGfx& gfx)
 {
-    const uint32_t  PERIOD      = 10000U; // show value page for 10 seconds
     bool            showPage    = false;
-    char            tmp[6]      = "";     // hold the display value
+    char            tmp[6]      = "";     // holds the display value
 
     if (false == m_timer.isTimerRunning())
     {
-        m_timer.start(PERIOD);
+        m_timer.start(m_pageTime);
         showPage = true;
     }
     else if (true == m_timer.isTimeout())
@@ -156,16 +170,17 @@ void TempHumidPlugin::update(IGfx& gfx)
 
         switch(m_page)
         {
-        case 0U: // screen 0 ist temperatur
+        case 0U: // screen 0 is temperature
             m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
             snprintf(tmp, sizeof(tmp), "%3f", m_temp);
             m_text = tmp;
-            m_text += "°C";
+            //somehow the degree symbol does not get displayed and the text gets truncated! m_text += "\x8E";
+            m_text += " C";
             LOG_INFO("p0: new string %s", m_text);
             m_textWidget.setFormatStr(m_text);
             break;
 
-        case 1U: // screen 1 ist Humidity
+        case 1U: // screen 1 is humidity
             m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
             snprintf(tmp, sizeof(tmp), "%3f", m_humid);
             m_text = tmp;
