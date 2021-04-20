@@ -26,6 +26,7 @@
 * [Toolchain installation](TOOLCHAIN-INSTALLATION.md)
 * [Software build](SW-BUILD.md)
 * [Software update](SW-UPDATE.md)
+* [Plugins](PLUGINS.md)
 * [REST API description](REST.md)
 * [Websocket API description](WEBSOCKET.md)
 
