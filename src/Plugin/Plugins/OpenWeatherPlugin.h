@@ -121,6 +121,11 @@ public:
      */
     ~OpenWeatherPlugin()
     {
+        /* Abort any pending TCP request to avoid getting a callback after the
+         * object is destroyed.
+         */
+        m_client.abort();
+        
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
