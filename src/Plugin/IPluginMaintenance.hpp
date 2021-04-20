@@ -45,9 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <IGfx.hpp>
-#include <HttpStatus.h>
-#include <ESPAsyncWebServer.h>
-#include <Util.h>
+#include <ArduinoJson.h>
 #include "ISlotPlugin.hpp"
 
 /******************************************************************************
@@ -93,21 +91,52 @@ public:
     virtual uint16_t getUID() const = 0;
 
     /**
-     * Register web interface, e.g. REST API functionality.
-     * Overwrite it, if your plugin provides a web interface.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
      */
-    virtual void registerWebInterface(AsyncWebServer& srv, const String& baseUri) = 0;
+    virtual void getTopics(JsonArray& topics) const = 0;
 
     /**
-     * Unregister web interface.
-     * Overwrite it, if your plugin provides a web interface.
-     *
-     * @param[in] srv   Webserver
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    virtual void unregisterWebInterface(AsyncWebServer& srv) = 0;
+    virtual bool getTopic(const String& topic, JsonObject& value) const = 0;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    virtual bool setTopic(const String& topic, const JsonObject& value) = 0;
+
+    /**
+     * Is a upload request accepted or rejected?
+     * 
+     * @param[in] topic         The topic which the upload belongs to.
+     * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
+     * @param[in] dstFilename   The destination filename, after storing the uploaded file.
+     * 
+     * @return If accepted it will return true otherwise false.
+     */
+    virtual bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) = 0;
 
     /**
      * Get the plugin name.

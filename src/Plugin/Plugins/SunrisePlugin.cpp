@@ -74,39 +74,70 @@ char *_EXFUN(strptime,  (const char *__restrict,
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* SunrisePlugin::IMAGE_PATH     = "/images/sunrise.bmp";
+const char* SunrisePlugin::IMAGE_PATH   = "/images/sunrise.bmp";
+
+/* Initialize plugin topic. */
+const char* SunrisePlugin::TOPIC        = "/location";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void SunrisePlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+void SunrisePlugin::getTopics(JsonArray& topics) const
 {
-    m_url = baseUri + "/location";
-
-    m_callbackWebHandler = &srv.on( m_url.c_str(),
-                                    [this](AsyncWebServerRequest *request)
-                                    {
-                                        this->webReqHandler(request);
-                                    });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
-
-    return;
+    (void)topics.add(TOPIC);
 }
 
-void SunrisePlugin::unregisterWebInterface(AsyncWebServer& srv)
+bool SunrisePlugin::getTopic(const String& topic, JsonObject& value) const
 {
-    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
+    bool isSuccessful = false;
 
-    if (false == srv.removeHandler(m_callbackWebHandler))
+    if (0U != topic.equals(TOPIC))
     {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
+        String  longitude;
+        String  latitude;
+
+        getLocation(longitude, latitude);
+
+        value["longitude"]  = longitude;
+        value["latitude"]   = latitude;
+
+        isSuccessful = true;
     }
 
-    m_callbackWebHandler = nullptr;
+    return isSuccessful;
+}
 
-    return;
+bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        String  longitude;
+        String  latitude;
+
+        getLocation(longitude, latitude);
+
+        if (false == value["longitude"].isNull())
+        {
+            longitude = value["longitude"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == value["latitude"].isNull())
+        {
+            latitude = value["latitude"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            setLocation(longitude, latitude);
+        }
+    }
+
+    return isSuccessful;
 }
 
 void SunrisePlugin::active(IGfx& gfx)
@@ -284,81 +315,6 @@ void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
  * Private Methods
  *****************************************************************************/
 
-void SunrisePlugin::webReqHandler(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
-        String      longitude;
-        String      latitude;
-
-        getLocation(longitude, latitude);
-
-        dataObj["longitude"]    = longitude;
-        dataObj["latitude"]     = latitude;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* Location missing? */
-        if ((false == request->hasArg("longitude")) ||
-            (false == request->hasArg("latitude")))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Argument is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            setLocation(request->arg("longitude"), request->arg("latitude"));
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
-
 bool SunrisePlugin::startHttpRequest()
 {
     bool    status  = false;
@@ -389,6 +345,25 @@ void SunrisePlugin::initHttpClient()
         const size_t                    FILTER_SIZE             = 128U;
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
+
+        /* Example:
+        * {
+        *   "results":
+        *   {
+        *     "sunrise":"2015-05-21T05:05:35+00:00",
+        *     "sunset":"2015-05-21T19:22:59+00:00",
+        *     "solar_noon":"2015-05-21T12:14:17+00:00",
+        *     "day_length":51444,
+        *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
+        *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
+        *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
+        *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
+        *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
+        *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
+        *   },
+        *    "status":"OK"
+        * }
+        */
 
         filter["results"]["sunrise"]    = true;
         filter["results"]["sunset"]     = true;
@@ -440,11 +415,11 @@ String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) con
 {
     tm          gmTimeInfo;
     tm*         lcTimeInfo          = nullptr;
-    tm          cvTimeInfo;
     time_t      gmTime;
     char        timeBuffer[17]      = { 0 };
     const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "%H:%M" : "%I:%M %p";
-    bool        isPM                = dateTimeString.endsWith("PM");
+
+    /* Example: "2015-05-21T05:05:35+00:00" */
 
     /* Convert date/time string to GMT time information */
     (void)strptime(dateTimeString.c_str(), "%Y-%m-%dT%H:%M:%S", &gmTimeInfo);
@@ -453,16 +428,8 @@ String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) con
     gmTime = mktime(&gmTimeInfo);
     lcTimeInfo = localtime(&gmTime);
 
-    /* Consider AM/PM */
-    cvTimeInfo = *lcTimeInfo;
-    
-    if (true == isPM)
-    {
-        cvTimeInfo.tm_hour += 12;
-    }
-
     /* Convert time information to user friendly string. */
-    (void)strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &cvTimeInfo);
+    (void)strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, lcTimeInfo);
 
     return timeBuffer;
 }

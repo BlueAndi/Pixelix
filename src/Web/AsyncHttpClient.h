@@ -115,9 +115,14 @@ public:
     bool connect();
 
     /**
-     * Disconnect TCP connection.
+     * Disconnect TCP connection gracefully.
      */
     void disconnect();
+
+    /**
+     * Abort TCP connection (non-gracefully) and avoid any follow up callback.
+     */
+    void abort();
 
     /**
      * Is connection established?

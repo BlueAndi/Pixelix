@@ -62,10 +62,6 @@
 /**
  * Shows a icon (bitmap) on the left side in 8 x 8 and text on the right side.
  * If the text is too long for the display width, it automatically scrolls.
- *
- * Change icon or text via REST API:
- * Icon: POST \c "<base-uri>/bitmap" with multipart/form-data file upload.
- * Text: POST \c "<base-uri>/text?show=<text>"
  */
 class IconTextPlugin : public Plugin
 {
@@ -83,11 +79,6 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget(),
-        m_urlIcon(),
-        m_urlText(),
-        m_callbackWebHandlerIcon(nullptr),
-        m_callbackWebHandlerText(nullptr),
-        m_fd(),
         m_isUploadError(false),
         m_xMutex(nullptr)
     {
@@ -132,6 +123,59 @@ public:
     }
 
     /**
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
+     */
+    void getTopics(JsonArray& topics) const final;
+
+    /**
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool getTopic(const String& topic, JsonObject& value) const final;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setTopic(const String& topic, const JsonObject& value) final;
+    
+    /**
+     * Is a upload request accepted or rejected?
+     * 
+     * @param[in] topic         The topic which the upload belongs to.
+     * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
+     * @param[in] dstFilename   The destination filename, after storing the uploaded file.
+     * 
+     * @return If accepted it will return true otherwise false.
+     */
+    bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
+
+    /**
+     * Stop the plugin.
+     */
+    void stop() final;
+
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
@@ -144,21 +188,6 @@ public:
      * it won't be shown on the display anymore.
      */
     void inactive() final;
-
-    /**
-     * Register web interface, e.g. REST API functionality.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
-     */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
-
-    /**
-     * Unregister web interface.
-     *
-     * @param[in] srv   Webserver
-     */
-    void unregisterWebInterface(AsyncWebServer& srv) final;
 
     /**
      * Update the display.
@@ -203,6 +232,16 @@ public:
 private:
 
     /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*  TOPIC_TEXT;
+
+    /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*  TOPIC_ICON;
+
+    /**
      * Icon width in pixels.
      */
     static const uint16_t ICON_WIDTH    = 8U;
@@ -212,45 +251,12 @@ private:
      */
     static const uint16_t ICON_HEIGHT   = 8U;
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_urlIcon;                  /**< REST API URL for updating the icon */
-    String                      m_urlText;                  /**< REST API URL for updating the text */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerIcon;   /**< Callback web handler for updating the icon */
-    AsyncCallbackWebHandler*    m_callbackWebHandlerText;   /**< Callback web handler for updating the text */
-    File                        m_fd;                       /**< File descriptor, used for bitmap file upload. */
-    bool                        m_isUploadError;            /**< Flag to signal a upload error. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandlerText(AsyncWebServerRequest *request);
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandlerIcon(AsyncWebServerRequest *request);
-
-    /**
-     * File upload handler.
-     *
-     * @param[in] request   HTTP request.
-     * @param[in] filename  Name of the uploaded file.
-     * @param[in] index     Current file offset.
-     * @param[in] data      Next data part of file, starting at offset.
-     * @param[in] len       Data part size in byte.
-     * @param[in] final     Is final packet or not.
-     */
-    void iconUploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
+    Canvas*             m_textCanvas;       /**< Canvas used for the text widget. */
+    Canvas*             m_iconCanvas;       /**< Canvas used for the bitmap widget. */
+    BitmapWidget        m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
+    TextWidget          m_textWidget;       /**< Text widget, used for showing the text. */
+    bool                m_isUploadError;    /**< Flag to signal a upload error. */
+    SemaphoreHandle_t   m_xMutex;           /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.

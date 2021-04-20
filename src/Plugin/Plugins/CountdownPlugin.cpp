@@ -63,39 +63,88 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* CountdownPlugin::IMAGE_PATH     = "/images/countdown.bmp";
+const char* CountdownPlugin::IMAGE_PATH = "/images/countdown.bmp";
+
+/* Initialize plugin topic. */
+const char* CountdownPlugin::TOPIC      = "/countdown";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void CountdownPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+void CountdownPlugin::getTopics(JsonArray& topics) const
 {
-    m_url = baseUri + "/countdown";
-
-    m_callbackWebHandler = &srv.on( m_url.c_str(),
-                                    [this](AsyncWebServerRequest *request)
-                                    {
-                                        this->webReqHandler(request);
-                                    });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
-
-    return;
+    (void)topics.add(TOPIC);
 }
 
-void CountdownPlugin::unregisterWebInterface(AsyncWebServer& srv)
+bool CountdownPlugin::getTopic(const String& topic, JsonObject& value) const
 {
-    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
+    bool isSuccessful = false;
 
-    if (false == srv.removeHandler(m_callbackWebHandler))
+    if (0U != topic.equals(TOPIC))
     {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
+        DateDMY                 targetDate              = getTargetDate();
+        TargetDayDescription    targetDayDescription    = getTargetDayDescription();
+
+        value["day"]      = targetDate.day;
+        value["month"]    = targetDate.month;
+        value["year"]     = targetDate.year;
+        value["plural"]   = targetDayDescription.plural;
+        value["singular"] = targetDayDescription.singular;
+
+        isSuccessful = true;
     }
 
-    m_callbackWebHandler = nullptr;
+    return isSuccessful;
+}
 
-    return;
+bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        DateDMY                 targetDate              = getTargetDate();
+        TargetDayDescription    targetDayDescription    = getTargetDayDescription();
+
+        if (false == value["day"].isNull())
+        {
+            targetDate.day = value["day"].as<uint8_t>();
+            isSuccessful = true;
+        }
+
+        if (false == value["month"].isNull())
+        {
+            targetDate.month = value["month"].as<uint8_t>();
+            isSuccessful = true;
+        }
+
+        if (false == value["year"].isNull())
+        {
+            targetDate.year = value["year"].as<uint16_t>();
+            isSuccessful = true;
+        }
+
+        if (false == value["plural"].isNull())
+        {
+            targetDayDescription.plural = value["plural"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == value["singular"].isNull())
+        {
+            targetDayDescription.singular = value["singular"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            setTargetDate(targetDate);
+            setTargetDayDescription(targetDayDescription);
+        }
+    }
+
+    return isSuccessful;
 }
 
 void CountdownPlugin::active(IGfx& gfx)
@@ -286,132 +335,6 @@ void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& target
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void CountdownPlugin::webReqHandler(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        DateDMY                 targetDate              = getTargetDate();
-        TargetDayDescription    targetDayDescription    = getTargetDayDescription();
-        JsonObject              dataObj                 = jsonDoc.createNestedObject("data");
-
-        dataObj["day"]      = targetDate.day;
-        dataObj["month"]    = targetDate.month;
-        dataObj["year"]     = targetDate.year;
-        dataObj["plural"]   = targetDayDescription.plural;
-        dataObj["singular"] = targetDayDescription.singular;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* Target date missing? */
-        if ((false == request->hasArg("day")) ||
-            (false == request->hasArg("month")) ||
-            (false == request->hasArg("year")) ||
-            (false == request->hasArg("plural")) ||
-            (false == request->hasArg("singular")))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Argument is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            DateDMY                 targetDate              = getTargetDate();
-            TargetDayDescription    targetDayDescription    = getTargetDayDescription();
-            bool                    isSuccess               = true;
-
-            if ((true == isSuccess) &&
-                (true == request->hasArg("day")))
-            {
-                isSuccess = Util::strToUInt8(request->arg("day"), targetDate.day);
-            }
-
-            if ((true == isSuccess) &&
-                (true == request->hasArg("month")))
-            {
-                isSuccess = Util::strToUInt8(request->arg("month"), targetDate.month);
-            }
-
-            if ((true == isSuccess) &&
-                (true == request->hasArg("year")))
-            {
-                isSuccess = Util::strToUInt16(request->arg("year"), targetDate.year);
-            }
-
-            if ((true == isSuccess) &&
-                (true == request->hasArg("plural")))
-            {
-                targetDayDescription.plural = request->arg("plural");
-            }
-
-            if ((true == isSuccess) &&
-                (true == request->hasArg("singular")))
-            {
-                targetDayDescription.singular = request->arg("singular");
-            }
-
-            if (false == isSuccess)
-            {
-                JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                /* Prepare response */
-                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                errorObj["msg"]     = "Invalid arguments.";
-                httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-            }
-            else
-            {
-                setTargetDate(targetDate);
-                setTargetDayDescription(targetDayDescription);
-
-                /* Prepare response */
-                (void)jsonDoc.createNestedObject("data");
-                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-                httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-            }
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
 
 bool CountdownPlugin::saveConfiguration() const
 {
