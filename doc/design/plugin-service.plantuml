@@ -6,8 +6,10 @@ interface IPluginMaintenance {
 
     + {abstract} setSlot(slot : const ISlotPlugin&) = 0 : void
     + {abstract} getUID() const = 0 : uint16_t
-    + {abstract} registerWebInterface(srv : AsyncWebServer&, baseUri : const String&) = 0 : void
-    + {abstract} unregisterWebInterface(srv : AsyncWebServer&) = 0 : void
+    + {abstract} getTopics(topics : JsonArray&) const = 0 : void
+    + {abstract} getTopic(topic : const String&, value : JsonObject&) const = 0 : bool
+    + {abstract} setTopic(topic : const String&, value : const JsonObject&) const = 0 : bool
+    + {abstract} isUploadAccepted(topic : const String&, srcFilename : const String&, dstFilename : String&) const = 0 : bool
     + {abstract} getName() const = 0 : const char*
     + {abstract} enable() = 0 : void
     + {abstract} disable() = 0 : void
@@ -33,8 +35,9 @@ class Plugin {
     + Plugin(name : const String&, uid : uint16_t)
     + {abstract} setSlot(slot : const ISlotPlugin&) : void
     + getUID() const : uint16_t
-    + {abstract} registerWebInterface(srv : AsyncWebServer&) : void
-    + {abstract} unregisterWebInterface(srv : AsyncWebServer&) : void
+    + {abstract} getTopic(topic : const String&, value : JsonObject&) const : bool
+    + {abstract} setTopic(topic : const String&, value : const JsonObject&) const : bool
+    + {abstract} isUploadAccepted(topic : const String&, srcFilename : const String&, dstFilename : String&) const : bool
     + getName() : const char*
     + enable() : void
     + disable() : void
