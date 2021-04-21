@@ -248,7 +248,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
         {
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
-            /* If there is already a icon in the filesystem, load it. */
+            /* If there is already an icon in the filesystem, load it. */
             (void)m_bitmapWidget.load(FILESYSTEM, getFileName());
         }
     }

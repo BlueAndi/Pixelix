@@ -60,7 +60,7 @@
  *****************************************************************************/
 
 /**
- * Shows a icon (bitmap) on the left side in 8 x 8 and text on the right side.
+ * Shows an icon (bitmap) on the left side in 8 x 8 and text on the right side.
  * If the text is too long for the display width, it automatically scrolls.
  */
 class IconTextPlugin : public Plugin

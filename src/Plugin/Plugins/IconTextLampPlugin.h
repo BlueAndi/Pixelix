@@ -61,7 +61,7 @@
  *****************************************************************************/
 
 /**
- * Shows a icon (bitmap) on the left side in 8 x 8, text on the right side and
+ * Shows an icon (bitmap) on the left side in 8 x 8, text on the right side and
  * under the text a bar with lamps.
  * If the text is too long for the display width, it automatically scrolls.
  */

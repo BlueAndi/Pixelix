@@ -50,7 +50,6 @@ Each part can be set separately via the [REST API](REST.md#endpoint-base-uridisp
 The JustTextPlugin shows only text on the whole display.\
 The text to be displayed can be set via the [REST API](REST.md#endpoint-base-uridisplayuidplugin-uidtext)
 
-
 # Dedicated plugins
 Dedicated plugins are plugins which only serves one single purpose thy are only internaly cofigurable.
 
@@ -60,7 +59,7 @@ Powered by [CoinDesk](https://www.coindesk.com/price/bitcoin)
  
 ## CountdownPlugin
 The CountdownPlugin shows the remaining days until a configured target date.\
-Target date and the description of the target day (plural/singular form) can be set via the [REST API](Rest.md#endpoint-base-uridisplayuidplugin-uidcountdown).
+Target date and the description of the target day (plural/singular form) can be set via the [REST API](REST.md#endpoint-base-uridisplayuidplugin-uidcountdown).
 
 ## DatePlugin
 The DatePlugin shows the current date. At the bottom the day of the week is shown, starting from the left with Monday.

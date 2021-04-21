@@ -40,11 +40,11 @@ menu.data = [{
         "title": "JustText Plugin",
         "hyperRef": "/plugins/JustTextPlugin.html"
     }, {
-        "title": "Rainbow Plugin",
-        "hyperRef": "/plugins/RainbowPlugin.html"
-    }, {
         "title": "OpenWeather Plugin",
         "hyperRef": "/plugins/OpenWeatherPlugin.html"
+    }, {
+        "title": "Rainbow Plugin",
+        "hyperRef": "/plugins/RainbowPlugin.html"
     }, {
         "title": "ShellyPlugS Plugin",
         "hyperRef": "/plugins/ShellyPlugSPlugin.html"
