@@ -19,15 +19,21 @@ pluginMgr -> displayMgr: Install plugin in display slot.
 
 alt Empty slot available
     displayMgr -> displayMgr: Add plugin to available slot.
-    displayMgr -> plugin: Set slot id.
+    displayMgr -> plugin: Set slot interface.
     plugin --> displayMgr
     displayMgr -> plugin: Start plugin.
     plugin --> displayMgr
     displayMgr --> pluginMgr: slot id
-    pluginMgr -> plugin: Register web interface.
-    plugin -> webServer: Register web interface.
-    webServer --> plugin
-    plugin --> pluginMgr
+    pluginMgr -> plugin: Get topics, used for web communication.
+    plugin --> pluginMgr: List of topics
+
+    loop for each topic
+        pluginMgr -> plugin: Get topic parameters.
+        plugin --> pluginMgr: Topic parameters
+        pluginMgr -> webServer: Register web interface
+        webServer --> pluginMgr: Web handler
+    end loop
+
     pluginMgr --> app: Concrete plugin
 
     alt Depends on application
@@ -45,12 +51,12 @@ end note
 
 app -> pluginMgr: Uninstall concrete plugin.
 pluginMgr -> displayMgr: Uninstall plugin.
-displayMgr -> plugin: Get slot id.
-plugin --> displayMgr: slot id
-displayMgr -> plugin: Unregister web interface.
-plugin -> webServer: Unregister web interface.
-webServer --> plugin
-plugin --> displayMgr
+
+loop for each web handler
+    pluginMgr -> webServer: UnRegister web interface
+    webServer --> pluginMgr
+end loop
+
 displayMgr -> plugin: Stop plugin.
 plugin --> displayMgr
 displayMgr -> displayMgr: Remove plugin from slot.
