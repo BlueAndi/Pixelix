@@ -40,7 +40,6 @@
 #include <DHTesp.h>
 #include <Logging.h>
 
-
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -80,12 +79,12 @@ void TempHumidPlugin::active(IGfx& gfx)
 {
     lock();
 
-    // set time to show page - either 10s or slot_time / 4
-    // read here because otherwise we do not get config changes in slot_time
-    if (nullptr == m_slotInterf) {
-        m_pageTime = 10000U;
-    } else {
-        m_pageTime = m_slotInterf->getDuration() / 4;
+    /** set time to show page - either 10s or slot_time / 4
+      * read here because otherwise we do not get config changes during runtime in slot_time
+      **/
+
+    if (nullptr != m_slotInterf) {
+        m_pageTime = m_slotInterf->getDuration() / 4U;
     }
 
     gfx.fillScreen(ColorDef::BLACK);
@@ -132,8 +131,8 @@ void TempHumidPlugin::active(IGfx& gfx)
 
 void TempHumidPlugin::update(IGfx& gfx)
 {
-    bool            showPage    = false;
-    char            tmp[6]      = "";     // holds the display value
+    bool showPage    = false;
+    char tmp[6]      =  { 0 };  /* holds the display value */
 
     if (false == m_timer.isTimerRunning())
     {
@@ -142,15 +141,16 @@ void TempHumidPlugin::update(IGfx& gfx)
     }
     else if (true == m_timer.isTimeout())
     {
+        /* switch to next page */
         ++m_page;
-        m_page %= 2U;
+        m_page %= PAGE_MAX;
 
         showPage = true;
         m_timer.restart();
     }
     else
     {
-        ;
+        /* do nothing */;
     }
 
     if (true == showPage)
@@ -170,22 +170,20 @@ void TempHumidPlugin::update(IGfx& gfx)
 
         switch(m_page)
         {
-        case 0U: // screen 0 is temperature
+        case TEMPERATURE:
             m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
             snprintf(tmp, sizeof(tmp), "%3f", m_temp);
             m_text = tmp;
-            //somehow the degree symbol does not get displayed and the text gets truncated! m_text += "\x8E";
+            /* need to verify if it works: m_text += "\x8E"; */
             m_text += " C";
-            LOG_INFO("p0: new string %s", m_text);
             m_textWidget.setFormatStr(m_text);
             break;
 
-        case 1U: // screen 1 is humidity
+        case HUMIDITY:
             m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
             snprintf(tmp, sizeof(tmp), "%3f", m_humid);
             m_text = tmp;
             m_text += "%";
-            LOG_INFO("p1: new string %s", m_text);
             m_textWidget.setFormatStr(m_text);
             break;
 
@@ -199,23 +197,24 @@ void TempHumidPlugin::update(IGfx& gfx)
 
 void TempHumidPlugin::process() 
 {
-    unsigned long m=millis();
-    float h;
-    float t;
+    unsigned long msSinceInit=millis();
+    float humidity;
+    float temperature;
 
-   /* read only if update_period not reached or sensor has never been read */
-   if ( m_last + SENSOR_UPDATE_PERIOD < m  || m_last == 0)
-   {
-        h = m_dht.getTemperature();
-        t = m_dht.getHumidity();
-        // only accept if both values could be read
-        if (!isnan(h) && !isnan(t)) {
-            m_humid = h;
-            m_temp  = t;
-            m_last = m;
-            LOG_INFO("got new temp %lu h: %f, t: %f", m_last, m_humid, m_temp);
-        }
-   }
+    /* read only if update_period not reached or sensor has never been read */
+    if ( ( msSinceInit > ( m_last + SENSOR_UPDATE_PERIOD ) )  || ( 0U == m_last ) )
+    {
+            humidity = m_dht.getTemperature();
+            temperature = m_dht.getHumidity();
+            /* only accept if both values could be read */
+            if ( !isnan(humidity) && !isnan(temperature) ) 
+            {
+                m_humid = humidity;
+                m_temp  = temperature;
+                m_last = msSinceInit;
+                LOG_INFO("got new temp %lu h: %f, t: %f", m_last, m_humid, m_temp);
+            }
+    }
 }
 
 void TempHumidPlugin::start()
@@ -223,6 +222,7 @@ void TempHumidPlugin::start()
     m_dht.setup(Board::Pin::dhtInPinNo, DHTTYPE);
     return;
 }
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/

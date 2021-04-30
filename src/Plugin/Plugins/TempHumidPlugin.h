@@ -38,9 +38,7 @@
 /******************************************************************************
  * Compile Switches
  *****************************************************************************/
-#define DHTTYPE DHTesp::DHT11   // DHT 11 sensor
-#define DHTTYPE DHTesp::DHT11   // DHT 11 sensor
-
+#define DHTTYPE DHTesp::DHT11   /**< Set sensor type to DHT11 */
 
 /******************************************************************************
  * Includes
@@ -66,8 +64,8 @@
 /**
  * TempHumid plugin.
  *
- * This plugins displays the temperature and humidity read from a sensor
- * currently implemented sensors:
+ * This plugins displays the temperature and humidity read from a sensor.
+ * Currently implemented sensors:
  * - DHT Sensors supported by DHTesp library
  * - TODO: sht3x
  */
@@ -88,14 +86,14 @@ public:
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
         m_text(),
-        m_page(0U),
-        m_pageTime(),
+        m_page(TEMPERATURE),
+        m_pageTime(10000U),
         m_timer(),
         m_xMutex(nullptr),
         m_dht(),
-        m_humid(0),
-        m_temp(0),
-        m_last(0),
+        m_humid(0.0F),
+        m_temp(0.0F),
+        m_last(0U),
         m_slotInterf(nullptr)
     {
         /* Move the text widget one line lower for better look. */
@@ -103,6 +101,16 @@ public:
 
         m_xMutex = xSemaphoreCreateMutex();        
     }
+
+    /**
+     * Enumeration to choose the page to be displayed.
+     */    
+    enum PageDisplay
+    {
+        TEMPERATURE = 0,   /**< Display Temperature in degree Celsius. */
+        HUMIDITY,          /**< Display humidity in %. */
+        PAGE_MAX           /**< Number of pages, use for simple switch (by using a PAGE_MAX as modulo operator) */ 
+    };
 
     /**
      * Destroys the plugin.
@@ -178,16 +186,6 @@ public:
      */
     void process(void) final;    
 
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
-
 private:
     /**
      * Icon width in pixels.
@@ -218,18 +216,26 @@ private:
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_text;
-
-    uint8_t                     m_page;                     /**< Number of page, which to show */
-    unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default) */    
-    SimpleTimer                 m_timer;                    /**< Timer for changing page */
+    String                      m_text;                     /**< The text to display. */
+    uint8_t                     m_page;                     /**< Number of page, which to show. */
+    unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
+    SimpleTimer                 m_timer;                    /**< Timer for changing page. */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-
-    DHTesp                      m_dht;                      /**< sensor object*/
-    float                       m_humid;                    /**< last sensor humidity value*/
-    float                       m_temp;                     /**< last sensor temperature value*/
-    unsigned long               m_last;                     /**< last sensor read timestamp*/
+    DHTesp                      m_dht;                      /**< Sensor object */
+    float                       m_humid;                    /**< Last sensor humidity value */
+    float                       m_temp;                     /**< Last sensor temperature value */
+    unsigned long               m_last;                     /**< Last sensor read timestamp */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
+
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void) const;
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void) const;
 
 };
 
