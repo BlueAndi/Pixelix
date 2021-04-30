@@ -82,7 +82,7 @@ bool JsonFile::load(const String& fileName, JsonDocument& doc)
     return isSuccessful;
 }
 
-bool JsonFile::save(const String& fileName, JsonDocument& doc)
+bool JsonFile::save(const String& fileName, const JsonDocument& doc)
 {
     bool    isSuccessful    = false;
     File    fd              = m_fs.open(fileName, "w");

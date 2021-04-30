@@ -1003,6 +1003,15 @@ static void handleFileDelete(AsyncWebServerRequest* request)
 
         if (false == FILESYSTEM.remove(path))
         {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            errorObj["msg"]     = "Failed to remove file.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
             JsonObject dataObj = jsonDoc.createNestedObject("data");
 
             UTIL_NOT_USED(dataObj);
@@ -1011,15 +1020,6 @@ static void handleFileDelete(AsyncWebServerRequest* request)
             jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
 
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-        else
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Failed to remove file.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
     }
 

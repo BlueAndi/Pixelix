@@ -34,7 +34,7 @@
  *****************************************************************************/
 #include "WifiStatusPlugin.h"
 #include "WiFiUtil.h"
-#include "WiFiSTA.h"
+#include "WiFi.h"
 
 /******************************************************************************
  * Compiler Switches

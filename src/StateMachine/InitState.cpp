@@ -116,9 +116,6 @@ void InitState::entry(StateMachine& sm)
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
 
-    /* Register plugins. This must be done before system message handler is initialized! */
-    registerPlugins();
-
     /* Initialize button driver */
     if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
     {
@@ -130,6 +127,21 @@ void InitState::entry(StateMachine& sm)
     {
         LOG_FATAL("Couldn't mount the filesystem.");
         isError = true;
+    }
+    else
+    {
+        /* Prepare everything for the plugins. */
+        PluginMgr::getInstance().begin();
+
+        /* Register plugins. This must be done before system message handler is initialized! */
+        registerPlugins();
+    }
+
+    /* Continoue only if there is no error yet. */
+    if (true == isError)
+    {
+        /* Error detected. */
+        ;
     }
     /* Start LED matrix */
     else if (false == LedMatrix::getInstance().begin())
@@ -354,9 +366,6 @@ void InitState::showStartupInfoOnDisplay()
 void InitState::registerPlugins()
 {
     PluginMgr&  pluginMgr = PluginMgr::getInstance();
-
-    /* Prepare everything for the plugins. */
-    pluginMgr.begin();
 
     /* Register in alphabetic order. */
 

@@ -284,6 +284,7 @@ public:
     /** MCU core where the task shall run */
     static const BaseType_t     TASK_RUN_CORE       = 1;
 
+    /** Task priority, note Arduino loop and AsyncTcp have lower priorities. */
     static const UBaseType_t    TASK_PRIORITY       = 4U;
 
     /** If no ambient light sensor is available, the default brightness shall be 40%. */

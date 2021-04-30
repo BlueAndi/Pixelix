@@ -279,6 +279,11 @@ void AsyncHttpClient::disconnect()
     m_tcpClient.close();
 }
 
+void AsyncHttpClient::abort()
+{
+    m_tcpClient.abort();
+}
+
 bool AsyncHttpClient::isConnected()
 {
     return m_tcpClient.connected();

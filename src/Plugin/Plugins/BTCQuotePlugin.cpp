@@ -219,8 +219,6 @@ void BTCQuotePlugin::initHttpClient()
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
 
-        m_httpResponseReceived = true;
-
         filter["bpi"]["USD"]["rate_float"]      = true;
         filter["bpi"]["USD"]["rate"]            = true;
 

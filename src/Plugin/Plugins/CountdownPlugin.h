@@ -184,8 +184,6 @@ public:
         m_targetDate(),
         m_targetDateInformation(),
         m_remainingDays(""),
-        m_url(),
-        m_callbackWebHandler(nullptr),
         m_xMutex(nullptr),
         m_cfgReloadTimer()
     {
@@ -240,19 +238,41 @@ public:
     }
 
     /**
-     * Register web interface, e.g. REST API functionality.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
      */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
+    void getTopics(JsonArray& topics) const final;
 
     /**
-     * Unregister web interface.
-     *
-     * @param[in] srv   Webserver
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void unregisterWebInterface(AsyncWebServer& srv) final;
+    bool getTopic(const String& topic, JsonObject& value) const final;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
      * This method will be called in case the plugin is set active, which means
@@ -333,6 +353,11 @@ private:
      */
     static const char*      IMAGE_PATH;
 
+    /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*      TOPIC;
+
    /**
     * Offset to translate the month of the tm struct (time.h)
     * to a human readable value, since months since January are used (0-11).
@@ -360,18 +385,8 @@ private:
     DateDMY                     m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
     TargetDayDescription        m_targetDateInformation;    /**< String used for configured additional target date information. */
     String                      m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
-    String                      m_url;                      /**< REST API URL */
-    AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
     SimpleTimer                 m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Saves current configuration to JSON file.

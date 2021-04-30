@@ -65,39 +65,57 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* ShellyPlugSPlugin::IMAGE_PATH     = "/images/plug.bmp";
+const char* ShellyPlugSPlugin::IMAGE_PATH   = "/images/plug.bmp";
+
+/* Initialize plugin topic. */
+const char* ShellyPlugSPlugin::TOPIC        = "/ipAddress";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void ShellyPlugSPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+void ShellyPlugSPlugin::getTopics(JsonArray& topics) const
 {
-    m_url = baseUri + "/ipAddress";
-
-    m_callbackWebHandler = &srv.on( m_url.c_str(),
-                                    [this](AsyncWebServerRequest *request)
-                                    {
-                                        this->webReqHandler(request);
-                                    });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
-
-    return;
+    (void)topics.add(TOPIC);
 }
 
-void ShellyPlugSPlugin::unregisterWebInterface(AsyncWebServer& srv)
+bool ShellyPlugSPlugin::getTopic(const String& topic, JsonObject& value) const
 {
-    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
+    bool isSuccessful = false;
 
-    if (false == srv.removeHandler(m_callbackWebHandler))
+    if (0U != topic.equals(TOPIC))
     {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
+        String  ipAddress   = getIPAddress();
+
+        value["ipAddress"] = ipAddress;
+
+        isSuccessful = true;
     }
 
-    m_callbackWebHandler = nullptr;
+    return isSuccessful;
+}
 
-    return;
+bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        String  ipAddress;
+
+        if (false == value["set"].isNull())
+        {
+            ipAddress = value["set"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            setIPAddress(ipAddress);
+        }
+    }
+
+    return isSuccessful;
 }
 
 void ShellyPlugSPlugin::active(IGfx& gfx)
@@ -249,14 +267,15 @@ void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
     return;
 }
 
-void ShellyPlugSPlugin::getIPAddress(String& ipAddress) const
+String ShellyPlugSPlugin::getIPAddress() const
 {
-    lock();
+    String ipAddress;
 
+    lock();
     ipAddress = m_ipAddress;
     unlock();
 
-    return;
+    return ipAddress;
 }
 
 /******************************************************************************
@@ -266,78 +285,6 @@ void ShellyPlugSPlugin::getIPAddress(String& ipAddress) const
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void ShellyPlugSPlugin::webReqHandler(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
-        String      ipAddress;
-
-        getIPAddress(ipAddress);
-
-        dataObj["ipAddress"] = ipAddress;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* Argument missing? */
-        if (false == request->hasArg("set"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Argument is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            setIPAddress(request->arg("set"));
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
 
 bool ShellyPlugSPlugin::startHttpRequest()
 {
@@ -373,8 +320,6 @@ void ShellyPlugSPlugin::initHttpClient()
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
 
-        m_httpResponseReceived = true;
-
         filter["power"] = true;
 
         if (true == filter.overflowed())
@@ -394,9 +339,24 @@ void ShellyPlugSPlugin::initHttpClient()
         }
         else
         {
-            String power;
+            float       powerRaw                = jsonDoc["power"].as<float>();
+            String      power;
+            const char* reducePrecision;
+            char        powerReducedPrecison[6] = { 0 };
 
-            power = jsonDoc["power"].as<String>();
+            if (powerRaw < 99.99f)
+            {
+                reducePrecision = (powerRaw > 9.9f) ? "%.1f" : "%.2f";
+            }
+            else
+            {
+                reducePrecision = "%.0f";
+            }
+            
+            (void)snprintf(powerReducedPrecison, sizeof(powerReducedPrecison), reducePrecision, powerRaw);
+
+            power = "\\calign";
+            power += powerReducedPrecison;
             power += " W";
             
             lock();

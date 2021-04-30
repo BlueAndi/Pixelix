@@ -113,3 +113,18 @@ utils.makeRequest = function(options) {
         }
     });
 };
+
+utils.readJsonFile = function(file) {
+    return new Promise(function(resolve, reject) {
+        var rawFile = new XMLHttpRequest();
+
+        rawFile.overrideMimeType("application/json");
+        rawFile.open("GET", file, true);
+        rawFile.onreadystatechange = function() {
+            if ((4 == rawFile.readyState) && ("200" == rawFile.status)) {
+                resolve(rawFile.responseText);
+            }
+        }
+        rawFile.send(null);
+    });
+};
