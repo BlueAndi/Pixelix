@@ -79,9 +79,10 @@ void TempHumidPlugin::active(IGfx& gfx)
 {
     lock();
 
-    /** set time to show page - either 10s or slot_time / 4
-      * read here because otherwise we do not get config changes during runtime in slot_time
-      **/
+    /* 
+    set time to show page - either 10s or slot_time / 4
+    read here because otherwise we do not get config changes during runtime in slot_time 
+    */
 
     if (nullptr != m_slotInterf) {
         m_pageTime = m_slotInterf->getDuration() / 4U;
@@ -171,16 +172,16 @@ void TempHumidPlugin::update(IGfx& gfx)
         switch(m_page)
         {
         case TEMPERATURE:
-            m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
             snprintf(tmp, sizeof(tmp), "%3f", m_temp);
             m_text = tmp;
-            /* need to verify if it works: m_text += "\x8E"; */
-            m_text += " C";
+            m_text += "\x8E";  /* degree symbol */
+            m_text += "C";
             m_textWidget.setFormatStr(m_text);
             break;
 
         case HUMIDITY:
-            m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
             snprintf(tmp, sizeof(tmp), "%3f", m_humid);
             m_text = tmp;
             m_text += "%";
@@ -231,13 +232,6 @@ void TempHumidPlugin::start()
  * Private Methods
  *****************************************************************************/
 
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
 void TempHumidPlugin::lock() const
 {
     if (nullptr != m_xMutex)
@@ -257,3 +251,11 @@ void TempHumidPlugin::unlock() const
 
     return;
 }
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
