@@ -31,7 +31,7 @@ package "Housing" {
     component "User Button" as userButton
     component "Reset Button" as resetButton
     component "Ambilight sensor" as ambilightSensor
-    
+    component "DHT11 sensor" as dht11Sensor
 }
 
 extPowerSupply --( iVcc
@@ -45,5 +45,6 @@ esp32 -- ledMatrix: data
 esp32 -- userButton: input
 esp32 -- resetButton: reset
 esp32 -- ambilightSensor: control brightness
+esp32 -- dht11Sensor: read temperature\nand humidity
 
 @enduml
