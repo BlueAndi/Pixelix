@@ -32,6 +32,7 @@ package "Housing" {
     component "Reset Button" as resetButton
     component "Ambilight sensor" as ambilightSensor
     component "DHT11 sensor" as dht11Sensor
+    
 }
 
 extPowerSupply --( iVcc
