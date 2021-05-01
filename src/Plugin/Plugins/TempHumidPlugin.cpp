@@ -133,7 +133,7 @@ void TempHumidPlugin::active(IGfx& gfx)
 void TempHumidPlugin::update(IGfx& gfx)
 {
     bool showPage    = false;
-    char tmp[6]      =  { 0 };  /* holds the display value */
+    char valueReducedPrecison[6]      =  { 0 };  /* holds a value in lower precision for display */
 
     if (false == m_timer.isTimerRunning())
     {
@@ -173,17 +173,19 @@ void TempHumidPlugin::update(IGfx& gfx)
         {
         case TEMPERATURE:
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-            snprintf(tmp, sizeof(tmp), "%3f", m_temp);
-            m_text = tmp;
-            m_text += "\x8E";  /* degree symbol */
+            /* Generate temperature string with reduced precision and add unit °C. */
+            (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9f) ? "%.0f" : "%.1f" , m_temp);
+            m_text  = "\\calign";
+            m_text += valueReducedPrecison;
+            m_text += "\x8E";
             m_text += "C";
             m_textWidget.setFormatStr(m_text);
             break;
 
         case HUMIDITY:
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
-            snprintf(tmp, sizeof(tmp), "%3f", m_humid);
-            m_text = tmp;
+            (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humid);
+            m_text = valueReducedPrecison;
             m_text += "%";
             m_textWidget.setFormatStr(m_text);
             break;
