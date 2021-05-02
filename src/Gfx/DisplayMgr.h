@@ -82,9 +82,9 @@ public:
     };
 
     /**
-     * Get LED matrix instance.
+     * Get display manager instance.
      *
-     * @return LED matrix
+     * @return Display manager
      */
     static DisplayMgr& getInstance()
     {
@@ -353,12 +353,12 @@ private:
     bool                m_fadeEffectUpdate;             /**< Flag to indicate that the fadeEffect was updated. */
 
     /**
-     * Construct LED matrix.
+     * Constructs the display manager.
      */
     DisplayMgr();
 
     /**
-     * Destroys LED matrix.
+     * Destroys the display manager.
      */
     ~DisplayMgr();
 
