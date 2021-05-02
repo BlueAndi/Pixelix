@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <Board.h>
 #include <Canvas.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
@@ -51,7 +52,6 @@
 #include <FadeMoveX.h>
 #include <FadeMoveY.h>
 
-#include "Board.h"
 #include "IPluginMaintenance.hpp"
 #include "Slot.h"
 
