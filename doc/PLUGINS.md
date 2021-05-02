@@ -23,6 +23,7 @@
     - [ShellyPlugSPlugin](#ShellyPlugSPlugin)
     - [SunrisePlugin](#SunrisePlugin)
     - [SysMsgPlugin](#SysMsgPlugin)
+    - [TempHumidPlugin](#TempHumidPlugin)
     - [TestPlugin](#TestPlugin)
     - [TimePlugin](#TimePlugin)
     - [VolumioPlugin](#VolumioPlugin)
@@ -97,6 +98,9 @@ The coordinates (latitude & longitude) of your location can be set via the [REST
 
 ## SysMsgPlugin
 The SysMsgPlugin is a system plugin, which is used to splash important informtions to the user. Note, it can not be uninstalled.
+
+## TempHumidPlugin
+Th TempHumidPlugin displays the temperature (in °C) and Humidity (in %) based on the readings of sensor connected to Pixelix.
 
 ## TestPlugin
 The TestPlugin can be used to check whether the LED matrix topology (layout) is correct or not.
