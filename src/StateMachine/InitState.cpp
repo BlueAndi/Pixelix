@@ -74,6 +74,7 @@
 #include "ShellyPlugSPlugin.h"
 #include "SunrisePlugin.h"
 #include "SysMsgPlugin.h"
+#include "TempHumidPlugin.h"
 #include "TestPlugin.h"
 #include "TimePlugin.h"
 #include "VolumioPlugin.h"
@@ -383,6 +384,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
+    pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
     pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
     pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
     pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
