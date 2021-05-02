@@ -202,8 +202,8 @@ void TempHumidPlugin::process()
     if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
         (true == m_sensorUpdateTimer.isTimeout()))
     {
-        float   humidity    = m_dht.getTemperature();
-        float   temperature = m_dht.getHumidity();
+        float   humidity    = m_dht.getHumidity();
+        float   temperature = m_dht.getTemperature();
 
         /* Only accept if both values could be read. */
         if ( (!isnan(humidity)) && (!isnan(temperature)) ) 
