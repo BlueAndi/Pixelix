@@ -35,7 +35,6 @@
 #include "RestApi.h"
 #include "HttpStatus.h"
 #include "Settings.h"
-#include "LedMatrix.h"
 #include "DisplayMgr.h"
 #include "Version.h"
 #include "PluginMgr.h"

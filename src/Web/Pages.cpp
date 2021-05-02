@@ -38,7 +38,6 @@
 #include "Settings.h"
 #include "Version.h"
 #include "UpdateMgr.h"
-#include "LedMatrix.h"
 #include "DisplayMgr.h"
 #include "RestApi.h"
 #include "PluginMgr.h"
