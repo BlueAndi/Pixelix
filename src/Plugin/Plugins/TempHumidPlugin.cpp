@@ -37,7 +37,6 @@
 
 #include <Board.h>
 #include <Color.h>
-#include <DHTesp.h>
 #include <Logging.h>
 
 /******************************************************************************
@@ -79,10 +78,9 @@ void TempHumidPlugin::active(IGfx& gfx)
 {
     lock();
 
-    /* 
-    set time to show page - either 10s or slot_time / 4
-    read here because otherwise we do not get config changes during runtime in slot_time 
-    */
+    /* Set time to show page - either 10s or slot_time / 4
+     * read here because otherwise we do not get config changes during runtime in slot_time.
+     */
 
     if (nullptr != m_slotInterf) {
         m_pageTime = m_slotInterf->getDuration() / 4U;
@@ -132,8 +130,8 @@ void TempHumidPlugin::active(IGfx& gfx)
 
 void TempHumidPlugin::update(IGfx& gfx)
 {
-    bool showPage    = false;
-    char valueReducedPrecison[6]      =  { 0 };  /* holds a value in lower precision for display */
+    bool showPage                   = false;
+    char valueReducedPrecison[6]    = { 0 };    /* Holds a value in lower precision for display. */
 
     if (false == m_timer.isTimerRunning())
     {
@@ -142,7 +140,7 @@ void TempHumidPlugin::update(IGfx& gfx)
     }
     else if (true == m_timer.isTimeout())
     {
-        /* switch to next page */
+        /* Switch to next page */
         ++m_page;
         m_page %= PAGE_MAX;
 
@@ -151,7 +149,7 @@ void TempHumidPlugin::update(IGfx& gfx)
     }
     else
     {
-        /* do nothing */;
+        /* Do nothing */;
     }
 
     if (true == showPage)
@@ -200,23 +198,23 @@ void TempHumidPlugin::update(IGfx& gfx)
 
 void TempHumidPlugin::process() 
 {
-    unsigned long msSinceInit=millis();
-    float humidity;
-    float temperature;
-
-    /* read only if update_period not reached or sensor has never been read */
-    if ( ( msSinceInit > ( m_last + SENSOR_UPDATE_PERIOD ) )  || ( 0U == m_last ) )
+    /* Read only if update period not reached or sensor has never been read. */
+    if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
+        (true == m_sensorUpdateTimer.isTimeout()))
     {
-            humidity = m_dht.getTemperature();
-            temperature = m_dht.getHumidity();
-            /* only accept if both values could be read */
-            if ( !isnan(humidity) && !isnan(temperature) ) 
-            {
-                m_humid = humidity;
-                m_temp  = temperature;
-                m_last = msSinceInit;
-                LOG_INFO("got new temp %lu h: %f, t: %f", m_last, m_humid, m_temp);
-            }
+        float   humidity    = m_dht.getTemperature();
+        float   temperature = m_dht.getHumidity();
+
+        /* Only accept if both values could be read. */
+        if ( (!isnan(humidity)) && (!isnan(temperature)) ) 
+        {
+            m_humid = humidity;
+            m_temp  = temperature;
+
+            LOG_INFO("Got new temp. h: %f, t: %f", m_humid, m_temp);
+
+            m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
+        }
     }
 }
 

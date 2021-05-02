@@ -93,7 +93,7 @@ public:
         m_dht(),
         m_humid(0.0F),
         m_temp(0.0F),
-        m_last(0U),
+        m_sensorUpdateTimer(),
         m_slotInterf(nullptr)
     {
         /* Move the text widget one line lower for better look. */
@@ -224,7 +224,7 @@ private:
     DHTesp                      m_dht;                      /**< Sensor object */
     float                       m_humid;                    /**< Last sensor humidity value */
     float                       m_temp;                     /**< Last sensor temperature value */
-    unsigned long               m_last;                     /**< Last sensor read timestamp */
+    SimpleTimer                 m_sensorUpdateTimer;        /**< Time used for cyclic sensor reading. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
 
     /**
