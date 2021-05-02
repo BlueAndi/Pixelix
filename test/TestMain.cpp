@@ -180,6 +180,25 @@ public:
     }
 
     /**
+     * Get pixel color at given position.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     *
+     * @return Color in RGB888 format.
+     */
+    Color getColor(int16_t x, int16_t y) const final
+    {
+        /* Out of bounds check */
+        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
+        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, y);
+        TEST_ASSERT_LESS_OR_EQUAL_INT16(WIDTH, x);
+        TEST_ASSERT_LESS_OR_EQUAL_INT16(HEIGHT, y);
+
+        return m_buffer[x + y * WIDTH];
+    }
+    
+    /**
      * Draw a single pixel in the matrix and ensure that the drawing borders
      * are not violated.
      *
@@ -187,7 +206,7 @@ public:
      * @param[in] y     y-coordinate
      * @param[in] color Pixel color
      */
-    void drawPixel(int16_t x, int16_t y, const Color& color)
+    void drawPixel(int16_t x, int16_t y, const Color& color) final
     {
         if ((0 > x) ||
             (0 > y) ||
@@ -211,25 +230,6 @@ public:
     }
 
     /**
-     * Get pixel color at given position.
-     *
-     * @param[in] x x-coordinate
-     * @param[in] y y-coordinate
-     *
-     * @return Color in RGB888 format.
-     */
-    Color getColor(int16_t x, int16_t y) const
-    {
-        /* Out of bounds check */
-        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
-        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, y);
-        TEST_ASSERT_LESS_OR_EQUAL_INT16(WIDTH, x);
-        TEST_ASSERT_LESS_OR_EQUAL_INT16(HEIGHT, y);
-
-        return m_buffer[x + y * WIDTH];
-    }
-
-    /**
      * Dim color to black.
      * A dim ratio of 255 means no change.
      * 
@@ -239,7 +239,7 @@ public:
      * @param[in] y     y-coordinate
      * @param[in] ratio Dim ration [0; 255]
      */
-    void dimPixel(int16_t x, int16_t y, uint8_t ratio)
+    void dimPixel(int16_t x, int16_t y, uint8_t ratio) final
     {
         /* Out of bounds check */
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
@@ -250,6 +250,21 @@ public:
         m_buffer[x + y * WIDTH].setIntensity(ratio);
 
         return;
+    }
+
+    /**
+     * Write a single character on the display.
+     * This method is necessary for using print() methods.
+     *
+     * @param[in] singleChar    Single character
+     *
+     * @return Number of written characters.
+     */
+    size_t write(uint8_t singleChar) final
+    {
+        drawChar(static_cast<char>(singleChar));
+
+        return 1U;
     }
 
     /**

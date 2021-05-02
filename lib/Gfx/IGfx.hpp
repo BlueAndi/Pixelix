@@ -75,21 +75,6 @@ public:
     {
     }
 
-    /**
-     * Write a single character on the display.
-     * This method is necessary for using print() methods.
-     *
-     * @param[in] singleChar    Single character
-     *
-     * @return Number of written characters.
-     */
-    size_t write(uint8_t singleChar) final
-    {
-        drawChar(static_cast<char>(singleChar));
-
-        return 1U;
-    }
-
 protected:
 
     /**
