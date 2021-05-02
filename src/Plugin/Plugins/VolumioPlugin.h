@@ -84,13 +84,11 @@ public:
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
         m_volumioHost("volumio.fritz.box"),
-        m_configurationFilename(),
         m_urlIcon(),
         m_urlText(),
+        m_client(),
         m_requestTimer(),
         m_offlineTimer(),
-        m_url(),
-        m_callbackWebHandler(nullptr),
         m_xMutex(nullptr),
         m_isConnectionError(false),
         m_lastSeekValue(0U),
@@ -107,6 +105,11 @@ public:
      */
     ~VolumioPlugin()
     {
+        /* Abort any pending TCP request to avoid getting a callback after the
+         * object is destroyed.
+         */
+        m_client.abort();
+        
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -140,6 +143,43 @@ public:
     }
 
     /**
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
+     */
+    void getTopics(JsonArray& topics) const final;
+
+    /**
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool getTopic(const String& topic, JsonObject& value) const final;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setTopic(const String& topic, const JsonObject& value) final;
+
+    /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
      */
@@ -171,21 +211,6 @@ public:
      * it won't be shown on the display anymore.
      */
     void inactive() final;
-
-    /**
-     * Register web interface, e.g. REST API functionality.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
-     */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
-
-    /**
-     * Unregister web interface.
-     *
-     * @param[in] srv   Webserver
-     */
-    void unregisterWebInterface(AsyncWebServer& srv) final;
 
     /**
      * Update the display.
@@ -242,9 +267,9 @@ private:
     static const char*      IMAGE_PATH_PAUSE_ICON;
 
     /**
-     * Configuration path within the filesystem.
+     * Plugin topic, used for parameter exchange.
      */
-    static const char*      CONFIG_PATH;
+    static const char*      TOPIC;
 
     /**
      * Period in ms for requesting data from server.
@@ -271,26 +296,15 @@ private:
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_volumioHost;              /**< Host address of the VOLUMIO server. */
-    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
     String                      m_urlIcon;                  /**< REST API URL for updating the icon */
     String                      m_urlText;                  /**< REST API URL for updating the text */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
     SimpleTimer                 m_offlineTimer;             /**< Timer used for offline detection. */
-    String                      m_url;                      /**< REST API URL */
-    AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
     bool                        m_isConnectionError;        /**< Is connection error happened? */
     uint32_t                    m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
     uint8_t                     m_pos;                      /**< Current music position in percent. */
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Request new data.
@@ -307,18 +321,12 @@ private:
     /**
      * Saves current configuration to JSON file.
      */
-    bool saveConfiguration();
+    bool saveConfiguration() const;
 
     /**
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * If configuration directory doesn't exists, it will be created.
-     * Otherwise nothing happens.
-     */
-    void createConfigDirectory();
 
     /**
      * Protect against concurrent access.

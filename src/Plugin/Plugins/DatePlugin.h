@@ -169,7 +169,7 @@ private:
     static const uint8_t    MAX_LAMPS                   = 7U;
 
     /** Size of lamp widgets used for weekday indication. */
-    static const uint16_t   CUSTOM_LAMP_WIDTH           = 3;
+    static const uint16_t   CUSTOM_LAMP_WIDTH           = 3U;
 
     /** Time to check date update period in ms */
     static const uint32_t   CHECK_DATE_UPDATE_PERIOD    = 1000U;

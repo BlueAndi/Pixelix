@@ -87,11 +87,8 @@ public:
         m_textWidget("\\calign?"),
         m_longitude("2.295"), /* Example data */
         m_latitude("48.858"), /* Example data */
-        m_configurationFilename(""),
-        m_httpResponseReceived(false),
         m_relevantResponsePart(""),
-        m_url(),
-        m_callbackWebHandler(nullptr),
+        m_client(),
         m_xMutex(nullptr),
         m_requestTimer()
     {
@@ -106,6 +103,11 @@ public:
      */
     ~SunrisePlugin()
     {
+        /* Abort any pending TCP request to avoid getting a callback after the
+         * object is destroyed.
+         */
+        m_client.abort();
+        
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -139,19 +141,41 @@ public:
     }
 
     /**
-     * Register web interface, e.g. REST API functionality.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
      */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
+    void getTopics(JsonArray& topics) const final;
 
     /**
-     * Unregister web interface.
-     *
-     * @param[in] srv   Webserver
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void unregisterWebInterface(AsyncWebServer& srv) final;
+    bool getTopic(const String& topic, JsonObject& value) const final;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
      * This method will be called in case the plugin is set active, which means
@@ -228,9 +252,9 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Configuration path within the filesystem.
+     * Plugin topic, used for parameter exchange.
      */
-    static const char*      CONFIG_PATH;
+    static const char*      TOPIC;
 
     /**
      * Period in ms for requesting sunset/sunrise from server.
@@ -250,23 +274,11 @@ private:
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_longitude;                /**< Longitude of sunrise location */
     String                      m_latitude;                 /**< Latitude of sunrise location */
-    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
-    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer                 m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
-    String                      m_url;                      /**< REST API URL */
-    AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
     SimpleTimer                 m_requestTimer;             /**< Timer is used for cyclic sunrise/sunset http request. */
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Request new data.
@@ -282,9 +294,10 @@ private:
 
     /**
      * Add the daylight saving (if available) and GMT offset values to the given
-     * dateTime string
+     * date/time string.
+     * sunrise-sunset.org API: https://sunrise-sunset.org/api
      *
-     * @param[in] dateTimeString dateTime string received via calling the sunrise-sunset.org API.
+     * @param[in] dateTimeString Date/Time string in UTC received via calling the sunrise-sunset.org API.
      *
      * @return A formatted (timezone adjusted) time string according to the configured time format.
      */
@@ -293,18 +306,12 @@ private:
     /**
      * Saves current configuration to JSON file.
      */
-    bool saveConfiguration();
+    bool saveConfiguration() const;
 
     /**
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * If configuration directory doesn't exists, it will be created.
-     * Otherwise nothing happens.
-     */
-    void createConfigDirectory();
 
     /**
      * Protect against concurrent access.

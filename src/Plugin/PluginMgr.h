@@ -46,8 +46,10 @@
 #include <stdint.h>
 #include "IPluginMaintenance.hpp"
 #include "DisplayMgr.h"
+#include "PluginFactory.h"
 
 #include <LinkedList.hpp>
+#include <ESPAsyncWebServer.h>
 
 /******************************************************************************
  * Macros
@@ -76,6 +78,12 @@ public:
 
         return instance;
     }
+
+    /**
+     * The plugin manager prepares everything for the plugins.
+     * Call this once before any other method is used.
+     */
+    void begin();
 
     /**
      * Register a plugin.
@@ -143,27 +151,57 @@ public:
 private:
 
     /**
-     * Plugin registry entry.
+     * Web handler data, which is necessary for the webserver handling.
      */
-    struct PluginRegEntry
+    struct WebHandlerData
     {
-        String                          name;       /**< Plugin name */
-        IPluginMaintenance::CreateFunc  createFunc; /**< Plugin creation function */
+        AsyncCallbackWebHandler*    webHandler;     /**< Webhandler callback, necessary to remove it later again. */
+        String                      uri;            /**< URI where the handler is registered. */
+        bool                        isUploadError;  /**< If upload error happened, it will be true otherwise false. */
+        String                      fullPath;       /**< Full path of uploaded file. If empty, there is no file available. */
+        File                        fd;             /**< Upload file descriptor */
+
+        /**
+         * Initialize the web handler data.
+         */
+        WebHandlerData() :
+            webHandler(nullptr),
+            uri(),
+            isUploadError(false),
+            fullPath(),
+            fd()
+        {
+        }
     };
 
-    DLinkedList<PluginRegEntry*>            m_registry;     /**< Plugin registry */
-    DLinkedListIterator<PluginRegEntry*>    m_registryIter; /**< Plugin registry iterator. Exclusive use in findFirst() and findNext()! */
-    DLinkedList<IPluginMaintenance*>        m_plugins;      /**< List with all installed plugins */
-    PluginRegEntry*                         m_current;      /**< Current registry entry */
+    /**
+     * Plugin object specific data, used for plugin management.
+     */
+    struct PluginObjData
+    {
+        static const uint8_t MAX_WEB_HANDLERS = 8U; /**< Max. number of web handlers. */
+
+        IPluginMaintenance* plugin;                         /**< Plugin object, where this data record belongs to. */
+        WebHandlerData      webHandlers[MAX_WEB_HANDLERS];  /**< Web data of the plugin, necessary to remove it later again. */
+
+        /**
+         * Initializes the plugin object data.
+         */
+        PluginObjData() :
+            plugin(nullptr),
+            webHandlers()
+        {
+        }
+    };
+
+    PluginFactory               m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
+    DLinkedList<PluginObjData*> m_pluginMeta;       /**< Plugin object management information. */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
-        m_registry(),
-        m_registryIter(m_registry),
-        m_plugins(),
-        m_current(nullptr)
+        m_pluginFactory()
     {
     }
 
@@ -179,15 +217,21 @@ private:
     PluginMgr& operator=(const PluginMgr& fab);
 
     /**
-     * Create plugin with given UID and install it to the given slot.
+     * If configuration directory doesn't exists, it will be created.
+     * Otherwise nothing happens.
+     */
+    void createPluginConfigDirectory();
+
+    /**
+     * Install plugin.
+     * If no slot id is given, the plugin will be installed in the next available slot.
      *
-     * @param[in] name      Plugin name
-     * @param[in] uid       Plugin UID
+     * @param[in] plugin    The plugin
      * @param[in] slotId    Slot id
      *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    IPluginMaintenance* install(const String& name, uint16_t uid, uint8_t slotId);
+    bool install(IPluginMaintenance* plugin, uint8_t slotId);
 
     /**
      * Install plugin to any available display slot.
@@ -209,11 +253,53 @@ private:
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
 
     /**
-     * Generate a 16-bit unique id, for a plugin instance.
-     *
-     * @return Unique id
+     * Register all topics of the given plugin depended on the used communication
+     * networks.
+     * 
+     * @param[in] plugin    The plugin, which shall be handled.
      */
-    uint16_t generateUID();
+    void registerTopics(IPluginMaintenance* plugin);
+
+    /**
+     * Register a single topic of the given plugin depended on the used communication
+     * networks.
+     * 
+     * @param[in] metaData  The plugin meta data, which shall be handled.
+     * @param[in] topic     The topic.
+     */
+    void registerTopic(PluginObjData* metaData, const String& topic);
+
+    /**
+     * The web request handler handles all incoming HTTP requests for every plugin topic.
+     * 
+     * @param[in] request           The web request information from the client.
+     * @param[in] plugin            The responsible plugin, which is related to the request.
+     * @param[in] topic             The topic, which is requested.
+     * @param[in] webHandlerData    Plugin web handler data, which is related to this request.
+     */
+    void webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
+
+    /**
+     * File upload handler.
+     *
+     * @param[in] request           HTTP request.
+     * @param[in] filename          Name of the uploaded file.
+     * @param[in] index             Current file offset.
+     * @param[in] data              Next data part of file, starting at offset.
+     * @param[in] len               Data part size in byte.
+     * @param[in] final             Is final packet or not.
+     * @param[in] plugin            The responsible plugin, which is related to the upload.
+     * @param[in] topic             The topic, which is requested.
+     * @param[in] webHandlerData    Plugin web handler data, which is related to this upload.
+     */
+    void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
+
+    /**
+     * Unregister all topics depended on the used communication networks.
+     * 
+     * @param[in] plugin    The plugin, which topics to unregister.
+     */
+    void unregisterTopics(IPluginMaintenance* plugin);
 };
 
 /******************************************************************************

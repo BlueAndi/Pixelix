@@ -183,16 +183,40 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
 void Pages::init(AsyncWebServer& srv)
 {
     const char* pluginName = nullptr;
+    String      webLoginUser;
+    String      webLoginPassword;
 
-    (void)srv.on("/about.html", HTTP_GET, aboutPage);
-    (void)srv.on("/debug.html", HTTP_GET, debugPage);
-    (void)srv.on("/display.html", HTTP_GET, displayPage);
-    (void)srv.on("/edit.html", HTTP_GET, editPage);
-    (void)srv.on("/index.html", HTTP_GET, indexPage);
-    (void)srv.on("/info.html", HTTP_GET, infoPage);
-    (void)srv.on("/settings.html", HTTP_GET | HTTP_POST, settingsPage);
-    (void)srv.on("/update.html", HTTP_GET, updatePage);
-    (void)srv.on("/upload.html", HTTP_POST, uploadPage, uploadHandler);
+    if (false == Settings::getInstance().open(true))
+    {
+        webLoginUser        = Settings::getInstance().getWebLoginUser().getDefault();
+        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        webLoginUser        = Settings::getInstance().getWebLoginUser().getValue();
+        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getValue();
+
+        Settings::getInstance().close();
+    }
+
+    (void)srv.on("/about.html", HTTP_GET, aboutPage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/debug.html", HTTP_GET, debugPage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/display.html", HTTP_GET, displayPage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/edit.html", HTTP_GET, editPage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/index.html", HTTP_GET, indexPage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/info.html", HTTP_GET, infoPage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/settings.html", HTTP_GET | HTTP_POST, settingsPage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/update.html", HTTP_GET, updatePage)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.on("/upload.html", HTTP_POST, uploadPage, uploadHandler)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     (void)srv.on("/", [](AsyncWebServerRequest* request) {
         if (nullptr != request)
@@ -201,13 +225,21 @@ void Pages::init(AsyncWebServer& srv)
         }
     });
 
+    /* Serve files with static content with disabled cache control. */
+    (void)srv.serveStatic("/configuration/", FILESYSTEM, "/configuration/")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesytem for 1 hour.
      */
-    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600");
-    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600");
-    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600");
-    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600");
+    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     /* Add one page per plugin. */
     pluginName = PluginMgr::getInstance().findFirst();
@@ -224,16 +256,9 @@ void Pages::init(AsyncWebServer& srv)
                                 return;
                             }
 
-                            /* Force authentication! */
-                            if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-                            {
-                                /* Request DIGEST authentication */
-                                request->requestAuthentication();
-                                return;
-                            }
-
                             request->send(FILESYSTEM, uri, "text/html", false, tmplPageProcessor);
-                        });
+
+                        }).setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());;
 
         pluginName = PluginMgr::getInstance().findNext();
     }
@@ -254,14 +279,6 @@ void Pages::error(AsyncWebServerRequest* request)
     }
 
     LOG_INFO("Invalid web request: %s", request->url().c_str());
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
 
     request->send(FILESYSTEM, "/error.html", "text/html", false, tmplPageProcessor);
 
@@ -363,7 +380,7 @@ static bool isValidHostname(const String& hostname)
  */
 static String tmplPageProcessor(const String& var)
 {
-    String  result  = var;
+    String  result;
     uint8_t index   = 0U;
     bool    isFound = false;
 
@@ -378,6 +395,11 @@ static String tmplPageProcessor(const String& var)
         ++index;
     }
 
+    if (false == isFound)
+    {
+        result = var;
+    }
+
     return result;
 }
 
@@ -390,14 +412,6 @@ static void aboutPage(AsyncWebServerRequest* request)
 {
     if (nullptr == request)
     {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
         return;
     }
 
@@ -418,14 +432,6 @@ static void debugPage(AsyncWebServerRequest* request)
         return;
     }
 
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
     request->send(FILESYSTEM, "/debug.html", "text/html", false, tmplPageProcessor);
 
     return;
@@ -440,14 +446,6 @@ static void displayPage(AsyncWebServerRequest* request)
 {
     if (nullptr == request)
     {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
         return;
     }
 
@@ -468,14 +466,6 @@ static void editPage(AsyncWebServerRequest* request)
         return;
     }
 
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
     request->send(FILESYSTEM, "/edit.html", "text/html", false, tmplPageProcessor);
 
     return;
@@ -493,14 +483,6 @@ static void indexPage(AsyncWebServerRequest* request)
         return;
     }
 
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
     request->send(FILESYSTEM, "/index.html", "text/html", false, tmplPageProcessor);
 
     return;
@@ -515,14 +497,6 @@ static void infoPage(AsyncWebServerRequest* request)
 {
     if (nullptr == request)
     {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
         return;
     }
 
@@ -760,14 +734,6 @@ static void settingsPage(AsyncWebServerRequest* request)
         return;
     }
 
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
     /* Store settings? */
     if ((HTTP_POST == request->method()) &&
         (0 < request->args()))
@@ -865,14 +831,6 @@ static void updatePage(AsyncWebServerRequest* request)
         return;
     }
 
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
-        return;
-    }
-
     request->send(FILESYSTEM, "/update.html", "text/html", false, tmplPageProcessor);
 
     return;
@@ -887,14 +845,6 @@ static void uploadPage(AsyncWebServerRequest* request)
 {
     if (nullptr == request)
     {
-        return;
-    }
-
-    /* Force authentication! */
-    if (false == request->authenticate(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD))
-    {
-        /* Request DIGEST authentication */
-        request->requestAuthentication();
         return;
     }
 
@@ -1075,7 +1025,7 @@ namespace tmpl
         uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
         char        chipIdStr[13];
 
-        snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
+        (void)snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
 
         result = chipIdStr;
 

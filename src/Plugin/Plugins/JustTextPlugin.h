@@ -59,9 +59,6 @@
 /**
  * Shows text over the whole display.
  * If the text is too long for the display width, it automatically scrolls.
- *
- * Change text via REST API:
- * Text: POST \c "<base-uri>/text?show=<text>"
  */
 class JustTextPlugin : public Plugin
 {
@@ -76,8 +73,6 @@ public:
     JustTextPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
         m_textWidget(),
-        m_url(),
-        m_callbackWebHandler(nullptr),
         m_xMutex(nullptr)
     {
         /* Move the text widget one line lower for better look. */
@@ -112,19 +107,41 @@ public:
     }
 
     /**
-     * Register web interface, e.g. REST API functionality.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
      */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
+    void getTopics(JsonArray& topics) const final;
 
     /**
-     * Unregister web interface.
-     *
-     * @param[in] srv   Webserver
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void unregisterWebInterface(AsyncWebServer& srv) final;
+    bool getTopic(const String& topic, JsonObject& value) const final;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
      * Update the display.
@@ -150,18 +167,13 @@ public:
 
 private:
 
-    TextWidget                  m_textWidget;           /**< Text widget, used for showing the text. */
-    String                      m_url;                  /**< REST API URL */
-    AsyncCallbackWebHandler*    m_callbackWebHandler;   /**< Callback web handler */
-    SemaphoreHandle_t           m_xMutex;               /**< Mutex to protect against concurrent access. */
-
     /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
+     * Plugin topic, used for parameter exchange.
      */
-    void webReqHandler(AsyncWebServerRequest *request);
+    static const char*  TOPIC_TEXT;
+
+    TextWidget          m_textWidget;   /**< Text widget, used for showing the text. */
+    SemaphoreHandle_t   m_xMutex;       /**< Mutex to protect against concurrent access. */
 
     /**
      * Protect against concurrent access.

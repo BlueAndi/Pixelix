@@ -67,7 +67,8 @@ static const IoPin* ioPinList[] =
     &userButtonIn,
     &testPinOut,
     &ledMatrixDataOut,
-    &ldrIn
+    &ldrIn,
+    &dhtIn
 };
 
 /******************************************************************************

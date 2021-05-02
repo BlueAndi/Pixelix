@@ -77,6 +77,12 @@ static const char*  KEY_WIFI_AP_SSID                = "ap_ssid";
 /** Wifi access point network passphrase key */
 static const char*  KEY_WIFI_AP_PASSPHRASE          = "ap_passphrase";
 
+/** Website login user account key */
+static const char*  KEY_WEB_LOGIN_USER              = "web_login_user";
+
+/** Website login user password key */
+static const char*  KEY_WEB_LOGIN_PASSWORD          = "web_login_pass";
+
 /** Hostname key */
 static const char*  KEY_HOSTNAME                    = "hostname";
 
@@ -84,31 +90,28 @@ static const char*  KEY_HOSTNAME                    = "hostname";
 static const char*  KEY_AUTO_BRIGHTNESS_CTRL        = "a_brightn_ctrl";
 
 /** Plugin installation key */
-static const char* KEY_PLUGIN_INSTALLATION          = "plugin_install";
+static const char*  KEY_PLUGIN_INSTALLATION         = "plugin_install";
 
-/** GMT offset key */
-static const char* KEY_GMTOFFSET                    = "gmt_offset";
-
-/** Daylight saving time control key */
-static const char* KEY_DAYLIGHT_SAVING_CTRL         = "dst_ctrl";
+/** POSIX timezone string key */
+static const char*  KEY_TIMEZONE                    = "timezone";
 
 /** NTP server key */
-static const char* KEY_NTP_SERVER                   = "ntp_server";
+static const char*  KEY_NTP_SERVER                  = "ntp_server";
 
 /** Time format key */
-static const char* KEY_TIME_FORMAT                  = "time_format";
+static const char*  KEY_TIME_FORMAT                 = "time_format";
 
 /** Date format key */
-static const char* KEY_DATE_FORMAT                  = "date_format";
+static const char*  KEY_DATE_FORMAT                 = "date_format";
 
 /** Max. number of display slots key */
-static const char* KEY_MAX_SLOTS                    = "max_slots";
+static const char*  KEY_MAX_SLOTS                   = "max_slots";
 
 /** Display slot configuration key */
-static const char* KEY_SLOT_CONFIG                  = "slot_cfg";
+static const char*  KEY_SLOT_CONFIG                 = "slot_cfg";
 
 /** Scroll pause key */
-static const char* KEY_SCROLL_PAUSE                 = "scroll_pause";
+static const char*  KEY_SCROLL_PAUSE                = "scroll_pause";
 
 /* ---------- Key value pair names ---------- */
 
@@ -124,6 +127,12 @@ static const char*  NAME_WIFI_AP_SSID               = "Wifi AP SSID";
 /** Wifi access point network passphrase name of key value pair */
 static const char*  NAME_WIFI_AP_PASSPHRASE         = "Wifi AP passphrase";
 
+/** Website login user account name of key value pair */
+static const char*  NAME_WEB_LOGIN_USER             = "Website login user";
+
+/** Website login user password name of key value pair */
+static const char*  NAME_WEB_LOGIN_PASSWORD         = "Website login password";
+
 /** Hostname name of key value pair */
 static const char*  NAME_HOSTNAME                   = "Hostname";
 
@@ -133,11 +142,8 @@ static const char*  NAME_AUTO_BRIGHTNESS_CTRL       = "Autom. brightness control
 /** Plugin installation name of key value pair */
 static const char*  NAME_PLUGIN_INSTALLATION        = "Plugin installation";
 
-/** GMT offset name of key value pair */
-static const char*  NAME_GMT_OFFSET                 = "GMT offset [s]";
-
-/** DaylightSaving name of key value pair */
-static const char*  NAME_DAYLIGHT_SAVING_CTRL       = "Daylight saving control (DST)";
+/** POSIX timezone string name of key value pair. */
+static const char*  NAME_TIMEZONE                   = "POSIX timezone string";
 
 /** NTP server name of key value pair */
 static const char*  NAME_NTP_SERVER                 = "NTP server address";
@@ -171,6 +177,12 @@ static const char*      DEFAULT_WIFI_AP_SSID            = "pixelix";
 /** Wifi access point network passphrase default value */
 static const char*      DEFAULT_WIFI_AP_PASSPHRASE      = "Luke, I am your father.";
 
+/** Website login user account default value */
+static const char*      DEFAULT_WEB_LOGIN_USER          = "luke";
+
+/** Website login user password default value */
+static const char*      DEFAULT_WEB_LOGIN_PASSWORD      = "skywalker";
+
 /** Hostname default value */
 static const char*      DEFAULT_HOSTNAME                = "pixelix";
 
@@ -180,11 +192,8 @@ static bool             DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
 /** Plugin installation default value */
 static const char*      DEFAULT_PLUGIN_INSTALLATION     = "";
 
-/** GMT offset default value */
-static const int16_t    DEFAULT_GMT_OFFSET              = 0;
-
-/** Daylight saving control default value */
-static bool             DEFAULT_DAYLIGHT_SAVING_CTRL    = false;
+/** POSIX timezone string default value */
+static const char*      DEFAULT_TIMEZONE                = "WEST-1DWEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 
 /** NTP server default value */
 static const char*      DEFAULT_NTP_SERVER              = "pool.ntp.org";
@@ -216,7 +225,13 @@ static const size_t     MIN_VALUE_WIFI_PASSPHRASE      = 8U;
 static const size_t     MIN_VALUE_WIFI_AP_SSID         = 0;
 
 /** Wifi access point network passphrase min. length */
-static const size_t     MIN_VALUE_WIFI_AP_PASSPHRASE   = 8U;
+static const size_t     MIN_VALUE_WIFI_AP_PASSPHRASE    = 8U;
+
+/** Website login user account min. length */
+static const size_t     MIN_VALUE_WEB_LOGIN_USER        = 4U;
+
+/** Website login user password min. length */
+static const size_t     MIN_VALUE_WEB_LOGIN_PASSWORD    = 4U;
 
 /** Hostname min. length */
 static const size_t     MIN_VALUE_HOSTNAME             = 1U;
@@ -226,10 +241,8 @@ static const size_t     MIN_VALUE_HOSTNAME             = 1U;
 /** Plugin installation min. length */
 static const size_t     MIN_VALUE_PLUGIN_INSTALLATION   = 0U;
 
-/** Min. GMT offset (-12h+60s = -43200s) length */
-static const int32_t    MIN_VALUE_GMT_OFFSET           = -43200;
-
-/*                      MIN_VALUE_DAYLIGHT_SAVING_CTRL */
+/** POSIX timezone min. length */
+static const size_t     MIN_VALUE_TIMEZONE              = 4U;
 
 /** NTP server address min. length */
 static const size_t     MIN_VALUE_NTP_SERVER            = 12U;
@@ -261,6 +274,12 @@ static const size_t     MAX_VALUE_WIFI_AP_SSID         = 32U;
 /** Wifi access point network passphrase max. length */
 static const size_t     MAX_VALUE_WIFI_AP_PASSPHRASE   = 64U;
 
+/** Website login user account max. length */
+static const size_t     MAX_VALUE_WEB_LOGIN_USER        = 16U;
+
+/** Website login user password max. length */
+static const size_t     MAX_VALUE_WEB_LOGIN_PASSWORD    = 32U;
+
 /** Hostname max. length */
 static const size_t     MAX_VALUE_HOSTNAME             = 63U;
 
@@ -269,10 +288,8 @@ static const size_t     MAX_VALUE_HOSTNAME             = 63U;
 /** Plugin installation max. length */
 static const size_t     MAX_VALUE_PLUGIN_INSTALLATION  = 512U;
 
-/** Max. GMT offset (14h*60s = 50400s) length */
-static const int32_t    MAX_VALUE_GMT_OFFSET           = 50400;
-
-/*                      MAX_VALUE_DAYLIGHT_SAVING_CTRL */
+/** POSIX timezone max. length */
+static const size_t     MAX_VALUE_TIMEZONE             = 128U;
 
 /** NTP server address max. length */
 static const size_t     MAX_VALUE_NTP_SERVER            = 30U;
@@ -340,11 +357,12 @@ Settings::Settings() :
     m_wifiPassphrase        (m_preferences, KEY_WIFI_PASSPHRASE,        NAME_WIFI_PASSPHRASE,       DEFAULT_WIFI_PASSPHRASE,        MIN_VALUE_WIFI_PASSPHRASE,      MAX_VALUE_WIFI_PASSPHRASE),
     m_apSSID                (m_preferences, KEY_WIFI_AP_SSID,           NAME_WIFI_AP_SSID,          DEFAULT_WIFI_AP_SSID,           MIN_VALUE_WIFI_AP_SSID,         MAX_VALUE_WIFI_AP_SSID),
     m_apPassphrase          (m_preferences, KEY_WIFI_AP_PASSPHRASE,     NAME_WIFI_AP_PASSPHRASE,    DEFAULT_WIFI_AP_PASSPHRASE,     MIN_VALUE_WIFI_AP_PASSPHRASE,   MAX_VALUE_WIFI_AP_PASSPHRASE),
+    m_webLoginUser          (m_preferences, KEY_WEB_LOGIN_USER,         NAME_WEB_LOGIN_USER,        DEFAULT_WEB_LOGIN_USER,         MIN_VALUE_WEB_LOGIN_USER,       MAX_VALUE_WEB_LOGIN_USER),
+    m_webLoginPassword      (m_preferences, KEY_WEB_LOGIN_PASSWORD,     NAME_WEB_LOGIN_PASSWORD,    DEFAULT_WEB_LOGIN_PASSWORD,     MIN_VALUE_WEB_LOGIN_PASSWORD,   MAX_VALUE_WEB_LOGIN_PASSWORD),
     m_hostname              (m_preferences, KEY_HOSTNAME,               NAME_HOSTNAME,              DEFAULT_HOSTNAME,               MIN_VALUE_HOSTNAME,             MAX_VALUE_HOSTNAME),
     m_autoBrightnessCtrl    (m_preferences, KEY_AUTO_BRIGHTNESS_CTRL,   NAME_AUTO_BRIGHTNESS_CTRL,  DEFAULT_AUTO_BRIGHTNESS_CTRL),
     m_pluginInstallation    (m_preferences, KEY_PLUGIN_INSTALLATION,    NAME_PLUGIN_INSTALLATION,   DEFAULT_PLUGIN_INSTALLATION,    MIN_VALUE_PLUGIN_INSTALLATION,  MAX_VALUE_PLUGIN_INSTALLATION),
-    m_gmtOffset             (m_preferences, KEY_GMTOFFSET,              NAME_GMT_OFFSET,            DEFAULT_GMT_OFFSET,             MIN_VALUE_GMT_OFFSET,           MAX_VALUE_GMT_OFFSET),
-    m_isDaylightSaving      (m_preferences, KEY_DAYLIGHT_SAVING_CTRL,   NAME_DAYLIGHT_SAVING_CTRL,  DEFAULT_DAYLIGHT_SAVING_CTRL),
+    m_timezone              (m_preferences, KEY_TIMEZONE,               NAME_TIMEZONE,              DEFAULT_TIMEZONE,               MIN_VALUE_TIMEZONE,             MAX_VALUE_TIMEZONE),
     m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER),
     m_timeFormatCtrl        (m_preferences, KEY_TIME_FORMAT,            NAME_TIME_FORMAT_CTRL,      DEFAULT_TIME_FORMAT_CTRL),
     m_dateFormatCtrl        (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT_CTRL,      DEFAULT_DATE_FORMAT_CTRL),
@@ -352,21 +370,39 @@ Settings::Settings() :
     m_slotConfig            (m_preferences, KEY_SLOT_CONFIG,            NAME_SLOT_CONFIG,           DEFAULT_SLOT_CONFIG,            MIN_VALUE_SLOT_CONFIG,          MAX_VALUE_SLOT_CONFIG),
     m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE)
 {
-    m_keyValueList[0] = &m_wifiSSID;
-    m_keyValueList[1] = &m_wifiPassphrase;
-    m_keyValueList[2] = &m_apSSID;
-    m_keyValueList[3] = &m_apPassphrase;
-    m_keyValueList[4] = &m_hostname;
-    m_keyValueList[5] = &m_autoBrightnessCtrl;
-    m_keyValueList[6] = &m_pluginInstallation;
-    m_keyValueList[7] = &m_gmtOffset;
-    m_keyValueList[8] = &m_isDaylightSaving;
-    m_keyValueList[9] = &m_ntpServer;
-    m_keyValueList[10] = &m_timeFormatCtrl;
-    m_keyValueList[11] = &m_dateFormatCtrl;
-    m_keyValueList[12] = &m_maxSlots;
-    m_keyValueList[13] = &m_slotConfig;
-    m_keyValueList[14] = &m_scrollPause;
+    uint8_t idx = 0;
+
+    m_keyValueList[idx] = &m_wifiSSID;
+    ++idx;
+    m_keyValueList[idx] = &m_wifiPassphrase;
+    ++idx;
+    m_keyValueList[idx] = &m_apSSID;
+    ++idx;
+    m_keyValueList[idx] = &m_apPassphrase;
+    ++idx;
+    m_keyValueList[idx] = &m_webLoginUser;
+    ++idx;
+    m_keyValueList[idx] = &m_webLoginPassword;
+    ++idx;
+    m_keyValueList[idx] = &m_hostname;
+    ++idx;
+    m_keyValueList[idx] = &m_autoBrightnessCtrl;
+    ++idx;
+    m_keyValueList[idx] = &m_pluginInstallation;
+    ++idx;
+    m_keyValueList[idx] = &m_timezone;
+    ++idx;
+    m_keyValueList[idx] = &m_ntpServer;
+    ++idx;
+    m_keyValueList[idx] = &m_timeFormatCtrl;
+    ++idx;
+    m_keyValueList[idx] = &m_dateFormatCtrl;
+    ++idx;
+    m_keyValueList[idx] = &m_maxSlots;
+    ++idx;
+    m_keyValueList[idx] = &m_slotConfig;
+    ++idx;
+    m_keyValueList[idx] = &m_scrollPause;
 }
 
 Settings::~Settings()

@@ -45,8 +45,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <IGfx.hpp>
-#include <HttpStatus.h>
-#include <ESPAsyncWebServer.h>
 #include <Util.h>
 #include "IPluginMaintenance.hpp"
 
@@ -95,29 +93,73 @@ public:
     }
 
     /**
-     * Register web interface, e.g. REST API functionality.
-     * Overwrite it, if your plugin provides a web interface.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
      */
-    virtual void registerWebInterface(AsyncWebServer& srv, const String& baseUri) override
+    virtual void getTopics(JsonArray& topics) const
     {
-        UTIL_NOT_USED(srv);
-        UTIL_NOT_USED(baseUri);
+        UTIL_NOT_USED(topics);
         return;
     }
 
     /**
-     * Unregister web interface.
-     * Overwrite it, if your plugin provides a web interface.
-     *
-     * @param[in] srv   Webserver
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    virtual void unregisterWebInterface(AsyncWebServer& srv) override
+    virtual bool getTopic(const String& topic, JsonObject& value) const
     {
-        UTIL_NOT_USED(srv);
-        return;
+        UTIL_NOT_USED(topic);
+        UTIL_NOT_USED(value);
+
+        return false;
+    }
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    virtual bool setTopic(const String& topic, const JsonObject& value)
+    {
+        UTIL_NOT_USED(topic);
+        UTIL_NOT_USED(value);
+
+        return false;
+    }
+
+    /**
+     * Is a upload request accepted or rejected?
+     * 
+     * @param[in] topic         The topic which the upload belongs to.
+     * @param[in] srcFilename   Name of the file, which will be uploaded if accepted.
+     * @param[in] dstFilename   The destination filename, after storing the uploaded file.
+     * 
+     * @return If accepted it will return true otherwise false.
+     */
+    bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) override
+    {
+        UTIL_NOT_USED(topic);
+        UTIL_NOT_USED(srcFilename);
+        UTIL_NOT_USED(dstFilename);
+        return false;
     }
 
     /**
@@ -221,6 +263,11 @@ public:
      */
     virtual void update(IGfx& gfx) = 0;
 
+    /**
+     * Path where plugin specific configuration files shall be stored.
+     */
+    static constexpr const char*    CONFIG_PATH = "/configuration";
+
 protected:
 
     /**
@@ -235,6 +282,30 @@ protected:
         m_name(name),
         m_isEnabled(false)
     {
+    }
+
+    /**
+     * Generate the full path for any plugin instance specific kind of configuration
+     * file.
+     * 
+     * @param[in] extension Full path filename
+     *
+     * @return Full path
+     */
+    String generateFullPath(const String& extension) const
+    {
+        return String(CONFIG_PATH) + "/" + getUID() + extension;
+    }
+
+    /**
+     * Get full path (path + filename) to plugin instance specific configuration
+     * in JSON format.
+     * 
+     * @return Full path to configuration file
+     */
+    String getFullPathToConfiguration() const
+    {
+        return generateFullPath(".json");
     }
 
 private:

@@ -58,11 +58,12 @@ def anyUnpushedCommit(upstream):
     return anyUnpushedCommit
 
 def getVersion():
+    VERSION_FILENAME = "version.json"
     version = "vX.X.X"
     branchName = getCurrentGitBranch()
 
     try:
-        with open("version.json") as jsonFile:
+        with open(VERSION_FILENAME) as jsonFile:
             data = json.load(jsonFile)
             version = data["version"]
 

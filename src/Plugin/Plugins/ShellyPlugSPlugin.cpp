@@ -65,42 +65,57 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* ShellyPlugSPlugin::IMAGE_PATH     = "/images/plug.bmp";
+const char* ShellyPlugSPlugin::IMAGE_PATH   = "/images/plug.bmp";
 
-/* Initialize configuration path. */
-const char* ShellyPlugSPlugin::CONFIG_PATH    = "/configuration";
+/* Initialize plugin topic. */
+const char* ShellyPlugSPlugin::TOPIC        = "/ipAddress";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void ShellyPlugSPlugin::registerWebInterface(AsyncWebServer& srv, const String& baseUri)
+void ShellyPlugSPlugin::getTopics(JsonArray& topics) const
 {
-    m_url = baseUri + "/ipAddress";
-
-    m_callbackWebHandler = &srv.on( m_url.c_str(),
-                                    [this](AsyncWebServerRequest *request)
-                                    {
-                                        this->webReqHandler(request);
-                                    });
-
-    LOG_INFO("[%s] Register: %s", getName(), m_url.c_str());
-
-    return;
+    (void)topics.add(TOPIC);
 }
 
-void ShellyPlugSPlugin::unregisterWebInterface(AsyncWebServer& srv)
+bool ShellyPlugSPlugin::getTopic(const String& topic, JsonObject& value) const
 {
-    LOG_INFO("[%s] Unregister: %s", getName(), m_url.c_str());
+    bool isSuccessful = false;
 
-    if (false == srv.removeHandler(m_callbackWebHandler))
+    if (0U != topic.equals(TOPIC))
     {
-        LOG_WARNING("Couldn't remove %s handler.", getName());
+        String  ipAddress   = getIPAddress();
+
+        value["ipAddress"] = ipAddress;
+
+        isSuccessful = true;
     }
 
-    m_callbackWebHandler = nullptr;
+    return isSuccessful;
+}
 
-    return;
+bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC))
+    {
+        String  ipAddress;
+
+        if (false == value["set"].isNull())
+        {
+            ipAddress = value["set"].as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            setIPAddress(ipAddress);
+        }
+    }
+
+    return isSuccessful;
 }
 
 void ShellyPlugSPlugin::active(IGfx& gfx)
@@ -171,17 +186,14 @@ void ShellyPlugSPlugin::start()
 {
     lock();
 
-    m_configurationFilename = String(CONFIG_PATH) + "/" + getUID() + ".json";
-
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
      */
-    createConfigDirectory();
     if (false == loadConfiguration())
     {
         if (false == saveConfiguration())
         {
-            LOG_WARNING("Failed to create initial configuration file %s.", m_configurationFilename.c_str());
+            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
 
@@ -202,13 +214,15 @@ void ShellyPlugSPlugin::start()
 
 void ShellyPlugSPlugin::stop()
 {
+    String configurationFilename = getFullPathToConfiguration();
+
     lock();
 
     m_requestTimer.stop();
 
-    if (false != FILESYSTEM.remove(m_configurationFilename))
+    if (false != FILESYSTEM.remove(configurationFilename))
     {
-        LOG_INFO("File %s removed", m_configurationFilename.c_str());
+        LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
     unlock();
@@ -253,14 +267,15 @@ void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
     return;
 }
 
-void ShellyPlugSPlugin::getIPAddress(String& ipAddress) const
+String ShellyPlugSPlugin::getIPAddress() const
 {
-    lock();
+    String ipAddress;
 
+    lock();
     ipAddress = m_ipAddress;
     unlock();
 
-    return;
+    return ipAddress;
 }
 
 /******************************************************************************
@@ -270,78 +285,6 @@ void ShellyPlugSPlugin::getIPAddress(String& ipAddress) const
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void ShellyPlugSPlugin::webReqHandler(AsyncWebServerRequest *request)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if (nullptr == request)
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
-        String      ipAddress;
-
-        getIPAddress(ipAddress);
-
-        dataObj["ipAddress"] = ipAddress;
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* Argument missing? */
-        if (false == request->hasArg("set"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Argument is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            setIPAddress(request->arg("set"));
-
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
-
-    return;
-}
 
 bool ShellyPlugSPlugin::startHttpRequest()
 {
@@ -377,8 +320,6 @@ void ShellyPlugSPlugin::initHttpClient()
         StaticJsonDocument<FILTER_SIZE> filter;
         DeserializationError            error;
 
-        m_httpResponseReceived = true;
-
         filter["power"] = true;
 
         if (true == filter.overflowed())
@@ -398,9 +339,24 @@ void ShellyPlugSPlugin::initHttpClient()
         }
         else
         {
-            String power;
+            float       powerRaw                = jsonDoc["power"].as<float>();
+            String      power;
+            const char* reducePrecision;
+            char        powerReducedPrecison[6] = { 0 };
 
-            power = jsonDoc["power"].as<String>();
+            if (powerRaw < 99.99f)
+            {
+                reducePrecision = (powerRaw > 9.9f) ? "%.1f" : "%.2f";
+            }
+            else
+            {
+                reducePrecision = "%.0f";
+            }
+            
+            (void)snprintf(powerReducedPrecison, sizeof(powerReducedPrecison), reducePrecision, powerRaw);
+
+            power = "\\calign";
+            power += powerReducedPrecison;
             power += " W";
             
             lock();
@@ -423,23 +379,24 @@ void ShellyPlugSPlugin::initHttpClient()
     });
 }
 
-bool ShellyPlugSPlugin::saveConfiguration()
+bool ShellyPlugSPlugin::saveConfiguration() const
 {
     bool                status                  = true;
     JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              configurationFilename   = getFullPathToConfiguration();
 
     jsonDoc["shellyPlugSIP"] = m_ipAddress;
     
-    if (false == jsonFile.save(m_configurationFilename, jsonDoc))
+    if (false == jsonFile.save(configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to save file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
         status = false;
     }
     else
     {
-        LOG_INFO("File %s saved.", m_configurationFilename.c_str());
+        LOG_INFO("File %s saved.", configurationFilename.c_str());
     }
 
     return status;
@@ -451,10 +408,11 @@ bool ShellyPlugSPlugin::loadConfiguration()
     JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              configurationFilename   = getFullPathToConfiguration();
 
-    if (false == jsonFile.load(m_configurationFilename, jsonDoc))
+    if (false == jsonFile.load(configurationFilename, jsonDoc))
     {
-        LOG_WARNING("Failed to load file %s.", m_configurationFilename.c_str());
+        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
     else if (false == jsonDoc["shellyPlugSIP"].is<String>())
@@ -468,17 +426,6 @@ bool ShellyPlugSPlugin::loadConfiguration()
     }
 
     return status;
-}
-
-void ShellyPlugSPlugin::createConfigDirectory()
-{
-    if (false == FILESYSTEM.exists(CONFIG_PATH))
-    {
-        if (false == FILESYSTEM.mkdir(CONFIG_PATH))
-        {
-            LOG_WARNING("Couldn't create directory: %s", CONFIG_PATH);
-        }
-    }
 }
 
 void ShellyPlugSPlugin::lock() const

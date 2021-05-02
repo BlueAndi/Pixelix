@@ -107,7 +107,7 @@ public:
      * 
      * @return If successful, it will return true otherwise false.
      */
-    bool save(const String& fileName, JsonDocument& doc);
+    bool save(const String& fileName, const JsonDocument& doc);
 
 protected:
 

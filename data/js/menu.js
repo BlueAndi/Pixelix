@@ -10,6 +10,9 @@ menu.data = [{
     "title": "Plugins",
     "hyperRef": "#",
     "subMenu": [{
+        "title": "BTC Quote Plugin",
+        "hyperRef": "/plugins/BTCQuotePlugin.html"
+    }, {
         "title": "Countdown Plugin",
         "hyperRef": "/plugins/CountdownPlugin.html"
     }, {
@@ -37,6 +40,9 @@ menu.data = [{
         "title": "JustText Plugin",
         "hyperRef": "/plugins/JustTextPlugin.html"
     }, {
+        "title": "OpenWeather Plugin",
+        "hyperRef": "/plugins/OpenWeatherPlugin.html"
+    }, {
         "title": "Rainbow Plugin",
         "hyperRef": "/plugins/RainbowPlugin.html"
     }, {
@@ -48,6 +54,9 @@ menu.data = [{
     }, {
         "title": "SysMsg Plugin",
         "hyperRef": "/plugins/SysMsgPlugin.html"
+    }, {
+        "title": "TempHumid Plugin",
+        "hyperRef": "/plugins/TempHumidPlugin.html"
     }, {
         "title": "Test Plugin",
         "hyperRef": "/plugins/TestPlugin.html"

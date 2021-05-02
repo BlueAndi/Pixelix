@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "WebSocket.h"
+#include "Settings.h"
 
 #include "WsCmdGetDisp.h"
 #include "WsCmdSlots.h"
@@ -134,11 +135,27 @@ static WsCmd*       gWsCommands[] =
 
 void WebSocketSrv::init(AsyncWebServer& srv)
 {
+    String      webLoginUser;
+    String      webLoginPassword;
+
+    if (false == Settings::getInstance().open(true))
+    {
+        webLoginUser        = Settings::getInstance().getWebLoginUser().getDefault();
+        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        webLoginUser        = Settings::getInstance().getWebLoginUser().getValue();
+        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getValue();
+
+        Settings::getInstance().close();
+    }
+
     /* Register websocket event handler */
     m_webSocket.onEvent(onEvent);
 
     /* HTTP Authenticate before switch to Websocket protocol */
-    m_webSocket.setAuthentication(WebConfig::WEB_LOGIN_USER, WebConfig::WEB_LOGIN_PASSWORD);
+    m_webSocket.setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     /* Register websocket on webserver */
     srv.addHandler(&m_webSocket);

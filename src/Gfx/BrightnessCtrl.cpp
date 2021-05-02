@@ -66,9 +66,10 @@ void BrightnessCtrl::init()
 {
     float lightNormalized = AmbientLightSensor::getInstance().getNormalizedLight();
 
-    m_recentShortTermAverage    = lightNormalized;
-    m_recentLongTermAverage     = lightNormalized;
-    setAmbientLight(m_recentShortTermAverage);
+    m_recentShortTermAverage.setStartValue(lightNormalized);
+    m_recentLongTermAverage.setStartValue(lightNormalized);
+
+    setAmbientLight(m_recentShortTermAverage.getValue());
     updateBrightnessGoal();
 
     return;
@@ -97,9 +98,10 @@ bool BrightnessCtrl::enable(bool state)
         {
             float lightNormalized = AmbientLightSensor::getInstance().getNormalizedLight();
 
-            m_recentShortTermAverage    = lightNormalized;
-            m_recentLongTermAverage     = lightNormalized;
-            setAmbientLight(m_recentShortTermAverage);
+            m_recentShortTermAverage.setStartValue(lightNormalized);
+            m_recentLongTermAverage.setStartValue(lightNormalized);
+
+            setAmbientLight(m_recentShortTermAverage.getValue());
             updateBrightnessGoal();
 
             /* Display brightness will be automatically adjusted in the process() method. */
@@ -149,8 +151,8 @@ void BrightnessCtrl::process()
         updateBrightness();
 
         /* The ambient environment appears to be brightening. */
-        if ((m_brighteningThreshold < m_recentShortTermAverage) &&
-            (m_brighteningThreshold < m_recentLongTermAverage))
+        if ((m_brighteningThreshold < m_recentShortTermAverage.getValue()) &&
+            (m_brighteningThreshold < m_recentLongTermAverage.getValue()))
         {
             if (AMBIENT_LIGHT_DIRECTION_BRIGTHER != m_direction)
             {
@@ -162,7 +164,7 @@ void BrightnessCtrl::process()
             else if ((true == m_lightSensorDebounceTimer.isTimerRunning()) &&
                      (true == m_lightSensorDebounceTimer.isTimeout()))
             {
-                setAmbientLight(m_recentShortTermAverage);
+                setAmbientLight(m_recentShortTermAverage.getValue());
                 updateBrightnessGoal();
             }
             else
@@ -171,8 +173,8 @@ void BrightnessCtrl::process()
             }
         }
         /* The ambient environment appears to be darkening. */
-        else if ((m_darkeningThreshold > m_recentShortTermAverage) &&
-                 (m_darkeningThreshold > m_recentLongTermAverage))
+        else if ((m_darkeningThreshold > m_recentShortTermAverage.getValue()) &&
+                 (m_darkeningThreshold > m_recentLongTermAverage.getValue()))
         {
             if (AMBIENT_LIGHT_DIRECTION_DARKER != m_direction)
             {
@@ -184,7 +186,7 @@ void BrightnessCtrl::process()
             else if ((true == m_lightSensorDebounceTimer.isTimerRunning()) &&
                      (true == m_lightSensorDebounceTimer.isTimeout()))
             {
-                setAmbientLight(m_recentShortTermAverage);
+                setAmbientLight(m_recentShortTermAverage.getValue());
                 updateBrightnessGoal();
             }
             else
@@ -221,8 +223,8 @@ BrightnessCtrl::BrightnessCtrl() :
     m_brightness(0U),
     m_minBrightness((UINT8_MAX * 10U) / 100U),  /* 10% */
     m_maxBrightness(UINT8_MAX),                 /* 100% */
-    m_recentShortTermAverage(0.0F),
-    m_recentLongTermAverage(0.0F),
+    m_recentShortTermAverage(SHORT_TERM_AVG_LIGHT_TIME_CONST, 0.0F),
+    m_recentLongTermAverage(LONG_TERM_AVG_LIGHT_TIME_CONST, 0.0F),
     m_brighteningThreshold(0.0F),
     m_darkeningThreshold(0.0F),
     m_ambientLight(0.0F),
@@ -249,11 +251,8 @@ void BrightnessCtrl::setAmbientLight(float light)
 
 void BrightnessCtrl::applyLightSensorMeasurement(uint32_t dTime, float light)
 {
-    m_recentShortTermAverage += (light - m_recentShortTermAverage) * dTime
-        / (SHORT_TERM_AVG_LIGHT_TIME_CONST + dTime);
-
-    m_recentLongTermAverage += (light - m_recentLongTermAverage)* dTime
-        / (LONG_TERM_AVG_LIGHT_TIME_CONST + dTime);
+    (void)m_recentShortTermAverage.calc(light, dTime);
+    (void)m_recentLongTermAverage.calc(light, dTime);
 
     //LOG_INFO("Light: m %0.3f s-avg %0.3f l-avg %0.3f", light, m_recentShortTermAverage, m_recentLongTermAverage);
 

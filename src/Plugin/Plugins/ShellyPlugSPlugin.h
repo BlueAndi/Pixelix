@@ -81,10 +81,7 @@ public:
         m_bitmapWidget(),
         m_textWidget("?"),
         m_ipAddress("192.168.1.123"), /* Example data */
-        m_configurationFilename(""),
-        m_httpResponseReceived(false),
-        m_url(),
-        m_callbackWebHandler(nullptr),
+        m_client(),
         m_xMutex(nullptr),
         m_requestTimer()
     {
@@ -99,6 +96,11 @@ public:
      */
     ~ShellyPlugSPlugin()
     {
+        /* Abort any pending TCP request to avoid getting a callback after the
+         * object is destroyed.
+         */
+        m_client.abort();
+        
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -132,19 +134,41 @@ public:
     }
 
     /**
-     * Register web interface, e.g. REST API functionality.
-     *
-     * @param[in] srv       Webserver
-     * @param[in] baseUri   Base URI, use this and append plugin specific part.
+     * Get plugin topics, which can be get/set via different communication
+     * interfaces like REST, websocket, MQTT, etc.
+     * 
+     * Example:
+     * {
+     *     "topics": [
+     *         "/text"
+     *     ]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
      */
-    void registerWebInterface(AsyncWebServer& srv, const String& baseUri) final;
+    void getTopics(JsonArray& topics) const final;
 
     /**
-     * Unregister web interface.
-     *
-     * @param[in] srv   Webserver
+     * Get a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[out]  value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void unregisterWebInterface(AsyncWebServer& srv) final;
+    bool getTopic(const String& topic, JsonObject& value) const final;
+
+    /**
+     * Set a topic data.
+     * Note, currently only JSON format is supported.
+     * 
+     * @param[in]   topic   The topic which data shall be retrieved.
+     * @param[in]   value   The topic value in JSON format.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
      * This method will be called in case the plugin is set active, which means
@@ -189,10 +213,10 @@ public:
 
     /**
      * Get ip-address.
-     *
-     * @param[out] ipAddress IP-address
+     * 
+     * @return IP-address
      */
-    void getIPAddress(String& ipAddress) const;
+    String getIPAddress() const;
 
     /**
      * Set ip-address.
@@ -219,9 +243,9 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Configuration path within the filesystem.
+     * Plugin topic, used for parameter exchange.
      */
-    static const char*      CONFIG_PATH;
+    static const char*      TOPIC;
 
     /**
      * Period in ms for requesting power consumption from the Shelly PlugS.
@@ -240,21 +264,9 @@ private:
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_ipAddress;                /**< IP-address of the ShellyPlugS server. */
-    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
-    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    String                      m_url;                      /**< REST API URL */
-    AsyncCallbackWebHandler*    m_callbackWebHandler;       /**< Callback web handler */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
     SimpleTimer                 m_requestTimer;             /**< Timer is used for cyclic ShellyPlugS  http request. */
-
-    /**
-     * Instance specific web request handler, called by the static web request
-     * handler. It will really handle the request.
-     *
-     * @param[in] request   Web request
-     */
-    void webReqHandler(AsyncWebServerRequest *request);
 
     /**
      * Request new data.
@@ -271,18 +283,12 @@ private:
     /**
      * Saves current configuration to JSON file.
      */
-    bool saveConfiguration();
+    bool saveConfiguration() const;
 
     /**
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * If configuration directory doesn't exists, it will be created.
-     * Otherwise nothing happens.
-     */
-    void createConfigDirectory();
 
     /**
      * Protect against concurrent access.

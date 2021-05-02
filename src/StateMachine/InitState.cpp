@@ -59,6 +59,7 @@
 #include <Util.h>
 #include <ESPmDNS.h>
 
+#include "BTCQuotePlugin.h"
 #include "CountdownPlugin.h"
 #include "DatePlugin.h"
 #include "DateTimePlugin.h"
@@ -68,10 +69,12 @@
 #include "IconTextLampPlugin.h"
 #include "IconTextPlugin.h"
 #include "JustTextPlugin.h"
+#include "OpenWeatherPlugin.h"
 #include "RainbowPlugin.h"
 #include "ShellyPlugSPlugin.h"
 #include "SunrisePlugin.h"
 #include "SysMsgPlugin.h"
+#include "TempHumidPlugin.h"
 #include "TestPlugin.h"
 #include "TimePlugin.h"
 #include "VolumioPlugin.h"
@@ -113,9 +116,6 @@ void InitState::entry(StateMachine& sm)
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
 
-    /* Register plugins. This must be done before system message handler is initialized! */
-    registerPlugins();
-
     /* Initialize button driver */
     if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
     {
@@ -127,6 +127,21 @@ void InitState::entry(StateMachine& sm)
     {
         LOG_FATAL("Couldn't mount the filesystem.");
         isError = true;
+    }
+    else
+    {
+        /* Prepare everything for the plugins. */
+        PluginMgr::getInstance().begin();
+
+        /* Register plugins. This must be done before system message handler is initialized! */
+        registerPlugins();
+    }
+
+    /* Continoue only if there is no error yet. */
+    if (true == isError)
+    {
+        /* Error detected. */
+        ;
     }
     /* Start LED matrix */
     else if (false == LedMatrix::getInstance().begin())
@@ -354,6 +369,7 @@ void InitState::registerPlugins()
 
     /* Register in alphabetic order. */
 
+    pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);
     pluginMgr.registerPlugin("CountdownPlugin", CountdownPlugin::create);
     pluginMgr.registerPlugin("DatePlugin", DatePlugin::create);
     pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
@@ -363,10 +379,12 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
     pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
+    pluginMgr.registerPlugin("OpenWeatherPlugin", OpenWeatherPlugin::create);
     pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
     pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
+    pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
     pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
     pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
     pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);

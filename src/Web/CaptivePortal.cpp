@@ -34,10 +34,10 @@
  *****************************************************************************/
 #include "CaptivePortal.h"
 #include "HttpStatus.h"
-#include "WebConfig.h"
 #include "Settings.h"
 #include "CaptivePortalHandler.h"
 #include "FileSystem.h"
+#include "Settings.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -89,16 +89,38 @@ static bool                     gIsRestartRequested         = false;
 
 void CaptivePortal::init(AsyncWebServer& srv)
 {
+    String      webLoginUser;
+    String      webLoginPassword;
+
+    if (false == Settings::getInstance().open(true))
+    {
+        webLoginUser        = Settings::getInstance().getWebLoginUser().getDefault();
+        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getDefault();
+    }
+    else
+    {
+        webLoginUser        = Settings::getInstance().getWebLoginUser().getValue();
+        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getValue();
+
+        Settings::getInstance().close();
+    }
+
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesystem for 1 hour.
      */
-    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600");
-    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600");
-    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600");
-    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600");
+    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     /* Add the captive portal request handler at last, because it will handle everything. */
-    (void)srv.addHandler(&gCaptivePortalReqHandler).setFilter(ON_AP_FILTER);
+    (void)srv.addHandler(&gCaptivePortalReqHandler)
+        .setFilter(ON_AP_FILTER)
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     return;
 }

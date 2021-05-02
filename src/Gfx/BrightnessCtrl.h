@@ -55,6 +55,96 @@
  *****************************************************************************/
 
 /**
+ * Recursive average IIR filter.
+ * 
+ * y[n] = ax[n] + (1-a)y[n-1]
+ * 
+ * n: Sample number
+ * x[n]: Input value
+ * y[n]: Output value
+ * y[n-1]: Last output value
+ * a: Defines how deep or sharp the filter is [0;1].
+ * 
+ * => y[n] = y[n-1] + a * (x[n] - y[n-1])
+ * 
+ * The weight for a depends on the filter time constant and the delta time
+ * for each input value.
+ * 
+ * a = dT / (b + dT)
+ * 
+ * dT: Delta time (duration between current input value and last one)
+ * b: Filter time constant
+ * 
+ * @tparam T    The type of the filter values.
+ */
+template <typename T>
+class RecursiveAverageIIR
+{
+public:
+
+    /**
+     * Create the filter, based on given information.
+     * 
+     * @param[in] filterTimeConstant    The filter time constant.
+     * @param[in] startValue            Defines the start value for the internal filter memory.
+     */
+    RecursiveAverageIIR(uint32_t filterTimeConstant, T startValue) :
+        m_filterTimeConstant(filterTimeConstant),
+        m_value(startValue)
+    {
+    }
+
+    /**
+     * Destroy the filter.
+     */
+    ~RecursiveAverageIIR()
+    {
+    }
+
+    /**
+     * Calculate new filter output value, based on given input value.
+     * 
+     * @param[in] input     Input value
+     * @param[in] deltaTime Time difference from current input value to last given input value.
+     * 
+     * @return Filter output value
+     */
+    T calc(T input, uint32_t deltaTime)
+    {
+        m_value += (input - m_value) * deltaTime / (m_filterTimeConstant + deltaTime);
+
+        return m_value;
+    }
+
+    /**
+     * Set the start value of the filter or set the current filter output value.
+     * 
+     * @param[in] startValue    The new filter start value.
+     */
+    void setStartValue(T startValue)
+    {
+        m_value = startValue;
+    }
+
+    /**
+     * Get current filter output value.
+     * 
+     * @return Filter output value
+     */
+    T getValue() const
+    {
+        return m_value;
+    }
+
+private:
+
+    uint32_t    m_filterTimeConstant;   /** Filter time constant. */
+    T           m_value;                /** Current filter output value. */
+
+    RecursiveAverageIIR();
+};
+
+/**
  * The brightness controller sets the display brightness depended on the
  * ambient light.
  */
@@ -175,54 +265,54 @@ private:
     };
 
     /** Timer, used for automatic brightness adjustment. */
-    SimpleTimer             m_autoBrightnessTimer;
+    SimpleTimer                 m_autoBrightnessTimer;
 
     /** Display brightness in digits [0; 255]. */
-    uint8_t                 m_brightness;
+    uint8_t                     m_brightness;
 
     /** Min. brightness level in digits [0; 255]. */
-    uint8_t                 m_minBrightness;
+    uint8_t                     m_minBrightness;
 
     /** Max. brightness level in digits [0; 255]. */
-    uint8_t                 m_maxBrightness;
+    uint8_t                     m_maxBrightness;
 
     /** Short-term moving average of light (normalized) [0.0; 1.0]. */
-    float                   m_recentShortTermAverage;
+    RecursiveAverageIIR<float>  m_recentShortTermAverage;
 
     /** Long-term moving average of light (normalized) [0.0; 1.0]. */
-    float                   m_recentLongTermAverage;
+    RecursiveAverageIIR<float>  m_recentLongTermAverage;
 
     /**
      * Brightening threshold (normalized) [0.0; 1.0]. The ambient light value
      * must be greater than this threshold to consider it.
      */
-    float                   m_brighteningThreshold;
+    float                       m_brighteningThreshold;
 
     /**
      * Darkening threshold (normalized) [0.0; 1.0]. The ambient light value
      * must be lower than this threshold to consider it.
      */
-    float                   m_darkeningThreshold;
+    float                       m_darkeningThreshold;
 
     /**
      * Ambient light (normalized) [0.0; 1.0].
      */
-    float                   m_ambientLight;
+    float                       m_ambientLight;
 
     /**
      * Light sensor debounce timestamp value.
      */
-    SimpleTimer             m_lightSensorDebounceTimer;
+    SimpleTimer                 m_lightSensorDebounceTimer;
 
     /**
      * Direction of changing ambient light.
      */
-    AbientLightDirection    m_direction;
+    AbientLightDirection        m_direction;
 
     /**
      * Brightness goal in digits [0; 255].
      */
-    uint8_t                 m_brightnessGoal;
+    uint8_t                     m_brightnessGoal;
 
     /**
      * Constructs a brightness controller instance.
