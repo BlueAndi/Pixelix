@@ -68,6 +68,7 @@ For more information, see the [documentation](./doc/README.md).
 * [Bootstrap](https://getbootstrap.com/) - CSS Framework - MIT License
 * [POPPER JS](https://popper.js.org/) - POPPER JS - MIT License
 * [jQuery](https://jquery.com/) - Javascript librariy for DOM handling - MIT License
+* [DHTesp](https://github.com/beegee-tokyo/DHTesp) - An Arduino library for reading the DHT family of temperature and humidity sensors. - GPL-3.0 License
 
 # FAQ
 
