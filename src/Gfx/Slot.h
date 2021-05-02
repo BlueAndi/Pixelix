@@ -137,8 +137,8 @@ private:
     uint32_t            m_duration; /**< Duration in ms, how long the plugin shall be active. */
     bool                m_isLocked; /**< Is slot locked or not. */
 
-    Slot(const Slot& matrix);
-    Slot& operator=(const Slot& matrix);
+    Slot(const Slot& slot);
+    Slot& operator=(const Slot& slot);
 };
 
 /******************************************************************************
