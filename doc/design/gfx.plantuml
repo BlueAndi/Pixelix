@@ -133,6 +133,8 @@ class "IGfx" as igfx {
 note left of igfx
     The IGfx interface includes the concrete color information and
     includes arduino print support.
+    All widgets have either a strong coupling with it or at least
+    depend on it.
 end note
 
 PixelixGfx <|-- igfx
