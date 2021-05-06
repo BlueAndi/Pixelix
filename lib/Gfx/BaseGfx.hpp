@@ -143,7 +143,7 @@ public:
      *
      * @param[in] x     x-coordinate
      * @param[in] y     y-coordinate
-     * @param[in] ratio Dim ration [0; 255]
+     * @param[in] ratio Dim ratio [0; 255]
      */
     virtual void dimPixel(int16_t x, int16_t y, uint8_t ratio) = 0;
 
