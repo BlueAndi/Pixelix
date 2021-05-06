@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  LED matrix
+ * @brief  LED matrix display
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __LEDMATRIX_H__
-#define __LEDMATRIX_H__
+#ifndef __DISPLAY_H__
+#define __DISPLAY_H__
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IGfx.hpp>
+#include <IDisplay.hpp>
 #include <NeoPixelBrightnessBus.h>
 #include <ColorDef.hpp>
 
@@ -59,30 +59,30 @@
  *****************************************************************************/
 
 /**
- * Specific LED matrix.
+ * This display represents a LED matrix of 32x8 NeoPixels (WS2812B).
  */
-class LedMatrix : public IGfx
+class Display : public IDisplay
 {
 public:
 
     /**
-     * Get LED matrix instance.
+     * Get display instance.
      *
-     * @return LED matrix
+     * @return Display
      */
-    static LedMatrix& getInstance()
+    static Display& getInstance()
     {
-        static LedMatrix instance; /* singleton idiom to force initialization in the first usage. */
+        static Display instance; /* singleton idiom to force initialization in the first usage. */
 
         return instance;
     }
 
     /**
-     * Initialize base driver for the LED matrix.
+     * Initialize base driver for the display.
      *
      * @return If successful, returns true otherwise false.
      */
-    bool begin()
+    bool begin() final
     {
         m_strip.Begin();
         m_strip.Show();
@@ -91,20 +91,22 @@ public:
     }
 
     /**
-     * Show internal framebuffer on physical LED matrix.
+     * Show framebuffer on physical display. This may be synchronous
+     * or asynchronous.
      */
-    void show()
+    void show() final
     {
         m_strip.Show();
         return;
     }
 
     /**
-     * LED matrix is ready, when the last physical pixel update is finished.
+     * The display is ready, when the last physical pixel update is finished.
+     * A asynchronous display update, triggered by show() can be observed this way.
      *
      * @return If ready for another update via show(), it will return true otherwise false.
      */
-    bool isReady() const
+    bool isReady() const final
     {
         return m_strip.CanShow();
     }
@@ -114,7 +116,7 @@ public:
      *
      * @param[in] brightness    Brightness value [0; 255]
      */
-    void setBrightness(uint8_t brightness)
+    void setBrightness(uint8_t brightness) final
     {
         /* To protect the the electronic parts, the brigntness will be scaled down
          * according to the max. supply current.
@@ -128,7 +130,7 @@ public:
     }
 
     /**
-     * Clear LED matrix.
+     * Clear display.
      */
     void clear()
     {
@@ -155,20 +157,20 @@ private:
     NeoTopology<ColumnMajorAlternatingLayout>               m_topo;
 
     /**
-     * Construct LED matrix.
+     * Construct display.
      */
-    LedMatrix();
+    Display();
 
     /**
-     * Destroys LED matrix.
+     * Destroys display.
      */
-    ~LedMatrix();
+    ~Display();
 
-    LedMatrix(const LedMatrix& matrix);
-    LedMatrix& operator=(const LedMatrix& matrix);
+    Display(const Display& display);
+    Display& operator=(const Display& display);
 
     /**
-     * Draw a single pixel in the matrix.
+     * Draw a single pixel on the display.
      *
      * @param[in] x     x-coordinate
      * @param[in] y     y-coordinate
@@ -197,7 +199,7 @@ private:
      *
      * @param[in] x     x-coordinate
      * @param[in] y     y-coordinate
-     * @param[in] ratio Dim ration [0; 255]
+     * @param[in] ratio Dim ratio [0; 255]
      */
     void dimPixel(int16_t x, int16_t y, uint8_t ratio) final
     {
@@ -234,6 +236,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __LEDMATRIX_H__ */
+#endif  /* __DISPLAY_H__ */
 
 /** @} */

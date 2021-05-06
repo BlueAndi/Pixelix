@@ -37,9 +37,9 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Board.h>
+#include <Display.h>
 
 #include "ButtonDrv.h"
-#include "LedMatrix.h"
 #include "DisplayMgr.h"
 #include "SysMsg.h"
 #include "Version.h"
@@ -143,10 +143,10 @@ void InitState::entry(StateMachine& sm)
         /* Error detected. */
         ;
     }
-    /* Start LED matrix */
-    else if (false == LedMatrix::getInstance().begin())
+    /* Start display */
+    else if (false == Display::getInstance().begin())
     {
-        LOG_FATAL("Failed to initialize LED matrix.");
+        LOG_FATAL("Failed to initialize display.");
         isError = true;
     }
     /* Initialize display manager */

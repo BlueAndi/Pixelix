@@ -25,18 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Websocket command get display content
+ * @brief  TTGO T-Display
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmdGetDisp.h"
-#include "DisplayMgr.h"
-
-#include <Util.h>
-#include <Display.h>
+#include "Display.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -62,56 +58,6 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
-{
-    if ((nullptr == server) ||
-        (nullptr == client))
-    {
-        return;
-    }
-
-    /* Any error happended? */
-    if (true == m_isError)
-    {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
-    }
-    else
-    {
-        uint32_t    index       = 0U;
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
-        IDisplay&   display     = Display::getInstance();
-        uint32_t    framebuffer[display.getWidth() * display.getHeight()];
-        uint8_t     slotId      = DisplayMgr::SLOT_ID_INVALID;
-
-        DisplayMgr::getInstance().getFBCopy(framebuffer, UTIL_ARRAY_NUM(framebuffer), &slotId);
-
-        rsp += DELIMITER;
-        rsp += slotId;
-
-        for(index = 0U; index <  UTIL_ARRAY_NUM(framebuffer); ++index)
-        {
-            rsp += DELIMITER;
-            rsp += Util::uint32ToHex(framebuffer[index]);
-        }
-
-        server->text(client->id(), rsp);
-    }
-
-    m_isError = false;
-
-    return;
-}
-
-void WsCmdGetDisp::setPar(const char* par)
-{
-    UTIL_NOT_USED(par);
-
-    m_isError = true;
-
-    return;
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -119,6 +65,22 @@ void WsCmdGetDisp::setPar(const char* par)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+Display::Display() :
+    IDisplay(MATRIX_WIDTH, MATRIX_HEIGHT),
+    m_tft(),
+    m_ledMatrix()
+{
+}
+
+Display::~Display()
+{
+}
+
+Color Display::getColor(int16_t x, int16_t y) const
+{
+    return m_ledMatrix[x][y];
+}
 
 /******************************************************************************
  * External Functions

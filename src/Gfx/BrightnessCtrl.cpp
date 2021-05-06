@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "BrightnessCtrl.h"
-#include "LedMatrix.h"
 #include "AmbientLightSensor.h"
 
 #include <Logging.h>
@@ -62,10 +61,11 @@
  * Public Methods
  *****************************************************************************/
 
-void BrightnessCtrl::init()
+void BrightnessCtrl::init(IDisplay& display)
 {
     float lightNormalized = AmbientLightSensor::getInstance().getNormalizedLight();
 
+    m_display = &display;
     m_recentShortTermAverage.setStartValue(lightNormalized);
     m_recentLongTermAverage.setStartValue(lightNormalized);
 
@@ -204,7 +204,11 @@ void BrightnessCtrl::setBrightness(uint8_t level)
     if (false == isEnabled())
     {
         m_brightness = level;
-        LedMatrix::getInstance().setBrightness(m_brightness);
+
+        if (nullptr != m_display)
+        {
+            m_display->setBrightness(m_brightness);
+        }
     }
 
     return;
@@ -219,6 +223,7 @@ void BrightnessCtrl::setBrightness(uint8_t level)
  *****************************************************************************/
 
 BrightnessCtrl::BrightnessCtrl() :
+    m_display(nullptr),
     m_autoBrightnessTimer(),
     m_brightness(0U),
     m_minBrightness((UINT8_MAX * 10U) / 100U),  /* 10% */
@@ -273,7 +278,6 @@ void BrightnessCtrl::updateBrightnessGoal()
 
 void BrightnessCtrl::updateBrightness()
 {
-    LedMatrix&      matrix  = LedMatrix::getInstance();
     const uint8_t   STEP    = 2U;
 
     if (m_brightnessGoal > m_brightness)
@@ -287,7 +291,10 @@ void BrightnessCtrl::updateBrightness()
             m_brightness += STEP;
         }
 
-        matrix.setBrightness(m_brightness);
+        if (nullptr != m_display)
+        {
+            m_display->setBrightness(m_brightness);
+        }
     }
     else if (m_brightnessGoal < m_brightness)
     {
@@ -300,7 +307,10 @@ void BrightnessCtrl::updateBrightness()
             m_brightness -= STEP;
         }
 
-        matrix.setBrightness(m_brightness);
+        if (nullptr != m_display)
+        {
+            m_display->setBrightness(m_brightness);
+        }
     }
     else
     {

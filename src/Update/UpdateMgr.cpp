@@ -36,9 +36,9 @@
 
 #include <Logging.h>
 #include <Esp.h>
+#include <Display.h>
 
 #include "FileSystem.h"
-#include "LedMatrix.h"
 #include "MyWebServer.h"
 #include "Settings.h"
 #include "DisplayMgr.h"
@@ -183,15 +183,15 @@ void UpdateMgr::updateProgress(uint8_t progress)
         /* Update display manually. Note, that this must be done to avoid
          * artifacts on the display, caused by long flash write cycles.
          */
-        LedMatrix::getInstance().clear();
-        m_progressBar.update(LedMatrix::getInstance()); // Draw the progress bar in the background
-        m_textWidget.update(LedMatrix::getInstance());  // Overlay with the text
-        LedMatrix::getInstance().show();
+        Display::getInstance().clear();
+        m_progressBar.update(Display::getInstance()); // Draw the progress bar in the background
+        m_textWidget.update(Display::getInstance());  // Overlay with the text
+        Display::getInstance().show();
 
         /* Wait until the LED matrix is updated to avoid artifacts on the
          * display.
          */
-        while(false == LedMatrix::getInstance().isReady())
+        while(false == Display::getInstance().isReady())
         {
             /* Just wait and give other tasks a chance. */
             delay(1U);

@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <SimpleTimer.hpp>
+#include <IDisplay.hpp>
 
 /******************************************************************************
  * Macros
@@ -166,8 +167,10 @@ public:
 
     /**
      * Initialize brightness controller and set initial display brightness.
+     * 
+     * @param[in] display   The display, which to control.
      */
-    void init();
+    void init(IDisplay& display);
 
     /**
      * Enable/Disable automatic brightness adjustment.
@@ -263,6 +266,9 @@ private:
         AMBIENT_LIGHT_DIRECTION_BRIGTHER = 0,   /**< Its getting brighter. */
         AMBIENT_LIGHT_DIRECTION_DARKER          /**< Its getting darker. */
     };
+
+    /** The interface for the display, where to control the brightness. */
+    IDisplay*                   m_display;
 
     /** Timer, used for automatic brightness adjustment. */
     SimpleTimer                 m_autoBrightnessTimer;

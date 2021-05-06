@@ -33,11 +33,11 @@
  * Includes
  *****************************************************************************/
 #include "DisplayMgr.h"
-#include "LedMatrix.h"
 #include "AmbientLightSensor.h"
 #include "Settings.h"
 #include "BrightnessCtrl.h"
 
+#include <Display.h>
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
@@ -73,7 +73,7 @@ bool DisplayMgr::begin()
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.
      */
-    BrightnessCtrl::getInstance().init();
+    BrightnessCtrl::getInstance().init(Display::getInstance());
     BrightnessCtrl::getInstance().setBrightness(BRIGHTNESS_DEFAULT);
 
     /* No slots available? */
@@ -108,7 +108,7 @@ bool DisplayMgr::begin()
 
         for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
         {
-            m_framebuffers[idx] = new Canvas(LedMatrix::getInstance().getWidth(), LedMatrix::getInstance().getHeight(), 0, 0, true);
+            m_framebuffers[idx] = new Canvas(Display::getInstance().getWidth(), Display::getInstance().getHeight(), 0, 0, true);
 
             if (nullptr == m_framebuffers[idx])
             {
@@ -627,7 +627,7 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
     if ((nullptr != fb) &&
         (0 < length))
     {
-        LedMatrix&  matrix  = LedMatrix::getInstance();
+        IDisplay&   display = Display::getInstance();
         int16_t     x       = 0;
         int16_t     y       = 0;
         size_t      index   = 0;
@@ -635,11 +635,11 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
         lock();
 
         /* Copy framebuffer after it is completely updated. */
-        for(y = 0; y < matrix.getHeight(); ++y)
+        for(y = 0; y < display.getHeight(); ++y)
         {
-            for(x = 0; x < matrix.getWidth(); ++x)
+            for(x = 0; x < display.getWidth(); ++x)
             {
-                fb[index] = matrix.getColor(x, y);
+                fb[index] = display.getColor(x, y);
                 ++index;
 
                 if (length <= index)
@@ -834,7 +834,7 @@ void DisplayMgr::fadeInOut(IGfx& dst)
 
 void DisplayMgr::process()
 {
-    LedMatrix&  matrix  = LedMatrix::getInstance();
+    IDisplay&   display = Display::getInstance();
     uint8_t     index   = 0U;
 
     lock();
@@ -978,7 +978,7 @@ void DisplayMgr::process()
             }
             else
             {
-                m_selectedPlugin->active(matrix);
+                m_selectedPlugin->active(display);
             }
 
             LOG_INFO("Slot %u (%s) now active.", m_selectedSlot, m_selectedPlugin->getName());
@@ -990,7 +990,7 @@ void DisplayMgr::process()
             {
                 m_currCanvas->fillScreen(ColorDef::BLACK);
             }
-            matrix.clear();
+            display.clear();
         }
     }
 
@@ -1034,12 +1034,12 @@ void DisplayMgr::process()
     /* Update display (main canvas available) */
     if (nullptr != m_currCanvas)
     {
-        fadeInOut(matrix);
+        fadeInOut(display);
     }
     /* Update display (main canvas not available) */
     else if (nullptr != m_selectedPlugin)
     {
-        m_selectedPlugin->update(matrix);
+        m_selectedPlugin->update(display);
     }
     /* No plugin selected. */
     else
@@ -1049,7 +1049,7 @@ void DisplayMgr::process()
     }
 
     delay(1U);
-    matrix.show();
+    display.show();
 
     unlock();
 
@@ -1071,10 +1071,8 @@ void DisplayMgr::updateTask(void* parameters)
             uint32_t    duration    = 0U;
             bool        abort       = false;
 
-            /* Max. time needed to load the data into the pixels.
-             * Only a 1 ms tolerance is added, which should be enough.
-             */
-            const uint32_t  MAX_LOOP_TIME   = Board::LedMatrix::matrixLoadTime + 1U; /* ms */
+            /* Observe the display refresh and limit the duration to 70% of refresh period. */
+            const uint32_t  MAX_LOOP_TIME   = (TASK_PERIOD * 7U) / (10U);
 
             /* Refresh display content periodically */
             displayMgr->process();
@@ -1084,7 +1082,7 @@ void DisplayMgr::updateTask(void* parameters)
              * access.
              */
             timestamp = millis();
-            while((false == LedMatrix::getInstance().isReady()) && (false == abort))
+            while((false == Display::getInstance().isReady()) && (false == abort))
             {
                 duration = millis() - timestamp;
 

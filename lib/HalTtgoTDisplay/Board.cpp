@@ -27,123 +27,94 @@
 /**
  * @brief  Board Abstraction
  * @author Andreas Merkle <web@blue-andi.de>
- *
- * @addtogroup hal
- *
- * @{
  */
-
-#ifndef __BOARD_H__
-#define __BOARD_H__
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Io.hpp"
+#include "Board.h"
+
+#include <Util.h>
+#include <esp_int_wdt.h>
+#include <esp_task_wdt.h>
 
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
 
-/** Electronic board abstraction */
-namespace Board
-{
+using namespace Board;
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
 
 /******************************************************************************
- * Variables
+ * Prototypes
  *****************************************************************************/
 
-/** Pin number of all used pins. */
-namespace Pin
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
+
+/** A list of all used i/o pins, used for intializaton. */
+static const IoPin* ioPinList[] =
 {
-    /** Pin number of onboard LED */
-    static const uint8_t    onBoardLedPinNo         = 2U;
-
-    /** Pin number of user button */
-    static const uint8_t    userButtonPinNo         = 4U;
-
-    /** Pin number of test pin */
-    static const uint8_t    testPinNo               = 23U;
-
-    /** Pin number of LED matrix data out */
-    static const uint8_t    ledMatrixDataOutPinNo   = 27U;
-
-    /** Pin number of LDR in */
-    static const uint8_t    ldrInPinNo              = 34U;
-
-    /** Pin number of dht sensor in */
-    static const uint8_t    dhtInPinNo              = 5U;
-};
-
-/** Digital output pin: Onboard LED */
-static const DOutPin<Pin::onBoardLedPinNo>              onBoardLedOut;
-
-/** Digital input pin: User button (input with pull-up) */
-static const DInPin<Pin::userButtonPinNo, INPUT_PULLUP> userButtonIn;
-
-/** Digital output pin: Test pin (only for debug purposes) */
-static const DOutPin<Pin::testPinNo>                    testPinOut;
-
-/** Digital output pin: LED matrix data out */
-static const DOutPin<Pin::ledMatrixDataOutPinNo>        ledMatrixDataOut;
-
-/** Analog input pin: LDR in */
-static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
-
-/** Digital input pin: DHT Sensor (input with pull-up) */
-static const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
-
-/** ADC resolution in digits */
-static const uint16_t   adcResolution   = 4096U;
-
-/** ADC reference voltage in mV */
-static const uint16_t   adcRefVoltage   = 3300U;
-
-/** LED matrix specific values */
-namespace LedMatrix
-{
-
-/** LED matrix width in pixels */
-static const uint8_t    width               = 32U;
-
-/** LED matrix height in pixels */
-static const uint8_t    height              = 8U;
-
-/** LED matrix supply voltage in volt */
-static const uint8_t    supplyVoltage       = 5U;
-
-/** LED matrix max. supply current in mA */
-static const uint32_t   supplyCurrentMax    = 3500U;
-
-/** Max. current in mA per LED */
-static const uint32_t   maxCurrentPerLed    = 60U;
-
+    &onBoardLedOut,
+    &userButtonIn,
+    &ldrIn,
+    &dhtIn
 };
 
 /******************************************************************************
- * Functions
+ * Public Methods
  *****************************************************************************/
 
-/**
- * Initialize all i/o pins.
- */
-extern void init();
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
 
-/**
- * Execute a hard reset!
- */
-extern void reset();
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
 
-};
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
 
-#endif  /* __BOARD_H__ */
+extern void Board::init()
+{
+    uint8_t index = 0U;
 
-/** @} */
+    /* Initialize all i/o pins */
+    for(index = 0U; index < UTIL_ARRAY_NUM(ioPinList); ++index)
+    {
+        if (nullptr != ioPinList[index])
+        {
+            ioPinList[index]->init();
+        }
+    }
+
+    return;
+}
+
+extern void Board::reset()
+{
+    esp_task_wdt_init(1, true);
+    esp_task_wdt_add(nullptr);
+    
+    for(;;)
+    {
+        /* Wait for reset. */
+        ;
+    }
+
+    return;
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

@@ -25,16 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  LED matrix
+ * @brief  LED matrix display
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "LedMatrix.h"
-
-#include <Util.h>
+#include "Display.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -68,18 +66,18 @@
  * Private Methods
  *****************************************************************************/
 
-LedMatrix::LedMatrix() :
-    IGfx(Board::LedMatrix::width, Board::LedMatrix::height),
+Display::Display() :
+    IDisplay(Board::LedMatrix::width, Board::LedMatrix::height),
     m_strip(Board::LedMatrix::width * Board::LedMatrix::height, Board::Pin::ledMatrixDataOutPinNo),
     m_topo(Board::LedMatrix::width, Board::LedMatrix::height)
 {
 }
 
-LedMatrix::~LedMatrix()
+Display::~Display()
 {
 }
 
-Color LedMatrix::getColor(int16_t x, int16_t y) const
+Color Display::getColor(int16_t x, int16_t y) const
 {
     HtmlColor htmlColor = m_strip.GetPixelColor(m_topo.Map(x, y));
 
