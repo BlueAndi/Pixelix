@@ -19,7 +19,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 - [Documentation](#documentation)
 - [Used Libraries](#used-libraries)
 - [FAQ](#faq)
-  - [Where to change panel topology?](#where-to-change-panel-topology)
+  - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -39,6 +39,9 @@ I want to have a remote display to show multiple kind of information, running 24
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 * [Rough overview](./doc/Overview.pdf)
+
+Additional supported variantes, which were original not in focus:
+* [TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
@@ -72,10 +75,10 @@ For more information, see the [documentation](./doc/README.md).
 
 # FAQ
 
-## Where to change panel topology?
-First adapt in ```./src/HAL/Board.h``` the _width_ and _height_ according your LED matrix.
+## Where to change panel topology of the LED matrix?
+First adapt in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ according your LED matrix.
 
-In the ```./src/Gfx/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
+In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
