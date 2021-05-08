@@ -69,7 +69,8 @@
 Display::Display() :
     IDisplay(MATRIX_WIDTH, MATRIX_HEIGHT),
     m_tft(),
-    m_ledMatrix()
+    m_ledMatrix(),
+    m_brightness(UINT8_MAX)
 {
 }
 

@@ -103,11 +103,18 @@ public:
         {
             for(x = 0U; x < MATRIX_WIDTH; ++x)
             {
+                Color       brightnessAdjustedColor = m_ledMatrix[x][y];
+                uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
+
+                intensity *= (static_cast<uint16_t>(m_brightness) + 1U);
+                intensity /= 256U;
+                brightnessAdjustedColor.setIntensity(static_cast<uint8_t>(intensity));
+
                 m_tft.fillRect( y * (PIXEL_HEIGHT + PiXEL_DISTANCE) + BORDER_Y,
                                 TFT_HEIGHT - (x * (PIXEL_WIDTH  + PiXEL_DISTANCE) + BORDER_X) - 1,
                                 PIXEL_HEIGHT,
                                 PIXEL_WIDTH,
-                                m_ledMatrix[x][y].to565());
+                                brightnessAdjustedColor.to565());
             }
         }
 
@@ -127,21 +134,13 @@ public:
 
     /**
      * Set brightness from 0 to 255.
+     * 255 = max. brightness.
      *
      * @param[in] brightness    Brightness value [0; 255]
      */
     void setBrightness(uint8_t brightness) final
     {
-        uint8_t x = 0U;
-        uint8_t y = 0U;
-
-        for(y = 0U; y < MATRIX_HEIGHT; ++y)
-        {
-            for(x = 0U; x < MATRIX_WIDTH; ++x)
-            {
-                m_ledMatrix[x][y].setIntensity(brightness);
-            }
-        }
+        m_brightness = brightness;
 
         return;
     }
@@ -202,6 +201,7 @@ private:
 
     TFT_eSPI    m_tft;                                      /**< T-Display driver */
     Color       m_ledMatrix[MATRIX_WIDTH][MATRIX_HEIGHT];   /**< Simulated LED matrix framebuffer */
+    uint8_t     m_brightness;                               /**< Display brightness [0; 255] value. 255 = max. brightness. */
 
     /**
      * Construct display.
