@@ -72,6 +72,7 @@ For more information, see the [documentation](./doc/README.md).
 * [POPPER JS](https://popper.js.org/) - POPPER JS - MIT License
 * [jQuery](https://jquery.com/) - Javascript librariy for DOM handling - MIT License
 * [DHTesp](https://github.com/beegee-tokyo/DHTesp) - An Arduino library for reading the DHT family of temperature and humidity sensors. - GPL-3.0 License
+* [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) - Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips - Mixed licenses: MIT, BSD, FreeBSD
 
 # FAQ
 
