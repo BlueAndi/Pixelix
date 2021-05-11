@@ -265,19 +265,31 @@ void IconTextLampPlugin::active(IGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, 1U, ICON_WIDTH, gfx.getHeight() - 1);
-
-        if (nullptr != m_lampCanvas)
+        uint16_t        lampWidth       = 0U;
+        uint16_t        lampDistance    = 0U;
+        const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
+        const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
+        
+        if (true == calcLayout(gfx.getWidth(), MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
         {
-            uint8_t index = 0U;
+            m_lampCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, 1U, ICON_WIDTH, gfx.getHeight() - 1);
 
-            for(index = 0U; index < MAX_LAMPS; ++index)
+            if (nullptr != m_lampCanvas)
             {
-                /* One space at the begin, two spaces between the lamps. */
-                int16_t x = (LampWidget::DEFAULT_WIDTH + 2) * index + 1;
+                /* Calculate the border to have the lamps shown aligned to center. */
+                uint16_t    border  = (gfx.getWidth() - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
+                uint8_t     index   = 0U;
 
-                (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
-                m_lampWidgets[index].move(x, 0);
+                for(index = 0U; index < MAX_LAMPS; ++index)
+                {
+                    /* One space at the begin, two spaces between the lamps. */
+                    int16_t x = (lampWidth + lampDistance) * index + border;
+
+                    m_lampWidgets[index].setWidth(lampWidth);
+
+                    (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
+                    m_lampWidgets[index].move(x, 0);
+                }
             }
         }
     }
@@ -421,6 +433,47 @@ void IconTextLampPlugin::unlock() const
     }
 
     return;
+}
+
+bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)
+{
+    bool    status  = false;
+
+    /* The min. border (left and right) must not be greater than the given width. */
+    if (width > (2U * minBorder))
+    {
+        uint16_t    availableWidth  = width - (2U * minBorder); /* The available width is calculated considering the min. borders. */
+
+        /* The available width must be greater than the number of elements, including the min. element distance. */
+        if (availableWidth > (cnt + ((cnt - 1U) * minDistance)))
+        {
+            uint16_t    maxElementWidth                     = (availableWidth - ((cnt - 1U) * minDistance)) / cnt; /* Max. element width, considering the given limitation. */
+            uint16_t    elementWidthToAvailWidthRatio       = 8U;   /* 1 / N */
+            uint16_t    elementDistanceToElementWidthRatio  = 4U;   /* 1 / N */
+            uint16_t    elementWidthConsideringRatio        = availableWidth / elementWidthToAvailWidthRatio;
+
+            /* Consider the ratio between element width to available width and
+             * ratio between element distance to element width.
+             * This is just to have a nice look.
+             */
+            if (maxElementWidth > elementWidthConsideringRatio)
+            {
+                uint16_t    elementDistanceConsideringRatio = elementWidthConsideringRatio / elementDistanceToElementWidthRatio;
+
+                elementWidth    = elementWidthConsideringRatio - elementDistanceConsideringRatio;
+                elementDistance = elementDistanceConsideringRatio;
+            }
+            else
+            {
+                elementWidth    = maxElementWidth;
+                elementDistance = minDistance;
+            }
+
+            status = true;
+        }
+    }
+
+    return status;
 }
 
 /******************************************************************************

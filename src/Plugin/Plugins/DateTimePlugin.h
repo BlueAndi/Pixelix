@@ -175,13 +175,10 @@ public:
 private:
 
     /** Max. number of lamps. */
-    static const uint8_t    MAX_LAMPS               = 7U;
-
-    /** Size of lamp widgets used for weekday indication. */
-    static const uint16_t   CUSTOM_LAMP_WIDTH       = 3U;
+    static const uint8_t    MAX_LAMPS           = 7U;
 
     /** Time to check date update period in ms */
-    static const uint32_t   CHECK_UPDATE_PERIOD     = 1000U;
+    static const uint32_t   CHECK_UPDATE_PERIOD = 1000U;
 
     TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
     Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
@@ -207,6 +204,20 @@ private:
      * @param[in] timeinfo the current timeinfo.
      */
     void setWeekdayIndicator(tm timeinfo);
+
+    /**
+     * Calculates the optimal layout for several elements, which shall be aligned.
+     * 
+     * @param[in]   width           Max. available width in pixel.
+     * @param[in]   cnt             Number of elements in a row.
+     * @param[in]   minDistance     The minimal distance in pixel between each element.
+     * @param[in]   minBorder       The minimal border left and right of all elements.
+     * @param[out]  elementWidth    The calculated optimal element width in pixel.
+     * @param[out]  elementDistance The calculated optimal element distance in pixel.
+     * 
+     * @return If the calculation is successful, it will return true otherwise false.
+     */
+    bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
 };
 
 /******************************************************************************

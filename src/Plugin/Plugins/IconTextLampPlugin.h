@@ -316,6 +316,20 @@ private:
      * Unprotect against concurrent access.
      */
     void unlock(void) const;
+
+    /**
+     * Calculates the optimal layout for several elements, which shall be aligned.
+     * 
+     * @param[in]   width           Max. available width in pixel.
+     * @param[in]   cnt             Number of elements in a row.
+     * @param[in]   minDistance     The minimal distance in pixel between each element.
+     * @param[in]   minBorder       The minimal border left and right of all elements.
+     * @param[out]  elementWidth    The calculated optimal element width in pixel.
+     * @param[out]  elementDistance The calculated optimal element distance in pixel.
+     * 
+     * @return If the calculation is successful, it will return true otherwise false.
+     */
+    bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
 };
 
 /******************************************************************************
