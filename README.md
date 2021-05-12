@@ -81,6 +81,34 @@ First adapt in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ accordi
 
 In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
+## How to change text properties?
+
+Text properties can be changed using different keywords added to the string to be displayed.  
+In order to be able to use these keywords, they must be prefixed by a backslash, otherwise they will only be treated as text.
+
+The following keywords are available:
+Keyword   | Description
+----------|---------------------------------
+\\#RRGGBB | Change text color (RRGGBB in hex)
+\lalign   | Alignment left
+\ralign   | Alignment right
+\calign   | Alignment center
+
+
+**Note**
+- If theses keywords are used within the sourcecode they have to be prefixed with two backslashes (one additional for escaping).
+- If these keywords are used via the [REST API](REST.md) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
+- The keywords can be combined.  
+
+**Examples**
+
+Sourcecode   | URL   | Result
+----------|--------------------|-------------
+\\\lalign\\\\#ff0000Hi! | %5Clalign%23ff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
+\\\calign\\#ff0000Hi! | %5Ccalign%23ff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
+\\\ralign\\#ff0000Hi! | %5Ccalign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
+
+
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
