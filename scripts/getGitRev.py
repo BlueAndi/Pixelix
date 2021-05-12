@@ -26,17 +26,43 @@ import json
 Import("env")
 
 def getGitRevisionHash():
-    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+    revHash = "0"
+
+    try:
+        revHash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+    except:
+        pass
+
+    return revHash
 
 def getGitRevisionShortHash():
-    return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+    revShortHash = "0"
+
+    try:
+        revShortHash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+    except:
+        pass
+
+    return revShortHash
 
 def getCurrentGitBranch():
-    return subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
+    branchName = "unknown"
+    
+    try:
+        branchName = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
+    except:
+        pass
+
+    return branchName
 
 def anyLocalChange():
     anyLocalChange = False
-    result = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no']).decode('ascii').strip()
+    result = ""
+
+    try:
+        result = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no']).decode('ascii').strip()
+    except:
+        pass
 
     if (0 < len(result)):
         anyLocalChange = True
