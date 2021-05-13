@@ -7,7 +7,7 @@
 
 ## System Diagram
 
-![system-diagram](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/design/system.png)
+![system-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/design/system.plantuml)
 
 ## ESP32 DevKit V1
 
