@@ -20,6 +20,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 - [Used Libraries](#used-libraries)
 - [FAQ](#faq)
   - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
+  - [How to change text properties?](#how-to-change-text-properties)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
