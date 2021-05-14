@@ -14,14 +14,11 @@ The [PlatformIO IDE](https://platformio.org/platformio-ide) is used for the deve
 3. Close and start VSCode again.
 4. Recommended is to take a look to the [quick-start guide](https://docs.platformio.org/en/latest/ide/vscode.html#quick-start).
 
-## Installation of test environment
-1. For the test environment on windows platform, install [MinGW](http://www.mingw.org/).
-    * Install as basic setup:
-        * mingw-developer-toolkit-bin
-        * mingw32-base-bin
-        * mingw32-gcc-g++-bin
-        * msys-base-bin
-    * Install additional packages:
-        * mingw32-libmingwex-dev
-        * mingw32-libmingwex-dll
-2. Place ```c:\mingw\bin``` on path.
+## Installation of test environment (win only)
+1. For the test environment on windows platform, install [Mingw-w64](http://mingw-w64.org/) by using the [online installer](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer) and following installation settings:
+    * Version: Choose the newest
+    * Architecture: x86_64
+    * Threads: posix
+    * [Exception](https://wiki.qt.io/MinGW-64-bit#Exception_handling:_SJLJ.2C_DWARF.2C_and_SEH): seh
+    * Build revision: 0
+2. Add Mingw binary folder (```C:\Program Files\mingw-w64\<depends-on-your-installation-settings>\mingw64\bin```)to path, see environment variables.
