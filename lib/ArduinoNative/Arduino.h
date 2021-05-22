@@ -71,17 +71,19 @@ typedef bool boolean;
  * Functions
  *****************************************************************************/
 
-static unsigned long millis()
-{
-    clock_t now = clock();
+/**
+ * Get timestamp in ms since the program is running.
+ * 
+ * @return Timestamp in ms
+ */
+extern unsigned long millis();
 
-    return (now * 1000UL) / CLOCKS_PER_SEC;
-}
-
-static uint32_t esp_log_timestamp(void)
-{
-    return millis();
-}
+/**
+ * Get timestamp for log output in ms.
+ * 
+ * @return Timestamp in ms
+ */
+extern uint32_t esp_log_timestamp(void);
 
 #endif  /* __ARDUINO_H__ */
 
