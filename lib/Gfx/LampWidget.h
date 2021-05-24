@@ -244,14 +244,14 @@ public:
     static const uint16_t   DEFAULT_WIDTH   = 4U;
 
     /** Lamp height in pixel */
-    static const uint16_t   HEIGHT  = 1U;
+    static const uint16_t   HEIGHT          = 1U;
 
 private:
 
-    bool    m_isOn;     /**< Lamp on state */
-    Color   m_colorOff; /**< Lamp color in off state */
-    Color   m_colorOn;  /**< Lamp color in on state */
-    uint16_t m_width;   /**< Lamp width in pixel */
+    bool        m_isOn;     /**< Lamp on state */
+    Color       m_colorOff; /**< Lamp color in off state */
+    Color       m_colorOn;  /**< Lamp color in on state */
+    uint16_t    m_width;    /**< Lamp width in pixel */
 
 };
 
