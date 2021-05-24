@@ -162,7 +162,7 @@ public:
     }
 
     /**
-     * Get the curren on state.
+     * Get the current on state.
      *
      * @return On state
      */
