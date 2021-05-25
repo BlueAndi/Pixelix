@@ -1,5 +1,5 @@
 {
-    "name": "Common",
+    "name": "YAWidgets",
     "version": "0.1.0",
     "dependencies": [{
         "name": "YAGfx"

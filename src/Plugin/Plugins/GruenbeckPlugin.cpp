@@ -115,7 +115,7 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void GruenbeckPlugin::active(IGfx& gfx)
+void GruenbeckPlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -167,7 +167,7 @@ void GruenbeckPlugin::inactive()
     return;
 }
 
-void GruenbeckPlugin::update(IGfx& gfx)
+void GruenbeckPlugin::update(YAGfx& gfx)
 {
     lock();
 

@@ -134,7 +134,7 @@ public:
      *
      * @param[in] gfx Graphics interface
      */
-    void update(IGfx& gfx) override
+    void update(YAGfx& gfx) override
     {
         if (nullptr != m_buffer)
         {

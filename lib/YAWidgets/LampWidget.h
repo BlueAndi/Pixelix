@@ -45,7 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <Widget.hpp>
-#include <Color.h>
+#include <YAColor.h>
 
 /******************************************************************************
  * Macros
@@ -135,7 +135,7 @@ public:
      *
      * @param[in] gfx Graphics interface.
      */
-    void update(IGfx& gfx) override
+    void update(YAGfx& gfx) override
     {
         Color color = m_colorOn;
 

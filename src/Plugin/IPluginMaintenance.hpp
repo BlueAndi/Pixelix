@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IGfx.hpp>
+#include <YAGfx.h>
 #include <ArduinoJson.h>
 #include "ISlotPlugin.hpp"
 
@@ -191,7 +191,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void active(IGfx& gfx) = 0;
+    virtual void active(YAGfx& gfx) = 0;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
@@ -207,7 +207,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void update(IGfx& gfx) = 0;
+    virtual void update(YAGfx& gfx) = 0;
 
 protected:
 

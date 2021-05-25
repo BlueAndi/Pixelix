@@ -153,7 +153,7 @@ void IconTextPlugin::stop()
     }
 }
 
-void IconTextPlugin::active(IGfx& gfx)
+void IconTextPlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -194,7 +194,7 @@ void IconTextPlugin::inactive()
     return;
 }
 
-void IconTextPlugin::update(IGfx& gfx)
+void IconTextPlugin::update(YAGfx& gfx)
 {
     lock();
 

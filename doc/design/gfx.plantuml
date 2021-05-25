@@ -19,9 +19,6 @@ end note
 class "BaseGfx<TColor>" as baseGfx {
     - m_width : uint16_t
     - m_height : uint16_t
-    - m_cursorX : int16_t
-    - m_cursorY : int16_t
-    - m_textColor : TColor
     - m_font : const GFXfont*
     + BaseGfx(width : uint16_t, height : uint16_t)
     + {abstract} getColor(x : int16_t, y : int16_t) = 0 : TColor
@@ -34,20 +31,6 @@ class "BaseGfx<TColor>" as baseGfx {
     + fillRect(x : int16_t, y : int16_t, width : uint16_t, height : uint16_t, color : const TColor&) : void
     + fillScreen(color : const TColor&) : void
     + drawRGBBitmap(x : int16_t, y : int16_t, bitmap : const TColor*, width : uint16_t, height : uint16_t) : void
-    + getTextCursorPos(x : int16_t&, y : int16_t&) const : void
-    + getTextCursorPosX() const : int16_t
-    + getTextCursorPosY() const : int16_t
-    + setTextCursorPos(x : int16_t, y : int16_t) : void
-    + getTextColor() const : TColor
-    + setTextColor(color : const TColor&) const : void
-    + getFont() const : const GFXFont*
-    + setFont(font : const GFXfont*) : void
-    + drawChar(character : char) : void
-    + drawText(text : const char*) : void
-    + isTextWrapEnabled() const : bool
-    + setTextWrap(isEnabled : bool) : void
-    + getCharBoundingBox(character : char, width : uint16_t&, height : uint16_t) : bool
-    + getTextBoundingBox(text : const char*, width : uint16_t&, height : uint16_t) : bool
 }
 
 note left of baseGfx
@@ -55,7 +38,41 @@ note left of baseGfx
     independend of the color type.
 end note
 
-gfxFont <-- baseGfx
+class "BaseFont<TColor>" as baseFont {
+    - m_gfxFont : const GFXfont*
+    + getGfxFont() : const GFXfont*
+    + setGfxFont(gfxFont : const GFXfont*) : void
+    + getHeigth() : uint16_t
+    + getCharBoundingBox(singleChar : char, width : uint16_t&, height : uint16_t) const : bool
+    + drawChar(gfx : BaseGfx<TColor>&, cursorX : int16_t&, cursorY : int16_t&, singleChar : char, color : const TColor&) : void
+}
+
+class "BaseText<TColor>" as baseText {
+    - m_cursorX : int16_t
+    - m_cursorY : int16_t
+    - m_textColor : TColor
+    - m_isTextWrapEnabled : bool
+    - m_font : BaseFont<TColor>
+    + getTextCursorPos(x : int16_t&, y : int16_t&) const : void
+    + getTextCursorPosX() const : int16_t
+    + getTextCursorPosY() const : int16_t
+    + setTextCursorPos(x : int16_t, y : int16_t) : void
+    + getTextColor() const : TColor
+    + setTextColor(color : const TColor&) const : void
+    + isTextWrapEnabled() const : bool
+    + setTextWrap(isEnabled : bool) : void
+    + getFont() const : BaseFont<TColor>&
+    + setFont(font : BaseFont<TColor>&) : void
+    + getTextBoundingBox(width : uint16_t, height : uint16_t, text : const char*, boxWidth : uint16_t&, boxHeight : uint16_t&) : bool
+    + drawChar(gfx : BaseGfx<TColor>&, singleChar : char) : void
+    + drawText(gfx : BaseGfx<TColor>&, text : const char*) : void
+}
+
+gfxFont <-- baseFont
+baseFont <-- baseText
+
+baseFont ..> baseGfx: <<use>>
+baseText ...> baseGfx: <<use>>
 
 class "BaseGfxPen<TColor>" as baseGfxPen {
     - m_x : int16_t
@@ -80,46 +97,25 @@ end note
 
 baseGfx <- baseGfxPen: <<draw>>
 
-class PixelixGfx <<typedef>>
-hide PixelixGfx members
+class YAGfx <<typedef>>
+hide YAGfx members
 
-note left of PixelixGfx
+note left of YAGfx
     Graphic operations, defined with
     color type according to display type.
 end note
 
-baseGfx <|-- PixelixGfx: <<bind>>\nTColor -> Color
+baseGfx <|-- YAGfx: <<bind>>\nTColor -> Color
 
-class PixelixGfxPen <<typedef>>
-hide PixelixGfxPen members
+class YAGfxPen <<typedef>>
+hide YAGfxPen members
 
-note bottom of PixelixGfxPen
+note bottom of YAGfxPen
     Drawing pen operations, defined with
     color type according to display type.
 end note
 
-baseGfxPen <|-- PixelixGfxPen: <<bind>>\nTColor -> Color
-
-class "Print" as print {
-    +{abstract} write(singleChar : uint8_t) = 0: size_t
-}
-
-note left of print
-    Arduino Print class.
-end note
-
-class "IGfx" as iGfx {
-}
-
-note left of iGfx
-    The IGfx interface includes the concrete color information and
-    includes arduino print support.
-    All widgets have either a strong coupling with it or at least
-    depend on it.
-end note
-
-PixelixGfx <|-- iGfx
-print <|-- iGfx
+baseGfxPen <|-- YAGfxPen: <<bind>>\nTColor -> Color
 
 class "IDisplay" as iDisplay {
     + {abstract} begin() = 0 : bool
@@ -133,7 +129,7 @@ note left of iDisplay
     The interface for physical display adapters.
 end note
 
-iGfx <|-- iDisplay
+YAGfx <|-- iDisplay
 
 package "HAL" {
 

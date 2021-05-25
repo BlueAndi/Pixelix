@@ -118,7 +118,7 @@ bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void ShellyPlugSPlugin::active(IGfx& gfx)
+void ShellyPlugSPlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -161,7 +161,7 @@ void ShellyPlugSPlugin::inactive()
     return;
 }
 
-void ShellyPlugSPlugin::update(IGfx& gfx)
+void ShellyPlugSPlugin::update(YAGfx& gfx)
 {
     lock();
 

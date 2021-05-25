@@ -214,7 +214,7 @@ void VolumioPlugin::process()
     return;
 }
 
-void VolumioPlugin::active(IGfx& gfx)
+void VolumioPlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -266,7 +266,7 @@ void VolumioPlugin::inactive()
     return;
 }
 
-void VolumioPlugin::update(IGfx& gfx)
+void VolumioPlugin::update(YAGfx& gfx)
 {
     lock();
 

@@ -60,7 +60,7 @@
  * This class defines a drawing canvas. The canvas can contain several widgets
  * and will update their drawings.
  */
-class Canvas : public IGfx, public Widget
+class Canvas : public YAGfx, public Widget
 {
 public:
 
@@ -74,7 +74,7 @@ public:
      * @param[in] isBuffered    Create a buffered (true) canvas or not (false)
      */
     Canvas(uint16_t width, uint16_t height, int16_t x, int16_t y, bool isBuffered = false) :
-        IGfx(width, height),
+        YAGfx(width, height),
         Widget(WIDGET_TYPE, x, y),
         m_gfx(nullptr),
         m_widgets(),
@@ -154,7 +154,7 @@ public:
      *
      * @param[in] gfx   Graphics interface
      */
-    void update(IGfx& gfx) override
+    void update(YAGfx& gfx) override
     {
         DLinkedListIterator<Widget*> it(m_widgets);
 
@@ -202,7 +202,7 @@ public:
      *
      * @param[in] gfx   Graphics interface
      */
-    void updateFromBuffer(IGfx& gfx)
+    void updateFromBuffer(YAGfx& gfx)
     {
         /* In a buffered canvas, only the buffer into the underlying canvas. */
         if (nullptr != m_buffer)
@@ -287,7 +287,7 @@ public:
 
 private:
 
-    IGfx*                   m_gfx;      /**< Graphics interface of the underlying layer */
+    YAGfx*                  m_gfx;      /**< Graphics interface of the underlying layer */
     DLinkedList<Widget*>    m_widgets;  /**< Widgets in the canvas */
     Color*                  m_buffer;   /**< Buffer */
 
@@ -366,21 +366,6 @@ private:
         }
 
         return;
-    }
-
-    /**
-     * Write a single character on the display.
-     * This method is necessary for using print() methods.
-     *
-     * @param[in] singleChar    Single character
-     *
-     * @return Number of written characters.
-     */
-    size_t write(uint8_t singleChar) final
-    {
-        drawChar(static_cast<char>(singleChar));
-
-        return 1U;
     }
 };
 

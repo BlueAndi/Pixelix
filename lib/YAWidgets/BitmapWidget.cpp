@@ -25,14 +25,22 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Fade in/out effect by moving the old content out and the new one in.
+ * @brief  Bitmap Widget
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "FadeMoveX.h"
+#include "BitmapWidget.h"
+
+#ifndef NATIVE
+
+#include <NeoPixelBus.h>
+#include <YAColor.h>
+#include <Logging.h>
+
+#endif  /* NATIVE */
 
 /******************************************************************************
  * Compiler Switches
@@ -54,62 +62,152 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize bitmap widget type. */
+const char* BitmapWidget::WIDGET_TYPE = "bitmap";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void FadeMoveX::init()
+BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 {
-    m_state = FADE_STATE_INIT;
-}
-
-bool FadeMoveX::fadeIn(IGfx& gfx, IGfx& prev, IGfx& next)
-{
-    (void)prev;
-
-    gfx.copy(next);
-
-    return true;
-}
-
-bool FadeMoveX::fadeOut(IGfx& gfx, IGfx& prev, IGfx& next)
-{
-    bool    isFinished  = false;
-    int16_t x           = 0;
-    int16_t y           = 0;
-
-    if (FADE_STATE_OUT != m_state)
+    if (&widget != this)
     {
-        m_state     = FADE_STATE_OUT;
-        m_xOffset   = 0;
-    }
+        m_bufferSize    = widget.m_bufferSize;
+        m_width         = widget.m_width;
+        m_height        = widget.m_height;
 
-    for(x = 0; x < (gfx.getWidth() - m_xOffset); ++x)
-    {
-        for(y = 0; y < gfx.getHeight(); ++y)
+        if (nullptr != m_buffer)
         {
-            gfx.drawPixel(x, y, prev.getColor(x + m_xOffset, y));
+            delete[] m_buffer;
+            m_buffer = nullptr;
+        }
+
+        if (nullptr != widget.m_buffer)
+        {
+            m_buffer = new Color[m_bufferSize];
+
+            if (nullptr == m_buffer)
+            {
+                m_bufferSize = 0U;
+            }
+            else
+            {
+                size_t index = 0U;
+
+                for(index = 0U; index < m_bufferSize; ++index)
+                {
+                    m_buffer[index] = widget.m_buffer[index];
+                }
+            }
         }
     }
 
-    for(x = gfx.getWidth() - m_xOffset; x < gfx.getWidth(); ++x)
+    return *this;
+}
+
+void BitmapWidget::set(const Color* bitmap, uint16_t width, uint16_t height)
+{
+    if (nullptr != bitmap)
     {
-        for(y = 0; y < gfx.getHeight(); ++y)
+        if (nullptr != m_buffer)
         {
-            gfx.drawPixel(x, y, next.getColor((x + m_xOffset) - gfx.getWidth(), y));
+            delete[] m_buffer;
+            m_buffer = nullptr;
+        }
+
+        m_bufferSize    = width * height;
+        m_width         = width;
+        m_height        = height;
+
+        m_buffer = new Color[m_bufferSize];
+
+        if (nullptr == m_buffer)
+        {
+            m_bufferSize = 0U;
+        }
+        else
+        {
+            size_t index = 0U;
+
+            for(index = 0U; index < m_bufferSize; ++index)
+            {
+                m_buffer[index] = bitmap[index];
+            }
         }
     }
 
-    ++m_xOffset;
+    return;
+}
 
-    if (gfx.getWidth() <= m_xOffset)
+#ifndef NATIVE
+
+bool BitmapWidget::load(FS& fs, const String& filename)
+{
+    bool    status  = false;
+    File    fd;
+
+    if (false == fs.exists(filename))
     {
-        m_state     = FADE_STATE_INIT;
-        isFinished  = true;
+        LOG_WARNING("File %s doesn't exists.", filename.c_str());
+    }
+    else
+    {
+        NeoBitmapFile<NeoGrbFeature, File>  neoFile;
+
+        fd = fs.open(filename, "r");
+
+        if (false == fd)
+        {
+            LOG_ERROR("Failed to open file %s.", filename.c_str());
+        }
+        else
+        {
+            if (false == neoFile.Begin(fd))
+            {
+                LOG_ERROR("File %s has incompatible bitmap file format.", filename.c_str());
+            }
+            else
+            {
+                m_width         = neoFile.Width();
+                m_height        = neoFile.Height();
+                m_bufferSize    = m_width * m_height;
+
+                if (nullptr != m_buffer)
+                {
+                    delete[] m_buffer;
+                    m_buffer = nullptr;
+                }
+
+                m_buffer = new Color[m_bufferSize];
+
+                if (nullptr != m_buffer)
+                {
+                    uint16_t x = 0U;
+                    uint16_t y = 0U;
+
+                    for(y = 0U; y < m_height; ++y)
+                    {
+                        for(x = 0U; x < m_width; ++x)
+                        {
+                            RgbColor rgbColor = neoFile.GetPixelColor(x, y);
+
+                            m_buffer[x + y * m_width].set(rgbColor.R, rgbColor.G, rgbColor.B);
+                        }
+                    }
+
+                    status = true;
+                }
+            }
+
+            fd.close();
+        }
     }
 
-    return isFinished;
+    return status;
 }
+
+#endif  /* NATIVE */
 
 /******************************************************************************
  * Protected Methods

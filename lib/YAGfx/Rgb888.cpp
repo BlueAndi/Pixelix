@@ -25,94 +25,87 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Basic fade effect interface
+ * @brief  Rgb888
  * @author Andreas Merkle <web@blue-andi.de>
- *
- * @addtogroup gfx
- *
- * @{
  */
-
-#ifndef __BASE_IFADEEFFECT_HPP__
-#define __BASE_IFADEEFFECT_HPP__
-
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IGfx.hpp>
+#include "Rgb888.h"
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
  *****************************************************************************/
-
-/**
- * Base fade effect interface, used to fade display content in or out.
- * The effect will fade in/out from one framebuffer to another and draws the
- * result directly to the display.
- */
-class IFadeEffect
-{
-public:
-
-    /**
-     * Destroys the fade effect interface.
-     */
-    virtual ~IFadeEffect()
-    {
-    }
-
-    /**
-     * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
-     */
-    virtual void init() = 0;
-
-    /**
-     * Achieves a fade in effect. Call this method as long as the effect is not completed.
-     *
-     * @param[in] gfx   Graphics interface to display
-     * @param[in] prev  Graphics interface to previous framebuffer
-     * @param[in] next  Graphics interface to next framebuffer
-     *
-     * @return If the effect is complete, it will return true otherwise false.
-     */
-    virtual bool fadeIn(IGfx& gfx, IGfx& prev, IGfx& next) = 0;
-
-    /**
-     * Achieves a fade out effect. Call this method as long as the effect is not completed.
-     *
-     * @param[in] gfx   Graphics interface to display
-     * @param[in] prev  Graphics interface to previous framebuffer
-     * @param[in] next  Graphics interface to next framebuffer
-     *
-     * @return If the effect is complete, it will return true otherwise false.
-     */
-    virtual bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) = 0;
-
-protected:
-
-    /**
-     * Constructs the fade effect interface.
-     */
-    IFadeEffect()
-    {
-    }
-
-private:
-
-};
 
 /******************************************************************************
- * Functions
+ * Prototypes
  *****************************************************************************/
 
-#endif  /* __BASE_IFADEEFFECT_HPP__ */
+/******************************************************************************
+ * Local Variables
+ *****************************************************************************/
 
-/** @} */
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+void Rgb888::turnColorWheel(uint8_t wheelPos)
+{
+    const uint8_t COL_PARTS = 3U;
+    const uint8_t COL_RANGE = UINT8_MAX / COL_PARTS;
+
+    wheelPos = UINT8_MAX - wheelPos;
+
+    /* Red + Blue ? */
+    if (wheelPos < COL_RANGE)
+    {
+        m_red   = UINT8_MAX - wheelPos * COL_PARTS;
+        m_green = 0U;
+        m_blue  = COL_PARTS * wheelPos;
+    }
+    /* Green + Blue ? */
+    else if (wheelPos < (2 * COL_RANGE))
+    {
+        wheelPos -= COL_RANGE;
+        
+        m_red   = 0U;
+        m_green = COL_PARTS * wheelPos;
+        m_blue  = UINT8_MAX - wheelPos * COL_PARTS;
+    }
+    /* Red + Green */
+    else
+    {
+        wheelPos -= ((COL_PARTS - 1U) * COL_RANGE);
+        
+        m_red   = COL_PARTS * wheelPos;
+        m_green = UINT8_MAX - wheelPos * COL_PARTS;
+        m_blue  = 0U;
+    }
+
+    return;
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/

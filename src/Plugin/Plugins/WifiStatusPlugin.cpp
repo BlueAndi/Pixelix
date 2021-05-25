@@ -60,7 +60,7 @@
  * Public Methods
  *****************************************************************************/
 
-void WifiStatusPlugin::active(IGfx& gfx)
+void WifiStatusPlugin::active(YAGfx& gfx)
 {
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -122,7 +122,7 @@ void WifiStatusPlugin::inactive()
     return;
 }
 
-void WifiStatusPlugin::update(IGfx& gfx)
+void WifiStatusPlugin::update(YAGfx& gfx)
 {
     if (nullptr != m_dsp)
     {

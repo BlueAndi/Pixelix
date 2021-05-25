@@ -110,7 +110,7 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void JustTextPlugin::update(IGfx& gfx)
+void JustTextPlugin::update(YAGfx& gfx)
 {
     lock();
     gfx.fillScreen(ColorDef::BLACK);

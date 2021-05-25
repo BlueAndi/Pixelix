@@ -63,7 +63,7 @@
 /* Initialize image path. */
 const char* BTCQuotePlugin::BTC_USD_IMAGE_PATH     = "/images/BTC_USD.bmp";
 
-void BTCQuotePlugin::active(IGfx& gfx)
+void BTCQuotePlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -106,7 +106,7 @@ void BTCQuotePlugin::inactive()
     return;
 }
 
-void BTCQuotePlugin::update(IGfx& gfx)
+void BTCQuotePlugin::update(YAGfx& gfx)
 {
     lock();
 

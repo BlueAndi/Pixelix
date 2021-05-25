@@ -89,7 +89,7 @@ void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
     return;
 }
 
-void DateTimePlugin::active(IGfx& gfx)
+void DateTimePlugin::active(YAGfx& gfx)
 {
     if (nullptr == m_textCanvas)
     {
@@ -150,7 +150,7 @@ void DateTimePlugin::inactive()
     return;
 }
 
-void DateTimePlugin::update(IGfx& gfx)
+void DateTimePlugin::update(YAGfx& gfx)
 {
     if (false != m_isUpdateAvailable)
     {

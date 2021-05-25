@@ -9,7 +9,7 @@ note as N1
     sourcecode.
 end note
 
-class IGfx
+class YAGfx
 
 class Canvas {
     - m_gfx : IGfx&
@@ -23,7 +23,7 @@ class Canvas {
     - drawPixel(x : int16_t, y : int16_t, color : uint16_t) : void
 }
 
-IGfx <|-- Canvas
+YAGfx <|-- Canvas
 Widget <|-- Canvas
 Canvas o--> Widget
 

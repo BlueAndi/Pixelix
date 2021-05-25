@@ -45,7 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <Widget.hpp>
-#include <Color.h>
+#include <YAColor.h>
 
 /******************************************************************************
  * Macros
@@ -125,7 +125,7 @@ public:
      * 
      * @param[in] gfx Graphics interface
      */
-    void update(IGfx& gfx) override;
+    void update(YAGfx& gfx) override;
 
     /**
      * Set progress in % [0; 100].
@@ -186,14 +186,14 @@ private:
      * 
      * @param[in] gfx Graphics interface
      */
-    void showProgressPixel(IGfx& gfx);
+    void showProgressPixel(YAGfx& gfx);
 
     /**
      * Show current progress as bar over the longer dimension.
      * 
      * @param[in] gfx Graphics interface
      */
-    void showProgressBar(IGfx& gfx);
+    void showProgressBar(YAGfx& gfx);
 };
 
 /******************************************************************************

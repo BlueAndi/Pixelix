@@ -385,7 +385,7 @@ private:
      *
      * @param[in] dst   Destination display
      */
-    void fadeInOut(IGfx& dst);
+    void fadeInOut(YAGfx& dst);
 
     /**
      * Process the slots. This shall be called periodically in

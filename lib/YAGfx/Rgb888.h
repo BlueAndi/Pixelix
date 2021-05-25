@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Color
+ * @brief  Color in RGB888 format
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __COLOR_H__
-#define __COLOR_H__
+#ifndef __RGB888_H__
+#define __RGB888_H__
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,6 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <ColorDef.hpp>
 
 /******************************************************************************
  * Macros
@@ -60,7 +59,7 @@
  * Additional one byte is used for color intensity, used for non-destructive
  * fading.
  */
-class Color
+class Rgb888
 {
 public:
 
@@ -73,10 +72,10 @@ public:
     /**
      * Constructs the color black.
      */
-    Color() :
-        m_red(ColorDef::getRed(ColorDef::BLACK)),
-        m_green(ColorDef::getGreen(ColorDef::BLACK)),
-        m_blue(ColorDef::getBlue(ColorDef::BLACK)),
+    Rgb888() :
+        m_red(0U),
+        m_green(0U),
+        m_blue(0U),
         m_intensity(MAX_BRIGHT)
     {
     }
@@ -84,7 +83,7 @@ public:
     /**
      * Destroys the color.
      */
-    ~Color()
+    ~Rgb888()
     {
     }
 
@@ -96,7 +95,7 @@ public:
      * @param[in] green Green value
      * @param[in] blue  Blue value
      */
-    Color(uint8_t red, uint8_t green, uint8_t blue) :
+    Rgb888(uint8_t red, uint8_t green, uint8_t blue) :
         m_red(red),
         m_green(green),
         m_blue(blue),
@@ -113,7 +112,7 @@ public:
      * @param[in] blue      Blue value
      * @param[in] intensity Color intensity [0; 255]
      */
-    Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t intensity) :
+    Rgb888(uint8_t red, uint8_t green, uint8_t blue, uint8_t intensity) :
         m_red(red),
         m_green(green),
         m_blue(blue),
@@ -127,10 +126,10 @@ public:
      *
      * @param[in] value Color value in 24 bit format
      */
-    Color(uint32_t value) :
-        m_red(ColorDef::getRed(value)),
-        m_green(ColorDef::getGreen(value)),
-        m_blue(ColorDef::getBlue(value)),
+    Rgb888(uint32_t value) :
+        m_red(extractRed(value)),
+        m_green(extractGreen(value)),
+        m_blue(extractBlue(value)),
         m_intensity(MAX_BRIGHT)
     {
     }
@@ -140,7 +139,7 @@ public:
      *
      * @param[in] color Color, which to copy
      */
-    Color(const Color& color) :
+    Rgb888(const Rgb888& color) :
         m_red(color.m_red),
         m_green(color.m_green),
         m_blue(color.m_blue),
@@ -154,7 +153,7 @@ public:
      *
      * @param[in] color Color, which to assign
      */
-    Color& operator=(const Color& color)
+    Rgb888& operator=(const Rgb888& color)
     {
         if (this != &color)
         {
@@ -183,7 +182,7 @@ public:
     }
 
     /**
-     * Get base color information.
+     * Get base color information with respect to current intensity.
      *
      * @param[out] red      Red value
      * @param[out] green    Green value
@@ -240,9 +239,9 @@ public:
      */
     void set(const uint32_t& value)
     {
-        m_red	= ColorDef::getRed(value);
-        m_green	= ColorDef::getGreen(value);
-        m_blue	= ColorDef::getBlue(value);
+        m_red	= extractRed(value);
+        m_green	= extractGreen(value);
+        m_blue	= extractBlue(value);
 
         return;
     }
@@ -361,6 +360,42 @@ public:
      */
     void turnColorWheel(uint8_t wheelPos);
 
+    /**
+     * Extract the red base color from a RGB24 value.
+     * 
+     * @param[in] value Color value in RGB24 format.
+     * 
+     * @return Red base color
+     */
+    static uint8_t extractRed(uint32_t value)
+    {
+        return (value >> 16U) & 0xffU;
+    }
+
+    /**
+     * Extract the green base color from a RGB24 value.
+     * 
+     * @param[in] value Color value in RGB24 format.
+     * 
+     * @return Green base color
+     */
+    static uint8_t extractGreen(uint32_t value)
+    {
+        return (value >> 8U) & 0xffU;
+    }
+
+    /**
+     * Extract the blue base color from a RGB24 value.
+     * 
+     * @param[in] value Color value in RGB24 format.
+     * 
+     * @return Blue base color
+     */
+    static uint8_t extractBlue(uint32_t value)
+    {
+        return (value >> 0U) & 0xffU;
+    }
+
 protected:
 
 private:
@@ -370,6 +405,11 @@ private:
     uint8_t m_blue;         /**< Blue intensity value */
     uint8_t m_intensity;    /**< Color intensity [0; 255] - 0: min. bright / 255: max. bright */
 
+    /**
+     * Calculate the base color with respect to the current intensity.
+     * 
+     * @return Base color with considered intensity.
+     */
     inline uint8_t applyIntensity(uint8_t baseColor) const
     {
         return (static_cast<uint16_t>(baseColor) * static_cast<uint16_t>(m_intensity)) / MAX_BRIGHT;
@@ -381,6 +421,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __COLOR_H__ */
+#endif  /* __RGB888_H__ */
 
 /** @} */

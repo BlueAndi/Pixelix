@@ -45,7 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <WString.h>
-#include <IGfx.hpp>
+#include <YAGfx.h>
 
 /******************************************************************************
  * Macros
@@ -123,7 +123,7 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    virtual void update(IGfx& gfx) = 0;
+    virtual void update(YAGfx& gfx) = 0;
 
     /**
      * Get widget type as string.

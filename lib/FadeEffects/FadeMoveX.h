@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Display interface
+ * @brief  Fade in/out effect by moving the old content out and the new one in.
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup hal
+ *
+ * @addtogroup gfx
  *
  * @{
  */
 
-#ifndef __IDISPLAY_H__
-#define __IDISPLAY_H__
+#ifndef __FADE_MOVE_X_H__
+#define __FADE_MOVE_X_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <YAGfx.h>
+#include <stdint.h>
+#include <IFadeEffect.hpp>
 
 /******************************************************************************
  * Macros
@@ -54,70 +55,68 @@
  *****************************************************************************/
 
 /**
- * The display interface combines the graphic interfaces and the additional
- * interfaces to control the underlying physical display.
+ * A simple fade in/out effect, which moves the old content and out and the
+ * new content in. The movement is along the x-axis into the direction of
+ * the negative x-coordinates.
  */
-class IDisplay : public YAGfx
+class FadeMoveX : public IFadeEffect
 {
 public:
 
     /**
-     * Destroys the display interface.
+     * Constructs the fade effect.
      */
-    ~IDisplay()
+    FadeMoveX() :
+        m_state(FADE_STATE_INIT),
+        m_xOffset(0)
     {
     }
 
     /**
-     * Initialize base driver for the display.
-     *
-     * @return If successful, returns true otherwise false.
+     * Destroys the fade effect instance.
      */
-    virtual bool begin() = 0;
-
-    /**
-     * Show framebuffer on physical display. This may be synchronous
-     * or asynchronous.
-     */
-    virtual void show() = 0;
-
-    /**
-     * The display is ready, when the last physical pixel update is finished.
-     * A asynchronous display update, triggered by show() can be observed this way.
-     *
-     * @return If ready for another update via show(), it will return true otherwise false.
-     */
-    virtual bool isReady() const = 0;
-
-    /**
-     * Set brightness from 0 to 255.
-     *
-     * @param[in] brightness    Brightness value [0; 255]
-     */
-    virtual void setBrightness(uint8_t brightness) = 0;
-
-    /**
-     * Clear display.
-     */
-    virtual void clear() = 0;
-
-protected:
-
-    /**
-     * Constructs the display interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
-     */
-    IDisplay(uint16_t width, uint16_t height) :
-        YAGfx(width, height)
+    ~FadeMoveX()
     {
     }
+
+    /**
+     * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
+     */
+    void init() final;
+
+    /**
+     * Achieves a fade in effect. Call this method as long as the effect is not completed.
+     *
+     * @param[in] gfx   Graphics interface to display
+     * @param[in] prev  Graphics interface to previous framebuffer
+     * @param[in] next  Graphics interface to next framebuffer
+     *
+     * @return If the effect is complete, it will return true otherwise false.
+     */
+    bool fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next) final;
+
+    /**
+     * Achieves a fade out effect. Call this method as long as the effect is not completed.
+     *
+     * @param[in] gfx   Graphics interface to display
+     * @param[in] prev  Graphics interface to previous framebuffer
+     * @param[in] next  Graphics interface to next framebuffer
+     *
+     * @return If the effect is complete, it will return true otherwise false.
+     */
+    bool fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next) final;
 
 private:
 
-    /* Don't allow standard constructor. */
-    IDisplay();
+    /** Fading states. */
+    enum FadeState
+    {
+        FADE_STATE_INIT = 0,    /**< Initialize fadeing */
+        FADE_STATE_OUT          /**< Fading out is pending */
+    };
+
+    FadeState   m_state;        /**< Current fading state */
+    int16_t     m_xOffset;      /**< Current x-offset regarding movement */
 
 };
 
@@ -125,6 +124,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __IDISPLAY_H__ */
+#endif  /* __FADE_MOVE_X_H__ */
 
 /** @} */

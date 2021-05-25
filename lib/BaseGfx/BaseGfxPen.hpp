@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Display interface
+ * @brief  Base graphics pen
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup hal
+ *
+ * @addtogroup gfx
  *
  * @{
  */
 
-#ifndef __IDISPLAY_H__
-#define __IDISPLAY_H__
+#ifndef __BASE_GFX_PEN_HPP__
+#define __BASE_GFX_PEN_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <YAGfx.h>
+#include <stdint.h>
+#include "BaseGfx.hpp"
 
 /******************************************************************************
  * Macros
@@ -54,77 +55,121 @@
  *****************************************************************************/
 
 /**
- * The display interface combines the graphic interfaces and the additional
- * interfaces to control the underlying physical display.
+ * The graphics draw pen can be used for continously drawing by only using
+ * always the destination coordinates. It is color agnostic like the base
+ * graphic functions.
+ *
+ * Note, the type for coordinates must be a signed type!
+ *
  */
-class IDisplay : public YAGfx
+template < typename TColor >
+class BaseGfxPen
 {
 public:
 
     /**
-     * Destroys the display interface.
+     * Destroys a graphics pen.
      */
-    ~IDisplay()
+    ~BaseGfxPen()
     {
     }
 
     /**
-     * Initialize base driver for the display.
+     * Get pen color.
      *
-     * @return If successful, returns true otherwise false.
+     * @return Pen color
      */
-    virtual bool begin() = 0;
+    TColor getColor() const
+    {
+        return m_pen;
+    }
 
     /**
-     * Show framebuffer on physical display. This may be synchronous
-     * or asynchronous.
-     */
-    virtual void show() = 0;
-
-    /**
-     * The display is ready, when the last physical pixel update is finished.
-     * A asynchronous display update, triggered by show() can be observed this way.
+     * Set pen color.
      *
-     * @return If ready for another update via show(), it will return true otherwise false.
+     * @param[in] color Pen color which to set
      */
-    virtual bool isReady() const = 0;
+    void setColor(const TColor& color)
+    {
+        m_pen = color;
+    }
 
     /**
-     * Set brightness from 0 to 255.
+     * Plot a pixel at given position with pen.
      *
-     * @param[in] brightness    Brightness value [0; 255]
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
      */
-    virtual void setBrightness(uint8_t brightness) = 0;
+    void plot(int16_t x, int16_t y)
+    {
+        m_gfx.drawPixel(x, y, m_color);
+
+        m_x = x;
+        m_y = y;
+    }
 
     /**
-     * Clear display.
+     * Get pen position.
+     *
+     * @param[out] x x-coordinate
+     * @param[out] y y-coordinate
      */
-    virtual void clear() = 0;
+    void getPos(int16_t& x, int16_t& y) const
+    {
+        x = m_x;
+        y = m_y;
+    }
+
+    /**
+     * Move pen to given coordinates.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     */
+    void moveTo(int16_t x, int16_t y)
+    {
+        m_x = x;
+        m_y = y;
+    }
+
+    /**
+     * Draw line from current pen location to the given
+     * coordinates.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     */
+    void lineTo(int16_t x, int16_t y)
+    {
+        m_gfx.line(m_x, m_y, x, y, m_color);
+
+        m_x = x;
+        m_y = y;
+    }
 
 protected:
 
+    BaseGfx<TColor>&    m_gfx;      /**< Base gfx */
+    TColor              m_color;    /**< Pen color */
+    int16_t             m_x;        /**< Pen x-coordinate */
+    int16_t             m_y;        /**< Pen y-coordinate */
+
     /**
-     * Constructs the display interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
+     * Constructs a base graphics pen.
      */
-    IDisplay(uint16_t width, uint16_t height) :
-        YAGfx(width, height)
+    BaseGfxPen(BaseGfx& gfx) :
+        m_gfx(gfx),
+        m_color(),
+        m_x(0),
+        m_y(0)
     {
     }
-
-private:
-
-    /* Don't allow standard constructor. */
-    IDisplay();
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __IDISPLAY_H__ */
+#endif  /* __BASE_GFX_PEN_HPP__ */
 
 /** @} */

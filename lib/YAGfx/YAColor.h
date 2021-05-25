@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Display interface
+ * @brief  Yet anoterh color class
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup hal
+ *
+ * @addtogroup gfx
  *
  * @{
  */
 
-#ifndef __IDISPLAY_H__
-#define __IDISPLAY_H__
+#ifndef __YACOLOR_H__
+#define __YACOLOR_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <YAGfx.h>
+#include <Rgb888.h>
+#include <ColorDef.hpp>
 
 /******************************************************************************
  * Macros
@@ -54,77 +55,14 @@
  *****************************************************************************/
 
 /**
- * The display interface combines the graphic interfaces and the additional
- * interfaces to control the underlying physical display.
+ * Defines the general color to RGB888 format.
  */
-class IDisplay : public YAGfx
-{
-public:
-
-    /**
-     * Destroys the display interface.
-     */
-    ~IDisplay()
-    {
-    }
-
-    /**
-     * Initialize base driver for the display.
-     *
-     * @return If successful, returns true otherwise false.
-     */
-    virtual bool begin() = 0;
-
-    /**
-     * Show framebuffer on physical display. This may be synchronous
-     * or asynchronous.
-     */
-    virtual void show() = 0;
-
-    /**
-     * The display is ready, when the last physical pixel update is finished.
-     * A asynchronous display update, triggered by show() can be observed this way.
-     *
-     * @return If ready for another update via show(), it will return true otherwise false.
-     */
-    virtual bool isReady() const = 0;
-
-    /**
-     * Set brightness from 0 to 255.
-     *
-     * @param[in] brightness    Brightness value [0; 255]
-     */
-    virtual void setBrightness(uint8_t brightness) = 0;
-
-    /**
-     * Clear display.
-     */
-    virtual void clear() = 0;
-
-protected:
-
-    /**
-     * Constructs the display interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
-     */
-    IDisplay(uint16_t width, uint16_t height) :
-        YAGfx(width, height)
-    {
-    }
-
-private:
-
-    /* Don't allow standard constructor. */
-    IDisplay();
-
-};
+typedef Rgb888  Color;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __IDISPLAY_H__ */
+#endif  /* __YACOLOR_H__ */
 
 /** @} */

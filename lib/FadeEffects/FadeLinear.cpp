@@ -63,7 +63,7 @@ void FadeLinear::init()
     m_state = FADE_STATE_INIT;
 }
 
-bool FadeLinear::fadeIn(IGfx& gfx, IGfx& prev, IGfx& next)
+bool FadeLinear::fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next)
 {
     bool isFinished = false;
 
@@ -93,7 +93,7 @@ bool FadeLinear::fadeIn(IGfx& gfx, IGfx& prev, IGfx& next)
     return isFinished;
 }
 
-bool FadeLinear::fadeOut(IGfx& gfx, IGfx& prev, IGfx& next)
+bool FadeLinear::fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next)
 {
     bool isFinished = false;
 

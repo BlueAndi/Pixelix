@@ -777,7 +777,7 @@ void DisplayMgr::startFadeOut()
     }
 }
 
-void DisplayMgr::fadeInOut(IGfx& dst)
+void DisplayMgr::fadeInOut(YAGfx& dst)
 {
     if ((nullptr != m_currCanvas) &&
         (nullptr != m_fadeEffect))

@@ -140,7 +140,7 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void SunrisePlugin::active(IGfx& gfx)
+void SunrisePlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -183,7 +183,7 @@ void SunrisePlugin::inactive()
     return;
 }
 
-void SunrisePlugin::update(IGfx& gfx)
+void SunrisePlugin::update(YAGfx& gfx)
 {
     lock();
 

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,102 +27,103 @@
 /**
  * @brief  Fade in/out effect by moving the old content out and the new one in.
  * @author Yann Le Glaz <yann_le@web.de>
+ *
+ * @addtogroup gfx
+ *
+ * @{
  */
+
+#ifndef __FADE_MOVE_Y_H__
+#define __FADE_MOVE_Y_H__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "FadeMoveY.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <stdint.h>
+#include <IFadeEffect.hpp>
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-void FadeMoveY::init()
+/**
+ * A simple fade in/out effect, which moves the old content and out and the
+ * new content in. The movement is along the y-axis into the direction of
+ * the negative y-coordinates.
+ */
+class FadeMoveY : public IFadeEffect
 {
-    m_state = FADE_STATE_INIT;
-}
+public:
 
-bool FadeMoveY::fadeIn(IGfx& gfx, IGfx& prev, IGfx& next)
-{
-    (void)prev;
-
-    gfx.copy(next);
-
-    return true;
-}
-
-bool FadeMoveY::fadeOut(IGfx& gfx, IGfx& prev, IGfx& next)
-{
-    bool    isFinished  = false;
-    int16_t x           = 0;
-    int16_t y           = 0;
-
-    if (FADE_STATE_OUT != m_state)
+    /**
+     * Constructs the fade effect.
+     */
+    FadeMoveY() :
+        m_state(FADE_STATE_INIT),
+        m_yOffset(0)
     {
-        m_state     = FADE_STATE_OUT;
-        m_yOffset   = 0;
     }
 
-    for(y = 0; y < (gfx.getHeight() - m_yOffset); ++y)
+    /**
+     * Destroys the fade effect instance.
+     */
+    ~FadeMoveY()
     {
-        for(x = 0; x < gfx.getWidth(); ++x)
-        {
-            gfx.drawPixel(x, y, prev.getColor(x , (y + m_yOffset)));
-        }
     }
 
-    for(y = gfx.getHeight() - m_yOffset; y < gfx.getHeight(); ++y)
+    /**
+     * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
+     */
+    void init() final;
+
+    /**
+     * Achieves a fade in effect. Call this method as long as the effect is not completed.
+     *
+     * @param[in] gfx   Graphics interface to display
+     * @param[in] prev  Graphics interface to previous framebuffer
+     * @param[in] next  Graphics interface to next framebuffer
+     *
+     * @return If the effect is complete, it will return true otherwise false.
+     */
+    bool fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next) final;
+
+    /**
+     * Achieves a fade out effect. Call this method as long as the effect is not completed.
+     *
+     * @param[in] gfx   Graphics interface to display
+     * @param[in] prev  Graphics interface to previous framebuffer
+     * @param[in] next  Graphics interface to next framebuffer
+     *
+     * @return If the effect is complete, it will return true otherwise false.
+     */
+    bool fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next) final;
+
+private:
+
+    /** Fading states. */
+    enum FadeState
     {
-        for(x = 0; x < gfx.getWidth(); ++x)
-        {
-            gfx.drawPixel(x, y, next.getColor(x, ((y + m_yOffset) - gfx.getHeight())));
-        }
-    }
+        FADE_STATE_INIT = 0,    /**< Initialize fadeing */
+        FADE_STATE_OUT          /**< Fading out is pending */
+    };
 
-    ++m_yOffset;
+    FadeState   m_state;        /**< Current fading state */
+    int16_t     m_yOffset;      /**< Current y-offset regarding movement */
 
-    if (gfx.getHeight() <= m_yOffset)
-    {
-        m_state     = FADE_STATE_INIT;
-        isFinished  = true;
-    }
-
-    return isFinished;
-}
+};
 
 /******************************************************************************
- * Protected Methods
+ * Functions
  *****************************************************************************/
 
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
+#endif  /* __FADE_MOVE_Y_H__ */
 
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+/** @} */

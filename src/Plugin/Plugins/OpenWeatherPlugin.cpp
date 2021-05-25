@@ -249,7 +249,7 @@ void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
     return;
 }
 
-void OpenWeatherPlugin::active(IGfx& gfx)
+void OpenWeatherPlugin::active(YAGfx& gfx)
 {
     lock();
     if(true == m_configurationHasChanged)
@@ -310,7 +310,7 @@ void OpenWeatherPlugin::inactive()
     return;
 }
 
-void OpenWeatherPlugin::update(IGfx& gfx)
+void OpenWeatherPlugin::update(YAGfx& gfx)
 {
     lock();
 

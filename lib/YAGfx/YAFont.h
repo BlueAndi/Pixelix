@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Fade in/out effect by moving the old content out and the new one in.
+ * @brief  Yet another font class
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __FADE_MOVE_X_H__
-#define __FADE_MOVE_X_H__
+#ifndef __YAFONT_H__
+#define __YAFONT_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,8 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include <IFadeEffect.hpp>
+#include <BaseFont.hpp>
+#include <YAColor.h>
 
 /******************************************************************************
  * Macros
@@ -55,75 +55,14 @@
  *****************************************************************************/
 
 /**
- * A simple fade in/out effect, which moves the old content and out and the
- * new content in. The movement is along the x-axis into the direction of
- * the negative x-coordinates.
+ * Font with concrete color.
  */
-class FadeMoveX : public IFadeEffect
-{
-public:
-
-    /**
-     * Constructs the fade effect.
-     */
-    FadeMoveX() :
-        m_state(FADE_STATE_INIT),
-        m_xOffset(0)
-    {
-    }
-
-    /**
-     * Destroys the fade effect instance.
-     */
-    ~FadeMoveX()
-    {
-    }
-
-    /**
-     * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
-     */
-    void init() final;
-
-    /**
-     * Achieves a fade in effect. Call this method as long as the effect is not completed.
-     *
-     * @param[in] gfx   Graphics interface to display
-     * @param[in] prev  Graphics interface to previous framebuffer
-     * @param[in] next  Graphics interface to next framebuffer
-     *
-     * @return If the effect is complete, it will return true otherwise false.
-     */
-    bool fadeIn(IGfx& gfx, IGfx& prev, IGfx& next) final;
-
-    /**
-     * Achieves a fade out effect. Call this method as long as the effect is not completed.
-     *
-     * @param[in] gfx   Graphics interface to display
-     * @param[in] prev  Graphics interface to previous framebuffer
-     * @param[in] next  Graphics interface to next framebuffer
-     *
-     * @return If the effect is complete, it will return true otherwise false.
-     */
-    bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) final;
-
-private:
-
-    /** Fading states. */
-    enum FadeState
-    {
-        FADE_STATE_INIT = 0,    /**< Initialize fadeing */
-        FADE_STATE_OUT          /**< Fading out is pending */
-    };
-
-    FadeState   m_state;        /**< Current fading state */
-    int16_t     m_xOffset;      /**< Current x-offset regarding movement */
-
-};
+typedef BaseFont<Color> YAFont;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __FADE_MOVE_X_H__ */
+#endif  /* __YAFONT_H__ */
 
 /** @} */

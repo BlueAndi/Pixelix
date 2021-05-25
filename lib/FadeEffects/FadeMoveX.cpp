@@ -25,22 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Bitmap Widget
+ * @brief  Fade in/out effect by moving the old content out and the new one in.
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "BitmapWidget.h"
-
-#ifndef NATIVE
-
-#include <NeoPixelBus.h>
-#include <Color.h>
-#include <Logging.h>
-
-#endif  /* NATIVE */
+#include "FadeMoveX.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -62,152 +54,62 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize bitmap widget type. */
-const char* BitmapWidget::WIDGET_TYPE = "bitmap";
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
+void FadeMoveX::init()
 {
-    if (&widget != this)
-    {
-        m_bufferSize    = widget.m_bufferSize;
-        m_width         = widget.m_width;
-        m_height        = widget.m_height;
-
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-        }
-
-        if (nullptr != widget.m_buffer)
-        {
-            m_buffer = new Color[m_bufferSize];
-
-            if (nullptr == m_buffer)
-            {
-                m_bufferSize = 0U;
-            }
-            else
-            {
-                size_t index = 0U;
-
-                for(index = 0U; index < m_bufferSize; ++index)
-                {
-                    m_buffer[index] = widget.m_buffer[index];
-                }
-            }
-        }
-    }
-
-    return *this;
+    m_state = FADE_STATE_INIT;
 }
 
-void BitmapWidget::set(const Color* bitmap, uint16_t width, uint16_t height)
+bool FadeMoveX::fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next)
 {
-    if (nullptr != bitmap)
-    {
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-        }
+    (void)prev;
 
-        m_bufferSize    = width * height;
-        m_width         = width;
-        m_height        = height;
+    gfx.copy(next);
 
-        m_buffer = new Color[m_bufferSize];
-
-        if (nullptr == m_buffer)
-        {
-            m_bufferSize = 0U;
-        }
-        else
-        {
-            size_t index = 0U;
-
-            for(index = 0U; index < m_bufferSize; ++index)
-            {
-                m_buffer[index] = bitmap[index];
-            }
-        }
-    }
-
-    return;
+    return true;
 }
 
-#ifndef NATIVE
-
-bool BitmapWidget::load(FS& fs, const String& filename)
+bool FadeMoveX::fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next)
 {
-    bool    status  = false;
-    File    fd;
+    bool    isFinished  = false;
+    int16_t x           = 0;
+    int16_t y           = 0;
 
-    if (false == fs.exists(filename))
+    if (FADE_STATE_OUT != m_state)
     {
-        LOG_WARNING("File %s doesn't exists.", filename.c_str());
+        m_state     = FADE_STATE_OUT;
+        m_xOffset   = 0;
     }
-    else
+
+    for(x = 0; x < (gfx.getWidth() - m_xOffset); ++x)
     {
-        NeoBitmapFile<NeoGrbFeature, File>  neoFile;
-
-        fd = fs.open(filename, "r");
-
-        if (false == fd)
+        for(y = 0; y < gfx.getHeight(); ++y)
         {
-            LOG_ERROR("Failed to open file %s.", filename.c_str());
-        }
-        else
-        {
-            if (false == neoFile.Begin(fd))
-            {
-                LOG_ERROR("File %s has incompatible bitmap file format.", filename.c_str());
-            }
-            else
-            {
-                m_width         = neoFile.Width();
-                m_height        = neoFile.Height();
-                m_bufferSize    = m_width * m_height;
-
-                if (nullptr != m_buffer)
-                {
-                    delete[] m_buffer;
-                    m_buffer = nullptr;
-                }
-
-                m_buffer = new Color[m_bufferSize];
-
-                if (nullptr != m_buffer)
-                {
-                    uint16_t x = 0U;
-                    uint16_t y = 0U;
-
-                    for(y = 0U; y < m_height; ++y)
-                    {
-                        for(x = 0U; x < m_width; ++x)
-                        {
-                            RgbColor rgbColor = neoFile.GetPixelColor(x, y);
-
-                            m_buffer[x + y * m_width].set(rgbColor.R, rgbColor.G, rgbColor.B);
-                        }
-                    }
-
-                    status = true;
-                }
-            }
-
-            fd.close();
+            gfx.drawPixel(x, y, prev.getColor(x + m_xOffset, y));
         }
     }
 
-    return status;
+    for(x = gfx.getWidth() - m_xOffset; x < gfx.getWidth(); ++x)
+    {
+        for(y = 0; y < gfx.getHeight(); ++y)
+        {
+            gfx.drawPixel(x, y, next.getColor((x + m_xOffset) - gfx.getWidth(), y));
+        }
+    }
+
+    ++m_xOffset;
+
+    if (gfx.getWidth() <= m_xOffset)
+    {
+        m_state     = FADE_STATE_INIT;
+        isFinished  = true;
+    }
+
+    return isFinished;
 }
-
-#endif  /* NATIVE */
 
 /******************************************************************************
  * Protected Methods

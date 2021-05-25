@@ -61,7 +61,7 @@ const char* ProgressBar::WIDGET_TYPE = "progressBar";
  * Public Methods
  *****************************************************************************/
 
-void ProgressBar::update(IGfx& gfx)
+void ProgressBar::update(YAGfx& gfx)
 {
     switch(m_algorithm)
     {
@@ -93,7 +93,7 @@ void ProgressBar::update(IGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-void ProgressBar::showProgressPixel(IGfx& gfx)
+void ProgressBar::showProgressPixel(YAGfx& gfx)
 {
     uint16_t    pixelCount  = gfx.getWidth() * gfx.getHeight() * m_progress / 100U;
     int16_t     x           = 0;
@@ -116,7 +116,7 @@ void ProgressBar::showProgressPixel(IGfx& gfx)
     return;
 }
 
-void ProgressBar::showProgressBar(IGfx& gfx)
+void ProgressBar::showProgressBar(YAGfx& gfx)
 {
     if (gfx.getWidth() > gfx.getHeight())
     {

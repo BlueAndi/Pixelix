@@ -236,7 +236,7 @@ void IconTextLampPlugin::stop()
     }
 }
 
-void IconTextLampPlugin::active(IGfx& gfx)
+void IconTextLampPlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -305,7 +305,7 @@ void IconTextLampPlugin::inactive()
     return;
 }
 
-void IconTextLampPlugin::update(IGfx& gfx)
+void IconTextLampPlugin::update(YAGfx& gfx)
 {
     lock();
 

@@ -58,7 +58,7 @@
  * Public Methods
  *****************************************************************************/
 
-void GameOfLifePlugin::active(IGfx& gfx)
+void GameOfLifePlugin::active(YAGfx& gfx)
 {
     uint8_t index   = 0U;
     bool    isInit  = true;
@@ -112,7 +112,7 @@ void GameOfLifePlugin::inactive()
     return;
 }
 
-void GameOfLifePlugin::update(IGfx& gfx)
+void GameOfLifePlugin::update(YAGfx& gfx)
 {
     uint8_t index   = 0U;
     bool    isInit  = true;
@@ -449,7 +449,7 @@ uint8_t GameOfLifePlugin::countAliveNeighbours(uint8_t gridId, int16_t x, int16_
     return count;
 }
 
-void GameOfLifePlugin::update(IGfx& gfx, uint8_t gridId)
+void GameOfLifePlugin::update(YAGfx& gfx, uint8_t gridId)
 {
     int16_t x   = 0;
     int16_t y   = 0;

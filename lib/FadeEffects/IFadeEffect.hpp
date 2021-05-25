@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Display interface
+ * @brief  Basic fade effect interface
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup hal
+ *
+ * @addtogroup gfx
  *
  * @{
  */
 
-#ifndef __IDISPLAY_H__
-#define __IDISPLAY_H__
+#ifndef __BASE_IFADEEFFECT_HPP__
+#define __BASE_IFADEEFFECT_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -54,70 +54,58 @@
  *****************************************************************************/
 
 /**
- * The display interface combines the graphic interfaces and the additional
- * interfaces to control the underlying physical display.
+ * Base fade effect interface, used to fade display content in or out.
+ * The effect will fade in/out from one framebuffer to another and draws the
+ * result directly to the display.
  */
-class IDisplay : public YAGfx
+class IFadeEffect
 {
 public:
 
     /**
-     * Destroys the display interface.
+     * Destroys the fade effect interface.
      */
-    ~IDisplay()
+    virtual ~IFadeEffect()
     {
     }
 
     /**
-     * Initialize base driver for the display.
+     * Initializes/reset fade effect. May be necessary in case a fade effect was aborted.
+     */
+    virtual void init() = 0;
+
+    /**
+     * Achieves a fade in effect. Call this method as long as the effect is not completed.
      *
-     * @return If successful, returns true otherwise false.
-     */
-    virtual bool begin() = 0;
-
-    /**
-     * Show framebuffer on physical display. This may be synchronous
-     * or asynchronous.
-     */
-    virtual void show() = 0;
-
-    /**
-     * The display is ready, when the last physical pixel update is finished.
-     * A asynchronous display update, triggered by show() can be observed this way.
+     * @param[in] gfx   Graphics interface to display
+     * @param[in] prev  Graphics interface to previous framebuffer
+     * @param[in] next  Graphics interface to next framebuffer
      *
-     * @return If ready for another update via show(), it will return true otherwise false.
+     * @return If the effect is complete, it will return true otherwise false.
      */
-    virtual bool isReady() const = 0;
+    virtual bool fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next) = 0;
 
     /**
-     * Set brightness from 0 to 255.
+     * Achieves a fade out effect. Call this method as long as the effect is not completed.
      *
-     * @param[in] brightness    Brightness value [0; 255]
+     * @param[in] gfx   Graphics interface to display
+     * @param[in] prev  Graphics interface to previous framebuffer
+     * @param[in] next  Graphics interface to next framebuffer
+     *
+     * @return If the effect is complete, it will return true otherwise false.
      */
-    virtual void setBrightness(uint8_t brightness) = 0;
-
-    /**
-     * Clear display.
-     */
-    virtual void clear() = 0;
+    virtual bool fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next) = 0;
 
 protected:
 
     /**
-     * Constructs the display interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
+     * Constructs the fade effect interface.
      */
-    IDisplay(uint16_t width, uint16_t height) :
-        YAGfx(width, height)
+    IFadeEffect()
     {
     }
 
 private:
-
-    /* Don't allow standard constructor. */
-    IDisplay();
 
 };
 
@@ -125,6 +113,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __IDISPLAY_H__ */
+#endif  /* __BASE_IFADEEFFECT_HPP__ */
 
 /** @} */

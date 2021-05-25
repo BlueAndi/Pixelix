@@ -147,7 +147,7 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void CountdownPlugin::active(IGfx& gfx)
+void CountdownPlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -185,7 +185,7 @@ void CountdownPlugin::inactive()
     return;
 }
 
-void CountdownPlugin::update(IGfx& gfx)
+void CountdownPlugin::update(YAGfx& gfx)
 {
     lock();
 

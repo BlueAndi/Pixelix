@@ -73,7 +73,7 @@
  * Public Methods
  *****************************************************************************/
 
-void DatePlugin::active(IGfx& gfx)
+void DatePlugin::active(YAGfx& gfx)
 {
     if (nullptr == m_textCanvas)
     {
@@ -123,7 +123,7 @@ void DatePlugin::inactive()
     return;
 }
 
-void DatePlugin::update(IGfx& gfx)
+void DatePlugin::update(YAGfx& gfx)
 {
     if (false != m_isUpdateAvailable)
     {

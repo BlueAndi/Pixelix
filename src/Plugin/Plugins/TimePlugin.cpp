@@ -74,7 +74,7 @@
  * Public Methods
  *****************************************************************************/
 
-void TimePlugin::active(IGfx& gfx)
+void TimePlugin::active(YAGfx& gfx)
 {
     m_isUpdateAvailable = true;
 
@@ -93,7 +93,7 @@ void TimePlugin::inactive()
     return;
 }
 
-void TimePlugin::update(IGfx& gfx)
+void TimePlugin::update(YAGfx& gfx)
 {
     if (false != m_isUpdateAvailable)
     {

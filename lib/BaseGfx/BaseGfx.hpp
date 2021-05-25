@@ -46,7 +46,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <gfxfont.h>
 
 /******************************************************************************
  * Macros
@@ -85,12 +84,8 @@ public:
     {
         if (&gfx != this)
         {
-            m_width             = gfx.m_width;
-            m_height            = gfx.m_height;
-            m_cursorX           = gfx.m_cursorX;
-            m_cursorY           = gfx.m_cursorY;
-            m_isTextWrapEnabled = gfx.m_isTextWrapEnabled;
-            m_font              = gfx.m_font;
+            m_width     = gfx.m_width;
+            m_height    = gfx.m_height;
         }
 
         return *this;
@@ -357,329 +352,10 @@ public:
         }
     }
 
-    /**
-     * Get cursor position.
-     *
-     * @param[out] x x-coordinate
-     * @param[out] y y-coordinate
-     */
-    void getTextCursorPos(int16_t& x, int16_t& y) const
-    {
-        x = m_cursorX;
-        y = m_cursorY;
-    }
-
-    /**
-     * Get cursor x-position.
-     *
-     * @return Cursor x-position
-     */
-    int16_t getTextCursorPosX() const
-    {
-        return m_cursorX;
-    }
-
-    /**
-     * Get cursor y-position.
-     *
-     * @return Cursor y-position
-     */
-    int16_t getTextCursorPosY() const
-    {
-        return m_cursorY;
-    }
-
-    /**
-     * Move text cursor to position.
-     *
-     * @param[in] x x-coordinate
-     * @param[in] y y-coordinate
-     */
-    void setTextCursorPos(int16_t x, int16_t y)
-    {
-        m_cursorX = x;
-        m_cursorY = y;
-    }
-
-    /**
-     * Get text color.
-     *
-     * @return Text color
-     */
-    TColor getTextColor() const
-    {
-        return m_textColor;
-    }
-
-    /**
-     * Set text color.
-     *
-     * @param[in] color Text color
-     */
-    void setTextColor(const TColor& color)
-    {
-        m_textColor = color;
-    }
-
-    /**
-     * Get font.
-     *
-     * @return Font
-     */
-    const GFXfont* getFont() const
-    {
-        return m_font;
-    }
-
-    /**
-     * Set font.
-     *
-     * @param[in] font  Font
-     */
-    void setFont(const GFXfont* font)
-    {
-        m_font = font;
-    }
-
-    /**
-     * Draw single character at current cursor position.
-     *
-     * @param[in] singleChar    Single character which to draw
-     */
-    void drawChar(char singleChar)
-    {
-        uint8_t uChar = static_cast<uint8_t>(singleChar);
-
-        if (nullptr == m_font)
-        {
-            return;
-        }
-
-        /* Set cursor to next line? */
-        if ('\n' == singleChar)
-        {
-            /* Move cursor to begin and one row down. */
-            m_cursorX = 0;
-            m_cursorY += m_font->yAdvance;
-        }
-        /* Is character available in the font? Note, carriage return is skipped. */
-        else if (('\r' != singleChar) &&
-                 (m_font->first <= uChar) &&
-                 (m_font->last >= uChar))
-        {
-            uint8_t         glyphIndex      = uChar - m_font->first;
-            const GFXglyph* glyph           = &(m_font->glyph[glyphIndex]);
-            int16_t         x               = 0;
-            int16_t         y               = 0;
-            uint16_t        bitmapOffset    = glyph->bitmapOffset;
-            uint8_t         bitmapRowBits   = 0U;
-            uint8_t         bitCnt          = 0U;
-
-            /* If text wrap around is enabled and the character is clipping,
-             * jump to the next line.
-             */
-            if (true == m_isTextWrapEnabled)
-            {
-                if (m_width < (m_cursorX + glyph->xOffset + glyph->width))
-                {
-                    m_cursorX = 0;
-                    m_cursorY += m_font->yAdvance;
-                }
-            }
-
-            for(y = 0U; y < glyph->height; ++y)
-            {
-                for(x = 0U; x < glyph->width; ++x)
-                {
-                    /* Every 8 bit, the bitmap offset must be increased. */
-                    if (0U == (bitCnt & 0x07))
-                    {
-                        bitmapRowBits = m_font->bitmap[bitmapOffset];
-                        ++bitmapOffset;
-                    }
-                    ++bitCnt;
-
-                    /* A 1b in the bitmap row bits must be drawn as single pixel. */
-                    if (0U != (bitmapRowBits & 0x80U))
-                    {
-                        drawPixel(m_cursorX + x + glyph->xOffset, m_cursorY + y + glyph->yOffset, m_textColor);
-                    }
-
-                    bitmapRowBits <<= 1U;
-                }
-            }
-
-            m_cursorX += glyph->xAdvance;
-        }
-        /* Skip character */
-        else
-        {
-            ;
-        }
-    }
-
-    /**
-     * Draw a text at given cursor position.
-     *
-     * @param[in] text  Text which to draw
-     */
-    void drawText(const char* text)
-    {
-        size_t idx = 0U;
-
-        if (nullptr == m_font)
-        {
-            return;
-        }
-
-        while('\0' != text[idx])
-        {
-            drawChar(text[idx]);
-
-            ++idx;
-        }
-    }
-
-    /**
-     * Is text wrap around enabled?
-     *
-     * @return If text wrap around is enabled, it will return true otherwise false.
-     */
-    bool isTextWrapEnabled() const
-    {
-        return m_isTextWrapEnabled;
-    }
-
-    /**
-     * Set text wrap around behaviour.
-     *
-     * @param[in] isEnabled Enable (true) wrap around or disable (false) it
-     */
-    void setTextWrap(bool isEnabled)
-    {
-        m_isTextWrapEnabled = isEnabled;
-    }
-
-    /**
-     * Get bounding box of single character.
-     *
-     * @param[in]   singleChar  Single character
-     * @param[out]  width       Width in pixel
-     * @param[out]  height      Height in pixel
-     *
-     * @return If character is valid, it will return true otherwise false.
-     */
-    bool getCharBoundingBox(char singleChar, uint16_t& width, uint16_t& height) const
-    {
-        bool    status  = false;
-        uint8_t uChar   = static_cast<uint8_t>(singleChar);
-
-        if ((nullptr != m_font) &&
-            (m_font->first <= uChar) &&
-            (m_font->last >= uChar) &&
-            ('\n' != singleChar) &&
-            ('\r' != singleChar))
-        {
-            uint8_t         glyphIndex  = uChar - m_font->first;
-            const GFXglyph* glyph       = &(m_font->glyph[glyphIndex]);
-
-            width   = glyph->xAdvance;
-            height  = m_font->yAdvance;
-            status  = true;
-        }
-
-        return status;
-    }
-
-    /**
-     * Get bounding box of text.
-     *
-     * @param[in]   text    Text
-     * @param[out]  width   Width in pixel
-     * @param[out]  height  Height in pixel
-     */
-    bool getTextBoundingBox(const char* text, uint16_t& width, uint16_t& height) const
-    {
-        bool status = false;
-
-        if ((nullptr != text) &&
-            (nullptr != m_font))
-        {
-            size_t      idx         = 0U;
-            uint16_t    lineWidth   = 0U;
-
-            width   = 0U;
-            height  = 0U;
-
-            while('\0' != text[idx])
-            {
-                uint16_t charWidth  = 0U;
-                uint16_t charHeight = 0U;
-
-                if ('\n' == text[idx])
-                {
-                    if (width < lineWidth)
-                    {
-                        width = lineWidth;
-                    }
-
-                    lineWidth = 0U;
-                    height += m_font->yAdvance;;
-                }
-                else if (true == getCharBoundingBox(text[idx], charWidth, charHeight))
-                {
-                    if (0U == idx)
-                    {
-                        height += m_font->yAdvance;
-                    }
-
-                    /* If text wrap around is enabled and the character is clipping,
-                     * jump to the next line.
-                     */
-                    if (true == m_isTextWrapEnabled)
-                    {
-                        if (m_width < (lineWidth + charWidth))
-                        {
-                            if (width < lineWidth)
-                            {
-                                width = lineWidth;
-                            }
-
-                            lineWidth = 0U;
-                            height += m_font->yAdvance;
-                        }
-                    }
-
-                    lineWidth += charWidth;
-                }
-                else
-                {
-                    ;
-                }
-
-                ++idx;
-            }
-
-            if (width < lineWidth)
-            {
-                width = lineWidth;
-            }
-
-            status = true;
-        }
-
-        return status;
-    }
-
 protected:
 
-    uint16_t        m_width;                /**< Canvas width in pixel */
-    uint16_t        m_height;               /**< Canvas height in pixel */
-    int16_t         m_cursorX;              /**< Cursor x-coordinate */
-    int16_t         m_cursorY;              /**< Cursor y-coordinate */
-    TColor          m_textColor;            /**< Text color */
-    bool            m_isTextWrapEnabled;    /**< Is text wrap around enabled or not? */
-    const GFXfont*  m_font;                 /**< Current selected font */
+    uint16_t    m_width;    /**< Canvas width in pixel */
+    uint16_t    m_height;   /**< Canvas height in pixel */
 
     /**
      * Constructs the base graphics functionality.
@@ -689,12 +365,7 @@ protected:
      */
     BaseGfx(uint16_t width, uint16_t height) :
         m_width(width),
-        m_height(height),
-        m_cursorX(0),
-        m_cursorY(0),
-        m_textColor(0U),
-        m_isTextWrapEnabled(false),
-        m_font(nullptr)
+        m_height(height)
     {
     }
 
@@ -705,11 +376,7 @@ protected:
      */
     BaseGfx(const BaseGfx& gfx) :
         m_width(gfx.m_width),
-        m_height(gfx.m_height),
-        m_cursorX(gfx.m_cursorX),
-        m_cursorY(gfx.m_cursorY),
-        m_isTextWrapEnabled(gfx.m_isTextWrapEnabled),
-        m_font(gfx.m_font)
+        m_height(gfx.m_height)
     {
     }
 

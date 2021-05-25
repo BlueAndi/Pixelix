@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Graphics interface
+ * @brief  Yet anoterh GFX drawing pen class
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __IGFX_HPP__
-#define __IGFX_HPP__
+#ifndef __YAGFXPEN_H__
+#define __YAGFXPEN_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,10 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include <BaseGfx.hpp>
-#include <Color.h>
-#include <Print.h>
+#include <BaseGfxPen.hpp>
+#include "YAColor.h"
 
 /******************************************************************************
  * Macros
@@ -57,47 +55,14 @@
  *****************************************************************************/
 
 /**
- * Pixelix graphics operations with RGB888 color format.
+ * GFX drawing pen with concrete color.
  */
-typedef BaseGfx<Color> PixelixGfx;
-
-/**
- * Graphics interface, based on the Adafruit GFX with extensions.
- */
-class IGfx : public PixelixGfx, public Print
-{
-public:
-
-    /**
-     * Destroys the graphics interface.
-     */
-    virtual ~IGfx()
-    {
-    }
-
-protected:
-
-    /**
-     * Constructs the graphics interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
-     */
-    IGfx(uint16_t width, uint16_t height) :
-        PixelixGfx(width, height)
-    {
-    }
-
-private:
-
-    /* Default constructor not allowed. */
-    IGfx();
-};
+typedef BaseGfxPen<Color> YAGfxPen;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __IGFX_HPP__ */
+#endif  /* __YAGFXPEN_H__ */
 
 /** @} */

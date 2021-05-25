@@ -42,7 +42,8 @@
 #include <LampWidget.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
-#include <Color.h>
+#include <YAColor.h>
+#include <YAGfx.h>
 #include <StateMachine.hpp>
 #include <SimpleTimer.hpp>
 #include <ProgressBar.h>
@@ -152,7 +153,7 @@ private:
  * Graphics interface for testing purposes.
  * It provides all relevant methods from the Adafruit GFX, which are used.
  */
-class TestGfx : public IGfx
+class TestGfx : public YAGfx
 {
 public:
 
@@ -160,7 +161,7 @@ public:
      * Constructs a graphic interface for testing purposes.
      */
     TestGfx() :
-        IGfx(WIDTH, HEIGHT),
+        YAGfx(WIDTH, HEIGHT),
         m_buffer(),
         m_callCounterDrawPixel(0U)
     {
@@ -250,21 +251,6 @@ public:
         m_buffer[x + y * WIDTH].setIntensity(ratio);
 
         return;
-    }
-
-    /**
-     * Write a single character on the display.
-     * This method is necessary for using print() methods.
-     *
-     * @param[in] singleChar    Single character
-     *
-     * @return Number of written characters.
-     */
-    size_t write(uint8_t singleChar) final
-    {
-        drawChar(static_cast<char>(singleChar));
-
-        return 1U;
     }
 
     /**
@@ -455,7 +441,7 @@ public:
      *
      * @param[in] gfx Graphics interface, which to use.
      */
-    void update(IGfx& gfx)
+    void update(YAGfx& gfx)
     {
         int16_t x = 0;
         int16_t y = 0;
@@ -613,6 +599,7 @@ static T getMin(const T value1, const T value2);
 
 static void testDoublyLinkedList(void);
 static void testGfx(void);
+static void testGfxText(void);
 static void testWidget(void);
 static void testCanvas(void);
 static void testLampWidget(void);
@@ -648,6 +635,7 @@ int main(int argc, char **argv)
 
     RUN_TEST(testDoublyLinkedList);
     RUN_TEST(testGfx);
+    RUN_TEST(testGfxText);
     RUN_TEST(testWidget);
     RUN_TEST(testCanvas);
     RUN_TEST(testLampWidget);
@@ -856,8 +844,6 @@ static void testGfx()
     uint16_t    height      = 0U;
     Color       color       = 0U;
     Color       bitmap[TestGfx::WIDTH * TestGfx::HEIGHT];
-    int16_t     cursorPosX  = 0;
-    int16_t     cursorPosY  = 0;
 
     /* Verify screen size */
     TEST_ASSERT_EQUAL_UINT16(TestGfx::WIDTH, testGfx.getWidth());
@@ -953,30 +939,46 @@ static void testGfx()
     testGfx.fillScreen(0U);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
 
+    return;
+}
+
+/**
+ * Test the text graphic functions.
+ */
+static void testGfxText()
+{
+    TestGfx     testGfx;
+    YAText      testGfxText;
+    const Color COLOR       = 0x1234;
+    uint16_t    width       = 0U;
+    uint16_t    height      = 0U;
+    int16_t     cursorPosX  = 0;
+    int16_t     cursorPosY  = 0;
+
     /* Verify cursor positon */
-    testGfx.getTextCursorPos(cursorPosX, cursorPosY);
+    testGfxText.getTextCursorPos(cursorPosX, cursorPosY);
     TEST_ASSERT_EQUAL_INT16(0, cursorPosX);
     TEST_ASSERT_EQUAL_INT16(0, cursorPosY);
-    TEST_ASSERT_EQUAL_INT16(0, testGfx.getTextCursorPosX());
-    TEST_ASSERT_EQUAL_INT16(0, testGfx.getTextCursorPosY());
+    TEST_ASSERT_EQUAL_INT16(0, testGfxText.getTextCursorPosX());
+    TEST_ASSERT_EQUAL_INT16(0, testGfxText.getTextCursorPosY());
 
-    testGfx.setTextCursorPos(1, 2);
-    testGfx.getTextCursorPos(cursorPosX, cursorPosY);
+    testGfxText.setTextCursorPos(1, 2);
+    testGfxText.getTextCursorPos(cursorPosX, cursorPosY);
     TEST_ASSERT_EQUAL_INT16(1, cursorPosX);
     TEST_ASSERT_EQUAL_INT16(2, cursorPosY);
-    TEST_ASSERT_EQUAL_INT16(1, testGfx.getTextCursorPosX());
-    TEST_ASSERT_EQUAL_INT16(2, testGfx.getTextCursorPosY());
+    TEST_ASSERT_EQUAL_INT16(1, testGfxText.getTextCursorPosX());
+    TEST_ASSERT_EQUAL_INT16(2, testGfxText.getTextCursorPosY());
 
     /* Draw character, but without font. Nothing shall be shown. */
-    testGfx.setTextCursorPos(0, 6);
-    testGfx.setTextWrap(false);
-    testGfx.setTextColor(COLOR);
-    testGfx.drawChar('T');
+    testGfxText.setTextCursorPos(0, 6);
+    testGfxText.setTextWrap(false);
+    testGfxText.setTextColor(COLOR);
+    testGfxText.drawChar(testGfx, 'T');
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
 
     /* Select font and draw again. The character shall be shown. */
-    testGfx.setFont(&TomThumb);
-    TEST_ASSERT_TRUE(testGfx.getTextBoundingBox("Test", width, height));
+    testGfxText.setFont(&TomThumb);
+    TEST_ASSERT_TRUE(testGfxText.getTextBoundingBox(testGfx.getWidth(), testGfx.getHeight(), "Test", width, height));
 
     return;
 }
@@ -1372,13 +1374,13 @@ static void testTextWidget()
     TEST_ASSERT_EQUAL_UINT32(TEXT_COLOR, textWidget.getTextColor());
 
     /* Check for default font */
-    TEST_ASSERT_NOT_NULL(textWidget.getFont());
-    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, textWidget.getFont());
+    TEST_ASSERT_NOT_NULL(textWidget.getFont().getGfxFont());
+    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, textWidget.getFont().getGfxFont());
 
     /* Font shall be used for drawing */
     textWidget.update(testGfx);
-    TEST_ASSERT_NOT_NULL(testGfx.getFont());
-    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, testGfx.getFont());
+    TEST_ASSERT_NOT_NULL(textWidget.getFont().getGfxFont());
+    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, textWidget.getFont().getGfxFont());
 
     /* Set text with format tag and get text without format tag back. */
     textWidget.setFormatStr("\\#FF00FFHello World!");

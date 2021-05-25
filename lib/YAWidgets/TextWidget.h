@@ -46,7 +46,9 @@
 #include <stdint.h>
 #include <WString.h>
 #include <Widget.hpp>
-#include <Color.h>
+#include <YAColor.h>
+#include <YAFont.h>
+#include <YAText.h>
 #include <SimpleTimer.hpp>
 
 /******************************************************************************
@@ -81,8 +83,7 @@ public:
     TextWidget() :
         Widget(WIDGET_TYPE),
         m_formatStr(),
-        m_textColor(DEFAULT_TEXT_COLOR),
-        m_font(DEFAULT_FONT),
+        m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
         m_scrollingCnt(0U),
@@ -102,8 +103,7 @@ public:
     TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR) :
         Widget(WIDGET_TYPE),
         m_formatStr(str),
-        m_textColor(color),
-        m_font(DEFAULT_FONT),
+        m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
         m_checkScrollingNeed(false),
         m_isScrollingEnabled(false),
         m_scrollingCnt(0U),
@@ -121,8 +121,7 @@ public:
     TextWidget(const TextWidget& widget) :
         Widget(WIDGET_TYPE),
         m_formatStr(widget.m_formatStr),
-        m_textColor(widget.m_textColor),
-        m_font(widget.m_font),
+        m_gfxText(widget.m_gfxText),
         m_checkScrollingNeed(widget.m_checkScrollingNeed),
         m_isScrollingEnabled(widget.m_isScrollingEnabled),
         m_scrollingCnt(widget.m_scrollingCnt),
@@ -149,8 +148,7 @@ public:
         if (&widget != this)
         {
             m_formatStr             = widget.m_formatStr;
-            m_textColor             = widget.m_textColor;
-            m_font                  = widget.m_font;
+            m_gfxText               = widget.m_gfxText;
             m_checkScrollingNeed    = widget.m_checkScrollingNeed;
             m_isScrollingEnabled    = widget.m_isScrollingEnabled;
             m_scrollingCnt          = widget.m_scrollingCnt;
@@ -167,7 +165,7 @@ public:
      *
      * @param[in] gfx Graphics interface
      */
-    void update(IGfx& gfx) override;
+    void update(YAGfx& gfx) override;
 
     /**
      * Set the text string. It can contain format tags like:
@@ -214,7 +212,7 @@ public:
      */
     void setTextColor(const Color& color)
     {
-        m_textColor = color;
+        m_gfxText.setTextColor(color);
         return;
     }
 
@@ -223,9 +221,9 @@ public:
      *
      * @return Text color
      */
-    const Color& getTextColor() const
+    Color getTextColor() const
     {
-        return m_textColor;
+        return m_gfxText.getTextColor();
     }
 
     /**
@@ -233,9 +231,9 @@ public:
      *
      * @param[in] font  New font to set
      */
-    void setFont(const GFXfont* font)
+    void setFont(const YAFont& font)
     {
-        m_font                  = font;
+        m_gfxText.setFont(font);
         m_checkScrollingNeed    = true;
 
         return;
@@ -244,11 +242,11 @@ public:
     /**
      * Get font.
      *
-     * @return If a font is set, it will be returned otherwise nullptr.
+     * @return Font
      */
-    const GFXfont* getFont() const
+    YAFont& getFont()
     {
-        return m_font;
+        return m_gfxText.getFont();
     }
 
     /**
@@ -314,11 +312,10 @@ public:
 private:
 
     /** Keyword handler method. */
-    typedef bool (TextWidget::*KeywordHandler)(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    typedef bool (TextWidget::*KeywordHandler)(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
 
     String          m_formatStr;            /**< String, which contains format tags. */
-    Color           m_textColor;            /**< Text color of the string */
-    const GFXfont*  m_font;                 /**< Current font */
+    YAText          m_gfxText;              /**< Current gfx for text */
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
     bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
     uint32_t        m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
@@ -346,7 +343,7 @@ private:
      * @param[in] gfx       Graphics, used to draw the characters
      * @param[in] formatStr String which contains format tags
      */
-    void show(IGfx& gfx, const String& formatStr) const;
+    void show(YAGfx& gfx, const String& formatStr);
 
     /**
      * Handles the keyword for color changes.
@@ -358,7 +355,7 @@ private:
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
-    bool handleColor(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    bool handleColor(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
 
     /**
      * Handles the keyword for alignment changes.
@@ -370,7 +367,7 @@ private:
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
-    bool handleAlignment(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    bool handleAlignment(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
 };
 
 /******************************************************************************

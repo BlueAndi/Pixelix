@@ -91,7 +91,7 @@ public:
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeIn(IGfx& gfx, IGfx& prev, IGfx& next) final;
+    bool fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next) final;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
@@ -102,7 +102,7 @@ public:
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeOut(IGfx& gfx, IGfx& prev, IGfx& next) final;
+    bool fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next) final;
 
     /**
      * Fading step per fadeIn/fadeOut call.

@@ -36,7 +36,7 @@
 #include "FileSystem.h"
 
 #include <Board.h>
-#include <Color.h>
+#include <YAColor.h>
 #include <Logging.h>
 
 /******************************************************************************
@@ -74,7 +74,7 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
     return;
 }
 
-void TempHumidPlugin::active(IGfx& gfx)
+void TempHumidPlugin::active(YAGfx& gfx)
 {
     lock();
 
@@ -128,7 +128,7 @@ void TempHumidPlugin::active(IGfx& gfx)
     return;
 }
 
-void TempHumidPlugin::update(IGfx& gfx)
+void TempHumidPlugin::update(YAGfx& gfx)
 {
     bool showPage                   = false;
     char valueReducedPrecison[6]    = { 0 };    /* Holds a value in lower precision for display. */

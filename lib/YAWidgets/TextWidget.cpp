@@ -79,15 +79,10 @@ uint32_t                    TextWidget::m_scrollPause       = TextWidget::DEFAUL
  * Public Methods
  *****************************************************************************/
 
-void TextWidget::update(IGfx& gfx)
+void TextWidget::update(YAGfx& gfx)
 {
     int16_t cursorX = m_posX;
-    int16_t cursorY = m_posY + m_font->yAdvance - 1; /* Set cursor to baseline */
-
-    /* Set base parameters */
-    gfx.setFont(m_font);
-    gfx.setTextColor(m_textColor);
-    gfx.setTextWrap(false); /* If text is too long, don't wrap around. */
+    int16_t cursorY = m_posY + m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
 
     /* Text changed, check whether scrolling is necessary? */
     if (true == m_checkScrollingNeed)
@@ -95,7 +90,7 @@ void TextWidget::update(IGfx& gfx)
         uint16_t    textHeight      = 0U;
         String      str             = removeFormatTags(m_formatStr);
 
-        if (true == gfx.getTextBoundingBox(str.c_str(), m_textWidth, textHeight))
+        if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), gfx.getHeight(), str.c_str(), m_textWidth, textHeight))
         {
             /* Text too long for the display? */
             if (gfx.getWidth() < m_textWidth)
@@ -118,7 +113,7 @@ void TextWidget::update(IGfx& gfx)
 
     /* Move cursor to right position */
     cursorX -= m_scrollOffset;
-    gfx.setTextCursorPos(cursorX, cursorY);
+    m_gfxText.setTextCursorPos(cursorX, cursorY);
 
     /* Show text */
     show(gfx, m_formatStr);
@@ -183,7 +178,7 @@ String TextWidget::removeFormatTags(const String& formatStr) const
             {
                 KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
                 uint8_t         overstep    = 0U;
-                bool            status      = (this->*handler)(nullptr, false, formatStr.substring(index), overstep);
+                bool            status      = (this->*handler)(nullptr, nullptr, false, formatStr.substring(index), overstep);
 
                 if (true == status)
                 {
@@ -215,12 +210,13 @@ String TextWidget::removeFormatTags(const String& formatStr) const
     return str;
 }
 
-void TextWidget::show(IGfx& gfx, const String& formatStr) const
+void TextWidget::show(YAGfx& gfx, const String& formatStr)
 {
-    uint32_t    index       = 0U;
-    bool        escapeFound = false;
-    bool        useChar     = false;
-    uint32_t    length      = formatStr.length();
+    uint32_t    index           = 0U;
+    bool        escapeFound     = false;
+    bool        useChar         = false;
+    uint32_t    length          = formatStr.length();
+    Color       textColorBackup = m_gfxText.getTextColor();
 
     while(length > index)
     {
@@ -247,7 +243,7 @@ void TextWidget::show(IGfx& gfx, const String& formatStr) const
             {
                 KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
                 uint8_t         overstep    = 0U;
-                bool            status      = (this->*handler)(&gfx, false, formatStr.substring(index), overstep);
+                bool            status      = (this->*handler)(&gfx, &m_gfxText, false, formatStr.substring(index), overstep);
 
                 if (true == status)
                 {
@@ -272,18 +268,18 @@ void TextWidget::show(IGfx& gfx, const String& formatStr) const
         {
             useChar = false;
 
-            gfx.print(formatStr[index]);
+            m_gfxText.drawChar(gfx, formatStr[index]);
             ++index;
         }
     }
 
     /* Text color might be changed, restore original. */
-    gfx.setTextColor(m_textColor);
+    m_gfxText.setTextColor(textColorBackup);
 
     return;
 }
 
-bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const
+bool TextWidget::handleColor(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const
 {
     bool status = false;
 
@@ -297,9 +293,10 @@ bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, 
         if (true == convStatus)
         {
             if ((false == noAction) &&
-                (nullptr != gfx))
+                (nullptr != gfx) &&
+                (nullptr != gfxText))
             {
-                gfx->setTextColor(colorRGB888);
+                gfxText->setTextColor(colorRGB888);
             }
 
             overstep    = 1U + RGB_HEX_LEN;
@@ -310,7 +307,7 @@ bool TextWidget::handleColor(IGfx* gfx, bool noAction, const String& formatStr, 
     return status;
 }
 
-bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatStr, uint8_t& overstep) const
+bool TextWidget::handleAlignment(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const
 {
     bool status                 = false;
     const uint8_t   KEYWORD_LEN = 6U;
@@ -325,15 +322,16 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
     else if (true == formatStr.startsWith("ralign"))
     {
         if ((false == noAction) &&
-            (nullptr != gfx))
+            (nullptr != gfx) &&
+            (nullptr != gfxText))
         {
             String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
             uint16_t    textWidth   = 0U;
             uint16_t    textHeight  = 0U;
 
-            if (true == gfx->getTextBoundingBox(text.c_str(), textWidth, textHeight))
+            if (true == gfxText->getTextBoundingBox(gfx->getWidth(), gfx->getHeight(), text.c_str(), textWidth, textHeight))
             {
-                gfx->setTextCursorPos(gfx->getWidth() - textWidth, gfx->getTextCursorPosY());
+                gfxText->setTextCursorPos(gfx->getWidth() - textWidth, gfxText->getTextCursorPosY());
             }
         }
 
@@ -344,15 +342,16 @@ bool TextWidget::handleAlignment(IGfx* gfx, bool noAction, const String& formatS
     else if (true == formatStr.startsWith("calign"))
     {
         if ((false == noAction) &&
-            (nullptr != gfx))
+            (nullptr != gfx) &&
+            (nullptr != gfxText))
         {
             String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
             uint16_t    textWidth   = 0U;
             uint16_t    textHeight  = 0U;
 
-            if (true == gfx->getTextBoundingBox(text.c_str(), textWidth, textHeight))
+            if (true == gfxText->getTextBoundingBox(gfx->getWidth(), gfx->getHeight(), text.c_str(), textWidth, textHeight))
             {
-                gfx->setTextCursorPos(gfx->getTextCursorPosX() + (gfx->getWidth() - gfx->getTextCursorPosX() - textWidth) / 2, gfx->getTextCursorPosY());
+                gfxText->setTextCursorPos(gfxText->getTextCursorPosX() + (gfx->getWidth() - gfxText->getTextCursorPosX() - textWidth) / 2, gfxText->getTextCursorPosY());
             }
         }
 

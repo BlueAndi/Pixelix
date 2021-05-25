@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IGfx.hpp>
+#include <YAGfx.h>
 #include <Util.h>
 #include "IPluginMaintenance.hpp"
 
@@ -238,7 +238,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void active(IGfx& gfx) override
+    virtual void active(YAGfx& gfx) override
     {
         UTIL_NOT_USED(gfx);
         return;
@@ -261,7 +261,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void update(IGfx& gfx) = 0;
+    virtual void update(YAGfx& gfx) = 0;
 
     /**
      * Path where plugin specific configuration files shall be stored.

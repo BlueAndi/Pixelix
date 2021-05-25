@@ -58,7 +58,7 @@
  * Public Methods
  *****************************************************************************/
 
-void FirePlugin::active(IGfx& gfx)
+void FirePlugin::active(YAGfx& gfx)
 {
     /* Defered constructor */
     if (nullptr == m_heat)
@@ -84,7 +84,7 @@ void FirePlugin::inactive()
     return;
 }
 
-void FirePlugin::update(IGfx& gfx)
+void FirePlugin::update(YAGfx& gfx)
 {
     int16_t x       = 0;
     int16_t y       = 0;

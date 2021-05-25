@@ -58,7 +58,7 @@
  * Public Methods
  *****************************************************************************/
 
-void SysMsgPlugin::update(IGfx& gfx)
+void SysMsgPlugin::update(YAGfx& gfx)
 {
     bool        isScrollingEnabled  = false;
     uint32_t    scrollingCnt        = 0U;
