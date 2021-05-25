@@ -44,6 +44,7 @@
 #include <TextWidget.h>
 #include <YAColor.h>
 #include <YAGfx.h>
+#include <YAGfxText.h>
 #include <StateMachine.hpp>
 #include <SimpleTimer.hpp>
 #include <ProgressBar.h>
@@ -948,7 +949,7 @@ static void testGfx()
 static void testGfxText()
 {
     TestGfx     testGfx;
-    YAText      testGfxText;
+    YAGfxText   testGfxText;
     const Color COLOR       = 0x1234;
     uint16_t    width       = 0U;
     uint16_t    height      = 0U;

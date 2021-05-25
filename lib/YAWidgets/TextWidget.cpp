@@ -279,7 +279,7 @@ void TextWidget::show(YAGfx& gfx, const String& formatStr)
     return;
 }
 
-bool TextWidget::handleColor(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const
+bool TextWidget::handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const
 {
     bool status = false;
 
@@ -307,7 +307,7 @@ bool TextWidget::handleColor(YAGfx* gfx, YAText* gfxText, bool noAction, const S
     return status;
 }
 
-bool TextWidget::handleAlignment(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const
+bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const
 {
     bool status                 = false;
     const uint8_t   KEYWORD_LEN = 6U;

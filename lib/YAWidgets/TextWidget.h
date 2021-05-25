@@ -48,7 +48,7 @@
 #include <Widget.hpp>
 #include <YAColor.h>
 #include <YAFont.h>
-#include <YAText.h>
+#include <YAGfxText.h>
 #include <SimpleTimer.hpp>
 
 /******************************************************************************
@@ -312,10 +312,10 @@ public:
 private:
 
     /** Keyword handler method. */
-    typedef bool (TextWidget::*KeywordHandler)(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    typedef bool (TextWidget::*KeywordHandler)(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
 
     String          m_formatStr;            /**< String, which contains format tags. */
-    YAText          m_gfxText;              /**< Current gfx for text */
+    YAGfxText       m_gfxText;              /**< Current gfx for text */
     bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
     bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
     uint32_t        m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
@@ -355,7 +355,7 @@ private:
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
-    bool handleColor(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    bool handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
 
     /**
      * Handles the keyword for alignment changes.
@@ -367,7 +367,7 @@ private:
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
-    bool handleAlignment(YAGfx* gfx, YAText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    bool handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
 };
 
 /******************************************************************************

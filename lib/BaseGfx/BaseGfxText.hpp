@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Base text
+ * @brief  Base GFX text
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BASE_TEXT_HPP__
-#define __BASE_TEXT_HPP__
+#ifndef __BASE_GFX_TEXT_HPP__
+#define __BASE_GFX_TEXT_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -56,14 +56,15 @@
  *****************************************************************************/
 
 /**
- * The BaseText class provides generic text handling, based on the configured
+ * The BaseGfxText class provides generic text handling, based on the configured
  * font.
  * 
  * Features:
+ * - Provides a text cursor
  * - Text wrap around
  */
 template < typename TColor >
-class BaseText
+class BaseGfxText
 {
 public:
 
@@ -71,7 +72,7 @@ public:
      * Constructs a base text object, without graphical font representation.
      * Note, until no GFXfont is assigned, it can not draw any character.
      */
-    BaseText() :
+    BaseGfxText() :
         m_cursorX(0),
         m_cursorY(0),
         m_textColor(0U),
@@ -85,7 +86,7 @@ public:
      * 
      * @param[in] text  Base text, which to copy.
      */
-    BaseText(const BaseText& text) :
+    BaseGfxText(const BaseGfxText& text) :
         m_cursorX(text.m_cursorX),
         m_cursorY(text.m_cursorY),
         m_textColor(text.m_textColor),
@@ -100,7 +101,7 @@ public:
      * @param[in] gfxFont   GFXfont
      * @param[in] color     Text color
      */
-    BaseText(const GFXfont* gfxFont, const TColor& color = 0U) :
+    BaseGfxText(const GFXfont* gfxFont, const TColor& color = 0U) :
         m_cursorX(0),
         m_cursorY(0),
         m_textColor(color),
@@ -112,7 +113,7 @@ public:
     /**
      * Destroys the base text.
      */
-    ~BaseText()
+    ~BaseGfxText()
     {
     }
 
@@ -376,6 +377,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BASE_TEXT_HPP__ */
+#endif  /* __BASE_GFX_TEXT_HPP__ */
 
 /** @} */

@@ -47,7 +47,7 @@ class "BaseFont<TColor>" as baseFont {
     + drawChar(gfx : BaseGfx<TColor>&, cursorX : int16_t&, cursorY : int16_t&, singleChar : char, color : const TColor&) : void
 }
 
-class "BaseText<TColor>" as baseText {
+class "BaseGfxText<TColor>" as baseGfxText {
     - m_cursorX : int16_t
     - m_cursorY : int16_t
     - m_textColor : TColor
@@ -69,10 +69,10 @@ class "BaseText<TColor>" as baseText {
 }
 
 gfxFont <-- baseFont
-baseFont <-- baseText
+baseFont <-- baseGfxText
 
 baseFont ..> baseGfx: <<use>>
-baseText ...> baseGfx: <<use>>
+baseGfxText ...> baseGfx: <<use>>
 
 class "BaseGfxPen<TColor>" as baseGfxPen {
     - m_x : int16_t
