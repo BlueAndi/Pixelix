@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __IDISPLAY_H__
-#define __IDISPLAY_H__
+#ifndef __DISPLAY_HPP__
+#define __DISPLAY_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -125,6 +125,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __IDISPLAY_H__ */
+#endif  /* __DISPLAY_HPP__ */
 
 /** @} */
