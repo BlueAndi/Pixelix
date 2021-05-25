@@ -124,9 +124,32 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
 }
 
 
-void VolumioPlugin::start()
+void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
     lock();
+
+    if (nullptr == m_iconCanvas)
+    {
+        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
+
+        if (nullptr != m_iconCanvas)
+        {
+            (void)m_iconCanvas->addWidget(m_bitmapWidget);
+
+            /* Load icon from filesystem. */
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+        }
+    }
+
+    if (nullptr == m_textCanvas)
+    {
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
+
+        if (nullptr != m_textCanvas)
+        {
+            (void)m_textCanvas->addWidget(m_textWidget);
+        }
+    }
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -174,6 +197,18 @@ void VolumioPlugin::stop()
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
     unlock();
 
     return;
@@ -211,58 +246,6 @@ void VolumioPlugin::process()
 
     unlock();
 
-    return;
-}
-
-void VolumioPlugin::active(YAGfx& gfx)
-{
-    lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr == m_iconCanvas)
-    {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
-
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_bitmapWidget);
-
-            /* Load icon from filesystem. */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-
-            m_iconCanvas->update(gfx);
-        }
-    }
-    else
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
-
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
-        }
-    }
-    else
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    unlock();
-
-    return;
-}
-
-void VolumioPlugin::inactive()
-{
-    /* Nothing to do. */
     return;
 }
 

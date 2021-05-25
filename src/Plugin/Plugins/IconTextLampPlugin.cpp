@@ -228,6 +228,15 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
     return isAccepted;
 }
 
+void IconTextLampPlugin::start(uint16_t width, uint16_t height)
+{
+    UTIL_NOT_USED(width);
+    UTIL_NOT_USED(height);
+
+    /* Nothing to do. */
+    return;
+}
+
 void IconTextLampPlugin::stop()
 {
     if (false != FILESYSTEM.remove(getFileName()))

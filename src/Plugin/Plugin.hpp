@@ -206,9 +206,14 @@ public:
     /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    virtual void start() override
+    virtual void start(uint16_t width, uint16_t height) override
     {
+        UTIL_NOT_USED(width);
+        UTIL_NOT_USED(height);
         return;
     }
 

@@ -196,10 +196,21 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
+     * Set the slot interface, which the plugin can used to request information
+     * from the slot, it is plugged in.
+     *
+     * @param[in] slotInterf    Slot interface
+     */
+    void setSlot(const ISlotPlugin* slotInterf) final;
+
+    /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    void start() final;
+    void start(uint16_t width, uint16_t height) final;
 
     /**
      * Stop the plugin.
@@ -213,14 +224,6 @@ public:
      * active slot.
      */
     void process(void) final;
-    
-    /**
-     * Set the slot interface, which the plugin can used to request information
-     * from the slot, it is plugged in.
-     *
-     * @param[in] slotInterf    Slot interface
-     */
-    void setSlot(const ISlotPlugin* slotInterf) final;
 
     /**
      * This method will be called in case the plugin is set active, which means

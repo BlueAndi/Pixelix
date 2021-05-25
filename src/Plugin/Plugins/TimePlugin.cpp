@@ -74,40 +74,10 @@
  * Public Methods
  *****************************************************************************/
 
-void TimePlugin::active(YAGfx& gfx)
-{
-    m_isUpdateAvailable = true;
-
-    m_checkTimeUpdateTimer.start(CHECK_TIME_UPDATE_PERIOD);
-
-    /* Force immediate time update to avoid displaying
-     * an old time for one TIME_UPDATE_PERIOD.
-     */
-    updateTime(true);
-}
-
-void TimePlugin::inactive()
-{
-    m_checkTimeUpdateTimer.stop();
-
-    return;
-}
-
-void TimePlugin::update(YAGfx& gfx)
-{
-    if (false != m_isUpdateAvailable)
-    {
-        gfx.fillScreen(ColorDef::BLACK);
-        m_textWidget.update(gfx);
-
-        m_isUpdateAvailable = false;
-    }
-
-    return;
-}
-
 void TimePlugin::process()
 {
+    lock();
+
     if ((true == m_checkTimeUpdateTimer.isTimerRunning()) &&
         (true == m_checkTimeUpdateTimer.isTimeout()))
     {
@@ -116,12 +86,66 @@ void TimePlugin::process()
         m_checkTimeUpdateTimer.restart();
     }
 
+    unlock();
+
+    return;
+}
+
+void TimePlugin::active(YAGfx& gfx)
+{
+    UTIL_NOT_USED(gfx);
+
+    lock();
+
+    /* Force immediate time update to avoid displaying
+     * an old time for one TIME_UPDATE_PERIOD.
+     */
+    updateTime(true);
+
+    /* Force drawing on display in the update() method for the very first time
+     * after activation.
+     */
+    m_isUpdateAvailable = true;
+    m_checkTimeUpdateTimer.start(CHECK_TIME_UPDATE_PERIOD);
+
+    unlock();
+}
+
+void TimePlugin::inactive()
+{
+    lock();
+
+    m_checkTimeUpdateTimer.stop();
+
+    unlock();
+
+    return;
+}
+
+void TimePlugin::update(YAGfx& gfx)
+{
+    lock();
+
+    if (false != m_isUpdateAvailable)
+    {
+        gfx.fillScreen(ColorDef::BLACK);
+        m_textWidget.update(gfx);
+
+        m_isUpdateAvailable = false;
+    }
+
+    unlock();
+
     return;
 }
 
 void TimePlugin::setText(const String& formatText)
 {
+    lock();
+
     m_textWidget.setFormatStr(formatText);
+    
+    unlock();
 
     return;
 }
@@ -153,6 +177,26 @@ void TimePlugin::updateTime(bool force)
             m_isUpdateAvailable = true;
         }
     }
+}
+
+void TimePlugin::lock() const
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void TimePlugin::unlock() const
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
+
+    return;
 }
 
 /******************************************************************************

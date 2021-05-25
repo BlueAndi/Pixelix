@@ -74,19 +74,9 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
     return;
 }
 
-void TempHumidPlugin::active(YAGfx& gfx)
+void TempHumidPlugin::start(uint16_t width, uint16_t height)
 {
     lock();
-
-    /* Set time to show page - either 10s or slot_time / 4
-     * read here because otherwise we do not get config changes during runtime in slot_time.
-     */
-
-    if (nullptr != m_slotInterf) {
-        m_pageTime = m_slotInterf->getDuration() / 4U;
-    }
-
-    gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr == m_iconCanvas)
     {
@@ -98,27 +88,92 @@ void TempHumidPlugin::active(YAGfx& gfx)
 
             /* Load icon from filesystem. */
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-
-            m_iconCanvas->update(gfx);
         }
-    }
-    else
-    {
-        m_iconCanvas->update(gfx);
     }
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, width, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
         }
     }
-    else
+
+    m_dht.setup(Board::Pin::dhtInPinNo, DHTTYPE);
+
+    unlock();
+
+    return;
+}
+
+void TempHumidPlugin::stop()
+{
+    lock();
+
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    unlock();
+
+    return;
+}
+
+void TempHumidPlugin::process() 
+{
+    lock();
+
+    /* Read only if update period not reached or sensor has never been read. */
+    if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
+        (true == m_sensorUpdateTimer.isTimeout()))
+    {
+        float   humidity    = m_dht.getHumidity();
+        float   temperature = m_dht.getTemperature();
+
+        /* Only accept if both values could be read. */
+        if ( (!isnan(humidity)) && (!isnan(temperature)) ) 
+        {
+            m_humid = humidity;
+            m_temp  = temperature;
+
+            LOG_INFO("Got new temp. h: %f, t: %f", m_humid, m_temp);
+
+            m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
+        }
+    }
+
+    unlock();
+}
+
+void TempHumidPlugin::active(YAGfx& gfx)
+{
+    lock();
+
+    /* Set time to show page - either 10s or slot_time / 4
+     * read here because otherwise we do not get config changes during runtime in slot_time.
+     */
+    if (nullptr != m_slotInterf) {
+        m_pageTime = m_slotInterf->getDuration() / 4U;
+    }
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
+
+    if (nullptr != m_textCanvas)
     {
         m_textCanvas->update(gfx);
     }
@@ -128,10 +183,18 @@ void TempHumidPlugin::active(YAGfx& gfx)
     return;
 }
 
+void TempHumidPlugin::inactive()
+{
+    /* Nothing to do. */
+    return;
+}
+
 void TempHumidPlugin::update(YAGfx& gfx)
 {
     bool showPage                   = false;
     char valueReducedPrecison[6]    = { 0 };    /* Holds a value in lower precision for display. */
+
+    lock();
 
     if (false == m_timer.isTimerRunning())
     {
@@ -193,34 +256,8 @@ void TempHumidPlugin::update(YAGfx& gfx)
         }
     }
 
-    return;
-}
+    unlock();
 
-void TempHumidPlugin::process() 
-{
-    /* Read only if update period not reached or sensor has never been read. */
-    if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
-        (true == m_sensorUpdateTimer.isTimeout()))
-    {
-        float   humidity    = m_dht.getHumidity();
-        float   temperature = m_dht.getTemperature();
-
-        /* Only accept if both values could be read. */
-        if ( (!isnan(humidity)) && (!isnan(temperature)) ) 
-        {
-            m_humid = humidity;
-            m_temp  = temperature;
-
-            LOG_INFO("Got new temp. h: %f, t: %f", m_humid, m_temp);
-
-            m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
-        }
-    }
-}
-
-void TempHumidPlugin::start()
-{
-    m_dht.setup(Board::Pin::dhtInPinNo, DHTTYPE);
     return;
 }
 

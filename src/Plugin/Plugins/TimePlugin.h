@@ -77,10 +77,13 @@ public:
         m_textWidget("\\calignNo NTP"),
         m_checkTimeUpdateTimer(),
         m_currentMinute(0),
-        m_isUpdateAvailable(false)
+        m_isUpdateAvailable(false),
+        m_xMutex(nullptr)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        m_xMutex = xSemaphoreCreateMutex();
     }
 
     /**
@@ -88,6 +91,11 @@ public:
      */
     ~TimePlugin()
     {
+        if (nullptr != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = nullptr;
+        }
     }
 
     /**
@@ -102,6 +110,13 @@ public:
     {
         return new TimePlugin(name, uid);
     }
+
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;
 
     /**
      * Update the display.
@@ -126,13 +141,6 @@ public:
     void inactive() final;
 
     /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     */
-    void process(void) final;
-
-    /**
      * Set text, which may contain format tags.
      *
      * @param[in] formatText    Text, which may contain format tags.
@@ -144,10 +152,11 @@ private:
     /** Time to check time update period in ms */
     static const uint32_t   CHECK_TIME_UPDATE_PERIOD  = 5000U;
 
-    TextWidget  m_textWidget;           /**< Text widget, used for showing the text. */
-    SimpleTimer m_checkTimeUpdateTimer; /**< Timer, used for cyclic check if time update is necessarry. */
-    int32_t     m_currentMinute;        /**< Variable to hold the current minute value. */
-    bool        m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
+    TextWidget          m_textWidget;           /**< Text widget, used for showing the text. */
+    SimpleTimer         m_checkTimeUpdateTimer; /**< Timer, used for cyclic check if time update is necessarry. */
+    int32_t             m_currentMinute;        /**< Variable to hold the current minute value. */
+    bool                m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
+    SemaphoreHandle_t   m_xMutex;               /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current time and update the text, which to be displayed.
@@ -156,6 +165,16 @@ private:
      * @param[in] force Force update independent of time.
      */
     void updateTime(bool force);
+
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void) const;
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void) const;
 };
 
 /******************************************************************************

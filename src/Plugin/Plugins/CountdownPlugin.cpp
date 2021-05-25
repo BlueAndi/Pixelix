@@ -147,7 +147,7 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void CountdownPlugin::active(YAGfx& gfx)
+void CountdownPlugin::start(uint16_t width, uint16_t height)
 {
     lock();
 
@@ -166,58 +166,13 @@ void CountdownPlugin::active(YAGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
         }
     }
-
-    unlock();
-
-    return;
-}
-
-void CountdownPlugin::inactive()
-{
-    /* Nothing to do */
-    return;
-}
-
-void CountdownPlugin::update(YAGfx& gfx)
-{
-    lock();
-
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        (void)loadConfiguration();
-        calculateDifferenceInDays();
-
-        m_cfgReloadTimer.restart();
-    }
-
-    gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    unlock();
-
-    return;
-}
-
-void CountdownPlugin::start()
-{
-    lock();
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -250,6 +205,48 @@ void CountdownPlugin::stop()
     if (false != FILESYSTEM.remove(configurationFilename))
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
+    }
+
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    unlock();
+
+    return;
+}
+
+void CountdownPlugin::update(YAGfx& gfx)
+{
+    lock();
+
+    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
+        (true == m_cfgReloadTimer.isTimeout()))
+    {
+        (void)loadConfiguration();
+        calculateDifferenceInDays();
+
+        m_cfgReloadTimer.restart();
+    }
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
     }
 
     unlock();

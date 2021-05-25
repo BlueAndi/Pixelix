@@ -58,6 +58,24 @@
  * Public Methods
  *****************************************************************************/
 
+void GameOfLifePlugin::start(uint16_t width, uint16_t height)
+{
+    m_width     = width;
+    m_height    = height;
+    m_gridSize  = ((m_width * m_height) + (BITS - 1U)) / BITS;
+
+    (void)createGrids();
+
+    return;
+}
+
+void GameOfLifePlugin::stop()
+{
+    destroyGrids();
+
+    return;
+}
+
 void GameOfLifePlugin::active(YAGfx& gfx)
 {
     uint8_t index   = 0U;
@@ -73,18 +91,7 @@ void GameOfLifePlugin::active(YAGfx& gfx)
         ++index;
     }
 
-    if (false == isInit)
-    {
-        m_width     = gfx.getWidth();
-        m_height    = gfx.getHeight();
-        m_gridSize  = ((m_width * m_height) + (BITS - 1U)) / BITS;
-
-        if (true == createGrids())
-        {
-            generateInitialPattern(m_activeGrid);
-        }
-    }
-    else
+    if (true == isInit)
     {
         /* It may happen that the slot duration is lower than the force restart period.
          * To avoid that the game of life doesn't change anymore, a new pattern shall

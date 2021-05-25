@@ -289,7 +289,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
                 }
                 else
                 {
-                    plugin->start();
+                    plugin->start(Display::getInstance().getWidth(), Display::getInstance().getHeight());
                 }
             }
             else
@@ -312,7 +312,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
             }
             else
             {
-                plugin->start();
+                plugin->start(Display::getInstance().getWidth(), Display::getInstance().getHeight());
             }
 
             unlock();

@@ -171,6 +171,15 @@ public:
     bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
 
     /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+    
+    /**
      * Stop the plugin.
      */
     void stop() final;

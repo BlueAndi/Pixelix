@@ -73,11 +73,13 @@
  * Public Methods
  *****************************************************************************/
 
-void DatePlugin::active(YAGfx& gfx)
+void DatePlugin::start(uint16_t width, uint16_t height)
 {
+    lock();
+
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth(), gfx.getHeight() - 2U, 0, 0);
+        m_textCanvas = new Canvas(width, height - 2U, 0, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -87,7 +89,7 @@ void DatePlugin::active(YAGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.getWidth(), 1U, 1, gfx.getHeight() - 1);
+        m_lampCanvas = new Canvas(width, 1U, 1, height - 1);
 
         if (nullptr != m_lampCanvas)
         {
@@ -108,23 +110,82 @@ void DatePlugin::active(YAGfx& gfx)
         }
     }
 
-    m_isUpdateAvailable = true;
+    unlock();
 
-    m_checkDateUpdateTimer.start(CHECK_DATE_UPDATE_PERIOD);
+    return;
+}
+
+void DatePlugin::stop()
+{
+    lock();
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    if (nullptr != m_lampCanvas)
+    {
+        delete m_lampCanvas;
+        m_lampCanvas = nullptr;
+    }
+
+    unlock();
+
+    return;
+}
+
+void DatePlugin::process()
+{
+    lock();
+
+    if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
+        (true == m_checkDateUpdateTimer.isTimeout()))
+    {
+        updateDate(false);
+
+        m_checkDateUpdateTimer.restart();
+    }
+
+    unlock();
+
+    return;
+}
+
+void DatePlugin::active(YAGfx& gfx)
+{
+    UTIL_NOT_USED(gfx);
+
+    lock();
 
     /* Force immediate date update on activation */
     updateDate(true);
+
+    /* Force drawing on display in the update() method for the very first time
+     * after activation.
+     */
+    m_isUpdateAvailable = true;
+    m_checkDateUpdateTimer.start(CHECK_DATE_UPDATE_PERIOD);
+
+    unlock();
 }
 
 void DatePlugin::inactive()
 {
+    lock();
+
     m_checkDateUpdateTimer.stop();
+
+    unlock();
 
     return;
 }
 
 void DatePlugin::update(YAGfx& gfx)
 {
+    lock();
+
     if (false != m_isUpdateAvailable)
     {
         gfx.fillScreen(ColorDef::BLACK);
@@ -142,25 +203,18 @@ void DatePlugin::update(YAGfx& gfx)
         m_isUpdateAvailable = false;
     }
 
-    return;
-}
-
-void DatePlugin::process()
-{
-    if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
-        (true == m_checkDateUpdateTimer.isTimeout()))
-    {
-        updateDate(false);
-
-        m_checkDateUpdateTimer.restart();
-    }
+    unlock();
 
     return;
 }
 
 void DatePlugin::setText(const String& formatText)
 {
+    lock();
+
     m_textWidget.setFormatStr(formatText);
+
+    unlock();
 
     return;
 }
@@ -169,7 +223,11 @@ void DatePlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
+        lock();
+
         m_lampWidgets[lampId].setOnState(state);
+
+        unlock();
     }
 
     return;
@@ -213,6 +271,26 @@ void DatePlugin::updateDate(bool force)
             m_isUpdateAvailable = true;
         }
     }
+}
+
+void DatePlugin::lock() const
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void DatePlugin::unlock() const
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
+
+    return;
 }
 
 /******************************************************************************

@@ -89,11 +89,13 @@ void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
     return;
 }
 
-void DateTimePlugin::active(YAGfx& gfx)
+void DateTimePlugin::start(uint16_t width, uint16_t height)
 {
+    lock();
+
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth(), gfx.getHeight() - 2, 0, 0);
+        m_textCanvas = new Canvas(width, height - 2, 0, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -108,14 +110,14 @@ void DateTimePlugin::active(YAGfx& gfx)
         const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
         const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
         
-        if (true == calcLayout(gfx.getWidth(), MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
+        if (true == calcLayout(width, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
         {
-            m_lampCanvas = new Canvas(gfx.getWidth(), 1U, 1, gfx.getHeight() - 1);
+            m_lampCanvas = new Canvas(width, 1U, 1, height - 1);
 
             if (nullptr != m_lampCanvas)
             {
                 /* Calculate the border to have the days (lamps) shown aligned to center. */
-                uint16_t    border  = (gfx.getWidth() - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
+                uint16_t    border  = (width - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
                 uint8_t     index   = 0U;
 
                 for(index = 0U; index < MAX_LAMPS; ++index)
@@ -133,25 +135,81 @@ void DateTimePlugin::active(YAGfx& gfx)
         }
     }
 
-    m_isUpdateAvailable = true;
+    unlock();
 
-    m_durationCounter = 0U;
+    return;
+}
 
-    m_checkUpdateTimer.start(CHECK_UPDATE_PERIOD);
+void DateTimePlugin::stop()
+{
+    lock();
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    if (nullptr != m_lampCanvas)
+    {
+        delete m_lampCanvas;
+        m_lampCanvas = nullptr;
+    }
+
+    unlock();
+
+    return;
+}
+
+void DateTimePlugin::process()
+{
+    lock();
+
+    if ((true == m_checkUpdateTimer.isTimerRunning()) &&
+        (true == m_checkUpdateTimer.isTimeout()))
+    {
+        updateDateTime(false);
+
+        m_checkUpdateTimer.restart();
+    }
+
+    unlock();
+
+    return;
+}
+
+void DateTimePlugin::active(YAGfx& gfx)
+{
+    lock();
 
     /* Force immediate date/time update on activation */
     updateDateTime(true);
+
+    /* Force drawing on display in the update() method for the very first time
+     * after activation.
+     */
+    m_isUpdateAvailable = true;
+    m_durationCounter = 0U;
+    m_checkUpdateTimer.start(CHECK_UPDATE_PERIOD);
+
+    unlock();
 }
 
 void DateTimePlugin::inactive()
 {
+    lock();
+
     m_checkUpdateTimer.stop();
+
+    unlock();
 
     return;
 }
 
 void DateTimePlugin::update(YAGfx& gfx)
 {
+    lock();
+
     if (false != m_isUpdateAvailable)
     {
         gfx.fillScreen(ColorDef::BLACK);
@@ -169,25 +227,18 @@ void DateTimePlugin::update(YAGfx& gfx)
         m_isUpdateAvailable = false;
     }
 
-    return;
-}
-
-void DateTimePlugin::process()
-{
-    if ((true == m_checkUpdateTimer.isTimerRunning()) &&
-        (true == m_checkUpdateTimer.isTimeout()))
-    {
-        updateDateTime(false);
-
-        m_checkUpdateTimer.restart();
-    }
+    unlock();
 
     return;
 }
 
 void DateTimePlugin::setText(const String& formatText)
 {
+    lock();
+
     m_textWidget.setFormatStr(formatText);
+
+    unlock();
 
     return;
 }
@@ -196,7 +247,11 @@ void DateTimePlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
+        lock();
+
         m_lampWidgets[lampId].setOnState(state);
+
+        unlock();
     }
 
     return;
@@ -325,6 +380,26 @@ bool DateTimePlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistan
     }
 
     return status;
+}
+
+void DateTimePlugin::lock() const
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+    }
+
+    return;
+}
+
+void DateTimePlugin::unlock() const
+{
+    if (nullptr != m_xMutex)
+    {
+        (void)xSemaphoreGiveRecursive(m_xMutex);
+    }
+
+    return;
 }
 
 /******************************************************************************

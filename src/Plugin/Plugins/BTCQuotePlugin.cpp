@@ -63,11 +63,13 @@
 /* Initialize image path. */
 const char* BTCQuotePlugin::BTC_USD_IMAGE_PATH     = "/images/BTC_USD.bmp";
 
-void BTCQuotePlugin::active(YAGfx& gfx)
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
+
+void BTCQuotePlugin::start(uint16_t width, uint16_t height)
 {
     lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr == m_iconCanvas)
     {
@@ -79,57 +81,18 @@ void BTCQuotePlugin::active(YAGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(FILESYSTEM, BTC_USD_IMAGE_PATH);
-
-            m_iconCanvas->update(gfx);
         }
     }
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
         }
     }
-
-    unlock();
-
-    return;
-}
-
-void BTCQuotePlugin::inactive()
-{
-    return;
-}
-
-void BTCQuotePlugin::update(YAGfx& gfx)
-{
-    lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    unlock();
-
-    return;
-}
-
-void BTCQuotePlugin::start()
-{
-    lock();
 
     initHttpClient();
     if (false == startHttpRequest())
@@ -172,6 +135,27 @@ void BTCQuotePlugin::process()
         {
             m_requestTimer.start(UPDATE_PERIOD);
         }
+    }
+
+    unlock();
+
+    return;
+}
+
+void BTCQuotePlugin::update(YAGfx& gfx)
+{
+    lock();
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
     }
 
     unlock();

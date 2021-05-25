@@ -82,11 +82,14 @@ public:
         m_checkUpdateTimer(),
         m_durationCounter(0u),
         m_isUpdateAvailable(false),
-        m_slotInterf(nullptr)
+        m_slotInterf(nullptr),
+        m_xMutex(nullptr)
 
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        m_xMutex = xSemaphoreCreateMutex();
     }
 
     /**
@@ -104,6 +107,12 @@ public:
         {
             delete m_lampCanvas;
             m_lampCanvas = nullptr;
+        }
+
+        if (nullptr != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = nullptr;
         }
     }
 
@@ -129,6 +138,28 @@ public:
     void setSlot(const ISlotPlugin* slotInterf) final;
 
     /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+
+   /**
+     * Stop the plugin.
+     * Overwrite it if your plugin needs to know that it will be uninstalled.
+     */
+    void stop() final;
+
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;
+
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
@@ -149,13 +180,6 @@ public:
      * @param[in] gfx   Display graphics interface
      */
     void update(YAGfx& gfx) final;
-
-    /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     */
-    void process(void) final;
 
     /**
      * Set text, which may contain format tags.
@@ -188,6 +212,7 @@ private:
     uint8_t             m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
     bool                m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
     const ISlotPlugin*  m_slotInterf;               /**< Slot interface */
+    SemaphoreHandle_t   m_xMutex;                   /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current date/time and update the text, which to be displayed.
@@ -218,6 +243,16 @@ private:
      * @return If the calculation is successful, it will return true otherwise false.
      */
     bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
+
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void) const;
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void) const;
 };
 
 /******************************************************************************

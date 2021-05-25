@@ -115,11 +115,9 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void GruenbeckPlugin::active(YAGfx& gfx)
+void GruenbeckPlugin::start(uint16_t width, uint16_t height)
 {
     lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
 
     if (nullptr == m_iconCanvas)
     {
@@ -131,74 +129,18 @@ void GruenbeckPlugin::active(YAGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
-
-            m_iconCanvas->update(gfx);
         }
-    }
-    else
-    {
-        m_iconCanvas->update(gfx);
     }
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
         }
     }
-    else
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    unlock();
-
-    return;
-}
-
-void GruenbeckPlugin::inactive()
-{
-    /* Nothing to do */
-    return;
-}
-
-void GruenbeckPlugin::update(YAGfx& gfx)
-{
-    lock();
-
-    if (false != m_httpResponseReceived)
-    {
-        m_textWidget.setFormatStr("\\calign" + m_relevantResponsePart + "%");
-        gfx.fillScreen(ColorDef::BLACK);
-
-        if (nullptr != m_iconCanvas)
-        {
-            m_iconCanvas->update(gfx);
-        }
-
-        if (nullptr != m_textCanvas)
-        {
-            m_textCanvas->update(gfx);
-        }
-
-        m_relevantResponsePart = "";
-
-        m_httpResponseReceived = false;
-    }
-
-    unlock();
-
-    return;
-}
-
-void GruenbeckPlugin::start()
-{
-    lock();
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -242,6 +184,18 @@ void GruenbeckPlugin::stop()
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
     unlock();
 
     return;
@@ -265,6 +219,62 @@ void GruenbeckPlugin::process()
         {
             m_requestTimer.start(UPDATE_PERIOD);
         }
+    }
+
+    unlock();
+
+    return;
+}
+
+void GruenbeckPlugin::active(YAGfx& gfx)
+{
+    lock();
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
+    }
+
+    unlock();
+
+    return;
+}
+
+void GruenbeckPlugin::inactive()
+{
+    /* Nothing to do */
+    return;
+}
+
+void GruenbeckPlugin::update(YAGfx& gfx)
+{
+    lock();
+
+    if (false != m_httpResponseReceived)
+    {
+        m_textWidget.setFormatStr("\\calign" + m_relevantResponsePart + "%");
+        gfx.fillScreen(ColorDef::BLACK);
+
+        if (nullptr != m_iconCanvas)
+        {
+            m_iconCanvas->update(gfx);
+        }
+
+        if (nullptr != m_textCanvas)
+        {
+            m_textCanvas->update(gfx);
+        }
+
+        m_relevantResponsePart = "";
+
+        m_httpResponseReceived = false;
     }
 
     unlock();

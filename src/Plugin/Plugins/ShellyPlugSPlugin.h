@@ -171,26 +171,13 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    void active(YAGfx& gfx) final;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() final;
-
-    /**
-     * Update the display.
-     * The scheduler will call this method periodically.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void update(YAGfx& gfx) final;
+    void start(uint16_t width, uint16_t height) final;
 
    /**
      * Stop the plugin.
@@ -199,17 +186,19 @@ public:
     void stop() final;
 
     /**
-     * Start the plugin.
-     * Overwrite it if your plugin needs to know that it was installed.
-     */
-    void start() final;
-
-    /**
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
      */
     void process(void) final;
+
+    /**
+     * Update the display.
+     * The scheduler will call this method periodically.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void update(YAGfx& gfx) final;
 
     /**
      * Get ip-address.

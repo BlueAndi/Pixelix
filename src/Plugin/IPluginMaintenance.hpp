@@ -168,8 +168,11 @@ public:
     /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    virtual void start() = 0;
+    virtual void start(uint16_t width, uint16_t height) = 0;
 
     /**
      * Stop the plugin.

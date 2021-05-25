@@ -81,11 +81,14 @@ public:
         m_lampWidgets(),
         m_checkDateUpdateTimer(),
         m_currentDay(0),
-        m_isUpdateAvailable(false)
+        m_isUpdateAvailable(false),
+        m_xMutex(nullptr)
 
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        m_xMutex = xSemaphoreCreateMutex();
     }
 
     /**
@@ -104,6 +107,12 @@ public:
             delete m_lampCanvas;
             m_lampCanvas = nullptr;
         }
+
+        if (nullptr != m_xMutex)
+        {
+            vSemaphoreDelete(m_xMutex);
+            m_xMutex = nullptr;
+        }
     }
 
     /**
@@ -118,6 +127,28 @@ public:
     {
         return new DatePlugin(name, uid);
     }
+
+    /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+    
+   /**
+     * Stop the plugin.
+     * Overwrite it if your plugin needs to know that it will be uninstalled.
+     */
+    void stop() final;
+
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;
 
     /**
      * This method will be called in case the plugin is set active, which means
@@ -141,13 +172,6 @@ public:
      */
     void update(YAGfx& gfx) final;
     
-    /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     */
-    void process(void) final;
-
     /**
      * Set text, which may contain format tags.
      *
@@ -174,13 +198,14 @@ private:
     /** Time to check date update period in ms */
     static const uint32_t   CHECK_DATE_UPDATE_PERIOD    = 1000U;
 
-    TextWidget  m_textWidget;               /**< Text widget, used for showing the text. */
-    Canvas*     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*     m_lampCanvas;               /**< Canvas used for the lamp widget. */
-    LampWidget  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
-    SimpleTimer m_checkDateUpdateTimer;     /**< Timer, used for cyclic check if date update is necessarry. */
-    int32_t     m_currentDay;               /**< Variable to hold the current day. */
-    bool        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
+    Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*             m_lampCanvas;               /**< Canvas used for the lamp widget. */
+    LampWidget          m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
+    SimpleTimer         m_checkDateUpdateTimer;     /**< Timer, used for cyclic check if date update is necessarry. */
+    int32_t             m_currentDay;               /**< Variable to hold the current day. */
+    bool                m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    SemaphoreHandle_t   m_xMutex;                   /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current date and update the text, which to be displayed.
@@ -189,6 +214,16 @@ private:
      * @param[in] force Force update independent of date.
      */
     void updateDate(bool force);
+
+    /**
+     * Protect against concurrent access.
+     */
+    void lock(void) const;
+
+    /**
+     * Unprotect against concurrent access.
+     */
+    void unlock(void) const;
 };
 
 /******************************************************************************

@@ -159,9 +159,38 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void OpenWeatherPlugin::start()
+void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
+{
+    m_slotInterf = slotInterf;
+    return;
+}
+
+void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
 {
     lock();
+
+    if (nullptr == m_iconCanvas)
+    {
+        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
+
+        if (nullptr != m_iconCanvas)
+        {
+            (void)m_iconCanvas->addWidget(m_bitmapWidget);
+
+            /* Load icon from filesystem. */
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+        }
+    }
+
+    if (nullptr == m_textCanvas)
+    {
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
+
+        if (nullptr != m_textCanvas)
+        {
+            (void)m_textCanvas->addWidget(m_textWidget);
+        }
+    }
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -206,6 +235,18 @@ void OpenWeatherPlugin::stop()
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
     unlock();
 
     return;
@@ -238,67 +279,31 @@ void OpenWeatherPlugin::process()
         updateDisplay(false);
         m_updateContentTimer.restart();
     }
+    
     unlock();
 
-    return;
-}
-
-void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
-{
-    m_slotInterf = slotInterf;
     return;
 }
 
 void OpenWeatherPlugin::active(YAGfx& gfx)
 {
     lock();
-    if(true == m_configurationHasChanged)
+
+    if (true == m_configurationHasChanged)
     {
         (void)loadConfiguration();
     }
 
-    gfx.fillScreen(ColorDef::BLACK);
+    /* Force immediate weather update on activation */
+    updateDisplay(true);
 
-    if (nullptr == m_iconCanvas)
-    {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
-
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_bitmapWidget);
-
-            /* Load icon from filesystem. */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-
-            m_iconCanvas->update(gfx);
-        }
-    }
-    else
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
-
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
-        }
-    }
-    else
-    {
-        m_textCanvas->update(gfx);
-    }
-
+    /* Force drawing on display in the update() method for the very first time
+     * after activation.
+     */
     m_isUpdateAvailable = true;
     m_durationCounter = 0U;
     m_updateContentTimer.start(DURATION_TICK_PERIOD);
 
-    updateDisplay(true);
     unlock();
 
     return;
@@ -306,7 +311,12 @@ void OpenWeatherPlugin::active(YAGfx& gfx)
 
 void OpenWeatherPlugin::inactive()
 {
+    lock();
+
     m_updateContentTimer.stop();
+
+    unlock();
+
     return;
 }
 
