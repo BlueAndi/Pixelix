@@ -1,0 +1,47 @@
+@startuml
+
+title Hardware Abstraction Layer (HAL)
+
+package "HAL" as halPkg {
+
+    package "Common" as commonPkg {
+
+        component "Io" {
+            interface "DOutPin" <pinNo>
+            interface "DInPin" <pinNo, pinMode>
+            interface "AnalogPin" <pinNo>
+        }
+        interface "IDisplay" as iDisplay
+    }
+
+    package "HALxxx" as halXXXPkg {
+
+        class "Display" as display <<Singleton>>
+        class "Board" as board
+        class "SensorDataProvider" as sensorDataProvider <<Singleton>>
+
+        display .> board: <<use>>
+        sensorDataProvider .l.> board: <<use>>
+    }
+
+    note left of halXXXPkg
+        The hardware is a combination
+        of a board and the display.
+    end note
+
+    display ..|> iDisplay: <<realize>>
+    board ..> DOutPin: <<use>>
+    board ..> DInPin: <<use>>
+    board ..> AnalogPin: <<use>>
+}
+
+package "App" as appPkg {
+
+    class "App" as app
+}
+
+app ..> board: <<use>>
+app ..> display: <<use>>
+app ..> sensorDataProvider: <<use>>
+
+@enduml
