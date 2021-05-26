@@ -38,6 +38,7 @@
 #include <WiFi.h>
 #include <Board.h>
 #include <Display.h>
+#include <SensorDataProvider.h>
 
 #include "ButtonDrv.h"
 #include "DisplayMgr.h"
@@ -112,6 +113,9 @@ void InitState::entry(StateMachine& sm)
 
     /* Initialize hardware */
     Board::init();
+
+    /* Initialize sensors */
+    SensorDataProvider::getInstance().begin();
 
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();

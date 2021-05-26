@@ -2,46 +2,157 @@
 
 title Hardware Abstraction Layer (HAL)
 
-package "HAL" as halPkg {
+package "Common" as commonPkg {
 
-    package "Common" as commonPkg {
+    component "Io" as io {
+        interface "DOutPin" <pinNo>
+        interface "DInPin" <pinNo, pinMode>
+        interface "AnalogPin" <pinNo>
 
-        component "Io" {
-            interface "DOutPin" <pinNo>
-            interface "DInPin" <pinNo, pinMode>
-            interface "AnalogPin" <pinNo>
-        }
-        interface "IDisplay" as iDisplay
+        note bottom of DOutPin: Digital output pin
+        note bottom of DInPin: Digital input pin
+        note bottom of AnalogPin: Analog input pin
     }
 
-    package "HALxxx" as halXXXPkg {
+    note bottom of io
+        Abstract interfaces used to configure the GPIO, which
+        providing methods depended on its type.
+    end note
 
-        class "Display" as display <<Singleton>>
-        class "Board" as board
-        class "SensorDataProvider" as sensorDataProvider <<Singleton>>
+    interface "IDisplay" as iDisplay
+
+    note right of iDisplay
+        The abstract interface to control
+        a display.
+    end note
+
+    interface "ISensor" as iSensor
+
+    note left of iSensor
+        Abstract sensor interface, used for 
+        generic sensor handling. A sensor may provide
+        one ore more data channels, depending on its
+        nature.
+    end note
+
+    interface "ISensorChannel" as iSensorChannel
+
+    note right of iSensorChannel
+        Abstract sensor channel interface, used
+        for generic channel handling.
+    end note
+
+    component "SensorChannelType" as sensorChannelPkg {
+        
+        class "SensorChannelType<T, dataType : DataType>" as sensorChannelType
+
+        note right of sensorChannelType
+            The template variant for easy
+            providing channels with different
+            kind of value data types.
+        end note
+
+        class SensorUInt32 <<typedef>>
+        hide SensorUInt32 members
+
+        class SensorInt32 <<typedef>>
+        hide SensorInt32 members
+
+        class SensorFloat32 <<typedef>>
+        hide SensorFloat32 members
+
+        SensorUInt32 .u.> sensorChannelType: <<bind>>\nT -> uint32_t\ndataType = DATA_TYPE_UINT32
+        SensorInt32 .u.> sensorChannelType: <<bind>>\nT -> int32_t\ndataType = DATA_TYPE_INT32
+        SensorFloat32 ..> sensorChannelType: <<bind>>\nT -> float\ndataType = DATA_TYPE_FLOAT
+    }
+
+    note bottom of sensorChannelPkg
+        Considers the different data types a
+        sensor may provide.
+    end note
+
+    sensorChannelType .u..|> iSensorChannel
+    iSensor .> iSensorChannel: <<use>>
+}
+
+note right of commonPkg
+    Common interfaces and classes, used by
+    the HAL.
+end note
+
+package "HAL" as halPkg {
+
+    package "HAL<concrete-name>" as halXXXPkg {
+
+        class "Display" as display <<singleton>>
+        class "Board" as board <<namespace>>
+        class "Sensors" as sensors <<namespace>>
+
+        note right of sensors
+            Provides the sensor data provider
+            implementation (pimpl idiom), which contains
+            all instantiated sensors.
+        end note
 
         display .> board: <<use>>
-        sensorDataProvider .l.> board: <<use>>
     }
 
     note left of halXXXPkg
         The hardware is a combination
-        of a board and the display.
+        of a board, a display and sensors.
     end note
 
+    package "Sensors" as sensorsPkg {
+
+        class "SensorDht11" as sensorDht11
+
+        note right of sensorDht11
+            The DHT11 sensor is just
+            a example, providing two channels.
+            One for temperature and one for
+            humidity.
+        end note
+    }
+
     display ..|> iDisplay: <<realize>>
-    board ..> DOutPin: <<use>>
-    board ..> DInPin: <<use>>
-    board ..> AnalogPin: <<use>>
+    board --> DOutPin
+    board --> DInPin
+    board --> AnalogPin
+    board <.. sensorDht11: <<use>>
+    sensors *--> sensorDht11
+    sensorDht11 ..|> iSensor: <<realize>>
+    sensorDht11 *--> "2" SensorFloat32
 }
+
+note left of halPkg
+    Virtual hardware abstraction layer (HAL).
+    Its a combination of the concrete HAL and
+    the provided sensors.
+end note
+
+halPkg -[hidden]--- commonPkg
 
 package "App" as appPkg {
 
     class "App" as app
+
+    note top of app
+        Represents the application, which of course
+        is a litte bit more complex.
+    end note
+
+    class "SensorDataProvider" as sensorDataProvider <<singleton>>
+
+    note top of sensorDataProvider
+        Provides access to every sensor
+        and its data channels.
+    end note
 }
 
 app ..> board: <<use>>
 app ..> display: <<use>>
-app ..> sensorDataProvider: <<use>>
+app .r.> sensorDataProvider: <<use>>
+
+sensorDataProvider ..> sensors: <<use>>
 
 @enduml

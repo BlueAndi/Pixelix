@@ -38,7 +38,6 @@
 /******************************************************************************
  * Compile Switches
  *****************************************************************************/
-#define DHTTYPE DHTesp::DHT11   /**< Set sensor type to DHT11 */
 
 /******************************************************************************
  * Includes
@@ -46,12 +45,11 @@
 #include <stdint.h>
 #include "Plugin.hpp"
 
-#include <DHTesp.h>
 #include <SimpleTimer.hpp>
-
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ISensorChannel.hpp>
 
 /******************************************************************************
  * Macros
@@ -65,9 +63,6 @@
  * TempHumid plugin.
  *
  * This plugins displays the temperature and humidity read from a sensor.
- * Currently implemented sensors:
- * - DHT Sensors supported by DHTesp library
- * - TODO: sht3x
  */
 class TempHumidPlugin : public Plugin
 {
@@ -85,16 +80,16 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_text(),
         m_page(TEMPERATURE),
         m_pageTime(10000U),
         m_timer(),
         m_xMutex(nullptr),
-        m_dht(),
         m_humid(0.0F),
         m_temp(0.0F),
         m_sensorUpdateTimer(),
-        m_slotInterf(nullptr)
+        m_slotInterf(nullptr),
+        m_temperatureSensorCh(nullptr),
+        m_humiditySensorCh(nullptr)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -202,6 +197,7 @@ public:
     void update(YAGfx& gfx) final;
 
 private:
+
     /**
      * Icon width in pixels.
      */
@@ -231,16 +227,16 @@ private:
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_text;                     /**< The text to display. */
     uint8_t                     m_page;                     /**< Number of page, which to show. */
     unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
     SimpleTimer                 m_timer;                    /**< Timer for changing page. */
     SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    DHTesp                      m_dht;                      /**< Sensor object */
     float                       m_humid;                    /**< Last sensor humidity value */
     float                       m_temp;                     /**< Last sensor temperature value */
     SimpleTimer                 m_sensorUpdateTimer;        /**< Time used for cyclic sensor reading. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
+    ISensorChannel*             m_temperatureSensorCh;      /**< Temperature sensor channel */
+    ISensorChannel*             m_humiditySensorCh;         /**< Humidity sensor channel */
 
     /**
      * Protect against concurrent access.

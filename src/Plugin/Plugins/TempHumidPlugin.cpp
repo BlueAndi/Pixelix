@@ -34,8 +34,10 @@
  *****************************************************************************/
 #include "TempHumidPlugin.h"
 #include "FileSystem.h"
+#include "SensorDataProvider.h"
 
 #include <Board.h>
+#include <SensorChannelType.hpp>
 #include <YAColor.h>
 #include <Logging.h>
 
@@ -58,6 +60,7 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
 /* Initialize image path for temperature (scale) icon. */
 const char* TempHumidPlugin::IMAGE_PATH_TEMP_ICON      = "/images/temp.bmp";
 
@@ -76,6 +79,10 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void TempHumidPlugin::start(uint16_t width, uint16_t height)
 {
+    SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
+    uint8_t             sensorIdx       = 0U;
+    uint8_t             channelIdx      = 0U;
+
     lock();
 
     if (nullptr == m_iconCanvas)
@@ -101,7 +108,17 @@ void TempHumidPlugin::start(uint16_t width, uint16_t height)
         }
     }
 
-    m_dht.setup(Board::Pin::dhtInPinNo, DHTTYPE);
+    /* Use just the first found sensor for temperature. */
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::DATA_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))
+    {
+        m_temperatureSensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
+    }
+
+    /* Use just the first found sensor for humidity. */
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::DATA_HUMIDITY_PERCENT, ISensorChannel::DATA_TYPE_FLOAT32))
+    {
+        m_humiditySensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
+    }
 
     unlock();
 
@@ -137,19 +154,39 @@ void TempHumidPlugin::process()
     if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
         (true == m_sensorUpdateTimer.isTimeout()))
     {
-        float   humidity    = m_dht.getHumidity();
-        float   temperature = m_dht.getTemperature();
-
-        /* Only accept if both values could be read. */
-        if ( (!isnan(humidity)) && (!isnan(temperature)) ) 
+        if (nullptr != m_temperatureSensorCh)
         {
-            m_humid = humidity;
-            m_temp  = temperature;
+            if (ISensorChannel::DATA_TYPE_FLOAT32 == m_temperatureSensorCh->getType())
+            {
+                SensorChannelFloat32*   channel     = static_cast<SensorChannelFloat32*>(m_temperatureSensorCh);
+                float                   temperature = channel->getValue();
 
-            LOG_INFO("Got new temp. h: %f, t: %f", m_humid, m_temp);
+                if (!isnan(temperature))
+                {
+                    m_temp = temperature;
 
-            m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
+                    LOG_INFO("Temperature: %0.1f °C", m_temp);
+                }
+            }
         }
+
+        if (nullptr != m_humiditySensorCh)
+        {
+            if (ISensorChannel::DATA_TYPE_FLOAT32 == m_humiditySensorCh->getType())
+            {
+                SensorChannelFloat32*   channel     = static_cast<SensorChannelFloat32*>(m_humiditySensorCh);
+                float                   humidity    = channel->getValue();
+
+                if (!isnan(humidity))
+                {
+                    m_humid = humidity;
+
+                    LOG_INFO("Humidity: %3.1f %%", m_humid);
+                }
+            }
+        }
+
+        m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
     }
 
     unlock();
@@ -191,8 +228,7 @@ void TempHumidPlugin::inactive()
 
 void TempHumidPlugin::update(YAGfx& gfx)
 {
-    bool showPage                   = false;
-    char valueReducedPrecison[6]    = { 0 };    /* Holds a value in lower precision for display. */
+    bool showPage = false;
 
     lock();
 
@@ -234,21 +270,44 @@ void TempHumidPlugin::update(YAGfx& gfx)
         {
         case TEMPERATURE:
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-            /* Generate temperature string with reduced precision and add unit °C. */
-            (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9f) ? "%.0f" : "%.1f" , m_temp);
-            m_text  = "\\calign";
-            m_text += valueReducedPrecison;
-            m_text += "\x8E";
-            m_text += "C";
-            m_textWidget.setFormatStr(m_text);
+
+            if (nullptr == m_temperatureSensorCh)
+            {
+                m_textWidget.setFormatStr("\\calign-");
+            }
+            else
+            {
+                char    valueReducedPrecison[6] = { 0 };    /* Holds a value in lower precision for display. */
+                String  text;
+
+                /* Generate temperature string with reduced precision and add unit °C. */
+                (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9f) ? "%.0f" : "%.1f" , m_temp);
+                text  = "\\calign";
+                text += valueReducedPrecison;
+                text += "\x8E";
+                text += "C";
+                m_textWidget.setFormatStr(text);
+            }
             break;
 
         case HUMIDITY:
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
-            (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humid);
-            m_text = valueReducedPrecison;
-            m_text += "%";
-            m_textWidget.setFormatStr(m_text);
+
+            if (nullptr == m_humiditySensorCh)
+            {
+                m_textWidget.setFormatStr("\\calign-");
+            }
+            else
+            {
+                char    valueReducedPrecison[4] = { 0 };    /* Holds a value in lower precision for display. */
+                String  text;
+
+                (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humid);
+                text  = "\\calign";
+                text += valueReducedPrecison;
+                text += "%";
+                m_textWidget.setFormatStr(text);
+            }
             break;
 
         default:

@@ -44,7 +44,7 @@ class Widget {
     - m_name : const char*
     + move(x : uint16_t, y : uint16_t) : void
     + getPos(x : uint16_t&, y : uint16_t&) const : void
-    + {abstract} update(gfx : Adafruit_GFX&) = 0 : void
+    + {abstract} update(gfx : YAGfx&) = 0 : void
     + getType() : const char*
     + getName() : const char*
     + setName(name : const char*) : void
