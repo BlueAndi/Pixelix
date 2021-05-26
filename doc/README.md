@@ -45,6 +45,7 @@
     \---schematics  (Schematics)
 +---include         (Include files)
 +---lib             (Project specific (private) libraries)
++---scripts         (PlatformIO specific Python scripts)
 +---src             (Sourcecode)
 +---test            (Unit tests)
 \---platform.ini    (Project configuration file)
