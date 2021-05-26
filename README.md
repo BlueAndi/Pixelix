@@ -41,8 +41,11 @@ I want to have a remote display to show multiple kind of information, running 24
 * Power supply 5 V / 4 A
 * [Rough overview](./doc/Overview.pdf)
 
-Additional supported variantes, which were original not in focus:
+Additional supported variants, which were original not in focus:
 * [TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
+
+Although Pixelix was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
+* Temperature and humidity sensors DHTx
 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
