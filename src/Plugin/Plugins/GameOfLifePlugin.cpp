@@ -300,6 +300,7 @@ void GameOfLifePlugin::destroyGrids()
         if (nullptr != m_grids[index])
         {
             delete[] m_grids[index];
+            m_grids[index] = nullptr;
         }
 
         ++index;
