@@ -67,14 +67,21 @@ namespace Pin
     /** Pin number of onboard LED */
     static const uint8_t    onBoardLedPinNo         = 2U;
 
-    /** Pin number of user button */
-    static const uint8_t    userButtonPinNo         = 35U;
+    /** Pin number of I2C SDA */
+    static const uint8_t    i2cSdaPinNo             = 21U;
+
+    /** Pin number of I2C SDL */
+    static const uint8_t    i2cSdlPinNo             = 22U;
+
+    /** Pin number of dht sensor in */
+    static const uint8_t    dhtInPinNo              = 27U;
 
     /** Pin number of LDR in */
     static const uint8_t    ldrInPinNo              = 32U;
 
-    /** Pin number of dht sensor in */
-    static const uint8_t    dhtInPinNo              = 27U;
+    /** Pin number of user button */
+    static const uint8_t    userButtonPinNo         = 35U;
+
 };
 
 /** Digital output pin: Onboard LED */

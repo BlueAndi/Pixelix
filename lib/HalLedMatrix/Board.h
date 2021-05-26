@@ -70,6 +70,15 @@ namespace Pin
     /** Pin number of user button */
     static const uint8_t    userButtonPinNo         = 4U;
 
+    /** Pin number of dht sensor in */
+    static const uint8_t    dhtInPinNo              = 5U;
+
+    /** Pin number of I2C SDA */
+    static const uint8_t    i2cSdaPinNo             = 21U;
+
+    /** Pin number of I2C SDL */
+    static const uint8_t    i2cSdlPinNo             = 22U;
+
     /** Pin number of test pin */
     static const uint8_t    testPinNo               = 23U;
 
@@ -78,9 +87,6 @@ namespace Pin
 
     /** Pin number of LDR in */
     static const uint8_t    ldrInPinNo              = 34U;
-
-    /** Pin number of dht sensor in */
-    static const uint8_t    dhtInPinNo              = 5U;
 };
 
 /** Digital output pin: Onboard LED */
