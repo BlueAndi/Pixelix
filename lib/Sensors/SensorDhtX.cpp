@@ -32,7 +32,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "SensorDht11.h"
+#include "SensorDhtX.h"
 
 #include <Board.h>
 
@@ -60,14 +60,14 @@
  * Public Methods
  *****************************************************************************/
 
-void SensorDht11::begin()
+void SensorDhtX::begin()
 {
-    m_dht.setup(Board::Pin::dhtInPinNo, DHTesp::DHT11);
+    m_dht.setup(Board::Pin::dhtInPinNo, m_dhtModel);
 
     return;
 }
 
-ISensorChannel* SensorDht11::getChannel(uint8_t index)
+ISensorChannel* SensorDhtX::getChannel(uint8_t index)
 {
     ISensorChannel* channel = nullptr;
 

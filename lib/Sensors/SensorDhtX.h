@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  DHT11 sensor
+ * @brief  DHTx sensor
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup hal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSOR_DHT11_H__
-#define __SENSOR_DHT11_H__
+#ifndef __SENSOR_DHTX_H__
+#define __SENSOR_DHTX_H__
 
 /******************************************************************************
  * Compile Switches
@@ -57,26 +57,26 @@
  *****************************************************************************/
 
 /**
- * Temperature channel of the DHT11 sensor.
+ * Temperature channel of the DHTx sensor.
  */
-class Dht11TemperatureChannel : public SensorChannelFloat32
+class DhtXTemperatureChannel : public SensorChannelFloat32
 {
 public:
 
     /**
-     * Constructs the temperature channel of the DHT11 sensor.
+     * Constructs the temperature channel of the DHTx sensor.
      * 
      * @param[in] dht   The DHT driver.
      */
-    Dht11TemperatureChannel(DHTesp& dht) :
+    DhtXTemperatureChannel(DHTesp& dht) :
         m_dht(dht)
     {
     }
 
     /**
-     * Destroys the temperature channel of the DHT11 sensor.
+     * Destroys the temperature channel of the DHTx sensor.
      */
-    ~Dht11TemperatureChannel()
+    ~DhtXTemperatureChannel()
     {
     }
 
@@ -104,32 +104,32 @@ private:
 
     DHTesp& m_dht;  /**< DHT sensor driver. */
 
-    Dht11TemperatureChannel();
-    Dht11TemperatureChannel(const Dht11TemperatureChannel& channel);
-    Dht11TemperatureChannel& operator=(const Dht11TemperatureChannel& channel);
+    DhtXTemperatureChannel();
+    DhtXTemperatureChannel(const DhtXTemperatureChannel& channel);
+    DhtXTemperatureChannel& operator=(const DhtXTemperatureChannel& channel);
 };
 
 /**
- * Humidity channel of the DHT11 sensor.
+ * Humidity channel of the DHTx sensor.
  */
-class Dht11HumidityChannel : public SensorChannelFloat32
+class DhtXHumidityChannel : public SensorChannelFloat32
 {
 public:
 
     /**
-     * Constructs the humidity channel of the DHT11 sensor.
+     * Constructs the humidity channel of the DHTx sensor.
      * 
      * @param[in] dht   The DHT driver.
      */
-    Dht11HumidityChannel(DHTesp& dht) :
+    DhtXHumidityChannel(DHTesp& dht) :
         m_dht(dht)
     {
     }
 
     /**
-     * Destroys the humidity channel of the DHT11 sensor.
+     * Destroys the humidity channel of the DHTx sensor.
      */
-    ~Dht11HumidityChannel()
+    ~DhtXHumidityChannel()
     {
     }
 
@@ -157,32 +157,35 @@ private:
 
     DHTesp& m_dht;  /**< DHT sensor driver. */
 
-    Dht11HumidityChannel();
-    Dht11HumidityChannel(const Dht11HumidityChannel& channel);
-    Dht11HumidityChannel& operator=(const Dht11HumidityChannel& channel);
+    DhtXHumidityChannel();
+    DhtXHumidityChannel(const DhtXHumidityChannel& channel);
+    DhtXHumidityChannel& operator=(const DhtXHumidityChannel& channel);
 };
 
 /**
- * DHT11 sensor adapter
+ * DHTx sensor adapter
  */
-class SensorDht11 : public ISensor
+class SensorDhtX : public ISensor
 {
 public:
 
     /**
-     * Constructs the DHT11 sensor.
+     * Constructs the DHTx sensor.
+     * 
+     * @param[in] dhtModel  DHTx sensor model
      */
-    SensorDht11() :
+    SensorDhtX(DHTesp::DHT_MODEL_t dhtModel) :
         m_dht(),
+        m_dhtModel(dhtModel),
         m_temperatureChannel(m_dht),
         m_humidityChannel(m_dht)
     {
     }
 
     /**
-     * Destroys the DHT11 sensor.
+     * Destroys the DHTx sensor.
      */
-    ~SensorDht11()
+    ~SensorDhtX()
     {
     }
 
@@ -221,15 +224,19 @@ private:
     };
 
     DHTesp                  m_dht;                  /**< DHT sensor driver. */
-    Dht11TemperatureChannel m_temperatureChannel;   /**< Temperature channel */
-    Dht11HumidityChannel    m_humidityChannel;      /**< Humidity channel */
+    DHTesp::DHT_MODEL_t     m_dhtModel;             /**< DHT sensor model */
+    DhtXTemperatureChannel  m_temperatureChannel;   /**< Temperature channel */
+    DhtXHumidityChannel     m_humidityChannel;      /**< Humidity channel */
     
+    SensorDhtX();
+    SensorDhtX(const SensorDhtX& sensor);
+    SensorDhtX& operator=(const SensorDhtX& sensor);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __SENSOR_DHT11_H__ */
+#endif  /* __SENSOR_DHTX_H__ */
 
 /** @} */

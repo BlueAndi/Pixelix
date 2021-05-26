@@ -35,7 +35,7 @@
 #include "Sensors.h"
 
 #include <Util.h>
-#include <SensorDht11.h>
+#include <SensorDhtX.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -58,7 +58,7 @@
  *****************************************************************************/
 
 /** The DHT11 sensor. */
-static SensorDht11              gDht11;
+static SensorDhtX               gDht11(DHTesp::DHT11);
 
 /** A list with all registered sensors. */
 static ISensor*                 gSensors[] =

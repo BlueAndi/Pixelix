@@ -104,10 +104,10 @@ package "HAL" as halPkg {
 
     package "Sensors" as sensorsPkg {
 
-        class "SensorDht11" as sensorDht11
+        class "SensorDhtX" as sensorDhtX
 
-        note right of sensorDht11
-            The DHT11 sensor is just
+        note right of sensorDhtX
+            The DHTx sensor is just
             a example, providing two channels.
             One for temperature and one for
             humidity.
@@ -118,10 +118,10 @@ package "HAL" as halPkg {
     board --> DOutPin
     board --> DInPin
     board --> AnalogPin
-    board <.. sensorDht11: <<use>>
-    sensors *--> sensorDht11
-    sensorDht11 ..|> iSensor: <<realize>>
-    sensorDht11 *--> "2" SensorFloat32
+    board <.. sensorDhtX: <<use>>
+    sensors *--> sensorDhtX
+    sensorDhtX ..|> iSensor: <<realize>>
+    sensorDhtX *--> "2" SensorFloat32
 }
 
 note left of halPkg
