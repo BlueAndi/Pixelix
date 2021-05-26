@@ -57,15 +57,13 @@
  * Local Variables
  *****************************************************************************/
 
-static SensorDht11              gDht11;                     /**< The DHT11 main sensor. */
-static SensorDht11Temperature   gDht11Temperature(gDht11);  /**< The DHT11 temperature sensor channel. */
-static SensorDht11Humidity      gDht11Humidity(gDht11);     /**< The DHT11 humidity sensor channel. */
+/** The DHT11 sensor. */
+static SensorDht11              gDht11;
 
 /** A list with all registered sensors. */
 static ISensor*                 gSensors[] =
 {
-    &gDht11Temperature,
-    &gDht11Humidity
+    &gDht11
 };
 
 /** The concrete sensor data provider implementation. */
