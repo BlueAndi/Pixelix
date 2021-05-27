@@ -115,9 +115,6 @@ void InitState::entry(StateMachine& sm)
     /* Initialize hardware */
     Board::init();
 
-    /* Initialize sensors */
-    SensorDataProvider::getInstance().begin();
-
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
 
@@ -141,6 +138,9 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
+        /* Initialize sensors */
+        SensorDataProvider::getInstance().begin();
+
         /* Prepare everything for the plugins. */
         PluginMgr::getInstance().begin();
 
