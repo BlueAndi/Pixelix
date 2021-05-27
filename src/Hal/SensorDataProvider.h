@@ -58,7 +58,8 @@
 class SensorDataProviderImpl;
 
 /**
- * It provides the data of all available sensors in the system.
+ * It provides access to all installed sensor drivers and the
+ * data of physical available sensors in the system.
  */
 class SensorDataProvider
 {
@@ -89,14 +90,17 @@ public:
     void begin();
 
     /**
-     * Get number of available sensors.
+     * Get number of installed sensor drivers, independed of the physical
+     * sensor availability.
      * 
-     * @return Number of available sensors.
+     * @return Number of installed sensor drivers.
      */
-    uint8_t getAvailSensors() const;
+    uint8_t getNumSensors() const;
 
     /**
      * Get specific sensor by sensor index.
+     * 
+     * @param[in] index Index of the sensor
      * 
      * @return If sensor index is valid, it will return the sensor interface otherwise nullptr.
      */
@@ -104,6 +108,7 @@ public:
 
     /**
      * Find sensor channel by its data, unit and value data type.
+     * It considers the physical sensor availablity.
      * 
      * @param[out]  sensorIndex     The index of the sensor.
      * @param[out]  channelIndex    The index of the channel from the sensor.

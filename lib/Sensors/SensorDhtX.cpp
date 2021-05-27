@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  DHT11 sensor
+ * @brief  DHTx sensor
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
@@ -62,7 +62,7 @@
 
 void SensorDhtX::begin()
 {
-    m_dht.setup(Board::Pin::dhtInPinNo, m_dhtModel);
+    m_driver.setup(Board::Pin::dhtInPinNo, m_model);
 
     return;
 }

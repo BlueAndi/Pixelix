@@ -67,6 +67,15 @@ public:
     virtual void begin() = 0;
 
     /**
+     * Is sensor available?
+     * If a sensor is physically not available or the initialization failed (see begin()),
+     * this can be checked with this method.
+     *
+     * @return If sensor is available, it will return true otherwise false.
+     */
+    virtual bool isAvailable() const = 0;
+
+    /**
      * Get number of data channels.
      * 
      * @return Number of data channels.

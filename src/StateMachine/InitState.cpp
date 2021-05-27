@@ -39,6 +39,7 @@
 #include <Board.h>
 #include <Display.h>
 #include <SensorDataProvider.h>
+#include <Wire.h>
 
 #include "ButtonDrv.h"
 #include "DisplayMgr.h"
@@ -120,8 +121,14 @@ void InitState::entry(StateMachine& sm)
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
 
+    /* Initialize two-wire (I2C) */
+    if (false == Wire.begin())
+    {
+        LOG_FATAL("Couldn't initialize two-wire.");
+        isError = true;
+    }
     /* Initialize button driver */
-    if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
+    else if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
     {
         LOG_FATAL("Couldn't initialize button driver.");
         isError = true;

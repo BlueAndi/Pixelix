@@ -25,15 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Sensor data provider
+ * @brief  SHT3x sensor
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "SensorDataProvider.h"
-#include <Sensors.h>
+#include "SensorSht3X.h"
+
+#include <Board.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,85 +60,42 @@
  * Public Methods
  *****************************************************************************/
 
-void SensorDataProvider::begin()
+void SensorSht3X::begin()
 {
-    m_impl->begin();
-}
-
-uint8_t SensorDataProvider::getNumSensors() const
-{
-    return m_impl->getNumSensors();
-}
-
-ISensor* SensorDataProvider::getSensor(uint8_t index)
-{
-    return m_impl->getSensor(index);
-}
-
-bool SensorDataProvider::find(
-    uint8_t& sensorIndex,
-    uint8_t& channelIndex,
-    ISensorChannel::DataWithUnit dataWithUnit,
-    ISensorChannel::DataType dataType,
-    uint8_t sensorStartIdx,
-    uint8_t channelStartIdx)
-{
-    uint8_t sensorIdx   = sensorStartIdx;
-    uint8_t channelIdx  = channelStartIdx;
-    uint8_t sensorCnt   = m_impl->getNumSensors();
-    bool    isFound     = false;
-
-    while((sensorCnt > sensorIdx) && (false == isFound))
+    if (false == m_driver.init())
     {
-        ISensor* sensor = m_impl->getSensor(sensorIdx);
+        m_isAvailable = false;
+    }
+    else
+    {
+        m_isAvailable = true;
         
-        /* A sensor driver must be installed and of course, a physical
-         * sensor must be available.
-         */
-        if ((nullptr != sensor) &&
-            (true == sensor->isAvailable()))
-        {
-            uint8_t channelCnt = sensor->getNumChannels();
-
-            /* Walk through all sensor channels and try to find the requested one. */
-            while((channelCnt > channelIdx) && (false == isFound))
-            {
-                ISensorChannel* channel = sensor->getChannel(channelIdx);
-
-                if (nullptr != channel)
-                {
-                    /* The kind of data and its unit must always match. */
-                    if (channel->getDataWithUnit() == dataWithUnit)
-                    {
-                        /* Shall the value data type be considered? */
-                        if (ISensorChannel::DATA_TYPE_INVALID != dataType)
-                        {
-                            if (channel->getType() == dataType)
-                            {
-                                isFound = true;
-                            }
-                        }
-                        else
-                        /* Don't consider the value data type. */
-                        {
-                            isFound = true;
-                        }
-                    }
-                }
-
-                ++channelIdx;
-            }
-        }
-
-        ++sensorIdx;
+        /* Only supported for SHT3x sensors */
+        m_driver.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
     }
 
-    if (sensorCnt <= sensorIdx)
+    return;
+}
+
+ISensorChannel* SensorSht3X::getChannel(uint8_t index)
+{
+    ISensorChannel* channel = nullptr;
+
+    switch(index)
     {
-        sensorIdx = INVALID_SENSOR_IDX;
+    case CHANNEL_ID_TEMPERATURE:
+        channel = &m_temperatureChannel;
+        break;
+
+    case CHANNEL_ID_HUMIDITY:
+        channel = &m_humidityChannel;
+        break;
+    
+    default:
+        break;
     }
 
-    return sensorIdx;
+    return channel;
 }
 
 /******************************************************************************
@@ -147,11 +105,6 @@ bool SensorDataProvider::find(
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-SensorDataProvider::SensorDataProvider() :
-    m_impl(Sensors::getSensorDataProviderImpl())
-{
-}
 
 /******************************************************************************
  * External Functions

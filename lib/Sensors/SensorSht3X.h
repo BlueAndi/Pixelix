@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  DHTx sensor
+ * @brief  SHT3x sensor
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup hal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSOR_DHTX_H__
-#define __SENSOR_DHTX_H__
+#ifndef __SENSOR_SHT3X_H__
+#define __SENSOR_SHT3X_H__
 
 /******************************************************************************
  * Compile Switches
@@ -46,7 +46,7 @@
 #include <stdint.h>
 #include <ISensor.hpp>
 #include <SensorChannelType.hpp>
-#include <DHTesp.h>
+#include <SHTSensor.h>
 
 /******************************************************************************
  * Macros
@@ -57,26 +57,26 @@
  *****************************************************************************/
 
 /**
- * Temperature channel of the DHTx sensor.
+ * Temperature channel of the SHT3x sensor.
  */
-class DhtXTemperatureChannel : public SensorChannelFloat32
+class Sht3XTemperatureChannel : public SensorChannelFloat32
 {
 public:
 
     /**
-     * Constructs the temperature channel of the DHTx sensor.
+     * Constructs the temperature channel of the SHT3x sensor.
      * 
-     * @param[in] driver    The DHTx driver.
+     * @param[in] driver    The SHT3x driver.
      */
-    DhtXTemperatureChannel(DHTesp& driver) :
+    Sht3XTemperatureChannel(SHTSensor& driver) :
         m_driver(driver)
     {
     }
 
     /**
-     * Destroys the temperature channel of the DHTx sensor.
+     * Destroys the temperature channel of the SHT3x sensor.
      */
-    ~DhtXTemperatureChannel()
+    ~Sht3XTemperatureChannel()
     {
     }
 
@@ -102,34 +102,34 @@ public:
 
 private:
 
-    DHTesp& m_driver;   /**< DHTx sensor driver. */
+    SHTSensor&  m_driver;   /**< SHT3x sensor driver. */
 
-    DhtXTemperatureChannel();
-    DhtXTemperatureChannel(const DhtXTemperatureChannel& channel);
-    DhtXTemperatureChannel& operator=(const DhtXTemperatureChannel& channel);
+    Sht3XTemperatureChannel();
+    Sht3XTemperatureChannel(const Sht3XTemperatureChannel& channel);
+    Sht3XTemperatureChannel& operator=(const Sht3XTemperatureChannel& channel);
 };
 
 /**
- * Humidity channel of the DHTx sensor.
+ * Humidity channel of the SHT3x sensor.
  */
-class DhtXHumidityChannel : public SensorChannelFloat32
+class Sht3XHumidityChannel : public SensorChannelFloat32
 {
 public:
 
     /**
-     * Constructs the humidity channel of the DHTx sensor.
+     * Constructs the humidity channel of the SHT3x sensor.
      * 
-     * @param[in] driver    The DHTx driver.
+     * @param[in] driver    The SHT3x driver.
      */
-    DhtXHumidityChannel(DHTesp& driver) :
+    Sht3XHumidityChannel(SHTSensor& driver) :
         m_driver(driver)
     {
     }
 
     /**
-     * Destroys the humidity channel of the DHTx sensor.
+     * Destroys the humidity channel of the SHT3x sensor.
      */
-    ~DhtXHumidityChannel()
+    ~Sht3XHumidityChannel()
     {
     }
 
@@ -155,37 +155,37 @@ public:
 
 private:
 
-    DHTesp& m_driver;   /**< DHTx sensor driver. */
+    SHTSensor&  m_driver;   /**< SHT3x sensor driver. */
 
-    DhtXHumidityChannel();
-    DhtXHumidityChannel(const DhtXHumidityChannel& channel);
-    DhtXHumidityChannel& operator=(const DhtXHumidityChannel& channel);
+    Sht3XHumidityChannel();
+    Sht3XHumidityChannel(const Sht3XHumidityChannel& channel);
+    Sht3XHumidityChannel& operator=(const Sht3XHumidityChannel& channel);
 };
 
 /**
- * DHTx sensor adapter
+ * SHT3x sensor adapter
  */
-class SensorDhtX : public ISensor
+class SensorSht3X : public ISensor
 {
 public:
 
     /**
-     * Constructs the DHTx sensor.
+     * Constructs the SHT3x sensor.
      * 
-     * @param[in] model DHTx sensor model
+     * @param[in] model SHT3x sensor model
      */
-    SensorDhtX(DHTesp::DHT_MODEL_t model) :
-        m_driver(),
-        m_model(model),
+    SensorSht3X(SHTSensor::SHTSensorType model) :
+        m_driver(model),
+        m_isAvailable(false),
         m_temperatureChannel(m_driver),
         m_humidityChannel(m_driver)
     {
     }
 
     /**
-     * Destroys the DHTx sensor.
+     * Destroys the SHT3x sensor.
      */
-    ~SensorDhtX()
+    ~SensorSht3X()
     {
     }
 
@@ -203,8 +203,7 @@ public:
      */
     bool isAvailable() const final
     {
-        /* Can not be detected right now. */
-        return true;
+        return m_isAvailable;
     }
 
     /**
@@ -236,20 +235,20 @@ private:
         CHANNEL_ID_COUNT            /**< Number of channels */
     };
 
-    DHTesp                  m_driver;               /**< DHTx sensor driver. */
-    DHTesp::DHT_MODEL_t     m_model;                /**< DHTx sensor model */
-    DhtXTemperatureChannel  m_temperatureChannel;   /**< Temperature channel */
-    DhtXHumidityChannel     m_humidityChannel;      /**< Humidity channel */
+    SHTSensor               m_driver;               /**< SHT3x sensor driver. */
+    bool                    m_isAvailable;          /**< Is a SHT3x sensor available or not? */
+    Sht3XTemperatureChannel m_temperatureChannel;   /**< Temperature channel */
+    Sht3XHumidityChannel    m_humidityChannel;      /**< Humidity channel */
     
-    SensorDhtX();
-    SensorDhtX(const SensorDhtX& sensor);
-    SensorDhtX& operator=(const SensorDhtX& sensor);
+    SensorSht3X();
+    SensorSht3X(const SensorSht3X& sensor);
+    SensorSht3X& operator=(const SensorSht3X& sensor);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __SENSOR_DHTX_H__ */
+#endif  /* __SENSOR_SHT3X_H__ */
 
 /** @} */

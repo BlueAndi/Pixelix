@@ -35,6 +35,7 @@
 #include "Sensors.h"
 
 #include <Util.h>
+#include <SensorSht3X.h>
 #include <SensorDhtX.h>
 
 /******************************************************************************
@@ -57,13 +58,17 @@
  * Local Variables
  *****************************************************************************/
 
+/** The SHT3x sensor in autodetect mode (for two-wire sensors only). */
+static SensorSht3X              gSht3x(SHTSensor::AUTO_DETECT);
+
 /** The DHT11 sensor. */
 static SensorDhtX               gDht11(DHTesp::DHT11);
 
 /** A list with all registered sensors. */
 static ISensor*                 gSensors[] =
 {
-    &gDht11
+    &gSht3x,
+    &gDht11 /* Keep it as last, because currently it can not detect whether a physical sensor is really connected. */
 };
 
 /** The concrete sensor data provider implementation. */
