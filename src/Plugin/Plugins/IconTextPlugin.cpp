@@ -147,23 +147,6 @@ bool IconTextPlugin::isUploadAccepted(const String& topic, const String& srcFile
 
 void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
-    UTIL_NOT_USED(width);
-    UTIL_NOT_USED(height);
-
-    /* Nothing to do. */
-    return;
-}
-
-void IconTextPlugin::stop()
-{
-    if (false != FILESYSTEM.remove(getFileName()))
-    {
-        LOG_INFO("File %s removed", getFileName().c_str());
-    }
-}
-
-void IconTextPlugin::active(YAGfx& gfx)
-{
     lock();
 
     if (nullptr == m_iconCanvas)
@@ -181,7 +164,7 @@ void IconTextPlugin::active(YAGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -197,9 +180,29 @@ void IconTextPlugin::active(YAGfx& gfx)
     return;
 }
 
-void IconTextPlugin::inactive()
+void IconTextPlugin::stop()
 {
-    /* Nothing to do. */
+    lock();
+
+    if (false != FILESYSTEM.remove(getFileName()))
+    {
+        LOG_INFO("File %s removed", getFileName().c_str());
+    }
+
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    unlock();
+
     return;
 }
 

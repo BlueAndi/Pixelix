@@ -230,23 +230,6 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    UTIL_NOT_USED(width);
-    UTIL_NOT_USED(height);
-
-    /* Nothing to do. */
-    return;
-}
-
-void IconTextLampPlugin::stop()
-{
-    if (false != FILESYSTEM.remove(getFileName()))
-    {
-        LOG_INFO("File %s removed", getFileName().c_str());
-    }
-}
-
-void IconTextLampPlugin::active(YAGfx& gfx)
-{
     lock();
 
     if (nullptr == m_iconCanvas)
@@ -264,7 +247,7 @@ void IconTextLampPlugin::active(YAGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight() - 2U, ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height - 2U, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -278,11 +261,11 @@ void IconTextLampPlugin::active(YAGfx& gfx)
         uint16_t        lampDistance    = 0U;
         const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
         const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
-        const uint16_t  canvasWidth     = gfx.getWidth() - ICON_WIDTH;
+        const uint16_t  canvasWidth     = width - ICON_WIDTH;
         
         if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
         {
-            m_lampCanvas = new Canvas(canvasWidth, 1U, ICON_WIDTH, gfx.getHeight() - 1);
+            m_lampCanvas = new Canvas(canvasWidth, 1U, ICON_WIDTH, height - 1);
 
             if (nullptr != m_lampCanvas)
             {
@@ -309,10 +292,34 @@ void IconTextLampPlugin::active(YAGfx& gfx)
     return;
 }
 
-void IconTextLampPlugin::inactive()
+void IconTextLampPlugin::stop()
 {
-    /* Nothing to do. */
-    return;
+    lock();
+
+    if (false != FILESYSTEM.remove(getFileName()))
+    {
+        LOG_INFO("File %s removed", getFileName().c_str());
+    }
+
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    if (nullptr != m_lampCanvas)
+    {
+        delete m_lampCanvas;
+        m_lampCanvas = nullptr;
+    }
+
+    unlock();
 }
 
 void IconTextLampPlugin::update(YAGfx& gfx)
