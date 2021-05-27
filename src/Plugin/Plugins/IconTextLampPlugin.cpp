@@ -278,15 +278,16 @@ void IconTextLampPlugin::active(YAGfx& gfx)
         uint16_t        lampDistance    = 0U;
         const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
         const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
+        const uint16_t  canvasWidth     = gfx.getWidth() - ICON_WIDTH;
         
-        if (true == calcLayout(gfx.getWidth(), MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
+        if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
         {
-            m_lampCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, 1U, ICON_WIDTH, gfx.getHeight() - 1);
+            m_lampCanvas = new Canvas(canvasWidth, 1U, ICON_WIDTH, gfx.getHeight() - 1);
 
             if (nullptr != m_lampCanvas)
             {
                 /* Calculate the border to have the lamps shown aligned to center. */
-                uint16_t    border  = (gfx.getWidth() - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
+                uint16_t    border  = (canvasWidth - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
                 uint8_t     index   = 0U;
 
                 for(index = 0U; index < MAX_LAMPS; ++index)
@@ -469,8 +470,23 @@ bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDi
             {
                 uint16_t    elementDistanceConsideringRatio = elementWidthConsideringRatio / elementDistanceToElementWidthRatio;
 
-                elementWidth    = elementWidthConsideringRatio - elementDistanceConsideringRatio;
-                elementDistance = elementDistanceConsideringRatio;
+                if (0U == elementDistanceConsideringRatio)
+                {
+                    if (0U == minDistance)
+                    {
+                        elementDistance = 0U;
+                    }
+                    else
+                    {
+                        elementWidth    = maxElementWidth;
+                        elementDistance = (availableWidth - (cnt * maxElementWidth)) / (cnt - 1U);
+                    }
+                }
+                else
+                {
+                    elementWidth    = elementWidthConsideringRatio - elementDistanceConsideringRatio;
+                    elementDistance = elementDistanceConsideringRatio;
+                }
             }
             else
             {

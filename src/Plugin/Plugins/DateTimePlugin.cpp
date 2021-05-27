@@ -366,8 +366,23 @@ bool DateTimePlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistan
             {
                 uint16_t    elementDistanceConsideringRatio = elementWidthConsideringRatio / elementDistanceToElementWidthRatio;
 
-                elementWidth    = elementWidthConsideringRatio - elementDistanceConsideringRatio;
-                elementDistance = elementDistanceConsideringRatio;
+                if (0U == elementDistanceConsideringRatio)
+                {
+                    if (0U == minDistance)
+                    {
+                        elementDistance = 0U;
+                    }
+                    else
+                    {
+                        elementWidth    = maxElementWidth;
+                        elementDistance = (availableWidth - (cnt * maxElementWidth)) / (cnt - 1U);
+                    }
+                }
+                else
+                {
+                    elementWidth    = elementWidthConsideringRatio - elementDistanceConsideringRatio;
+                    elementDistance = elementDistanceConsideringRatio;
+                }
             }
             else
             {
