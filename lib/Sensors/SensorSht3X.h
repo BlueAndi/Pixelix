@@ -196,6 +196,13 @@ public:
     void begin() final;
 
     /**
+     * Get sensor name.
+     * 
+     * @return Sensor name
+     */
+    const char* getName() const final;
+    
+    /**
      * Is sensor available?
      * If a sensor is physically not available or the initialization failed (see begin()),
      * this can be checked with this method.

@@ -77,6 +77,14 @@ void SensorSht3X::begin()
     return;
 }
 
+const char* SensorSht3X::getName() const
+{
+    /* Model can not be read back and the automatic detection may be enabled,
+     * so the given model (via constructor) can not be used.
+     */
+    return "SHT3x";
+}
+
 ISensorChannel* SensorSht3X::getChannel(uint8_t index)
 {
     ISensorChannel* channel = nullptr;

@@ -177,6 +177,7 @@ public:
     SensorDhtX(DHTesp::DHT_MODEL_t model) :
         m_driver(),
         m_model(model),
+        m_isAvailable(false),
         m_temperatureChannel(m_driver),
         m_humidityChannel(m_driver)
     {
@@ -195,6 +196,13 @@ public:
     void begin() final;
 
     /**
+     * Get sensor name.
+     * 
+     * @return Sensor name
+     */
+    const char* getName() const final;
+    
+    /**
      * Is sensor available?
      * If a sensor is physically not available or the initialization failed (see begin()),
      * this can be checked with this method.
@@ -203,8 +211,7 @@ public:
      */
     bool isAvailable() const final
     {
-        /* Can not be detected right now. */
-        return true;
+        return m_isAvailable;
     }
 
     /**
@@ -238,6 +245,7 @@ private:
 
     DHTesp                  m_driver;               /**< DHTx sensor driver. */
     DHTesp::DHT_MODEL_t     m_model;                /**< DHTx sensor model */
+    bool                    m_isAvailable;          /**< Is a DHTx sensor available or not? */
     DhtXTemperatureChannel  m_temperatureChannel;   /**< Temperature channel */
     DhtXHumidityChannel     m_humidityChannel;      /**< Humidity channel */
     

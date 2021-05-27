@@ -67,6 +67,13 @@ public:
     virtual void begin() = 0;
 
     /**
+     * Get sensor name.
+     * 
+     * @return Sensor name
+     */
+    virtual const char* getName() const = 0;
+
+    /**
      * Is sensor available?
      * If a sensor is physically not available or the initialization failed (see begin()),
      * this can be checked with this method.

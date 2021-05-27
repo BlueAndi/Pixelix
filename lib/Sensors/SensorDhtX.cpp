@@ -63,8 +63,52 @@
 void SensorDhtX::begin()
 {
     m_driver.setup(Board::Pin::dhtInPinNo, m_model);
+    
+    /* Read model back, because automatic detection may be used. */
+    m_model = m_driver.getModel();
+
+    /* Detect whether a sensor is available. */
+    (void)m_driver.getTempAndHumidity();
+    
+    if (DHTesp::ERROR_NONE != m_driver.getStatus())
+    {
+        m_isAvailable = false;
+    }
+    else
+    {
+        m_isAvailable = true;
+    }
 
     return;
+}
+
+const char* SensorDhtX::getName() const
+{
+    const char* sensorName  = "?";
+
+    switch(m_model)
+    {
+    case DHTesp::DHT11:
+        sensorName = "DHT11";
+        break;
+    
+    case DHTesp::DHT22:
+        sensorName = "DHT22";
+        break;
+    
+    case DHTesp::AM2302:
+        sensorName = "AM2302";
+        break;
+
+    case DHTesp::RHT03:
+        sensorName = "RHT03";
+        break;
+
+    default:
+        break;
+    }
+
+    return sensorName;
 }
 
 ISensorChannel* SensorDhtX::getChannel(uint8_t index)

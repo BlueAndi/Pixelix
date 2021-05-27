@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "SensorDataProvider.h"
 #include <Sensors.h>
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -61,7 +62,24 @@
 
 void SensorDataProvider::begin()
 {
+    uint8_t index   = 0U;
+    uint8_t cnt     = m_impl->getNumSensors();
+
+    /* Initialize all sensor drivers. */
     m_impl->begin();
+
+    /* For debug purposes, show the sensor driver states. */
+    for(index = 0U; index < cnt; ++index)
+    {
+        ISensor* sensor = m_impl->getSensor(index);
+
+        if (nullptr != sensor)
+        {
+            bool isAvailable = sensor->isAvailable();
+
+            LOG_INFO("Sensor %s: %s", sensor->getName(), (false == isAvailable) ? "-" : "available" );
+        }
+    }
 }
 
 uint8_t SensorDataProvider::getNumSensors() const
@@ -132,12 +150,7 @@ bool SensorDataProvider::find(
         ++sensorIdx;
     }
 
-    if (sensorCnt <= sensorIdx)
-    {
-        sensorIdx = INVALID_SENSOR_IDX;
-    }
-
-    return sensorIdx;
+    return isFound;
 }
 
 /******************************************************************************

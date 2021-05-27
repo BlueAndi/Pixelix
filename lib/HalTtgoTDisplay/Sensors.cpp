@@ -68,7 +68,7 @@ static SensorDhtX               gDht11(DHTesp::DHT11);
 static ISensor*                 gSensors[] =
 {
     &gSht3x,
-    &gDht11 /* Keep it as last, because currently it can not detect whether a physical sensor is really connected. */
+    &gDht11
 };
 
 /** The concrete sensor data provider implementation. */
