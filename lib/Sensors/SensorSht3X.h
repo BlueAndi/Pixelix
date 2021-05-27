@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <stddef.h>
 #include <ISensor.hpp>
 #include <SensorChannelType.hpp>
 #include <SHTSensor.h>
