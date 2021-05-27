@@ -466,7 +466,7 @@ void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
 {
     lock();
 
-    if (FADE_EFFECT_MOVE_Y < fadeEffect)
+    if (FADE_EFFECT_COUNT <= fadeEffect)
     {
         m_fadeEffectIndex = FADE_EFFECT_LINEAR;
     }

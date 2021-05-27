@@ -78,7 +78,8 @@ public:
         FADE_EFFECT_NO = 0, /**< No fade effect */
         FADE_EFFECT_LINEAR, /**< Linear dimming fade effect. */
         FADE_EFFECT_MOVE_X, /**< Moving fade effect into the direction of negative x-coordinates. */
-        FADE_EFFECT_MOVE_Y  /**< Moving fade effect into the direction of negative y-coordinates. */
+        FADE_EFFECT_MOVE_Y, /**< Moving fade effect into the direction of negative y-coordinates. */
+        FADE_EFFECT_COUNT   /**< Number of fade effects. */
     };
 
     /**
