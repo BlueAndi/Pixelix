@@ -63,10 +63,13 @@
  * Prototypes
  *****************************************************************************/
 
-static void handleStatus(AsyncWebServerRequest* request);
-static void handleSlots(AsyncWebServerRequest* request);
-static void handlePlugin(AsyncWebServerRequest* request);
 static void handleButton(AsyncWebServerRequest* request);
+static void handleFadeEffect(AsyncWebServerRequest* request);
+static void handleSlots(AsyncWebServerRequest* request);
+static void handlePluginInstall(AsyncWebServerRequest* request);
+static void handlePluginUninstall(AsyncWebServerRequest* request);
+static void handlePlugins(AsyncWebServerRequest* request);
+static void handleStatus(AsyncWebServerRequest* request);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
 static String getContentType(const String& filename);
@@ -96,10 +99,13 @@ static void handleFileDelete(AsyncWebServerRequest* request);
 
 void RestApi::init(AsyncWebServer& srv)
 {
-    (void)srv.on("/rest/api/v1/status", handleStatus);
-    (void)srv.on("/rest/api/v1/display/slots", handleSlots);
-    (void)srv.on("/rest/api/v1/plugin", handlePlugin);
     (void)srv.on("/rest/api/v1/button", handleButton);
+    (void)srv.on("/rest/api/v1/display/fadeEffect", handleFadeEffect);
+    (void)srv.on("/rest/api/v1/display/slots", handleSlots);
+    (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
+    (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
+    (void)srv.on("/rest/api/v1/plugins", handlePlugins);
+    (void)srv.on("/rest/api/v1/status", handleStatus);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_GET, handleFileGet);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete);
@@ -127,7 +133,7 @@ void RestApi::error(AsyncWebServerRequest* request)
     }
 
     /* Prepare response */
-    jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+    jsonDoc["status"]   = "error";
     errorObj["msg"]     = "Invalid path requested.";
     httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
@@ -151,12 +157,12 @@ void RestApi::error(AsyncWebServerRequest* request)
  *****************************************************************************/
 
 /**
- * Get status information.
- * GET \c "/api/v1/status"
+ * Trigger virtual user button.
+ * POST \c "/api/v1/button"
  *
  * @param[in] request   HTTP request
  */
-static void handleStatus(AsyncWebServerRequest* request)
+static void handleButton(AsyncWebServerRequest* request)
 {
     String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -168,57 +174,91 @@ static void handleStatus(AsyncWebServerRequest* request)
         return;
     }
 
-    if (HTTP_GET != request->method())
+    if (HTTP_POST != request->method())
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
-        String      ssid;
-        int8_t      rssi            = -100; // dbm
-        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
-        JsonObject  hwObj           = dataObj.createNestedObject("hardware");
-        JsonObject  swObj           = dataObj.createNestedObject("software");
-        JsonObject  internalRamObj  = swObj.createNestedObject("internalRam");
-        JsonObject  wifiObj         = dataObj.createNestedObject("wifi");
+        DisplayMgr::getInstance().activateNextSlot();
+ 
+        /* Prepare response */
+        (void)jsonDoc.createNestedObject("data");
+        jsonDoc["status"]   = "ok";
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
 
-        /* Only in station mode it makes sense to retrieve the RSSI.
-         * Otherwise keep it -100 dbm.
-         */
-        if (WIFI_MODE_STA == WiFi.getMode())
-        {
-            rssi = WiFi.RSSI();
-        }
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
 
-        if (true == Settings::getInstance().open(true))
-        {
-            ssid = Settings::getInstance().getWifiSSID().getValue();
-            Settings::getInstance().close();
-        }
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * Activate next fade effect.
+ * POST \c "/api/v1/display/fadeEffect"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleFadeEffect(AsyncWebServerRequest* request)
+{
+    String              content;
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET == request->method())
+    {
+        JsonObject data = jsonDoc.createNestedObject("data");
+        
+        data["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
 
         /* Prepare response */
-        jsonDoc["status"]       = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        jsonDoc["status"]   = "ok";
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+    else if (HTTP_POST == request->method())
+    {
+        JsonObject              data                = jsonDoc.createNestedObject("data");
+        DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
+        uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
+        DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1);
 
-        hwObj["chipRev"]        = ESP.getChipRevision();
-        hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
+        DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
 
-        swObj["version"]        = Version::SOFTWARE_VER;
-        swObj["revision"]       = Version::SOFTWARE_REV;
-        swObj["espSdkVersion"]  = ESP.getSdkVersion();
+        data["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
 
-        internalRamObj["heapSize"]      = ESP.getHeapSize();
-        internalRamObj["availableHeap"] = ESP.getFreeHeap();
+        /* Prepare response */
+        jsonDoc["status"]   = "ok";
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
 
-        wifiObj["ssid"]         = ssid;
-        wifiObj["rssi"]         = rssi;                             // dBm
-        wifiObj["quality"]      = WiFiUtil::getSignalQuality(rssi); // percent
-
-        httpStatusCode          = HttpStatus::STATUS_CODE_OK;
+        /* Prepare response */
+        jsonDoc["status"]   = "error";
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
     if (true == jsonDoc.overflowed())
@@ -259,7 +299,7 @@ static void handleSlots(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -290,7 +330,7 @@ static void handleSlots(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        jsonDoc["status"]   = "ok";
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
@@ -310,14 +350,12 @@ static void handleSlots(AsyncWebServerRequest* request)
 }
 
 /**
- * Install/Uninstall plugins
- * List plugins:     GET \c "/api/v1/plugin?list"
- * Install plugin:   POST \c "/api/v1/plugin?install=<plugin-name>"
- * Uninstall plugin: POST \c "/api/v1/plugin?uninstall=<plugin-name>&slotId=<slot-id>"
+ * Install plugin
+ * POST \c "/api/v1/plugin/install?name=<plugin-name>"
  *
  * @param[in] request   HTTP request
  */
-static void handlePlugin(AsyncWebServerRequest* request)
+static void handlePluginInstall(AsyncWebServerRequest* request)
 {
     String              content;
     const size_t        JSON_DOC_SIZE   = 512U;
@@ -329,41 +367,30 @@ static void handlePlugin(AsyncWebServerRequest* request)
         return;
     }
 
-    if (HTTP_GET == request->method())
+    if (HTTP_POST != request->method())
     {
-        /* List all plugins? */
-        if (true == request->hasArg("list"))
-        {
-            JsonObject  dataObj     = jsonDoc.createNestedObject("data");
-            JsonArray   pluginArray = dataObj.createNestedArray("plugins");
-            const char* pluginName  = PluginMgr::getInstance().findFirst();
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
 
-            while(nullptr != pluginName)
-            {
-                pluginArray.add(pluginName);
-                pluginName = PluginMgr::getInstance().findNext();
-            }
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-        else
+        /* Prepare response */
+        jsonDoc["status"]   = "error";
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        /* Plugin name missing? */
+        if (false == request->hasArg("name"))
         {
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Unknown argument.";
+            jsonDoc["status"]   = "error";
+            errorObj["msg"]     = "Plugin name is missing.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
-    }
-    else if (HTTP_POST == request->method())
-    {
-        /* Plugin installation? */
-        if (true == request->hasArg("install"))
+        else
         {
-            String              pluginName  = request->arg("install");
+            String              pluginName  = request->arg("name");
             IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName);
 
             /* Plugin not found? */
@@ -372,9 +399,9 @@ static void handlePlugin(AsyncWebServerRequest* request)
                 JsonObject errorObj = jsonDoc.createNestedObject("error");
 
                 /* Prepare response */
-                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+                jsonDoc["status"]   = "error";
                 errorObj["msg"]     = "Plugin unknown.";
-                httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+                httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
             }
             /* Plugin successful installed. */
             else
@@ -389,110 +416,10 @@ static void handlePlugin(AsyncWebServerRequest* request)
                 /* Prepare response */
                 dataObj["slotId"]   = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
                 dataObj["uid"]      = plugin->getUID();
-                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+                jsonDoc["status"]   = "ok";
                 httpStatusCode      = HttpStatus::STATUS_CODE_OK;
             }
         }
-        /* Plugin uninstallation? */
-        else if (true == request->hasArg("uninstall"))
-        {
-            /* "slotId" argument missing? */
-            if (false == request->hasArg("slotId"))
-            {
-                JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                /* Prepare response */
-                jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                errorObj["msg"]     = "Slot id is missing.";
-                httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-            }
-            else
-            {
-                uint8_t slotId          = DisplayMgr::SLOT_ID_INVALID;
-                bool    slotIdStatus    = Util::strToUInt8(request->arg("slotId"), slotId);
-
-                if (false == slotIdStatus)
-                {
-                    JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                    /* Prepare response */
-                    jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                    errorObj["msg"]     = "Invalid slot id.";
-                    httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-                }
-                else
-                {
-                    String              pluginName  = request->arg("uninstall");
-                    IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
-
-                    if (nullptr == plugin)
-                    {
-                        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                        /* Prepare response */
-                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                        errorObj["msg"]     = "No plugin in slot.";
-                        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-                    }
-                    else if (0 != pluginName.compareTo(plugin->getName()))
-                    {
-                        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                        /* Prepare response */
-                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                        errorObj["msg"]     = "Wrong plugin in slot.";
-                        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-                    }
-                    else if (true == DisplayMgr::getInstance().isSlotLocked(slotId))
-                    {
-                        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                        /* Prepare response */
-                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                        errorObj["msg"]     = "Slot is locked.";
-                        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-                    }
-                    else if (false == PluginMgr::getInstance().uninstall(plugin))
-                    {
-                        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                        /* Prepare response */
-                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-                        errorObj["msg"]     = "Failed to uninstall.";
-                        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-                    }
-                    else
-                    {
-                        /* Save current installed plugins to persistent memory. */
-                        PluginMgr::getInstance().save();
-
-                        /* Prepare response */
-                        (void)jsonDoc.createNestedObject("data");
-                        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-                        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-                    }
-                }
-            }
-        }
-        /* Unknown command */
-        else
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "Unknown argument.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-    }
-    else
-    {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
     if (true == jsonDoc.overflowed())
@@ -511,13 +438,204 @@ static void handlePlugin(AsyncWebServerRequest* request)
 }
 
 /**
- * Trigger virtual user button.
- * Activate next slot:              GET \c "/api/v1/button"
- * Switch to the next FadeEffect:   POST \c "/api/v1/button?fadeEffect=<FadeEffectId>"
+ * Uninstall plugin
+ * POST \c "/api/v1/plugin/uninstall?name=<plugin-name>&slotId=<slot-id>"
  *
  * @param[in] request   HTTP request
  */
-static void handleButton(AsyncWebServerRequest* request)
+static void handlePluginUninstall(AsyncWebServerRequest* request)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = "error";
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        /* Plugin name missing? */
+        if (false == request->hasArg("name"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = "error";
+            errorObj["msg"]     = "Plugin name is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        /* Slot id missing? */
+        else if (false == request->hasArg("slotId"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = "error";
+            errorObj["msg"]     = "Slot id is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            uint8_t slotId          = DisplayMgr::SLOT_ID_INVALID;
+            bool    slotIdStatus    = Util::strToUInt8(request->arg("slotId"), slotId);
+
+            if (false == slotIdStatus)
+            {
+                JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                /* Prepare response */
+                jsonDoc["status"]   = "error";
+                errorObj["msg"]     = "Invalid slot id.";
+                httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+            }
+            else
+            {
+                String              pluginName  = request->arg("name");
+                IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
+
+                if (nullptr == plugin)
+                {
+                    JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                    /* Prepare response */
+                    jsonDoc["status"]   = "error";
+                    errorObj["msg"]     = "No plugin in slot.";
+                    httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                }
+                else if (0 != pluginName.compareTo(plugin->getName()))
+                {
+                    JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                    /* Prepare response */
+                    jsonDoc["status"]   = "error";
+                    errorObj["msg"]     = "Wrong plugin in slot.";
+                    httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                }
+                else if (true == DisplayMgr::getInstance().isSlotLocked(slotId))
+                {
+                    JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                    /* Prepare response */
+                    jsonDoc["status"]   = "error";
+                    errorObj["msg"]     = "Slot is locked.";
+                    httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                }
+                else if (false == PluginMgr::getInstance().uninstall(plugin))
+                {
+                    JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                    /* Prepare response */
+                    jsonDoc["status"]   = "error";
+                    errorObj["msg"]     = "Failed to uninstall.";
+                    httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                }
+                else
+                {
+                    /* Save current installed plugins to persistent memory. */
+                    PluginMgr::getInstance().save();
+
+                    /* Prepare response */
+                    (void)jsonDoc.createNestedObject("data");
+                    jsonDoc["status"]   = "ok";
+                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+                }
+            }
+        }
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * List all available plugins.
+ * GET \c "/api/v1/plugins"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handlePlugins(AsyncWebServerRequest* request)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = "error";
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+        JsonArray   pluginArray = dataObj.createNestedArray("plugins");
+        const char* pluginName  = PluginMgr::getInstance().findFirst();
+
+        while(nullptr != pluginName)
+        {
+            pluginArray.add(pluginName);
+            pluginName = PluginMgr::getInstance().findNext();
+        }
+
+        /* Prepare response */
+        jsonDoc["status"]   = "ok";
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * Get status information.
+ * GET \c "/api/v1/status"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleStatus(AsyncWebServerRequest* request)
 {
     String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -529,53 +647,57 @@ static void handleButton(AsyncWebServerRequest* request)
         return;
     }
 
-    if (HTTP_POST == request->method())
-    {
-        JsonObject  dataObj = jsonDoc.createNestedObject("data");
-        
-        /* Fade effect? */
-        if (false == request->hasArg("fadeEffect"))
-        {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
-            errorObj["msg"]     = "fadeEffect is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            String effect = request->arg("fadeEffect");
-
-            DisplayMgr::getInstance().activateNextFadeEffect(static_cast<DisplayMgr::FadeEffect>(effect.toInt()));
-
-            /* Prepare response */
-            dataObj["fadeEffect"]   = effect.toInt();
-            jsonDoc["status"]       = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-            httpStatusCode          = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else if (HTTP_GET == request->method())
-    {
-        JsonObject  dataObj = jsonDoc.createNestedObject("data");
-
-        UTIL_NOT_USED(dataObj);
-        DisplayMgr::getInstance().activateNextSlot();
-        DisplayMgr::FadeEffect currentFadeEffect = DisplayMgr::getInstance().getFadeEffect();
-
-        /* Prepare response */
-        jsonDoc["status"]       = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-        dataObj["fadeEffect"]   = currentFadeEffect;
-        httpStatusCode          = HttpStatus::STATUS_CODE_OK;
-    }
-    else
+    if (HTTP_GET != request->method())
     {
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        String      ssid;
+        int8_t      rssi            = -100; // dbm
+        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
+        JsonObject  hwObj           = dataObj.createNestedObject("hardware");
+        JsonObject  swObj           = dataObj.createNestedObject("software");
+        JsonObject  internalRamObj  = swObj.createNestedObject("internalRam");
+        JsonObject  wifiObj         = dataObj.createNestedObject("wifi");
+
+        /* Only in station mode it makes sense to retrieve the RSSI.
+         * Otherwise keep it -100 dbm.
+         */
+        if (WIFI_MODE_STA == WiFi.getMode())
+        {
+            rssi = WiFi.RSSI();
+        }
+
+        if (true == Settings::getInstance().open(true))
+        {
+            ssid = Settings::getInstance().getWifiSSID().getValue();
+            Settings::getInstance().close();
+        }
+
+        /* Prepare response */
+        jsonDoc["status"]       = "ok";
+
+        hwObj["chipRev"]        = ESP.getChipRevision();
+        hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
+
+        swObj["version"]        = Version::SOFTWARE_VER;
+        swObj["revision"]       = Version::SOFTWARE_REV;
+        swObj["espSdkVersion"]  = ESP.getSdkVersion();
+
+        internalRamObj["heapSize"]      = ESP.getHeapSize();
+        internalRamObj["availableHeap"] = ESP.getFreeHeap();
+
+        wifiObj["ssid"]         = ssid;
+        wifiObj["rssi"]         = rssi;                             // dBm
+        wifiObj["quality"]      = WiFiUtil::getSignalQuality(rssi); // percent
+
+        httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
 
     if (true == jsonDoc.overflowed())
@@ -617,7 +739,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -698,7 +820,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+        jsonDoc["status"]   = "ok";
 
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
@@ -742,7 +864,7 @@ static void handleFileGet(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
@@ -769,7 +891,7 @@ static void handleFileGet(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = "error";
             errorObj["msg"]     = String("Invalid path ") + path;
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
@@ -877,19 +999,15 @@ static void handleFilePost(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
-        JsonObject dataObj = jsonDoc.createNestedObject("data");
-
-        UTIL_NOT_USED(dataObj);
-
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-
+        (void)jsonDoc.createNestedObject("data");
+        jsonDoc["status"]   = "ok";
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
@@ -990,7 +1108,7 @@ static void handleFileDelete(AsyncWebServerRequest* request)
         JsonObject errorObj = jsonDoc.createNestedObject("error");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
@@ -1005,19 +1123,15 @@ static void handleFileDelete(AsyncWebServerRequest* request)
             JsonObject errorObj = jsonDoc.createNestedObject("error");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = "error";
             errorObj["msg"]     = "Failed to remove file.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
-            JsonObject dataObj = jsonDoc.createNestedObject("data");
-
-            UTIL_NOT_USED(dataObj);
-
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
-
+            (void)jsonDoc.createNestedObject("data");
+            jsonDoc["status"]   = "ok";
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }

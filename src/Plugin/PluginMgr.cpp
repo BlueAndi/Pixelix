@@ -448,13 +448,13 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
             jsonDoc.remove("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = "error";
             errorObj["msg"]     = "Requested topic not supported.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            jsonDoc["status"]   = "ok";
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
@@ -483,13 +483,13 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
             jsonDoc.remove("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = "error";
             errorObj["msg"]     = "Requested topic not supported or invalid data.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            jsonDoc["status"]   = "ok";
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
@@ -500,7 +500,7 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
         jsonDoc.remove("data");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }

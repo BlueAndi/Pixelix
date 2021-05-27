@@ -63,16 +63,6 @@ namespace RestApi
  */
 static const char BASE_URI[] = "/rest/api/v1";
 
-/**
- * REST request status code.
- */
-typedef enum
-{
-    STATUS_CODE_OK = 0,     /**< Successful */
-    STATUS_CODE_NOT_FOUND   /**< Requested URI not found. */
-
-} StatusCode;
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
