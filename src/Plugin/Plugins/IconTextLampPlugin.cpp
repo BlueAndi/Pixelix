@@ -270,7 +270,7 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
             if (nullptr != m_lampCanvas)
             {
                 /* Calculate the border to have the lamps shown aligned to center. */
-                uint16_t    border  = (canvasWidth - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
+                uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
                 uint8_t     index   = 0U;
 
                 for(index = 0U; index < MAX_LAMPS; ++index)
