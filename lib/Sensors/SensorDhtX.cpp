@@ -34,8 +34,6 @@
  *****************************************************************************/
 #include "SensorDhtX.h"
 
-#include <Board.h>
-
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -62,15 +60,16 @@
 
 void SensorDhtX::begin()
 {
-    m_driver.setup(Board::Pin::dhtInPinNo, m_model);
-    
-    /* Read model back, because automatic detection may be used. */
-    m_model = m_driver.getModel();
+    float temperature   = NAN;
+    float humidity      = NAN;
 
-    /* Detect whether a sensor is available. */
-    (void)m_driver.getTempAndHumidity();
+    m_driver.begin();
     
-    if (DHTesp::ERROR_NONE != m_driver.getStatus())
+    /* Detect whether a sensor is available. */
+    temperature = m_driver.readTemperature();
+    humidity    = m_driver.readHumidity();
+
+    if (isnan(temperature) || isnan(humidity))
     {
         m_isAvailable = false;
     }
@@ -88,20 +87,20 @@ const char* SensorDhtX::getName() const
 
     switch(m_model)
     {
-    case DHTesp::DHT11:
+    case MODEL_DHT11:
         sensorName = "DHT11";
         break;
     
-    case DHTesp::DHT22:
-        sensorName = "DHT22";
+    case MODEL_DHT12:
+        sensorName = "DHT12";
         break;
     
-    case DHTesp::AM2302:
-        sensorName = "AM2302";
+    case MODEL_DHT21:
+        sensorName = "DHT21";
         break;
 
-    case DHTesp::RHT03:
-        sensorName = "RHT03";
+    case MODEL_DHT22:
+        sensorName = "DHT22";
         break;
 
     default:

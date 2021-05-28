@@ -46,7 +46,8 @@
 #include <stdint.h>
 #include <ISensor.hpp>
 #include <SensorChannelType.hpp>
-#include <DHTesp.h>
+#include <DHT.h>
+#include <Board.h>
 
 /******************************************************************************
  * Macros
@@ -68,7 +69,7 @@ public:
      * 
      * @param[in] driver    The DHTx driver.
      */
-    DhtXTemperatureChannel(DHTesp& driver) :
+    DhtXTemperatureChannel(DHT& driver) :
         m_driver(driver)
     {
     }
@@ -97,12 +98,12 @@ public:
      */
     float getValue()
     {
-        return m_driver.getTemperature();
+        return m_driver.readTemperature();
     }
 
 private:
 
-    DHTesp& m_driver;   /**< DHTx sensor driver. */
+    DHT&    m_driver;   /**< DHTx sensor driver. */
 
     DhtXTemperatureChannel();
     DhtXTemperatureChannel(const DhtXTemperatureChannel& channel);
@@ -121,7 +122,7 @@ public:
      * 
      * @param[in] driver    The DHTx driver.
      */
-    DhtXHumidityChannel(DHTesp& driver) :
+    DhtXHumidityChannel(DHT& driver) :
         m_driver(driver)
     {
     }
@@ -150,12 +151,12 @@ public:
      */
     float getValue()
     {
-        return m_driver.getHumidity();
+        return m_driver.readHumidity();
     }
 
 private:
 
-    DHTesp& m_driver;   /**< DHTx sensor driver. */
+    DHT&    m_driver;   /**< DHTx sensor driver. */
 
     DhtXHumidityChannel();
     DhtXHumidityChannel(const DhtXHumidityChannel& channel);
@@ -170,12 +171,23 @@ class SensorDhtX : public ISensor
 public:
 
     /**
+     * Supported DHTx sensors.
+     */
+    enum Model
+    {
+        MODEL_DHT11     = 11,   /**< DHT11 */
+        MODEL_DHT12     = 12,   /**< DHT12 */
+        MODEL_DHT21     = 21,   /**< DHT21 or AM2301 */
+        MODEL_DHT22     = 22    /**< DHT22 */
+    };
+
+    /**
      * Constructs the DHTx sensor.
      * 
      * @param[in] model DHTx sensor model
      */
-    SensorDhtX(DHTesp::DHT_MODEL_t model) :
-        m_driver(),
+    SensorDhtX(Model model) :
+        m_driver(Board::Pin::dhtInPinNo, model),
         m_model(model),
         m_isAvailable(false),
         m_temperatureChannel(m_driver),
@@ -243,8 +255,8 @@ private:
         CHANNEL_ID_COUNT            /**< Number of channels */
     };
 
-    DHTesp                  m_driver;               /**< DHTx sensor driver. */
-    DHTesp::DHT_MODEL_t     m_model;                /**< DHTx sensor model */
+    DHT                     m_driver;               /**< DHTx sensor driver. */
+    Model                   m_model;                /**< DHTx sensor model */
     bool                    m_isAvailable;          /**< Is a DHTx sensor available or not? */
     DhtXTemperatureChannel  m_temperatureChannel;   /**< Temperature channel */
     DhtXHumidityChannel     m_humidityChannel;      /**< Humidity channel */
