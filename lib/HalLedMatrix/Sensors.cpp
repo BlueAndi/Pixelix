@@ -62,7 +62,7 @@
 static SensorSht3X              gSht3x(SHTSensor::AUTO_DETECT);
 
 /** The DHT11 sensor. */
-static SensorDhtX               gDht11(DHTesp::DHT11);
+static SensorDhtX               gDht11(SensorDhtX::MODEL_DHT11);
 
 /** A list with all registered sensors. */
 static ISensor*                 gSensors[] =
