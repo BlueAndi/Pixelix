@@ -93,7 +93,7 @@ void setup()
 
     /* Pipe esp_log_write() output through own logging system. */
     (void)esp_log_set_vprintf(main_espLogVPrintf);
-    esp_log_level_set("*", ESP_LOG_VERBOSE);
+    esp_log_level_set("*", ESP_LOG_INFO);
 
     /* Register serial log sink and select it per default. */
     if (true == Logging::getInstance().registerSink(&gLogSinkSerial))

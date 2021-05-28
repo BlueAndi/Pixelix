@@ -136,8 +136,20 @@ public:
      */
     void send(const Logging::Msg& msg) final;
 
+    /** Maximum timestamp string length. */
+    static const uint32_t   TIMESTAMP_LEN   = 10U;
+
+    /** Maximum log level string length. */
+    static const uint32_t   LOG_LEVEL_LEN   = 7U;
+
+    /** Maximum filename string length. */
+    static const uint32_t   FILENAME_LEN    = 22U;
+
+    /** Maximum line number string length. */
+    static const uint32_t   LINE_LEN        = 5U;
+
     /** The maximum size of the whole log message. */
-    static const uint16_t LOG_MESSAGE_BUFFER_SIZE = Logging::MESSAGE_BUFFER_SIZE + 10u /* timestamp */ + 8u /* log level */ + 20u /* filename */ + 5u /* line */ + 6u /* others */;
+    static const uint16_t LOG_MESSAGE_BUFFER_SIZE = Logging::MESSAGE_BUFFER_SIZE + TIMESTAMP_LEN + LOG_LEVEL_LEN + FILENAME_LEN + LINE_LEN + 6u /* others */;
 
 private:
 
