@@ -118,6 +118,7 @@ bool SensorDataProvider::find(
             uint8_t channelCnt = sensor->getNumChannels();
 
             /* Walk through all sensor channels and try to find the requested one. */
+            channelIdx = 0U;
             while((channelCnt > channelIdx) && (false == isFound))
             {
                 ISensorChannel* channel = sensor->getChannel(channelIdx);
