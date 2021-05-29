@@ -141,6 +141,12 @@ bool SensorDataProvider::find(
                         {
                             isFound = true;
                         }
+
+                        if (true == isFound)
+                        {
+                            sensorIndex     = sensorIdx;
+                            channelIndex    = channelIdx;
+                        }
                     }
                 }
 
