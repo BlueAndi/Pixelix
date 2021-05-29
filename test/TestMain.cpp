@@ -1651,7 +1651,7 @@ static void testLogging()
     const char*     printBuffer     = nullptr;
     const char*     TEST_STRING_1   = "TestMessage";
     const String    TEST_STRING_2   = "TestMessageAsString";
-    char            expectedLogMessage[52];
+    char            expectedLogMessage[128];
     int             lineNo          = 0;
 
     /* Check intial LogLevel. */
@@ -1672,37 +1672,35 @@ static void testLogging()
 
     /* Check expected error log output, with type const char* string. */
     LOG_ERROR(TEST_STRING_1); lineNo = __LINE__;
-    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "ERROR: TestMain.cpp:%d %s\r\n", lineNo, TEST_STRING_1);
+    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "%*s %*s:%*d %s\n",
+        LogSinkPrinter::LOG_LEVEL_LEN,
+        "ERROR  ",
+        LogSinkPrinter::FILENAME_LEN,
+        "TestMain.cpp",
+        LogSinkPrinter::LINE_LEN,
+        lineNo,
+        TEST_STRING_1);
     printBuffer = myTestLogger.getBuffer();
 
     /* Skip timestamp */
-    while(('\0' != *printBuffer) && (' ' != *printBuffer))
-    {
-        ++printBuffer;
-    }
-
-    if (' ' == *printBuffer)
-    {
-        ++printBuffer;
-    }
+    printBuffer = &printBuffer[LogSinkPrinter::TIMESTAMP_LEN + 1];
 
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
     /* Check expected error log output, with type const String string. */
     LOG_ERROR(TEST_STRING_2);  lineNo = __LINE__;
-    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "ERROR: TestMain.cpp:%d %s\r\n", lineNo, TEST_STRING_2.c_str());
+    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "%*s %*s:%*d %s\n",
+        LogSinkPrinter::LOG_LEVEL_LEN,
+        "ERROR  ",
+        LogSinkPrinter::FILENAME_LEN,
+        "TestMain.cpp",
+        LogSinkPrinter::LINE_LEN,
+        lineNo,
+        TEST_STRING_2.c_str());
     printBuffer = myTestLogger.getBuffer();
 
     /* Skip timestamp */
-    while(('\0' != *printBuffer) && (' ' != *printBuffer))
-    {
-        ++printBuffer;
-    }
-
-    if (' ' == *printBuffer)
-    {
-        ++printBuffer;
-    }
+    printBuffer = &printBuffer[LogSinkPrinter::TIMESTAMP_LEN + 1];
 
     TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
 
@@ -1710,7 +1708,7 @@ static void testLogging()
     Logging::getInstance().unregisterSink(&myLogSink);
     myTestLogger.clear();
     LOG_ERROR("Should not be shown.");
-    TEST_ASSERT_EQUAL_size_t(0, strlen(myTestLogger.getBuffer()));
+    TEST_ASSERT_EQUAL_UINT32(0, strlen(myTestLogger.getBuffer()));
 
     return;
 }
