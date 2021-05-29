@@ -95,7 +95,7 @@ ISensor* SensorDataProvider::getSensor(uint8_t index)
 bool SensorDataProvider::find(
     uint8_t& sensorIndex,
     uint8_t& channelIndex,
-    ISensorChannel::DataWithUnit dataWithUnit,
+    ISensorChannel::Type type,
     ISensorChannel::DataType dataType,
     uint8_t sensorStartIdx,
     uint8_t channelStartIdx)
@@ -126,12 +126,12 @@ bool SensorDataProvider::find(
                 if (nullptr != channel)
                 {
                     /* The kind of data and its unit must always match. */
-                    if (channel->getDataWithUnit() == dataWithUnit)
+                    if (channel->getType() == type)
                     {
                         /* Shall the value data type be considered? */
                         if (ISensorChannel::DATA_TYPE_INVALID != dataType)
                         {
-                            if (channel->getType() == dataType)
+                            if (channel->getDataType() == dataType)
                             {
                                 isFound = true;
                             }

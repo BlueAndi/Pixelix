@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <stdio.h>
 #include "ISensorChannel.hpp"
 
 /******************************************************************************
@@ -62,9 +63,6 @@ class SensorChannelType : public ISensorChannel
 {
 public:
 
-    /** The data type of the channel value. */
-    static const DataType   SENSOR_TYPE = dataType;
-
     /**
      * Destroys the sensor channel.
      */
@@ -77,17 +75,17 @@ public:
      * 
      * @return Sensor data type
      */
-    DataType getType() const
+    DataType getDataType() const final
     {
-        return SENSOR_TYPE;
+        return dataType;
     }
 
     /**
-     * Get the kind of data and its unit.
+     * Get sensor channel type.
      * 
-     * @return Sensor data unit
+     * @return Sensor channel type
      */
-    virtual DataWithUnit getDataWithUnit() const = 0;
+    virtual Type getType() const = 0;
 
     /**
      * Get data value.
@@ -95,6 +93,19 @@ public:
      * @return Sensor data value
      */
     virtual T getValue() = 0;
+
+    /**
+     * Get value as string.
+     * 
+     * @param[in] precision The precision (ignored for integer values) of the value.
+     * 
+     * @return Value as string
+     */
+    String getValueAsString(uint32_t precision) override
+    {
+        (void)precision;
+        return String(getValue());
+    }
 
 protected:
 
@@ -107,6 +118,58 @@ protected:
 
 private:
 
+};
+
+/**
+ * Specialization for 32 bit floating point value channel.
+ */
+template <>
+class SensorChannelType<float, ISensorChannel::DATA_TYPE_FLOAT32> : public ISensorChannel
+{
+public:
+
+    /**
+     * Get the data type.
+     * 
+     * @return Sensor data type
+     */
+    DataType getDataType() const final
+    {
+        return DATA_TYPE_FLOAT32;
+    }
+
+    /**
+     * Get sensor channel type.
+     * 
+     * @return Sensor channel type
+     */
+    virtual Type getType() const = 0;
+
+    /**
+     * Get data value.
+     * 
+     * @return Sensor data value
+     */
+    virtual float getValue() = 0;
+
+    /**
+     * Get value as string.
+     * 
+     * @param[in] precision The precision (ignored for integer values) of the value.
+     * 
+     * @return Value as string
+     */
+    String getValueAsString(uint32_t precision) override
+    {
+        float   value       = getValue();
+        String  valueStr;
+        char    buffer[20];
+
+        (void)snprintf(buffer, sizeof(buffer), "%.*F", precision, value);
+        valueStr = buffer;
+
+        return valueStr;
+    }
 };
 
 /** Sensor, which provides data as 32 bit unsigned integer. */

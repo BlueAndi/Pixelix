@@ -112,8 +112,8 @@ public:
      * 
      * @param[out]  sensorIndex     The index of the sensor.
      * @param[out]  channelIndex    The index of the channel from the sensor.
-     * @param[in]   dataWithUnit    The data and unit to search for.
-     * @param[in]   dataType        The data type to search for. Default: disabled
+     * @param[in]   type            The sensor channel type to search for.
+     * @param[in]   dataType        The sensor channel data type to search for. Default: disabled
      * @param[in]   sensorStartIdx  The sensor index, where to start to search. Default: 0
      * @param[in]   channelStartIdx The channel index, where to start to search. Default: 0
      * 
@@ -121,7 +121,7 @@ public:
      */
     bool find(  uint8_t& sensorIndex,
                 uint8_t& channelIndex,
-                ISensorChannel::DataWithUnit dataWithUnit,
+                ISensorChannel::Type type,
                 ISensorChannel::DataType dataType = ISensorChannel::DATA_TYPE_INVALID,
                 uint8_t sensorStartIdx = 0U,
                 uint8_t channelStartIdx = 0U);

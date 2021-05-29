@@ -55,6 +55,9 @@
  * Local Variables
  *****************************************************************************/
 
+/**
+ * Ambient light level definitions.
+ */
 static const float  gAmbientLightLevels[AmbientLight::AMBIENT_LIGHT_LEVEL_MAX] =
 {
     /* Pitch black with 1 Lux */

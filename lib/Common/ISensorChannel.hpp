@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <WString.h>
 
 /******************************************************************************
  * Macros
@@ -61,7 +62,7 @@ class ISensorChannel
 public:
 
     /**
-     * Supported sensor data types.
+     * Supported sensor channel data types.
      */
     enum DataType
     {
@@ -72,14 +73,14 @@ public:
     };
 
     /**
-     * Supported data units.
+     * Supported sensor channel type. Note, currently the SI unit is directly bound.
      */
-    enum DataWithUnit
+    enum Type
     {
-        DATA_RAW_NONE = 0,                  /**< Raw digits */
-        DATA_TEMPERATURE_DEGREE_CELSIUS,    /**< Temperature in [°C] */
-        DATA_HUMIDITY_PERCENT,              /**< Humidity in [%] */
-        DATA_ILLUMINANCE_LUX                /**< Illuminance in [lux] */
+        TYPE_RAW_NONE = 0,                  /**< Raw digits */
+        TYPE_TEMPERATURE_DEGREE_CELSIUS,    /**< Temperature in [°C] */
+        TYPE_HUMIDITY_PERCENT,              /**< Humidity in [%] */
+        TYPE_ILLUMINANCE_LUX                /**< Illuminance in [lux] */
     };
 
     /**
@@ -94,14 +95,23 @@ public:
      * 
      * @return Sensor data type
      */
-    virtual DataType getType() const = 0;
+    virtual DataType getDataType() const = 0;
 
     /**
-     * Get the kind of data and its unit.
+     * Get sensor channel type.
      * 
-     * @return Sensor data unit
+     * @return Sensor channel type
      */
-    virtual DataWithUnit getDataWithUnit() const = 0;
+    virtual Type getType() const = 0;
+
+    /**
+     * Get value as string.
+     * 
+     * @param[in] precision The precision (ignored for integer values) of the value.
+     * 
+     * @return Value as string
+     */
+    virtual String getValueAsString(uint32_t precision) = 0;
 
 protected:
 

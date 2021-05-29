@@ -71,7 +71,7 @@ void BrightnessCtrl::init(IDisplay& display)
     m_display = &display;
 
     /* Find a sensor channel, which provides the current illuminance. */
-    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::DATA_ILLUMINANCE_LUX, ISensorChannel::DATA_TYPE_FLOAT32))
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_ILLUMINANCE_LUX, ISensorChannel::DATA_TYPE_FLOAT32))
     {
         ISensor*        sensor  = sensorDataProv.getSensor(sensorIdx);
         ISensorChannel* channel = (nullptr != sensor) ? sensor->getChannel(channelIdx) : nullptr;

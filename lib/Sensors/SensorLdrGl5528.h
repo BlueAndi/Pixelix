@@ -81,13 +81,13 @@ public:
     }
 
     /**
-     * Get the kind of data and its unit.
+     * Get sensor channel type.
      * 
-     * @return Sensor data unit
+     * @return Sensor channel type
      */
-    DataWithUnit getDataWithUnit() const final
+    Type getType() const final
     {
-        return ISensorChannel::DATA_ILLUMINANCE_LUX;
+        return ISensorChannel::TYPE_ILLUMINANCE_LUX;
     }
 
     /**

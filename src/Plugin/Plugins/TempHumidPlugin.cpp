@@ -109,13 +109,13 @@ void TempHumidPlugin::start(uint16_t width, uint16_t height)
     }
 
     /* Use just the first found sensor for temperature. */
-    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::DATA_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))
     {
         m_temperatureSensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
     }
 
     /* Use just the first found sensor for humidity. */
-    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::DATA_HUMIDITY_PERCENT, ISensorChannel::DATA_TYPE_FLOAT32))
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_HUMIDITY_PERCENT, ISensorChannel::DATA_TYPE_FLOAT32))
     {
         m_humiditySensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
     }
@@ -156,7 +156,7 @@ void TempHumidPlugin::process()
     {
         if (nullptr != m_temperatureSensorCh)
         {
-            if (ISensorChannel::DATA_TYPE_FLOAT32 == m_temperatureSensorCh->getType())
+            if (ISensorChannel::DATA_TYPE_FLOAT32 == m_temperatureSensorCh->getDataType())
             {
                 SensorChannelFloat32*   channel     = static_cast<SensorChannelFloat32*>(m_temperatureSensorCh);
                 float                   temperature = channel->getValue();
@@ -172,7 +172,7 @@ void TempHumidPlugin::process()
 
         if (nullptr != m_humiditySensorCh)
         {
-            if (ISensorChannel::DATA_TYPE_FLOAT32 == m_humiditySensorCh->getType())
+            if (ISensorChannel::DATA_TYPE_FLOAT32 == m_humiditySensorCh->getDataType())
             {
                 SensorChannelFloat32*   channel     = static_cast<SensorChannelFloat32*>(m_humiditySensorCh);
                 float                   humidity    = channel->getValue();
