@@ -25,19 +25,15 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Sensor data provider
+ * @brief  Ambient light sensor
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Sensors.h"
-
-#include <Util.h>
-#include <SensorLdrGl5528.h>
-#include <SensorSht3X.h>
-#include <SensorDhtX.h>
+#include "AmbientLight.h"
+#include <math.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,25 +55,33 @@
  * Local Variables
  *****************************************************************************/
 
-/** The LDR GL5528 is used for automatic display brightness control. */
-static SensorLdrGl5528          gLdrGl5528;
-
-/** The SHT3x sensor in autodetect mode (for two-wire sensors only). */
-static SensorSht3X              gSht3x(SHTSensor::AUTO_DETECT);
-
-/** The DHT11 sensor. */
-static SensorDhtX               gDht11(SensorDhtX::MODEL_DHT11);
-
-/** A list with all registered sensors. */
-static ISensor*                 gSensors[] =
+static const float  gAmbientLightLevels[AmbientLight::AMBIENT_LIGHT_LEVEL_MAX] =
 {
-    &gLdrGl5528,
-    &gSht3x,
-    &gDht11
+    /* Pitch black with 1 Lux */
+    1.0F,
+    /* Night sky with 10 Lux */
+    10.0F,
+    /* Dark room with 50 Lux */
+    50.0F,
+    /* Dark overcast with 500 Lux */
+    500.0F,
+    /* Overcast day with 1000 Lux */
+    1000.0F,
+    /* Full daylight with 15000 Lux */
+    15000.0F,
+    /* Full sunlight with more than 15000 Lux */
+    15000.0F
 };
 
-/** The concrete sensor data provider implementation. */
-static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors));
+/**
+ * Lower limit for light luminance normalization in lux.
+ */
+static const float  LIMIT_LOW   = 1.0F;
+
+/**
+ * Upper limit for light luminance normalization in lux.
+ */
+static const float  LIMIT_HIGH  = 100000.0F;
 
 /******************************************************************************
  * Public Methods
@@ -95,9 +99,52 @@ static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM
  * External Functions
  *****************************************************************************/
 
-extern SensorDataProviderImpl* Sensors::getSensorDataProviderImpl()
+extern float AmbientLight::normalizeIlluminance(float illuminance)
 {
-    return &gSensorDataProviderImpl;
+    const float LIGHT_NORM_MIN  = 0.0F;
+    const float LIGHT_NORM_MAX  = 1.0F;
+    float       lightNormalized = 0.0F; /* Range: 0.0F - 1.0F */
+
+    if (LIMIT_LOW > illuminance)
+    {
+        lightNormalized = LIGHT_NORM_MIN;
+    }
+    else if (LIMIT_HIGH < illuminance)
+    {
+        lightNormalized = LIGHT_NORM_MAX;
+    }
+    else
+    {
+        /* Map lux values to human perception, according to
+         * https://docs.microsoft.com/en-us/windows/win32/sensorsapi/understanding-and-interpreting-lux-values
+         */
+        lightNormalized = log10f(illuminance) / 5.0F;
+    }
+
+    return lightNormalized;
+}
+
+extern AmbientLight::AmbientLightLevel AmbientLight::getAmbientLightLevel(float illuminance)
+{
+    uint8_t             levelIndex  = 0U;
+    AmbientLightLevel   level       = AMBIENT_LIGHT_LEVEL_MAX;
+
+    while((AMBIENT_LIGHT_LEVEL_MAX >= levelIndex) && (AMBIENT_LIGHT_LEVEL_MAX == level))
+    {
+        if (gAmbientLightLevels[levelIndex] >= illuminance)
+        {
+            level = static_cast<AmbientLightLevel>(levelIndex);
+        }
+
+        ++levelIndex;
+    }
+
+    if (AMBIENT_LIGHT_LEVEL_MAX == level)
+    {
+        level = AMBIENT_LIGHT_LEVEL_FULL_SUNLIGHT;
+    }
+
+    return level;
 }
 
 /******************************************************************************

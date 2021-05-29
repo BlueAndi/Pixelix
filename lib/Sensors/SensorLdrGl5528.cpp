@@ -32,7 +32,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "AmbientLightSensor.h"
+#include "SensorLdrGl5528.h"
 
 #include <Board.h>
 
@@ -56,41 +56,27 @@
  * Local Variables
  *****************************************************************************/
 
-static const uint16_t   ambientLightLevels[AmbientLightSensor::AMBIENT_LIGHT_LEVEL_MAX] =
-{
-    /* Pitch black with 1 Lux => 65 mV */
-    ( 65UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
-    /* Night sky with 10 Lux => 300 mV */
-    ( 300UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
-    /* Dark room with 50 Lux => 778 mV */
-    ( 778UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
-    /* Dark overcast with 500 Lux => 2004 mV */
-    (2004UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
-    /* Overcast day with 1000 Lux => 2360 mV */
-    (2360UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
-    /* Full daylight with 15000 Lux => 3114 mV */
-    (3114UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage,
-    /* Full sunlight with more than 15000 Lux */
-    4095U
-};
-
 /* Set threshold to detect that no LDR is connected.
  * Expected voltage is lower or equal than 3 mV.
  * This corresponds to the absolute dark resistance of the LDR with 1 MOhm.
  */
-const uint16_t  AmbientLightSensor::NO_LDR_THRESHOLD    = (3UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage;
-
-/* Set lower limit for light luminance normalization in lux. */
-const float     AmbientLightSensor::LIMIT_LOW           = 1.0F;
-
-/* Set upper limit for light luminance normalization in lux. */
-const float     AmbientLightSensor::LIMIT_HIGH          = 100000.0F;
+const uint16_t  SensorLdrGl5528::NO_LDR_THRESHOLD   = (3UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage;
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-bool AmbientLightSensor::isSensorAvailable()
+float LdrChannelIluminance::getValue()
+{
+    return m_driver->getIlluminance();
+}
+
+void SensorLdrGl5528::begin()
+{
+    /* Nothing to do. */
+}
+
+bool SensorLdrGl5528::isAvailable() const
 {
     const uint16_t  ADC_UINT16  = Board::ldrIn.read();
     bool            isAvailable = false;
@@ -103,31 +89,19 @@ bool AmbientLightSensor::isSensorAvailable()
     return isAvailable;
 }
 
-AmbientLightSensor::AmbientLightLevel AmbientLightSensor::getAmbientLightLevel()
+ISensorChannel* SensorLdrGl5528::getChannel(uint8_t index)
 {
-    uint16_t            adcValue    = Board::ldrIn.read();
-    uint8_t             levelIndex  = 0U;
-    AmbientLightLevel   level       = AMBIENT_LIGHT_LEVEL_MAX;
+    ISensorChannel* channel = nullptr;
 
-    while((AMBIENT_LIGHT_LEVEL_MAX >= levelIndex) && (AMBIENT_LIGHT_LEVEL_MAX == level))
+    if (0U == index)
     {
-        if (ambientLightLevels[levelIndex] >= adcValue)
-        {
-            level = static_cast<AmbientLightLevel>(levelIndex);
-        }
-
-        ++levelIndex;
+        channel = &m_illuminanceChannel;
     }
 
-    if (AMBIENT_LIGHT_LEVEL_MAX == level)
-    {
-        level = AMBIENT_LIGHT_LEVEL_FULL_SUNLIGHT;
-    }
-
-    return level;
+    return channel;
 }
 
-float AmbientLightSensor::getIlluminance()
+float SensorLdrGl5528::getIlluminance()
 {
     const uint16_t  ADC_UINT16  = Board::ldrIn.read();
     float           illuminance = 0.0F;
@@ -208,13 +182,6 @@ float AmbientLightSensor::getIlluminance()
     return illuminance;
 }
 
-float AmbientLightSensor::getNormalizedLight()
-{
-    float illuminance = getIlluminance();
-
-    return calcNormalizedLight(illuminance);
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -222,31 +189,6 @@ float AmbientLightSensor::getNormalizedLight()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-float AmbientLightSensor::calcNormalizedLight(float illuminance)
-{
-    const float LIGHT_NORM_MIN  = 0.0F;
-    const float LIGHT_NORM_MAX  = 1.0F;
-    float       lightNormalized = 0.0F;         /* Range: 0.0f - 1.0f */
-
-    if (LIMIT_LOW > illuminance)
-    {
-        lightNormalized = LIGHT_NORM_MIN;
-    }
-    else if (LIMIT_HIGH < illuminance)
-    {
-        lightNormalized = LIGHT_NORM_MAX;
-    }
-    else
-    {
-        /* Map lux values to human perception, according to
-         * https://docs.microsoft.com/en-us/windows/win32/sensorsapi/understanding-and-interpreting-lux-values
-         */
-        lightNormalized = log10f(illuminance) / 5.0F;
-    }
-
-    return lightNormalized;
-}
 
 /******************************************************************************
  * External Functions

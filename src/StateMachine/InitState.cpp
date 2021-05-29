@@ -45,7 +45,6 @@
 #include "DisplayMgr.h"
 #include "SysMsg.h"
 #include "Version.h"
-#include "AmbientLightSensor.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "Settings.h"
@@ -348,7 +347,6 @@ void InitState::showStartupInfoOnSerial()
     LOG_INFO(String("SW revision: ") + Version::SOFTWARE_REV);
     LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
-    LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
     LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
     LOG_INFO(String("LwIP version: ") + LWIP_VERSION_STRING);
 

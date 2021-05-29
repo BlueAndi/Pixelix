@@ -33,7 +33,8 @@
  * Includes
  *****************************************************************************/
 #include "BrightnessCtrl.h"
-#include "AmbientLightSensor.h"
+#include "AmbientLight.h"
+#include "SensorDataProvider.h"
 
 #include <Logging.h>
 
@@ -63,14 +64,34 @@
 
 void BrightnessCtrl::init(IDisplay& display)
 {
-    float lightNormalized = AmbientLightSensor::getInstance().getNormalizedLight();
-
+    SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
+    uint8_t             sensorIdx       = 0U;
+    uint8_t             channelIdx      = 0U;
+    
     m_display = &display;
-    m_recentShortTermAverage.setStartValue(lightNormalized);
-    m_recentLongTermAverage.setStartValue(lightNormalized);
 
-    setAmbientLight(m_recentShortTermAverage.getValue());
-    updateBrightnessGoal();
+    /* Find a sensor channel, which provides the current illuminance. */
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::DATA_ILLUMINANCE_LUX, ISensorChannel::DATA_TYPE_FLOAT32))
+    {
+        ISensor*        sensor  = sensorDataProv.getSensor(sensorIdx);
+        ISensorChannel* channel = (nullptr != sensor) ? sensor->getChannel(channelIdx) : nullptr;
+
+        if (nullptr != channel)
+        {
+            m_illuminanceChannel = static_cast<SensorChannelFloat32*>(channel);
+        }
+    }
+
+    if (nullptr != m_illuminanceChannel)
+    {
+        float lightNormalized = getNormalizedLight();
+
+        m_recentShortTermAverage.setStartValue(lightNormalized);
+        m_recentLongTermAverage.setStartValue(lightNormalized);
+
+        setAmbientLight(m_recentShortTermAverage.getValue());
+        updateBrightnessGoal();
+    }
 
     return;
 }
@@ -89,14 +110,14 @@ bool BrightnessCtrl::enable(bool state)
     else
     {
         /* If no ambient light sensor is available, enable it makes no sense. */
-        if (false == AmbientLightSensor::getInstance().isSensorAvailable())
+        if (nullptr == m_illuminanceChannel)
         {
             status = false;
         }
         /* Ambient light sensor is available */
         else
         {
-            float lightNormalized = AmbientLightSensor::getInstance().getNormalizedLight();
+            float lightNormalized = getNormalizedLight();
 
             m_recentShortTermAverage.setStartValue(lightNormalized);
             m_recentLongTermAverage.setStartValue(lightNormalized);
@@ -145,7 +166,7 @@ void BrightnessCtrl::process()
     if ((true == m_autoBrightnessTimer.isTimerRunning()) &&
         (true == m_autoBrightnessTimer.isTimeout()))
     {
-        float lightNormalized = AmbientLightSensor::getInstance().getNormalizedLight();
+        float lightNormalized = getNormalizedLight();
 
         applyLightSensorMeasurement(AUTO_ADJUST_PERIOD, lightNormalized);
         updateBrightness();
@@ -224,6 +245,7 @@ void BrightnessCtrl::setBrightness(uint8_t level)
 
 BrightnessCtrl::BrightnessCtrl() :
     m_display(nullptr),
+    m_illuminanceChannel(nullptr),
     m_autoBrightnessTimer(),
     m_brightness(0U),
     m_minBrightness((UINT8_MAX * 10U) / 100U),  /* 10% */
@@ -241,6 +263,20 @@ BrightnessCtrl::BrightnessCtrl() :
 
 BrightnessCtrl::~BrightnessCtrl()
 {
+}
+
+float BrightnessCtrl::getNormalizedLight()
+{
+    float lightNormalized   = 0.0F;
+
+    if (nullptr != m_illuminanceChannel)
+    {
+        float illuminance = m_illuminanceChannel->getValue();
+        
+        lightNormalized = AmbientLight::normalizeIlluminance(illuminance);
+    }
+
+    return lightNormalized;
 }
 
 void BrightnessCtrl::setAmbientLight(float light)

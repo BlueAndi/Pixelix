@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "DisplayMgr.h"
-#include "AmbientLightSensor.h"
 #include "Settings.h"
 #include "BrightnessCtrl.h"
 

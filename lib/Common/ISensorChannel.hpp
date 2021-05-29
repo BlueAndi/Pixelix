@@ -78,7 +78,8 @@ public:
     {
         DATA_RAW_NONE = 0,                  /**< Raw digits */
         DATA_TEMPERATURE_DEGREE_CELSIUS,    /**< Temperature in [°C] */
-        DATA_HUMIDITY_PERCENT               /**< Humidity in [%] */
+        DATA_HUMIDITY_PERCENT,              /**< Humidity in [%] */
+        DATA_ILLUMINANCE_LUX                /**< Illuminance in [lux] */
     };
 
     /**

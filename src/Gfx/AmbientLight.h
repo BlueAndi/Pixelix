@@ -25,81 +25,81 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Sensor data provider
+ * @brief  Ambient light functions
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * @addtogroup gfx
+ *
+ * @{
  */
+
+#ifndef __AMBIENT_LIGHT_H__
+#define __AMBIENT_LIGHT_H__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Sensors.h"
-
-#include <Util.h>
-#include <SensorLdrGl5528.h>
-#include <SensorSht3X.h>
-#include <SensorDhtX.h>
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <stdint.h>
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/** The LDR GL5528 is used for automatic display brightness control. */
-static SensorLdrGl5528          gLdrGl5528;
-
-/** The SHT3x sensor in autodetect mode (for two-wire sensors only). */
-static SensorSht3X              gSht3x(SHTSensor::AUTO_DETECT);
-
-/** The DHT11 sensor. */
-static SensorDhtX               gDht11(SensorDhtX::MODEL_DHT11);
-
-/** A list with all registered sensors. */
-static ISensor*                 gSensors[] =
+/**
+ * Ambient light functions, based on illuminance, measured by a external sensor.
+ */
+namespace AmbientLight
 {
-    &gLdrGl5528,
-    &gSht3x,
-    &gDht11
+
+/**
+ * Ambient light level
+ * Source: https://docs.microsoft.com/de-de/windows-hardware/design/whitepapers/integrating-ambient-light-sensors-with-computers-running-windows-10-creators-update
+ */
+enum AmbientLightLevel
+{
+    AMBIENT_LIGHT_LEVEL_PITCH_BLACK = 0,    /**< Pitch black with 1 Lux */
+    AMBIENT_LIGHT_LEVEL_NIGHT_SKY,          /**< Night sky with 10 Lux */
+    AMBIENT_LIGHT_LEVEL_DARK_ROOM,          /**< Dark room with 50 Lux */
+    AMBIENT_LIGHT_LEVEL_DARK_OVERCAST,      /**< Dark overcast with 500 Lux */
+    AMBIENT_LIGHT_LEVEL_OVERCAST_DAY,       /**< Overcast day with 1000 Lux */
+    AMBIENT_LIGHT_LEVEL_FULL_DAYLIGHT,      /**< Full daylight with 15000 Lux */
+    AMBIENT_LIGHT_LEVEL_FULL_SUNLIGHT,      /**< Full sunlight with more than 15000 Lux */
+    AMBIENT_LIGHT_LEVEL_MAX                 /**< Number of levels */
 };
 
-/** The concrete sensor data provider implementation. */
-static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors));
+/**
+ * Calculuate normalized light value in range of 0.0F - 1.0F, which
+ * corresponds from 0 to 100000 lux.
+ *
+ * @param[in] illuminance   Illuminance in lux
+ * 
+ * @return Normalized light value
+ */
+extern float normalizeIlluminance(float illuminance);
 
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
+/**
+ * Get ambient light level.
+ *
+ * @param[in] illuminance   Illuminance in lux
+ * 
+ * @return Ambient light level
+ */
+extern AmbientLightLevel getAmbientLightLevel(float illuminance);
 
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-extern SensorDataProviderImpl* Sensors::getSensorDataProviderImpl()
-{
-    return &gSensorDataProviderImpl;
 }
 
 /******************************************************************************
- * Local Functions
+ * Functions
  *****************************************************************************/
+
+#endif  /* __AMBIENT_LIGHT_H__ */
+
+/** @} */
