@@ -81,8 +81,9 @@ uint32_t                    TextWidget::m_scrollPause       = TextWidget::DEFAUL
 
 void TextWidget::update(YAGfx& gfx)
 {
-    int16_t cursorX = m_posX;
-    int16_t cursorY = m_posY + m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
+    int16_t         cursorX         = m_posX;
+    int16_t         cursorY         = m_posY + m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
+    const uint16_t  SCROLL_DISTANCE = gfx.getWidth() / 2U; /* Distance in pixel after a scrolling text starts to repeat. */
 
     /* Text changed, check whether scrolling is necessary? */
     if (true == m_checkScrollingNeed)
@@ -111,24 +112,44 @@ void TextWidget::update(YAGfx& gfx)
         m_scrollingCnt          = 0U;
     }
 
-    /* Move cursor to right position */
+    /* Move cursor to left side of the display. It may be set outside the canvas
+     * in case the text is scrolling.
+     */
     cursorX -= m_scrollOffset;
     m_gfxText.setTextCursorPos(cursorX, cursorY);
 
     /* Show text */
     show(gfx, m_formatStr);
 
+    /* If text is scrolling, repeat the text after a defined distance. */
+    if (true == m_isScrollingEnabled)
+    {
+        if (static_cast<int32_t>(gfx.getWidth() - SCROLL_DISTANCE) > static_cast<int32_t>(m_textWidth - m_scrollOffset))
+        {
+            m_gfxText.setTextCursorPos(m_textWidth - m_scrollOffset + SCROLL_DISTANCE, cursorY);
+            show(gfx, m_formatStr);
+        }
+    }
+
     /* Shall we scroll again? */
     if (true == m_scrollTimer.isTimeout())
     {
         /* Text scrolls completly out, until it starts from the beginning again. */
         ++m_scrollOffset;
+
+        /* Only count one complete scrolling text cycle. */
         if (static_cast<int32_t>(m_textWidth) < static_cast<int32_t>(m_scrollOffset))
         {
-            m_scrollOffset = ((-1) * gfx.getWidth()) + 1; /* The user can see the first characters better, if starting nearly outside the canvas. */
-
             /* Here we know that the text was once complete scrolled through the display. */
             ++m_scrollingCnt;
+        }
+
+        /* Reset scrolling offset at the right place, so the user won't see any difference
+         * on the display.
+         */
+        if (static_cast<int32_t>(m_textWidth + SCROLL_DISTANCE - 1U) < static_cast<int32_t>(m_scrollOffset))
+        {
+            m_scrollOffset = 0;
         }
 
         m_scrollTimer.start(m_scrollPause);
@@ -323,7 +344,8 @@ bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, 
     {
         if ((false == noAction) &&
             (nullptr != gfx) &&
-            (nullptr != gfxText))
+            (nullptr != gfxText) &&
+            (false == m_isScrollingEnabled))
         {
             String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
             uint16_t    textWidth   = 0U;
@@ -343,7 +365,8 @@ bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, 
     {
         if ((false == noAction) &&
             (nullptr != gfx) &&
-            (nullptr != gfxText))
+            (nullptr != gfxText) &&
+            (false == m_isScrollingEnabled))
         {
             String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
             uint16_t    textWidth   = 0U;
