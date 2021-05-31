@@ -229,6 +229,8 @@ public:
      * @param[in]   text        Text
      * @param[out]  boxWidth    Bounding box width in pixel
      * @param[out]  boxHeight   Bounding box height in pixel
+     * 
+     * @return If successful, it will return true otherwise false.
      */
     bool getTextBoundingBox(uint16_t width, uint16_t height, const char* text, uint16_t& boxWidth, uint16_t& boxHeight) const
     {
