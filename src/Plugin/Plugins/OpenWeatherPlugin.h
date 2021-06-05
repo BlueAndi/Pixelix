@@ -95,7 +95,6 @@ public:
         m_currentHumidity("\\calign?"),
         m_currentWindspeed("\\calign?"),
         m_slotInterf(nullptr),
-        m_configurationHasChanged(false),
         m_durationCounter(0u),
         m_isUpdateAvailable(false)
     {
@@ -402,7 +401,6 @@ private:
     String                      m_currentHumidity;          /**< The current humidity. */
     String                      m_currentWindspeed;         /**< The current windspeed. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
-    bool                        m_configurationHasChanged;  /**< Flag to indicate whether the configuration has changed. */
     uint8_t                     m_durationCounter;          /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
     bool                        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
 

@@ -289,10 +289,10 @@ void OpenWeatherPlugin::active(YAGfx& gfx)
 {
     lock();
 
-    if (true == m_configurationHasChanged)
-    {
-        (void)loadConfiguration();
-    }
+    /* Load configuration, because it may be changed by web request
+     * or direct editing.
+     */
+    (void)loadConfiguration();
 
     /* Force immediate weather update on activation */
     updateDisplay(true);
@@ -363,8 +363,7 @@ void OpenWeatherPlugin::setApiKey(const String& apiKey)
 
     if (apiKey != m_apiKey)
     {
-        m_apiKey                    = apiKey;
-        m_configurationHasChanged   = true;
+        m_apiKey = apiKey;
 
         (void)saveConfiguration();
     }
@@ -389,10 +388,9 @@ void OpenWeatherPlugin::setLatitude(const String& latitude)
 {
     lock();
 
-    if(latitude != m_latitude)
+    if (latitude != m_latitude)
     {
-        m_latitude                  = latitude;
-        m_configurationHasChanged   = true;
+        m_latitude = latitude;
 
         (void)saveConfiguration();
     }
@@ -417,10 +415,9 @@ void OpenWeatherPlugin::setLongitude(const String& longitude)
 {
     lock();
 
-    if(longitude != m_longitude)
+    if (longitude != m_longitude)
     {
-        m_longitude                 = longitude;
-        m_configurationHasChanged   = true;
+        m_longitude = longitude;
 
         (void)saveConfiguration();
     }
@@ -445,10 +442,9 @@ void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& 
 {
     lock();
 
-    if(additionalInformation != m_additionalInformation)
+    if (additionalInformation != m_additionalInformation)
     {
-        m_additionalInformation     = additionalInformation;
-        m_configurationHasChanged   = true;
+        m_additionalInformation = additionalInformation;
 
         (void)saveConfiguration();
     }
@@ -475,8 +471,7 @@ void OpenWeatherPlugin::setUnits(const String& units)
 
     if (units != m_units)
     {
-        m_units                     = units;
-        m_configurationHasChanged   = true;
+        m_units = units;
 
         (void)saveConfiguration();
     }
@@ -862,7 +857,6 @@ bool OpenWeatherPlugin::loadConfiguration()
         m_units                 = jsonDoc["units"].as<String>();
     }
 
-    m_configurationHasChanged = false;
     return status;
 }
 
