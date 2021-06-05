@@ -201,7 +201,7 @@ public:
      */
     String getFormatStr() const
     {
-        return m_formatStr;
+        return m_formatStrNew;
     }
 
     /**
@@ -211,7 +211,7 @@ public:
      */
     String getStr() const
     {
-        return removeFormatTags(m_formatStr);
+        return removeFormatTags(m_formatStrNew);
     }
 
     /**
