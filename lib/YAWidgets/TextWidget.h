@@ -83,11 +83,13 @@ public:
     TextWidget() :
         Widget(WIDGET_TYPE),
         m_formatStr(),
+        m_formatStrNew(),
+        m_scrollInfo(),
+        m_scrollInfoNew(),
+        m_isNewTextAvailable(false),
+        m_handleNewText(false),
         m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
-        m_checkScrollingNeed(false),
-        m_isScrollingEnabled(false),
         m_scrollingCnt(0U),
-        m_textWidth(0U),
         m_scrollOffset(0),
         m_scrollTimer()
     {
@@ -103,11 +105,13 @@ public:
     TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR) :
         Widget(WIDGET_TYPE),
         m_formatStr(str),
+        m_formatStrNew(str),
+        m_scrollInfo(),
+        m_scrollInfoNew(),
+        m_isNewTextAvailable(false),
+        m_handleNewText(false),
         m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
-        m_checkScrollingNeed(false),
-        m_isScrollingEnabled(false),
         m_scrollingCnt(0U),
-        m_textWidth(0U),
         m_scrollOffset(0),
         m_scrollTimer()
     {
@@ -121,11 +125,13 @@ public:
     TextWidget(const TextWidget& widget) :
         Widget(WIDGET_TYPE),
         m_formatStr(widget.m_formatStr),
+        m_formatStrNew(widget.m_formatStrNew),
+        m_scrollInfo(widget.m_scrollInfo),
+        m_scrollInfoNew(widget.m_scrollInfoNew),
+        m_isNewTextAvailable(widget.m_isNewTextAvailable),
+        m_handleNewText(widget.m_handleNewText),
         m_gfxText(widget.m_gfxText),
-        m_checkScrollingNeed(widget.m_checkScrollingNeed),
-        m_isScrollingEnabled(widget.m_isScrollingEnabled),
         m_scrollingCnt(widget.m_scrollingCnt),
-        m_textWidth(widget.m_textWidth),
         m_scrollOffset(widget.m_scrollOffset),
         m_scrollTimer(widget.m_scrollTimer)
     {
@@ -148,11 +154,13 @@ public:
         if (&widget != this)
         {
             m_formatStr             = widget.m_formatStr;
+            m_formatStrNew          = widget.m_formatStrNew;
+            m_scrollInfo            = widget.m_scrollInfo;
+            m_scrollInfoNew         = widget.m_scrollInfoNew;
+            m_isNewTextAvailable    = widget.m_isNewTextAvailable;
+            m_handleNewText         = widget.m_handleNewText;
             m_gfxText               = widget.m_gfxText;
-            m_checkScrollingNeed    = widget.m_checkScrollingNeed;
-            m_isScrollingEnabled    = widget.m_isScrollingEnabled;
             m_scrollingCnt          = widget.m_scrollingCnt;
-            m_textWidth             = widget.m_textWidth;
             m_scrollOffset          = widget.m_scrollOffset;
             m_scrollTimer           = widget.m_scrollTimer;
         }
@@ -176,10 +184,11 @@ public:
     void setFormatStr(const String& formatStr)
     {
         /* Avoid upate if not necessary. */
-        if (m_formatStr != formatStr)
+        if ((m_formatStr != formatStr) &&
+            (m_formatStrNew != formatStr))
         {
-            m_formatStr             = formatStr;
-            m_checkScrollingNeed    = true;
+            m_formatStrNew          = formatStr;
+            m_isNewTextAvailable    = true;
         }
 
         return;
@@ -234,7 +243,7 @@ public:
     void setFont(const YAFont& font)
     {
         m_gfxText.setFont(font);
-        m_checkScrollingNeed    = true;
+        m_isNewTextAvailable = true;
 
         return;
     }
@@ -280,11 +289,13 @@ public:
      */
     bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
     {
-        bool status = (true == m_checkScrollingNeed) ? false : true;
-
-        if (true == status)
+        bool status = false;
+        
+        if ((false == m_isNewTextAvailable) &&
+            (false == m_handleNewText))
         {
-            isScrollingEnabled  = m_isScrollingEnabled;
+            status              = true;
+            isScrollingEnabled  = m_scrollInfoNew.isEnabled;
             scrollingCnt        = m_scrollingCnt;
         }
 
@@ -312,14 +323,40 @@ public:
 private:
 
     /** Keyword handler method. */
-    typedef bool (TextWidget::*KeywordHandler)(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    typedef bool (TextWidget::*KeywordHandler)(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const;
 
-    String          m_formatStr;            /**< String, which contains format tags. */
+    /**
+     * Scroll information, used per text.
+     */
+    struct ScrollInfo
+    {
+        bool        isEnabled;  /**< Is scrolling enabled? */
+        bool        stopAtDest; /**< Shall scrolling be stopped if offset destination reached? */
+        int16_t     offsetDest; /**< Offset destination in pixel */
+        int16_t     offset;     /**< Current offset in pixel */
+        uint16_t    textWidth;  /**< Text width in pixel */
+
+        /**
+         * Initializes scroll information.
+         */
+        ScrollInfo() :
+            isEnabled(false),
+            stopAtDest(false),
+            offsetDest(0),
+            offset(0),
+            textWidth(0U)
+        {
+        }
+    };
+
+    String          m_formatStr;            /**< Current shown string, which contains format tags. */
+    String          m_formatStrNew;         /**< New text string, which contains format tags. */
+    ScrollInfo      m_scrollInfo;           /**< Scroll information */
+    ScrollInfo      m_scrollInfoNew;        /**< Scroll information for the new text. */
+    bool            m_isNewTextAvailable;   /**< Is new updated text available? */
+    bool            m_handleNewText;        /**< New text scroll information is determined, now it shall be handled. */
     YAGfxText       m_gfxText;              /**< Current gfx for text */
-    bool            m_checkScrollingNeed;   /**< Check for scrolling need or not */
-    bool            m_isScrollingEnabled;   /**< Is scrolling enabled or disabled */
     uint32_t        m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
-    uint16_t        m_textWidth;            /**< Text width in pixel */
     int16_t         m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
 
@@ -340,10 +377,11 @@ private:
      * Format tags:
      * - #RRGGBB Color in HTML form (RGB888)
      *
-     * @param[in] gfx       Graphics, used to draw the characters
-     * @param[in] formatStr String which contains format tags
+     * @param[in] gfx           Graphics, used to draw the characters
+     * @param[in] formatStr     String which contains format tags
+     * @param[in] isScrolling   Is text scrolling or not.
      */
-    void show(YAGfx& gfx, const String& formatStr);
+    void show(YAGfx& gfx, const String& formatStr, bool isScrolling);
 
     /**
      * Handles the keyword for color changes.
@@ -355,7 +393,7 @@ private:
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
-    bool handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    bool handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const;
 
     /**
      * Handles the keyword for alignment changes.
@@ -367,7 +405,7 @@ private:
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
-    bool handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const;
+    bool handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const;
 };
 
 /******************************************************************************

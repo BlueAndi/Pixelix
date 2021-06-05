@@ -81,78 +81,214 @@ uint32_t                    TextWidget::m_scrollPause       = TextWidget::DEFAUL
 
 void TextWidget::update(YAGfx& gfx)
 {
-    int16_t         cursorX         = m_posX;
     int16_t         cursorY         = m_posY + m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
     const uint16_t  SCROLL_DISTANCE = gfx.getWidth() / 2U; /* Distance in pixel after a scrolling text starts to repeat. */
 
-    /* Text changed, check whether scrolling is necessary? */
-    if (true == m_checkScrollingNeed)
+    /* If there is an updated text available, it shall be determined how to show it on the display. */
+    if (true == m_isNewTextAvailable)
     {
-        uint16_t    textHeight      = 0U;
-        String      str             = removeFormatTags(m_formatStr);
+        uint16_t    textWidth   = 0U;
+        uint16_t    textHeight  = 0U;
+        String      str         = removeFormatTags(m_formatStrNew);
 
-        if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), gfx.getHeight(), str.c_str(), m_textWidth, textHeight))
+        /* Get bounding box of the text, without any format tags. */
+        if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), gfx.getHeight(), str.c_str(), textWidth, textHeight))
         {
-            /* Text too long for the display? */
-            if (gfx.getWidth() < m_textWidth)
+            m_scrollInfoNew.textWidth   = textWidth;
+            m_handleNewText             = true;
+
+            /* Can new text be static shown or must it be scrolled? */
+            if (gfx.getWidth() >= m_scrollInfoNew.textWidth)
             {
-                m_isScrollingEnabled    = true;
-                m_scrollOffset          = ((-1) * gfx.getWidth()) + 1;  /* The user can see the first characters better, if starting nearly outside the canvas. */
-                m_scrollTimer.start(0U);                                /* Ensure immediate update */
+                /* Static */
+                m_scrollInfoNew.isEnabled = false;
             }
             else
             {
-                m_isScrollingEnabled    = false;
-                m_scrollOffset          = 0;
-                m_scrollTimer.stop();
+                /* Scrolling */
+                m_scrollInfoNew.isEnabled = true;
+            }
+
+            /* Handle the following scenarios:
+             * +==============+==============+
+             * | Current text | New text     |
+             * +==============+==============+
+             * | Static       | Static       | --> Show new text immediately, no scrolling.
+             * +--------------+--------------+
+             * | Static       | Scrolling    | --> Scroll current text out and new one in.
+             * +--------------+--------------+
+             * | Scrolling    | Static       | --> Scroll curren text out, new one in and stop scrolling at the end.
+             * +--------------+--------------+
+             * | Scrolling    | Scrolling    | --> Continue scrolling and just scroll new one in.
+             * +--------------+--------------+
+             */
+
+            /* Is current text be static shown? */
+            if (false == m_scrollInfo.isEnabled)
+            {
+                /* Can new text be static shown?
+                 * If yes, it will jump immediately in.
+                 */
+                if (false == m_scrollInfoNew.isEnabled)
+                {
+                    /* New text is kept static. */
+                    m_scrollInfoNew.stopAtDest  = false;
+                    m_scrollInfoNew.offsetDest  = 0;
+                    m_scrollInfoNew.offset      = 0;
+
+                    /* Immediate take over. */
+                    m_formatStr     = m_formatStrNew;
+                    m_scrollInfo    = m_scrollInfoNew;
+                    m_handleNewText = false;
+                }
+                else
+                /* New text will be scrolling, starting outside the display. */
+                {
+                    /* The current text shall scroll out. */
+                    m_scrollInfo.isEnabled  = true;
+                    m_scrollInfo.offsetDest = -m_scrollInfo.textWidth;
+                    m_scrollInfo.offset     = 0;
+
+                    /* The next text shall scroll in. */
+                    m_scrollInfoNew.stopAtDest  = false;
+                    m_scrollInfoNew.offsetDest  = 0;
+                    m_scrollInfoNew.offset      = gfx.getWidth();
+
+                    /* Because the scroll timer is stopped, it must be enabled again. */
+                    m_scrollTimer.start(0U);
+                }
+            }
+            /* Current text is scrolling. */
+            else
+            {
+                /* Can new text be static shown? */
+                if (false == m_scrollInfoNew.isEnabled)
+                {
+                    /* New text will be scrolling in and then static shown.
+                     * If the current text is near the end, the new text will start outside the display.
+                     */
+                    m_scrollInfoNew.stopAtDest  = true;
+                    m_scrollInfoNew.offsetDest  = 0;
+                    m_scrollInfoNew.offset      = m_scrollInfo.offset + m_scrollInfo.textWidth + SCROLL_DISTANCE;
+
+                    /* Avoid that the new text is jumping in, instead of scrolling in. */
+                    if (gfx.getWidth() > m_scrollInfoNew.offset)
+                    {
+                        m_scrollInfoNew.offset = gfx.getWidth();
+                    }
+                }
+                else
+                /* New text will be scrolling, starting right after current scrolling text.
+                 * If the current text is near the end, the new text will start outside the display.
+                 */
+                {
+                    m_scrollInfoNew.stopAtDest  = false;
+                    m_scrollInfoNew.offsetDest  = 0;
+                    m_scrollInfoNew.offset      = m_scrollInfo.offset + m_scrollInfo.textWidth + SCROLL_DISTANCE;
+
+                    /* Avoid that the new text is jumping in, instead of scrolling in. */
+                    if (gfx.getWidth() > m_scrollInfoNew.offset)
+                    {
+                        m_scrollInfoNew.offset = gfx.getWidth();
+                    }
+                }
             }
         }
 
-        m_checkScrollingNeed    = false;
-        m_scrollingCnt          = 0U;
+        m_isNewTextAvailable = false;
     }
 
-    /* Move cursor to left side of the display. It may be set outside the canvas
-     * in case the text is scrolling.
-     */
-    cursorX -= m_scrollOffset;
-    m_gfxText.setTextCursorPos(cursorX, cursorY);
+    /* Clear the display. */
+    gfx.fillScreen(ColorDef::BLACK);
 
-    /* Show text */
-    show(gfx, m_formatStr);
+    /* Show current text. */
+    m_gfxText.setTextCursorPos(m_posX + m_scrollInfo.offset, cursorY);
+    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
 
-    /* If text is scrolling, repeat the text after a defined distance. */
-    if (true == m_isScrollingEnabled)
+    /* Show new text. */
+    if (true == m_handleNewText)
     {
-        if (static_cast<int32_t>(gfx.getWidth() - SCROLL_DISTANCE) > static_cast<int32_t>(m_textWidth - m_scrollOffset))
-        {
-            m_gfxText.setTextCursorPos(m_textWidth - m_scrollOffset + SCROLL_DISTANCE, cursorY);
-            show(gfx, m_formatStr);
-        }
+        m_gfxText.setTextCursorPos(m_posX + m_scrollInfoNew.offset, cursorY);
+        show(gfx, m_formatStrNew, m_scrollInfoNew.isEnabled);
     }
 
     /* Shall we scroll again? */
     if (true == m_scrollTimer.isTimeout())
     {
-        /* Text scrolls completly out, until it starts from the beginning again. */
-        ++m_scrollOffset;
-
-        /* Only count one complete scrolling text cycle. */
-        if (static_cast<int32_t>(m_textWidth) < static_cast<int32_t>(m_scrollOffset))
+        /* Handle scrolling text. */
+        if (m_scrollInfo.offsetDest < m_scrollInfo.offset)
         {
-            /* Here we know that the text was once complete scrolled through the display. */
+            --m_scrollInfo.offset;
+        }
+        else if (m_scrollInfo.offsetDest > m_scrollInfo.offset)
+        {
+            ++m_scrollInfo.offset;
+        }
+        else if (false == m_handleNewText)
+        {
+            m_scrollInfo.offset = gfx.getWidth();
+            
             ++m_scrollingCnt;
         }
-
-        /* Reset scrolling offset at the right place, so the user won't see any difference
-         * on the display.
-         */
-        if (static_cast<int32_t>(m_textWidth + SCROLL_DISTANCE - 1U) < static_cast<int32_t>(m_scrollOffset))
+        else
         {
-            m_scrollOffset = 0;
+            /* Wait till new text is at destination position. */
+            ;
         }
 
-        m_scrollTimer.start(m_scrollPause);
+        /* Handle scrolling new text. */
+        if (true == m_handleNewText)
+        {
+            if (m_scrollInfoNew.offsetDest < m_scrollInfoNew.offset)
+            {
+                --m_scrollInfoNew.offset;
+            }
+            else if (m_scrollInfoNew.offsetDest > m_scrollInfoNew.offset)
+            {
+                ++m_scrollInfoNew.offset;
+            }
+            else
+            {
+                m_handleNewText = false;
+                m_formatStr     = m_formatStrNew;
+                m_scrollingCnt  = 0U;
+
+                /* If the new text can be shown static, it must be stopped scrolling  now. */
+                if (true == m_scrollInfoNew.stopAtDest)
+                {
+                    m_scrollInfoNew.isEnabled   = false;
+                    m_scrollInfoNew.stopAtDest  = false;
+                }
+
+                /* Show new text static? */
+                if (false == m_scrollInfoNew.isEnabled)
+                {
+                    m_scrollInfo.isEnabled  = false;
+                    m_scrollInfo.stopAtDest = false;
+                    m_scrollInfo.offsetDest = 0;
+                    m_scrollInfo.offset     = 0;
+                    m_scrollInfo.textWidth  = m_scrollInfoNew.textWidth;
+                }
+                else
+                /* Continue scrolling with new text. */
+                {
+                    m_scrollInfo.isEnabled  = true;
+                    m_scrollInfo.stopAtDest = false;
+                    m_scrollInfo.offsetDest = -m_scrollInfoNew.textWidth;
+                    m_scrollInfo.offset     = m_scrollInfoNew.offset - 1;   /* Because new text is already at most left position, decrease one pixel to avoid a short stumble. */
+                    m_scrollInfo.textWidth  = m_scrollInfoNew.textWidth;
+                }
+            }
+        }
+
+        if (false == m_scrollInfo.isEnabled)
+        {
+            m_scrollTimer.stop();
+        }
+        else
+        {
+            m_scrollTimer.start(m_scrollPause);
+        }
     }
 
     return;
@@ -199,7 +335,7 @@ String TextWidget::removeFormatTags(const String& formatStr) const
             {
                 KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
                 uint8_t         overstep    = 0U;
-                bool            status      = (this->*handler)(nullptr, nullptr, false, formatStr.substring(index), overstep);
+                bool            status      = (this->*handler)(nullptr, nullptr, false, formatStr.substring(index), false, overstep);
 
                 if (true == status)
                 {
@@ -231,7 +367,7 @@ String TextWidget::removeFormatTags(const String& formatStr) const
     return str;
 }
 
-void TextWidget::show(YAGfx& gfx, const String& formatStr)
+void TextWidget::show(YAGfx& gfx, const String& formatStr, bool isScrolling)
 {
     uint32_t    index           = 0U;
     bool        escapeFound     = false;
@@ -264,7 +400,7 @@ void TextWidget::show(YAGfx& gfx, const String& formatStr)
             {
                 KeywordHandler  handler     = m_keywordHandlers[keywordIndex];
                 uint8_t         overstep    = 0U;
-                bool            status      = (this->*handler)(&gfx, &m_gfxText, false, formatStr.substring(index), overstep);
+                bool            status      = (this->*handler)(&gfx, &m_gfxText, false, formatStr.substring(index), isScrolling, overstep);
 
                 if (true == status)
                 {
@@ -300,9 +436,11 @@ void TextWidget::show(YAGfx& gfx, const String& formatStr)
     return;
 }
 
-bool TextWidget::handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const
+bool TextWidget::handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const
 {
     bool status = false;
+
+    UTIL_NOT_USED(isScrolling);
 
     if ('#' == formatStr[0])
     {
@@ -328,7 +466,7 @@ bool TextWidget::handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, cons
     return status;
 }
 
-bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, uint8_t& overstep) const
+bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const
 {
     bool status                 = false;
     const uint8_t   KEYWORD_LEN = 6U;
@@ -345,7 +483,7 @@ bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, 
         if ((false == noAction) &&
             (nullptr != gfx) &&
             (nullptr != gfxText) &&
-            (false == m_isScrollingEnabled))
+            (false == isScrolling))
         {
             String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
             uint16_t    textWidth   = 0U;
@@ -366,7 +504,7 @@ bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, 
         if ((false == noAction) &&
             (nullptr != gfx) &&
             (nullptr != gfxText) &&
-            (false == m_isScrollingEnabled))
+            (false == isScrolling))
         {
             String      text        = removeFormatTags(formatStr.substring(KEYWORD_LEN));
             uint16_t    textWidth   = 0U;
