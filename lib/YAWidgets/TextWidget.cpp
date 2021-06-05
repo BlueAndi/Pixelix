@@ -198,9 +198,6 @@ void TextWidget::update(YAGfx& gfx)
         m_isNewTextAvailable = false;
     }
 
-    /* Clear the display. */
-    gfx.fillScreen(ColorDef::BLACK);
-
     /* Show current text. */
     m_gfxText.setTextCursorPos(m_posX + m_scrollInfo.offset, cursorY);
     show(gfx, m_formatStr, m_scrollInfo.isEnabled);
