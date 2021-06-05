@@ -284,8 +284,8 @@ void TempHumidPlugin::update(YAGfx& gfx)
                 (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9f) ? "%.0f" : "%.1f" , m_temp);
                 text  = "\\calign";
                 text += valueReducedPrecison;
-                text += "\x8E";
-                text += "C";
+                text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
+
                 m_textWidget.setFormatStr(text);
             }
             break;
@@ -305,7 +305,8 @@ void TempHumidPlugin::update(YAGfx& gfx)
                 (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humid);
                 text  = "\\calign";
                 text += valueReducedPrecison;
-                text += "%";
+                text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
+                
                 m_textWidget.setFormatStr(text);
             }
             break;

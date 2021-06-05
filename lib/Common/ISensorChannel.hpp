@@ -113,6 +113,79 @@ public:
      */
     virtual String getValueAsString(uint32_t precision) = 0;
 
+    /**
+     * Get the channel type as string from the corresponding sensor channel type.
+     * 
+     * @param[in] channelType   Channel type
+     * 
+     * @return Unit as string
+     */
+    static String channelTypeToName(ISensorChannel::Type channelType)
+    {
+        String name;
+
+        switch(channelType)
+        {
+        case ISensorChannel::TYPE_RAW_NONE:
+            name = "raw";
+            break;
+
+        case ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS:
+            name = "temperature";
+            break;
+
+        case ISensorChannel::TYPE_HUMIDITY_PERCENT:
+            name = "humidity";
+            break;
+
+        case ISensorChannel::TYPE_ILLUMINANCE_LUX:
+            name = "illuminance";
+            break;
+
+        default:
+            break;
+        }
+
+        return name;
+    }
+
+    /**
+     * Get the unit as string from the corresponding sensor channel type.
+     * 
+     * @param[in] channelType   Channel type
+     * 
+     * @return Unit as string
+     */
+    static String channelTypeToUnit(ISensorChannel::Type channelType)
+    {
+        String unit;
+
+        switch(channelType)
+        {
+        case ISensorChannel::TYPE_RAW_NONE:
+            unit = "digits";
+            break;
+
+        case ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS:
+            unit  = "\x8E";
+            unit += "C";
+            break;
+
+        case ISensorChannel::TYPE_HUMIDITY_PERCENT:
+            unit = "%";
+            break;
+
+        case ISensorChannel::TYPE_ILLUMINANCE_LUX:
+            unit = "lux";
+            break;
+
+        default:
+            break;
+        }
+
+        return unit;
+    }
+
 protected:
 
     /**
