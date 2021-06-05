@@ -52,6 +52,8 @@
                 <p><img src="/images/SensorPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows sensor values of the selected sensor channel.</p>
                 <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get all installed sensor drivers and their provided channels.</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/sensors</code></pre>
                 <h3 class="mt-1">Get current selected sensor and channel.</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/channel</code></pre>
                 <h3 class="mt-1">Set sensor and channel, which values to show.</h3>
