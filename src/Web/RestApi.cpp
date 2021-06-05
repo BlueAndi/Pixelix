@@ -46,6 +46,7 @@
 #include <ArduinoJson.h>
 #include <Esp.h>
 #include <Logging.h>
+#include <SensorDataProvider.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,6 +70,7 @@ static void handleSlots(AsyncWebServerRequest* request);
 static void handlePluginInstall(AsyncWebServerRequest* request);
 static void handlePluginUninstall(AsyncWebServerRequest* request);
 static void handlePlugins(AsyncWebServerRequest* request);
+static void handleSensors(AsyncWebServerRequest* request);
 static void handleStatus(AsyncWebServerRequest* request);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
@@ -105,6 +107,7 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
     (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
     (void)srv.on("/rest/api/v1/plugins", handlePlugins);
+    (void)srv.on("/rest/api/v1/sensors", handleSensors);
     (void)srv.on("/rest/api/v1/status", handleStatus);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_GET, handleFileGet);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
@@ -607,6 +610,95 @@ static void handlePlugins(AsyncWebServerRequest* request)
         {
             pluginArray.add(pluginName);
             pluginName = PluginMgr::getInstance().findNext();
+        }
+
+        /* Prepare response */
+        jsonDoc["status"]   = "ok";
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * List all sensors.
+ * GET \c "/api/v1/sensors"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleSensors(AsyncWebServerRequest* request)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 1024U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = "error";
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        JsonObject          dataObj         = jsonDoc.createNestedObject("data");
+        JsonArray           sensorsArray    = dataObj.createNestedArray("sensors");
+        SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
+        uint8_t             numSensors      = sensorDataProv.getNumSensors();
+        uint8_t             sensorIdx       = 0U;
+
+        for(sensorIdx = 0; sensorIdx < numSensors; ++sensorIdx)
+        {
+            ISensor*    sensor  = sensorDataProv.getSensor(sensorIdx);
+
+            if (nullptr != sensor)
+            {
+                uint8_t     numChannels     = sensor->getNumChannels();
+                uint8_t     channelIdx      = 0U;
+                JsonObject  sensorObj       = sensorsArray.createNestedObject();
+
+                sensorObj["index"]          = sensorIdx;
+                sensorObj["name"]           = sensor->getName();
+                sensorObj["isAvailable"]    = sensor->isAvailable();
+
+                /* Block is only used, to have the channels in the correct JSON order. */
+                {
+                    JsonArray   channelsArray = sensorObj.createNestedArray("channels");
+
+                    for(channelIdx = 0U; channelIdx < numChannels; ++channelIdx)
+                    {
+                        ISensorChannel* channel     = sensor->getChannel(channelIdx);
+                        JsonObject      channelObj  = channelsArray.createNestedObject();
+
+                        if (nullptr != channel)
+                        {
+                            channelObj["index"]  = channelIdx;
+                            channelObj["name"]   = ISensorChannel::channelTypeToName(channel->getType());
+                        }
+                    }
+
+                }
+            }
         }
 
         /* Prepare response */
