@@ -132,7 +132,7 @@ public:
     /**
      * Clear display.
      */
-    void clear()
+    void clear() final
     {
         m_strip.ClearTo(ColorDef::BLACK);
         return;

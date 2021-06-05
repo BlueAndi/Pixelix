@@ -148,7 +148,7 @@ public:
     /**
      * Clear LED matrix.
      */
-    void clear()
+    void clear() final
     {
         uint8_t x = 0U;
         uint8_t y = 0U;
