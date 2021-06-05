@@ -72,6 +72,7 @@
 #include "JustTextPlugin.h"
 #include "OpenWeatherPlugin.h"
 #include "RainbowPlugin.h"
+#include "SensorPlugin.h"
 #include "ShellyPlugSPlugin.h"
 #include "SunrisePlugin.h"
 #include "SysMsgPlugin.h"
@@ -390,6 +391,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
     pluginMgr.registerPlugin("OpenWeatherPlugin", OpenWeatherPlugin::create);
     pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
+    pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);
     pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);

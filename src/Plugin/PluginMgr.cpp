@@ -427,7 +427,7 @@ void PluginMgr::registerTopic(PluginObjData* metaData, const String& topic)
 void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
+    const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj         = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;

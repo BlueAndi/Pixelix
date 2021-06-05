@@ -46,6 +46,9 @@ menu.data = [{
         "title": "Rainbow Plugin",
         "hyperRef": "/plugins/RainbowPlugin.html"
     }, {
+        "title": "Sensor Plugin",
+        "hyperRef": "/plugins/SensorPlugin.html"
+    }, {
         "title": "ShellyPlugS Plugin",
         "hyperRef": "/plugins/ShellyPlugSPlugin.html"
     }, {
