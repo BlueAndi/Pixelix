@@ -87,9 +87,30 @@ public:
      *
      * @return Unique id
      */
-    uint16_t getUID() const  override
+    uint16_t getUID() const final
     {
         return m_uid;
+    }
+
+    /**
+     * Set instance alias name, which is more user friendly than the UID.
+     * 
+     * @param[in] alias Plugin instance alias name
+     */
+    void setAlias(const String& alias) final
+    {
+        m_alias = alias;
+        return;
+    }
+
+    /**
+     * Get instance alias name.
+     * 
+     * @return Plugin instance alias name
+     */
+    String getAlias() const final
+    {
+        return m_alias;
     }
 
     /**
@@ -284,6 +305,7 @@ protected:
      */
     Plugin(const String& name, uint16_t uid) :
         m_uid(uid),
+        m_alias(),
         m_name(name),
         m_isEnabled(false)
     {
@@ -316,6 +338,7 @@ protected:
 private:
 
     uint16_t    m_uid;          /**< Unique id */
+    String      m_alias;        /**< Alias name */
     String      m_name;         /**< Plugin name */
     bool        m_isEnabled;    /**< Plugin is enabled or disabled */
 

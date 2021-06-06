@@ -91,6 +91,20 @@ public:
     virtual uint16_t getUID() const = 0;
 
     /**
+     * Set instance alias name, which is more user friendly than the UID.
+     * 
+     * @param[in] alias Plugin instance alias name
+     */
+    virtual void setAlias(const String& alias) = 0;
+
+    /**
+     * Get instance alias name.
+     * 
+     * @return Plugin instance alias name
+     */
+    virtual String getAlias() const = 0;
+
+    /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
      * 
