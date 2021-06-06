@@ -520,7 +520,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
     if (nullptr == parameter)
     {
         status = false;
-        jsonDoc["status"]   = 1;
+        jsonDoc["status"]   = "error";
         jsonDoc["error"]    = "Internal error.";
     }
     else
@@ -537,7 +537,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                     if (false == isValidHostname(value))
                     {
                         status = false;
-                        jsonDoc["status"]   = 1;
+                        jsonDoc["status"]   = "error";
                         jsonDoc["error"]    = "Invalid hostname.";
                     }
                 }
@@ -552,7 +552,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                         errorStr += ".";
 
                         status = false;
-                        jsonDoc["status"]   = 1;
+                        jsonDoc["status"]   = "error";
                         jsonDoc["error"]    = errorStr;
                     }
                     else if (kvStr->getMaxLength() < value.length())
@@ -562,7 +562,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                         errorStr += ".";
 
                         status = false;
-                        jsonDoc["status"]   = 1;
+                        jsonDoc["status"]   = "error";
                         jsonDoc["error"]    = errorStr;
                     }
                     else
@@ -588,7 +588,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                 else
                 {
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = "Invalid value.";
                 }
             }
@@ -604,7 +604,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                 if (false == convStatus)
                 {
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = "Invalid value.";
                 }
                 /* Check for min. and max. length */
@@ -615,7 +615,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                     errorStr += ".";
 
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = errorStr;
                 }
                 else if (kvUInt8->getMax() < uint8Value)
@@ -625,7 +625,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                     errorStr += ".";
 
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = errorStr;
                 }
                 else
@@ -645,7 +645,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                 if (false == convStatus)
                 {
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = "Invalid value.";
                 }
                 /* Check for min. and max. length */
@@ -656,7 +656,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                     errorStr += ".";
 
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = errorStr;
                 }
                 else if (kvInt32->getMax() < int32Value)
@@ -666,7 +666,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                     errorStr += ".";
 
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = errorStr;
                 }
                 else
@@ -688,7 +688,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                     errorStr += ".";
 
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = errorStr;
                 }
                 else if (kvJson->getMaxLength() < value.length())
@@ -698,7 +698,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
                     errorStr += ".";
 
                     status = false;
-                    jsonDoc["status"]   = 1;
+                    jsonDoc["status"]   = "error";
                     jsonDoc["error"]    = errorStr;
                 }
                 else
@@ -712,7 +712,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
             /* fallthrough */
         default:
             status = false;
-            jsonDoc["status"]   = 1;
+            jsonDoc["status"]   = "error";
             jsonDoc["error"]    = "Unknown parameter.";
             break;
         }
@@ -748,7 +748,7 @@ static void settingsPage(AsyncWebServerRequest* request)
 
             LOG_WARNING("Couldn't open settings.");
 
-            jsonDoc["status"]   = 1;
+            jsonDoc["status"]   = "error";
             errorObj["msg"]     = "Internal error.";
         }
         else
@@ -781,7 +781,7 @@ static void settingsPage(AsyncWebServerRequest* request)
 
                 LOG_WARNING("Internal error.");
 
-                jsonDoc["status"]   = 1;
+                jsonDoc["status"]   = "error";
                 errorObj["msg"]     = "Internal error.";
             }
             else
@@ -790,7 +790,7 @@ static void settingsPage(AsyncWebServerRequest* request)
 
                 UTIL_NOT_USED(dataObj);
 
-                jsonDoc["status"] = 0;
+                jsonDoc["status"] = "ok";
             }
         }
 
