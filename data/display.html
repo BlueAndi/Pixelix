@@ -25,7 +25,7 @@
             }
 
             div.divSlot {
-                height: 10em;
+                height: 12em;
                 width: 12em;
                 border: 2px solid #666666;
                 background-color: #ccc;
@@ -372,6 +372,7 @@
                     var divSlot = null;
                     var dragableSlot = null;
                     var htmlStr = "";
+                    var pluginAlias = "";
 
                     divSlots.innerHTML = "";
                     for(index = 0; index < rsp.slots.length; ++index) {
@@ -406,10 +407,17 @@
 
                         if (0 == rsp.slots[index].name.length) {
                             dragableSlot.setAttribute("id", "A" + index);
-                            dragableSlot.innerHTML = "-<br />UID -";
+                            dragableSlot.innerHTML = "-<br />UID -<br />Alias -";
                         } else {
+
+                            if (0 === rsp.slots[index].alias.length) {
+                                pluginAlias = "-";
+                            } else {
+                                pluginAlias = rsp.slots[index].alias;
+                            }
+
                             dragableSlot.setAttribute("id", rsp.slots[index].uid);
-                            dragableSlot.innerHTML = rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid;
+                            dragableSlot.innerHTML = rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid + "<br />Alias " + pluginAlias;
                         }
                         divSlot.appendChild(dragableSlot);
                     }
