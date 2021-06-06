@@ -87,6 +87,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         /* Provides for every slot:
          * - Name of plugin.
          * - Plugin UID.
+         * - Plugin alias name.
          * - Information about whether the slot is locked or not.
          * - Slot duration in ms.
          */
@@ -95,6 +96,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
             const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
             uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
+            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
             bool                isLocked    = displayMgr.isSlotLocked(slotId);
             uint32_t            duration    = displayMgr.getSlotDuration(slotId);
 
@@ -104,6 +106,10 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             rsp += "\"";
             rsp += DELIMITER;
             rsp += uid;
+            rsp += DELIMITER;
+            rsp += "\"";
+            rsp += alias;
+            rsp += "\"";
             rsp += DELIMITER;
             rsp += (false == isLocked) ? "0" : "1";
             rsp += DELIMITER;
