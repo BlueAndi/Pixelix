@@ -117,7 +117,7 @@ void TextWidget::update(YAGfx& gfx)
              * +--------------+--------------+
              * | Static       | Scrolling    | --> Scroll current text out and new one in.
              * +--------------+--------------+
-             * | Scrolling    | Static       | --> Scroll curren text out, new one in and stop scrolling at the end.
+             * | Scrolling    | Static       | --> Scroll current text out, new one in and stop scrolling at the end.
              * +--------------+--------------+
              * | Scrolling    | Scrolling    | --> Continue scrolling and just scroll new one in.
              * +--------------+--------------+
