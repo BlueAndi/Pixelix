@@ -152,7 +152,13 @@ void TextWidget::update(YAGfx& gfx)
                     /* The next text shall scroll in. */
                     m_scrollInfoNew.stopAtDest  = false;
                     m_scrollInfoNew.offsetDest  = 0;
-                    m_scrollInfoNew.offset      = gfx.getWidth();
+                    m_scrollInfoNew.offset      = m_scrollInfo.offset + m_scrollInfo.textWidth + SCROLL_DISTANCE;
+
+                    /* Avoid that the new text is jumping in, instead of scrolling in. */
+                    if (gfx.getWidth() > m_scrollInfoNew.offset)
+                    {
+                        m_scrollInfoNew.offset = gfx.getWidth();
+                    }
 
                     /* Because the scroll timer is stopped, it must be enabled again. */
                     m_scrollTimer.start(0U);
