@@ -73,6 +73,8 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 {
     if (&widget != this)
     {
+        Widget::operator=(widget);
+        
         m_bufferSize    = widget.m_bufferSize;
         m_width         = widget.m_width;
         m_height        = widget.m_height;

@@ -112,6 +112,8 @@ public:
     {
         if (&widget != this)
         {
+            Widget::operator=(widget);
+            
             m_progress  = widget.m_progress;
             m_color     = widget.m_color;
             m_algorithm = widget.m_algorithm;

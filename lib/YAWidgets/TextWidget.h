@@ -153,6 +153,8 @@ public:
     {
         if (&widget != this)
         {
+            Widget::operator=(widget);
+            
             m_formatStr             = widget.m_formatStr;
             m_formatStrNew          = widget.m_formatStrNew;
             m_scrollInfo            = widget.m_scrollInfo;
