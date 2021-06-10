@@ -709,6 +709,47 @@ static bool storeSetting(KeyValue* parameter, const String& value, DynamicJsonDo
             }
             break;
 
+        case KeyValue::TYPE_UINT32:
+            {
+                KeyValueUInt32* kvUInt32    = static_cast<KeyValueUInt32*>(parameter);
+                uint32_t        uint32Value = 0U;
+                bool            convStatus  = Util::strToUInt32(value, uint32Value);
+
+                /* Conversion failed? */
+                if (false == convStatus)
+                {
+                    status = false;
+                    jsonDoc["status"]   = "error";
+                    jsonDoc["error"]    = "Invalid value.";
+                }
+                /* Check for min. and max. length */
+                else if (kvUInt32->getMin() > uint32Value)
+                {
+                    String  errorStr = "Value lower than ";
+                    errorStr += kvUInt32->getMin();
+                    errorStr += ".";
+
+                    status = false;
+                    jsonDoc["status"]   = "error";
+                    jsonDoc["error"]    = errorStr;
+                }
+                else if (kvUInt32->getMax() < uint32Value)
+                {
+                    String  errorStr = "Value greater than ";
+                    errorStr += kvUInt32->getMax();
+                    errorStr += ".";
+
+                    status = false;
+                    jsonDoc["status"]   = "error";
+                    jsonDoc["error"]    = errorStr;
+                }
+                else
+                {
+                    kvUInt32->setValue(uint32Value);
+                }
+            }
+            break;
+
         case KeyValue::TYPE_UNKNOWN:
             /* fallthrough */
         default:
@@ -1251,6 +1292,16 @@ namespace tmpl
                         jsonInput["maxlength"]  = kvJson->getMaxLength();
                     }
                     break;
+
+                case KeyValue::TYPE_UINT32:
+                {
+                    KeyValueUInt32* kvUInt32 = static_cast<KeyValueUInt32*>(parameter);
+                    jsonInput["type"]   = "number";
+                    jsonInput["value"]  = kvUInt32->getValue();
+                    jsonInput["min"]    = kvUInt32->getMin();
+                    jsonInput["max"]    = kvUInt32->getMax();
+                }
+                break;
 
                 default:
                     break;
