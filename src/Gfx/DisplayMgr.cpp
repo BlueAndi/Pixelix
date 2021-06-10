@@ -1095,41 +1095,39 @@ void DisplayMgr::updateTask(void* parameters)
 
         while(false == displayMgr->m_taskExit)
         {
-            uint32_t    timestamp   = 0U;
-            uint32_t    duration    = 0U;
+            uint32_t    timestamp           = millis();
+            uint32_t    duration            = 0U;
+            uint32_t    timestampPhyUpdate  = millis();
+            uint32_t    durationPhyUpdate   = 0U;
             bool        abort       = false;
 
-            /* Observe the display refresh and limit the duration to 70% of refresh period. */
+            /* Observe the physical display refresh and limit the duration to 70% of refresh period. */
             const uint32_t  MAX_LOOP_TIME   = (TASK_PERIOD * 7U) / (10U);
-
-#ifdef ENABLE_STATISTICS
-            uint32_t    timestampBegin  = millis();
-#endif /* ENABLE_STATISTICS */
 
             /* Refresh display content periodically */
             displayMgr->process();
 
 #ifdef ENABLE_STATISTICS
-            statistics.pluginProcessing.update(millis() - timestampBegin);
+            statistics.pluginProcessing.update(millis() - timestamp);
 #endif /* ENABLE_STATISTICS */
 
             /* Wait until the physical update is ready to avoid flickering
              * and artifacts on the display, because of e.g. webserver flash
              * access.
              */
-            timestamp = millis();
+            timestampPhyUpdate = millis();
             while((false == Display::getInstance().isReady()) && (false == abort))
             {
-                duration = millis() - timestamp;
+                durationPhyUpdate = millis() - timestampPhyUpdate;
 
-                if (MAX_LOOP_TIME <= duration)
+                if (MAX_LOOP_TIME <= durationPhyUpdate)
                 {
                     abort = true;
                 }
             }
 
 #ifdef ENABLE_STATISTICS
-            statistics.displayUpdate.update(duration);
+            statistics.displayUpdate.update(durationPhyUpdate);
             statistics.total.update(statistics.pluginProcessing.getCurrent() + statistics.displayUpdate.getCurrent());
 
             if (true == statisticsLogTimer.isTimeout())
@@ -1162,7 +1160,18 @@ void DisplayMgr::updateTask(void* parameters)
             }
 #endif /* ENABLE_STATISTICS */
 
-            delay(TASK_PERIOD - duration);
+            /* Calculate overall duration */
+            duration = millis() - timestamp;
+
+            /* Give other tasks a chance. */
+            if (TASK_PERIOD <= duration)
+            {
+                delay(1U);
+            }
+            else
+            {
+                delay(TASK_PERIOD - duration);
+            }
 
 #ifdef ENABLE_STATISTICS
             statistics.refreshPeriod.update(millis() - timestampLastUpdate);
