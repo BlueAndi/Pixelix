@@ -330,7 +330,8 @@ public:
     }
 
     /**
-     * Draw bitmap buffer.
+     * Draw bitmap buffer. It assumes that the pixel position in the buffer
+     * follows this algorithm: position in buffer = x + y * width
      *
      * @param[in] x         x-coordinate of upper left point
      * @param[in] y         y-coordinate of upper left point
@@ -338,7 +339,7 @@ public:
      * @param[in] width     Bitmap width in pixel
      * @param[in] height    Bitmap height in pixel
      */
-    void drawRGBBitmap(int16_t x, int16_t y, const TColor* bitmap, uint16_t width, uint16_t height)
+    void drawBitmap(int16_t x, int16_t y, const TColor* bitmap, uint16_t width, uint16_t height)
     {
         int16_t xIndex = 0;
         int16_t yIndex = 0;

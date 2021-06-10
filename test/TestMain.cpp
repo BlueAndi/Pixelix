@@ -926,7 +926,7 @@ static void testGfx()
         }
     }
 
-    testGfx.drawRGBBitmap(0, 0, bitmap, TestGfx::WIDTH, TestGfx::HEIGHT);
+    testGfx.drawBitmap(0, 0, bitmap, TestGfx::WIDTH, TestGfx::HEIGHT);
 
     for(height = 0U; height < TestGfx::HEIGHT; ++height)
     {

@@ -138,7 +138,7 @@ public:
     {
         if (nullptr != m_buffer)
         {
-            gfx.drawRGBBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
+            gfx.drawBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
         }
 
         return;
