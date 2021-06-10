@@ -68,6 +68,7 @@ struct Statistics
     StatisticValue<uint32_t, 0U, 10U>   pluginProcessing;
     StatisticValue<uint32_t, 0U, 10U>   displayUpdate;
     StatisticValue<uint32_t, 0U, 10U>   total;
+    StatisticValue<uint32_t, 0U, 10U>   refreshPeriod;
 };
 
 #endif /* ENABLE_STATISTICS */
@@ -1085,6 +1086,7 @@ void DisplayMgr::updateTask(void* parameters)
         Statistics      statistics;
         SimpleTimer     statisticsLogTimer;
         const uint32_t  STATISTICS_LOG_PERIOD   = 4000U;    /* [ms] */
+        uint32_t        timestampLastUpdate     = millis();
 
         statisticsLogTimer.start(STATISTICS_LOG_PERIOD);
 
@@ -1135,6 +1137,12 @@ void DisplayMgr::updateTask(void* parameters)
 
             if (true == statisticsLogTimer.isTimeout())
             {
+                LOG_INFO("[ %2u, %2u, %2u ]", 
+                    statistics.refreshPeriod.getMin(),
+                    statistics.refreshPeriod.getAvg(),
+                    statistics.refreshPeriod.getMax()
+                );
+                
                 LOG_INFO("[ %2u, %2u, %2u ] [ %2u, %2u, %2u ] [ %2u, %2u, %2u ]",
                     statistics.pluginProcessing.getMin(),
                     statistics.pluginProcessing.getAvg(),
@@ -1151,12 +1159,18 @@ void DisplayMgr::updateTask(void* parameters)
                 statistics.pluginProcessing.reset();
                 statistics.displayUpdate.reset();
                 statistics.total.reset();
+                statistics.refreshPeriod.reset();
 
                 statisticsLogTimer.restart();
             }
 #endif /* ENABLE_STATISTICS */
 
             delay(TASK_PERIOD - duration);
+
+#ifdef ENABLE_STATISTICS
+            statistics.refreshPeriod.update(millis() - timestampLastUpdate);
+            timestampLastUpdate = millis();
+#endif /* ENABLE_STATISTICS */
         }
 
         (void)xSemaphoreGive(displayMgr->m_xSemaphore);
