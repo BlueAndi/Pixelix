@@ -68,7 +68,8 @@ public:
         TYPE_STRING,        /**< String type */
         TYPE_BOOL,          /**< bool type */
         TYPE_INT32,         /**< int32_t type */
-        TYPE_JSON           /**< JSON type */
+        TYPE_JSON,          /**< JSON type */
+        TYPE_UINT32         /**< uint32_t type */
     };
 
     /**

@@ -42,6 +42,10 @@
 #include <ArduinoJson.h>
 #include <Util.h>
 
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+#include <StatisticValue.hpp>
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -53,6 +57,21 @@
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
+
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+
+/**
+ * A collection of statistics, which are interesting for debugging purposes.
+ */
+struct Statistics
+{
+    StatisticValue<uint32_t, 0U, 10U>   pluginProcessing;
+    StatisticValue<uint32_t, 0U, 10U>   displayUpdate;
+    StatisticValue<uint32_t, 0U, 10U>   total;
+    StatisticValue<uint32_t, 0U, 10U>   refreshPeriod;
+};
+
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
 /******************************************************************************
  * Prototypes
@@ -1063,13 +1082,25 @@ void DisplayMgr::updateTask(void* parameters)
     if ((nullptr != displayMgr) &&
         (nullptr != displayMgr->m_xSemaphore))
     {
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+        Statistics      statistics;
+        SimpleTimer     statisticsLogTimer;
+        const uint32_t  STATISTICS_LOG_PERIOD   = 4000U;    /* [ms] */
+        uint32_t        timestampLastUpdate     = millis();
+
+        statisticsLogTimer.start(STATISTICS_LOG_PERIOD);
+
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
+
         (void)xSemaphoreTake(displayMgr->m_xSemaphore, portMAX_DELAY);
 
         while(false == displayMgr->m_taskExit)
         {
-            uint32_t    timestamp   = 0U;
-            uint32_t    duration    = 0U;
-            bool        abort       = false;
+            uint32_t    timestamp           = millis();
+            uint32_t    duration            = 0U;
+            uint32_t    timestampPhyUpdate  = millis();
+            uint32_t    durationPhyUpdate   = 0U;
+            bool        abort               = false;
 
             /* Max. time needed to load the data into the pixels.
              * Only a 1 ms tolerance is added, which should be enough.
@@ -1079,22 +1110,76 @@ void DisplayMgr::updateTask(void* parameters)
             /* Refresh display content periodically */
             displayMgr->process();
 
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+            statistics.pluginProcessing.update(millis() - timestamp);
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
+
             /* Wait until the physical update is ready to avoid flickering
              * and artifacts on the display, because of e.g. webserver flash
              * access.
              */
-            timestamp = millis();
+            timestampPhyUpdate = millis();
             while((false == LedMatrix::getInstance().isReady()) && (false == abort))
             {
-                duration = millis() - timestamp;
+                durationPhyUpdate = millis() - timestampPhyUpdate;
 
-                if (MAX_LOOP_TIME <= duration)
+                if (MAX_LOOP_TIME <= durationPhyUpdate)
                 {
                     abort = true;
                 }
             }
 
-            delay(TASK_PERIOD - duration);
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+            statistics.displayUpdate.update(durationPhyUpdate);
+            statistics.total.update(statistics.pluginProcessing.getCurrent() + statistics.displayUpdate.getCurrent());
+
+            if (true == statisticsLogTimer.isTimeout())
+            {
+                LOG_INFO("[ %2u, %2u, %2u ]", 
+                    statistics.refreshPeriod.getMin(),
+                    statistics.refreshPeriod.getAvg(),
+                    statistics.refreshPeriod.getMax()
+                );
+                
+                LOG_INFO("[ %2u, %2u, %2u ] [ %2u, %2u, %2u ] [ %2u, %2u, %2u ]",
+                    statistics.pluginProcessing.getMin(),
+                    statistics.pluginProcessing.getAvg(),
+                    statistics.pluginProcessing.getMax(),
+                    statistics.displayUpdate.getMin(),
+                    statistics.displayUpdate.getAvg(),
+                    statistics.displayUpdate.getMax(),
+                    statistics.total.getMin(),
+                    statistics.total.getAvg(),
+                    statistics.total.getMax()
+                );
+
+                /* Reset the statistics to get a new min./max. determination. */
+                statistics.pluginProcessing.reset();
+                statistics.displayUpdate.reset();
+                statistics.total.reset();
+                statistics.refreshPeriod.reset();
+
+                statisticsLogTimer.restart();
+            }
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
+
+            /* Calculate overall duration */
+            duration = millis() - timestamp;
+
+            /* Give other tasks a chance. */
+            if (TASK_PERIOD <= duration)
+            {
+                delay(1U);
+            }
+            else
+            {
+                delay(TASK_PERIOD - duration);
+            }
+
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
+            statistics.refreshPeriod.update(millis() - timestampLastUpdate);
+            timestampLastUpdate = millis();
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
         }
 
         (void)xSemaphoreGive(displayMgr->m_xSemaphore);
