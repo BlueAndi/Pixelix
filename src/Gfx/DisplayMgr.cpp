@@ -41,6 +41,10 @@
 #include <ArduinoJson.h>
 #include <Util.h>
 
+#ifdef ENABLE_STATISTICS
+#include <StatisticValue.hpp>
+#endif /* ENABLE_STATISTICS */
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -52,6 +56,21 @@
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
+
+#ifdef ENABLE_STATISTICS
+
+/**
+ * A collection of statistics, which are interesting for debugging purposes.
+ */
+struct Statistics
+{
+    StatisticValue<uint32_t, 0U, 10U>   pluginProcessing;
+    StatisticValue<uint32_t, 0U, 10U>   displayUpdate;
+    StatisticValue<uint32_t, 0U, 10U>   total;
+    StatisticValue<uint32_t, 0U, 10U>   refreshPeriod;
+};
+
+#endif /* ENABLE_STATISTICS */
 
 /******************************************************************************
  * Prototypes
@@ -1062,6 +1081,16 @@ void DisplayMgr::updateTask(void* parameters)
     if ((nullptr != displayMgr) &&
         (nullptr != displayMgr->m_xSemaphore))
     {
+#ifdef ENABLE_STATISTICS
+        Statistics      statistics;
+        SimpleTimer     statisticsLogTimer;
+        const uint32_t  STATISTICS_LOG_PERIOD   = 4000U;    /* [ms] */
+        uint32_t        timestampLastUpdate     = millis();
+
+        statisticsLogTimer.start(STATISTICS_LOG_PERIOD);
+
+#endif /* ENABLE_STATISTICS */
+
         (void)xSemaphoreTake(displayMgr->m_xSemaphore, portMAX_DELAY);
 
         while(false == displayMgr->m_taskExit)
@@ -1073,8 +1102,16 @@ void DisplayMgr::updateTask(void* parameters)
             /* Observe the display refresh and limit the duration to 70% of refresh period. */
             const uint32_t  MAX_LOOP_TIME   = (TASK_PERIOD * 7U) / (10U);
 
+#ifdef ENABLE_STATISTICS
+            uint32_t    timestampBegin  = millis();
+#endif /* ENABLE_STATISTICS */
+
             /* Refresh display content periodically */
             displayMgr->process();
+
+#ifdef ENABLE_STATISTICS
+            statistics.pluginProcessing.update(millis() - timestampBegin);
+#endif /* ENABLE_STATISTICS */
 
             /* Wait until the physical update is ready to avoid flickering
              * and artifacts on the display, because of e.g. webserver flash
@@ -1091,7 +1128,46 @@ void DisplayMgr::updateTask(void* parameters)
                 }
             }
 
+#ifdef ENABLE_STATISTICS
+            statistics.displayUpdate.update(duration);
+            statistics.total.update(statistics.pluginProcessing.getCurrent() + statistics.displayUpdate.getCurrent());
+
+            if (true == statisticsLogTimer.isTimeout())
+            {
+                LOG_INFO("[ %2u, %2u, %2u ]", 
+                    statistics.refreshPeriod.getMin(),
+                    statistics.refreshPeriod.getAvg(),
+                    statistics.refreshPeriod.getMax()
+                );
+                
+                LOG_INFO("[ %2u, %2u, %2u ] [ %2u, %2u, %2u ] [ %2u, %2u, %2u ]",
+                    statistics.pluginProcessing.getMin(),
+                    statistics.pluginProcessing.getAvg(),
+                    statistics.pluginProcessing.getMax(),
+                    statistics.displayUpdate.getMin(),
+                    statistics.displayUpdate.getAvg(),
+                    statistics.displayUpdate.getMax(),
+                    statistics.total.getMin(),
+                    statistics.total.getAvg(),
+                    statistics.total.getMax()
+                );
+
+                /* Reset the statistics to get a new min./max. determination. */
+                statistics.pluginProcessing.reset();
+                statistics.displayUpdate.reset();
+                statistics.total.reset();
+                statistics.refreshPeriod.reset();
+
+                statisticsLogTimer.restart();
+            }
+#endif /* ENABLE_STATISTICS */
+
             delay(TASK_PERIOD - duration);
+
+#ifdef ENABLE_STATISTICS
+            statistics.refreshPeriod.update(millis() - timestampLastUpdate);
+            timestampLastUpdate = millis();
+#endif /* ENABLE_STATISTICS */
         }
 
         (void)xSemaphoreGive(displayMgr->m_xSemaphore);
