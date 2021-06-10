@@ -28,6 +28,7 @@
 * [Software update](SW-UPDATE.md)
 * [Software configuration management](SW-RELEASE.md)
 * [Plugins](PLUGINS.md)
+* [Plugin Development](PLUGIN-DEV.md)
 * [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix)
 * [Websocket API description](WEBSOCKET.md)
 
