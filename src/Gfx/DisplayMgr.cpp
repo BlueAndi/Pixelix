@@ -42,9 +42,9 @@
 #include <ArduinoJson.h>
 #include <Util.h>
 
-#ifdef ENABLE_STATISTICS
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 #include <StatisticValue.hpp>
-#endif /* ENABLE_STATISTICS */
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
 /******************************************************************************
  * Compiler Switches
@@ -58,7 +58,7 @@
  * Types and classes
  *****************************************************************************/
 
-#ifdef ENABLE_STATISTICS
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 
 /**
  * A collection of statistics, which are interesting for debugging purposes.
@@ -71,7 +71,7 @@ struct Statistics
     StatisticValue<uint32_t, 0U, 10U>   refreshPeriod;
 };
 
-#endif /* ENABLE_STATISTICS */
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
 /******************************************************************************
  * Prototypes
@@ -1082,7 +1082,7 @@ void DisplayMgr::updateTask(void* parameters)
     if ((nullptr != displayMgr) &&
         (nullptr != displayMgr->m_xSemaphore))
     {
-#ifdef ENABLE_STATISTICS
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
         Statistics      statistics;
         SimpleTimer     statisticsLogTimer;
         const uint32_t  STATISTICS_LOG_PERIOD   = 4000U;    /* [ms] */
@@ -1090,7 +1090,7 @@ void DisplayMgr::updateTask(void* parameters)
 
         statisticsLogTimer.start(STATISTICS_LOG_PERIOD);
 
-#endif /* ENABLE_STATISTICS */
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
         (void)xSemaphoreTake(displayMgr->m_xSemaphore, portMAX_DELAY);
 
@@ -1110,9 +1110,9 @@ void DisplayMgr::updateTask(void* parameters)
             /* Refresh display content periodically */
             displayMgr->process();
 
-#ifdef ENABLE_STATISTICS
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
             statistics.pluginProcessing.update(millis() - timestamp);
-#endif /* ENABLE_STATISTICS */
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
             /* Wait until the physical update is ready to avoid flickering
              * and artifacts on the display, because of e.g. webserver flash
@@ -1129,7 +1129,7 @@ void DisplayMgr::updateTask(void* parameters)
                 }
             }
 
-#ifdef ENABLE_STATISTICS
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
             statistics.displayUpdate.update(durationPhyUpdate);
             statistics.total.update(statistics.pluginProcessing.getCurrent() + statistics.displayUpdate.getCurrent());
 
@@ -1161,7 +1161,7 @@ void DisplayMgr::updateTask(void* parameters)
 
                 statisticsLogTimer.restart();
             }
-#endif /* ENABLE_STATISTICS */
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
             /* Calculate overall duration */
             duration = millis() - timestamp;
@@ -1176,10 +1176,10 @@ void DisplayMgr::updateTask(void* parameters)
                 delay(TASK_PERIOD - duration);
             }
 
-#ifdef ENABLE_STATISTICS
+#if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
             statistics.refreshPeriod.update(millis() - timestampLastUpdate);
             timestampLastUpdate = millis();
-#endif /* ENABLE_STATISTICS */
+#endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
         }
 
         (void)xSemaphoreGive(displayMgr->m_xSemaphore);
