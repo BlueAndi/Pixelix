@@ -1574,6 +1574,8 @@ static void testProgressBar()
     TestGfx     testGfx;
     ProgressBar progressBar;
     const char* WIDGET_NAME = "progressBarName";
+    int16_t     posX        = 2;
+    int16_t     posY        = 2;
 
     /* Verify widget type name */
     TEST_ASSERT_EQUAL_STRING(ProgressBar::WIDGET_TYPE, progressBar.getType());
@@ -1613,6 +1615,16 @@ static void testProgressBar()
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::RED));
 
+    /* Clear display */
+    testGfx.fill(ColorDef::BLACK);
+
+    /* Widget must be moveable */
+    progressBar.move(posX, posY);
+    progressBar.setProgress(100U);
+    progressBar.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(posX, posY, testGfx.getWidth() - posX, testGfx.getHeight() - posY, ColorDef::RED));
+    progressBar.move(0, 0);
+
     /* Test algorithm: progress pixel wise */
     progressBar.setAlgo(ProgressBar::ALGORITHM_PIXEL_WISE);
 
@@ -1635,6 +1647,16 @@ static void testProgressBar()
     progressBar.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, testGfx.getWidth(), testGfx.getHeight(), ColorDef::RED));
 
+    /* Clear display */
+    testGfx.fill(ColorDef::BLACK);
+
+    /* Widget must be moveable */
+    progressBar.move(posX, posY);
+    progressBar.setProgress(100U);
+    progressBar.update(testGfx);
+    TEST_ASSERT_TRUE(testGfx.verify(posX, posY, testGfx.getWidth() - posX, testGfx.getHeight() - posY, ColorDef::RED));
+    progressBar.move(0, 0);
+    
     return;
 }
 
