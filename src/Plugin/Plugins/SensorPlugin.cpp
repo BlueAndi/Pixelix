@@ -308,7 +308,12 @@ void SensorPlugin::update()
     }
     else
     {
-        text  = m_sensorChannel->getValueAsString(PRECISION);
+        /* If text is updated and keeps static shown (no scrolling), right
+         * aligned looks better, because the unit stays at the same
+         * position and only the number seems to be updated.
+         */
+        text  = "\\ralign";
+        text += m_sensorChannel->getValueAsString(PRECISION);
         text += " ";
         text += ISensorChannel::channelTypeToUnit(m_sensorChannel->getType());
     }
