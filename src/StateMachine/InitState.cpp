@@ -198,7 +198,10 @@ void InitState::entry(StateMachine& sm)
 
             /* Set text scroll pause for all text widgets. */
             uint32_t scrollPause = settings->getScrollPause().getValue();
-            TextWidget::setScrollPause(scrollPause);
+            if (false == TextWidget::setScrollPause(scrollPause))
+            {
+                LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
+            }
 
             settings->close();
         }

@@ -82,7 +82,7 @@ public:
      */
     Type getValueType() const final
     {
-        return TYPE_INT32;
+        return TYPE_UINT32;
     }
 
     /**
