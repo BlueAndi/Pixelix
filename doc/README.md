@@ -6,7 +6,7 @@
 - [PIXELIX](#pixelix)
 - [Documentation](#documentation)
   - [Requirements](#requirements)
-  - [Electronic](#electronic)
+  - [Hardware](#hardware)
   - [Software](#software)
   - [Structure](#structure)
 
@@ -16,10 +16,10 @@
 
 * [Requirements](REQUIREMENTS.md)
 
-## Electronic
+## Hardware
 
-* [Detail](ELECTRONIC.md)
-* [Bill of material](BOM.md)
+* [Boards](BOARDS.md)
+* [Sensors](SENSORS.md)
 
 ## Software
 
