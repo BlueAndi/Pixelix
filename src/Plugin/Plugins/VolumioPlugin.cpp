@@ -123,7 +123,6 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-
 void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
     lock();
@@ -134,10 +133,23 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
 
         if (nullptr != m_iconCanvas)
         {
-            (void)m_iconCanvas->addWidget(m_bitmapWidget);
+            (void)m_iconCanvas->addWidget(m_stdIconWidget);
+            (void)m_iconCanvas->addWidget(m_stopIconWidget);
+            (void)m_iconCanvas->addWidget(m_playIconWidget);
+            (void)m_iconCanvas->addWidget(m_pauseIconWidget);
 
-            /* Load icon from filesystem. */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            /* Load all icons from filesystem now, to prevent filesystem
+             * access during active/inactive/update methods.
+             */
+            (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            (void)m_stopIconWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
+            (void)m_playIconWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
+            (void)m_pauseIconWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
+
+            /* Disable all, except the standard icon. */
+            m_stopIconWidget.disable();
+            m_playIconWidget.disable();
+            m_pauseIconWidget.disable();
         }
     }
 
@@ -166,7 +178,7 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
     if (false == startHttpRequest())
     {
         /* If a request fails, show standard icon and a '?' */
-        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+        changeState(STATE_UNKNOWN);
         m_textWidget.setFormatStr("\\calign?");
 
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -224,7 +236,7 @@ void VolumioPlugin::process()
         if (false == startHttpRequest())
         {
             /* If a request fails, show standard icon and a '?' */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            changeState(STATE_UNKNOWN);
             m_textWidget.setFormatStr("\\calign?");
 
             m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -308,6 +320,57 @@ void VolumioPlugin::setHost(const String& host)
  * Private Methods
  *****************************************************************************/
 
+void VolumioPlugin::changeState(VolumioState state)
+{
+    /* Disable current icon */
+    switch(m_state)
+    {
+    case STATE_UNKNOWN:
+        m_stdIconWidget.disable();
+        break;
+
+    case STATE_STOP:
+        m_stopIconWidget.disable();
+        break;
+
+    case STATE_PLAY:
+        m_playIconWidget.disable();
+        break;
+
+    case STATE_PAUSE:
+        m_pauseIconWidget.disable();
+        break;
+
+    default:
+        break;
+    }
+
+    /* Enable new icon */
+    switch(state)
+    {
+    case STATE_UNKNOWN:
+        m_stdIconWidget.enable();
+        break;
+
+    case STATE_STOP:
+        m_stopIconWidget.enable();
+        break;
+
+    case STATE_PLAY:
+        m_playIconWidget.enable();
+        break;
+
+    case STATE_PAUSE:
+        m_pauseIconWidget.enable();
+        break;
+        
+    default:
+        break;
+    }
+
+    m_state = state;
+}
+
 bool VolumioPlugin::startHttpRequest()
 {
     bool status = false;
@@ -381,13 +444,14 @@ void VolumioPlugin::initHttpClient()
             }
             else
             {
-                String      status          = jsonDoc["status"].as<String>();
-                String      artist;
-                String      title           = jsonDoc["title"].as<String>();
-                uint32_t    seekValue       = jsonDoc["seek"].as<uint32_t>();
-                String      service         = jsonDoc["service"].as<String>();
-                String      infoOnDisplay;
-                uint32_t    pos             = 0U;
+                String          status          = jsonDoc["status"].as<String>();
+                String          artist;
+                String          title           = jsonDoc["title"].as<String>();
+                uint32_t        seekValue       = jsonDoc["seek"].as<uint32_t>();
+                String          service         = jsonDoc["service"].as<String>();
+                String          infoOnDisplay;
+                uint32_t        pos             = 0U;
+                VolumioState    state           = STATE_UNKNOWN;
 
                 /* Artist may exist */
                 if (true == jsonDoc["artist"].is<String>())
@@ -465,21 +529,22 @@ void VolumioPlugin::initHttpClient()
 
                 if (status == "stop")
                 {
-                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
+                    state = STATE_STOP;
                 }
                 else if (status == "play")
                 {
-                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
+                    state = STATE_PLAY;
                 }
                 else if (status == "pause")
                 {
-                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
+                    state = STATE_PAUSE;
                 }
                 else
                 {
-                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                    state = STATE_UNKNOWN;
                 }
 
+                changeState(state);
                 m_textWidget.setFormatStr(infoOnDisplay);
 
                 m_pos = static_cast<uint8_t>(pos);
@@ -506,7 +571,7 @@ void VolumioPlugin::initHttpClient()
         if (true == m_isConnectionError)
         {
             /* If a request fails, show standard icon and a '?' */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            changeState(STATE_UNKNOWN);
             m_textWidget.setFormatStr("\\calign?");
 
             m_requestTimer.start(UPDATE_PERIOD_SHORT);

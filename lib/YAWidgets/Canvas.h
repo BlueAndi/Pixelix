@@ -149,54 +149,6 @@ public:
     }
 
     /**
-     * Update/Draw the widgets in the canvas with the
-     * given graphics interface.
-     *
-     * @param[in] gfx   Graphics interface
-     */
-    void update(YAGfx& gfx) override
-    {
-        DLinkedListIterator<Widget*> it(m_widgets);
-
-        /* Walk through all widgets and draw them in the priority as
-         * they were added.
-         */
-        if (true == it.first())
-        {
-            /* If canvas is not buffered, draw directly on the underlying canvas. */
-            if (nullptr == m_buffer)
-            {
-                m_gfx = &gfx;
-            }
-
-            do
-            {
-                (*it.current())->update(*this);
-            }
-            while(true == it.next());
-
-            m_gfx = nullptr;
-        }
-
-        /* In a buffered canvas, only the buffer into the underlying canvas. */
-        if (nullptr != m_buffer)
-        {
-            int16_t x = 0;
-            int16_t y = 0;
-
-            for(y = 0; y < getHeight(); ++y)
-            {
-                for(x = 0; x < getWidth(); ++x)
-                {
-                    gfx.drawPixel(x, y, m_buffer[x + y * getWidth()]);
-                }
-            }
-        }
-
-        return;
-    }
-
-    /**
      * Update from the canvas buffer with the given graphics interface.
      * Note, only useable in case the canvas is buffered.
      *
@@ -293,6 +245,53 @@ private:
 
     Canvas(const Canvas& canvas);
     Canvas& operator=(const Canvas& canvas);
+
+    /**
+     * Paint the widget with the given graphics interface.
+     * 
+     * @param[in] gfx   Graphics interface
+     */
+    void paint(YAGfx& gfx) override
+    {
+        DLinkedListIterator<Widget*> it(m_widgets);
+
+        /* Walk through all widgets and draw them in the priority as
+         * they were added.
+         */
+        if (true == it.first())
+        {
+            /* If canvas is not buffered, draw directly on the underlying canvas. */
+            if (nullptr == m_buffer)
+            {
+                m_gfx = &gfx;
+            }
+
+            do
+            {
+                (*it.current())->update(*this);
+            }
+            while(true == it.next());
+
+            m_gfx = nullptr;
+        }
+
+        /* In a buffered canvas, only the buffer into the underlying canvas. */
+        if (nullptr != m_buffer)
+        {
+            int16_t x = 0;
+            int16_t y = 0;
+
+            for(y = 0; y < getHeight(); ++y)
+            {
+                for(x = 0; x < getWidth(); ++x)
+                {
+                    gfx.drawPixel(x, y, m_buffer[x + y * getWidth()]);
+                }
+            }
+        }
+
+        return;
+    }
 
     /**
      * Draw a single pixel in the matrix and ensure that the drawing borders

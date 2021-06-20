@@ -133,25 +133,6 @@ public:
     }
 
     /**
-     * Update/Draw the lamp widget with the given graphics interface.
-     *
-     * @param[in] gfx Graphics interface.
-     */
-    void update(YAGfx& gfx) override
-    {
-        Color color = m_colorOn;
-
-        if (false == m_isOn)
-        {
-            color = m_colorOff;
-        }
-
-        gfx.fillRect(m_posX, m_posY, m_width, HEIGHT, color);
-
-        return;
-    }
-
-    /**
      * Set the on state.
      *
      * @param[in] state On state
@@ -254,6 +235,25 @@ private:
     Color       m_colorOff; /**< Lamp color in off state */
     Color       m_colorOn;  /**< Lamp color in on state */
     uint16_t    m_width;    /**< Lamp width in pixel */
+
+    /**
+     * Paint the widget with the given graphics interface.
+     * 
+     * @param[in] gfx   Graphics interface
+     */
+    void paint(YAGfx& gfx) override
+    {
+        Color color = m_colorOn;
+
+        if (false == m_isOn)
+        {
+            color = m_colorOff;
+        }
+
+        gfx.fillRect(m_posX, m_posY, m_width, HEIGHT, color);
+
+        return;
+    }
 
 };
 

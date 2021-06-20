@@ -123,13 +123,6 @@ public:
     }
 
     /**
-     * Update/Draw the progress bar widget.
-     * 
-     * @param[in] gfx Graphics interface
-     */
-    void update(YAGfx& gfx) override;
-
-    /**
      * Set progress in % [0; 100].
      * 
      * @param[in] progress  Progress as number from 0 to 100.
@@ -183,6 +176,13 @@ private:
     Color       m_color;        /**< Color of the progress bar */
     Algorithm   m_algorithm;    /**< Choosen algorithm */
 
+    /**
+     * Paint the widget with the given graphics interface.
+     * 
+     * @param[in] gfx   Graphics interface
+     */
+    void paint(YAGfx& gfx) override;
+    
     /**
      * Fill the display pixel wise depended on current progress.
      * 

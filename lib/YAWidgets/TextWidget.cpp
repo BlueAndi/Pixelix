@@ -79,7 +79,15 @@ uint32_t                    TextWidget::m_scrollPause       = TextWidget::DEFAUL
  * Public Methods
  *****************************************************************************/
 
-void TextWidget::update(YAGfx& gfx)
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void TextWidget::paint(YAGfx& gfx)
 {
     int16_t         cursorY         = m_posY + m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
     const uint16_t  SCROLL_DISTANCE = gfx.getWidth() / 2U; /* Distance in pixel after a scrolling text starts to repeat. */
@@ -296,14 +304,6 @@ void TextWidget::update(YAGfx& gfx)
 
     return;
 }
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
 
 String TextWidget::removeFormatTags(const String& formatStr) const
 {

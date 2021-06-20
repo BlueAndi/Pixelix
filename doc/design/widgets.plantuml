@@ -12,7 +12,7 @@ end note
 class YAGfx
 
 class Canvas {
-    - m_gfx : IGfx&
+    - m_gfx : YAGfx&
     - m_widgets : LinkedList<Widget*>
     + Canvas(width : uint16_t, height : uint16_t, x : uint16_t, y : uint16_t)
     + addWidget(widget : Widget&) : bool
@@ -42,13 +42,15 @@ class Widget {
     - m_posX : uint16_t
     - m_posY : uint16_t
     - m_name : const char*
+    - m_isEnabled : bool
     + move(x : uint16_t, y : uint16_t) : void
     + getPos(x : uint16_t&, y : uint16_t&) const : void
-    + {abstract} update(gfx : YAGfx&) = 0 : void
+    + update(gfx : YAGfx&) : void
     + getType() : const char*
     + getName() : const char*
     + setName(name : const char*) : void
     + find(name : const char*) : Widget*
+    # {abstract} paint(gfx : YAGfx&) = 0 : void
 }
 
 note left of Widget
@@ -60,13 +62,16 @@ end note
 class TextWidget {
     - m_str : String
     - m_textColor : uint16_t
-    + setStr(str : const String&) : void
+    + setFormatStr(str : const String&) : void
+    + getFormatStr() : String
     + getStr() : String
     + setTextColor(color : uint16_t) : void
     + getTextColor() const : uint16_t
     + setFont(font : const GFXfont*) : void
-    + const GFXfont* getFont() : void
-    + update(gfx : IGfx&) : void
+    + getFont() : const GFXfont*
+    + {static} setScrollPause(pause : uint32_t) : bool
+    + getScrollInfo(isScrollingEnabled : bool&, scrollingCnt : uint32_t&) : bool
+    # paint(gfx : YAGfx&) : void
 }
 
 Widget <|-- TextWidget
@@ -75,8 +80,10 @@ class BitmapWidget {
     - m_buffer : uint16_t*
     - m_width : uint16_t
     - m_height : uint16_t
-    + BitmapWidget(buffer : const uint16_t[])
-    + update(gfx : IGfx&) : void
+    + set(bitmap : const Color*, width : uint16_t, height : uint16_t)
+    + get(width : uint16_t&, height: uint16_t&) : const Color*
+    + load(fs : FS&, filename : const String&) : bool
+    # paint(gfx : YAGfx&) : void
 }
 
 Widget <|-- BitmapWidget
@@ -85,7 +92,16 @@ class LampWidget {
     - m_isOn : bool
     - m_colorOff : uint16_t
     - m_colorOn : uint16_t
-    + update(gfx : IGfx&) : void
+    - m_width : uint16_t
+    + setOnState(state : bool) : void
+    + getOnState() const : bool
+    + setColorOff(color : const Color&) : void
+    + getColorOff() : const Color&
+    + setColorOn(color : const Color&) : void
+    + getColorOn() : const Color&
+    + setWidth(width : uint16_t) : void
+    + getWidth() const : uin16_t
+    # paint(gfx : YAGfx&) : void
 }
 
 Widget <|-- LampWidget

@@ -82,10 +82,11 @@ public:
     {
         if (&widget != this)
         {
-            m_type = widget.m_type;
-            m_posX = widget.m_posX;
-            m_posY = widget.m_posY;
+            m_type      = widget.m_type;
+            m_posX      = widget.m_posX;
+            m_posY      = widget.m_posY;
             /* m_name is not assigned! */
+            m_isEnabled = widget.m_isEnabled;
         }
 
         return *this;
@@ -123,7 +124,15 @@ public:
      * 
      * @param[in] gfx   Graphics interface
      */
-    virtual void update(YAGfx& gfx) = 0;
+    void update(YAGfx& gfx)
+    {
+        if (true == m_isEnabled)
+        {
+            paint(gfx);
+        }
+
+        return;
+    }
 
     /**
      * Get widget type as string.
@@ -158,6 +167,36 @@ public:
     }
 
     /**
+     * Is widget enabled?
+     * 
+     * @return If widget is enabled, it will return true otherwise false.
+     */
+    bool isEnabled() const
+    {
+        return m_isEnabled;
+    }
+
+    /**
+     * Enable widget.
+     * If the widget is enabled, it will be drawn.
+     */
+    void enable()
+    {
+        m_isEnabled = true;
+        return;
+    }
+
+    /**
+     * Disable widget.
+     * If the widget is disabled, it won't be drawn.
+     */
+    void disable()
+    {
+        m_isEnabled = false;
+        return;
+    }
+
+    /**
      * Find widget by its name.
      * Note, it must be overriden by the inherited widget, if it is like a
      * container of widgets.
@@ -180,10 +219,11 @@ public:
 
 protected:
 
-    const char* m_type; /**< Widget type string */
-    int16_t     m_posX; /**< Upper left corner (x-coordinate) of the widget in a canvas. */
-    int16_t     m_posY; /**< Upper left corner (y-coordinate) of the widget in a canvas. */
-    String      m_name; /**< Widget name for identification. */
+    const char* m_type;         /**< Widget type string */
+    int16_t     m_posX;         /**< Upper left corner (x-coordinate) of the widget in a canvas. */
+    int16_t     m_posY;         /**< Upper left corner (y-coordinate) of the widget in a canvas. */
+    String      m_name;         /**< Widget name for identification. */
+    bool        m_isEnabled;    /**< If widget is enabled, it will be drawn otherwise not. */
 
     /**
      * Constructs a widget at position (0, 0) in the canvas.
@@ -194,7 +234,8 @@ protected:
         m_type(type),
         m_posX(0),
         m_posY(0),
-        m_name()
+        m_name(),
+        m_isEnabled(true)
     {
     }
 
@@ -209,7 +250,8 @@ protected:
         m_type(type),
         m_posX(x),
         m_posY(y),
-        m_name()
+        m_name(),
+        m_isEnabled(true)
     {
     }
 
@@ -223,9 +265,17 @@ protected:
         m_type(widget.m_type),
         m_posX(widget.m_posX),
         m_posY(widget.m_posY),
-        m_name()
+        m_name(),
+        m_isEnabled(widget.m_isEnabled)
     {
     }
+
+    /**
+     * Paint the widget with the given graphics interface.
+     * 
+     * @param[in] gfx   Graphics interface
+     */
+    virtual void paint(YAGfx& gfx) = 0;
 
 private:
 

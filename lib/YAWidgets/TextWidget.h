@@ -171,16 +171,9 @@ public:
     }
 
     /**
-     * Update/Draw the text widget.
-     *
-     * @param[in] gfx Graphics interface
-     */
-    void update(YAGfx& gfx) override;
-
-    /**
      * Set the text string. It can contain format tags like:
      * - "#RRGGBB" Color information in RGB888 format
-     *
+     * 
      * @param[in] formatStr String, which may contain format tags
      */
     void setFormatStr(const String& formatStr)
@@ -189,8 +182,14 @@ public:
         if ((m_formatStr != formatStr) &&
             (m_formatStrNew != formatStr))
         {
-            m_formatStrNew          = formatStr;
-            m_isNewTextAvailable    = true;
+            /* If there is already a new text, which is not shown yet,
+             * skip this new text.
+             */
+            if (false == m_handleNewText)
+            {
+                m_formatStrNew          = formatStr;
+                m_isNewTextAvailable    = true;
+            }
         }
 
         return;
@@ -364,6 +363,13 @@ private:
 
     static KeywordHandler   m_keywordHandlers[];    /**< List of all supported keyword handlers. */
     static uint32_t         m_scrollPause;          /**< Pause in ms, between each scroll movement. */
+
+    /**
+     * Paint the widget with the given graphics interface.
+     * 
+     * @param[in] gfx   Graphics interface
+     */
+    void paint(YAGfx& gfx) override;
 
     /**
      * Remove format tags from string.

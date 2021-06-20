@@ -130,21 +130,6 @@ public:
     BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
-     * Update/Draw the bitmap widget on the canvas.
-     *
-     * @param[in] gfx Graphics interface
-     */
-    void update(YAGfx& gfx) override
-    {
-        if (nullptr != m_buffer)
-        {
-            gfx.drawBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
-        }
-
-        return;
-    }
-
-    /**
      * Set a new bitmap.
      *
      * @param[in] bitmap    Ext. bitmap buffer
@@ -193,6 +178,21 @@ private:
     uint16_t    m_width;        /**< Bitmap width in pixel */
     uint16_t    m_height;       /**< Bitmap height in pixel */
 
+    /**
+     * Paint the widget with the given graphics interface.
+     * 
+     * @param[in] gfx   Graphics interface
+     */
+    void paint(YAGfx& gfx) override
+    {
+        if (nullptr != m_buffer)
+        {
+            gfx.drawBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
+        }
+
+        return;
+    }
+    
 };
 
 /******************************************************************************

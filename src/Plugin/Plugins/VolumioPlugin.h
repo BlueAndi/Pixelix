@@ -81,7 +81,10 @@ public:
         Plugin(name, uid),
         m_textCanvas(nullptr),
         m_iconCanvas(nullptr),
-        m_bitmapWidget(),
+        m_stdIconWidget(),
+        m_stopIconWidget(),
+        m_playIconWidget(),
+        m_pauseIconWidget(),
         m_textWidget("\\calign?"),
         m_volumioHost("volumio.fritz.box"),
         m_urlIcon(),
@@ -92,7 +95,8 @@ public:
         m_xMutex(nullptr),
         m_isConnectionError(false),
         m_lastSeekValue(0U),
-        m_pos(0U)
+        m_pos(0U),
+        m_state(STATE_UNKNOWN)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -226,6 +230,17 @@ public:
 private:
 
     /**
+     * The different Volumio player states.
+     */
+    enum VolumioState
+    {
+        STATE_UNKNOWN = 0,  /**< Unknown state */
+        STATE_STOP,         /**< Volumio player is stopped */
+        STATE_PLAY,         /**< Volumio player plays */
+        STATE_PAUSE         /**< Volumio player is paused */
+    };
+
+    /**
      * Icon width in pixels.
      */
     static const uint16_t   ICON_WIDTH          = 8U;
@@ -282,7 +297,10 @@ private:
 
     Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    BitmapWidget                m_stdIconWidget;            /**< Bitmap widget, used to show the standard icon. */
+    BitmapWidget                m_stopIconWidget;           /**< Bitmap widget, used to show the stop icon. */
+    BitmapWidget                m_playIconWidget;           /**< Bitmap widget, used to show the play icon. */
+    BitmapWidget                m_pauseIconWidget;          /**< Bitmap widget, used to show the pause icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     String                      m_volumioHost;              /**< Host address of the VOLUMIO server. */
     String                      m_urlIcon;                  /**< REST API URL for updating the icon */
@@ -294,6 +312,15 @@ private:
     bool                        m_isConnectionError;        /**< Is connection error happened? */
     uint32_t                    m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
     uint8_t                     m_pos;                      /**< Current music position in percent. */
+    VolumioState                m_state;                    /**< Volumio player state */
+
+    /**
+     * Change Volumio player state.
+     * Depended on the new state, the corresponding bitmap icon is enabled.
+     *
+     * @param[in] state Current player state
+     */
+    void changeState(VolumioState state);
 
     /**
      * Request new data.
