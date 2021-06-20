@@ -365,6 +365,13 @@ private:
     static uint32_t         m_scrollPause;          /**< Pause in ms, between each scroll movement. */
 
     /**
+     * Checks new text and prepares the scroll information.
+     * 
+     * @param[in] gfx   The graphics functionality, necessary to determine text width and etc.
+     */
+    void prepareNewText(YAGfx& gfx);
+
+    /**
      * Paint the widget with the given graphics interface.
      * 
      * @param[in] gfx   Graphics interface
