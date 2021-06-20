@@ -648,117 +648,7 @@ bool OpenWeatherPlugin::startHttpRequest()
 void OpenWeatherPlugin::initHttpClient()
 {
     m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                          payloadSize             = 0U;
-        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t                    JSON_DOC_SIZE           = 256;
-        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
-        const size_t                    FILTER_SIZE             = 128U;
-        StaticJsonDocument<FILTER_SIZE> filter;
-        JsonObject                      filterCurrent           = filter.createNestedObject("current");
-        DeserializationError            error;
-
-        /* See https://openweathermap.org/api/one-call-api for an example of API response. */
-        filterCurrent["temp"]                  = true;
-        filterCurrent["uvi"]                   = true;
-        filterCurrent["humidity"]              = true;
-        filterCurrent["wind_speed"]            = true;
-        filterCurrent["weather"][0]["icon"]    = true;
-        
-        if (true == filter.overflowed())
-        {
-            LOG_ERROR("Less memory for filter available.");
-        }
-
-        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            JsonObject current = jsonDoc["current"];
-
-            if (false == current["temp"].is<float>())
-            {
-               LOG_WARNING("JSON temperature type missmatch or missing.");
-            }
-            else if (false == current["uvi"].is<float>())
-            {
-               LOG_WARNING("JSON uvi type missmatch or missing.");
-            }
-            else if (false == current["humidity"].is<int>())
-            {
-               LOG_WARNING("JSON wind_speed type missmatch or missing.");
-            }
-            else if (false == current["wind_speed"].is<float>())
-            {
-               LOG_WARNING("JSON uvi type missmatch or missing.");
-            }
-            else if (false == current["weather"][0]["icon"].is<String>())
-            {
-                LOG_WARNING("JSON weather icon id type missmatch or missing.");
-            }
-            else
-            {
-                float   temperature             = current["temp"].as<float>();
-                String  weatherIconId           = current["weather"][0]["icon"].as<String>();
-                float   uvIndex                 = current["uvi"].as<float>();
-                int     humidity                = current["humidity"].as<int>();
-                float   windSpeed               = current["wind_speed"].as<float>();
-                char    tempReducedPrecison[6]  = { 0 };
-                char    windReducedPrecison[5]  = { 0 };
-                String  weatherConditionIcon;
-
-                lock();
-
-                /* Generate UV-Index string and adapt color of string accordingly. */
-                m_currentUvIndex = "\\calign";
-                m_currentUvIndex += uvIndexToColor(uvIndex);
-                m_currentUvIndex += uvIndex;
-
-                const char* reducePrecision = (temperature < -9.9f) ? "%.0f" : "%.1f";
-
-                /* Generate temperature string with reduced precision and add unit °C/°F. */
-                (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
-
-                m_currentTemp  = "\\calign";
-                m_currentTemp += tempReducedPrecison;
-                m_currentTemp += "\x8E";
-                m_currentTemp += (m_units == "metric")?"C":"F";
-
-                /* Generate humidity string */
-                m_currentHumidity = "\\calign";
-                m_currentHumidity += humidity;
-                m_currentHumidity += "%";
-
-                /* Generate windapeed string and add unit.*/
-                (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
-                m_currentWindspeed = "\\calign";
-                m_currentWindspeed += windReducedPrecison;
-                m_currentWindspeed += "m/s";
-
-                /* Handle icon depended on weather icon id.
-                 * See https://openweathermap.org/weather-conditions
-                 * 
-                 * First check whether there is a specific icon available.
-                 * If not, check for a generic weather icon.
-                 * If this is not available too, use the standard OpenWeather icon.
-                 */
-                weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
-                if (false == FILESYSTEM.exists(weatherConditionIcon))
-                {
-                    weatherConditionIcon  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
-                    weatherConditionIcon += ".bmp";
-                }
-
-                m_currentWeatherIcon = weatherConditionIcon;
-
-                updateDisplay(false);
-
-                unlock();
-            }
-        }
+        this->handleWebResponse(rsp);
     });
 
     m_client.regOnClosed([this]() {
@@ -785,6 +675,122 @@ void OpenWeatherPlugin::initHttpClient()
         unlock();
     });
 }
+
+void OpenWeatherPlugin::handleWebResponse(const HttpResponse& rsp)
+{
+    size_t                          payloadSize             = 0U;
+    const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+    const size_t                    JSON_DOC_SIZE           = 256;
+    DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
+    const size_t                    FILTER_SIZE             = 128U;
+    StaticJsonDocument<FILTER_SIZE> filter;
+    JsonObject                      filterCurrent           = filter.createNestedObject("current");
+    DeserializationError            error;
+
+    /* See https://openweathermap.org/api/one-call-api for an example of API response. */
+    filterCurrent["temp"]                  = true;
+    filterCurrent["uvi"]                   = true;
+    filterCurrent["humidity"]              = true;
+    filterCurrent["wind_speed"]            = true;
+    filterCurrent["weather"][0]["icon"]    = true;
+    
+    if (true == filter.overflowed())
+    {
+        LOG_ERROR("Less memory for filter available.");
+    }
+
+    error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+    if (DeserializationError::Ok != error.code())
+    {
+        LOG_WARNING("JSON parse error: %s", error.c_str());
+    }
+    else
+    {
+        JsonObject current = jsonDoc["current"];
+
+        if (false == current["temp"].is<float>())
+        {
+            LOG_WARNING("JSON temperature type missmatch or missing.");
+        }
+        else if (false == current["uvi"].is<float>())
+        {
+            LOG_WARNING("JSON uvi type missmatch or missing.");
+        }
+        else if (false == current["humidity"].is<int>())
+        {
+            LOG_WARNING("JSON wind_speed type missmatch or missing.");
+        }
+        else if (false == current["wind_speed"].is<float>())
+        {
+            LOG_WARNING("JSON uvi type missmatch or missing.");
+        }
+        else if (false == current["weather"][0]["icon"].is<String>())
+        {
+            LOG_WARNING("JSON weather icon id type missmatch or missing.");
+        }
+        else
+        {
+            float   temperature             = current["temp"].as<float>();
+            String  weatherIconId           = current["weather"][0]["icon"].as<String>();
+            float   uvIndex                 = current["uvi"].as<float>();
+            int     humidity                = current["humidity"].as<int>();
+            float   windSpeed               = current["wind_speed"].as<float>();
+            char    tempReducedPrecison[6]  = { 0 };
+            char    windReducedPrecison[5]  = { 0 };
+            String  weatherConditionIcon;
+
+            lock();
+
+            /* Generate UV-Index string and adapt color of string accordingly. */
+            m_currentUvIndex = "\\calign";
+            m_currentUvIndex += uvIndexToColor(uvIndex);
+            m_currentUvIndex += uvIndex;
+
+            const char* reducePrecision = (temperature < -9.9f) ? "%.0f" : "%.1f";
+
+            /* Generate temperature string with reduced precision and add unit °C/°F. */
+            (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
+
+            m_currentTemp  = "\\calign";
+            m_currentTemp += tempReducedPrecison;
+            m_currentTemp += "\x8E";
+            m_currentTemp += (m_units == "metric")?"C":"F";
+
+            /* Generate humidity string */
+            m_currentHumidity = "\\calign";
+            m_currentHumidity += humidity;
+            m_currentHumidity += "%";
+
+            /* Generate windapeed string and add unit.*/
+            (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
+            m_currentWindspeed = "\\calign";
+            m_currentWindspeed += windReducedPrecison;
+            m_currentWindspeed += "m/s";
+
+            /* Handle icon depended on weather icon id.
+                * See https://openweathermap.org/weather-conditions
+                * 
+                * First check whether there is a specific icon available.
+                * If not, check for a generic weather icon.
+                * If this is not available too, use the standard OpenWeather icon.
+                */
+            weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
+            if (false == FILESYSTEM.exists(weatherConditionIcon))
+            {
+                weatherConditionIcon  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
+                weatherConditionIcon += ".bmp";
+            }
+
+            m_currentWeatherIcon = weatherConditionIcon;
+
+            updateDisplay(false);
+
+            unlock();
+        }
+    }
+}
+
 
 bool OpenWeatherPlugin::saveConfiguration() const
 {

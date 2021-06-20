@@ -429,6 +429,13 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle a web response from the server.
+     * 
+     * @param[in] rsp   Web response
+     */
+    void handleWebResponse(const HttpResponse& rsp);
+
+    /**
      * Saves current configuration to JSON file.
      */
     bool saveConfiguration() const;
