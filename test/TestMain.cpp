@@ -438,27 +438,6 @@ public:
     }
 
     /**
-     * Update widget drawing.
-     *
-     * @param[in] gfx Graphics interface, which to use.
-     */
-    void update(YAGfx& gfx)
-    {
-        int16_t x = 0;
-        int16_t y = 0;
-
-        for(y = 0; y < HEIGHT; ++y)
-        {
-            for(x = 0; x < WIDTH; ++x)
-            {
-                gfx.drawPixel(m_posX + x, m_posY + y, m_color);
-            }
-        }
-
-        return;
-    }
-
-    /**
      * Get pen color, used to draw the widget.
      *
      * @return Pen color
@@ -487,6 +466,27 @@ private:
 
     Color m_color;  /**< Pen color, used to draw the widget. */
 
+    /**
+     * Update widget drawing.
+     *
+     * @param[in] gfx Graphics interface, which to use.
+     */
+    void paint(YAGfx& gfx)
+    {
+        int16_t x = 0;
+        int16_t y = 0;
+
+        for(y = 0; y < HEIGHT; ++y)
+        {
+            for(x = 0; x < WIDTH; ++x)
+            {
+                gfx.drawPixel(m_posX + x, m_posY + y, m_color);
+            }
+        }
+
+        return;
+    }
+    
 };
 
 const char* TestWidget::WIDGET_TYPE = "test";
