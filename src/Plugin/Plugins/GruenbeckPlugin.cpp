@@ -203,6 +203,8 @@ void GruenbeckPlugin::stop()
 
 void GruenbeckPlugin::process()
 {
+    Msg msg;
+
     lock();
 
     if ((true == m_requestTimer.isTimerRunning()) &&
@@ -218,6 +220,47 @@ void GruenbeckPlugin::process()
         else
         {
             m_requestTimer.start(UPDATE_PERIOD);
+        }
+    }
+
+    if (true == m_taskProxy.receive(msg))
+    {
+        switch(msg.type)
+        {
+        case MSG_TYPE_INVALID:
+            /* Should never happen. */
+            break;
+
+        case MSG_TYPE_RSP:
+            if (nullptr != msg.rsp)
+            {
+                handleWebResponse(*msg.rsp);
+                delete msg.rsp;
+                msg.rsp = nullptr;
+            }
+            break;
+
+        case MSG_TYPE_CONN_CLOSED:
+            LOG_INFO("Connection closed.");
+
+            if (true == m_isConnectionError)
+            {
+                /* If a request fails, show a '?' */
+                m_textWidget.setFormatStr("\\calign?");
+
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            m_isConnectionError = false;
+            break;
+
+        case MSG_TYPE_CONN_ERROR:
+            LOG_WARNING("Connection error.");
+            m_isConnectionError = true;
+            break;
+
+        default:
+            /* Should never happen. */
+            break;
         }
     }
 
@@ -340,65 +383,93 @@ bool GruenbeckPlugin::startHttpRequest()
 
 void GruenbeckPlugin::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        /* Structure of response-payload for requesting D_Y_10_1
-         *
-         * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
-         *
-         * <data><code>ok</code><D_Y_10_1>  = 31 bytes
-         * XYZ                              = 3 byte (relevant data)
-         * </D_Y_10_1></data>               = 18 bytes
-         */
-
-        /* Start index of relevant data */
-        const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
-
-        /* Length of relevant data */
-        const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
-
-        size_t          payloadSize                     = 0U;
-        const char*     payload                         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        char            restCapacity[RELEVANT_DATA_LENGTH + 1];
-
-        if (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
+    m_client.regOnResponse(
+        [this](const HttpResponse& rsp)
         {
-            memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
-            restCapacity[RELEVANT_DATA_LENGTH] = '\0';
-        }
-        else
-        {
-            restCapacity[0] = '?';
-            restCapacity[1] = '\0';
-        }
+            const size_t            JSON_DOC_SIZE   = 256U;
+            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
 
-        lock();
-        m_relevantResponsePart = restCapacity;
+            if (nullptr != jsonDoc)
+            {
+                /* Structure of response-payload for requesting D_Y_10_1
+                *
+                * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
+                *
+                * <data><code>ok</code><D_Y_10_1>  = 31 bytes
+                * XYZ                              = 3 byte (relevant data)
+                * </D_Y_10_1></data>               = 18 bytes
+                */
+
+                /* Start index of relevant data */
+                const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
+
+                /* Length of relevant data */
+                const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
+
+                size_t          payloadSize                     = 0U;
+                const char*     payload                         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                char            restCapacity[RELEVANT_DATA_LENGTH + 1];
+                Msg             msg;
+
+                if (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
+                {
+                    memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
+                    restCapacity[RELEVANT_DATA_LENGTH] = '\0';
+                }
+                else
+                {
+                    restCapacity[0] = '?';
+                    restCapacity[1] = '\0';
+                }
+
+                (*jsonDoc)["restCapacity"] = restCapacity;
+
+                msg.type    = MSG_TYPE_RSP;
+                msg.rsp     = jsonDoc;
+
+                if (false == this->m_taskProxy.send(msg))
+                {
+                    delete jsonDoc;
+                    jsonDoc = nullptr;
+                }
+            }
+        }
+    );
+
+    m_client.regOnClosed(
+        [this]()
+        {
+            Msg msg;
+
+            msg.type = MSG_TYPE_CONN_CLOSED;
+
+            (void)this->m_taskProxy.send(msg);
+        }
+    );
+
+    m_client.regOnError(
+        [this]()
+        {
+            Msg msg;
+
+            msg.type = MSG_TYPE_CONN_ERROR;
+
+            (void)this->m_taskProxy.send(msg);
+        }
+    );
+}
+
+void GruenbeckPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+{
+    if (false == jsonDoc["restCapacity"].is<String>())
+    {
+        LOG_WARNING("JSON rest capacity missmatch or missing.");
+    }
+    else
+    {
+        m_relevantResponsePart = jsonDoc["restCapacity"].as<String>();
         m_httpResponseReceived = true;
-        unlock();
-    });
-
-    m_client.regOnClosed([this]() {
-        LOG_INFO("Connection closed.");
-
-        lock();
-        if (true == m_isConnectionError)
-        {
-            /* If a request fails, show a '?' */
-            m_textWidget.setFormatStr("\\calign?");
-
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
-        }
-        m_isConnectionError = false;
-        unlock();
-    });
-
-    m_client.regOnError([this]() {
-        LOG_WARNING("Connection error happened.");
-
-        lock();
-        m_isConnectionError = true;
-        unlock();
-    });
+    }
 }
 
 bool GruenbeckPlugin::saveConfiguration() const
@@ -463,6 +534,20 @@ void GruenbeckPlugin::unlock() const
     }
 
     return;
+}
+
+void GruenbeckPlugin::clearQueue()
+{
+    Msg msg;
+
+    while(true == m_taskProxy.receive(msg))
+    {
+        if (MSG_TYPE_RSP == msg.type)
+        {
+            delete msg.rsp;
+            msg.rsp = nullptr;
+        }
+    }
 }
 
 /******************************************************************************

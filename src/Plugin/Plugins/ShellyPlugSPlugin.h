@@ -52,6 +52,7 @@
 #include <stdint.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
+#include <TaskProxy.hpp>
 
 /******************************************************************************
  * Macros
@@ -83,7 +84,8 @@ public:
         m_ipAddress("192.168.1.123"), /* Example data */
         m_client(),
         m_xMutex(nullptr),
-        m_requestTimer()
+        m_requestTimer(),
+        m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -96,10 +98,16 @@ public:
      */
     ~ShellyPlugSPlugin()
     {
+        m_client.regOnResponse(nullptr);
+        m_client.regOnClosed(nullptr);
+        m_client.regOnError(nullptr);
+
         /* Abort any pending TCP request to avoid getting a callback after the
          * object is destroyed.
          */
         m_client.abort();
+        
+        clearQueue();
         
         if (nullptr != m_iconCanvas)
         {
@@ -258,6 +266,38 @@ private:
     SimpleTimer                 m_requestTimer;             /**< Timer is used for cyclic ShellyPlugS  http request. */
 
     /**
+     * Defines the message types, which are necessary for HTTP client/server handling.
+     */
+    enum MsgType
+    {
+        MSG_TYPE_INVALID = 0,   /**< Invalid message type. */
+        MSG_TYPE_RSP            /**< A response, caused by a previous request. */
+    };
+
+    /**
+     * A message for HTTP client/server handling.
+     */
+    struct Msg
+    {
+        MsgType                 type;   /**< Message type */
+        DynamicJsonDocument*    rsp;    /**< Response, only valid if message type is a response. */
+
+        /**
+         * Constructs a message.
+         */
+        Msg() :
+            type(MSG_TYPE_INVALID),
+            rsp(nullptr)
+        {
+        }
+    }; 
+
+    /**
+     * Task proxy used to decouple server responses, which happen in a different task context.
+     */
+    TaskProxy<Msg, 2U, 0U> m_taskProxy;
+
+    /**
      * Request new data.
      *
      * @return If successful it will return true otherwise false.
@@ -268,6 +308,13 @@ private:
      * Register callback function on response reception.
      */
     void initHttpClient(void);
+
+    /**
+     * Handle a web response from the server.
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleWebResponse(DynamicJsonDocument& jsonDoc);
 
     /**
      * Saves current configuration to JSON file.
@@ -288,6 +335,11 @@ private:
      * Unprotect against concurrent access.
      */
     void unlock(void) const;
+
+    /**
+     * Clear the task proxy queue.
+     */
+    void clearQueue();
 };
 
 /******************************************************************************

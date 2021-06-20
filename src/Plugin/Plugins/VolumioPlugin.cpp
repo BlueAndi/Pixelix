@@ -228,6 +228,8 @@ void VolumioPlugin::stop()
 
 void VolumioPlugin::process()
 {
+    Msg msg;
+
     lock();
 
     if ((true == m_requestTimer.isTimerRunning()) &&
@@ -244,6 +246,48 @@ void VolumioPlugin::process()
         else
         {
             m_requestTimer.start(UPDATE_PERIOD);
+        }
+    }
+
+    if (true == m_taskProxy.receive(msg))
+    {
+        switch(msg.type)
+        {
+        case MSG_TYPE_INVALID:
+            /* Should never happen. */
+            break;
+
+        case MSG_TYPE_RSP:
+            if (nullptr != msg.rsp)
+            {
+                handleWebResponse(*msg.rsp);
+                delete msg.rsp;
+                msg.rsp = nullptr;
+            }
+            break;
+
+        case MSG_TYPE_CONN_CLOSED:
+            LOG_INFO("Connection closed.");
+
+            if (true == m_isConnectionError)
+            {
+                /* If a request fails, show standard icon and a '?' */
+                changeState(STATE_UNKNOWN);
+                m_textWidget.setFormatStr("\\calign?");
+
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            m_isConnectionError = false;
+            break;
+
+        case MSG_TYPE_CONN_ERROR:
+            LOG_WARNING("Connection error.");
+            m_isConnectionError = true;
+            break;
+
+        default:
+            /* Should never happen. */
+            break;
         }
     }
 
@@ -397,196 +441,215 @@ bool VolumioPlugin::startHttpRequest()
 
 void VolumioPlugin::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                          payloadSize             = 0U;
-        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t                    JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
-        const size_t                    FILTER_SIZE             = 128U;
-        StaticJsonDocument<FILTER_SIZE> filter;
-        DeserializationError            error;
-
-        filter["artist"]    = true;
-        filter["duration"]  = true;
-        filter["seek"]      = true;
-        filter["service"]   = true;
-        filter["status"]    = true;
-        filter["title"]     = true;
-        
-        if (true == filter.overflowed())
+    /* Note: All registered callbacks are running in a different task context!
+     *       Therefore it is not allowed to access a member here directly.
+     *       The processing must be deferred via task proxy.
+     */
+    m_client.regOnResponse(
+        [this](const HttpResponse& rsp)
         {
-            LOG_ERROR("Less memory for filter available.");
+            const size_t            JSON_DOC_SIZE   = 512U;
+            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+
+            if (nullptr != jsonDoc)
+            {
+                size_t                          payloadSize = 0U;
+                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t                    FILTER_SIZE = 128U;
+                StaticJsonDocument<FILTER_SIZE> filter;
+                DeserializationError            error;
+
+                filter["artist"]    = true;
+                filter["duration"]  = true;
+                filter["seek"]      = true;
+                filter["service"]   = true;
+                filter["status"]    = true;
+                filter["title"]     = true;
+                
+                if (true == filter.overflowed())
+                {
+                    LOG_ERROR("Less memory for filter available.");
+                }
+
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_WARNING("JSON parse error: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
+            }
+        }
+    );
+
+    m_client.regOnClosed(
+        [this]()
+        {
+            Msg msg;
+
+            msg.type = MSG_TYPE_CONN_CLOSED;
+
+            (void)this->m_taskProxy.send(msg);
+        }
+    );
+
+    m_client.regOnError(
+        [this]()
+        {
+            Msg msg;
+
+            msg.type = MSG_TYPE_CONN_ERROR;
+
+            (void)this->m_taskProxy.send(msg);
+        }
+    );
+}
+
+void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+{
+    if (false == jsonDoc["status"].is<String>())
+    {
+        LOG_WARNING("JSON status type missmatch or missing.");
+    }
+    else if (false == jsonDoc["title"].is<String>())
+    {
+        LOG_WARNING("JSON title type missmatch or missing.");
+    }
+    else if (false == jsonDoc["seek"].is<uint32_t>())
+    {
+        LOG_WARNING("JSON seek type missmatch or missing.");
+    }
+    else if (false == jsonDoc["service"].is<String>())
+    {
+        LOG_WARNING("JSON service type missmatch or missing.");
+    }
+    else
+    {
+        String          status          = jsonDoc["status"].as<String>();
+        String          artist;
+        String          title           = jsonDoc["title"].as<String>();
+        uint32_t        seekValue       = jsonDoc["seek"].as<uint32_t>();
+        String          service         = jsonDoc["service"].as<String>();
+        String          infoOnDisplay;
+        uint32_t        pos             = 0U;
+        VolumioState    state           = STATE_UNKNOWN;
+
+        /* Artist may exist */
+        if (true == jsonDoc["artist"].is<String>())
+        {
+            artist = jsonDoc["artist"].as<String>();
         }
 
-        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-        if (DeserializationError::Ok != error.code())
+        if (true == title.isEmpty())
         {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
+            title = "\\calign-";
         }
-        else
+
+        if (service == "mpd")
         {
-            if (false == jsonDoc["status"].is<String>())
+            if (true == artist.isEmpty())
             {
-                LOG_WARNING("JSON status type missmatch or missing.");
-            }
-            else if (false == jsonDoc["title"].is<String>())
-            {
-                LOG_WARNING("JSON title type missmatch or missing.");
-            }
-            else if (false == jsonDoc["seek"].is<uint32_t>())
-            {
-                LOG_WARNING("JSON seek type missmatch or missing.");
-            }
-            else if (false == jsonDoc["service"].is<String>())
-            {
-                LOG_WARNING("JSON service type missmatch or missing.");
+                infoOnDisplay = title;
             }
             else
             {
-                String          status          = jsonDoc["status"].as<String>();
-                String          artist;
-                String          title           = jsonDoc["title"].as<String>();
-                uint32_t        seekValue       = jsonDoc["seek"].as<uint32_t>();
-                String          service         = jsonDoc["service"].as<String>();
-                String          infoOnDisplay;
-                uint32_t        pos             = 0U;
-                VolumioState    state           = STATE_UNKNOWN;
-
-                /* Artist may exist */
-                if (true == jsonDoc["artist"].is<String>())
-                {
-                    artist = jsonDoc["artist"].as<String>();
-                }
-
-                if (true == title.isEmpty())
-                {
-                    title = "\\calign-";
-                }
-
-                if (service == "mpd")
-                {
-                    if (true == artist.isEmpty())
-                    {
-                        infoOnDisplay = title;
-                    }
-                    else
-                    {
-                        infoOnDisplay = artist + " - " + title;
-                    }
-                }
-                else if (service == "webradio")
-                {
-                    /* If stopped, the title contains the radio station name,
-                     * otherwise the title contains the music and the artist
-                     * the radio station name.
-                     * 
-                     * Therefore show only the title in any case.
-                     */
-                    infoOnDisplay = title;
-                }
-                else
-                {
-                    infoOnDisplay = title;
-                }
-
-                /* Determine position */
-                if (true == jsonDoc["duration"].is<uint32_t>())
-                {
-                    uint32_t duration = jsonDoc["duration"].as<uint32_t>();
-
-                    if (0U == duration)
-                    {
-                        pos = 0U;
-                    }
-                    else
-                    {
-                        pos = seekValue / duration;
-                        pos /= 10U;
-
-                        if (100U < pos)
-                        {
-                            pos = 100U;
-                        }
-                    }
-                }
-                else
-                {
-                    pos = 0U;
-                }
-
-                lock();
-
-                /* Workaround for a VOLUMIO bug, which provides a wrong status. */
-                if (status == "stop")
-                {
-                    if (m_lastSeekValue != seekValue)
-                    {
-                        status = "play";
-                    }
-                }
-                m_lastSeekValue = seekValue;
-
-                if (status == "stop")
-                {
-                    state = STATE_STOP;
-                }
-                else if (status == "play")
-                {
-                    state = STATE_PLAY;
-                }
-                else if (status == "pause")
-                {
-                    state = STATE_PAUSE;
-                }
-                else
-                {
-                    state = STATE_UNKNOWN;
-                }
-
-                changeState(state);
-                m_textWidget.setFormatStr(infoOnDisplay);
-
-                m_pos = static_cast<uint8_t>(pos);
-
-                /* Feed the offline timer to avoid that the plugin gets disabled. */
-                m_offlineTimer.restart();
-
-                /* Enable plugin again, if necessary. */
-                if (false == isEnabled())
-                {
-                    LOG_INFO("VOLUMIO back again, going online.");
-                    enable();
-                }
-
-                unlock();
+                infoOnDisplay = artist + " - " + title;
             }
         }
-    });
-
-    m_client.regOnClosed([this]() {
-        LOG_INFO("Connection closed.");
-
-        lock();
-        if (true == m_isConnectionError)
+        else if (service == "webradio")
         {
-            /* If a request fails, show standard icon and a '?' */
-            changeState(STATE_UNKNOWN);
-            m_textWidget.setFormatStr("\\calign?");
-
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            /* If stopped, the title contains the radio station name,
+                * otherwise the title contains the music and the artist
+                * the radio station name.
+                * 
+                * Therefore show only the title in any case.
+                */
+            infoOnDisplay = title;
         }
-        m_isConnectionError = false;
-        unlock();
-    });
+        else
+        {
+            infoOnDisplay = title;
+        }
 
-    m_client.regOnError([this]() {
-        LOG_WARNING("Connection error happened.");
+        /* Determine position */
+        if (true == jsonDoc["duration"].is<uint32_t>())
+        {
+            uint32_t duration = jsonDoc["duration"].as<uint32_t>();
 
-        lock();
-        m_isConnectionError = true;
-        unlock();
-    });
+            if (0U == duration)
+            {
+                pos = 0U;
+            }
+            else
+            {
+                pos = seekValue / duration;
+                pos /= 10U;
+
+                if (100U < pos)
+                {
+                    pos = 100U;
+                }
+            }
+        }
+        else
+        {
+            pos = 0U;
+        }
+
+        /* Workaround for a VOLUMIO bug, which provides a wrong status. */
+        if (status == "stop")
+        {
+            if (m_lastSeekValue != seekValue)
+            {
+                status = "play";
+            }
+        }
+        m_lastSeekValue = seekValue;
+
+        if (status == "stop")
+        {
+            state = STATE_STOP;
+        }
+        else if (status == "play")
+        {
+            state = STATE_PLAY;
+        }
+        else if (status == "pause")
+        {
+            state = STATE_PAUSE;
+        }
+        else
+        {
+            state = STATE_UNKNOWN;
+        }
+
+        changeState(state);
+        m_textWidget.setFormatStr(infoOnDisplay);
+
+        m_pos = static_cast<uint8_t>(pos);
+
+        /* Feed the offline timer to avoid that the plugin gets disabled. */
+        m_offlineTimer.restart();
+
+        /* Enable plugin again, if necessary. */
+        if (false == isEnabled())
+        {
+            LOG_INFO("VOLUMIO back again, going online.");
+            enable();
+        }
+    }
 }
 
 bool VolumioPlugin::saveConfiguration() const
@@ -656,6 +719,20 @@ void VolumioPlugin::unlock() const
     }
 
     return;
+}
+
+void VolumioPlugin::clearQueue()
+{
+    Msg msg;
+
+    while(true == m_taskProxy.receive(msg))
+    {
+        if (MSG_TYPE_RSP == msg.type)
+        {
+            delete msg.rsp;
+            msg.rsp = nullptr;
+        }
+    }
 }
 
 /******************************************************************************

@@ -50,6 +50,7 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <TaskProxy.hpp>
 
 /******************************************************************************
  * Macros
@@ -96,7 +97,8 @@ public:
         m_currentWindspeed("\\calign?"),
         m_slotInterf(nullptr),
         m_durationCounter(0u),
-        m_isUpdateAvailable(false)
+        m_isUpdateAvailable(false),
+        m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -120,10 +122,16 @@ public:
      */
     ~OpenWeatherPlugin()
     {
+        m_client.regOnResponse(nullptr);
+        m_client.regOnClosed(nullptr);
+        m_client.regOnError(nullptr);
+
         /* Abort any pending TCP request to avoid getting a callback after the
          * object is destroyed.
          */
         m_client.abort();
+        
+        clearQueue();
         
         if (nullptr != m_iconCanvas)
         {
@@ -403,6 +411,40 @@ private:
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
     uint8_t                     m_durationCounter;          /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
     bool                        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    
+    /**
+     * Defines the message types, which are necessary for HTTP client/server handling.
+     */
+    enum MsgType
+    {
+        MSG_TYPE_INVALID = 0,   /**< Invalid message type. */
+        MSG_TYPE_RSP,           /**< A response, caused by a previous request. */
+        MSG_TYPE_CONN_CLOSED,   /**< The connection is closed. */
+        MSG_TYPE_CONN_ERROR     /**< A connection error happened. */
+    };
+
+    /**
+     * A message for HTTP client/server handling.
+     */
+    struct Msg
+    {
+        MsgType                 type;   /**< Message type */
+        DynamicJsonDocument*    rsp;    /**< Response, only valid if message type is a response. */
+
+        /**
+         * Constructs a message.
+         */
+        Msg() :
+            type(MSG_TYPE_INVALID),
+            rsp(nullptr)
+        {
+        }
+    }; 
+
+    /**
+     * Task proxy used to decouple server responses, which happen in a different task context.
+     */
+    TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
      * Updates the text and icon, which to be displayed.
@@ -431,9 +473,9 @@ private:
     /**
      * Handle a web response from the server.
      * 
-     * @param[in] rsp   Web response
+     * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(const HttpResponse& rsp);
+    void handleWebResponse(DynamicJsonDocument& jsonDoc);
 
     /**
      * Saves current configuration to JSON file.
@@ -454,6 +496,11 @@ private:
      * Unprotect against concurrent access.
      */
     void unlock(void) const;
+
+    /**
+     * Clear the task proxy queue.
+     */
+    void clearQueue();
 };
 
 /******************************************************************************

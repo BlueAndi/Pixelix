@@ -203,6 +203,8 @@ void ShellyPlugSPlugin::stop()
 
 void ShellyPlugSPlugin::process()
 {
+    Msg msg;
+
     lock();
 
     if ((true == m_requestTimer.isTimerRunning()) &&
@@ -215,6 +217,29 @@ void ShellyPlugSPlugin::process()
         else
         {
             m_requestTimer.start(UPDATE_PERIOD);
+        }
+    }
+
+    if (true == m_taskProxy.receive(msg))
+    {
+        switch(msg.type)
+        {
+        case MSG_TYPE_INVALID:
+            /* Should never happen. */
+            break;
+
+        case MSG_TYPE_RSP:
+            if (nullptr != msg.rsp)
+            {
+                handleWebResponse(*msg.rsp);
+                delete msg.rsp;
+                msg.rsp = nullptr;
+            }
+            break;
+
+        default:
+            /* Should never happen. */
+            break;
         }
     }
 
@@ -303,72 +328,85 @@ bool ShellyPlugSPlugin::startHttpRequest()
 }
 void ShellyPlugSPlugin::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                          payloadSize             = 0U;
-        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t                    JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
-        const size_t                    FILTER_SIZE             = 128U;
-        StaticJsonDocument<FILTER_SIZE> filter;
-        DeserializationError            error;
-
-        filter["power"] = true;
-
-        if (true == filter.overflowed())
+    /* Note: All registered callbacks are running in a different task context!
+     *       Therefore it is not allowed to access a member here directly.
+     *       The processing must be deferred via task proxy.
+     */
+    m_client.regOnResponse(
+        [this](const HttpResponse& rsp)
         {
-            LOG_ERROR("Less memory for filter available.");
+            const size_t            JSON_DOC_SIZE   = 512U;
+            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+
+            if (nullptr != jsonDoc)
+            {
+                size_t                          payloadSize = 0U;
+                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t                    FILTER_SIZE = 128U;
+                StaticJsonDocument<FILTER_SIZE> filter;
+                DeserializationError            error;
+
+                filter["power"] = true;
+
+                if (true == filter.overflowed())
+                {
+                    LOG_ERROR("Less memory for filter available.");
+                }
+                
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_WARNING("JSON parse error: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
+            }
         }
-        
-        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+    );
+}
 
-        if (DeserializationError::Ok != error.code())
+void ShellyPlugSPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+{
+    if (false == jsonDoc["power"].is<float>())
+    {
+        LOG_WARNING("JSON power type missmatch or missing.");
+    }
+    else
+    {
+        float       powerRaw                = jsonDoc["power"].as<float>();
+        String      power;
+        const char* reducePrecision;
+        char        powerReducedPrecison[6] = { 0 };
+
+        if (powerRaw < 99.99f)
         {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else if (false == jsonDoc["power"].is<float>())
-        {
-            LOG_WARNING("JSON power type missmatch or missing.");
+            reducePrecision = (powerRaw > 9.9f) ? "%.1f" : "%.2f";
         }
         else
         {
-            float       powerRaw                = jsonDoc["power"].as<float>();
-            String      power;
-            const char* reducePrecision;
-            char        powerReducedPrecison[6] = { 0 };
-
-            if (powerRaw < 99.99f)
-            {
-                reducePrecision = (powerRaw > 9.9f) ? "%.1f" : "%.2f";
-            }
-            else
-            {
-                reducePrecision = "%.0f";
-            }
-            
-            (void)snprintf(powerReducedPrecison, sizeof(powerReducedPrecison), reducePrecision, powerRaw);
-
-            power = "\\calign";
-            power += powerReducedPrecison;
-            power += " W";
-            
-            lock();
-            m_textWidget.setFormatStr(power);
-            unlock();
-
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
+            reducePrecision = "%.0f";
         }
-    });
+        
+        (void)snprintf(powerReducedPrecison, sizeof(powerReducedPrecison), reducePrecision, powerRaw);
 
-    m_client.regOnError([this]() {
-        LOG_WARNING("Connection error happened.");
-    });
+        power = "\\calign";
+        power += powerReducedPrecison;
+        power += " W";
+        
+        m_textWidget.setFormatStr(power);
+    }
 }
 
 bool ShellyPlugSPlugin::saveConfiguration() const
@@ -438,6 +476,20 @@ void ShellyPlugSPlugin::unlock() const
     }
 
     return;
+}
+
+void ShellyPlugSPlugin::clearQueue()
+{
+    Msg msg;
+
+    while(true == m_taskProxy.receive(msg))
+    {
+        if (MSG_TYPE_RSP == msg.type)
+        {
+            delete msg.rsp;
+            msg.rsp = nullptr;
+        }
+    }
 }
 
 /******************************************************************************

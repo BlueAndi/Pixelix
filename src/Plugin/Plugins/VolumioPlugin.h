@@ -50,6 +50,7 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <TaskProxy.hpp>
 
 /******************************************************************************
  * Macros
@@ -96,7 +97,8 @@ public:
         m_isConnectionError(false),
         m_lastSeekValue(0U),
         m_pos(0U),
-        m_state(STATE_UNKNOWN)
+        m_state(STATE_UNKNOWN),
+        m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
@@ -109,11 +111,17 @@ public:
      */
     ~VolumioPlugin()
     {
+        m_client.regOnResponse(nullptr);
+        m_client.regOnClosed(nullptr);
+        m_client.regOnError(nullptr);
+
         /* Abort any pending TCP request to avoid getting a callback after the
          * object is destroyed.
          */
         m_client.abort();
         
+        clearQueue();
+
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -315,6 +323,40 @@ private:
     VolumioState                m_state;                    /**< Volumio player state */
 
     /**
+     * Defines the message types, which are necessary for HTTP client/server handling.
+     */
+    enum MsgType
+    {
+        MSG_TYPE_INVALID = 0,   /**< Invalid message type. */
+        MSG_TYPE_RSP,           /**< A response, caused by a previous request. */
+        MSG_TYPE_CONN_CLOSED,   /**< The connection is closed. */
+        MSG_TYPE_CONN_ERROR     /**< A connection error happened. */
+    };
+
+    /**
+     * A message for HTTP client/server handling.
+     */
+    struct Msg
+    {
+        MsgType                 type;   /**< Message type */
+        DynamicJsonDocument*    rsp;    /**< Response, only valid if message type is a response. */
+
+        /**
+         * Constructs a message.
+         */
+        Msg() :
+            type(MSG_TYPE_INVALID),
+            rsp(nullptr)
+        {
+        }
+    }; 
+
+    /**
+     * Task proxy used to decouple server responses, which happen in a different task context.
+     */
+    TaskProxy<Msg, 2U, 0U> m_taskProxy;
+
+    /**
      * Change Volumio player state.
      * Depended on the new state, the corresponding bitmap icon is enabled.
      *
@@ -335,6 +377,13 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle a web response from the server.
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    
+    /**
      * Saves current configuration to JSON file.
      */
     bool saveConfiguration() const;
@@ -353,6 +402,11 @@ private:
      * Unprotect against concurrent access.
      */
     void unlock(void) const;
+
+    /**
+     * Clear the task proxy queue.
+     */
+    void clearQueue();
 };
 
 /******************************************************************************

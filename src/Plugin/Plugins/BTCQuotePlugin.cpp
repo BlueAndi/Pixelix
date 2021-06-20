@@ -122,6 +122,8 @@ void BTCQuotePlugin::stop()
 
 void BTCQuotePlugin::process()
 {
+    Msg msg;
+    
     lock();
 
     if ((true == m_requestTimer.isTimerRunning()) &&
@@ -134,6 +136,29 @@ void BTCQuotePlugin::process()
         else
         {
             m_requestTimer.start(UPDATE_PERIOD);
+        }
+    }
+
+    if (true == m_taskProxy.receive(msg))
+    {
+        switch(msg.type)
+        {
+        case MSG_TYPE_INVALID:
+            /* Should never happen. */
+            break;
+
+        case MSG_TYPE_RSP:
+            if (nullptr != msg.rsp)
+            {
+                handleWebResponse(*msg.rsp);
+                delete msg.rsp;
+                msg.rsp = nullptr;
+            }
+            break;
+
+        default:
+            /* Should never happen. */
+            break;
         }
     }
 
@@ -194,50 +219,64 @@ bool BTCQuotePlugin::startHttpRequest()
 
 void BTCQuotePlugin::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                          payloadSize             = 0U;
-        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t                    JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
-        const size_t                    FILTER_SIZE             = 128U;
-        StaticJsonDocument<FILTER_SIZE> filter;
-        DeserializationError            error;
-
-        filter["bpi"]["USD"]["rate_float"]      = true;
-        filter["bpi"]["USD"]["rate"]            = true;
-
-        if (true == filter.overflowed())
+    /* Note: All registered callbacks are running in a different task context!
+     *       Therefore it is not allowed to access a member here directly.
+     *       The processing must be deferred via task proxy.
+     */
+    m_client.regOnResponse(
+        [this](const HttpResponse& rsp)
         {
-            LOG_ERROR("Less memory for filter available.");
-        }
+            const size_t            JSON_DOC_SIZE   = 512U;
+            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
 
-        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_ERROR("Invalid JSON message received: %s", error.c_str());
-        }
-        else
-        {
-            m_relevantResponsePart = jsonDoc["bpi"]["USD"]["rate"].as<String>() + " $/BTC";
-            m_relevantResponsePart.replace(",", "'");               // beautify to european(?) standard formatting ' for 1000s
-            
-            LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
-
-            lock();
-            m_textWidget.setFormatStr(m_relevantResponsePart);
-            unlock();
-
-            if (true == jsonDoc.overflowed())
+            if (nullptr != jsonDoc)
             {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+                size_t                          payloadSize = 0U;
+                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t                    FILTER_SIZE = 128U;
+                StaticJsonDocument<FILTER_SIZE> filter;
+                DeserializationError            error;
+
+                filter["bpi"]["USD"]["rate_float"]      = true;
+                filter["bpi"]["USD"]["rate"]            = true;
+
+                if (true == filter.overflowed())
+                {
+                    LOG_ERROR("Less memory for filter available.");
+                }
+
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
             }
         }
-    });
+    );
+}
+
+void BTCQuotePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+{
+    m_relevantResponsePart = jsonDoc["bpi"]["USD"]["rate"].as<String>() + " $/BTC";
+    m_relevantResponsePart.replace(",", "'");               // beautify to european(?) standard formatting ' for 1000s
+    
+    LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
+
+    m_textWidget.setFormatStr(m_relevantResponsePart);
 }
 
 void BTCQuotePlugin::lock() const
@@ -258,6 +297,20 @@ void BTCQuotePlugin::unlock() const
     }
 
     return;
+}
+
+void BTCQuotePlugin::clearQueue()
+{
+    Msg msg;
+
+    while(true == m_taskProxy.receive(msg))
+    {
+        if (MSG_TYPE_RSP == msg.type)
+        {
+            delete msg.rsp;
+            msg.rsp = nullptr;
+        }
+    }
 }
 
 /******************************************************************************
