@@ -204,33 +204,38 @@ public:
                  (m_gfxFont->first <= uChar) &&
                  (m_gfxFont->last >= uChar))
         {
-            uint8_t         glyphIndex      = uChar - m_gfxFont->first;
-            const GFXglyph* glyph           = &(m_gfxFont->glyph[glyphIndex]);
-            int16_t         x               = 0;
-            int16_t         y               = 0;
-            uint16_t        bitmapOffset    = glyph->bitmapOffset;
-            uint8_t         bitmapRowBits   = 0U;
-            uint8_t         bitCnt          = 0U;
+            uint8_t         glyphIndex  = uChar - m_gfxFont->first;
+            const GFXglyph* glyph       = &(m_gfxFont->glyph[glyphIndex]);
 
-            for(y = 0U; y < glyph->height; ++y)
+            /* Handle character only, if it is really drawn on the screen. */
+            if (0 <= (cursorX + glyph->xAdvance))
             {
-                for(x = 0U; x < glyph->width; ++x)
+                int16_t     x               = 0;
+                int16_t     y               = 0;
+                uint16_t    bitmapOffset    = glyph->bitmapOffset;
+                uint8_t     bitmapRowBits   = 0U;
+                uint8_t     bitCnt          = 0U;
+
+                for(y = 0U; y < glyph->height; ++y)
                 {
-                    /* Every 8 bit, the bitmap offset must be increased. */
-                    if (0U == (bitCnt & 0x07))
+                    for(x = 0U; x < glyph->width; ++x)
                     {
-                        bitmapRowBits = m_gfxFont->bitmap[bitmapOffset];
-                        ++bitmapOffset;
-                    }
-                    ++bitCnt;
+                        /* Every 8 bit, the bitmap offset must be increased. */
+                        if (0U == (bitCnt & 0x07))
+                        {
+                            bitmapRowBits = m_gfxFont->bitmap[bitmapOffset];
+                            ++bitmapOffset;
+                        }
+                        ++bitCnt;
 
-                    /* A 1b in the bitmap row bits must be drawn as single pixel. */
-                    if (0U != (bitmapRowBits & 0x80U))
-                    {
-                        gfx.drawPixel(cursorX + x + glyph->xOffset, cursorY + y + glyph->yOffset, color);
-                    }
+                        /* A 1b in the bitmap row bits must be drawn as single pixel. */
+                        if (0U != (bitmapRowBits & 0x80U))
+                        {
+                            gfx.drawPixel(cursorX + x + glyph->xOffset, cursorY + y + glyph->yOffset, color);
+                        }
 
-                    bitmapRowBits <<= 1U;
+                        bitmapRowBits <<= 1U;
+                    }
                 }
             }
 
