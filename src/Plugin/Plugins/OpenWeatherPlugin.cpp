@@ -710,6 +710,8 @@ void OpenWeatherPlugin::initHttpClient()
                 char    windReducedPrecison[5]  = { 0 };
                 String  weatherConditionIcon;
 
+                lock();
+
                 /* Generate UV-Index string and adapt color of string accordingly. */
                 m_currentUvIndex = "\\calign";
                 m_currentUvIndex += uvIndexToColor(uvIndex);
@@ -749,11 +751,12 @@ void OpenWeatherPlugin::initHttpClient()
                     weatherConditionIcon  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
                     weatherConditionIcon += ".bmp";
                 }
-				
-				lock();
+
                 m_currentWeatherIcon = weatherConditionIcon;
-				unlock();
+
                 updateDisplay(false);
+
+                unlock();
             }
         }
     });
