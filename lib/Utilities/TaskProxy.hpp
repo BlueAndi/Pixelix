@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Arduino.h>
+#include <Queue.hpp>
 
 /******************************************************************************
  * Macros
@@ -71,8 +71,9 @@ public:
      * Create the task proxy with a empty queue.
      */
     TaskProxy() :
-        m_queueHandle(xQueueCreate(size, sizeof(T)))
+        m_queue()
     {
+        (void)m_queue.create(size);
     }
 
     /**
@@ -80,11 +81,7 @@ public:
      */
     ~TaskProxy()
     {
-        if (nullptr != m_queueHandle)
-        {
-            vQueueDelete(m_queueHandle);
-            m_queueHandle = nullptr;
-        }
+        m_queue.destroy();
     }
 
     /**
@@ -97,15 +94,7 @@ public:
      */
     bool send(const T& item)
     {
-        bool isSuccessful = true;
-
-        /* Queue item by copy. */
-        if (pdTRUE != xQueueSendToBack(m_queueHandle, &item, waitTimeTicks))
-        {
-            isSuccessful = false;
-        }
-
-        return isSuccessful;
+        return m_queue.sendToBack(item, waitTimeTicks);
     }
 
     /**
@@ -118,29 +107,12 @@ public:
      */
     bool receive(T& item)
     {
-        bool isSuccessful = true;
-
-        /* Receive item by copy. */
-        if (pdTRUE != xQueueReceive(m_queueHandle, &item, waitTimeTicks))
-        {
-            isSuccessful = false;
-        }
-
-        return isSuccessful;
-    }
-
-    /**
-     * Reset the queue.
-     * Attention: Every item in the queue gets lost!
-     */
-    void reset()
-    {
-        (void)xQueueReset(m_queueHandle);
+        return m_queue.receive(&item, waitTimeTicks);
     }
 
 private:
 
-    QueueHandle_t   m_queueHandle;  /**< Handle to queue with elements, used for decoupling from task. */
+    Queue<T>    m_queue;    /**< Queue with elements, used for decoupling from task. */
 
     TaskProxy(const TaskProxy& proxy);
     TaskProxy& operator=(const TaskProxy& proxy);
