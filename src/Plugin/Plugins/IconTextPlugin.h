@@ -50,6 +50,7 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -80,9 +81,9 @@ public:
         m_bitmapWidget(),
         m_textWidget(),
         m_isUploadError(false),
-        m_xMutex(nullptr)
+        m_mutex()
     {
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -102,11 +103,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -251,7 +248,7 @@ private:
     BitmapWidget        m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
     TextWidget          m_textWidget;       /**< Text widget, used for showing the text. */
     bool                m_isUploadError;    /**< Flag to signal a upload error. */
-    SemaphoreHandle_t   m_xMutex;           /**< Mutex to protect against concurrent access. */
+    mutable Mutex       m_mutex;            /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.
@@ -259,16 +256,6 @@ private:
      * @return Image filename with path.
      */
     String getFileName(void);
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 };
 
 /******************************************************************************

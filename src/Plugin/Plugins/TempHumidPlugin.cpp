@@ -82,8 +82,7 @@ void TempHumidPlugin::start(uint16_t width, uint16_t height)
     SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
     uint8_t             sensorIdx       = 0U;
     uint8_t             channelIdx      = 0U;
-
-    lock();
+    MutexGuard<Mutex>   guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -120,14 +119,12 @@ void TempHumidPlugin::start(uint16_t width, uint16_t height)
         m_humiditySensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
     }
 
-    unlock();
-
     return;
 }
 
 void TempHumidPlugin::stop()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr != m_iconCanvas)
     {
@@ -141,14 +138,12 @@ void TempHumidPlugin::stop()
         m_textCanvas = nullptr;
     }
 
-    unlock();
-
     return;
 }
 
 void TempHumidPlugin::process() 
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     /* Read only if update period not reached or sensor has never been read. */
     if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
@@ -188,13 +183,11 @@ void TempHumidPlugin::process()
 
         m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
     }
-
-    unlock();
 }
 
 void TempHumidPlugin::active(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     /* Set time to show page - either 10s or slot_time / 4
      * read here because otherwise we do not get config changes during runtime in slot_time.
@@ -215,8 +208,6 @@ void TempHumidPlugin::active(YAGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
-    unlock();
-
     return;
 }
 
@@ -228,9 +219,8 @@ void TempHumidPlugin::inactive()
 
 void TempHumidPlugin::update(YAGfx& gfx)
 {
-    bool showPage = false;
-
-    lock();
+    bool                showPage = false;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     if (false == m_timer.isTimerRunning())
     {
@@ -316,8 +306,6 @@ void TempHumidPlugin::update(YAGfx& gfx)
         }
     }
 
-    unlock();
-
     return;
 }
 
@@ -328,26 +316,6 @@ void TempHumidPlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void TempHumidPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void TempHumidPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
-}
 
 /******************************************************************************
  * External Functions

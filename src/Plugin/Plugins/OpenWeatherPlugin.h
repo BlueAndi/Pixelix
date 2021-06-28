@@ -51,6 +51,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <TaskProxy.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -88,7 +89,7 @@ public:
         m_client(),
         m_requestTimer(),
         m_updateContentTimer(),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_isConnectionError(false),
         m_currentTemp("\\calign?"),
         m_currentWeatherIcon(IMAGE_PATH_STD_ICON),
@@ -103,7 +104,7 @@ public:
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -145,11 +146,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -401,7 +398,7 @@ private:
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
     SimpleTimer                 m_updateContentTimer;       /**< Timer used for duration ticks in [s]. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    mutable Mutex               m_mutex;                    /**< Mutex to protect against concurrent access. */
     bool                        m_isConnectionError;        /**< Is connection error happened? */
     String                      m_currentTemp;              /**< The current temperature. */
     String                      m_currentWeatherIcon;       /**< The current weather condition icon. */
@@ -486,16 +483,6 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 
     /**
      * Clear the task proxy queue.

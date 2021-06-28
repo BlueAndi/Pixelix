@@ -51,6 +51,7 @@
 #include <FadeLinear.h>
 #include <FadeMoveX.h>
 #include <FadeMoveY.h>
+#include <Mutex.hpp>
 
 #include "IPluginMaintenance.hpp"
 #include "Slot.h"
@@ -294,7 +295,7 @@ public:
 private:
 
     /** Mutex to lock/unlock display update. */
-    SemaphoreHandle_t   m_xMutex;
+    Mutex               m_mutex;
 
     /** Display update task handle */
     TaskHandle_t        m_taskHandle;
@@ -402,17 +403,6 @@ private:
      * @param[in]   parameters  Task pParameters
      */
     static void updateTask(void* parameters);
-
-    /**
-     * Lock display and prevent the display update, which will be done in a
-     * separate task.
-     */
-    void lock(void);
-
-    /**
-     * Unlock display.
-     */
-    void unlock(void);
 
     /**
      * Load display slot configuration from persistent memory.

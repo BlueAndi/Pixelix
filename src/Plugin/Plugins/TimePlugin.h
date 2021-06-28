@@ -49,6 +49,7 @@
 #include "Plugin.hpp"
 
 #include <TextWidget.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -78,12 +79,12 @@ public:
         m_checkTimeUpdateTimer(),
         m_currentMinute(0),
         m_isUpdateAvailable(false),
-        m_xMutex(nullptr)
+        m_mutex()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -91,11 +92,7 @@ public:
      */
     ~TimePlugin()
     {
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -156,7 +153,7 @@ private:
     SimpleTimer         m_checkTimeUpdateTimer; /**< Timer, used for cyclic check if time update is necessarry. */
     int32_t             m_currentMinute;        /**< Variable to hold the current minute value. */
     bool                m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
-    SemaphoreHandle_t   m_xMutex;               /**< Mutex to protect against concurrent access. */
+    Mutex               m_mutex;                /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current time and update the text, which to be displayed.
@@ -165,16 +162,6 @@ private:
      * @param[in] force Force update independent of time.
      */
     void updateTime(bool force);
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 };
 
 /******************************************************************************

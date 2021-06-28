@@ -53,6 +53,7 @@
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <TaskProxy.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -83,14 +84,14 @@ public:
         m_textWidget("?"),
         m_ipAddress("192.168.1.123"), /* Example data */
         m_client(),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_requestTimer(),
         m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -121,11 +122,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -256,14 +253,14 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_ipAddress;                /**< IP-address of the ShellyPlugS server. */
-    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    SimpleTimer                 m_requestTimer;             /**< Timer is used for cyclic ShellyPlugS  http request. */
+    Canvas*                 m_textCanvas;       /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;       /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    String                  m_ipAddress;        /**< IP-address of the ShellyPlugS server. */
+    AsyncHttpClient         m_client;           /**< Asynchronous HTTP client. */
+    mutable Mutex           m_mutex;            /**< Mutex to protect against concurrent access. */
+    SimpleTimer             m_requestTimer;     /**< Timer is used for cyclic ShellyPlugS  http request. */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -325,16 +322,6 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 
     /**
      * Clear the task proxy queue.

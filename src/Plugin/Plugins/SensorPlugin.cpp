@@ -125,7 +125,7 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void SensorPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -143,32 +143,27 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
     /* Force update. */
     m_updateTimer.start(0U);
 
-    unlock();
-
     return;
 }
 
 void SensorPlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String              configurationFilename = getFullPathToConfiguration();
+    MutexGuard<Mutex>   guard(m_mutex);
 
     if (false != FILESYSTEM.remove(configurationFilename))
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
-    unlock();
-
     return;
 }
 
 void SensorPlugin::active(YAGfx& gfx)
 {
-    UTIL_NOT_USED(gfx);
+    MutexGuard<Mutex> guard(m_mutex);
 
-    lock();
+    UTIL_NOT_USED(gfx);
 
     /* Load configuration, because it may be changed by web request
      * or direct editing.
@@ -177,8 +172,6 @@ void SensorPlugin::active(YAGfx& gfx)
     {
         m_sensorChannel = getChannel(m_sensorIdx, m_channelIdx);
     }
-
-    unlock();
 
     return;
 }
@@ -191,7 +184,7 @@ void SensorPlugin::inactive()
 
 void SensorPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (true == m_updateTimer.isTimeout())
     {
@@ -202,16 +195,13 @@ void SensorPlugin::update(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
 
-    unlock();
-
     return;
 }
 
 bool SensorPlugin::getSensorChannel(uint8_t& sensorIdx, uint8_t& channelIdx) const
 {
-    bool    isAvailable = false;
-
-    lock();
+    bool                isAvailable = false;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     sensorIdx   = m_sensorIdx;
     channelIdx  = m_channelIdx;
@@ -221,17 +211,14 @@ bool SensorPlugin::getSensorChannel(uint8_t& sensorIdx, uint8_t& channelIdx) con
         isAvailable = true;
     }
 
-    unlock();
-
     return isAvailable;
 }
 
 bool SensorPlugin::setSensorChannel(uint8_t sensorIdx, uint8_t channelIdx)
 {
-    ISensorChannel* channel     = nullptr;
-    bool            isAvailable = false;
-
-    lock();
+    ISensorChannel*     channel     = nullptr;
+    bool                isAvailable = false;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     /* Anything changed? */
     if ((sensorIdx != m_sensorIdx) ||
@@ -264,8 +251,6 @@ bool SensorPlugin::setSensorChannel(uint8_t sensorIdx, uint8_t channelIdx)
         ;
     }
 
-    unlock();
-
     return isAvailable;
 }
 
@@ -276,26 +261,6 @@ bool SensorPlugin::setSensorChannel(uint8_t sensorIdx, uint8_t channelIdx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void SensorPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void SensorPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
-}
 
 void SensorPlugin::update()
 {

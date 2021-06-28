@@ -230,7 +230,7 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -287,14 +287,12 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
         }
     }
 
-    unlock();
-
     return;
 }
 
 void IconTextLampPlugin::stop()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (false != FILESYSTEM.remove(getFileName()))
     {
@@ -318,13 +316,11 @@ void IconTextLampPlugin::stop()
         delete m_lampCanvas;
         m_lampCanvas = nullptr;
     }
-
-    unlock();
 }
 
 void IconTextLampPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -343,27 +339,24 @@ void IconTextLampPlugin::update(YAGfx& gfx)
         m_lampCanvas->update(gfx);
     }
 
-    unlock();
-
     return;
 }
 
 String IconTextLampPlugin::getText() const
 {
-    String formattedText;
+    String              formattedText;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     formattedText = m_textWidget.getFormatStr();
-    unlock();
 
     return formattedText;
 }
 
 void IconTextLampPlugin::setText(const String& formatText)
 {
-    unlock();
+    MutexGuard<Mutex> guard(m_mutex);
+
     m_textWidget.setFormatStr(formatText);
-    unlock();
 
     return;
 }
@@ -374,9 +367,9 @@ void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t
         (ICON_WIDTH >= width) &&
         (ICON_HEIGHT >= height))
     {
-        lock();
+        MutexGuard<Mutex> guard(m_mutex);
+
         m_bitmapWidget.set(bitmap, width, height);
-        unlock();
     }
 
     return;
@@ -384,11 +377,10 @@ void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t
 
 bool IconTextLampPlugin::loadBitmap(const String& filename)
 {
-    bool status = false;
+    bool                status = false;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     status = m_bitmapWidget.load(FILESYSTEM, filename);
-    unlock();
 
     return status;
 }
@@ -399,9 +391,9 @@ bool IconTextLampPlugin::getLamp(uint8_t lampId) const
 
     if (MAX_LAMPS > lampId)
     {
-        lock();
+        MutexGuard<Mutex> guard(m_mutex);
+
         lampState = m_lampWidgets[lampId].getOnState();
-        unlock();
     }
 
     return lampState;
@@ -411,9 +403,9 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
-        lock();
+        MutexGuard<Mutex> guard(m_mutex);
+
         m_lampWidgets[lampId].setOnState(state);
-        unlock();
     }
 
     return;
@@ -430,26 +422,6 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 String IconTextLampPlugin::getFileName()
 {
     return generateFullPath(".bmp");
-}
-
-void IconTextLampPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void IconTextLampPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)

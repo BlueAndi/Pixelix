@@ -51,6 +51,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <LampWidget.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -83,9 +84,9 @@ public:
         m_bitmapWidget(),
         m_textWidget(),
         m_lampWidgets(),
-        m_xMutex(nullptr)
+        m_mutex()
     {
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -111,11 +112,7 @@ public:
             m_lampCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -287,13 +284,13 @@ private:
      */
     static const uint8_t    MAX_LAMPS   = 4U;
 
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_lampCanvas;               /**< Canvas used for the lamp widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    LampWidget                  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    Canvas*                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    Canvas*                 m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                 m_lampCanvas;               /**< Canvas used for the lamp widget. */
+    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    LampWidget              m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
+    mutable Mutex           m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.
@@ -301,16 +298,6 @@ private:
      * @return Image filename with path.
      */
     String getFileName(void);
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 
     /**
      * Calculates the optimal layout for several elements, which shall be aligned.

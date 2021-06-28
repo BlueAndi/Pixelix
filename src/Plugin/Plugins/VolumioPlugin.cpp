@@ -125,7 +125,7 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -190,16 +190,13 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
 
     m_offlineTimer.start(OFFLINE_PERIOD);
 
-    unlock();
-
     return;
 }
 
 void VolumioPlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String              configurationFilename = getFullPathToConfiguration();
+    MutexGuard<Mutex>   guard(m_mutex);
 
     m_offlineTimer.stop();
     m_requestTimer.stop();
@@ -221,16 +218,13 @@ void VolumioPlugin::stop()
         m_textCanvas = nullptr;
     }
 
-    unlock();
-
     return;
 }
 
 void VolumioPlugin::process()
 {
-    Msg msg;
-
-    lock();
+    Msg                 msg;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -300,14 +294,12 @@ void VolumioPlugin::process()
         disable();
     }
 
-    unlock();
-
     return;
 }
 
 void VolumioPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -330,28 +322,25 @@ void VolumioPlugin::update(YAGfx& gfx)
         gfx.drawHLine(tcX, m_textCanvas->getHeight() - 1, posWidth, posColor);
     }
 
-    unlock();
-
     return;
 }
 
 String VolumioPlugin::getHost() const
 {
-    String host;
+    String              host;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     host = m_volumioHost;
-    unlock();
 
     return host;
 }
 
 void VolumioPlugin::setHost(const String& host)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
+
     m_volumioHost = host;
     (void)saveConfiguration();
-    unlock();
 
     return;
 }
@@ -699,26 +688,6 @@ bool VolumioPlugin::loadConfiguration()
     }
 
     return status;
-}
-
-void VolumioPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void VolumioPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 void VolumioPlugin::clearQueue()

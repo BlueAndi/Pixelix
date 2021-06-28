@@ -76,7 +76,7 @@
 
 void TimePlugin::process()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if ((true == m_checkTimeUpdateTimer.isTimerRunning()) &&
         (true == m_checkTimeUpdateTimer.isTimeout()))
@@ -86,16 +86,14 @@ void TimePlugin::process()
         m_checkTimeUpdateTimer.restart();
     }
 
-    unlock();
-
     return;
 }
 
 void TimePlugin::active(YAGfx& gfx)
 {
-    UTIL_NOT_USED(gfx);
+    MutexGuard<Mutex> guard(m_mutex);
 
-    lock();
+    UTIL_NOT_USED(gfx);
 
     /* Force immediate time update to avoid displaying
      * an old time for one TIME_UPDATE_PERIOD.
@@ -107,24 +105,20 @@ void TimePlugin::active(YAGfx& gfx)
      */
     m_isUpdateAvailable = true;
     m_checkTimeUpdateTimer.start(CHECK_TIME_UPDATE_PERIOD);
-
-    unlock();
 }
 
 void TimePlugin::inactive()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     m_checkTimeUpdateTimer.stop();
-
-    unlock();
 
     return;
 }
 
 void TimePlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (false != m_isUpdateAvailable)
     {
@@ -134,18 +128,14 @@ void TimePlugin::update(YAGfx& gfx)
         m_isUpdateAvailable = false;
     }
 
-    unlock();
-
     return;
 }
 
 void TimePlugin::setText(const String& formatText)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
-    
-    unlock();
 
     return;
 }
@@ -177,26 +167,6 @@ void TimePlugin::updateTime(bool force)
             m_isUpdateAvailable = true;
         }
     }
-}
-
-void TimePlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void TimePlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 /******************************************************************************

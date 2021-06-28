@@ -167,7 +167,7 @@ void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -217,16 +217,13 @@ void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
-    unlock();
-
     return;
 }
 
 void OpenWeatherPlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String              configurationFilename = getFullPathToConfiguration();
+    MutexGuard<Mutex>   guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -247,16 +244,13 @@ void OpenWeatherPlugin::stop()
         m_textCanvas = nullptr;
     }
 
-    unlock();
-
     return;
 }
 
 void OpenWeatherPlugin::process()
 {
-    Msg msg;
-
-    lock();
+    Msg                 msg;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -323,15 +317,13 @@ void OpenWeatherPlugin::process()
             break;
         }
     }
-    
-    unlock();
 
     return;
 }
 
 void OpenWeatherPlugin::active(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     /* Load configuration, because it may be changed by web request
      * or direct editing.
@@ -348,25 +340,21 @@ void OpenWeatherPlugin::active(YAGfx& gfx)
     m_durationCounter = 0U;
     m_updateContentTimer.start(DURATION_TICK_PERIOD);
 
-    unlock();
-
     return;
 }
 
 void OpenWeatherPlugin::inactive()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     m_updateContentTimer.stop();
-
-    unlock();
 
     return;
 }
 
 void OpenWeatherPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (false != m_isUpdateAvailable)
     {
@@ -385,25 +373,22 @@ void OpenWeatherPlugin::update(YAGfx& gfx)
         m_isUpdateAvailable = false;
     }
 
-    unlock();
-
     return;
 }
 
 String OpenWeatherPlugin::getApiKey() const
 {
-    String apiKey;
+    String              apiKey;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     apiKey = m_apiKey;
-    unlock();
 
     return apiKey;
 }
 
 void OpenWeatherPlugin::setApiKey(const String& apiKey)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (apiKey != m_apiKey)
     {
@@ -412,25 +397,22 @@ void OpenWeatherPlugin::setApiKey(const String& apiKey)
         (void)saveConfiguration();
     }
 
-    unlock();
-
     return;
 }
 
 String OpenWeatherPlugin::getLatitude() const
 {
-    String latitude;
+    String              latitude;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     latitude = m_latitude;
-    unlock();
 
     return latitude;
 }
 
 void OpenWeatherPlugin::setLatitude(const String& latitude)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (latitude != m_latitude)
     {
@@ -439,25 +421,22 @@ void OpenWeatherPlugin::setLatitude(const String& latitude)
         (void)saveConfiguration();
     }
 
-    unlock();
-
     return;
 }
 
 String OpenWeatherPlugin::getLongitude() const
 {
-    String longitude;
+    String              longitude;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     longitude = m_longitude;
-    unlock();
 
     return longitude;
 }
 
 void OpenWeatherPlugin::setLongitude(const String& longitude)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (longitude != m_longitude)
     {
@@ -466,25 +445,22 @@ void OpenWeatherPlugin::setLongitude(const String& longitude)
         (void)saveConfiguration();
     }
 
-    unlock();
-
     return;
 }
 
 OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInformation() const
 {
     OtherWeatherInformation additionalInformation;
+    MutexGuard<Mutex>       guard(m_mutex);
 
-    lock();
     additionalInformation = m_additionalInformation;
-    unlock();
 
     return additionalInformation;
 }
 
 void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& additionalInformation)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (additionalInformation != m_additionalInformation)
     {
@@ -493,25 +469,22 @@ void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& 
         (void)saveConfiguration();
     }
 
-    unlock();
-
     return;
 }
 
 String OpenWeatherPlugin::getUnits() const
 {
-    String units;
+    String              units;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     units = m_units;
-    unlock();
 
     return units;
 }
 
 void OpenWeatherPlugin::setUnits(const String& units)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (units != m_units)
     {
@@ -519,8 +492,6 @@ void OpenWeatherPlugin::setUnits(const String& units)
 
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
@@ -925,26 +896,6 @@ bool OpenWeatherPlugin::loadConfiguration()
     }
 
     return status;
-}
-
-void OpenWeatherPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void OpenWeatherPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 void OpenWeatherPlugin::clearQueue()

@@ -120,7 +120,7 @@ bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void ShellyPlugSPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -166,16 +166,13 @@ void ShellyPlugSPlugin::start(uint16_t width, uint16_t height)
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
-    unlock();
-
     return;
 }
 
 void ShellyPlugSPlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String              configurationFilename = getFullPathToConfiguration();
+    MutexGuard<Mutex>   guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -196,16 +193,13 @@ void ShellyPlugSPlugin::stop()
         m_textCanvas = nullptr;
     }
 
-    unlock();
-
     return;
 }
 
 void ShellyPlugSPlugin::process()
 {
-    Msg msg;
-
-    lock();
+    Msg                 msg;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -243,14 +237,12 @@ void ShellyPlugSPlugin::process()
         }
     }
 
-    unlock();
-
     return;
 }
 
 void ShellyPlugSPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -264,14 +256,12 @@ void ShellyPlugSPlugin::update(YAGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
-    unlock();
-
     return;
 }
 
 void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (ipAddress != m_ipAddress)
     {
@@ -279,18 +269,16 @@ void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
 
         (void)saveConfiguration();
     }
-    unlock();
 
     return;
 }
 
 String ShellyPlugSPlugin::getIPAddress() const
 {
-    String ipAddress;
+    String              ipAddress;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     ipAddress = m_ipAddress;
-    unlock();
 
     return ipAddress;
 }
@@ -456,26 +444,6 @@ bool ShellyPlugSPlugin::loadConfiguration()
     }
 
     return status;
-}
-
-void ShellyPlugSPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void ShellyPlugSPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 void ShellyPlugSPlugin::clearQueue()

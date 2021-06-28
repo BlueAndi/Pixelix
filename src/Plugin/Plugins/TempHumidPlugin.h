@@ -50,6 +50,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <ISensorChannel.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -83,7 +84,7 @@ public:
         m_page(TEMPERATURE),
         m_pageTime(10000U),
         m_timer(),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_humid(0.0F),
         m_temp(0.0F),
         m_sensorUpdateTimer(),
@@ -94,7 +95,7 @@ public:
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();        
+        (void)m_mutex.create();
     }
 
     /**
@@ -124,11 +125,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }        
+        m_mutex.destroy();
     }
 
     /**
@@ -230,24 +227,13 @@ private:
     uint8_t                     m_page;                     /**< Number of page, which to show. */
     unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
     SimpleTimer                 m_timer;                    /**< Timer for changing page. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    Mutex                       m_mutex;                    /**< Mutex to protect against concurrent access. */
     float                       m_humid;                    /**< Last sensor humidity value */
     float                       m_temp;                     /**< Last sensor temperature value */
     SimpleTimer                 m_sensorUpdateTimer;        /**< Time used for cyclic sensor reading. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
     ISensorChannel*             m_temperatureSensorCh;      /**< Temperature sensor channel */
     ISensorChannel*             m_humiditySensorCh;         /**< Humidity sensor channel */
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
-
 };
 
 /******************************************************************************

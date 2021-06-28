@@ -51,6 +51,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <TaskProxy.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -85,14 +86,14 @@ public:
         m_relevantResponsePart(),
         m_client(),
         m_requestTimer(),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_isConnectionError(false),
         m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -123,11 +124,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -272,17 +269,17 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_ipAddress;                /**< IP-address of the Gruenbeck server. */
-    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
-    String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
-    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer                 m_requestTimer;             /**< Timer, used for cyclic request of new data. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    bool                        m_isConnectionError;        /**< Is connection error happened? */
+    Canvas*                 m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    String                  m_ipAddress;                /**< IP-address of the Gruenbeck server. */
+    bool                    m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
+    String                  m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
+    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
+    SimpleTimer             m_requestTimer;             /**< Timer, used for cyclic request of new data. */
+    mutable Mutex           m_mutex;                    /**< Mutex to protect against concurrent access. */
+    bool                    m_isConnectionError;        /**< Is connection error happened? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -346,16 +343,6 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 
     /**
      * Clear the task proxy queue.

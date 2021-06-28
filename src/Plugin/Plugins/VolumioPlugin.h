@@ -51,6 +51,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <TaskProxy.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -93,7 +94,7 @@ public:
         m_client(),
         m_requestTimer(),
         m_offlineTimer(),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_isConnectionError(false),
         m_lastSeekValue(0U),
         m_pos(0U),
@@ -103,7 +104,7 @@ public:
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -134,11 +135,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -303,24 +300,24 @@ private:
      */
     static const uint32_t   OFFLINE_PERIOD      = (60U * 1000U);
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_stdIconWidget;            /**< Bitmap widget, used to show the standard icon. */
-    BitmapWidget                m_stopIconWidget;           /**< Bitmap widget, used to show the stop icon. */
-    BitmapWidget                m_playIconWidget;           /**< Bitmap widget, used to show the play icon. */
-    BitmapWidget                m_pauseIconWidget;          /**< Bitmap widget, used to show the pause icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_volumioHost;              /**< Host address of the VOLUMIO server. */
-    String                      m_urlIcon;                  /**< REST API URL for updating the icon */
-    String                      m_urlText;                  /**< REST API URL for updating the text */
-    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
-    SimpleTimer                 m_offlineTimer;             /**< Timer used for offline detection. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    bool                        m_isConnectionError;        /**< Is connection error happened? */
-    uint32_t                    m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
-    uint8_t                     m_pos;                      /**< Current music position in percent. */
-    VolumioState                m_state;                    /**< Volumio player state */
+    Canvas*                 m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_stdIconWidget;            /**< Bitmap widget, used to show the standard icon. */
+    BitmapWidget            m_stopIconWidget;           /**< Bitmap widget, used to show the stop icon. */
+    BitmapWidget            m_playIconWidget;           /**< Bitmap widget, used to show the play icon. */
+    BitmapWidget            m_pauseIconWidget;          /**< Bitmap widget, used to show the pause icon. */
+    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    String                  m_volumioHost;              /**< Host address of the VOLUMIO server. */
+    String                  m_urlIcon;                  /**< REST API URL for updating the icon */
+    String                  m_urlText;                  /**< REST API URL for updating the text */
+    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
+    SimpleTimer             m_requestTimer;             /**< Timer used for cyclic request of new data. */
+    SimpleTimer             m_offlineTimer;             /**< Timer used for offline detection. */
+    mutable Mutex           m_mutex;                    /**< Mutex to protect against concurrent access. */
+    bool                    m_isConnectionError;        /**< Is connection error happened? */
+    uint32_t                m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
+    uint8_t                 m_pos;                      /**< Current music position in percent. */
+    VolumioState            m_state;                    /**< Volumio player state */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -392,16 +389,6 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 
     /**
      * Clear the task proxy queue.

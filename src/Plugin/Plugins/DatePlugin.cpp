@@ -75,7 +75,7 @@
 
 void DatePlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr == m_textCanvas)
     {
@@ -110,14 +110,12 @@ void DatePlugin::start(uint16_t width, uint16_t height)
         }
     }
 
-    unlock();
-
     return;
 }
 
 void DatePlugin::stop()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr != m_textCanvas)
     {
@@ -131,14 +129,12 @@ void DatePlugin::stop()
         m_lampCanvas = nullptr;
     }
 
-    unlock();
-
     return;
 }
 
 void DatePlugin::process()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
         (true == m_checkDateUpdateTimer.isTimeout()))
@@ -148,16 +144,14 @@ void DatePlugin::process()
         m_checkDateUpdateTimer.restart();
     }
 
-    unlock();
-
     return;
 }
 
 void DatePlugin::active(YAGfx& gfx)
 {
-    UTIL_NOT_USED(gfx);
+    MutexGuard<Mutex> guard(m_mutex);
 
-    lock();
+    UTIL_NOT_USED(gfx);
 
     /* Force immediate date update on activation */
     updateDate(true);
@@ -167,24 +161,20 @@ void DatePlugin::active(YAGfx& gfx)
      */
     m_isUpdateAvailable = true;
     m_checkDateUpdateTimer.start(CHECK_DATE_UPDATE_PERIOD);
-
-    unlock();
 }
 
 void DatePlugin::inactive()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     m_checkDateUpdateTimer.stop();
-
-    unlock();
 
     return;
 }
 
 void DatePlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (false != m_isUpdateAvailable)
     {
@@ -203,18 +193,14 @@ void DatePlugin::update(YAGfx& gfx)
         m_isUpdateAvailable = false;
     }
 
-    unlock();
-
     return;
 }
 
 void DatePlugin::setText(const String& formatText)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
-
-    unlock();
 
     return;
 }
@@ -223,11 +209,9 @@ void DatePlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
-        lock();
+        MutexGuard<Mutex> guard(m_mutex);
 
         m_lampWidgets[lampId].setOnState(state);
-
-        unlock();
     }
 
     return;
@@ -271,26 +255,6 @@ void DatePlugin::updateDate(bool force)
             m_isUpdateAvailable = true;
         }
     }
-}
-
-void DatePlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void DatePlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 /******************************************************************************

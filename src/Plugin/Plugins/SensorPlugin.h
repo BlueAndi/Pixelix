@@ -49,6 +49,7 @@
 #include <TextWidget.h>
 #include <ISensorChannel.hpp>
 #include <SimpleTimer.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -74,7 +75,7 @@ public:
     SensorPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
         m_textWidget(),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_sensorIdx(0U),
         m_channelIdx(0U),
         m_sensorChannel(nullptr)
@@ -82,7 +83,7 @@ public:
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -90,11 +91,7 @@ public:
      */
     ~SensorPlugin()
     {
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -214,21 +211,11 @@ private:
     static const uint32_t   UPDATE_PERIOD   = 2000U;
 
     TextWidget          m_textWidget;       /**< Text widget, used for showing the text. */
-    SemaphoreHandle_t   m_xMutex;           /**< Mutex to protect against concurrent access. */
+    mutable Mutex       m_mutex;            /**< Mutex to protect against concurrent access. */
     uint8_t             m_sensorIdx;        /**< Index of selected sensor. */
     uint8_t             m_channelIdx;       /**< Index of selected channel. */
     ISensorChannel*     m_sensorChannel;    /**< Values of this channel will be shown. */
     SimpleTimer         m_updateTimer;      /**< Sensor value update timer. */
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 
     /**
      * Update shown information.

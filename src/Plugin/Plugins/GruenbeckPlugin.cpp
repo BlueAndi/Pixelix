@@ -117,7 +117,7 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void GruenbeckPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -166,16 +166,13 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
-    unlock();
-
     return;
 }
 
 void GruenbeckPlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String              configurationFilename = getFullPathToConfiguration();
+    MutexGuard<Mutex>   guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -196,16 +193,13 @@ void GruenbeckPlugin::stop()
         m_textCanvas = nullptr;
     }
 
-    unlock();
-
     return;
 }
 
 void GruenbeckPlugin::process()
 {
-    Msg msg;
-
-    lock();
+    Msg                 msg;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -264,14 +258,12 @@ void GruenbeckPlugin::process()
         }
     }
 
-    unlock();
-
     return;
 }
 
 void GruenbeckPlugin::active(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -285,8 +277,6 @@ void GruenbeckPlugin::active(YAGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
-    unlock();
-
     return;
 }
 
@@ -298,7 +288,7 @@ void GruenbeckPlugin::inactive()
 
 void GruenbeckPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (false != m_httpResponseReceived)
     {
@@ -320,28 +310,25 @@ void GruenbeckPlugin::update(YAGfx& gfx)
         m_httpResponseReceived = false;
     }
 
-    unlock();
-
     return;
 }
 
 String GruenbeckPlugin::getIPAddress() const
 {
-    String ipAddress;
+    String              ipAddress;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     ipAddress = m_ipAddress;
-    unlock();
 
     return ipAddress;
 }
 
 void GruenbeckPlugin::setIPAddress(const String& ipAddress)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
+
     m_ipAddress = ipAddress;
     (void)saveConfiguration();
-    unlock();
 
     return;
 }
@@ -514,26 +501,6 @@ bool GruenbeckPlugin::loadConfiguration()
     }
 
     return status;
-}
-
-void GruenbeckPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void GruenbeckPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 void GruenbeckPlugin::clearQueue()

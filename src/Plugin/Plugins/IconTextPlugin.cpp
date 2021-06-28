@@ -147,7 +147,7 @@ bool IconTextPlugin::isUploadAccepted(const String& topic, const String& srcFile
 
 void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -175,14 +175,12 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
         }
     }
 
-    unlock();
-
     return;
 }
 
 void IconTextPlugin::stop()
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (false != FILESYSTEM.remove(getFileName()))
     {
@@ -201,14 +199,12 @@ void IconTextPlugin::stop()
         m_textCanvas = nullptr;
     }
 
-    unlock();
-
     return;
 }
 
 void IconTextPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -222,27 +218,24 @@ void IconTextPlugin::update(YAGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
-    unlock();
-
     return;
 }
 
 String IconTextPlugin::getText() const
 {
-    String formattedText;
+    String              formattedText;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     formattedText = m_textWidget.getFormatStr();
-    unlock();
 
     return formattedText;
 }
 
 void IconTextPlugin::setText(const String& formatText)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
+
     m_textWidget.setFormatStr(formatText);
-    unlock();
 
     return;
 }
@@ -253,9 +246,9 @@ void IconTextPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t hei
         (ICON_WIDTH >= width) &&
         (ICON_HEIGHT >= height))
     {
-        lock();
+        MutexGuard<Mutex> guard(m_mutex);
+
         m_bitmapWidget.set(bitmap, width, height);
-        unlock();
     }
 
     return;
@@ -263,11 +256,10 @@ void IconTextPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t hei
 
 bool IconTextPlugin::loadBitmap(const String& filename)
 {
-    bool status = false;
+    bool                status = false;
+    MutexGuard<Mutex>   guard(m_mutex);
 
-    lock();
     status = m_bitmapWidget.load(FILESYSTEM, filename);
-    unlock();
 
     return status;
 }
@@ -283,26 +275,6 @@ bool IconTextPlugin::loadBitmap(const String& filename)
 String IconTextPlugin::getFileName()
 {
     return generateFullPath(".bmp");
-}
-
-void IconTextPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void IconTextPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 /******************************************************************************

@@ -50,6 +50,7 @@
 #include <LampWidget.h>
 #include <TextWidget.h>
 #include <Canvas.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -83,13 +84,13 @@ public:
         m_durationCounter(0u),
         m_isUpdateAvailable(false),
         m_slotInterf(nullptr),
-        m_xMutex(nullptr)
+        m_mutex()
 
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -109,11 +110,7 @@ public:
             m_lampCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -212,7 +209,7 @@ private:
     uint8_t             m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
     bool                m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
     const ISlotPlugin*  m_slotInterf;               /**< Slot interface */
-    SemaphoreHandle_t   m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    Mutex               m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current date/time and update the text, which to be displayed.
@@ -243,16 +240,6 @@ private:
      * @return If the calculation is successful, it will return true otherwise false.
      */
     bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 };
 
 /******************************************************************************

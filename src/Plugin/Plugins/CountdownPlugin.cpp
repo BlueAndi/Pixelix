@@ -149,7 +149,7 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void CountdownPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -189,16 +189,13 @@ void CountdownPlugin::start(uint16_t width, uint16_t height)
 
     m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
-    unlock();
-
     return;
 }
 
 void CountdownPlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String              configurationFilename = getFullPathToConfiguration();
+    MutexGuard<Mutex>   guard(m_mutex);
 
     m_cfgReloadTimer.stop();
 
@@ -219,14 +216,12 @@ void CountdownPlugin::stop()
         m_textCanvas = nullptr;
     }
 
-    unlock();
-
     return;
 }
 
 void CountdownPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if ((true == m_cfgReloadTimer.isTimerRunning()) &&
         (true == m_cfgReloadTimer.isTimeout()))
@@ -249,27 +244,22 @@ void CountdownPlugin::update(YAGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
-    unlock();
-
     return;
 }
 
 CountdownPlugin::DateDMY CountdownPlugin::getTargetDate() const
 {
-    DateDMY targetDate;
-
-    lock();
+    DateDMY             targetDate;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     targetDate = m_targetDate;
-
-    unlock();
 
     return targetDate;
 }
 
 void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if ((targetDate.day != m_targetDate.day) ||
         (targetDate.month != m_targetDate.month) ||
@@ -285,27 +275,22 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
         (void)saveConfiguration();
     }
 
-    unlock();
-
     return;
 }
 
 CountdownPlugin::TargetDayDescription CountdownPlugin::getTargetDayDescription() const
 {
-    TargetDayDescription desc;
-
-    lock();
+    TargetDayDescription    desc;
+    MutexGuard<Mutex>       guard(m_mutex);
 
     desc = m_targetDateInformation;
-
-    unlock();
 
     return desc;
 }
 
 void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& targetDayDescription)
 {
-    lock();
+    MutexGuard<Mutex> guard(m_mutex);
 
     if ((targetDayDescription.plural != m_targetDateInformation.plural) ||
         (targetDayDescription.singular != m_targetDateInformation.singular))
@@ -319,8 +304,6 @@ void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& target
          */
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
@@ -463,26 +446,6 @@ uint32_t CountdownPlugin::dateToDays(const CountdownPlugin::DateDMY& date) const
     dateInDays += countLeapYears(date);
 
     return dateInDays;
-}
-
-void CountdownPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void CountdownPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 /******************************************************************************
