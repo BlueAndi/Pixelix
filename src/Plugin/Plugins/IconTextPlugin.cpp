@@ -147,7 +147,7 @@ bool IconTextPlugin::isUploadAccepted(const String& topic, const String& srcFile
 
 void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -180,7 +180,7 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
 
 void IconTextPlugin::stop()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false != FILESYSTEM.remove(getFileName()))
     {
@@ -204,7 +204,7 @@ void IconTextPlugin::stop()
 
 void IconTextPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -223,8 +223,8 @@ void IconTextPlugin::update(YAGfx& gfx)
 
 String IconTextPlugin::getText() const
 {
-    String              formattedText;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      formattedText;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     formattedText = m_textWidget.getFormatStr();
 
@@ -233,7 +233,7 @@ String IconTextPlugin::getText() const
 
 void IconTextPlugin::setText(const String& formatText)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
 
@@ -246,7 +246,7 @@ void IconTextPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t hei
         (ICON_WIDTH >= width) &&
         (ICON_HEIGHT >= height))
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         m_bitmapWidget.set(bitmap, width, height);
     }
@@ -256,8 +256,8 @@ void IconTextPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t hei
 
 bool IconTextPlugin::loadBitmap(const String& filename)
 {
-    bool                status = false;
-    MutexGuard<Mutex>   guard(m_mutex);
+    bool                        status = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     status = m_bitmapWidget.load(FILESYSTEM, filename);
 

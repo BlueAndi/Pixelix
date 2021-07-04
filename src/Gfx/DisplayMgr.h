@@ -295,7 +295,7 @@ public:
 private:
 
     /** Mutex to lock/unlock display update. */
-    Mutex               m_mutex;
+    MutexRecursive      m_mutex;
 
     /** Display update task handle */
     TaskHandle_t        m_taskHandle;

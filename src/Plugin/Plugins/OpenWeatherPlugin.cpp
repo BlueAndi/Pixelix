@@ -167,7 +167,7 @@ void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -222,8 +222,8 @@ void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
 
 void OpenWeatherPlugin::stop()
 {
-    String              configurationFilename = getFullPathToConfiguration();
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -249,8 +249,8 @@ void OpenWeatherPlugin::stop()
 
 void OpenWeatherPlugin::process()
 {
-    Msg                 msg;
-    MutexGuard<Mutex>   guard(m_mutex);
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -323,7 +323,7 @@ void OpenWeatherPlugin::process()
 
 void OpenWeatherPlugin::active(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Load configuration, because it may be changed by web request
      * or direct editing.
@@ -345,7 +345,7 @@ void OpenWeatherPlugin::active(YAGfx& gfx)
 
 void OpenWeatherPlugin::inactive()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_updateContentTimer.stop();
 
@@ -354,7 +354,7 @@ void OpenWeatherPlugin::inactive()
 
 void OpenWeatherPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false != m_isUpdateAvailable)
     {
@@ -378,8 +378,8 @@ void OpenWeatherPlugin::update(YAGfx& gfx)
 
 String OpenWeatherPlugin::getApiKey() const
 {
-    String              apiKey;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      apiKey;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     apiKey = m_apiKey;
 
@@ -388,7 +388,7 @@ String OpenWeatherPlugin::getApiKey() const
 
 void OpenWeatherPlugin::setApiKey(const String& apiKey)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (apiKey != m_apiKey)
     {
@@ -402,8 +402,8 @@ void OpenWeatherPlugin::setApiKey(const String& apiKey)
 
 String OpenWeatherPlugin::getLatitude() const
 {
-    String              latitude;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      latitude;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     latitude = m_latitude;
 
@@ -412,7 +412,7 @@ String OpenWeatherPlugin::getLatitude() const
 
 void OpenWeatherPlugin::setLatitude(const String& latitude)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (latitude != m_latitude)
     {
@@ -426,8 +426,8 @@ void OpenWeatherPlugin::setLatitude(const String& latitude)
 
 String OpenWeatherPlugin::getLongitude() const
 {
-    String              longitude;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      longitude;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     longitude = m_longitude;
 
@@ -436,7 +436,7 @@ String OpenWeatherPlugin::getLongitude() const
 
 void OpenWeatherPlugin::setLongitude(const String& longitude)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (longitude != m_longitude)
     {
@@ -450,8 +450,8 @@ void OpenWeatherPlugin::setLongitude(const String& longitude)
 
 OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInformation() const
 {
-    OtherWeatherInformation additionalInformation;
-    MutexGuard<Mutex>       guard(m_mutex);
+    OtherWeatherInformation     additionalInformation;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     additionalInformation = m_additionalInformation;
 
@@ -460,7 +460,7 @@ OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInfor
 
 void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& additionalInformation)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (additionalInformation != m_additionalInformation)
     {
@@ -474,8 +474,8 @@ void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& 
 
 String OpenWeatherPlugin::getUnits() const
 {
-    String              units;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      units;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     units = m_units;
 
@@ -484,7 +484,7 @@ String OpenWeatherPlugin::getUnits() const
 
 void OpenWeatherPlugin::setUnits(const String& units)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (units != m_units)
     {

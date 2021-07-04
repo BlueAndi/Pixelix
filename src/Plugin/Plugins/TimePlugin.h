@@ -153,7 +153,7 @@ private:
     SimpleTimer         m_checkTimeUpdateTimer; /**< Timer, used for cyclic check if time update is necessarry. */
     int32_t             m_currentMinute;        /**< Variable to hold the current minute value. */
     bool                m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
-    Mutex               m_mutex;                /**< Mutex to protect against concurrent access. */
+    MutexRecursive      m_mutex;                /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current time and update the text, which to be displayed.

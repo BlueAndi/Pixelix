@@ -112,7 +112,7 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void JustTextPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
@@ -122,8 +122,8 @@ void JustTextPlugin::update(YAGfx& gfx)
 
 String JustTextPlugin::getText() const
 {
-    String              formattedText;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      formattedText;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     formattedText = m_textWidget.getFormatStr();
 
@@ -132,7 +132,7 @@ String JustTextPlugin::getText() const
 
 void JustTextPlugin::setText(const String& formatText)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
 

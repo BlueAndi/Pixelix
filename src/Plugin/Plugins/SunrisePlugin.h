@@ -271,7 +271,7 @@ private:
     String                  m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer             m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
-    mutable Mutex           m_mutex;                    /**< Mutex to protect against concurrent access. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_requestTimer;             /**< Timer is used for cyclic sunrise/sunset http request. */
 
     /**

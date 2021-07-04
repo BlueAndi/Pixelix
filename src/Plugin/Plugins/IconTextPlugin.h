@@ -243,12 +243,12 @@ private:
      */
     static const uint16_t ICON_HEIGHT   = 8U;
 
-    Canvas*             m_textCanvas;       /**< Canvas used for the text widget. */
-    Canvas*             m_iconCanvas;       /**< Canvas used for the bitmap widget. */
-    BitmapWidget        m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
-    TextWidget          m_textWidget;       /**< Text widget, used for showing the text. */
-    bool                m_isUploadError;    /**< Flag to signal a upload error. */
-    mutable Mutex       m_mutex;            /**< Mutex to protect against concurrent access. */
+    Canvas*                 m_textCanvas;       /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;       /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    bool                    m_isUploadError;    /**< Flag to signal a upload error. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.

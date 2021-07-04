@@ -149,7 +149,7 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void CountdownPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -194,8 +194,8 @@ void CountdownPlugin::start(uint16_t width, uint16_t height)
 
 void CountdownPlugin::stop()
 {
-    String              configurationFilename = getFullPathToConfiguration();
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_cfgReloadTimer.stop();
 
@@ -221,7 +221,7 @@ void CountdownPlugin::stop()
 
 void CountdownPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((true == m_cfgReloadTimer.isTimerRunning()) &&
         (true == m_cfgReloadTimer.isTimeout()))
@@ -249,8 +249,8 @@ void CountdownPlugin::update(YAGfx& gfx)
 
 CountdownPlugin::DateDMY CountdownPlugin::getTargetDate() const
 {
-    DateDMY             targetDate;
-    MutexGuard<Mutex>   guard(m_mutex);
+    DateDMY                     targetDate;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     targetDate = m_targetDate;
 
@@ -259,7 +259,7 @@ CountdownPlugin::DateDMY CountdownPlugin::getTargetDate() const
 
 void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((targetDate.day != m_targetDate.day) ||
         (targetDate.month != m_targetDate.month) ||
@@ -280,8 +280,8 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 
 CountdownPlugin::TargetDayDescription CountdownPlugin::getTargetDayDescription() const
 {
-    TargetDayDescription    desc;
-    MutexGuard<Mutex>       guard(m_mutex);
+    TargetDayDescription        desc;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     desc = m_targetDateInformation;
 
@@ -290,7 +290,7 @@ CountdownPlugin::TargetDayDescription CountdownPlugin::getTargetDayDescription()
 
 void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& targetDayDescription)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((targetDayDescription.plural != m_targetDateInformation.plural) ||
         (targetDayDescription.singular != m_targetDateInformation.singular))

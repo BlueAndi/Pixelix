@@ -398,7 +398,7 @@ private:
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
     SimpleTimer                 m_updateContentTimer;       /**< Timer used for duration ticks in [s]. */
-    mutable Mutex               m_mutex;                    /**< Mutex to protect against concurrent access. */
+    mutable MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
     bool                        m_isConnectionError;        /**< Is connection error happened? */
     String                      m_currentTemp;              /**< The current temperature. */
     String                      m_currentWeatherIcon;       /**< The current weather condition icon. */

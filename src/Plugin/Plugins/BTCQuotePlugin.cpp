@@ -69,7 +69,7 @@ const char* BTCQuotePlugin::BTC_USD_IMAGE_PATH     = "/images/BTC_USD.bmp";
 
 void BTCQuotePlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -109,7 +109,7 @@ void BTCQuotePlugin::start(uint16_t width, uint16_t height)
 
 void BTCQuotePlugin::stop()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -118,8 +118,8 @@ void BTCQuotePlugin::stop()
 
 void BTCQuotePlugin::process()
 {
-    Msg                 msg;
-    MutexGuard<Mutex>   guard(m_mutex);
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -162,7 +162,7 @@ void BTCQuotePlugin::process()
 
 void BTCQuotePlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 

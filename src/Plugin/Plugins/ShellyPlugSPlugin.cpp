@@ -120,7 +120,7 @@ bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void ShellyPlugSPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -171,8 +171,8 @@ void ShellyPlugSPlugin::start(uint16_t width, uint16_t height)
 
 void ShellyPlugSPlugin::stop()
 {
-    String              configurationFilename = getFullPathToConfiguration();
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -198,8 +198,8 @@ void ShellyPlugSPlugin::stop()
 
 void ShellyPlugSPlugin::process()
 {
-    Msg                 msg;
-    MutexGuard<Mutex>   guard(m_mutex);
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -242,7 +242,7 @@ void ShellyPlugSPlugin::process()
 
 void ShellyPlugSPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -261,7 +261,7 @@ void ShellyPlugSPlugin::update(YAGfx& gfx)
 
 void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (ipAddress != m_ipAddress)
     {
@@ -275,8 +275,8 @@ void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
 
 String ShellyPlugSPlugin::getIPAddress() const
 {
-    String              ipAddress;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      ipAddress;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     ipAddress = m_ipAddress;
 

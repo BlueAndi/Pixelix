@@ -125,7 +125,7 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void SensorPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -148,8 +148,8 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 
 void SensorPlugin::stop()
 {
-    String              configurationFilename = getFullPathToConfiguration();
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if (false != FILESYSTEM.remove(configurationFilename))
     {
@@ -161,7 +161,7 @@ void SensorPlugin::stop()
 
 void SensorPlugin::active(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     UTIL_NOT_USED(gfx);
 
@@ -184,7 +184,7 @@ void SensorPlugin::inactive()
 
 void SensorPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (true == m_updateTimer.isTimeout())
     {
@@ -200,8 +200,8 @@ void SensorPlugin::update(YAGfx& gfx)
 
 bool SensorPlugin::getSensorChannel(uint8_t& sensorIdx, uint8_t& channelIdx) const
 {
-    bool                isAvailable = false;
-    MutexGuard<Mutex>   guard(m_mutex);
+    bool                        isAvailable = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     sensorIdx   = m_sensorIdx;
     channelIdx  = m_channelIdx;
@@ -216,9 +216,9 @@ bool SensorPlugin::getSensorChannel(uint8_t& sensorIdx, uint8_t& channelIdx) con
 
 bool SensorPlugin::setSensorChannel(uint8_t sensorIdx, uint8_t channelIdx)
 {
-    ISensorChannel*     channel     = nullptr;
-    bool                isAvailable = false;
-    MutexGuard<Mutex>   guard(m_mutex);
+    ISensorChannel*             channel     = nullptr;
+    bool                        isAvailable = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     /* Anything changed? */
     if ((sensorIdx != m_sensorIdx) ||

@@ -75,7 +75,7 @@
 
 void DatePlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_textCanvas)
     {
@@ -115,7 +115,7 @@ void DatePlugin::start(uint16_t width, uint16_t height)
 
 void DatePlugin::stop()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr != m_textCanvas)
     {
@@ -134,7 +134,7 @@ void DatePlugin::stop()
 
 void DatePlugin::process()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
         (true == m_checkDateUpdateTimer.isTimeout()))
@@ -149,7 +149,7 @@ void DatePlugin::process()
 
 void DatePlugin::active(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     UTIL_NOT_USED(gfx);
 
@@ -165,7 +165,7 @@ void DatePlugin::active(YAGfx& gfx)
 
 void DatePlugin::inactive()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_checkDateUpdateTimer.stop();
 
@@ -174,7 +174,7 @@ void DatePlugin::inactive()
 
 void DatePlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false != m_isUpdateAvailable)
     {
@@ -198,7 +198,7 @@ void DatePlugin::update(YAGfx& gfx)
 
 void DatePlugin::setText(const String& formatText)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
 
@@ -209,7 +209,7 @@ void DatePlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         m_lampWidgets[lampId].setOnState(state);
     }

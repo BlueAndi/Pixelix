@@ -117,7 +117,7 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void GruenbeckPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -171,8 +171,8 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
 
 void GruenbeckPlugin::stop()
 {
-    String              configurationFilename = getFullPathToConfiguration();
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -198,8 +198,8 @@ void GruenbeckPlugin::stop()
 
 void GruenbeckPlugin::process()
 {
-    Msg                 msg;
-    MutexGuard<Mutex>   guard(m_mutex);
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -263,7 +263,7 @@ void GruenbeckPlugin::process()
 
 void GruenbeckPlugin::active(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -288,7 +288,7 @@ void GruenbeckPlugin::inactive()
 
 void GruenbeckPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false != m_httpResponseReceived)
     {
@@ -315,8 +315,8 @@ void GruenbeckPlugin::update(YAGfx& gfx)
 
 String GruenbeckPlugin::getIPAddress() const
 {
-    String              ipAddress;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      ipAddress;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     ipAddress = m_ipAddress;
 
@@ -325,7 +325,7 @@ String GruenbeckPlugin::getIPAddress() const
 
 void GruenbeckPlugin::setIPAddress(const String& ipAddress)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_ipAddress = ipAddress;
     (void)saveConfiguration();

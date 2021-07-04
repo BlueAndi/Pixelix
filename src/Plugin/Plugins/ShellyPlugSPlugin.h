@@ -259,7 +259,7 @@ private:
     TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
     String                  m_ipAddress;        /**< IP-address of the ShellyPlugS server. */
     AsyncHttpClient         m_client;           /**< Asynchronous HTTP client. */
-    mutable Mutex           m_mutex;            /**< Mutex to protect against concurrent access. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_requestTimer;     /**< Timer is used for cyclic ShellyPlugS  http request. */
 
     /**

@@ -142,7 +142,7 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
 
 void SunrisePlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -193,8 +193,8 @@ void SunrisePlugin::start(uint16_t width, uint16_t height)
 
 void SunrisePlugin::stop()
 {
-    String              configurationFilename = getFullPathToConfiguration();
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -220,8 +220,8 @@ void SunrisePlugin::stop()
 
 void SunrisePlugin::process()
 {
-    Msg                 msg;
-    MutexGuard<Mutex>   guard(m_mutex);
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -264,7 +264,7 @@ void SunrisePlugin::process()
 
 void SunrisePlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -283,7 +283,7 @@ void SunrisePlugin::update(YAGfx& gfx)
 
 void SunrisePlugin::getLocation(String& longitude, String&latitude) const
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     longitude   = m_longitude;
     latitude    = m_latitude;
@@ -293,7 +293,7 @@ void SunrisePlugin::getLocation(String& longitude, String&latitude) const
 
 void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((longitude != m_longitude) ||
         (latitude != m_latitude))

@@ -371,7 +371,7 @@ private:
     DateDMY                 m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
     TargetDayDescription    m_targetDateInformation;    /**< String used for configured additional target date information. */
     String                  m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
-    mutable Mutex           m_mutex;                    /**< Mutex to protect against concurrent access. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
 
     /**

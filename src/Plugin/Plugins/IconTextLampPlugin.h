@@ -290,7 +290,7 @@ private:
     BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
     LampWidget              m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
-    mutable Mutex           m_mutex;                    /**< Mutex to protect against concurrent access. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.

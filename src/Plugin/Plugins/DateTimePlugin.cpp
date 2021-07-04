@@ -91,7 +91,7 @@ void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void DateTimePlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_textCanvas)
     {
@@ -140,7 +140,7 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
 
 void DateTimePlugin::stop()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr != m_textCanvas)
     {
@@ -159,7 +159,7 @@ void DateTimePlugin::stop()
 
 void DateTimePlugin::process()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((true == m_checkUpdateTimer.isTimerRunning()) &&
         (true == m_checkUpdateTimer.isTimeout()))
@@ -174,7 +174,7 @@ void DateTimePlugin::process()
 
 void DateTimePlugin::active(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Force immediate date/time update on activation */
     updateDateTime(true);
@@ -189,7 +189,7 @@ void DateTimePlugin::active(YAGfx& gfx)
 
 void DateTimePlugin::inactive()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_checkUpdateTimer.stop();
 
@@ -198,7 +198,7 @@ void DateTimePlugin::inactive()
 
 void DateTimePlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false != m_isUpdateAvailable)
     {
@@ -222,7 +222,7 @@ void DateTimePlugin::update(YAGfx& gfx)
 
 void DateTimePlugin::setText(const String& formatText)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
 
@@ -233,7 +233,7 @@ void DateTimePlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         m_lampWidgets[lampId].setOnState(state);
     }

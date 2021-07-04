@@ -313,7 +313,7 @@ private:
     AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer             m_requestTimer;             /**< Timer used for cyclic request of new data. */
     SimpleTimer             m_offlineTimer;             /**< Timer used for offline detection. */
-    mutable Mutex           m_mutex;                    /**< Mutex to protect against concurrent access. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
     bool                    m_isConnectionError;        /**< Is connection error happened? */
     uint32_t                m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
     uint8_t                 m_pos;                      /**< Current music position in percent. */

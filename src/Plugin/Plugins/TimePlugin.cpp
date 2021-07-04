@@ -76,7 +76,7 @@
 
 void TimePlugin::process()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((true == m_checkTimeUpdateTimer.isTimerRunning()) &&
         (true == m_checkTimeUpdateTimer.isTimeout()))
@@ -91,7 +91,7 @@ void TimePlugin::process()
 
 void TimePlugin::active(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     UTIL_NOT_USED(gfx);
 
@@ -109,7 +109,7 @@ void TimePlugin::active(YAGfx& gfx)
 
 void TimePlugin::inactive()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_checkTimeUpdateTimer.stop();
 
@@ -118,7 +118,7 @@ void TimePlugin::inactive()
 
 void TimePlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false != m_isUpdateAvailable)
     {
@@ -133,7 +133,7 @@ void TimePlugin::update(YAGfx& gfx)
 
 void TimePlugin::setText(const String& formatText)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
 

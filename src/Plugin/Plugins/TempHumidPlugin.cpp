@@ -79,10 +79,10 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void TempHumidPlugin::start(uint16_t width, uint16_t height)
 {
-    SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
-    uint8_t             sensorIdx       = 0U;
-    uint8_t             channelIdx      = 0U;
-    MutexGuard<Mutex>   guard(m_mutex);
+    SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
+    uint8_t                     sensorIdx       = 0U;
+    uint8_t                     channelIdx      = 0U;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -124,7 +124,7 @@ void TempHumidPlugin::start(uint16_t width, uint16_t height)
 
 void TempHumidPlugin::stop()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr != m_iconCanvas)
     {
@@ -143,7 +143,7 @@ void TempHumidPlugin::stop()
 
 void TempHumidPlugin::process() 
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Read only if update period not reached or sensor has never been read. */
     if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
@@ -187,7 +187,7 @@ void TempHumidPlugin::process()
 
 void TempHumidPlugin::active(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Set time to show page - either 10s or slot_time / 4
      * read here because otherwise we do not get config changes during runtime in slot_time.
@@ -219,8 +219,8 @@ void TempHumidPlugin::inactive()
 
 void TempHumidPlugin::update(YAGfx& gfx)
 {
-    bool                showPage = false;
-    MutexGuard<Mutex>   guard(m_mutex);
+    bool                        showPage = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if (false == m_timer.isTimerRunning())
     {

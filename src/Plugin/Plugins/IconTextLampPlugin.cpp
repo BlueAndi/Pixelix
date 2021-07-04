@@ -230,7 +230,7 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -292,7 +292,7 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 
 void IconTextLampPlugin::stop()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false != FILESYSTEM.remove(getFileName()))
     {
@@ -320,7 +320,7 @@ void IconTextLampPlugin::stop()
 
 void IconTextLampPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -344,8 +344,8 @@ void IconTextLampPlugin::update(YAGfx& gfx)
 
 String IconTextLampPlugin::getText() const
 {
-    String              formattedText;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      formattedText;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     formattedText = m_textWidget.getFormatStr();
 
@@ -354,7 +354,7 @@ String IconTextLampPlugin::getText() const
 
 void IconTextLampPlugin::setText(const String& formatText)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
 
@@ -367,7 +367,7 @@ void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t
         (ICON_WIDTH >= width) &&
         (ICON_HEIGHT >= height))
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         m_bitmapWidget.set(bitmap, width, height);
     }
@@ -377,8 +377,8 @@ void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t
 
 bool IconTextLampPlugin::loadBitmap(const String& filename)
 {
-    bool                status = false;
-    MutexGuard<Mutex>   guard(m_mutex);
+    bool                        status = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     status = m_bitmapWidget.load(FILESYSTEM, filename);
 
@@ -391,7 +391,7 @@ bool IconTextLampPlugin::getLamp(uint8_t lampId) const
 
     if (MAX_LAMPS > lampId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         lampState = m_lampWidgets[lampId].getOnState();
     }
@@ -403,7 +403,7 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         m_lampWidgets[lampId].setOnState(state);
     }

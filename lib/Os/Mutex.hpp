@@ -123,7 +123,7 @@ public:
     {
         bool isSuccessful = false;
 
-        if (nullptr == m_mutexHandle)
+        if (nullptr != m_mutexHandle)
         {
             if (pdTRUE == xSemaphoreTake(m_mutexHandle, blockTime))
             {
@@ -143,7 +143,7 @@ public:
     {
         bool isSuccessful = false;
 
-        if (nullptr == m_mutexHandle)
+        if (nullptr != m_mutexHandle)
         {
             if (pdTRUE == xSemaphoreGive(m_mutexHandle))
             {
@@ -232,7 +232,7 @@ public:
     {
         bool isSuccessful = false;
 
-        if (nullptr == m_mutexHandle)
+        if (nullptr != m_mutexHandle)
         {
             if (pdTRUE == xSemaphoreTakeRecursive(m_mutexHandle, blockTime))
             {
@@ -252,7 +252,7 @@ public:
     {
         bool isSuccessful = false;
 
-        if (nullptr == m_mutexHandle)
+        if (nullptr != m_mutexHandle)
         {
             if (pdTRUE == xSemaphoreGiveRecursive(m_mutexHandle))
             {

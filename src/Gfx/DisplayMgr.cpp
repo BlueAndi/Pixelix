@@ -231,8 +231,8 @@ void DisplayMgr::end()
 
 bool DisplayMgr::setAutoBrightnessAdjustment(bool enable)
 {
-    bool                status = false;
-    MutexGuard<Mutex>   guard(m_mutex);
+    bool                        status = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     status = BrightnessCtrl::getInstance().enable(enable);
 
@@ -241,8 +241,8 @@ bool DisplayMgr::setAutoBrightnessAdjustment(bool enable)
 
 bool DisplayMgr::getAutoBrightnessAdjustment(void)
 {
-    bool                isEnabled = false;
-    MutexGuard<Mutex>   guard(m_mutex);
+    bool                        isEnabled = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     isEnabled = BrightnessCtrl::getInstance().isEnabled();
 
@@ -251,7 +251,7 @@ bool DisplayMgr::getAutoBrightnessAdjustment(void)
 
 void DisplayMgr::setBrightness(uint8_t level)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     BrightnessCtrl::getInstance().setBrightness(level);
 
@@ -260,8 +260,8 @@ void DisplayMgr::setBrightness(uint8_t level)
 
 uint8_t DisplayMgr::getBrightness(void)
 {
-    uint8_t             brightness = 0U;
-    MutexGuard<Mutex>   guard(m_mutex);
+    uint8_t                     brightness = 0U;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     brightness = BrightnessCtrl::getInstance().getBrightness();
 
@@ -279,7 +279,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
         /* Install to any available slot? */
         if (SLOT_ID_INVALID == slotId)
         {
-            MutexGuard<Mutex> guard(m_mutex);
+            MutexGuard<MutexRecursive> guard(m_mutex);
 
             /* Find a empty unlocked slot. */
             slotId = 0U;
@@ -309,7 +309,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
                  (true == m_slots[slotId].isEmpty()) &&
                  (false == m_slots[slotId].isLocked()))
         {
-            MutexGuard<Mutex> guard(m_mutex);
+            MutexGuard<MutexRecursive> guard(m_mutex);
 
             if (false == m_slots[slotId].setPlugin(plugin))
             {
@@ -340,8 +340,8 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
 
     if (nullptr != plugin)
     {
-        uint8_t             slotId = SLOT_ID_INVALID;
-        MutexGuard<Mutex>   guard(m_mutex);
+        uint8_t                     slotId = SLOT_ID_INVALID;
+        MutexGuard<MutexRecursive>  guard(m_mutex);
 
         slotId = getSlotIdByPluginUID(plugin->getUID());
 
@@ -383,9 +383,9 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
 
 uint8_t DisplayMgr::getSlotIdByPluginUID(uint16_t uid)
 {
-    uint8_t             index   = 0U;
-    uint8_t             slotId  = SLOT_ID_INVALID;
-    MutexGuard<Mutex>   guard(m_mutex);
+    uint8_t                     index   = 0U;
+    uint8_t                     slotId  = SLOT_ID_INVALID;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     while((m_maxSlots > index) && (m_maxSlots <= slotId))
     {
@@ -409,7 +409,7 @@ IPluginMaintenance* DisplayMgr::getPluginInSlot(uint8_t slotId)
 
     if (m_maxSlots > slotId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         plugin = m_slots[slotId].getPlugin();
     }
@@ -421,8 +421,8 @@ void DisplayMgr::activatePlugin(IPluginMaintenance* plugin)
 {
     if (nullptr != plugin)
     {
-        uint8_t             slotId = SLOT_ID_INVALID;
-        MutexGuard<Mutex>   guard(m_mutex);
+        uint8_t                     slotId = SLOT_ID_INVALID;
+        MutexGuard<MutexRecursive>  guard(m_mutex);
 
         slotId = getSlotIdByPluginUID(plugin->getUID());
 
@@ -437,7 +437,7 @@ void DisplayMgr::activatePlugin(IPluginMaintenance* plugin)
 
 void DisplayMgr::activateNextSlot()
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Avoid changing to next slot, if the there is a pending slot change. */
     if (FADE_IDLE == m_displayFadeState)
@@ -454,7 +454,7 @@ void DisplayMgr::activateNextSlot()
 
 void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (FADE_EFFECT_COUNT <= fadeEffect)
     {
@@ -472,8 +472,8 @@ void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
 
 DisplayMgr::FadeEffect DisplayMgr::getFadeEffect()
 {
-    FadeEffect          currentFadeEffect;
-    MutexGuard<Mutex>   guard(m_mutex);
+    FadeEffect                  currentFadeEffect;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     currentFadeEffect = m_fadeEffectIndex;
     
@@ -492,9 +492,9 @@ bool DisplayMgr::movePluginToSlot(IPluginMaintenance* plugin, uint8_t slotId)
         if ((m_maxSlots > srcSlotId) &&
             (srcSlotId != slotId))
         {
-            Slot*               srcSlot = &m_slots[srcSlotId];
-            Slot*               dstSlot = &m_slots[slotId];
-            MutexGuard<Mutex>   guard(m_mutex);
+            Slot*                       srcSlot = &m_slots[srcSlotId];
+            Slot*                       dstSlot = &m_slots[slotId];
+            MutexGuard<MutexRecursive>  guard(m_mutex);
 
             if (false == dstSlot->isLocked())
             {
@@ -521,7 +521,7 @@ void DisplayMgr::lockSlot(uint8_t slotId)
 {
     if (m_maxSlots > slotId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         m_slots[slotId].lock();
     }
@@ -533,7 +533,7 @@ void DisplayMgr::unlockSlot(uint8_t slotId)
 {
     if (m_maxSlots > slotId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         m_slots[slotId].unlock();
     }
@@ -547,7 +547,7 @@ bool DisplayMgr::isSlotLocked(uint8_t slotId)
 
     if (m_maxSlots > slotId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         isLocked = m_slots[slotId].isLocked();
     }
@@ -561,7 +561,7 @@ uint32_t DisplayMgr::getSlotDuration(uint8_t slotId)
 
     if (m_maxSlots > slotId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         duration = m_slots[slotId].getDuration();
     }
@@ -575,7 +575,7 @@ bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration, bool store)
 
     if (m_maxSlots > slotId)
     {
-        MutexGuard<Mutex> guard(m_mutex);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
         if (m_slots[slotId].getDuration() != duration)
         {
@@ -599,11 +599,11 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
     if ((nullptr != fb) &&
         (0 < length))
     {
-        IDisplay&           display = Display::getInstance();
-        int16_t             x       = 0;
-        int16_t             y       = 0;
-        size_t              index   = 0;
-        MutexGuard<Mutex>   guard(m_mutex);
+        IDisplay&                   display = Display::getInstance();
+        int16_t                     x       = 0;
+        int16_t                     y       = 0;
+        size_t                      index   = 0;
+        MutexGuard<MutexRecursive>  guard(m_mutex);
 
         /* Copy framebuffer after it is completely updated. */
         for(y = 0; y < display.getHeight(); ++y)
@@ -803,9 +803,9 @@ void DisplayMgr::fadeInOut(YAGfx& dst)
 
 void DisplayMgr::process()
 {
-    IDisplay&           display = Display::getInstance();
-    uint8_t             index   = 0U;
-    MutexGuard<Mutex>   guard(m_mutex);
+    IDisplay&                   display = Display::getInstance();
+    uint8_t                     index   = 0U;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     /* Handle display brightness */
     BrightnessCtrl::getInstance().process();

@@ -227,7 +227,7 @@ private:
     uint8_t                     m_page;                     /**< Number of page, which to show. */
     unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
     SimpleTimer                 m_timer;                    /**< Timer for changing page. */
-    Mutex                       m_mutex;                    /**< Mutex to protect against concurrent access. */
+    MutexRecursive              m_mutex;                    /**< Mutex to protect against concurrent access. */
     float                       m_humid;                    /**< Last sensor humidity value */
     float                       m_temp;                     /**< Last sensor temperature value */
     SimpleTimer                 m_sensorUpdateTimer;        /**< Time used for cyclic sensor reading. */

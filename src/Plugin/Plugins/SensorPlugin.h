@@ -205,17 +205,17 @@ private:
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*  TOPIC_CHANNEL;
+    static const char*      TOPIC_CHANNEL;
 
     /** Sensor value update period in ms. */
     static const uint32_t   UPDATE_PERIOD   = 2000U;
 
-    TextWidget          m_textWidget;       /**< Text widget, used for showing the text. */
-    mutable Mutex       m_mutex;            /**< Mutex to protect against concurrent access. */
-    uint8_t             m_sensorIdx;        /**< Index of selected sensor. */
-    uint8_t             m_channelIdx;       /**< Index of selected channel. */
-    ISensorChannel*     m_sensorChannel;    /**< Values of this channel will be shown. */
-    SimpleTimer         m_updateTimer;      /**< Sensor value update timer. */
+    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
+    uint8_t                 m_sensorIdx;        /**< Index of selected sensor. */
+    uint8_t                 m_channelIdx;       /**< Index of selected channel. */
+    ISensorChannel*         m_sensorChannel;    /**< Values of this channel will be shown. */
+    SimpleTimer             m_updateTimer;      /**< Sensor value update timer. */
 
     /**
      * Update shown information.

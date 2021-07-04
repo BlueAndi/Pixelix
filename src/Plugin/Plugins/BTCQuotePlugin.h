@@ -203,7 +203,7 @@ private:
     TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
     String              m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient     m_client;                   /**< Asynchronous HTTP client. */
-    Mutex               m_mutex;                    /**< Mutex to protect against concurrent access. */
+    MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
     SimpleTimer         m_requestTimer;             /**< Timer is used for cyclic weather http request. */
 
     /**

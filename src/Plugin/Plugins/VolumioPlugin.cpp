@@ -125,7 +125,7 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -195,8 +195,8 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
 
 void VolumioPlugin::stop()
 {
-    String              configurationFilename = getFullPathToConfiguration();
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_offlineTimer.stop();
     m_requestTimer.stop();
@@ -223,8 +223,8 @@ void VolumioPlugin::stop()
 
 void VolumioPlugin::process()
 {
-    Msg                 msg;
-    MutexGuard<Mutex>   guard(m_mutex);
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -299,7 +299,7 @@ void VolumioPlugin::process()
 
 void VolumioPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -327,8 +327,8 @@ void VolumioPlugin::update(YAGfx& gfx)
 
 String VolumioPlugin::getHost() const
 {
-    String              host;
-    MutexGuard<Mutex>   guard(m_mutex);
+    String                      host;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     host = m_volumioHost;
 
@@ -337,7 +337,7 @@ String VolumioPlugin::getHost() const
 
 void VolumioPlugin::setHost(const String& host)
 {
-    MutexGuard<Mutex> guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_volumioHost = host;
     (void)saveConfiguration();

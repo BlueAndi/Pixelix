@@ -209,7 +209,7 @@ private:
     uint8_t             m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
     bool                m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
     const ISlotPlugin*  m_slotInterf;               /**< Slot interface */
-    Mutex               m_mutex;                    /**< Mutex to protect against concurrent access. */
+    MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current date/time and update the text, which to be displayed.

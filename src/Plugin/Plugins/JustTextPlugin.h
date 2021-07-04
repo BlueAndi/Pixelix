@@ -169,8 +169,8 @@ private:
      */
     static const char*  TOPIC_TEXT;
 
-    TextWidget          m_textWidget;   /**< Text widget, used for showing the text. */
-    mutable Mutex       m_mutex;        /**< Mutex to protect against concurrent access. */
+    TextWidget              m_textWidget;   /**< Text widget, used for showing the text. */
+    mutable MutexRecursive  m_mutex;        /**< Mutex to protect against concurrent access. */
 };
 
 /******************************************************************************

@@ -202,7 +202,7 @@ private:
     SimpleTimer         m_checkDateUpdateTimer;     /**< Timer, used for cyclic check if date update is necessarry. */
     int32_t             m_currentDay;               /**< Variable to hold the current day. */
     bool                m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
-    Mutex               m_mutex;                    /**< Mutex to protect against concurrent access. */
+    MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current date and update the text, which to be displayed.
