@@ -64,16 +64,18 @@
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Sensor and channel index</h3>
-                <form id="myForm" action="javascript:setSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value, sensorIndex.value, channelIndex.value)">
+                <form id="myForm" action="javascript:setSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value, sensorList.options[sensorList.selectedIndex].value, channelList.options[channelList.selectedIndex].value)">
                     <label for="pluginUid">Plugin UID:</label><br />
                     <select id="pluginUid" size="1" onChange="getSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value, 'sensorIndex', 'channelIndex')">
                     </select>
                     <br />
-                    <label for="sensorIndex">Sensor index:</label><br />
-                    <input type="number" id="sensorIndex" name="sensorIndex" value="0" />
+                    <label for="sensor">Sensor:</label><br />
+                    <select id="sensorList" onChange="updateChannelList(sensorList.options[sensorList.selectedIndex].value)">
+                    </select>
                     <br />
-                    <label for="channelIndex">Channel index:</label><br />
-                    <input type="number" id="channelIndex" name="channelIndex" value="0" />
+                    <label for="sensor">Channel:</label><br />
+                    <select id="channelList">
+                    </select>
                     <br />
                     <input name="submit" type="submit" value="Update"/>
                 </form>       
@@ -103,6 +105,7 @@
 
             var pluginName  = "SensorPlugin";
             var restClient  = new pixelix.rest.Client();
+            var sensors     = [];
     
             function enableUI() {
                 utils.enableForm("myForm", true);
@@ -132,11 +135,36 @@
                     }
     
                     return Promise.resolve(cnt);
-                }).catch(function(rsp) {
-                    alert("Internal error.");
-                    return Promise.resolve(0);
                 });
             };
+
+            function getSensors() {
+                return restClient.getSensors().then(function(rsp) {
+                    var index   = 0;
+                    var $option = null;
+
+                    sensors = rsp.data.sensors;
+                    
+                    for(index = 0; index < sensors.length; ++index) {
+
+                        if (true === sensors[index].isAvailable) {
+
+                            $option = $("<option>")
+                                .attr("value", sensors[index].index)
+                                .text(sensors[index].name);
+
+                            if (0 === index) {
+                                $option.attr("selected", true);
+                                updateChannelList(sensors[index].index);
+                            }
+
+                            $("#sensorList").append($option);
+                        }
+                    }
+
+                    return Promise.resolve();
+                });
+            }
     
             function getSensorAndChannel(pluginUid, sensorId, channelId) {
                 disableUI();
@@ -145,11 +173,35 @@
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var sensorIndexInput    = document.getElementById(sensorId);
-                    var channelIndexInput   = document.getElementById(channelId);
 
-                    sensorIndexInput.value  = rsp.data.sensorIndex;
-                    channelIndexInput.value = rsp.data.channelIndex;
+                    var sensorIndex = 0;
+                    var channelIndex = 0;
+
+                    while(rsp.data.sensorIndex !== sensors[sensorIndex].index) {
+                        ++sensorIndex;
+                    }
+
+                    if (rsp.data.sensorIndex === sensors[sensorIndex].index) {
+
+                        if (false === sensors[sensorIndex].isAvailable) {
+
+                            $("#sensorList").empty();
+                            $("#channelList").empty();
+
+                        } else {
+                            $("#sensorList")
+                                .removeAttr("selected")
+                                .filter("[value=" + rsp.data.sensorIndex + "]")
+                                .attr("selected", true);
+                            
+                            updateChannelList(rsp.data.sensorIndex)
+
+                            $("#channelList")
+                                .removeAttr("selected")
+                                .filter("[value=" + rsp.data.channelIndex + "]")
+                                .attr("selected", true);
+                        }
+                    }
 
                 }).catch(function(rsp) {
                     alert("Internal error.");
@@ -178,6 +230,26 @@
                 });
             }
 
+            function updateChannelList(sensorIndex) {
+                var index   = 0;
+                var $option = null;
+
+                $("#channelList").empty();
+
+                for(index = 0; index < sensors[sensorIndex].channels.length; ++index) {
+
+                    $option = $("<option>")
+                        .attr("value", sensors[sensorIndex].channels[index].index)
+                        .text(sensors[sensorIndex].channels[index].name);
+
+                    if (0 === index) {
+                        $option.attr("selected", "selected");
+                    }
+
+                    $("#channelList").append($option);
+                }
+            }
+
             $(document).ready(function() {
                 menu.create("menu");
                 
@@ -186,8 +258,12 @@
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
     
+                /* Get all available sensors. */
+                getSensors()
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(cnt) {
+                .then(function() {
+                    return getPluginInstances();
+                }).then(function(cnt) {
                     var select = document.getElementById("pluginUid");
 
                     if (0 < cnt) {
@@ -198,6 +274,8 @@
                             "channelIndex"
                         );
                     }
+                }).catch(function(err) {
+                    alert("Internal error.");
                 });
             });
         </script>
