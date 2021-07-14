@@ -52,6 +52,8 @@
 #include <stdint.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
+#include <TaskProxy.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -82,13 +84,14 @@ public:
         m_textWidget("?"),
         m_ipAddress("192.168.1.123"), /* Example data */
         m_client(),
-        m_xMutex(nullptr),
-        m_requestTimer()
+        m_mutex(),
+        m_requestTimer(),
+        m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -96,10 +99,16 @@ public:
      */
     ~ShellyPlugSPlugin()
     {
+        m_client.regOnResponse(nullptr);
+        m_client.regOnClosed(nullptr);
+        m_client.regOnError(nullptr);
+
         /* Abort any pending TCP request to avoid getting a callback after the
          * object is destroyed.
          */
         m_client.abort();
+        
+        clearQueue();
         
         if (nullptr != m_iconCanvas)
         {
@@ -113,11 +122,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -171,26 +176,13 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    void active(IGfx& gfx) final;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() final;
-
-    /**
-     * Update the display.
-     * The scheduler will call this method periodically.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void update(IGfx& gfx) final;
+    void start(uint16_t width, uint16_t height) final;
 
    /**
      * Stop the plugin.
@@ -199,17 +191,19 @@ public:
     void stop() final;
 
     /**
-     * Start the plugin.
-     * Overwrite it if your plugin needs to know that it was installed.
-     */
-    void start() final;
-
-    /**
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
      */
     void process(void) final;
+
+    /**
+     * Update the display.
+     * The scheduler will call this method periodically.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void update(YAGfx& gfx) final;
 
     /**
      * Get ip-address.
@@ -259,14 +253,46 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_ipAddress;                /**< IP-address of the ShellyPlugS server. */
-    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    SimpleTimer                 m_requestTimer;             /**< Timer is used for cyclic ShellyPlugS  http request. */
+    Canvas*                 m_textCanvas;       /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;       /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    String                  m_ipAddress;        /**< IP-address of the ShellyPlugS server. */
+    AsyncHttpClient         m_client;           /**< Asynchronous HTTP client. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
+    SimpleTimer             m_requestTimer;     /**< Timer is used for cyclic ShellyPlugS  http request. */
+
+    /**
+     * Defines the message types, which are necessary for HTTP client/server handling.
+     */
+    enum MsgType
+    {
+        MSG_TYPE_INVALID = 0,   /**< Invalid message type. */
+        MSG_TYPE_RSP            /**< A response, caused by a previous request. */
+    };
+
+    /**
+     * A message for HTTP client/server handling.
+     */
+    struct Msg
+    {
+        MsgType                 type;   /**< Message type */
+        DynamicJsonDocument*    rsp;    /**< Response, only valid if message type is a response. */
+
+        /**
+         * Constructs a message.
+         */
+        Msg() :
+            type(MSG_TYPE_INVALID),
+            rsp(nullptr)
+        {
+        }
+    }; 
+
+    /**
+     * Task proxy used to decouple server responses, which happen in a different task context.
+     */
+    TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
      * Request new data.
@@ -281,6 +307,13 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle a web response from the server.
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+
+    /**
      * Saves current configuration to JSON file.
      */
     bool saveConfiguration() const;
@@ -291,14 +324,9 @@ private:
     bool loadConfiguration();
 
     /**
-     * Protect against concurrent access.
+     * Clear the task proxy queue.
      */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
+    void clearQueue();
 };
 
 /******************************************************************************

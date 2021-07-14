@@ -5,10 +5,24 @@
 
 - [PIXELIX](#pixelix)
 - [Software Build](#software-build)
+  - [Download](#download)
+    - [Pixelix v3.x and lower](#pixelix-v3x-and-lower)
+    - [Pixelix v4.x and higher](#pixelix-v4x-and-higher)
   - [Build Project](#build-project)
   - [Run Tests](#run-tests)
  
 # Software Build
+
+## Download
+
+### Pixelix v3.x and lower
+Pixelix v3.x and lower need git in the toolchain for the compilation process. Therefore download the sourcecode via git on the console (win: command shell):
+```
+$ git clone https://github.com/BlueAndi/esp-rgb-led-matrix
+```
+
+### Pixelix v4.x and higher
+Since Pixelix v4.x and higher it is not necessary anymore to download the sourcecode with git, but of course recommended (see above). You can just download the sources as well via your favorite browser.
 
 ## Build Project
 Build the software for the target with:
@@ -20,7 +34,9 @@ Build the software for the target with:
 Note, the default project is esp32 DevKit v1 board, programming via USB.
 
 ## Run Tests
-The tests are running on the native system. Run them manually with:
+The tests are running on the native system. Note, the test environment must be installed!
+
+Run them manually with:
 
 1. Running tests with _Project Tasks -> env:test -> Advanced -> Test_
 

@@ -50,6 +50,8 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <TaskProxy.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -81,7 +83,10 @@ public:
         Plugin(name, uid),
         m_textCanvas(nullptr),
         m_iconCanvas(nullptr),
-        m_bitmapWidget(),
+        m_stdIconWidget(),
+        m_stopIconWidget(),
+        m_playIconWidget(),
+        m_pauseIconWidget(),
         m_textWidget("\\calign?"),
         m_volumioHost("volumio.fritz.box"),
         m_urlIcon(),
@@ -89,15 +94,17 @@ public:
         m_client(),
         m_requestTimer(),
         m_offlineTimer(),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_isConnectionError(false),
         m_lastSeekValue(0U),
-        m_pos(0U)
+        m_pos(0U),
+        m_state(STATE_UNKNOWN),
+        m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -105,11 +112,17 @@ public:
      */
     ~VolumioPlugin()
     {
+        m_client.regOnResponse(nullptr);
+        m_client.regOnClosed(nullptr);
+        m_client.regOnError(nullptr);
+
         /* Abort any pending TCP request to avoid getting a callback after the
          * object is destroyed.
          */
         m_client.abort();
         
+        clearQueue();
+
         if (nullptr != m_iconCanvas)
         {
             delete m_iconCanvas;
@@ -122,11 +135,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -182,8 +191,11 @@ public:
     /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    void start() final;
+    void start(uint16_t width, uint16_t height) final;
 
     /**
      * Stop the plugin.
@@ -197,20 +209,6 @@ public:
      * active slot.
      */
     void process(void) final;
-    
-    /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void active(IGfx& gfx) final;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() final;
 
     /**
      * Update the display.
@@ -218,7 +216,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
 
     /**
      * Get VOLUMIO host address.
@@ -235,6 +233,17 @@ public:
     void setHost(const String& host);
 
 private:
+
+    /**
+     * The different Volumio player states.
+     */
+    enum VolumioState
+    {
+        STATE_UNKNOWN = 0,  /**< Unknown state */
+        STATE_STOP,         /**< Volumio player is stopped */
+        STATE_PLAY,         /**< Volumio player plays */
+        STATE_PAUSE         /**< Volumio player is paused */
+    };
 
     /**
      * Icon width in pixels.
@@ -291,20 +300,66 @@ private:
      */
     static const uint32_t   OFFLINE_PERIOD      = (60U * 1000U);
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_volumioHost;              /**< Host address of the VOLUMIO server. */
-    String                      m_urlIcon;                  /**< REST API URL for updating the icon */
-    String                      m_urlText;                  /**< REST API URL for updating the text */
-    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
-    SimpleTimer                 m_offlineTimer;             /**< Timer used for offline detection. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    bool                        m_isConnectionError;        /**< Is connection error happened? */
-    uint32_t                    m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
-    uint8_t                     m_pos;                      /**< Current music position in percent. */
+    Canvas*                 m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_stdIconWidget;            /**< Bitmap widget, used to show the standard icon. */
+    BitmapWidget            m_stopIconWidget;           /**< Bitmap widget, used to show the stop icon. */
+    BitmapWidget            m_playIconWidget;           /**< Bitmap widget, used to show the play icon. */
+    BitmapWidget            m_pauseIconWidget;          /**< Bitmap widget, used to show the pause icon. */
+    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    String                  m_volumioHost;              /**< Host address of the VOLUMIO server. */
+    String                  m_urlIcon;                  /**< REST API URL for updating the icon */
+    String                  m_urlText;                  /**< REST API URL for updating the text */
+    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
+    SimpleTimer             m_requestTimer;             /**< Timer used for cyclic request of new data. */
+    SimpleTimer             m_offlineTimer;             /**< Timer used for offline detection. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
+    bool                    m_isConnectionError;        /**< Is connection error happened? */
+    uint32_t                m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
+    uint8_t                 m_pos;                      /**< Current music position in percent. */
+    VolumioState            m_state;                    /**< Volumio player state */
+
+    /**
+     * Defines the message types, which are necessary for HTTP client/server handling.
+     */
+    enum MsgType
+    {
+        MSG_TYPE_INVALID = 0,   /**< Invalid message type. */
+        MSG_TYPE_RSP,           /**< A response, caused by a previous request. */
+        MSG_TYPE_CONN_CLOSED,   /**< The connection is closed. */
+        MSG_TYPE_CONN_ERROR     /**< A connection error happened. */
+    };
+
+    /**
+     * A message for HTTP client/server handling.
+     */
+    struct Msg
+    {
+        MsgType                 type;   /**< Message type */
+        DynamicJsonDocument*    rsp;    /**< Response, only valid if message type is a response. */
+
+        /**
+         * Constructs a message.
+         */
+        Msg() :
+            type(MSG_TYPE_INVALID),
+            rsp(nullptr)
+        {
+        }
+    }; 
+
+    /**
+     * Task proxy used to decouple server responses, which happen in a different task context.
+     */
+    TaskProxy<Msg, 2U, 0U> m_taskProxy;
+
+    /**
+     * Change Volumio player state.
+     * Depended on the new state, the corresponding bitmap icon is enabled.
+     *
+     * @param[in] state Current player state
+     */
+    void changeState(VolumioState state);
 
     /**
      * Request new data.
@@ -319,6 +374,13 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle a web response from the server.
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    
+    /**
      * Saves current configuration to JSON file.
      */
     bool saveConfiguration() const;
@@ -329,14 +391,9 @@ private:
     bool loadConfiguration();
 
     /**
-     * Protect against concurrent access.
+     * Clear the task proxy queue.
      */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
+    void clearQueue();
 };
 
 /******************************************************************************

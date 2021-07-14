@@ -140,11 +140,9 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void SunrisePlugin::active(IGfx& gfx)
+void SunrisePlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -156,57 +154,18 @@ void SunrisePlugin::active(IGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
-
-            m_iconCanvas->update(gfx);
         }
     }
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
         }
     }
-
-    unlock();
-
-    return;
-}
-
-void SunrisePlugin::inactive()
-{
-    return;
-}
-
-void SunrisePlugin::update(IGfx& gfx)
-{
-    lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    unlock();
-
-    return;
-}
-
-void SunrisePlugin::start()
-{
-    lock();
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -229,16 +188,13 @@ void SunrisePlugin::start()
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
-    unlock();
-
     return;
 }
 
 void SunrisePlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -247,14 +203,25 @@ void SunrisePlugin::stop()
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
-    unlock();
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
 
     return;
 }
 
 void SunrisePlugin::process()
 {
-    lock();
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -269,26 +236,64 @@ void SunrisePlugin::process()
         }
     }
 
-    unlock();
+    if (true == m_taskProxy.receive(msg))
+    {
+        switch(msg.type)
+        {
+        case MSG_TYPE_INVALID:
+            /* Should never happen. */
+            break;
+
+        case MSG_TYPE_RSP:
+            if (nullptr != msg.rsp)
+            {
+                handleWebResponse(*msg.rsp);
+                delete msg.rsp;
+                msg.rsp = nullptr;
+            }
+            break;
+
+        default:
+            /* Should never happen. */
+            break;
+        }
+    }
+
+    return;
+}
+
+void SunrisePlugin::update(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
+    }
 
     return;
 }
 
 void SunrisePlugin::getLocation(String& longitude, String&latitude) const
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     longitude   = m_longitude;
     latitude    = m_latitude;
-
-    unlock();
 
     return;
 }
 
 void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((longitude != m_longitude) ||
         (latitude != m_latitude))
@@ -301,8 +306,6 @@ void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
          */
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
@@ -337,78 +340,91 @@ bool SunrisePlugin::startHttpRequest()
 
 void SunrisePlugin::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                          payloadSize             = 0U;
-        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t                    JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
-        const size_t                    FILTER_SIZE             = 128U;
-        StaticJsonDocument<FILTER_SIZE> filter;
-        DeserializationError            error;
-
-        /* Example:
-        * {
-        *   "results":
-        *   {
-        *     "sunrise":"2015-05-21T05:05:35+00:00",
-        *     "sunset":"2015-05-21T19:22:59+00:00",
-        *     "solar_noon":"2015-05-21T12:14:17+00:00",
-        *     "day_length":51444,
-        *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
-        *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
-        *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
-        *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
-        *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
-        *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
-        *   },
-        *    "status":"OK"
-        * }
-        */
-
-        filter["results"]["sunrise"]    = true;
-        filter["results"]["sunset"]     = true;
-
-        if (true == filter.overflowed())
+    /* Note: All registered callbacks are running in a different task context!
+     *       Therefore it is not allowed to access a member here directly.
+     *       The processing must be deferred via task proxy.
+     */
+    m_client.regOnResponse(
+        [this](const HttpResponse& rsp)
         {
-            LOG_ERROR("Less memory for filter available.");
-        }
 
-        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+            const size_t            JSON_DOC_SIZE   = 512U;
+            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
 
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_ERROR("Invalid JSON message received: %s", error.c_str());
-        }
-        else
-        {
-            String      sunrise;
-            String      sunset;
-            JsonObject  results;
-            
-            results = jsonDoc["results"];
-            sunrise = results["sunrise"].as<String>();
-            sunset  = results["sunset"].as<String>();
-
-            sunrise = addCurrentTimezoneValues(sunrise);
-            sunset  = addCurrentTimezoneValues(sunset);
-
-            lock();
-
-            m_relevantResponsePart = sunrise + " / " + sunset;
-            m_textWidget.setFormatStr(m_relevantResponsePart);
-
-            unlock();
-
-            if (true == jsonDoc.overflowed())
+            if (nullptr != jsonDoc)
             {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+                size_t                          payloadSize = 0U;
+                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t                    FILTER_SIZE = 128U;
+                StaticJsonDocument<FILTER_SIZE> filter;
+                DeserializationError            error;
+
+                /* Example:
+                * {
+                *   "results":
+                *   {
+                *     "sunrise":"2015-05-21T05:05:35+00:00",
+                *     "sunset":"2015-05-21T19:22:59+00:00",
+                *     "solar_noon":"2015-05-21T12:14:17+00:00",
+                *     "day_length":51444,
+                *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
+                *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
+                *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
+                *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
+                *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
+                *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
+                *   },
+                *    "status":"OK"
+                * }
+                */
+
+                filter["results"]["sunrise"]    = true;
+                filter["results"]["sunset"]     = true;
+
+                if (true == filter.overflowed())
+                {
+                    LOG_ERROR("Less memory for filter available.");
+                }
+
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
             }
         }
-    });
+    );
+}
+
+void SunrisePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+{
+    String      sunrise;
+    String      sunset;
+    JsonObject  results;
+    
+    results = jsonDoc["results"];
+    sunrise = results["sunrise"].as<String>();
+    sunset  = results["sunset"].as<String>();
+
+    sunrise = addCurrentTimezoneValues(sunrise);
+    sunset  = addCurrentTimezoneValues(sunset);
+
+    m_relevantResponsePart = sunrise + " / " + sunset;
+    m_textWidget.setFormatStr(m_relevantResponsePart);
 }
 
 String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) const
@@ -480,24 +496,18 @@ bool SunrisePlugin::loadConfiguration()
     return status;
 }
 
-void SunrisePlugin::lock() const
+void SunrisePlugin::clearQueue()
 {
-    if (nullptr != m_xMutex)
+    Msg msg;
+
+    while(true == m_taskProxy.receive(msg))
     {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+        if (MSG_TYPE_RSP == msg.type)
+        {
+            delete msg.rsp;
+            msg.rsp = nullptr;
+        }
     }
-
-    return;
-}
-
-void SunrisePlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 /******************************************************************************

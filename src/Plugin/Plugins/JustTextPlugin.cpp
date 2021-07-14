@@ -110,32 +110,31 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void JustTextPlugin::update(IGfx& gfx)
+void JustTextPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
-    unlock();
 
     return;
 }
 
 String JustTextPlugin::getText() const
 {
-    String formattedText;
+    String                      formattedText;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     formattedText = m_textWidget.getFormatStr();
-    unlock();
 
     return formattedText;
 }
 
 void JustTextPlugin::setText(const String& formatText)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     m_textWidget.setFormatStr(formatText);
-    unlock();
 
     return;
 }
@@ -147,26 +146,6 @@ void JustTextPlugin::setText(const String& formatText)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void JustTextPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void JustTextPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
-}
 
 /******************************************************************************
  * External Functions

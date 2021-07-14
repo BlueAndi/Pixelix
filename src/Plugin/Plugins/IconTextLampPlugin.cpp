@@ -228,17 +228,9 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
     return isAccepted;
 }
 
-void IconTextLampPlugin::stop()
+void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    if (false != FILESYSTEM.remove(getFileName()))
-    {
-        LOG_INFO("File %s removed", getFileName().c_str());
-    }
-}
-
-void IconTextLampPlugin::active(IGfx& gfx)
-{
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -255,7 +247,7 @@ void IconTextLampPlugin::active(IGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight() - 2U, ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height - 2U, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -265,37 +257,70 @@ void IconTextLampPlugin::active(IGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, 1U, ICON_WIDTH, gfx.getHeight() - 1);
-
-        if (nullptr != m_lampCanvas)
+        uint16_t        lampWidth       = 0U;
+        uint16_t        lampDistance    = 0U;
+        const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
+        const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
+        const uint16_t  canvasWidth     = width - ICON_WIDTH;
+        
+        if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
         {
-            uint8_t index = 0U;
+            m_lampCanvas = new Canvas(canvasWidth, 1U, ICON_WIDTH, height - 1);
 
-            for(index = 0U; index < MAX_LAMPS; ++index)
+            if (nullptr != m_lampCanvas)
             {
-                /* One space at the begin, two spaces between the lamps. */
-                int16_t x = (LampWidget::DEFAULT_WIDTH + 2) * index + 1;
+                /* Calculate the border to have the lamps shown aligned to center. */
+                uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
+                uint8_t     index   = 0U;
 
-                (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
-                m_lampWidgets[index].move(x, 0);
+                for(index = 0U; index < MAX_LAMPS; ++index)
+                {
+                    /* One space at the begin, two spaces between the lamps. */
+                    int16_t x = (lampWidth + lampDistance) * index + border;
+
+                    m_lampWidgets[index].setWidth(lampWidth);
+
+                    (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
+                    m_lampWidgets[index].move(x, 0);
+                }
             }
         }
     }
 
-    unlock();
-
     return;
 }
 
-void IconTextLampPlugin::inactive()
+void IconTextLampPlugin::stop()
 {
-    /* Nothing to do. */
-    return;
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (false != FILESYSTEM.remove(getFileName()))
+    {
+        LOG_INFO("File %s removed", getFileName().c_str());
+    }
+
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    if (nullptr != m_lampCanvas)
+    {
+        delete m_lampCanvas;
+        m_lampCanvas = nullptr;
+    }
 }
 
-void IconTextLampPlugin::update(IGfx& gfx)
+void IconTextLampPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -314,27 +339,24 @@ void IconTextLampPlugin::update(IGfx& gfx)
         m_lampCanvas->update(gfx);
     }
 
-    unlock();
-
     return;
 }
 
 String IconTextLampPlugin::getText() const
 {
-    String formattedText;
+    String                      formattedText;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     formattedText = m_textWidget.getFormatStr();
-    unlock();
 
     return formattedText;
 }
 
 void IconTextLampPlugin::setText(const String& formatText)
 {
-    unlock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     m_textWidget.setFormatStr(formatText);
-    unlock();
 
     return;
 }
@@ -345,9 +367,9 @@ void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t
         (ICON_WIDTH >= width) &&
         (ICON_HEIGHT >= height))
     {
-        lock();
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
         m_bitmapWidget.set(bitmap, width, height);
-        unlock();
     }
 
     return;
@@ -355,11 +377,10 @@ void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t
 
 bool IconTextLampPlugin::loadBitmap(const String& filename)
 {
-    bool status = false;
+    bool                        status = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     status = m_bitmapWidget.load(FILESYSTEM, filename);
-    unlock();
 
     return status;
 }
@@ -370,9 +391,9 @@ bool IconTextLampPlugin::getLamp(uint8_t lampId) const
 
     if (MAX_LAMPS > lampId)
     {
-        lock();
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
         lampState = m_lampWidgets[lampId].getOnState();
-        unlock();
     }
 
     return lampState;
@@ -382,9 +403,9 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
-        lock();
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
         m_lampWidgets[lampId].setOnState(state);
-        unlock();
     }
 
     return;
@@ -403,24 +424,60 @@ String IconTextLampPlugin::getFileName()
     return generateFullPath(".bmp");
 }
 
-void IconTextLampPlugin::lock() const
+bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)
 {
-    if (nullptr != m_xMutex)
+    bool    status  = false;
+
+    /* The min. border (left and right) must not be greater than the given width. */
+    if (width > (2U * minBorder))
     {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+        uint16_t    availableWidth  = width - (2U * minBorder); /* The available width is calculated considering the min. borders. */
+
+        /* The available width must be greater than the number of elements, including the min. element distance. */
+        if (availableWidth > (cnt + ((cnt - 1U) * minDistance)))
+        {
+            uint16_t    maxElementWidth                     = (availableWidth - ((cnt - 1U) * minDistance)) / cnt; /* Max. element width, considering the given limitation. */
+            uint16_t    elementWidthToAvailWidthRatio       = 8U;   /* 1 / N */
+            uint16_t    elementDistanceToElementWidthRatio  = 4U;   /* 1 / N */
+            uint16_t    elementWidthConsideringRatio        = availableWidth / elementWidthToAvailWidthRatio;
+
+            /* Consider the ratio between element width to available width and
+             * ratio between element distance to element width.
+             * This is just to have a nice look.
+             */
+            if (maxElementWidth > elementWidthConsideringRatio)
+            {
+                uint16_t    elementDistanceConsideringRatio = elementWidthConsideringRatio / elementDistanceToElementWidthRatio;
+
+                if (0U == elementDistanceConsideringRatio)
+                {
+                    if (0U == minDistance)
+                    {
+                        elementDistance = 0U;
+                    }
+                    else
+                    {
+                        elementWidth    = maxElementWidth;
+                        elementDistance = (availableWidth - (cnt * maxElementWidth)) / (cnt - 1U);
+                    }
+                }
+                else
+                {
+                    elementWidth    = elementWidthConsideringRatio - elementDistanceConsideringRatio;
+                    elementDistance = elementDistanceConsideringRatio;
+                }
+            }
+            else
+            {
+                elementWidth    = maxElementWidth;
+                elementDistance = minDistance;
+            }
+
+            status = true;
+        }
     }
 
-    return;
-}
-
-void IconTextLampPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
+    return status;
 }
 
 /******************************************************************************

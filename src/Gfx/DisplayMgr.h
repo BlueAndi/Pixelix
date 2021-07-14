@@ -44,14 +44,15 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <Board.h>
 #include <Canvas.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <FadeLinear.h>
 #include <FadeMoveX.h>
 #include <FadeMoveY.h>
+#include <Mutex.hpp>
 
-#include "Board.h"
 #include "IPluginMaintenance.hpp"
 #include "Slot.h"
 
@@ -78,13 +79,14 @@ public:
         FADE_EFFECT_NO = 0, /**< No fade effect */
         FADE_EFFECT_LINEAR, /**< Linear dimming fade effect. */
         FADE_EFFECT_MOVE_X, /**< Moving fade effect into the direction of negative x-coordinates. */
-        FADE_EFFECT_MOVE_Y  /**< Moving fade effect into the direction of negative y-coordinates. */
+        FADE_EFFECT_MOVE_Y, /**< Moving fade effect into the direction of negative y-coordinates. */
+        FADE_EFFECT_COUNT   /**< Number of fade effects. */
     };
 
     /**
-     * Get LED matrix instance.
+     * Get display manager instance.
      *
-     * @return LED matrix
+     * @return Display manager
      */
     static DisplayMgr& getInstance()
     {
@@ -293,7 +295,7 @@ public:
 private:
 
     /** Mutex to lock/unlock display update. */
-    SemaphoreHandle_t   m_xMutex;
+    MutexRecursive      m_mutex;
 
     /** Display update task handle */
     TaskHandle_t        m_taskHandle;
@@ -353,12 +355,12 @@ private:
     bool                m_fadeEffectUpdate;             /**< Flag to indicate that the fadeEffect was updated. */
 
     /**
-     * Construct LED matrix.
+     * Constructs the display manager.
      */
     DisplayMgr();
 
     /**
-     * Destroys LED matrix.
+     * Destroys the display manager.
      */
     ~DisplayMgr();
 
@@ -385,7 +387,7 @@ private:
      *
      * @param[in] dst   Destination display
      */
-    void fadeInOut(IGfx& dst);
+    void fadeInOut(YAGfx& dst);
 
     /**
      * Process the slots. This shall be called periodically in
@@ -401,17 +403,6 @@ private:
      * @param[in]   parameters  Task pParameters
      */
     static void updateTask(void* parameters);
-
-    /**
-     * Lock display and prevent the display update, which will be done in a
-     * separate task.
-     */
-    void lock(void);
-
-    /**
-     * Unlock display.
-     */
-    void unlock(void);
 
     /**
      * Load display slot configuration from persistent memory.

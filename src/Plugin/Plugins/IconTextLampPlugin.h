@@ -51,6 +51,7 @@
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <LampWidget.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -83,9 +84,9 @@ public:
         m_bitmapWidget(),
         m_textWidget(),
         m_lampWidgets(),
-        m_xMutex(nullptr)
+        m_mutex()
     {
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -111,11 +112,7 @@ public:
             m_lampCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -180,23 +177,18 @@ public:
     bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
 
     /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+    
+    /**
      * Stop the plugin.
      */
     void stop() final;
-    
-    /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void active(IGfx& gfx) final;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() final;
 
     /**
      * Update the display.
@@ -204,7 +196,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
 
     /**
      * Get text.
@@ -292,13 +284,13 @@ private:
      */
     static const uint8_t    MAX_LAMPS   = 4U;
 
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_lampCanvas;               /**< Canvas used for the lamp widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    LampWidget                  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    Canvas*                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    Canvas*                 m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                 m_lampCanvas;               /**< Canvas used for the lamp widget. */
+    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    LampWidget              m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.
@@ -308,14 +300,18 @@ private:
     String getFileName(void);
 
     /**
-     * Protect against concurrent access.
+     * Calculates the optimal layout for several elements, which shall be aligned.
+     * 
+     * @param[in]   width           Max. available width in pixel.
+     * @param[in]   cnt             Number of elements in a row.
+     * @param[in]   minDistance     The minimal distance in pixel between each element.
+     * @param[in]   minBorder       The minimal border left and right of all elements.
+     * @param[out]  elementWidth    The calculated optimal element width in pixel.
+     * @param[out]  elementDistance The calculated optimal element distance in pixel.
+     * 
+     * @return If the calculation is successful, it will return true otherwise false.
      */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
+    bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
 };
 
 /******************************************************************************

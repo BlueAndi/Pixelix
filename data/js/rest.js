@@ -91,3 +91,11 @@ pixelix.rest.Client.prototype.getPluginInstances = function() {
         isJsonResponse: true
     });
 };
+
+pixelix.rest.Client.prototype.getSensors = function() {
+    return utils.makeRequest({
+        method: "GET",
+        url: "/rest/api/v1/sensors",
+        isJsonResponse: true
+    });
+};

@@ -123,12 +123,22 @@ const char* PluginMgr::findNext()
     return m_pluginFactory.findNext();
 }
 
-String PluginMgr::getRestApiBaseUri(uint16_t uid)
+String PluginMgr::getRestApiBaseUriByUid(uint16_t uid)
 {
     String  baseUri = RestApi::BASE_URI;
     baseUri += "/display";
     baseUri += "/uid/";
     baseUri += uid;
+
+    return baseUri;
+}
+
+String PluginMgr::getRestApiBaseUriByAlias(const String& alias)
+{
+    String  baseUri = RestApi::BASE_URI;
+    baseUri += "/display";
+    baseUri += "/alias/";
+    baseUri += alias;
 
     return baseUri;
 }
@@ -188,21 +198,32 @@ void PluginMgr::load()
                         if (false == name.isEmpty())
                         {
                             IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name, uid);
-
+                            
                             if (nullptr == plugin)
                             {
                                 LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
                             }
-                            else if (false == install(plugin, slotId))
-                            {
-                                LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
-
-                                m_pluginFactory.destroyPlugin(plugin);
-                                plugin = nullptr;
-                            }
                             else
                             {
-                                plugin->enable();
+                                /* Plugin instance alias available? */
+                                if (false == jsonSlot["alias"].isNull())
+                                {
+                                    String alias = jsonSlot["alias"].as<String>();
+
+                                    plugin->setAlias(alias);
+                                }
+
+                                if (false == install(plugin, slotId))
+                                {
+                                    LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+
+                                    m_pluginFactory.destroyPlugin(plugin);
+                                    plugin = nullptr;
+                                }
+                                else
+                                {
+                                    plugin->enable();
+                                }
                             }
                         }
 
@@ -238,11 +259,13 @@ void PluginMgr::save()
         {
             jsonSlot["name"]    = "";
             jsonSlot["uid"]     = 0;
+            jsonSlot["alias"]   = "";
         }
         else
         {
             jsonSlot["name"]    = plugin->getName();
             jsonSlot["uid"]     = plugin->getUID();
+            jsonSlot["alias"]   = plugin->getAlias();
         }
     }
 
@@ -304,8 +327,6 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (true == isSuccessful)
         {
-            String baseUri = getRestApiBaseUri(plugin->getUID());
-
             registerTopics(plugin);
         }
     }
@@ -369,11 +390,24 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
 
             if (nullptr != metaData)
             {
+                String baseUriByUid     = getRestApiBaseUriByUid(plugin->getUID());
+                String baseUriByAlias;
+
+                if (false == plugin->getAlias().isEmpty())
+                {
+                    baseUriByAlias = getRestApiBaseUriByAlias(plugin->getAlias());
+                }
+
                 metaData->plugin = plugin;
 
                 for (JsonVariant topic : topics)
                 {
-                    registerTopic(metaData, topic.as<String>());
+                    registerTopic(baseUriByUid, metaData, topic.as<String>());
+
+                    if (false == baseUriByAlias.isEmpty())
+                    {
+                        registerTopic(baseUriByAlias, metaData, topic.as<String>());
+                    }
                 }
 
                 m_pluginMeta.append(metaData);
@@ -382,9 +416,8 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
     }
 }
 
-void PluginMgr::registerTopic(PluginObjData* metaData, const String& topic)
+void PluginMgr::registerTopic(const String& baseUri, PluginObjData* metaData, const String& topic)
 {
-    String          baseUri         = getRestApiBaseUri(metaData->plugin->getUID());
     String          topicUri        = baseUri + topic;
     uint8_t         idx             = 0U;
     WebHandlerData* webHandlerData  = nullptr;
@@ -427,7 +460,7 @@ void PluginMgr::registerTopic(PluginObjData* metaData, const String& topic)
 void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE   = 512U;
+    const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj         = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -448,13 +481,13 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
             jsonDoc.remove("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = "error";
             errorObj["msg"]     = "Requested topic not supported.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            jsonDoc["status"]   = "ok";
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
@@ -483,13 +516,13 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
             jsonDoc.remove("data");
 
             /* Prepare response */
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+            jsonDoc["status"]   = "error";
             errorObj["msg"]     = "Requested topic not supported or invalid data.";
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
-            jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_OK);
+            jsonDoc["status"]   = "ok";
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
@@ -500,7 +533,7 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
         jsonDoc.remove("data");
 
         /* Prepare response */
-        jsonDoc["status"]   = static_cast<uint8_t>(RestApi::STATUS_CODE_NOT_FOUND);
+        jsonDoc["status"]   = "error";
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }

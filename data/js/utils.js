@@ -90,7 +90,7 @@ utils.makeRequest = function(options) {
                     if (true === isJsonResponse) {
                         jsonRsp = JSON.parse(xhr.response);
 
-                        if (0 === jsonRsp.status) {
+                        if ("ok" === jsonRsp.status) {
                             resolve(jsonRsp);
                         } else {
                             reject(jsonRsp);

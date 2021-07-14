@@ -50,6 +50,8 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <TaskProxy.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -84,13 +86,14 @@ public:
         m_relevantResponsePart(),
         m_client(),
         m_requestTimer(),
-        m_xMutex(nullptr),
-        m_isConnectionError(false)
+        m_mutex(),
+        m_isConnectionError(false),
+        m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -98,10 +101,16 @@ public:
      */
     ~GruenbeckPlugin()
     {
+        m_client.regOnResponse(nullptr);
+        m_client.regOnClosed(nullptr);
+        m_client.regOnError(nullptr);
+
         /* Abort any pending TCP request to avoid getting a callback after the
          * object is destroyed.
          */
         m_client.abort();
+        
+        clearQueue();
         
         if (nullptr != m_iconCanvas)
         {
@@ -115,11 +124,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -173,12 +178,34 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+
+   /**
+     * Stop the plugin.
+     * Overwrite it if your plugin needs to know that it will be uninstalled.
+     */
+    void stop() final;
+    
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;
+
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) final;
+    void active(YAGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
@@ -192,26 +219,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
-
-   /**
-     * Stop the plugin.
-     * Overwrite it if your plugin needs to know that it will be uninstalled.
-     */
-    void stop() final;
-
-    /**
-     * Start the plugin.
-     * Overwrite it if your plugin needs to know that it was installed.
-     */
-    void start() final;
-    
-    /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     */
-    void process(void) final;
+    void update(YAGfx& gfx) final;
 
     /**
      * Get ip-address.
@@ -261,17 +269,51 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_ipAddress;                /**< IP-address of the Gruenbeck server. */
-    bool                        m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
-    String                      m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
-    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer                 m_requestTimer;             /**< Timer, used for cyclic request of new data. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    bool                        m_isConnectionError;        /**< Is connection error happened? */
+    Canvas*                 m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    String                  m_ipAddress;                /**< IP-address of the Gruenbeck server. */
+    bool                    m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
+    String                  m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
+    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
+    SimpleTimer             m_requestTimer;             /**< Timer, used for cyclic request of new data. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
+    bool                    m_isConnectionError;        /**< Is connection error happened? */
+
+    /**
+     * Defines the message types, which are necessary for HTTP client/server handling.
+     */
+    enum MsgType
+    {
+        MSG_TYPE_INVALID = 0,   /**< Invalid message type. */
+        MSG_TYPE_RSP,           /**< A response, caused by a previous request. */
+        MSG_TYPE_CONN_CLOSED,   /**< The connection is closed. */
+        MSG_TYPE_CONN_ERROR     /**< A connection error happened. */
+    };
+
+    /**
+     * A message for HTTP client/server handling.
+     */
+    struct Msg
+    {
+        MsgType                 type;   /**< Message type */
+        DynamicJsonDocument*    rsp;    /**< Response, only valid if message type is a response. */
+
+        /**
+         * Constructs a message.
+         */
+        Msg() :
+            type(MSG_TYPE_INVALID),
+            rsp(nullptr)
+        {
+        }
+    }; 
+
+    /**
+     * Task proxy used to decouple server responses, which happen in a different task context.
+     */
+    TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
      * Request new data.
@@ -286,6 +328,13 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle a web response from the server.
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    
+    /**
      * Saves current configuration to JSON file.
      */
     bool saveConfiguration() const;
@@ -296,14 +345,9 @@ private:
     bool loadConfiguration();
 
     /**
-     * Protect against concurrent access.
+     * Clear the task proxy queue.
      */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
+    void clearQueue();
 };
 
 /******************************************************************************

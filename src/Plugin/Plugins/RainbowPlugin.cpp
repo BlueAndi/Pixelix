@@ -58,7 +58,7 @@
  * Public Methods
  *****************************************************************************/
 
-void RainbowPlugin::update(IGfx& gfx)
+void RainbowPlugin::update(YAGfx& gfx)
 {
     int16_t x       = 0;
     int16_t y       = 0;

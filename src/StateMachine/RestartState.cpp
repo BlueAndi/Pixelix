@@ -34,12 +34,12 @@
  *****************************************************************************/
 #include "RestartState.h"
 #include "DisplayMgr.h"
-#include "LedMatrix.h"
-#include "Board.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "FileSystem.h"
 
+#include <Board.h>
+#include <Display.h>
 #include <Logging.h>
 #include <Util.h>
 #include <ESPmDNS.h>
@@ -100,11 +100,11 @@ void RestartState::process(StateMachine& sm)
         DisplayMgr::getInstance().end();
 
         /* Clear display */
-        LedMatrix::getInstance().clear();
-        LedMatrix::getInstance().show();
+        Display::getInstance().clear();
+        Display::getInstance().show();
 
         /* Wait till all physical pixels are cleared. */
-        while(false == LedMatrix::getInstance().isReady())
+        while(false == Display::getInstance().isReady())
         {
             /* Just wait ... */
             ;

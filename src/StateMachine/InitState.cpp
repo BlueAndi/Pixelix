@@ -36,14 +36,15 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <Board.h>
+#include <Display.h>
+#include <SensorDataProvider.h>
+#include <Wire.h>
 
-#include "Board.h"
 #include "ButtonDrv.h"
-#include "LedMatrix.h"
 #include "DisplayMgr.h"
 #include "SysMsg.h"
 #include "Version.h"
-#include "AmbientLightSensor.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "Settings.h"
@@ -71,6 +72,7 @@
 #include "JustTextPlugin.h"
 #include "OpenWeatherPlugin.h"
 #include "RainbowPlugin.h"
+#include "SensorPlugin.h"
 #include "ShellyPlugSPlugin.h"
 #include "SunrisePlugin.h"
 #include "SysMsgPlugin.h"
@@ -116,8 +118,14 @@ void InitState::entry(StateMachine& sm)
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
 
+    /* Initialize two-wire (I2C) */
+    if (false == Wire.begin())
+    {
+        LOG_FATAL("Couldn't initialize two-wire.");
+        isError = true;
+    }
     /* Initialize button driver */
-    if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
+    else if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
     {
         LOG_FATAL("Couldn't initialize button driver.");
         isError = true;
@@ -130,6 +138,9 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
+        /* Initialize sensors */
+        SensorDataProvider::getInstance().begin();
+
         /* Prepare everything for the plugins. */
         PluginMgr::getInstance().begin();
 
@@ -143,10 +154,10 @@ void InitState::entry(StateMachine& sm)
         /* Error detected. */
         ;
     }
-    /* Start LED matrix */
-    else if (false == LedMatrix::getInstance().begin())
+    /* Start display */
+    else if (false == Display::getInstance().begin())
     {
-        LOG_FATAL("Failed to initialize LED matrix.");
+        LOG_FATAL("Failed to initialize display.");
         isError = true;
     }
     /* Initialize display manager */
@@ -340,7 +351,6 @@ void InitState::showStartupInfoOnSerial()
     LOG_INFO(String("SW revision: ") + Version::SOFTWARE_REV);
     LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
     LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
-    LOG_INFO(String("Ambient light sensor detected: ") + AmbientLightSensor::getInstance().isSensorAvailable());
     LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
     LOG_INFO(String("LwIP version: ") + LWIP_VERSION_STRING);
 
@@ -384,6 +394,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
     pluginMgr.registerPlugin("OpenWeatherPlugin", OpenWeatherPlugin::create);
     pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
+    pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);
     pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);

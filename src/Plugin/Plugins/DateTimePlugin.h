@@ -50,6 +50,7 @@
 #include <LampWidget.h>
 #include <TextWidget.h>
 #include <Canvas.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -82,11 +83,14 @@ public:
         m_checkUpdateTimer(),
         m_durationCounter(0u),
         m_isUpdateAvailable(false),
-        m_slotInterf(nullptr)
+        m_slotInterf(nullptr),
+        m_mutex()
 
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        (void)m_mutex.create();
     }
 
     /**
@@ -105,6 +109,8 @@ public:
             delete m_lampCanvas;
             m_lampCanvas = nullptr;
         }
+
+        m_mutex.destroy();
     }
 
     /**
@@ -129,12 +135,34 @@ public:
     void setSlot(const ISlotPlugin* slotInterf) final;
 
     /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+
+   /**
+     * Stop the plugin.
+     * Overwrite it if your plugin needs to know that it will be uninstalled.
+     */
+    void stop() final;
+
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;
+
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) final;
+    void active(YAGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
@@ -148,14 +176,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
-
-    /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     */
-    void process(void) final;
+    void update(YAGfx& gfx) final;
 
     /**
      * Set text, which may contain format tags.
@@ -175,13 +196,10 @@ public:
 private:
 
     /** Max. number of lamps. */
-    static const uint8_t    MAX_LAMPS               = 7U;
-
-    /** Size of lamp widgets used for weekday indication. */
-    static const uint16_t   CUSTOM_LAMP_WIDTH       = 3U;
+    static const uint8_t    MAX_LAMPS           = 7U;
 
     /** Time to check date update period in ms */
-    static const uint32_t   CHECK_UPDATE_PERIOD     = 1000U;
+    static const uint32_t   CHECK_UPDATE_PERIOD = 1000U;
 
     TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
     Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
@@ -191,6 +209,7 @@ private:
     uint8_t             m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
     bool                m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
     const ISlotPlugin*  m_slotInterf;               /**< Slot interface */
+    MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current date/time and update the text, which to be displayed.
@@ -207,6 +226,20 @@ private:
      * @param[in] timeinfo the current timeinfo.
      */
     void setWeekdayIndicator(tm timeinfo);
+
+    /**
+     * Calculates the optimal layout for several elements, which shall be aligned.
+     * 
+     * @param[in]   width           Max. available width in pixel.
+     * @param[in]   cnt             Number of elements in a row.
+     * @param[in]   minDistance     The minimal distance in pixel between each element.
+     * @param[in]   minBorder       The minimal border left and right of all elements.
+     * @param[out]  elementWidth    The calculated optimal element width in pixel.
+     * @param[out]  elementDistance The calculated optimal element distance in pixel.
+     * 
+     * @return If the calculation is successful, it will return true otherwise false.
+     */
+    bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
 };
 
 /******************************************************************************

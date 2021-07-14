@@ -73,11 +73,13 @@
  * Public Methods
  *****************************************************************************/
 
-void DatePlugin::active(IGfx& gfx)
+void DatePlugin::start(uint16_t width, uint16_t height)
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth(), gfx.getHeight() - 2U, 0, 0);
+        m_textCanvas = new Canvas(width, height - 2U, 0, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -87,7 +89,7 @@ void DatePlugin::active(IGfx& gfx)
 
     if (nullptr == m_lampCanvas)
     {
-        m_lampCanvas = new Canvas(gfx.getWidth(), 1U, 1, gfx.getHeight() - 1);
+        m_lampCanvas = new Canvas(width, 1U, 1, height - 1);
 
         if (nullptr != m_lampCanvas)
         {
@@ -108,23 +110,72 @@ void DatePlugin::active(IGfx& gfx)
         }
     }
 
-    m_isUpdateAvailable = true;
+    return;
+}
 
-    m_checkDateUpdateTimer.start(CHECK_DATE_UPDATE_PERIOD);
+void DatePlugin::stop()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    if (nullptr != m_lampCanvas)
+    {
+        delete m_lampCanvas;
+        m_lampCanvas = nullptr;
+    }
+
+    return;
+}
+
+void DatePlugin::process()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
+        (true == m_checkDateUpdateTimer.isTimeout()))
+    {
+        updateDate(false);
+
+        m_checkDateUpdateTimer.restart();
+    }
+
+    return;
+}
+
+void DatePlugin::active(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    UTIL_NOT_USED(gfx);
 
     /* Force immediate date update on activation */
     updateDate(true);
+
+    /* Force drawing on display in the update() method for the very first time
+     * after activation.
+     */
+    m_isUpdateAvailable = true;
+    m_checkDateUpdateTimer.start(CHECK_DATE_UPDATE_PERIOD);
 }
 
 void DatePlugin::inactive()
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     m_checkDateUpdateTimer.stop();
 
     return;
 }
 
-void DatePlugin::update(IGfx& gfx)
+void DatePlugin::update(YAGfx& gfx)
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     if (false != m_isUpdateAvailable)
     {
         gfx.fillScreen(ColorDef::BLACK);
@@ -145,21 +196,10 @@ void DatePlugin::update(IGfx& gfx)
     return;
 }
 
-void DatePlugin::process()
-{
-    if ((true == m_checkDateUpdateTimer.isTimerRunning()) &&
-        (true == m_checkDateUpdateTimer.isTimeout()))
-    {
-        updateDate(false);
-
-        m_checkDateUpdateTimer.restart();
-    }
-
-    return;
-}
-
 void DatePlugin::setText(const String& formatText)
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     m_textWidget.setFormatStr(formatText);
 
     return;
@@ -169,6 +209,8 @@ void DatePlugin::setLamp(uint8_t lampId, bool state)
 {
     if (MAX_LAMPS > lampId)
     {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
         m_lampWidgets[lampId].setOnState(state);
     }
 

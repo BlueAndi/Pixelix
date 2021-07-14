@@ -60,15 +60,13 @@
  * Public Methods
  *****************************************************************************/
 
-void WifiStatusPlugin::active(IGfx& gfx)
+void WifiStatusPlugin::start(uint16_t width, uint16_t height)
 {
-    gfx.fillScreen(ColorDef::BLACK);
-
     if (nullptr == m_dsp)
     {
-        m_dsp           = new Canvas(gfx.getWidth(), WIFI_ICON_HEIGHT, 0, 0);
+        m_dsp           = new Canvas(width, WIFI_ICON_HEIGHT, 0, 0);
         m_iconCanvas    = new Canvas(WIFI_ICON_WIDTH, WIFI_ICON_HEIGHT, 0, 0, true);
-        m_textCanvas    = new Canvas(gfx.getWidth() - WIFI_ICON_WIDTH - 1U, WIFI_ICON_HEIGHT, WIFI_ICON_WIDTH + 1, 0);
+        m_textCanvas    = new Canvas(width - WIFI_ICON_WIDTH - 1U, WIFI_ICON_HEIGHT, WIFI_ICON_WIDTH + 1, 0);
 
         if ((nullptr == m_dsp) ||
             (nullptr == m_iconCanvas) ||
@@ -109,6 +107,36 @@ void WifiStatusPlugin::active(IGfx& gfx)
         }
     }
 
+    return;
+}
+
+void WifiStatusPlugin::stop()
+{
+    if (nullptr != m_dsp)
+    {
+        delete m_dsp;
+        m_dsp = nullptr;
+    }
+
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    return;
+}
+
+void WifiStatusPlugin::active(YAGfx& gfx)
+{
+    gfx.fillScreen(ColorDef::BLACK);
+
     /* Force update of the status information */
     m_timer.start(0U);
 
@@ -122,7 +150,7 @@ void WifiStatusPlugin::inactive()
     return;
 }
 
-void WifiStatusPlugin::update(IGfx& gfx)
+void WifiStatusPlugin::update(YAGfx& gfx)
 {
     if (nullptr != m_dsp)
     {

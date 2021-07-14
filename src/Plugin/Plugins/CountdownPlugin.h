@@ -52,6 +52,7 @@
 #include <stdint.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -184,7 +185,7 @@ public:
         m_targetDate(),
         m_targetDateInformation(),
         m_remainingDays(""),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_cfgReloadTimer()
     {
         /* Example data, used to generate the very first configuration file. */
@@ -197,7 +198,7 @@ public:
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -217,11 +218,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -275,26 +272,13 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    void active(IGfx& gfx) final;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() final;
-
-    /**
-     * Update the display.
-     * The scheduler will call this method periodically.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void update(IGfx& gfx) final;
+    void start(uint16_t width, uint16_t height) final;
 
    /**
      * Stop the plugin.
@@ -303,10 +287,12 @@ public:
     void stop() final;
 
     /**
-     * Start the plugin.
-     * Overwrite it if your plugin needs to know that it was installed.
+     * Update the display.
+     * The scheduler will call this method periodically.
+     *
+     * @param[in] gfx   Display graphics interface
      */
-    void start() final;
+    void update(YAGfx& gfx) final;
 
     /**
      * Get current target date for countdown.
@@ -377,16 +363,16 @@ private:
      */
     static const uint32_t   CFG_RELOAD_PERIOD   = 30000U;
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    DateDMY                     m_currentDate;              /**< Date structure to hold the current date. */
-    DateDMY                     m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
-    TargetDayDescription        m_targetDateInformation;    /**< String used for configured additional target date information. */
-    String                      m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    SimpleTimer                 m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    Canvas*                 m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    DateDMY                 m_currentDate;              /**< Date structure to hold the current date. */
+    DateDMY                 m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
+    TargetDayDescription    m_targetDateInformation;    /**< String used for configured additional target date information. */
+    String                  m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
+    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
 
     /**
      * Saves current configuration to JSON file.
@@ -420,16 +406,6 @@ private:
      * @return Number of days since 0.
      */
     uint32_t dateToDays(const DateDMY& date) const;
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 };
 
 /******************************************************************************

@@ -50,6 +50,7 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -80,9 +81,9 @@ public:
         m_bitmapWidget(),
         m_textWidget(),
         m_isUploadError(false),
-        m_xMutex(nullptr)
+        m_mutex()
     {
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -102,11 +103,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -171,23 +168,18 @@ public:
     bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
 
     /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+    
+    /**
      * Stop the plugin.
      */
     void stop() final;
-
-    /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void active(IGfx& gfx) final;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() final;
 
     /**
      * Update the display.
@@ -195,7 +187,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
 
     /**
      * Get text.
@@ -251,12 +243,12 @@ private:
      */
     static const uint16_t ICON_HEIGHT   = 8U;
 
-    Canvas*             m_textCanvas;       /**< Canvas used for the text widget. */
-    Canvas*             m_iconCanvas;       /**< Canvas used for the bitmap widget. */
-    BitmapWidget        m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
-    TextWidget          m_textWidget;       /**< Text widget, used for showing the text. */
-    bool                m_isUploadError;    /**< Flag to signal a upload error. */
-    SemaphoreHandle_t   m_xMutex;           /**< Mutex to protect against concurrent access. */
+    Canvas*                 m_textCanvas;       /**< Canvas used for the text widget. */
+    Canvas*                 m_iconCanvas;       /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    bool                    m_isUploadError;    /**< Flag to signal a upload error. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.
@@ -264,16 +256,6 @@ private:
      * @return Image filename with path.
      */
     String getFileName(void);
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
 };
 
 /******************************************************************************

@@ -1,0 +1,7 @@
+{
+    "name": "Sensors",
+    "version": "0.1.0",
+    "dependencies": [{
+        "name": "Common"
+    }]
+}

@@ -2,25 +2,6 @@
 
 title GFX
 
-package "Makuna" {
-    class "NeoPixelBrightnessBus" as neoPixelBrightnessBus
-
-    note top of neoPixelBrightnessBus
-        Using RMT to drive the physical LEDs.
-    end note
-
-    class "NeoTopology" as neoTopology
-
-    note top of neoTopology
-        Maps x,y coordinates to framebuffer index,
-        depended on physical panel layout.
-    end note
-}
-
-note top of Makuna
-    https://github.com/Makuna/NeoPixelBus
-end note
-
 package "Adafruit" {
 
     class "GFXglyph" as gfxGlyph
@@ -38,13 +19,11 @@ end note
 class "BaseGfx<TColor>" as baseGfx {
     - m_width : uint16_t
     - m_height : uint16_t
-    - m_cursorX : int16_t
-    - m_cursorY : int16_t
-    - m_textColor : TColor
     - m_font : const GFXfont*
     + BaseGfx(width : uint16_t, height : uint16_t)
     + {abstract} getColor(x : int16_t, y : int16_t) = 0 : TColor
     + {abstract} drawPixel(x : int16_t, y : int16_t, color : const TColor&) = 0 : void
+    + {abstract} dimPixel(x : int16_t, y : int16_t, ratio : uint8_t) = 0 : void
     + drawVLine(x : int16_t, y : int16_t, width : uint16_t) : void
     + drawHLine(x : int16_t, y : int16_t, height : uint16_t) : void
     + drawLine(xs : int16_t, ys : int16_t, xe : int16_t, ye : int16_t, color : const TColor&) : void
@@ -52,20 +31,6 @@ class "BaseGfx<TColor>" as baseGfx {
     + fillRect(x : int16_t, y : int16_t, width : uint16_t, height : uint16_t, color : const TColor&) : void
     + fillScreen(color : const TColor&) : void
     + drawRGBBitmap(x : int16_t, y : int16_t, bitmap : const TColor*, width : uint16_t, height : uint16_t) : void
-    + getTextCursorPos(x : int16_t&, y : int16_t&) const : void
-    + getTextCursorPosX() const : int16_t
-    + getTextCursorPosY() const : int16_t
-    + setTextCursorPos(x : int16_t, y : int16_t) : void
-    + getTextColor() const : TColor
-    + setTextColor(color : const TColor&) const : void
-    + getFont() const : const GFXFont*
-    + setFont(font : const GFXfont*) : void
-    + drawChar(character : char) : void
-    + drawText(text : const char*) : void
-    + isTextWrapEnabled() const : bool
-    + setTextWrap(isEnabled : bool) : void
-    + getCharBoundingBox(character : char, width : uint16_t&, height : uint16_t) : bool
-    + getTextBoundingBox(text : const char*, width : uint16_t&, height : uint16_t) : bool
 }
 
 note left of baseGfx
@@ -73,7 +38,41 @@ note left of baseGfx
     independend of the color type.
 end note
 
-gfxFont <-- baseGfx
+class "BaseFont<TColor>" as baseFont {
+    - m_gfxFont : const GFXfont*
+    + getGfxFont() : const GFXfont*
+    + setGfxFont(gfxFont : const GFXfont*) : void
+    + getHeigth() : uint16_t
+    + getCharBoundingBox(singleChar : char, width : uint16_t&, height : uint16_t) const : bool
+    + drawChar(gfx : BaseGfx<TColor>&, cursorX : int16_t&, cursorY : int16_t&, singleChar : char, color : const TColor&) : void
+}
+
+class "BaseGfxText<TColor>" as baseGfxText {
+    - m_cursorX : int16_t
+    - m_cursorY : int16_t
+    - m_textColor : TColor
+    - m_isTextWrapEnabled : bool
+    - m_font : BaseFont<TColor>
+    + getTextCursorPos(x : int16_t&, y : int16_t&) const : void
+    + getTextCursorPosX() const : int16_t
+    + getTextCursorPosY() const : int16_t
+    + setTextCursorPos(x : int16_t, y : int16_t) : void
+    + getTextColor() const : TColor
+    + setTextColor(color : const TColor&) const : void
+    + isTextWrapEnabled() const : bool
+    + setTextWrap(isEnabled : bool) : void
+    + getFont() const : BaseFont<TColor>&
+    + setFont(font : BaseFont<TColor>&) : void
+    + getTextBoundingBox(width : uint16_t, height : uint16_t, text : const char*, boxWidth : uint16_t&, boxHeight : uint16_t&) : bool
+    + drawChar(gfx : BaseGfx<TColor>&, singleChar : char) : void
+    + drawText(gfx : BaseGfx<TColor>&, text : const char*) : void
+}
+
+gfxFont <-- baseFont
+baseFont <-- baseGfxText
+
+baseFont ..> baseGfx: <<use>>
+baseGfxText ...> baseGfx: <<use>>
 
 class "BaseGfxPen<TColor>" as baseGfxPen {
     - m_x : int16_t
@@ -98,55 +97,68 @@ end note
 
 baseGfx <- baseGfxPen: <<draw>>
 
-class PixelixGfx <<typedef>>
-hide PixelixGfx members
+class YAGfx <<typedef>>
+hide YAGfx members
 
-note left of PixelixGfx
+note left of YAGfx
     Graphic operations, defined with
     color type according to display type.
 end note
 
-baseGfx <|-- PixelixGfx: <<bind>>\nTColor -> Color
+baseGfx <|-- YAGfx: <<bind>>\nTColor -> Color
 
-class PixelixGfxPen <<typedef>>
-hide PixelixGfxPen members
+class YAGfxPen <<typedef>>
+hide YAGfxPen members
 
-note bottom of PixelixGfxPen
+note bottom of YAGfxPen
     Drawing pen operations, defined with
     color type according to display type.
 end note
 
-baseGfxPen <|-- PixelixGfxPen: <<bind>>\nTColor -> Color
+baseGfxPen <|-- YAGfxPen: <<bind>>\nTColor -> Color
 
-class "Print" as print
-
-note left of print
-    Arduino Print class.
-end note
-
-class "IGfx" as igfx {
-    + write(singleChar : uint8_t) : size_t
+class "IDisplay" as iDisplay {
+    + {abstract} begin() = 0 : bool
+    + {abstract} show() = 0 : void
+    + {abstract} isReady() = 0 : bool
+    + {abstract} setBrightness(brightness : uint8_t) = 0 : void
+    + {abstract} clear() = 0 : void
 }
 
-note left of igfx
-    Provides arduino print support.
+note left of iDisplay
+    The interface for physical display adapters.
 end note
 
-PixelixGfx <|-- igfx
-print <|-- igfx
+YAGfx <|-- iDisplay
 
-class "LedMatrix" as ledMatrix {
-    + drawPixel(x : int16_t, y : int16_t, color : const Color&) : void
+package "HAL" {
+
+    class "Board" as board
+
+    package "3rdPartyLibs" as 3rdPartyLibs {
+    }
+
+    class "Display" as display {
+        + begin() : bool
+        + show() : void
+        + isReady() : bool
+        + setBrightness(brightness : uint8_t) : void
+        + clear() : void
+        + getColor(x : int16_t, y : int16_t) : Color
+        - drawPixel(x : int16_t, y : int16_t, color : const Color&) : void
+        - dimPixel(x : int16_t, y : int16_t, ratio : uint8_t) : void
+        - write(singleChar : uint8_t) : size_t
+    }
+
+    note left of display
+        Represents the physical display and
+        provides the GFX interface to draw inside.
+    end note
+
+    iDisplay <|.... display: <<realize>>
+    3rdPartyLibs <-- display
+    board <.. display: <<use>>
 }
-
-note left of ledMatrix
-    Represents the physical LED matrix and
-    provides the GFX interface to draw inside.
-end note
-
-igfx <|---- ledMatrix
-neoPixelBrightnessBus <-- ledMatrix
-neoTopology <-- ledMatrix
 
 class "DisplayMgr" as displayMgr
 
@@ -154,8 +166,12 @@ note right of displayMgr
     Manages the display slots, which are shown in
     round robin order. In a slot a plugin can be
     installed, which shows informations on the display.
+
+    Note: **The used display is decided at compile time.**
+    **That means concrete, the module specific HAL is choosen**
+    **at compile time by platformio environment.**
 end note
 
-ledMatrix <.. displayMgr: <<use>>
+display <.. displayMgr: <<use>>
 
 @enduml

@@ -34,7 +34,7 @@
  *****************************************************************************/
 #include "TestPlugin.h"
 
-#include <Color.h>
+#include <YAColor.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -60,7 +60,7 @@
  * Public Methods
  *****************************************************************************/
 
-void TestPlugin::update(IGfx& gfx)
+void TestPlugin::update(YAGfx& gfx)
 {
     const uint32_t  PERIOD      = 2000U;
     bool            showPage    = false;

@@ -147,9 +147,9 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void CountdownPlugin::active(IGfx& gfx)
+void CountdownPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -166,7 +166,7 @@ void CountdownPlugin::active(IGfx& gfx)
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
@@ -174,20 +174,54 @@ void CountdownPlugin::active(IGfx& gfx)
         }
     }
 
-    unlock();
+    /* Try to load configuration. If there is no configuration available, a default configuration
+     * will be created.
+     */
+    if (false == loadConfiguration())
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
+        }
+    }
+
+    calculateDifferenceInDays();
+
+    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
     return;
 }
 
-void CountdownPlugin::inactive()
+void CountdownPlugin::stop()
 {
-    /* Nothing to do */
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    m_cfgReloadTimer.stop();
+
+    if (false != FILESYSTEM.remove(configurationFilename))
+    {
+        LOG_INFO("File %s removed", configurationFilename.c_str());
+    }
+
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
     return;
 }
 
-void CountdownPlugin::update(IGfx& gfx)
+void CountdownPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((true == m_cfgReloadTimer.isTimerRunning()) &&
         (true == m_cfgReloadTimer.isTimeout()))
@@ -210,69 +244,22 @@ void CountdownPlugin::update(IGfx& gfx)
         m_textCanvas->update(gfx);
     }
 
-    unlock();
-
-    return;
-}
-
-void CountdownPlugin::start()
-{
-    lock();
-
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-
-    calculateDifferenceInDays();
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
-
-    unlock();
-
-    return;
-}
-
-void CountdownPlugin::stop()
-{
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
-
-    m_cfgReloadTimer.stop();
-
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
-
-    unlock();
-
     return;
 }
 
 CountdownPlugin::DateDMY CountdownPlugin::getTargetDate() const
 {
-    DateDMY targetDate;
-
-    lock();
+    DateDMY                     targetDate;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     targetDate = m_targetDate;
-
-    unlock();
 
     return targetDate;
 }
 
 void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((targetDate.day != m_targetDate.day) ||
         (targetDate.month != m_targetDate.month) ||
@@ -288,27 +275,22 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
         (void)saveConfiguration();
     }
 
-    unlock();
-
     return;
 }
 
 CountdownPlugin::TargetDayDescription CountdownPlugin::getTargetDayDescription() const
 {
-    TargetDayDescription desc;
-
-    lock();
+    TargetDayDescription        desc;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     desc = m_targetDateInformation;
-
-    unlock();
 
     return desc;
 }
 
 void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& targetDayDescription)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if ((targetDayDescription.plural != m_targetDateInformation.plural) ||
         (targetDayDescription.singular != m_targetDateInformation.singular))
@@ -322,8 +304,6 @@ void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& target
          */
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
@@ -466,26 +446,6 @@ uint32_t CountdownPlugin::dateToDays(const CountdownPlugin::DateDMY& date) const
     dateInDays += countLeapYears(date);
 
     return dateInDays;
-}
-
-void CountdownPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void CountdownPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 /******************************************************************************

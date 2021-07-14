@@ -21,7 +21,7 @@ alt Empty slot available
     displayMgr -> displayMgr: Add plugin to available slot.
     displayMgr -> plugin: Set slot interface.
     plugin --> displayMgr
-    displayMgr -> plugin: Start plugin.
+    displayMgr -> plugin: Start plugin and provide display width and height.
     plugin --> displayMgr
     displayMgr --> pluginMgr: slot id
     pluginMgr -> plugin: Get topics, used for web communication.

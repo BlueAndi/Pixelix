@@ -1,0 +1,7 @@
+{
+    "name": "YAGfx",
+    "version": "0.1.0",
+    "dependencies": [{
+        "name": "BaseGfx"
+    }]
+}

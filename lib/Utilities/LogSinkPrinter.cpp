@@ -64,28 +64,38 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
     {
         char            buffer[LOG_MESSAGE_BUFFER_SIZE] = { 0 };
         int             written                         = 0;
-        const char*     STR_CUT_OFF_SEQ                 = "...";
+        const char*     STR_CUT_OFF_SEQ                 = "...\n";
         const uint16_t  STR_CUT_OFF_SEQ_LEN             = strlen(STR_CUT_OFF_SEQ);
 
         written = snprintf( buffer,
-                            LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN,
-                            "|%u| %s %s:%d %s\r\n",
+                            LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN + 1U, /* + 1U for cut off detection. */
+                            "%*u %*s %*s:%*d %s\n",
+                            TIMESTAMP_LEN,
                             msg.timestamp,
+                            LOG_LEVEL_LEN,
                             logLevelToString(msg.level),
+                            FILENAME_LEN,
                             msg.filename,
+                            LINE_LEN,
                             msg.line,
                             msg.str);
 
-        /* If buffer was too small or any other error happended, it shall be shown in the
-         * output string message with the STR_CUT_OFF_SEQ.
-         */
-        if ((0 > written) ||
-            ((LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN) <= written))
+        /* Encoding error is skipped. */
+        if (0 <= written)
         {
-            strncat(buffer, STR_CUT_OFF_SEQ, LOG_MESSAGE_BUFFER_SIZE - strlen(buffer) - 1U);
-        }
+            const uint16_t MAX_LOG_MSG_LEN  = LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN - 1U;
 
-        (void)m_output->print(buffer);
+            /* If the message string is cut off, notify the user about in the
+             * log output.
+             */
+            if (MAX_LOG_MSG_LEN < written)
+            {
+                buffer[MAX_LOG_MSG_LEN] = '\0';
+                strncat(buffer, STR_CUT_OFF_SEQ, STR_CUT_OFF_SEQ_LEN);
+            }
+
+            (void)m_output->print(buffer);
+        }
     }
 }
 
@@ -104,23 +114,23 @@ const char* LogSinkPrinter::logLevelToString(const Logging::LogLevel LogLevel) c
     switch (LogLevel)
     {
         case Logging::LOGLEVEL_INFO:
-            logLevelString = "INFO:";
+            logLevelString = "INFO   ";
             break;
 
         case Logging::LOGLEVEL_WARNING :
-            logLevelString = "WARNING:";
+            logLevelString = "WARNING";
             break;
 
         case Logging::LOGLEVEL_ERROR :
-            logLevelString = "ERROR:";
+            logLevelString = "ERROR  ";
         break;
 
         case Logging::LOGLEVEL_FATAL :
-            logLevelString = "FATAL:";
+            logLevelString = "FATAL  ";
             break;
 
         default:
-            logLevelString = "UNKNOWN:";
+            logLevelString = "UNKNOWN";
             break;
     }
 

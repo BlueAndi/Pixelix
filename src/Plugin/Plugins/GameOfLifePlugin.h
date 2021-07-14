@@ -123,12 +123,27 @@ public:
     }
 
     /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+    
+   /**
+     * Stop the plugin.
+     * Overwrite it if your plugin needs to know that it will be uninstalled.
+     */
+    void stop() final;
+
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) final;
+    void active(YAGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
@@ -142,7 +157,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
 
 private:
 
@@ -227,7 +242,7 @@ private:
      * @param[in] gfx       Graphics interface
      * @param[in] gridId    Grid id
      */
-    void update(IGfx& gfx, uint8_t gridId);
+    void update(YAGfx& gfx, uint8_t gridId);
 };
 
 /******************************************************************************

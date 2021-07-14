@@ -105,7 +105,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
 
 private:
 

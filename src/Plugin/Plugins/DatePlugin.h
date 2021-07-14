@@ -50,6 +50,7 @@
 #include <LampWidget.h>
 #include <TextWidget.h>
 #include <Canvas.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -81,11 +82,14 @@ public:
         m_lampWidgets(),
         m_checkDateUpdateTimer(),
         m_currentDay(0),
-        m_isUpdateAvailable(false)
+        m_isUpdateAvailable(false),
+        m_mutex()
 
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        (void)m_mutex.create();
     }
 
     /**
@@ -104,6 +108,8 @@ public:
             delete m_lampCanvas;
             m_lampCanvas = nullptr;
         }
+
+        m_mutex.destroy();
     }
 
     /**
@@ -120,12 +126,34 @@ public:
     }
 
     /**
+     * Start the plugin.
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+    
+   /**
+     * Stop the plugin.
+     * Overwrite it if your plugin needs to know that it will be uninstalled.
+     */
+    void stop() final;
+
+    /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;
+
+    /**
      * This method will be called in case the plugin is set active, which means
      * it will be shown on the display in the next step.
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) final;
+    void active(YAGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
@@ -139,15 +167,8 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
     
-    /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     */
-    void process(void) final;
-
     /**
      * Set text, which may contain format tags.
      *
@@ -174,13 +195,14 @@ private:
     /** Time to check date update period in ms */
     static const uint32_t   CHECK_DATE_UPDATE_PERIOD    = 1000U;
 
-    TextWidget  m_textWidget;               /**< Text widget, used for showing the text. */
-    Canvas*     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*     m_lampCanvas;               /**< Canvas used for the lamp widget. */
-    LampWidget  m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
-    SimpleTimer m_checkDateUpdateTimer;     /**< Timer, used for cyclic check if date update is necessarry. */
-    int32_t     m_currentDay;               /**< Variable to hold the current day. */
-    bool        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
+    Canvas*             m_textCanvas;               /**< Canvas used for the text widget. */
+    Canvas*             m_lampCanvas;               /**< Canvas used for the lamp widget. */
+    LampWidget          m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
+    SimpleTimer         m_checkDateUpdateTimer;     /**< Timer, used for cyclic check if date update is necessarry. */
+    int32_t             m_currentDay;               /**< Variable to hold the current day. */
+    bool                m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current date and update the text, which to be displayed.

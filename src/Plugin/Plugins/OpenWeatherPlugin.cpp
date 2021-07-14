@@ -159,9 +159,38 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void OpenWeatherPlugin::start()
+void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
 {
-    lock();
+    m_slotInterf = slotInterf;
+    return;
+}
+
+void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (nullptr == m_iconCanvas)
+    {
+        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
+
+        if (nullptr != m_iconCanvas)
+        {
+            (void)m_iconCanvas->addWidget(m_bitmapWidget);
+
+            /* Load icon from filesystem. */
+            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+        }
+    }
+
+    if (nullptr == m_textCanvas)
+    {
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
+
+        if (nullptr != m_textCanvas)
+        {
+            (void)m_textCanvas->addWidget(m_textWidget);
+        }
+    }
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -188,16 +217,13 @@ void OpenWeatherPlugin::start()
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
-    unlock();
-
     return;
 }
 
 void OpenWeatherPlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -206,14 +232,25 @@ void OpenWeatherPlugin::stop()
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
-    unlock();
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
 
     return;
 }
 
 void OpenWeatherPlugin::process()
 {
-    lock();
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -238,81 +275,86 @@ void OpenWeatherPlugin::process()
         updateDisplay(false);
         m_updateContentTimer.restart();
     }
-    unlock();
+
+    if (true == m_taskProxy.receive(msg))
+    {
+        switch(msg.type)
+        {
+        case MSG_TYPE_INVALID:
+            /* Should never happen. */
+            break;
+
+        case MSG_TYPE_RSP:
+            if (nullptr != msg.rsp)
+            {
+                handleWebResponse(*msg.rsp);
+                delete msg.rsp;
+                msg.rsp = nullptr;
+            }
+            break;
+
+        case MSG_TYPE_CONN_CLOSED:
+            LOG_INFO("Connection closed.");
+
+            if (true == m_isConnectionError)
+            {
+                /* If a request fails, show standard icon and a '?' */
+                (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                m_textWidget.setFormatStr("\\calign?");
+
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            m_isConnectionError = false;
+            break;
+
+        case MSG_TYPE_CONN_ERROR:
+            LOG_WARNING("Connection error.");
+            m_isConnectionError = true;
+            break;
+
+        default:
+            /* Should never happen. */
+            break;
+        }
+    }
 
     return;
 }
 
-void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
+void OpenWeatherPlugin::active(YAGfx& gfx)
 {
-    m_slotInterf = slotInterf;
-    return;
-}
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-void OpenWeatherPlugin::active(IGfx& gfx)
-{
-    lock();
-    if(true == m_configurationHasChanged)
-    {
-        (void)loadConfiguration();
-    }
+    /* Load configuration, because it may be changed by web request
+     * or direct editing.
+     */
+    (void)loadConfiguration();
 
-    gfx.fillScreen(ColorDef::BLACK);
+    /* Force immediate weather update on activation */
+    updateDisplay(true);
 
-    if (nullptr == m_iconCanvas)
-    {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
-
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_bitmapWidget);
-
-            /* Load icon from filesystem. */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-
-            m_iconCanvas->update(gfx);
-        }
-    }
-    else
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
-
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
-        }
-    }
-    else
-    {
-        m_textCanvas->update(gfx);
-    }
-
+    /* Force drawing on display in the update() method for the very first time
+     * after activation.
+     */
     m_isUpdateAvailable = true;
     m_durationCounter = 0U;
     m_updateContentTimer.start(DURATION_TICK_PERIOD);
-
-    updateDisplay(true);
-    unlock();
 
     return;
 }
 
 void OpenWeatherPlugin::inactive()
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     m_updateContentTimer.stop();
+
     return;
 }
 
-void OpenWeatherPlugin::update(IGfx& gfx)
+void OpenWeatherPlugin::update(YAGfx& gfx)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false != m_isUpdateAvailable)
     {
@@ -331,147 +373,125 @@ void OpenWeatherPlugin::update(IGfx& gfx)
         m_isUpdateAvailable = false;
     }
 
-    unlock();
-
     return;
 }
 
 String OpenWeatherPlugin::getApiKey() const
 {
-    String apiKey;
+    String                      apiKey;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     apiKey = m_apiKey;
-    unlock();
 
     return apiKey;
 }
 
 void OpenWeatherPlugin::setApiKey(const String& apiKey)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (apiKey != m_apiKey)
     {
-        m_apiKey                    = apiKey;
-        m_configurationHasChanged   = true;
+        m_apiKey = apiKey;
 
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
 
 String OpenWeatherPlugin::getLatitude() const
 {
-    String latitude;
+    String                      latitude;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     latitude = m_latitude;
-    unlock();
 
     return latitude;
 }
 
 void OpenWeatherPlugin::setLatitude(const String& latitude)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if(latitude != m_latitude)
+    if (latitude != m_latitude)
     {
-        m_latitude                  = latitude;
-        m_configurationHasChanged   = true;
+        m_latitude = latitude;
 
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
 
 String OpenWeatherPlugin::getLongitude() const
 {
-    String longitude;
+    String                      longitude;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     longitude = m_longitude;
-    unlock();
 
     return longitude;
 }
 
 void OpenWeatherPlugin::setLongitude(const String& longitude)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if(longitude != m_longitude)
+    if (longitude != m_longitude)
     {
-        m_longitude                 = longitude;
-        m_configurationHasChanged   = true;
+        m_longitude = longitude;
 
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
 
 OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInformation() const
 {
-    OtherWeatherInformation additionalInformation;
+    OtherWeatherInformation     additionalInformation;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     additionalInformation = m_additionalInformation;
-    unlock();
 
     return additionalInformation;
 }
 
 void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& additionalInformation)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if(additionalInformation != m_additionalInformation)
+    if (additionalInformation != m_additionalInformation)
     {
-        m_additionalInformation     = additionalInformation;
-        m_configurationHasChanged   = true;
+        m_additionalInformation = additionalInformation;
 
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
 
 String OpenWeatherPlugin::getUnits() const
 {
-    String units;
+    String                      units;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     units = m_units;
-    unlock();
 
     return units;
 }
 
 void OpenWeatherPlugin::setUnits(const String& units)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (units != m_units)
     {
-        m_units                     = units;
-        m_configurationHasChanged   = true;
+        m_units = units;
 
         (void)saveConfiguration();
     }
-
-    unlock();
 
     return;
 }
@@ -642,141 +662,164 @@ bool OpenWeatherPlugin::startHttpRequest()
 
 void OpenWeatherPlugin::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                          payloadSize             = 0U;
-        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t                    JSON_DOC_SIZE           = 256;
-        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
-        const size_t                    FILTER_SIZE             = 128U;
-        StaticJsonDocument<FILTER_SIZE> filter;
-        JsonObject                      filterCurrent           = filter.createNestedObject("current");
-        DeserializationError            error;
-
-        /* See https://openweathermap.org/api/one-call-api for an example of API response. */
-        filterCurrent["temp"]                  = true;
-        filterCurrent["uvi"]                   = true;
-        filterCurrent["humidity"]              = true;
-        filterCurrent["wind_speed"]            = true;
-        filterCurrent["weather"][0]["icon"]    = true;
-        
-        if (true == filter.overflowed())
+    /* Note: All registered callbacks are running in a different task context!
+     *       Therefore it is not allowed to access a member here directly.
+     *       The processing must be deferred via task proxy.
+     */
+    m_client.regOnResponse(
+        [this](const HttpResponse& rsp)
         {
-            LOG_ERROR("Less memory for filter available.");
-        }
+            const size_t            JSON_DOC_SIZE   = 256U;
+            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
 
-        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else
-        {
-            JsonObject current = jsonDoc["current"];
-
-            if (false == current["temp"].is<float>())
+            if (nullptr != jsonDoc)
             {
-               LOG_WARNING("JSON temperature type missmatch or missing.");
-            }
-            else if (false == current["uvi"].is<float>())
-            {
-               LOG_WARNING("JSON uvi type missmatch or missing.");
-            }
-            else if (false == current["humidity"].is<int>())
-            {
-               LOG_WARNING("JSON wind_speed type missmatch or missing.");
-            }
-            else if (false == current["wind_speed"].is<float>())
-            {
-               LOG_WARNING("JSON uvi type missmatch or missing.");
-            }
-            else if (false == current["weather"][0]["icon"].is<String>())
-            {
-                LOG_WARNING("JSON weather icon id type missmatch or missing.");
-            }
-            else
-            {
-                float   temperature             = current["temp"].as<float>();
-                String  weatherIconId           = current["weather"][0]["icon"].as<String>();
-                float   uvIndex                 = current["uvi"].as<float>();
-                int     humidity                = current["humidity"].as<int>();
-                float   windSpeed               = current["wind_speed"].as<float>();
-                char    tempReducedPrecison[6]  = { 0 };
-                char    windReducedPrecison[5]  = { 0 };
-                String  weatherConditionIcon;
+                size_t                          payloadSize             = 0U;
+                const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t                    FILTER_SIZE             = 128U;
+                StaticJsonDocument<FILTER_SIZE> filter;
+                JsonObject                      filterCurrent           = filter.createNestedObject("current");
+                DeserializationError            error;
 
-                /* Generate UV-Index string and adapt color of string accordingly. */
-                m_currentUvIndex = "\\calign";
-                m_currentUvIndex += uvIndexToColor(uvIndex);
-                m_currentUvIndex += uvIndex;
-
-                const char* reducePrecision = (temperature < -9.9f) ? "%.0f" : "%.1f";
-
-                /* Generate temperature string with reduced precision and add unit °C/°F. */
-                (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
-
-                m_currentTemp  = "\\calign";
-                m_currentTemp += tempReducedPrecison;
-                m_currentTemp += "\x8E";
-                m_currentTemp += (m_units == "metric")?"C":"F";
-
-                /* Generate humidity string */
-                m_currentHumidity = "\\calign";
-                m_currentHumidity += humidity;
-                m_currentHumidity += "%";
-
-                /* Generate windapeed string and add unit.*/
-                (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
-                m_currentWindspeed = "\\calign";
-                m_currentWindspeed += windReducedPrecison;
-                m_currentWindspeed += "m/s";
-
-                /* Handle icon depended on weather icon id.
-                 * See https://openweathermap.org/weather-conditions
-                 * 
-                 * First check whether there is a specific icon available.
-                 * If not, check for a generic weather icon.
-                 * If this is not available too, use the standard OpenWeather icon.
-                 */
-                weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
-                if (false == FILESYSTEM.exists(weatherConditionIcon))
+                /* See https://openweathermap.org/api/one-call-api for an example of API response. */
+                filterCurrent["temp"]                  = true;
+                filterCurrent["uvi"]                   = true;
+                filterCurrent["humidity"]              = true;
+                filterCurrent["wind_speed"]            = true;
+                filterCurrent["weather"][0]["icon"]    = true;
+                
+                if (true == filter.overflowed())
                 {
-                    weatherConditionIcon  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
-                    weatherConditionIcon += ".bmp";
+                    LOG_ERROR("Less memory for filter available.");
                 }
-				
-				lock();
-                m_currentWeatherIcon = weatherConditionIcon;
-				unlock();
-                updateDisplay(false);
+
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_WARNING("JSON parse error: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
             }
         }
-    });
+    );
 
-    m_client.regOnClosed([this]() {
-        LOG_INFO("Connection closed.");
-
-        lock();
-        if (true == m_isConnectionError)
+    m_client.regOnClosed(
+        [this]()
         {
-            /* If a request fails, show standard icon and a '?' */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-            m_textWidget.setFormatStr("\\calign?");
+            Msg msg;
 
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            msg.type = MSG_TYPE_CONN_CLOSED;
+
+            (void)this->m_taskProxy.send(msg);
         }
-        m_isConnectionError = false;
-        unlock();
-    });
+    );
 
-    m_client.regOnError([this]() {
-        LOG_WARNING("Connection error happened.");
+    m_client.regOnError(
+        [this]()
+        {
+            Msg msg;
 
-        lock();
-        m_isConnectionError = true;
-        unlock();
-    });
+            msg.type = MSG_TYPE_CONN_ERROR;
+
+            (void)this->m_taskProxy.send(msg);
+        }
+    );
 }
+
+void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+{
+    JsonObject current = jsonDoc["current"];
+
+    if (false == current["temp"].is<float>())
+    {
+        LOG_WARNING("JSON temperature type missmatch or missing.");
+    }
+    else if (false == current["uvi"].is<float>())
+    {
+        LOG_WARNING("JSON uvi type missmatch or missing.");
+    }
+    else if (false == current["humidity"].is<int>())
+    {
+        LOG_WARNING("JSON wind_speed type missmatch or missing.");
+    }
+    else if (false == current["wind_speed"].is<float>())
+    {
+        LOG_WARNING("JSON uvi type missmatch or missing.");
+    }
+    else if (false == current["weather"][0]["icon"].is<String>())
+    {
+        LOG_WARNING("JSON weather icon id type missmatch or missing.");
+    }
+    else
+    {
+        float   temperature             = current["temp"].as<float>();
+        String  weatherIconId           = current["weather"][0]["icon"].as<String>();
+        float   uvIndex                 = current["uvi"].as<float>();
+        int     humidity                = current["humidity"].as<int>();
+        float   windSpeed               = current["wind_speed"].as<float>();
+        char    tempReducedPrecison[6]  = { 0 };
+        char    windReducedPrecison[5]  = { 0 };
+        String  weatherConditionIcon;
+
+        /* Generate UV-Index string and adapt color of string accordingly. */
+        m_currentUvIndex = "\\calign";
+        m_currentUvIndex += uvIndexToColor(uvIndex);
+        m_currentUvIndex += uvIndex;
+
+        const char* reducePrecision = (temperature < -9.9f) ? "%.0f" : "%.1f";
+
+        /* Generate temperature string with reduced precision and add unit °C/°F. */
+        (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
+
+        m_currentTemp  = "\\calign";
+        m_currentTemp += tempReducedPrecison;
+        m_currentTemp += "\x8E";
+        m_currentTemp += (m_units == "metric")?"C":"F";
+
+        /* Generate humidity string */
+        m_currentHumidity = "\\calign";
+        m_currentHumidity += humidity;
+        m_currentHumidity += "%";
+
+        /* Generate windapeed string and add unit.*/
+        (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
+        m_currentWindspeed = "\\calign";
+        m_currentWindspeed += windReducedPrecison;
+        m_currentWindspeed += "m/s";
+
+        /* Handle icon depended on weather icon id.
+            * See https://openweathermap.org/weather-conditions
+            * 
+            * First check whether there is a specific icon available.
+            * If not, check for a generic weather icon.
+            * If this is not available too, use the standard OpenWeather icon.
+            */
+        weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
+        if (false == FILESYSTEM.exists(weatherConditionIcon))
+        {
+            weatherConditionIcon  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
+            weatherConditionIcon += ".bmp";
+        }
+
+        m_currentWeatherIcon = weatherConditionIcon;
+
+        updateDisplay(false);
+    }
+}
+
 
 bool OpenWeatherPlugin::saveConfiguration() const
 {
@@ -852,28 +895,21 @@ bool OpenWeatherPlugin::loadConfiguration()
         m_units                 = jsonDoc["units"].as<String>();
     }
 
-    m_configurationHasChanged = false;
     return status;
 }
 
-void OpenWeatherPlugin::lock() const
+void OpenWeatherPlugin::clearQueue()
 {
-    if (nullptr != m_xMutex)
+    Msg msg;
+
+    while(true == m_taskProxy.receive(msg))
     {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+        if (MSG_TYPE_RSP == msg.type)
+        {
+            delete msg.rsp;
+            msg.rsp = nullptr;
+        }
     }
-
-    return;
-}
-
-void OpenWeatherPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 /******************************************************************************

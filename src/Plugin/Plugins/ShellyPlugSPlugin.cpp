@@ -118,11 +118,9 @@ bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-void ShellyPlugSPlugin::active(IGfx& gfx)
+void ShellyPlugSPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -134,57 +132,18 @@ void ShellyPlugSPlugin::active(IGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
-
-            m_iconCanvas->update(gfx);
         }
     }
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
         }
     }
-
-    unlock();
-
-    return;
-}
-
-void ShellyPlugSPlugin::inactive()
-{
-    return;
-}
-
-void ShellyPlugSPlugin::update(IGfx& gfx)
-{
-    lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    unlock();
-
-    return;
-}
-
-void ShellyPlugSPlugin::start()
-{
-    lock();
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -207,16 +166,13 @@ void ShellyPlugSPlugin::start()
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
-    unlock();
-
     return;
 }
 
 void ShellyPlugSPlugin::stop()
 {
-    String configurationFilename = getFullPathToConfiguration();
-
-    lock();
+    String                      configurationFilename = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_requestTimer.stop();
 
@@ -225,14 +181,25 @@ void ShellyPlugSPlugin::stop()
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
-    unlock();
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
 
     return;
 }
 
 void ShellyPlugSPlugin::process()
 {
-    lock();
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -247,14 +214,54 @@ void ShellyPlugSPlugin::process()
         }
     }
 
-    unlock();
+    if (true == m_taskProxy.receive(msg))
+    {
+        switch(msg.type)
+        {
+        case MSG_TYPE_INVALID:
+            /* Should never happen. */
+            break;
+
+        case MSG_TYPE_RSP:
+            if (nullptr != msg.rsp)
+            {
+                handleWebResponse(*msg.rsp);
+                delete msg.rsp;
+                msg.rsp = nullptr;
+            }
+            break;
+
+        default:
+            /* Should never happen. */
+            break;
+        }
+    }
+
+    return;
+}
+
+void ShellyPlugSPlugin::update(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
+    }
 
     return;
 }
 
 void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (ipAddress != m_ipAddress)
     {
@@ -262,18 +269,16 @@ void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
 
         (void)saveConfiguration();
     }
-    unlock();
 
     return;
 }
 
 String ShellyPlugSPlugin::getIPAddress() const
 {
-    String ipAddress;
+    String                      ipAddress;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    lock();
     ipAddress = m_ipAddress;
-    unlock();
 
     return ipAddress;
 }
@@ -311,72 +316,85 @@ bool ShellyPlugSPlugin::startHttpRequest()
 }
 void ShellyPlugSPlugin::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                          payloadSize             = 0U;
-        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t                    JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
-        const size_t                    FILTER_SIZE             = 128U;
-        StaticJsonDocument<FILTER_SIZE> filter;
-        DeserializationError            error;
-
-        filter["power"] = true;
-
-        if (true == filter.overflowed())
+    /* Note: All registered callbacks are running in a different task context!
+     *       Therefore it is not allowed to access a member here directly.
+     *       The processing must be deferred via task proxy.
+     */
+    m_client.regOnResponse(
+        [this](const HttpResponse& rsp)
         {
-            LOG_ERROR("Less memory for filter available.");
+            const size_t            JSON_DOC_SIZE   = 512U;
+            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+
+            if (nullptr != jsonDoc)
+            {
+                size_t                          payloadSize = 0U;
+                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t                    FILTER_SIZE = 128U;
+                StaticJsonDocument<FILTER_SIZE> filter;
+                DeserializationError            error;
+
+                filter["power"] = true;
+
+                if (true == filter.overflowed())
+                {
+                    LOG_ERROR("Less memory for filter available.");
+                }
+                
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_WARNING("JSON parse error: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
+            }
         }
-        
-        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+    );
+}
 
-        if (DeserializationError::Ok != error.code())
+void ShellyPlugSPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+{
+    if (false == jsonDoc["power"].is<float>())
+    {
+        LOG_WARNING("JSON power type missmatch or missing.");
+    }
+    else
+    {
+        float       powerRaw                = jsonDoc["power"].as<float>();
+        String      power;
+        const char* reducePrecision;
+        char        powerReducedPrecison[6] = { 0 };
+
+        if (powerRaw < 99.99f)
         {
-            LOG_WARNING("JSON parse error: %s", error.c_str());
-        }
-        else if (false == jsonDoc["power"].is<float>())
-        {
-            LOG_WARNING("JSON power type missmatch or missing.");
+            reducePrecision = (powerRaw > 9.9f) ? "%.1f" : "%.2f";
         }
         else
         {
-            float       powerRaw                = jsonDoc["power"].as<float>();
-            String      power;
-            const char* reducePrecision;
-            char        powerReducedPrecison[6] = { 0 };
-
-            if (powerRaw < 99.99f)
-            {
-                reducePrecision = (powerRaw > 9.9f) ? "%.1f" : "%.2f";
-            }
-            else
-            {
-                reducePrecision = "%.0f";
-            }
-            
-            (void)snprintf(powerReducedPrecison, sizeof(powerReducedPrecison), reducePrecision, powerRaw);
-
-            power = "\\calign";
-            power += powerReducedPrecison;
-            power += " W";
-            
-            lock();
-            m_textWidget.setFormatStr(power);
-            unlock();
-
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
+            reducePrecision = "%.0f";
         }
-    });
+        
+        (void)snprintf(powerReducedPrecison, sizeof(powerReducedPrecison), reducePrecision, powerRaw);
 
-    m_client.regOnError([this]() {
-        LOG_WARNING("Connection error happened.");
-    });
+        power = "\\calign";
+        power += powerReducedPrecison;
+        power += " W";
+        
+        m_textWidget.setFormatStr(power);
+    }
 }
 
 bool ShellyPlugSPlugin::saveConfiguration() const
@@ -428,24 +446,18 @@ bool ShellyPlugSPlugin::loadConfiguration()
     return status;
 }
 
-void ShellyPlugSPlugin::lock() const
+void ShellyPlugSPlugin::clearQueue()
 {
-    if (nullptr != m_xMutex)
+    Msg msg;
+
+    while(true == m_taskProxy.receive(msg))
     {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
+        if (MSG_TYPE_RSP == msg.type)
+        {
+            delete msg.rsp;
+            msg.rsp = nullptr;
+        }
     }
-
-    return;
-}
-
-void ShellyPlugSPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
 }
 
 /******************************************************************************

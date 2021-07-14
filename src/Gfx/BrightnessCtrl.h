@@ -45,6 +45,8 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <SimpleTimer.hpp>
+#include <IDisplay.hpp>
+#include <SensorChannelType.hpp>
 
 /******************************************************************************
  * Macros
@@ -166,8 +168,10 @@ public:
 
     /**
      * Initialize brightness controller and set initial display brightness.
+     * 
+     * @param[in] display   The display, which to control.
      */
-    void init();
+    void init(IDisplay& display);
 
     /**
      * Enable/Disable automatic brightness adjustment.
@@ -264,6 +268,12 @@ private:
         AMBIENT_LIGHT_DIRECTION_DARKER          /**< Its getting darker. */
     };
 
+    /** The interface for the display, where to control the brightness. */
+    IDisplay*                   m_display;
+
+    /** Channel where to get current illuminance values. */
+    SensorChannelFloat32*       m_illuminanceChannel;
+
     /** Timer, used for automatic brightness adjustment. */
     SimpleTimer                 m_autoBrightnessTimer;
 
@@ -326,6 +336,13 @@ private:
 
     BrightnessCtrl(const BrightnessCtrl& ctrl);
     BrightnessCtrl& operator=(const BrightnessCtrl& ctrl);
+
+    /**
+     * Get current normalized light value.
+     * 
+     * @return Normalized light
+     */
+    float getNormalizedLight();
 
     /**
      * Set ambient light, which will be used to determine the display brightness.

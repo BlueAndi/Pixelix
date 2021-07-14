@@ -63,11 +63,13 @@
 /* Initialize image path. */
 const char* BTCQuotePlugin::BTC_USD_IMAGE_PATH     = "/images/BTC_USD.bmp";
 
-void BTCQuotePlugin::active(IGfx& gfx)
-{
-    lock();
+/******************************************************************************
+ * Public Methods
+ *****************************************************************************/
 
-    gfx.fillScreen(ColorDef::BLACK);
+void BTCQuotePlugin::start(uint16_t width, uint16_t height)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -79,57 +81,18 @@ void BTCQuotePlugin::active(IGfx& gfx)
 
             /* Load  icon from filesystem. */
             (void)m_bitmapWidget.load(FILESYSTEM, BTC_USD_IMAGE_PATH);
-
-            m_iconCanvas->update(gfx);
         }
     }
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
         }
     }
-
-    unlock();
-
-    return;
-}
-
-void BTCQuotePlugin::inactive()
-{
-    return;
-}
-
-void BTCQuotePlugin::update(IGfx& gfx)
-{
-    lock();
-
-    gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    unlock();
-
-    return;
-}
-
-void BTCQuotePlugin::start()
-{
-    lock();
 
     initHttpClient();
     if (false == startHttpRequest())
@@ -141,25 +104,22 @@ void BTCQuotePlugin::start()
         m_requestTimer.start(UPDATE_PERIOD);
     }
 
-    unlock();
-
     return;
 }
 
 void BTCQuotePlugin::stop()
 {
-    lock();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_requestTimer.stop();
-
-    unlock();
 
     return;
 }
 
 void BTCQuotePlugin::process()
 {
-    lock();
+    Msg                         msg;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if ((true == m_requestTimer.isTimerRunning()) &&
         (true == m_requestTimer.isTimeout()))
@@ -174,7 +134,47 @@ void BTCQuotePlugin::process()
         }
     }
 
-    unlock();
+    if (true == m_taskProxy.receive(msg))
+    {
+        switch(msg.type)
+        {
+        case MSG_TYPE_INVALID:
+            /* Should never happen. */
+            break;
+
+        case MSG_TYPE_RSP:
+            if (nullptr != msg.rsp)
+            {
+                handleWebResponse(*msg.rsp);
+                delete msg.rsp;
+                msg.rsp = nullptr;
+            }
+            break;
+
+        default:
+            /* Should never happen. */
+            break;
+        }
+    }
+
+    return;
+}
+
+void BTCQuotePlugin::update(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
+    }
 
     return;
 }
@@ -210,70 +210,78 @@ bool BTCQuotePlugin::startHttpRequest()
 
 void BTCQuotePlugin::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
-        size_t                          payloadSize             = 0U;
-        const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-        const size_t                    JSON_DOC_SIZE           = 512U;
-        DynamicJsonDocument             jsonDoc(JSON_DOC_SIZE);
-        const size_t                    FILTER_SIZE             = 128U;
-        StaticJsonDocument<FILTER_SIZE> filter;
-        DeserializationError            error;
-
-        filter["bpi"]["USD"]["rate_float"]      = true;
-        filter["bpi"]["USD"]["rate"]            = true;
-
-        if (true == filter.overflowed())
+    /* Note: All registered callbacks are running in a different task context!
+     *       Therefore it is not allowed to access a member here directly.
+     *       The processing must be deferred via task proxy.
+     */
+    m_client.regOnResponse(
+        [this](const HttpResponse& rsp)
         {
-            LOG_ERROR("Less memory for filter available.");
-        }
+            const size_t            JSON_DOC_SIZE   = 512U;
+            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
 
-        error = deserializeJson(jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-        if (DeserializationError::Ok != error.code())
-        {
-            LOG_ERROR("Invalid JSON message received: %s", error.c_str());
-        }
-        else
-        {
-            m_relevantResponsePart = jsonDoc["bpi"]["USD"]["rate"].as<String>() + " $/BTC";
-            m_relevantResponsePart.replace(",", "'");               // beautify to european(?) standard formatting ' for 1000s
-            
-            LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
-
-            lock();
-            m_textWidget.setFormatStr(m_relevantResponsePart);
-            unlock();
-
-            if (true == jsonDoc.overflowed())
+            if (nullptr != jsonDoc)
             {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+                size_t                          payloadSize = 0U;
+                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t                    FILTER_SIZE = 128U;
+                StaticJsonDocument<FILTER_SIZE> filter;
+                DeserializationError            error;
+
+                filter["bpi"]["USD"]["rate_float"]      = true;
+                filter["bpi"]["USD"]["rate"]            = true;
+
+                if (true == filter.overflowed())
+                {
+                    LOG_ERROR("Less memory for filter available.");
+                }
+
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
             }
         }
-    });
+    );
 }
 
-void BTCQuotePlugin::lock() const
+void BTCQuotePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
+    m_relevantResponsePart = jsonDoc["bpi"]["USD"]["rate"].as<String>() + " $/BTC";
+    m_relevantResponsePart.replace(",", "'");               // beautify to european(?) standard formatting ' for 1000s
+    
+    LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
 
-    return;
+    m_textWidget.setFormatStr(m_relevantResponsePart);
 }
 
-void BTCQuotePlugin::unlock() const
+void BTCQuotePlugin::clearQueue()
 {
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
+    Msg msg;
 
-    return;
+    while(true == m_taskProxy.receive(msg))
+    {
+        if (MSG_TYPE_RSP == msg.type)
+        {
+            delete msg.rsp;
+            msg.rsp = nullptr;
+        }
+    }
 }
 
 /******************************************************************************

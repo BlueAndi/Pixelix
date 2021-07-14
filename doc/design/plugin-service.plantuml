@@ -14,7 +14,7 @@ interface IPluginMaintenance {
     + {abstract} enable() = 0 : void
     + {abstract} disable() = 0 : void
     + {abstract} isEnabled() const = 0 : bool
-    + {abstract} start() = 0 : void
+    + {abstract} start(width : uint16_t, height : uint16_t) = 0 : void
     + {abstract} process() = 0 : void
     + {abstract} stop() = 0 : void
     + {abstract} active(gfx : IGfx&) = 0 : void
@@ -42,7 +42,7 @@ class Plugin {
     + enable() : void
     + disable() : void
     + isEnabled() : bool
-    + {abstract} start() : void
+    + {abstract} start(width : uint16_t, height : uint16_t) : void
     + {abstract} process() : void
     + {abstract} stop() : void
     + {abstract} active(gfx : IGfx&) : void

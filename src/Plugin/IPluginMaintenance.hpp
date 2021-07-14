@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IGfx.hpp>
+#include <YAGfx.h>
 #include <ArduinoJson.h>
 #include "ISlotPlugin.hpp"
 
@@ -89,6 +89,20 @@ public:
      * @return Unique id
      */
     virtual uint16_t getUID() const = 0;
+
+    /**
+     * Set instance alias name, which is more user friendly than the UID.
+     * 
+     * @param[in] alias Plugin instance alias name
+     */
+    virtual void setAlias(const String& alias) = 0;
+
+    /**
+     * Get instance alias name.
+     * 
+     * @return Plugin instance alias name
+     */
+    virtual String getAlias() const = 0;
 
     /**
      * Get plugin topics, which can be get/set via different communication
@@ -168,8 +182,11 @@ public:
     /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    virtual void start() = 0;
+    virtual void start(uint16_t width, uint16_t height) = 0;
 
     /**
      * Stop the plugin.
@@ -191,7 +208,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void active(IGfx& gfx) = 0;
+    virtual void active(YAGfx& gfx) = 0;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
@@ -207,7 +224,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void update(IGfx& gfx) = 0;
+    virtual void update(YAGfx& gfx) = 0;
 
 protected:
 

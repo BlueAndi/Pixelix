@@ -74,40 +74,10 @@
  * Public Methods
  *****************************************************************************/
 
-void TimePlugin::active(IGfx& gfx)
-{
-    m_isUpdateAvailable = true;
-
-    m_checkTimeUpdateTimer.start(CHECK_TIME_UPDATE_PERIOD);
-
-    /* Force immediate time update to avoid displaying
-     * an old time for one TIME_UPDATE_PERIOD.
-     */
-    updateTime(true);
-}
-
-void TimePlugin::inactive()
-{
-    m_checkTimeUpdateTimer.stop();
-
-    return;
-}
-
-void TimePlugin::update(IGfx& gfx)
-{
-    if (false != m_isUpdateAvailable)
-    {
-        gfx.fillScreen(ColorDef::BLACK);
-        m_textWidget.update(gfx);
-
-        m_isUpdateAvailable = false;
-    }
-
-    return;
-}
-
 void TimePlugin::process()
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     if ((true == m_checkTimeUpdateTimer.isTimerRunning()) &&
         (true == m_checkTimeUpdateTimer.isTimeout()))
     {
@@ -119,8 +89,52 @@ void TimePlugin::process()
     return;
 }
 
+void TimePlugin::active(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    UTIL_NOT_USED(gfx);
+
+    /* Force immediate time update to avoid displaying
+     * an old time for one TIME_UPDATE_PERIOD.
+     */
+    updateTime(true);
+
+    /* Force drawing on display in the update() method for the very first time
+     * after activation.
+     */
+    m_isUpdateAvailable = true;
+    m_checkTimeUpdateTimer.start(CHECK_TIME_UPDATE_PERIOD);
+}
+
+void TimePlugin::inactive()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_checkTimeUpdateTimer.stop();
+
+    return;
+}
+
+void TimePlugin::update(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (false != m_isUpdateAvailable)
+    {
+        gfx.fillScreen(ColorDef::BLACK);
+        m_textWidget.update(gfx);
+
+        m_isUpdateAvailable = false;
+    }
+
+    return;
+}
+
 void TimePlugin::setText(const String& formatText)
 {
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
     m_textWidget.setFormatStr(formatText);
 
     return;

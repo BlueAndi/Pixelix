@@ -52,31 +52,31 @@
  *****************************************************************************/
 
 /** Severity: InfoLevel. */
-#define LL_INFO (Logging::LOGLEVEL_INFO)
+#define LL_INFO                         (Logging::LOGLEVEL_INFO)
 
 /** Severity: WarningLevel. */
-#define LL_WARNING (Logging::LOGLEVEL_WARNING)
+#define LL_WARNING                      (Logging::LOGLEVEL_WARNING)
 
 /** Severity: ErrorLevel. */
-#define LL_ERROR (Logging::LOGLEVEL_ERROR)
+#define LL_ERROR                        (Logging::LOGLEVEL_ERROR)
 
 /** Severity: FatalLevel. */
-#define LL_FATAL (Logging::LOGLEVEL_FATAL)
+#define LL_FATAL                        (Logging::LOGLEVEL_FATAL)
 
 /** Macro for Logging with LOGLEVEL_INFO. */
-#define LOG_INFO(...) (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_INFO, __VA_ARGS__))
+#define LOG_INFO(...)                   (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_INFO, __VA_ARGS__))
 
 /** Macro for Logging with LOGLEVEL_WARNING. */
-#define LOG_WARNING(...) (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_WARNING, __VA_ARGS__))
+#define LOG_WARNING(...)                (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_WARNING, __VA_ARGS__))
 
 /** Macro for Logging with LOGLEVEL_ERROR. */
-#define LOG_ERROR(...) (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_ERROR, __VA_ARGS__))
+#define LOG_ERROR(...)                  (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_ERROR, __VA_ARGS__))
 
 /** Macro for Logging with LOGLEVEL_FATAL. */
-#define LOG_FATAL(...) (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_FATAL, __VA_ARGS__))
+#define LOG_FATAL(...)                  (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_FATAL, __VA_ARGS__))
 
 /** Macro for switching the LogLevel. */
-#define SWITCH_LOG_LEVEL_TO(logLevel) (Logging::getInstance().setLogLevel(logLevel))
+#define SWITCH_LOG_LEVEL_TO(logLevel)   (Logging::getInstance().setLogLevel(logLevel))
 
 /******************************************************************************
  * Types and Classes

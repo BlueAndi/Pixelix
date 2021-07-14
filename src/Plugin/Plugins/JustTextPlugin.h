@@ -47,6 +47,7 @@
 #include "Plugin.hpp"
 
 #include <TextWidget.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -73,12 +74,12 @@ public:
     JustTextPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
         m_textWidget(),
-        m_xMutex(nullptr)
+        m_mutex()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -86,11 +87,7 @@ public:
      */
     ~JustTextPlugin()
     {
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -149,7 +146,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
 
     /**
      * Get text.
@@ -172,18 +169,8 @@ private:
      */
     static const char*  TOPIC_TEXT;
 
-    TextWidget          m_textWidget;   /**< Text widget, used for showing the text. */
-    SemaphoreHandle_t   m_xMutex;       /**< Mutex to protect against concurrent access. */
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
+    TextWidget              m_textWidget;   /**< Text widget, used for showing the text. */
+    mutable MutexRecursive  m_mutex;        /**< Mutex to protect against concurrent access. */
 };
 
 /******************************************************************************

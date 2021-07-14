@@ -36,6 +36,7 @@
 #include "DisplayMgr.h"
 
 #include <Util.h>
+#include <Display.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -79,7 +80,8 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         uint32_t    index       = 0U;
         String      rsp         = "ACK";
         const char  DELIMITER   = ';';
-        uint32_t    framebuffer[Board::LedMatrix::width * Board::LedMatrix::height];
+        IDisplay&   display     = Display::getInstance();
+        uint32_t    framebuffer[display.getWidth() * display.getHeight()];
         uint8_t     slotId      = DisplayMgr::SLOT_ID_INVALID;
 
         DisplayMgr::getInstance().getFBCopy(framebuffer, UTIL_ARRAY_NUM(framebuffer), &slotId);

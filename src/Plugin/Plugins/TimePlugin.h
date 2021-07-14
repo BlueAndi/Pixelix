@@ -49,6 +49,7 @@
 #include "Plugin.hpp"
 
 #include <TextWidget.h>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -77,10 +78,13 @@ public:
         m_textWidget("\\calignNo NTP"),
         m_checkTimeUpdateTimer(),
         m_currentMinute(0),
-        m_isUpdateAvailable(false)
+        m_isUpdateAvailable(false),
+        m_mutex()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
+
+        (void)m_mutex.create();
     }
 
     /**
@@ -88,6 +92,7 @@ public:
      */
     ~TimePlugin()
     {
+        m_mutex.destroy();
     }
 
     /**
@@ -104,12 +109,19 @@ public:
     }
 
     /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     */
+    void process(void) final;
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
 
    /**
      * This method will be called in case the plugin is set active, which means
@@ -117,20 +129,13 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) final;
+    void active(YAGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
      * it won't be shown on the display anymore.
      */
     void inactive() final;
-
-    /**
-     * Process the plugin.
-     * Overwrite it if your plugin has cyclic stuff to do without being in a
-     * active slot.
-     */
-    void process(void) final;
 
     /**
      * Set text, which may contain format tags.
@@ -144,10 +149,11 @@ private:
     /** Time to check time update period in ms */
     static const uint32_t   CHECK_TIME_UPDATE_PERIOD  = 5000U;
 
-    TextWidget  m_textWidget;           /**< Text widget, used for showing the text. */
-    SimpleTimer m_checkTimeUpdateTimer; /**< Timer, used for cyclic check if time update is necessarry. */
-    int32_t     m_currentMinute;        /**< Variable to hold the current minute value. */
-    bool        m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
+    TextWidget          m_textWidget;           /**< Text widget, used for showing the text. */
+    SimpleTimer         m_checkTimeUpdateTimer; /**< Timer, used for cyclic check if time update is necessarry. */
+    int32_t             m_currentMinute;        /**< Variable to hold the current minute value. */
+    bool                m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
+    MutexRecursive      m_mutex;                /**< Mutex to protect against concurrent access. */
 
     /**
      * Get current time and update the text, which to be displayed.

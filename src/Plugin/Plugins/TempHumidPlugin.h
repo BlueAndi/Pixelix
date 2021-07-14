@@ -38,7 +38,6 @@
 /******************************************************************************
  * Compile Switches
  *****************************************************************************/
-#define DHTTYPE DHTesp::DHT11   /**< Set sensor type to DHT11 */
 
 /******************************************************************************
  * Includes
@@ -46,12 +45,12 @@
 #include <stdint.h>
 #include "Plugin.hpp"
 
-#include <DHTesp.h>
 #include <SimpleTimer.hpp>
-
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <ISensorChannel.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -65,9 +64,6 @@
  * TempHumid plugin.
  *
  * This plugins displays the temperature and humidity read from a sensor.
- * Currently implemented sensors:
- * - DHT Sensors supported by DHTesp library
- * - TODO: sht3x
  */
 class TempHumidPlugin : public Plugin
 {
@@ -85,21 +81,21 @@ public:
         m_iconCanvas(nullptr),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_text(),
         m_page(TEMPERATURE),
         m_pageTime(10000U),
         m_timer(),
-        m_xMutex(nullptr),
-        m_dht(),
+        m_mutex(),
         m_humid(0.0F),
         m_temp(0.0F),
         m_sensorUpdateTimer(),
-        m_slotInterf(nullptr)
+        m_slotInterf(nullptr),
+        m_temperatureSensorCh(nullptr),
+        m_humiditySensorCh(nullptr)
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();        
+        (void)m_mutex.create();
     }
 
     /**
@@ -129,11 +125,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }        
+        m_mutex.destroy();
     }
 
     /**
@@ -158,26 +150,19 @@ public:
     void setSlot(const ISlotPlugin* slotInterf) final;
 
     /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void active(IGfx& gfx) final;
-
-    /**
-     * Update the display.
-     * The scheduler will call this method periodically.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void update(IGfx& gfx) final;
-
-    /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    void start() final;
+    void start(uint16_t width, uint16_t height) final;
+
+   /**
+     * Stop the plugin.
+     * Overwrite it if your plugin needs to know that it will be uninstalled.
+     */
+    void stop() final;
 
     /**
      * Process the plugin.
@@ -186,7 +171,30 @@ public:
      */
     void process(void) final;    
 
+    /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void active(YAGfx& gfx) final;
+
+    /**
+     * This method will be called in case the plugin is set inactive, which means
+     * it won't be shown on the display anymore.
+     */
+    void inactive() final;
+    
+    /**
+     * Update the display.
+     * The scheduler will call this method periodically.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void update(YAGfx& gfx) final;
+
 private:
+
     /**
      * Icon width in pixels.
      */
@@ -216,27 +224,16 @@ private:
     Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_text;                     /**< The text to display. */
     uint8_t                     m_page;                     /**< Number of page, which to show. */
     unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
     SimpleTimer                 m_timer;                    /**< Timer for changing page. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
-    DHTesp                      m_dht;                      /**< Sensor object */
+    MutexRecursive              m_mutex;                    /**< Mutex to protect against concurrent access. */
     float                       m_humid;                    /**< Last sensor humidity value */
     float                       m_temp;                     /**< Last sensor temperature value */
     SimpleTimer                 m_sensorUpdateTimer;        /**< Time used for cyclic sensor reading. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
-
-    /**
-     * Protect against concurrent access.
-     */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
-
+    ISensorChannel*             m_temperatureSensorCh;      /**< Temperature sensor channel */
+    ISensorChannel*             m_humiditySensorCh;         /**< Humidity sensor channel */
 };
 
 /******************************************************************************

@@ -58,7 +58,25 @@
  * Public Methods
  *****************************************************************************/
 
-void GameOfLifePlugin::active(IGfx& gfx)
+void GameOfLifePlugin::start(uint16_t width, uint16_t height)
+{
+    m_width     = width;
+    m_height    = height;
+    m_gridSize  = ((m_width * m_height) + (BITS - 1U)) / BITS;
+
+    (void)createGrids();
+
+    return;
+}
+
+void GameOfLifePlugin::stop()
+{
+    destroyGrids();
+
+    return;
+}
+
+void GameOfLifePlugin::active(YAGfx& gfx)
 {
     uint8_t index   = 0U;
     bool    isInit  = true;
@@ -73,18 +91,7 @@ void GameOfLifePlugin::active(IGfx& gfx)
         ++index;
     }
 
-    if (false == isInit)
-    {
-        m_width     = gfx.getWidth();
-        m_height    = gfx.getHeight();
-        m_gridSize  = ((m_width * m_height) + (BITS - 1U)) / BITS;
-
-        if (true == createGrids())
-        {
-            generateInitialPattern(m_activeGrid);
-        }
-    }
-    else
+    if (true == isInit)
     {
         /* It may happen that the slot duration is lower than the force restart period.
          * To avoid that the game of life doesn't change anymore, a new pattern shall
@@ -112,7 +119,7 @@ void GameOfLifePlugin::inactive()
     return;
 }
 
-void GameOfLifePlugin::update(IGfx& gfx)
+void GameOfLifePlugin::update(YAGfx& gfx)
 {
     uint8_t index   = 0U;
     bool    isInit  = true;
@@ -293,6 +300,7 @@ void GameOfLifePlugin::destroyGrids()
         if (nullptr != m_grids[index])
         {
             delete[] m_grids[index];
+            m_grids[index] = nullptr;
         }
 
         ++index;
@@ -449,7 +457,7 @@ uint8_t GameOfLifePlugin::countAliveNeighbours(uint8_t gridId, int16_t x, int16_
     return count;
 }
 
-void GameOfLifePlugin::update(IGfx& gfx, uint8_t gridId)
+void GameOfLifePlugin::update(YAGfx& gfx, uint8_t gridId)
 {
     int16_t x   = 0;
     int16_t y   = 0;

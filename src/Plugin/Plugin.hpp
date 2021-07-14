@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IGfx.hpp>
+#include <YAGfx.h>
 #include <Util.h>
 #include "IPluginMaintenance.hpp"
 
@@ -87,9 +87,30 @@ public:
      *
      * @return Unique id
      */
-    uint16_t getUID() const  override
+    uint16_t getUID() const final
     {
         return m_uid;
+    }
+
+    /**
+     * Set instance alias name, which is more user friendly than the UID.
+     * 
+     * @param[in] alias Plugin instance alias name
+     */
+    void setAlias(const String& alias) final
+    {
+        m_alias = alias;
+        return;
+    }
+
+    /**
+     * Get instance alias name.
+     * 
+     * @return Plugin instance alias name
+     */
+    String getAlias() const final
+    {
+        return m_alias;
     }
 
     /**
@@ -206,9 +227,14 @@ public:
     /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    virtual void start() override
+    virtual void start(uint16_t width, uint16_t height) override
     {
+        UTIL_NOT_USED(width);
+        UTIL_NOT_USED(height);
         return;
     }
 
@@ -238,7 +264,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void active(IGfx& gfx) override
+    virtual void active(YAGfx& gfx) override
     {
         UTIL_NOT_USED(gfx);
         return;
@@ -261,7 +287,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void update(IGfx& gfx) = 0;
+    virtual void update(YAGfx& gfx) = 0;
 
     /**
      * Path where plugin specific configuration files shall be stored.
@@ -279,6 +305,7 @@ protected:
      */
     Plugin(const String& name, uint16_t uid) :
         m_uid(uid),
+        m_alias(),
         m_name(name),
         m_isEnabled(false)
     {
@@ -311,6 +338,7 @@ protected:
 private:
 
     uint16_t    m_uid;          /**< Unique id */
+    String      m_alias;        /**< Alias name */
     String      m_name;         /**< Plugin name */
     bool        m_isEnabled;    /**< Plugin is enabled or disabled */
 

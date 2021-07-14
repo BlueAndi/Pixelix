@@ -58,12 +58,11 @@
  * Public Methods
  *****************************************************************************/
 
-void FirePlugin::active(IGfx& gfx)
+void FirePlugin::start(uint16_t width, uint16_t height)
 {
-    /* Defered constructor */
     if (nullptr == m_heat)
     {
-        m_heatSize = gfx.getWidth() * gfx.getHeight();
+        m_heatSize = width * height;
         m_heat = new uint8_t[m_heatSize];
 
         if (nullptr == m_heat)
@@ -72,6 +71,22 @@ void FirePlugin::active(IGfx& gfx)
         }
     }
 
+    return;
+}
+
+void FirePlugin::stop()
+{
+    if (nullptr != m_heat)
+    {
+        delete[] m_heat;
+        m_heat = nullptr;
+    }
+
+    return;
+}
+
+void FirePlugin::active(YAGfx& gfx)
+{
     /* Clear display */
     gfx.fillScreen(ColorDef::BLACK);
 
@@ -84,7 +99,7 @@ void FirePlugin::inactive()
     return;
 }
 
-void FirePlugin::update(IGfx& gfx)
+void FirePlugin::update(YAGfx& gfx)
 {
     int16_t x       = 0;
     int16_t y       = 0;

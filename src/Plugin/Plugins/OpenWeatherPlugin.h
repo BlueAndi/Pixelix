@@ -50,6 +50,8 @@
 #include <Canvas.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
+#include <TaskProxy.hpp>
+#include <Mutex.hpp>
 
 /******************************************************************************
  * Macros
@@ -87,7 +89,7 @@ public:
         m_client(),
         m_requestTimer(),
         m_updateContentTimer(),
-        m_xMutex(nullptr),
+        m_mutex(),
         m_isConnectionError(false),
         m_currentTemp("\\calign?"),
         m_currentWeatherIcon(IMAGE_PATH_STD_ICON),
@@ -95,14 +97,14 @@ public:
         m_currentHumidity("\\calign?"),
         m_currentWindspeed("\\calign?"),
         m_slotInterf(nullptr),
-        m_configurationHasChanged(false),
         m_durationCounter(0u),
-        m_isUpdateAvailable(false)
+        m_isUpdateAvailable(false),
+        m_taskProxy()
     {
         /* Move the text widget one line lower for better look. */
         m_textWidget.move(0, 1);
 
-        m_xMutex = xSemaphoreCreateMutex();
+        (void)m_mutex.create();
     }
 
     /**
@@ -121,10 +123,16 @@ public:
      */
     ~OpenWeatherPlugin()
     {
+        m_client.regOnResponse(nullptr);
+        m_client.regOnClosed(nullptr);
+        m_client.regOnError(nullptr);
+
         /* Abort any pending TCP request to avoid getting a callback after the
          * object is destroyed.
          */
         m_client.abort();
+        
+        clearQueue();
         
         if (nullptr != m_iconCanvas)
         {
@@ -138,11 +146,7 @@ public:
             m_textCanvas = nullptr;
         }
 
-        if (nullptr != m_xMutex)
-        {
-            vSemaphoreDelete(m_xMutex);
-            m_xMutex = nullptr;
-        }
+        m_mutex.destroy();
     }
 
     /**
@@ -196,10 +200,21 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
+     * Set the slot interface, which the plugin can used to request information
+     * from the slot, it is plugged in.
+     *
+     * @param[in] slotInterf    Slot interface
+     */
+    void setSlot(const ISlotPlugin* slotInterf) final;
+
+    /**
      * Start the plugin.
      * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
-    void start() final;
+    void start(uint16_t width, uint16_t height) final;
 
     /**
      * Stop the plugin.
@@ -213,14 +228,6 @@ public:
      * active slot.
      */
     void process(void) final;
-    
-    /**
-     * Set the slot interface, which the plugin can used to request information
-     * from the slot, it is plugged in.
-     *
-     * @param[in] slotInterf    Slot interface
-     */
-    void setSlot(const ISlotPlugin* slotInterf) final;
 
     /**
      * This method will be called in case the plugin is set active, which means
@@ -228,7 +235,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void active(IGfx& gfx) final;
+    void active(YAGfx& gfx) final;
 
     /**
      * This method will be called in case the plugin is set inactive, which means
@@ -242,7 +249,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    void update(IGfx& gfx) final;
+    void update(YAGfx& gfx) final;
 
     /**
      * Get OpenWeather API key.
@@ -391,7 +398,7 @@ private:
     AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
     SimpleTimer                 m_updateContentTimer;       /**< Timer used for duration ticks in [s]. */
-    SemaphoreHandle_t           m_xMutex;                   /**< Mutex to protect against concurrent access. */
+    mutable MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
     bool                        m_isConnectionError;        /**< Is connection error happened? */
     String                      m_currentTemp;              /**< The current temperature. */
     String                      m_currentWeatherIcon;       /**< The current weather condition icon. */
@@ -399,9 +406,42 @@ private:
     String                      m_currentHumidity;          /**< The current humidity. */
     String                      m_currentWindspeed;         /**< The current windspeed. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
-    bool                        m_configurationHasChanged;  /**< Flag to indicate whether the configuration has changed. */
     uint8_t                     m_durationCounter;          /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
     bool                        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    
+    /**
+     * Defines the message types, which are necessary for HTTP client/server handling.
+     */
+    enum MsgType
+    {
+        MSG_TYPE_INVALID = 0,   /**< Invalid message type. */
+        MSG_TYPE_RSP,           /**< A response, caused by a previous request. */
+        MSG_TYPE_CONN_CLOSED,   /**< The connection is closed. */
+        MSG_TYPE_CONN_ERROR     /**< A connection error happened. */
+    };
+
+    /**
+     * A message for HTTP client/server handling.
+     */
+    struct Msg
+    {
+        MsgType                 type;   /**< Message type */
+        DynamicJsonDocument*    rsp;    /**< Response, only valid if message type is a response. */
+
+        /**
+         * Constructs a message.
+         */
+        Msg() :
+            type(MSG_TYPE_INVALID),
+            rsp(nullptr)
+        {
+        }
+    }; 
+
+    /**
+     * Task proxy used to decouple server responses, which happen in a different task context.
+     */
+    TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
      * Updates the text and icon, which to be displayed.
@@ -428,6 +468,13 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle a web response from the server.
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+
+    /**
      * Saves current configuration to JSON file.
      */
     bool saveConfiguration() const;
@@ -438,14 +485,9 @@ private:
     bool loadConfiguration();
 
     /**
-     * Protect against concurrent access.
+     * Clear the task proxy queue.
      */
-    void lock(void) const;
-
-    /**
-     * Unprotect against concurrent access.
-     */
-    void unlock(void) const;
+    void clearQueue();
 };
 
 /******************************************************************************

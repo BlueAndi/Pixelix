@@ -6,7 +6,7 @@
 - [PIXELIX](#pixelix)
 - [Documentation](#documentation)
   - [Requirements](#requirements)
-  - [Electronic](#electronic)
+  - [Hardware](#hardware)
   - [Software](#software)
   - [Structure](#structure)
 
@@ -16,18 +16,20 @@
 
 * [Requirements](REQUIREMENTS.md)
 
-## Electronic
+## Hardware
 
-* [Detail](ELECTRONIC.md)
-* [Bill of material](BOM.md)
+* [Boards](BOARDS.md)
+* [Sensors](SENSORS.md)
 
 ## Software
 
 * [Toolchain installation](TOOLCHAIN-INSTALLATION.md)
 * [Software build](SW-BUILD.md)
 * [Software update](SW-UPDATE.md)
+* [Software configuration management](SW-RELEASE.md)
 * [Plugins](PLUGINS.md)
-* [REST API description](REST.md)
+* [Plugin Development](PLUGIN-DEV.md)
+* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix)
 * [Websocket API description](WEBSOCKET.md)
 
 ## Structure
@@ -45,6 +47,7 @@
     \---schematics  (Schematics)
 +---include         (Include files)
 +---lib             (Project specific (private) libraries)
++---scripts         (PlatformIO specific Python scripts)
 +---src             (Sourcecode)
 +---test            (Unit tests)
 \---platform.ini    (Project configuration file)

@@ -128,13 +128,22 @@ public:
     const char* findNext();
 
     /**
-     * Get plugin REST base URI.
+     * Get plugin REST base URI to identify plugin by UID.
      *
      * @param[in] uid   Plugin UID
      *
      * @return Plugin REST API base URI
      */
-    String getRestApiBaseUri(uint16_t uid);
+    String getRestApiBaseUriByUid(uint16_t uid);
+
+    /**
+     * Get plugin REST base URI to identify plugin by alias name.
+     *
+     * @param[in] alias Plugin alias name
+     *
+     * @return Plugin REST API base URI
+     */
+    String getRestApiBaseUriByAlias(const String& alias);
 
     /**
      * Load plugin installation from persistent memory.
@@ -179,7 +188,7 @@ private:
      */
     struct PluginObjData
     {
-        static const uint8_t MAX_WEB_HANDLERS = 8U; /**< Max. number of web handlers. */
+        static const uint8_t MAX_WEB_HANDLERS = 16U; /**< Max. number of web handlers. */
 
         IPluginMaintenance* plugin;                         /**< Plugin object, where this data record belongs to. */
         WebHandlerData      webHandlers[MAX_WEB_HANDLERS];  /**< Web data of the plugin, necessary to remove it later again. */
@@ -264,10 +273,11 @@ private:
      * Register a single topic of the given plugin depended on the used communication
      * networks.
      * 
+     * @param[in] baseUri   The REST API base URI.
      * @param[in] metaData  The plugin meta data, which shall be handled.
      * @param[in] topic     The topic.
      */
-    void registerTopic(PluginObjData* metaData, const String& topic);
+    void registerTopic(const String& baseUri, PluginObjData* metaData, const String& topic);
 
     /**
      * The web request handler handles all incoming HTTP requests for every plugin topic.

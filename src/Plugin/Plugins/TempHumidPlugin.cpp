@@ -34,9 +34,11 @@
  *****************************************************************************/
 #include "TempHumidPlugin.h"
 #include "FileSystem.h"
+#include "SensorDataProvider.h"
 
 #include <Board.h>
-#include <Color.h>
+#include <SensorChannelType.hpp>
+#include <YAColor.h>
 #include <Logging.h>
 
 /******************************************************************************
@@ -58,6 +60,7 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
 /* Initialize image path for temperature (scale) icon. */
 const char* TempHumidPlugin::IMAGE_PATH_TEMP_ICON      = "/images/temp.bmp";
 
@@ -74,19 +77,12 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
     return;
 }
 
-void TempHumidPlugin::active(IGfx& gfx)
+void TempHumidPlugin::start(uint16_t width, uint16_t height)
 {
-    lock();
-
-    /* Set time to show page - either 10s or slot_time / 4
-     * read here because otherwise we do not get config changes during runtime in slot_time.
-     */
-
-    if (nullptr != m_slotInterf) {
-        m_pageTime = m_slotInterf->getDuration() / 4U;
-    }
-
-    gfx.fillScreen(ColorDef::BLACK);
+    SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
+    uint8_t                     sensorIdx       = 0U;
+    uint8_t                     channelIdx      = 0U;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if (nullptr == m_iconCanvas)
     {
@@ -98,40 +94,133 @@ void TempHumidPlugin::active(IGfx& gfx)
 
             /* Load icon from filesystem. */
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-
-            m_iconCanvas->update(gfx);
         }
-    }
-    else
-    {
-        m_iconCanvas->update(gfx);
     }
 
     if (nullptr == m_textCanvas)
     {
-        m_textCanvas = new Canvas(gfx.getWidth() - ICON_WIDTH, gfx.getHeight(), ICON_WIDTH, 0);
+        m_textCanvas = new Canvas(width - ICON_WIDTH, width, ICON_WIDTH, 0);
 
         if (nullptr != m_textCanvas)
         {
             (void)m_textCanvas->addWidget(m_textWidget);
-
-            m_textCanvas->update(gfx);
         }
     }
-    else
+
+    /* Use just the first found sensor for temperature. */
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))
     {
-        m_textCanvas->update(gfx);
+        m_temperatureSensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
     }
 
-    unlock();
+    /* Use just the first found sensor for humidity. */
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_HUMIDITY_PERCENT, ISensorChannel::DATA_TYPE_FLOAT32))
+    {
+        m_humiditySensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
+    }
 
     return;
 }
 
-void TempHumidPlugin::update(IGfx& gfx)
+void TempHumidPlugin::stop()
 {
-    bool showPage                   = false;
-    char valueReducedPrecison[6]    = { 0 };    /* Holds a value in lower precision for display. */
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (nullptr != m_iconCanvas)
+    {
+        delete m_iconCanvas;
+        m_iconCanvas = nullptr;
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        delete m_textCanvas;
+        m_textCanvas = nullptr;
+    }
+
+    return;
+}
+
+void TempHumidPlugin::process() 
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    /* Read only if update period not reached or sensor has never been read. */
+    if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
+        (true == m_sensorUpdateTimer.isTimeout()))
+    {
+        if (nullptr != m_temperatureSensorCh)
+        {
+            if (ISensorChannel::DATA_TYPE_FLOAT32 == m_temperatureSensorCh->getDataType())
+            {
+                SensorChannelFloat32*   channel     = static_cast<SensorChannelFloat32*>(m_temperatureSensorCh);
+                float                   temperature = channel->getValue();
+
+                if (!isnan(temperature))
+                {
+                    m_temp = temperature;
+
+                    LOG_INFO("Temperature: %0.1f °C", m_temp);
+                }
+            }
+        }
+
+        if (nullptr != m_humiditySensorCh)
+        {
+            if (ISensorChannel::DATA_TYPE_FLOAT32 == m_humiditySensorCh->getDataType())
+            {
+                SensorChannelFloat32*   channel     = static_cast<SensorChannelFloat32*>(m_humiditySensorCh);
+                float                   humidity    = channel->getValue();
+
+                if (!isnan(humidity))
+                {
+                    m_humid = humidity;
+
+                    LOG_INFO("Humidity: %3.1f %%", m_humid);
+                }
+            }
+        }
+
+        m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
+    }
+}
+
+void TempHumidPlugin::active(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    /* Set time to show page - either 10s or slot_time / 4
+     * read here because otherwise we do not get config changes during runtime in slot_time.
+     */
+    if (nullptr != m_slotInterf) {
+        m_pageTime = m_slotInterf->getDuration() / 4U;
+    }
+
+    gfx.fillScreen(ColorDef::BLACK);
+
+    if (nullptr != m_iconCanvas)
+    {
+        m_iconCanvas->update(gfx);
+    }
+
+    if (nullptr != m_textCanvas)
+    {
+        m_textCanvas->update(gfx);
+    }
+
+    return;
+}
+
+void TempHumidPlugin::inactive()
+{
+    /* Nothing to do. */
+    return;
+}
+
+void TempHumidPlugin::update(YAGfx& gfx)
+{
+    bool                        showPage = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if (false == m_timer.isTimerRunning())
     {
@@ -171,21 +260,45 @@ void TempHumidPlugin::update(IGfx& gfx)
         {
         case TEMPERATURE:
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-            /* Generate temperature string with reduced precision and add unit °C. */
-            (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9f) ? "%.0f" : "%.1f" , m_temp);
-            m_text  = "\\calign";
-            m_text += valueReducedPrecison;
-            m_text += "\x8E";
-            m_text += "C";
-            m_textWidget.setFormatStr(m_text);
+
+            if (nullptr == m_temperatureSensorCh)
+            {
+                m_textWidget.setFormatStr("\\calign-");
+            }
+            else
+            {
+                char    valueReducedPrecison[6] = { 0 };    /* Holds a value in lower precision for display. */
+                String  text;
+
+                /* Generate temperature string with reduced precision and add unit °C. */
+                (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9f) ? "%.0f" : "%.1f" , m_temp);
+                text  = "\\calign";
+                text += valueReducedPrecison;
+                text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
+
+                m_textWidget.setFormatStr(text);
+            }
             break;
 
         case HUMIDITY:
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
-            (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humid);
-            m_text = valueReducedPrecison;
-            m_text += "%";
-            m_textWidget.setFormatStr(m_text);
+
+            if (nullptr == m_humiditySensorCh)
+            {
+                m_textWidget.setFormatStr("\\calign-");
+            }
+            else
+            {
+                char    valueReducedPrecison[4] = { 0 };    /* Holds a value in lower precision for display. */
+                String  text;
+
+                (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humid);
+                text  = "\\calign";
+                text += valueReducedPrecison;
+                text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
+                
+                m_textWidget.setFormatStr(text);
+            }
             break;
 
         default:
@@ -196,34 +309,6 @@ void TempHumidPlugin::update(IGfx& gfx)
     return;
 }
 
-void TempHumidPlugin::process() 
-{
-    /* Read only if update period not reached or sensor has never been read. */
-    if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
-        (true == m_sensorUpdateTimer.isTimeout()))
-    {
-        float   humidity    = m_dht.getHumidity();
-        float   temperature = m_dht.getTemperature();
-
-        /* Only accept if both values could be read. */
-        if ( (!isnan(humidity)) && (!isnan(temperature)) ) 
-        {
-            m_humid = humidity;
-            m_temp  = temperature;
-
-            LOG_INFO("Got new temp. h: %f, t: %f", m_humid, m_temp);
-
-            m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
-        }
-    }
-}
-
-void TempHumidPlugin::start()
-{
-    m_dht.setup(Board::Pin::dhtInPinNo, DHTTYPE);
-    return;
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -231,26 +316,6 @@ void TempHumidPlugin::start()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void TempHumidPlugin::lock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreTakeRecursive(m_xMutex, portMAX_DELAY);
-    }
-
-    return;
-}
-
-void TempHumidPlugin::unlock() const
-{
-    if (nullptr != m_xMutex)
-    {
-        (void)xSemaphoreGiveRecursive(m_xMutex);
-    }
-
-    return;
-}
 
 /******************************************************************************
  * External Functions
