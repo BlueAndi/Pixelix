@@ -20,10 +20,11 @@
 ## What must be done?
 
 1. The plugin sources (.h/.cpp) shall be in ```/src/Plugin/Plugins``` folder.
-2. A short plugin description shall be in ```/doc/PLUGINS.md```.
-3. A plugin specific HTML page shall be in ```/data/plugins```.
-4. Place a plugin screenshot as image in ```/data/images```, using the plugin name and the file extension. It shall be shown in the HTML page.
-5. If the plugin spawns a REST API:
+2. The plugin shall be registered in the module ```/src/StateMachine/InitState.cpp```, function ```void InitState::registerPlugins()```.
+3. A short plugin description shall be in ```/doc/PLUGINS.md```.
+4. A plugin specific HTML page shall be in ```/data/plugins```.
+5. Place a plugin screenshot as image in ```/data/images```, using the plugin name and the file extension. It shall be shown in the HTML page.
+6. If the plugin spawns a REST API:
    1. The HTML page must be able to get/set the corresponding information via REST API.
    2. The [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix) shall be extended. Ask the owner to do this via issue or pull-request.
 
