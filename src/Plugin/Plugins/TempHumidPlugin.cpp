@@ -295,7 +295,7 @@ void TempHumidPlugin::update(YAGfx& gfx)
                 (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humid);
                 text  = "\\calign";
                 text += valueReducedPrecison;
-                text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
+                text += ISensorChannel::channelTypeToUnit(m_humiditySensorCh->getType());
                 
                 m_textWidget.setFormatStr(text);
             }
