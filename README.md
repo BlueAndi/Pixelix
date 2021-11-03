@@ -70,7 +70,7 @@ For more information, see the [documentation](./doc/README.md).
 * [Arduino](https://github.com/platformio/platform-espressif32) - ESP32 Arduino framework - Apache-2.0 License
 * [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (RMT) - LGPL-3.0 License
 * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) - Webserver - LGPL-2.1 License
-* [AsyncTCP](https://github.com/me-no-dev/AsyncTCP) - TCP library - LGPL-3.0 License
+* [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock) - TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets - LGPL-3.0 License
 * [ArduinoJson](https://arduinojson.org/) - JSON handling - MIT License
 * [StreamUtils](https://github.com/bblanchon/ArduinoStreamUtils) - Stream utilities - MIT License
 * [Bootstrap](https://getbootstrap.com/) - CSS Framework - MIT License

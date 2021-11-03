@@ -85,7 +85,7 @@ const char* OpenWeatherPlugin::IMAGE_PATH_WIND_ICON     = "/images/wind.bmp";
 const char* OpenWeatherPlugin::IMAGE_PATH               = "/images/";
 
 /* Initialize OpenWeather base URI */
-const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "http://api.openweathermap.org";
+const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "https://api.openweathermap.org";
 
 /* Initialize plugin topic. */
 const char* OpenWeatherPlugin::TOPIC                    = "/weather";

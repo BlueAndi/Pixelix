@@ -69,6 +69,7 @@ AsyncHttpClient::AsyncHttpClient() :
     m_onErrorCallback(),
     m_hostname(),
     m_port(0U),
+    m_isSecure(false),
     m_base64Authorization(),
     m_uri(),
     m_headers(),
@@ -160,10 +161,12 @@ bool AsyncHttpClient::begin(const String& url)
         if (protocol == "http")
         {
             m_port = HTTP_PORT;
+            m_isSecure = false;
         }
         else if (protocol == "https")
         {
             m_port = HTTPS_PORT;
+            m_isSecure = true;
         }
         else
         {
@@ -271,7 +274,7 @@ void AsyncHttpClient::end()
 
 bool AsyncHttpClient::connect()
 {
-    return m_tcpClient.connect(m_hostname.c_str(), m_port);
+    return m_tcpClient.connect(m_hostname.c_str(), m_port, m_isSecure);
 }
 
 void AsyncHttpClient::disconnect()
@@ -291,7 +294,7 @@ bool AsyncHttpClient::isConnected()
 
 bool AsyncHttpClient::isDisconnected()
 {
-    return m_tcpClient.disconnected();
+    return m_tcpClient.freeable();
 }
 
 void AsyncHttpClient::setHttpVersion(bool useHttp10)
