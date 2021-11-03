@@ -273,6 +273,7 @@ private:
     OnError         m_onErrorCallback;      /**< Callback which to call for a connection error. */
     String          m_hostname;             /**< Server hostname */
     uint16_t        m_port;                 /**< Server port */
+    bool            m_isSecure;             /**< Secure transport (true) or not (false) */
     String          m_base64Authorization;  /**< Authorization BASE64 encoded */
     String          m_uri;                  /**< Request URI */
     String          m_headers;              /**< Additional request headers */
