@@ -339,8 +339,11 @@ void VolumioPlugin::setHost(const String& host)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_volumioHost = host;
-    (void)saveConfiguration();
+    if (host != m_volumioHost)
+    {
+        m_volumioHost = host;
+        (void)saveConfiguration();
+    }
 
     return;
 }
@@ -560,11 +563,11 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         else if (service == "webradio")
         {
             /* If stopped, the title contains the radio station name,
-                * otherwise the title contains the music and the artist
-                * the radio station name.
-                * 
-                * Therefore show only the title in any case.
-                */
+             * otherwise the title contains the music and the artist
+             * the radio station name.
+             * 
+             * Therefore show only the title in any case.
+             */
             infoOnDisplay = title;
         }
         else
