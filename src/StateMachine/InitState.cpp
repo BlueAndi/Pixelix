@@ -66,6 +66,7 @@
 #include "DateTimePlugin.h"
 #include "FirePlugin.h"
 #include "GameOfLifePlugin.h"
+#include "GithubPlugin.h"
 #include "GruenbeckPlugin.h"
 #include "IconTextLampPlugin.h"
 #include "IconTextPlugin.h"
@@ -388,6 +389,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
     pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
     pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
+    pluginMgr.registerPlugin("GithubPlugin", GithubPlugin::create);
     pluginMgr.registerPlugin("GruenbeckPlugin", GruenbeckPlugin::create);
     pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
     pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);

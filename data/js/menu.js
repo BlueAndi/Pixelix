@@ -28,6 +28,9 @@ menu.data = [{
         "title": "GameOfLife Plugin",
         "hyperRef": "/plugins/GameOfLifePlugin.html"
     }, {
+        "title": "Github Plugin",
+        "hyperRef": "/plugins/GithubPlugin.html"
+    }, {
         "title": "Gruenbeck Plugin",
         "hyperRef": "/plugins/GruenbeckPlugin.html"
     }, {
