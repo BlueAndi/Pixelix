@@ -43,7 +43,7 @@ def get_git_revision_hash():
 
     try:
         rev_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
-    except FileNotFoundError:
+    except subprocess.CalledProcessError:
         pass
 
     return rev_hash
@@ -58,7 +58,7 @@ def get_git_revision_short_hash():
 
     try:
         rev_short_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
-    except FileNotFoundError:
+    except subprocess.CalledProcessError:
         pass
 
     return rev_short_hash
@@ -73,7 +73,7 @@ def get_current_git_branch():
 
     try:
         branch_name = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode('ascii').strip()
-    except FileNotFoundError:
+    except subprocess.CalledProcessError:
         pass
 
     return branch_name
@@ -90,7 +90,7 @@ def any_local_change():
 
     try:
         result = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no']).decode('ascii').strip()
-    except FileNotFoundError:
+    except subprocess.CalledProcessError:
         pass
 
     if len(result) > 0:
@@ -112,7 +112,7 @@ def any_unpushed_commit(upstream):
 
     try:
         result = subprocess.check_output(['git', 'cherry', '-v', upstream], stderr=subprocess.STDOUT).decode('ascii').strip()
-    except FileNotFoundError:
+    except subprocess.CalledProcessError:
         pass
 
     if len(result) > 0:
