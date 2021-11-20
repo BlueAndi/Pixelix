@@ -70,72 +70,121 @@
         <script type="text/javascript" src="/js/menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
 
         <!-- Custom javascript -->
         <script>
-            var data = ~SETTINGS_DATA~;
+            var restClient  = new pixelix.rest.Client();
+            var data = [];
 
             function store(id) {
-                var $input      = $("#" + id);
-                var formData    = new FormData();
+                var $input = $("#" + id);
+                var index = parseInt(id.substring(8));
+                var value = null;
 
                 if ("checkbox" === $input.attr("type")) {
-                    formData.append($input.attr("name"), $input.is(":checked"));
+                    value = $input.is(":checked");
                 } else {
-                    formData.append($input.attr("name"), $input.val());
+                    value = $input.val();
                 }
 
-                utils.makeRequest({
-                    method: "POST",
-                    url: "/settings.html",
-                    isJsonResponse: true,
-                    formData: formData
-                }).then(function(rsp) {
+                restClient.setSetting(data[index].key, value).then(function(rsp) {
                     alert("Info: Successful stored.");
                 }).catch(function(rsp) {
-                    alert("Error: " + jsonRsp.error.msg);
+                    alert("Error: " + rsp.error.msg);
                 });
             }
 
             $(document).ready(function() {
-                var index       = 0;
-                var keyIndex    = 0;
-                var keys        = null;
-                var $label      = null;
-                var $formGroup  = null;
-                var $inputField = null;
-                var $button     = null;
+                var index = 0;
 
                 menu.create("menu");
 
-                for(index = 0; index < data.length; ++index) {
-                    keys        = Object.keys(data[index].input);
-                    $label      = $("<label>")
-                                .attr("for", "for-" + index)
-                                .attr("class", "form-label")
-                                .text(data[index].title);
-                    $inputField = $("<input>")
-                                .attr("class", "form-control")
-                                .attr("id", "setting-" + index)
-                                .attr("placeholder", "");
-                    
-                    for(keyIndex = 0; keyIndex < keys.length; ++keyIndex) {
-                        $($inputField).attr(keys[keyIndex], data[index].input[keys[keyIndex]]);
+                restClient.getSettingKeys().then(function(result) {
+                    var promise = null;
+                    var promises = []
+                    var index = 0;
+
+                    for(index = 0; index < result.data.settings.length; ++index) {
+                        promise = restClient.getSettingByKey(result.data.settings[index]).then(function(result) {
+                            data.push(result.data);
+                            return Promise.resolve();
+                        });
+
+                        promises.push(promise);
                     }
 
-                    $button     = $("<button>")
-                                .attr("class", "btn btn-primary")
-                                .attr("onclick", "store(\"setting-" + index + "\");")
-                                .text("Store");
+                    return Promise.all(promises);
+                }).then(function() {
+                    var $label      = null;
+                    var $formGroup  = null;
+                    var $inputField = null;
+                    var $button     = null;
 
-                    $formGroup  = $("<div>")
-                                .attr("class", "form-group")
-                                .append($label)
-                                .append($inputField)
-                                .append($button);
+                    for(index = 0; index < data.length; ++index) {
+                        $label      = $("<label>")
+                                    .attr("for", "for-" + index)
+                                    .attr("class", "form-label")
+                                    .text(data[index].name);
+                        
+                        if ("string" === typeof data[index].value) {
+                            $inputField = $("<input>")
+                                    .attr("class", "form-control")
+                                    .attr("id", "setting-" + index)
+                                    .attr("placeholder", "")
+                                    .attr("type", "text")
+                                    .attr("minlength", data[index].minlength)
+                                    .attr("maxlength", data[index].maxlength)
+                                    .val(data[index].value);
+                        } else if ("number" === typeof data[index].value) {
+                            $inputField = $("<input>")
+                                    .attr("class", "form-control")
+                                    .attr("id", "setting-" + index)
+                                    .attr("placeholder", "")
+                                    .attr("type", "number")
+                                    .attr("min", data[index].min)
+                                    .attr("max", data[index].max)
+                                    .val(data[index].value);
+                        } else if ("boolean" === typeof data[index].value) {
+                            $inputField = $("<input>")
+                                    .attr("class", "form-control")
+                                    .attr("id", "setting-" + index)
+                                    .attr("placeholder", "")
+                                    .attr("type", "checkbox");
 
-                    $("#settings").append($formGroup);
-                }
+                            if (true === data[index].value) {
+                                $($inputField).attr("checked", true);
+                            }
+                        } else if ("object" === typeof data[index].value) {
+                            $inputField = $("<textarea>")
+                                    .attr("class", "form-control")
+                                    .attr("id", "setting-" + index)
+                                    .attr("placeholder", "")
+                                    .attr("cols", 40)
+                                    .attr("rows", 20)
+                                    .attr("style", "font-family: monospace;")
+                                    .attr("minlength", data[index].minlength)
+                                    .attr("maxlength", data[index].maxlength)
+                                    .val(JSON.stringify(data[index].value, null, 2));
+                        } else {
+                            console.error("Data type" + typeof data[index].value + "not handled.");
+                        }
+
+                        $button     = $("<button>")
+                                    .attr("class", "btn btn-primary")
+                                    .attr("onclick", "store(\"setting-" + index + "\");")
+                                    .text("Store");
+
+                        $formGroup  = $("<div>")
+                                    .attr("class", "form-group")
+                                    .append($label)
+                                    .append($inputField)
+                                    .append($button);
+
+                        $("#settings").append($formGroup);
+                    }
+                });
             });
         </script>
     </body>

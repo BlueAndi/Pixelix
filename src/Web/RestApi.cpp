@@ -71,6 +71,9 @@ static void handlePluginInstall(AsyncWebServerRequest* request);
 static void handlePluginUninstall(AsyncWebServerRequest* request);
 static void handlePlugins(AsyncWebServerRequest* request);
 static void handleSensors(AsyncWebServerRequest* request);
+static void handleSettings(AsyncWebServerRequest* request);
+static void handleSetting(AsyncWebServerRequest* request);
+static bool storeSetting(KeyValue* parameter, const String& value, String& error);
 static void handleStatus(AsyncWebServerRequest* request);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
@@ -78,6 +81,7 @@ static String getContentType(const String& filename);
 static void handleFilePost(AsyncWebServerRequest* request);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 static void handleFileDelete(AsyncWebServerRequest* request);
+static bool isValidHostname(const String& hostname);
 
 /******************************************************************************
  * Local Variables
@@ -108,6 +112,8 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
     (void)srv.on("/rest/api/v1/plugins", handlePlugins);
     (void)srv.on("/rest/api/v1/sensors", handleSensors);
+    (void)srv.on("/rest/api/v1/settings", handleSettings);
+    (void)srv.on("/rest/api/v1/setting", handleSetting);
     (void)srv.on("/rest/api/v1/status", handleStatus);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_GET, handleFileGet);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
@@ -722,6 +728,527 @@ static void handleSensors(AsyncWebServerRequest* request)
 }
 
 /**
+ * List settings by keys.
+ * GET \c "/api/v1/settings"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleSettings(AsyncWebServerRequest* request)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 1024U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = "error";
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
+        JsonArray   settingsArray   = dataObj.createNestedArray("settings");
+        uint8_t     settingIdx      = 0U;
+        KeyValue**  settings        = Settings::getInstance().getList();
+
+        for(settingIdx = 0; settingIdx < Settings::KEY_VALUE_PAIR_NUM; ++settingIdx)
+        {
+            KeyValue*   setting = settings[settingIdx];
+
+            if (nullptr != setting)
+            {
+                (void)settingsArray.add(setting->getKey());
+            }
+        }
+
+        /* Prepare response */
+        jsonDoc["status"]   = "ok";
+        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * Get/Set single setting.
+ * GET \c "/api/v1/setting"
+ * POST \c "/api/v1/setting"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleSetting(AsyncWebServerRequest* request)
+{
+    String              content;
+    const size_t        JSON_DOC_SIZE   = 1024U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET == request->method())
+    {
+        if (false == request->hasArg("key"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = "error";
+            errorObj["msg"]     = "Key is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else if (false == Settings::getInstance().open(true))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            jsonDoc["status"]   = "error";
+            errorObj["msg"]     = "Internal error.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_BAD_REQUEST;
+        }
+        else
+        {
+            JsonObject      dataObj = jsonDoc.createNestedObject("data");
+            const String&   key     = request->arg("key");
+            KeyValue*       setting = Settings::getInstance().getSettingByKey(key.c_str());
+
+            dataObj["key"]  = setting->getKey();
+            dataObj["name"] = setting->getName();
+
+            switch(setting->getValueType())
+            {
+            case KeyValue::TYPE_STRING:
+                {
+                    KeyValueString* kvStr = static_cast<KeyValueString*>(setting);
+
+                    dataObj["value"]        = kvStr->getValue();
+                    dataObj["size"]         = kvStr->getMaxLength();
+                    dataObj["minlength"]    = kvStr->getMinLength();
+                    dataObj["maxlength"]    = kvStr->getMaxLength();
+                }
+                break;
+            
+            case KeyValue::TYPE_BOOL:
+                {
+                    KeyValueBool* kvBool = static_cast<KeyValueBool*>(setting);
+
+                    dataObj["value"]    = kvBool->getValue();
+                }
+                break;
+
+            case KeyValue::TYPE_UINT8:
+                {
+                    KeyValueUInt8* kvUInt8 = static_cast<KeyValueUInt8*>(setting);
+
+                    dataObj["value"]    = kvUInt8->getValue();
+                    dataObj["min"]      = kvUInt8->getMin();
+                    dataObj["max"]      = kvUInt8->getMax();
+                }
+                break;
+            
+            case KeyValue::TYPE_INT32:
+                {
+                    KeyValueInt32* kvInt32 = static_cast<KeyValueInt32*>(setting);
+
+                    dataObj["value"]    = kvInt32->getValue();
+                    dataObj["min"]      = kvInt32->getMin();
+                    dataObj["max"]      = kvInt32->getMax();
+                }
+                break;
+            
+            case KeyValue::TYPE_JSON:
+                {
+                    KeyValueJson*           kvJson      = static_cast<KeyValueJson*>(setting);
+                    JsonObject              valueObj    = dataObj.createNestedObject("value");
+                    DynamicJsonDocument     jsonBuffer(JSON_DOC_SIZE);
+                    DeserializationError    error       = deserializeJson(jsonBuffer, kvJson->getValue());
+
+                    if (DeserializationError::Ok != error.code())
+                    {
+                        LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+                    }
+                    else
+                    {
+                        /* Copy deserialized JSON object. */
+                        valueObj.set(jsonBuffer.as<JsonObject>());
+                    }
+
+                    dataObj["minlength"]    = kvJson->getMinLength();
+                    dataObj["maxlength"]    = kvJson->getMaxLength();
+                }
+                break;
+
+            case KeyValue::TYPE_UINT32:
+                {
+                    KeyValueUInt32* kvUInt32 = static_cast<KeyValueUInt32*>(setting);
+
+                    dataObj["value"]    = kvUInt32->getValue();
+                    dataObj["min"]      = kvUInt32->getMin();
+                    dataObj["max"]      = kvUInt32->getMax();
+                }
+                break;
+
+            default:
+                break;
+            }
+
+            Settings::getInstance().close();
+
+            /* Prepare response */
+            jsonDoc["status"]   = "ok";
+            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        }
+    }
+    else if (HTTP_POST == request->method())
+    {
+        if (false == request->hasArg("key"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = "error";
+            errorObj["msg"]     = "Key is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else if (false == request->hasArg("value"))
+        {
+            JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+            /* Prepare response */
+            jsonDoc["status"]   = "error";
+            errorObj["msg"]     = "Value is missing.";
+            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        }
+        else
+        {
+            const String&   key     = request->arg("key");
+            KeyValue*       setting = Settings::getInstance().getSettingByKey(key.c_str());
+
+            if (nullptr == setting)
+            {
+                JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                /* Prepare response */
+                jsonDoc["status"]   = "error";
+                errorObj["msg"]     = "Key not found.";
+                httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            }
+            else if (false == Settings::getInstance().open(false))
+            {
+                JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                jsonDoc["status"]   = "error";
+                errorObj["msg"]     = "Internal error.";
+                httpStatusCode      = HttpStatus::STATUS_CODE_BAD_REQUEST;
+            }
+            else
+            {
+                String error;
+
+                if (false == storeSetting(setting, request->arg("value"), error))
+                {
+                    JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+                    LOG_WARNING(error);
+
+                    jsonDoc["status"]   = "error";
+                    errorObj["msg"]     = error;
+                    httpStatusCode      = HttpStatus::STATUS_CODE_BAD_REQUEST;
+                }
+                else
+                {
+                    JsonObject dataObj = jsonDoc.createNestedObject("data");
+
+                    UTIL_NOT_USED(dataObj);
+
+                    jsonDoc["status"]   = "ok";
+                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+                }
+
+                Settings::getInstance().close();
+            }
+        }
+    }
+    else
+    {
+        JsonObject errorObj = jsonDoc.createNestedObject("error");
+
+        /* Prepare response */
+        jsonDoc["status"]   = "error";
+        errorObj["msg"]     = "HTTP method not supported.";
+        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else
+    {
+        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+    }
+
+    (void)serializeJsonPretty(jsonDoc, content);
+    request->send(httpStatusCode, "application/json", content);
+
+    return;
+}
+
+/**
+ * Store setting in persistent memory, considering the setting type.
+ *
+ * @param[in]   parameter   Key value pair
+ * @param[in]   value       Value to write
+ * @param[out]  error       If a error happended, it will contain the root cause.
+ *
+ * @return If successful stored, it will return true otherwise false.
+ */
+static bool storeSetting(KeyValue* parameter, const String& value, String& error)
+{
+    bool status = true;
+
+    if (nullptr == parameter)
+    {
+        status = false;
+        error   = "Internal error.";
+    }
+    else
+    {
+        switch(parameter->getValueType())
+        {
+        case KeyValue::TYPE_STRING:
+            {
+                KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
+
+                /* If it is the hostname, verify it explicit. */
+                if (0 == strcmp(Settings::getInstance().getHostname().getKey(), kvStr->getKey()))
+                {
+                    if (false == isValidHostname(value))
+                    {
+                        status  = false;
+                        error   = "Invalid hostname.";
+                    }
+                }
+
+                if (true == status)
+                {
+                    /* Check for min. and max. length */
+                    if (kvStr->getMinLength() > value.length())
+                    {
+                        error  = "String length lower than ";
+                        error += kvStr->getMinLength();
+                        error += ".";
+
+                        status = false;
+                    }
+                    else if (kvStr->getMaxLength() < value.length())
+                    {
+                        error  = "String length greater than ";
+                        error += kvStr->getMaxLength();
+                        error += ".";
+
+                        status = false;
+                    }
+                    else
+                    {
+                        kvStr->setValue(value);
+                    }
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_BOOL:
+            {
+                KeyValueBool* kvBool = static_cast<KeyValueBool*>(parameter);
+
+                if (0 == strcmp(value.c_str(), "false"))
+                {
+                    kvBool->setValue(false);
+                }
+                else if (0 == strcmp(value.c_str(), "true"))
+                {
+                    kvBool->setValue(true);
+                }
+                else
+                {
+                    status  = false;
+                    error   = "Invalid value.";
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_UINT8:
+            {
+                KeyValueUInt8*  kvUInt8     = static_cast<KeyValueUInt8*>(parameter);
+                uint8_t         uint8Value  = 0;
+                bool            convStatus  = Util::strToUInt8(value, uint8Value);
+
+                /* Conversion failed? */
+                if (false == convStatus)
+                {
+                    status  = false;
+                    error   = "Invalid value.";
+                }
+                /* Check for min. and max. length */
+                else if (kvUInt8->getMin() > uint8Value)
+                {
+                    error  = "Value lower than ";
+                    error += kvUInt8->getMin();
+                    error += ".";
+
+                    status = false;
+                }
+                else if (kvUInt8->getMax() < uint8Value)
+                {
+                    error  = "Value greater than ";
+                    error += kvUInt8->getMax();
+                    error += ".";
+
+                    status = false;
+                }
+                else
+                {
+                    kvUInt8->setValue(uint8Value);
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_INT32:
+            {
+                KeyValueInt32*  kvInt32     = static_cast<KeyValueInt32*>(parameter);
+                int32_t         int32Value  = 0;
+                bool            convStatus  = Util::strToInt32(value, int32Value);
+
+                /* Conversion failed? */
+                if (false == convStatus)
+                {
+                    status  = false;
+                    error   = "Invalid value.";
+                }
+                /* Check for min. and max. length */
+                else if (kvInt32->getMin() > int32Value)
+                {
+                    error  = "Value lower than ";
+                    error += kvInt32->getMin();
+                    error += ".";
+
+                    status = false;
+                }
+                else if (kvInt32->getMax() < int32Value)
+                {
+                    error  = "Value greater than ";
+                    error += kvInt32->getMax();
+                    error += ".";
+
+                    status = false;
+                }
+                else
+                {
+                    kvInt32->setValue(int32Value);
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_JSON:
+            {
+                KeyValueJson* kvJson = static_cast<KeyValueJson*>(parameter);
+
+                /* Check for min. and max. length */
+                if (kvJson->getMinLength() > value.length())
+                {
+                    error  = "JSON length lower than ";
+                    error += kvJson->getMinLength();
+                    error += ".";
+
+                    status = false;
+                }
+                else if (kvJson->getMaxLength() < value.length())
+                {
+                    error  = "JSON length greater than ";
+                    error += kvJson->getMaxLength();
+                    error += ".";
+
+                    status = false;
+                }
+                else
+                {
+                    kvJson->setValue(value);
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_UINT32:
+            {
+                KeyValueUInt32* kvUInt32    = static_cast<KeyValueUInt32*>(parameter);
+                uint32_t        uint32Value = 0U;
+                bool            convStatus  = Util::strToUInt32(value, uint32Value);
+
+                /* Conversion failed? */
+                if (false == convStatus)
+                {
+                    status  = false;
+                    error   = "Invalid value.";
+                }
+                /* Check for min. and max. length */
+                else if (kvUInt32->getMin() > uint32Value)
+                {
+                    error  = "Value lower than ";
+                    error += kvUInt32->getMin();
+                    error += ".";
+
+                    status = false;
+                }
+                else if (kvUInt32->getMax() < uint32Value)
+                {
+                    error  = "Value greater than ";
+                    error += kvUInt32->getMax();
+                    error += ".";
+
+                    status = false;
+                }
+                else
+                {
+                    kvUInt32->setValue(uint32Value);
+                }
+            }
+            break;
+
+        case KeyValue::TYPE_UNKNOWN:
+            /* fallthrough */
+        default:
+            status  = false;
+            error   = "Unknown parameter.";
+            break;
+        }
+    }
+
+    return status;
+}
+
+/**
  * Get status information.
  * GET \c "/api/v1/status"
  *
@@ -1241,4 +1768,70 @@ static void handleFileDelete(AsyncWebServerRequest* request)
     request->send(httpStatusCode, "application/json", content);
 
     return;
+}
+
+/**
+ * Check the given hostname and returns whether it is valid or not.
+ * Validation is according to RFC952.
+ *
+ * @param[in] hostname  Hostname which to validate
+ *
+ * @return Is valid (true) or not (false).
+ */
+static bool isValidHostname(const String& hostname)
+{
+    bool            isValid             = true;
+    const size_t    MIN_HOSTNAME_LENGTH = Settings::getInstance().getHostname().getMinLength();
+    const size_t    MAX_HOSTNAME_LENGTH = Settings::getInstance().getHostname().getMaxLength();
+
+    if ((MIN_HOSTNAME_LENGTH > hostname.length()) ||
+        (MAX_HOSTNAME_LENGTH < hostname.length()))
+    {
+        isValid = false;
+    }
+    else
+    {
+        uint8_t index = 0;
+
+        while((true == isValid) && (index < hostname.length()))
+        {
+            if (('0' <= hostname[index]) &&
+                ('9' >= hostname[index]))
+            {
+                /* No digit at the begin */
+                if (0 == index)
+                {
+                    isValid = false;
+                }
+            }
+            else if (('A' <= hostname[index]) &&
+                     ('Z' >= hostname[index]))
+            {
+                /* Ok */
+                ;
+            }
+            else if (('a' <= hostname[index]) &&
+                     ('z' >= hostname[index]))
+            {
+                /* Ok */
+                ;
+            }
+            else if ('-' == hostname[index])
+            {
+                /* No - at the begin */
+                if (0 == index)
+                {
+                    isValid = false;
+                }
+            }
+            else
+            {
+                isValid = false;
+            }
+
+            ++index;
+        }
+    }
+
+    return isValid;
 }

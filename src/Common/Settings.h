@@ -277,6 +277,14 @@ public:
         return m_preferences.clear();
     }
 
+    /**
+     * Get key value pair by key.
+     * 
+     * @param key The key is used to search for the right key value pair.
+     * @return If key is found, it will return the key value pair otherwise nullptr.
+     */
+    KeyValue* getSettingByKey(const char* key);
+
     /** Number of key value pairs. */
     static const uint8_t KEY_VALUE_PAIR_NUM = 16U;
 
