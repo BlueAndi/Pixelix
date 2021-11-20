@@ -68,6 +68,7 @@ pixelix.rest.Client.prototype.writeFile = function(filename, content) {
 
 pixelix.rest.Client.prototype.removeFile = function(filename) {
     var promise = null;
+
     if ("string" !== typeof filename) {
         promise = Promise.reject();
     } else {
@@ -98,4 +99,53 @@ pixelix.rest.Client.prototype.getSensors = function() {
         url: "/rest/api/v1/sensors",
         isJsonResponse: true
     });
+};
+
+pixelix.rest.Client.prototype.getSettingKeys = function() {
+    return utils.makeRequest({
+        method: "GET",
+        url: "/rest/api/v1/settings",
+        isJsonResponse: true
+    });
+};
+
+pixelix.rest.Client.prototype.getSettingByKey = function(key) {
+    var promise = null;
+
+    if ("string" !== typeof key) {
+        promise = Promise.reject();
+    } else {
+        promise = utils.makeRequest({
+            method: "GET",
+            url: "/rest/api/v1/setting",
+            isJsonResponse: true,
+            parameter: {
+                key: key
+            }
+        });
+    }
+
+    return promise;
+};
+
+pixelix.rest.Client.prototype.setSetting = function(key, value) {
+    var promise = null;
+
+    if ("string" !== typeof key) {
+        promise = Promise.reject();
+    } else if ("undefined" === typeof value) {
+        promise = Promise.reject();
+    } else {
+        promise = utils.makeRequest({
+            method: "POST",
+            url: "/rest/api/v1/setting",
+            isJsonResponse: true,
+            parameter: {
+                key: key,
+                value: value
+            }
+        });
+    }
+
+    return promise;
 };

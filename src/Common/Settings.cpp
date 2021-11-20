@@ -286,7 +286,7 @@ static const size_t     MAX_VALUE_HOSTNAME             = 63U;
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** Plugin installation max. length */
-static const size_t     MAX_VALUE_PLUGIN_INSTALLATION  = 512U;
+static const size_t     MAX_VALUE_PLUGIN_INSTALLATION  = 1024U;
 
 /** POSIX timezone max. length */
 static const size_t     MAX_VALUE_TIMEZONE             = 128U;
@@ -302,7 +302,7 @@ static const size_t     MAX_VALUE_NTP_SERVER            = 30U;
 static uint8_t          MAX_MAX_SLOTS                   = 11U;
 
 /** Display slot configuration max. length */
-static const size_t     MAX_VALUE_SLOT_CONFIG           = 256U;
+static const size_t     MAX_VALUE_SLOT_CONFIG           = 512U;
 
 /** Scroll pause maximum value in ms */
 static uint32_t         MAX_VALUE_SCROLL_PAUSE          = 500U;
@@ -340,6 +340,24 @@ void Settings::close()
 {
     m_preferences.end();
     return;
+}
+
+KeyValue* Settings::getSettingByKey(const char* key)
+{
+    uint8_t     idx             = 0U;
+    KeyValue*   keyValuePair    = nullptr;
+
+    while((KEY_VALUE_PAIR_NUM > idx) && (0 != strcmp(m_keyValueList[idx]->getKey(), key)))
+    {
+        ++idx;
+    }
+
+    if (KEY_VALUE_PAIR_NUM > idx)
+    {
+        keyValuePair = m_keyValueList[idx];
+    }
+
+    return keyValuePair;
 }
 
 /******************************************************************************
