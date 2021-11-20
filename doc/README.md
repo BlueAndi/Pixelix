@@ -29,7 +29,7 @@
 * [Software configuration management](SW-RELEASE.md)
 * [Plugins](PLUGINS.md)
 * [Plugin Development](PLUGIN-DEV.md)
-* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix)
+* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0)
 * [Websocket API description](WEBSOCKET.md)
 
 ## Structure
