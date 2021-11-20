@@ -845,7 +845,6 @@ static void handleSetting(AsyncWebServerRequest* request)
                     KeyValueString* kvStr = static_cast<KeyValueString*>(setting);
 
                     dataObj["value"]        = kvStr->getValue();
-                    dataObj["size"]         = kvStr->getMaxLength();
                     dataObj["minlength"]    = kvStr->getMinLength();
                     dataObj["maxlength"]    = kvStr->getMaxLength();
                 }
@@ -954,7 +953,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 /* Prepare response */
                 jsonDoc["status"]   = "error";
                 errorObj["msg"]     = "Key not found.";
-                httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+                httpStatusCode      = HttpStatus::STATUS_CODE_BAD_REQUEST;
             }
             else if (false == Settings::getInstance().open(false))
             {
