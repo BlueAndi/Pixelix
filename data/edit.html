@@ -186,32 +186,8 @@
                 });
             }
 
-            function listAllFilesHelper(par) {
-                var page = par.page;
-
-                ++par.page;
-
-                return restClient.listFiles("/", page).then(function(rsp) {
-                    if (0 < rsp.data.length) {
-                        par.data = par.data.concat(rsp.data);
-                        promise = listAllFilesHelper(par);
-                    } else {
-                        promise = Promise.resolve(par.data);
-                    }
-
-                    return promise;
-                }).catch(function(rsp) {
-                    return Promise.reject(rsp);
-                });
-            }
-
             function listAllFiles(id) {
-                var par = {
-                    page: 0,
-                    data: []
-                };
-
-                return listAllFilesHelper(par).then(function(items) {
+                return restClient.listAllFiles("/").then(function(items) {
                     var index       = 0;
                     var compareFunc = function(a, b) {
                         if (a.name < b.name) {
