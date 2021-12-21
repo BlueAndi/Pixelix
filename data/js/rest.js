@@ -25,6 +25,24 @@ pixelix.rest.Client.prototype.listFiles = function(path = "/", page = "0") {
     });
 };
 
+pixelix.rest.Client.prototype.listAllFiles = function(path = "/") {
+    var page    = 0;
+    var data    = [];
+    var client  = this;
+    var handler = function(rsp) {
+        if (0 < rsp.data.length) {
+            data = data.concat(rsp.data);
+            ++page;
+            promise = client.listFiles(path, page).then(handler);
+        } else {
+            promise = Promise.resolve(data);
+        }
+        return promise;
+    };
+
+    return this.listFiles(path, page).then(handler);
+};
+
 pixelix.rest.Client.prototype.readFile = function(filename) {
     var promise = null;
     if ("string" !== typeof filename) {
