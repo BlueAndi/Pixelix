@@ -35,6 +35,7 @@
 #include "DisplayMgr.h"
 #include "Settings.h"
 #include "BrightnessCtrl.h"
+#include "PluginMgr.h"
 
 #include <Display.h>
 #include <Logging.h>
@@ -379,6 +380,50 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
     }
 
     return status;
+}
+
+String DisplayMgr::getPluginAliasName(uint16_t uid)
+{
+    String                      alias;
+    uint8_t                     slotId          = getSlotIdByPluginUID(uid);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    if (SLOT_ID_INVALID != slotId)
+    {
+        IPluginMaintenance* plugin = m_slots[slotId].getPlugin();
+
+        if (nullptr != plugin)
+        {
+            alias = plugin->getAlias();
+        }
+    }
+
+    return alias;
+}
+
+bool DisplayMgr::setPluginAliasName(uint16_t uid, const String& alias)
+{
+    bool                        isSuccessful    = false;
+    uint8_t                     slotId          = getSlotIdByPluginUID(uid);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    if (SLOT_ID_INVALID != slotId)
+    {
+        IPluginMaintenance* plugin = m_slots[slotId].getPlugin();
+
+        if (nullptr != plugin)
+        {
+            if (true == PluginMgr::getInstance().setPluginAliasName(plugin, alias))
+            {
+                /* Save current installed plugins to persistent memory. */
+                PluginMgr::getInstance().save();
+                
+                isSuccessful = true;
+            }
+        }
+    }
+
+    return isSuccessful;
 }
 
 uint8_t DisplayMgr::getSlotIdByPluginUID(uint16_t uid)

@@ -128,6 +128,16 @@ public:
     const char* findNext();
 
     /**
+     * Set the alias name of a plugin.
+     * If the plugin has registered a REST API, the corresponding URIs will be updated.
+     * 
+     * @param[in] plugin    Plugin which to assign the alias name
+     * @param[in] alias     Plugin alias name
+     * @return If successful, it will return true otherwise false.
+     */
+    bool setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
+
+    /**
      * Get plugin REST base URI to identify plugin by UID.
      *
      * @param[in] uid   Plugin UID

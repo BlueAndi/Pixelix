@@ -361,73 +361,119 @@
                 });
             }
 
+            function setAlias(pluginUid) {
+                var alias = $("#alias" + pluginUid).val();
+
+                return wsClient.setPluginAlias({
+                    uid: pluginUid,
+                    name: alias
+                }).then(function(rsp) {
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    alert("Set alias failed.");
+                }).finally(function() {
+                    return updateSlotInfo();
+                });
+            }
+
             function updateSlotInfo() {
                 return wsClient.getSlots().then(function(rsp) {
                     var index = 0;
                     var row = null;
                     var cell = null;
 
-                    var divSlots = document.getElementById("divSlots");
-                    var divSlot = null;
-                    var dragableSlot = null;
-                    var htmlStr = "";
+                    var $divSlots = $("#divSlots");
+                    var $divSlot = null;
+                    var $header = null;
+                    var $inputAlias = null;
+                    var $inputDuration = null;
+                    var $dragableSlot = null;
                     var pluginAlias = "";
 
-                    divSlots.innerHTML = "";
+                    $divSlots.empty();
                     for(index = 0; index < rsp.slots.length; ++index) {
-                        divSlot = document.createElement("div");
+                        $divSlot = $("<div>");
 
                         if (false == rsp.slots[index].isLocked) {
-                            divSlot.setAttribute("class", "divSlot");
-                            divSlot.setAttribute("ondragover", "allowDrop(event)");
-                            divSlot.setAttribute("ondrop", "drop(event)");
+                            $divSlot.attr("class", "divSlot");
+                            $divSlot.attr("ondragover", "allowDrop(event)");
+                            $divSlot.attr("ondrop", "drop(event)");
                         } else {
-                            divSlot.setAttribute("class", "divSlot locked");
+                            $divSlot.attr("class", "divSlot locked");
                         }
 
-                        divSlot.setAttribute("id", index);
-                        htmlStr  = "<header>";
-                        htmlStr += "Slot " + index + "<br />";
-                        htmlStr += "<input id=\"duration" + index + "\" type=\"number\" value=\"" + (rsp.slots[index].duration / 1000) + "\" min=\"1\" max=\"3600000\" size=\"8\" onchange=\"setDuration(" + index + ")\"/>"
-                        htmlStr += "[s]";
-                        htmlStr += "</header>";
-                        divSlot.innerHTML = htmlStr;
-                        divSlots.appendChild(divSlot);
+                        $divSlot.attr("id", index);
+                        
+                        $header = $("<header>");
+                        $header.append("Slot " + index + "<br />");
 
-                        dragableSlot = document.createElement("p");
-                        dragableSlot.setAttribute("class", "dragableSlot");
+                        $inputDuration = $("<input>")
+                            .attr("id", "duration" + index)
+                            .attr("type", "number")
+                            .attr("value", rsp.slots[index].duration / 1000)
+                            .attr("min", "1")
+                            .attr("max", "3600")
+                            .attr("onchange", "setDuration(" + index + ")");
+                        
+                        $header.append($inputDuration);
+                        $header.append("[s]");
+
+                        $divSlot.append($header);
+
+                        $dragableSlot = $("<p>")
+                            .attr("class", "dragableSlot");
 
                         if ((false == rsp.slots[index].isLocked) &&
                             (0 < rsp.slots[index].name.length)) {
-                            dragableSlot.setAttribute("draggable", "true");
-                            dragableSlot.setAttribute("ondragstart", "drag(event)");
-                            dragableSlot.setAttribute("ondragend", "onDragEnd(event)");
+                            $dragableSlot.attr("draggable", "true");
+                            $dragableSlot.attr("ondragstart", "drag(event)");
+                            $dragableSlot.attr("ondragend", "onDragEnd(event)");
                         }
 
                         if (0 == rsp.slots[index].name.length) {
-                            dragableSlot.setAttribute("id", "A" + index);
-                            dragableSlot.innerHTML = "-<br />UID -<br />Alias -";
+                            $dragableSlot.attr("id", "A" + index);
+                            $dragableSlot.append("-<br />UID -<br />Alias -");
                         } else {
+                            $dragableSlot.attr("id", rsp.slots[index].uid);
+                            $dragableSlot.append(rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid);
 
                             if (0 === rsp.slots[index].alias.length) {
-                                pluginAlias = "-";
+                                pluginAlias = "";
                             } else {
                                 pluginAlias = rsp.slots[index].alias;
                             }
 
-                            dragableSlot.setAttribute("id", rsp.slots[index].uid);
-                            dragableSlot.innerHTML = rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid + "<br />Alias " + pluginAlias;
+                            $inputAlias = $("<input>")
+                                .attr("id", "alias" + rsp.slots[index].uid)
+                                .attr("type", "text")
+                                .attr("value", pluginAlias)
+                                .attr("size", "8")
+                                .attr("minlength", "0")
+                                .attr("maxlength", "8")
+                                .attr("onchange", "setAlias(" + rsp.slots[index].uid + ")");
+
+                                $dragableSlot.append("<br />Alias ");
+                                $dragableSlot.append($inputAlias);
                         }
-                        divSlot.appendChild(dragableSlot);
+                        $divSlot.append($dragableSlot);
+
+                        $divSlots.append($divSlot);
                     }
 
-                    divSlot = document.createElement("div");
-                    divSlot.setAttribute("class", "divSlot");
-                    divSlot.setAttribute("ondragover", "allowDrop(event)");
-                    divSlot.setAttribute("ondrop", "drop(event)");
-                    divSlot.setAttribute("id", "uninstall");
-                    divSlot.innerHTML = "<header>Uninstall</header>";
-                    divSlots.appendChild(divSlot);
+                    $divSlot = $("<div>")
+                        .attr("class", "divSlot")
+                        .attr("ondragover", "allowDrop(event)")
+                        .attr("ondrop", "drop(event)")
+                        .attr("id", "uninstall");
+                    
+                    $header = $("<header>")
+                        .text("Uninstall");
+                    
+                    $divSlot.append($header);
+                    
+                    $divSlots.append($divSlot);
                 });
             }
 

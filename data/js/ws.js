@@ -152,7 +152,10 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
         if (null === this._pendingCmd) {
             console.error("No pending command, but response received.");
         } else if ("ACK" === status) {
-            if ("GETDISP" === this._pendingCmd.name) {
+            if ("ALIAS" === this._pendingCmd.name) {
+                rsp.name = data[0];
+                this._pendingCmd.resolve(rsp);
+            } else if ("GETDISP" === this._pendingCmd.name) {
                 rsp.slotId = data.shift();
                 rsp.data = [];
                 for(index = 0; index < data.length; ++index) {
@@ -577,6 +580,48 @@ pixelix.ws.Client.prototype.getFadeEffect = function() {
             this._sendCmd({
                 name: "EFFECT",
                 par: null,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.getPluginAlias = function(options) {
+    return new Promise(function(resolve, reject) {
+        if (null === this._socket) {
+            reject();
+        } else if ("number" !== typeof options.uuid) {
+            reject();
+        } else {
+            this._sendCmd({
+                name: "ALIAS",
+                par: options.uuid,
+                resolve: resolve,
+                reject: reject
+            });
+        }
+    }.bind(this));
+};
+
+pixelix.ws.Client.prototype.setPluginAlias = function(options) {
+    return new Promise(function(resolve, reject) {
+        var par = "";
+        if (null === this._socket) {
+            reject();
+        } else if ("number" !== typeof options.uid) {
+            reject();
+        } else if ("string" !== typeof options.name) {
+            reject();
+        } else {
+
+            par += options.uid;
+            par += ";";
+            par += options.name;
+
+            this._sendCmd({
+                name: "ALIAS",
+                par: par,
                 resolve: resolve,
                 reject: reject
             });

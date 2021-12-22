@@ -123,6 +123,28 @@ const char* PluginMgr::findNext()
     return m_pluginFactory.findNext();
 }
 
+bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)
+{
+    bool isSuccessful = false;
+
+    if ((nullptr != plugin) &&
+        (plugin->getAlias() != alias))
+    {
+        /* First remove current registered topics. */
+        unregisterTopics(plugin);
+
+        /* Set new alias */
+        plugin->setAlias(alias);
+
+        /* Register web API, based on new alias. */
+        registerTopics(plugin);
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
 String PluginMgr::getRestApiBaseUriByUid(uint16_t uid)
 {
     String  baseUri = RestApi::BASE_URI;
@@ -410,7 +432,10 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
                     }
                 }
 
-                m_pluginMeta.append(metaData);
+                if (false == m_pluginMeta.append(metaData))
+                {
+                    LOG_WARNING("Couldn't append plugin meta data.");
+                }
             }
         }
     }

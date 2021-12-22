@@ -35,19 +35,20 @@
 #include "WebSocket.h"
 #include "Settings.h"
 
-#include "WsCmdGetDisp.h"
-#include "WsCmdSlots.h"
-#include "WsCmdPlugins.h"
-#include "WsCmdInstall.h"
-#include "WsCmdUninstall.h"
-#include "WsCmdReset.h"
+#include "WsCmdAlias.h"
 #include "WsCmdBrightness.h"
-#include "WsCmdLog.h"
-#include "WsCmdMove.h"
-#include "WsCmdSlotDuration.h"
-#include "WsCmdIperf.h"
 #include "WsCmdButton.h"
 #include "WsCmdEffect.h"
+#include "WsCmdGetDisp.h"
+#include "WsCmdInstall.h"
+#include "WsCmdIperf.h"
+#include "WsCmdLog.h"
+#include "WsCmdMove.h"
+#include "WsCmdPlugins.h"
+#include "WsCmdReset.h"
+#include "WsCmdSlotDuration.h"
+#include "WsCmdSlots.h"
+#include "WsCmdUninstall.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -111,6 +112,9 @@ static WsCmdButton          gWsCmdButton;
 /** Websocket control fade effects */
 static WsCmdEffect          gWsCmdEffect;
 
+/** Websocket get/set plugin alias name command */
+static WsCmdAlias           gWsCmdAlias;
+
 /** Websocket command list */
 static WsCmd*       gWsCommands[] =
 {
@@ -126,7 +130,8 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdSlotDuration,
     &gWsCmdIperf,
     &gWsCmdButton,
-    &gWsCmdEffect
+    &gWsCmdEffect,
+    &gWsCmdAlias
 };
 
 /******************************************************************************
