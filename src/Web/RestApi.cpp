@@ -847,6 +847,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                     dataObj["value"]        = kvStr->getValue();
                     dataObj["minlength"]    = kvStr->getMinLength();
                     dataObj["maxlength"]    = kvStr->getMaxLength();
+                    dataObj["isSecret"]     = kvStr->isSecret();
                 }
                 break;
             

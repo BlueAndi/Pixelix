@@ -129,11 +129,18 @@
                                     .text(data[index].name);
                         
                         if ("string" === typeof data[index].value) {
+                            inputFieldType = "text"
+                            if ("boolean" === typeof data[index].isSecret) {
+                                if (true === data[index].isSecret) {
+                                    inputFieldType = "password"
+                                }
+                            }
+
                             $inputField = $("<input>")
                                     .attr("class", "form-control")
                                     .attr("id", "setting-" + index)
                                     .attr("placeholder", "")
-                                    .attr("type", "text")
+                                    .attr("type", inputFieldType)
                                     .attr("minlength", data[index].minlength)
                                     .attr("maxlength", data[index].maxlength)
                                     .val(data[index].value);

@@ -63,14 +63,15 @@ public:
     /**
      * Constructs a key value pair.
      */
-    KeyValueString(Preferences& pref, const char* key, const char* name, const char* defValue, size_t min, size_t max) :
+    KeyValueString(Preferences& pref, const char* key, const char* name, const char* defValue, size_t min, size_t max, bool isSecret = false) :
         KeyValue(),
         m_pref(pref),
         m_key(key),
         m_name(name),
         m_defValue(defValue),
         m_min(min),
-        m_max(max)
+        m_max(max),
+        m_isSecret(isSecret)
     {
     }
 
@@ -161,14 +162,25 @@ public:
         return String(m_defValue);
     }
 
+    /**
+     * Contains it a secret value?
+     * 
+     * @return If its a secret value, it will return true otherwise false.
+     */
+    bool isSecret() const
+    {
+        return m_isSecret;
+    }
+
 private:
 
     Preferences&    m_pref;     /**< Preferences */
     const char*     m_key;      /**< Key */
     const char*     m_name;     /**< Name */
     const char*     m_defValue; /**< Default value */
-    size_t          m_min;      /**< Min. length */
-    size_t          m_max;      /**< Max. length */
+    const size_t    m_min;      /**< Min. length */
+    const size_t    m_max;      /**< Max. length */
+    const bool      m_isSecret; /**< Is the value a secret value? */
 
     /* An instance shall not be copied. */
     KeyValueString(const KeyValueString& kv);
