@@ -162,6 +162,24 @@ public:
     bool uninstallPlugin(IPluginMaintenance* plugin);
 
     /**
+     * Get the alias name of a plugin.
+     * If the given plugin UID is invalid, it will return a empty alias name.
+     * 
+     * @param[in] uid   Plugin UID
+     * @return The plugin alias name.
+     */
+    String getPluginAliasName(uint16_t uid);
+
+    /**
+     * Set the alias name of a plugin.
+     * 
+     * @param[in] uid   Plugin UID
+     * @param[in] alias Plugin alias name
+     * @return If successful, it will return true otherwise false.
+     */
+    bool setPluginAliasName(uint16_t uid, const String& alias);
+
+    /**
      * Get slot id by plugin UID.
      *
      * @param[in] uid   Plugin UID
