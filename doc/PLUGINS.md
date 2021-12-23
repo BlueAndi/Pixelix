@@ -16,6 +16,7 @@
   - [DateTimePlugin](#datetimeplugin)
   - [FirePlugin](#fireplugin)
   - [GameOfLifePlugin](#gameoflifeplugin)
+  - [GithubPlugin](#githubplugin)
   - [GruenbeckPlugin](#gruenbeckplugin)
   - [OpenWeatherPlugin](#openweatherplugin)
   - [RainbowPlugin](#rainbowplugin)
@@ -74,6 +75,9 @@ The FirePlugin shows a animated fire on the display.
 
 ## GameOfLifePlugin
 The GameOfLifePlugin shows the game of life game on the display.
+
+## GithubPlugin
+The plugin shows the stargazers count of a github repository.
 
 ## GruenbeckPlugin
 The GruenbeckPlugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.\
