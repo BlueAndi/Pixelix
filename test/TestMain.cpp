@@ -49,6 +49,7 @@
 #include "TestProgressBar.h"
 #include "TestLogging.h"
 #include "TestUtil.h"
+#include "TestBmpImg.h"
 
 /******************************************************************************
  * Macros
@@ -97,6 +98,7 @@ int main(int argc, char **argv)
     RUN_TEST(testProgressBar);
     RUN_TEST(testLogging);
     RUN_TEST(testUtil);
+    RUN_TEST(testBmpImg);
 
     return UNITY_END();
 }
