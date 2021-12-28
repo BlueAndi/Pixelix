@@ -71,17 +71,34 @@ class BmpImg
 public:
 
     /**
-     * Construct a new BmpImg object.
+     * Construct a new bitmap image object.
      */
     BmpImg() :
         m_pixels(nullptr),
-        m_width(0),
-        m_height(0)
+        m_width(0U),
+        m_height(0U)
     {
     }
 
     /**
-     * Destroy the BmpImg object.
+     * Construct a bitmap image by copy.
+     * 
+     * @param img 
+     */
+    BmpImg(const BmpImg& img) :
+        m_pixels(nullptr),
+        m_width(img.m_width),
+        m_height(img.m_height)
+    {
+        if (false == allocatePixels(img.m_width, img.m_height))
+        {
+            m_width     = 0U;
+            m_height    = 0U;
+        }
+    }
+
+    /**
+     * Destroy the bitmap image object.
      */
     ~BmpImg()
     {
@@ -91,6 +108,27 @@ public:
             delete[] m_pixels;
             m_pixels = nullptr;
         }
+    }
+
+    /**
+     * Assign bitmap image.
+     * 
+     */
+    BmpImg& operator=(const BmpImg& img)
+    {
+        if (this != (&img))
+        {
+            m_width     = img.m_width;
+            m_height    = img.m_height;
+
+            if (false == allocatePixels(img.m_width, img.m_height))
+            {
+                m_width     = 0U;
+                m_height    = 0U;
+            }
+        }
+
+        return *this;
     }
 
     /**
@@ -158,6 +196,51 @@ public:
         }
 
         return *pixel;
+    }
+
+    /**
+     * Get access to the internal pixel buffer.
+     * 
+     * @return Internal pixel buffer.
+     */
+    const Color* get() const
+    {
+        return m_pixels;
+    }
+
+    /**
+     * Copy ext. bitmap buffer.
+     */
+    void copy(const Color* buffer, const uint16_t& width, const uint16_t& height)
+    {
+        if (nullptr != m_pixels)
+        {
+            delete[] m_pixels;
+        }
+
+        if (true == allocatePixels(width, height))
+        {
+            uint16_t    x = 0U;
+            uint16_t    y = 0U;
+
+            m_width     = width;
+            m_height    = height;
+
+            while(m_height > y)
+            {
+                x = 0U;
+                while(m_width > x)
+                {
+                    uint32_t pos = x + y * m_width;
+
+                    m_pixels[pos] = buffer[pos];
+
+                    ++x;
+                }
+
+                ++y;
+            }
+        }
     }
 
 private:

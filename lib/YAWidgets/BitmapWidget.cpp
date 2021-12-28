@@ -34,13 +34,9 @@
  *****************************************************************************/
 #include "BitmapWidget.h"
 
-#ifndef NATIVE
-
-#include <NeoPixelBus.h>
 #include <YAColor.h>
 #include <Logging.h>
-
-#endif  /* NATIVE */
+#include <BmpImg.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -75,34 +71,7 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     {
         Widget::operator=(widget);
         
-        m_bufferSize    = widget.m_bufferSize;
-        m_width         = widget.m_width;
-        m_height        = widget.m_height;
-
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-        }
-
-        if (nullptr != widget.m_buffer)
-        {
-            m_buffer = new Color[m_bufferSize];
-
-            if (nullptr == m_buffer)
-            {
-                m_bufferSize = 0U;
-            }
-            else
-            {
-                size_t index = 0U;
-
-                for(index = 0U; index < m_bufferSize; ++index)
-                {
-                    m_buffer[index] = widget.m_buffer[index];
-                }
-            }
-        }
+        m_image = widget.m_image;
     }
 
     return *this;
@@ -110,44 +79,14 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 
 void BitmapWidget::set(const Color* bitmap, uint16_t width, uint16_t height)
 {
-    if (nullptr != bitmap)
-    {
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-        }
-
-        m_bufferSize    = width * height;
-        m_width         = width;
-        m_height        = height;
-
-        m_buffer = new Color[m_bufferSize];
-
-        if (nullptr == m_buffer)
-        {
-            m_bufferSize = 0U;
-        }
-        else
-        {
-            size_t index = 0U;
-
-            for(index = 0U; index < m_bufferSize; ++index)
-            {
-                m_buffer[index] = bitmap[index];
-            }
-        }
-    }
+    m_image.copy(bitmap, width, height);
 
     return;
 }
 
-#ifndef NATIVE
-
 bool BitmapWidget::load(FS& fs, const String& filename)
 {
     bool    status  = false;
-    File    fd;
 
     if (false == fs.exists(filename))
     {
@@ -155,61 +94,39 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
     else
     {
-        NeoBitmapFile<NeoGrbFeature, File>  neoFile;
+        BmpImg::Ret ret = m_image.load(fs, filename);
 
-        fd = fs.open(filename, "r");
-
-        if (false == fd)
+        if (BmpImg::RET_OK != ret)
         {
-            LOG_ERROR("Failed to open file %s.", filename.c_str());
-        }
-        else
-        {
-            if (false == neoFile.Begin(fd))
+            if (BmpImg::RET_FILE_NOT_FOUND == ret)
             {
-                LOG_ERROR("File %s has incompatible bitmap file format.", filename.c_str());
+                LOG_ERROR("Failed to open file %s.", filename.c_str());
+            }
+            else if (BmpImg::RET_FILE_FORMAT_INVALID == ret)
+            {
+                LOG_ERROR("File %s has invalid format.", filename.c_str());
+            }
+            else if (BmpImg::RET_FILE_FORMAT_UNSUPPORTED == ret)
+            {
+                LOG_ERROR("File %s has unsupported format.", filename.c_str());
+            }
+            else if (BmpImg::RET_FILE_FORMAT_UNSUPPORTED == ret)
+            {
+                LOG_ERROR("File %s is too big.", filename.c_str());
             }
             else
             {
-                m_width         = neoFile.Width();
-                m_height        = neoFile.Height();
-                m_bufferSize    = m_width * m_height;
-
-                if (nullptr != m_buffer)
-                {
-                    delete[] m_buffer;
-                    m_buffer = nullptr;
-                }
-
-                m_buffer = new Color[m_bufferSize];
-
-                if (nullptr != m_buffer)
-                {
-                    uint16_t x = 0U;
-                    uint16_t y = 0U;
-
-                    for(y = 0U; y < m_height; ++y)
-                    {
-                        for(x = 0U; x < m_width; ++x)
-                        {
-                            RgbColor rgbColor = neoFile.GetPixelColor(x, y);
-
-                            m_buffer[x + y * m_width].set(rgbColor.R, rgbColor.G, rgbColor.B);
-                        }
-                    }
-
-                    status = true;
-                }
+                LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
             }
-
-            fd.close();
+        }
+        else
+        {
+            status = true;
         }
     }
 
     return status;
 }
-
-#endif  /* NATIVE */
 
 /******************************************************************************
  * Protected Methods

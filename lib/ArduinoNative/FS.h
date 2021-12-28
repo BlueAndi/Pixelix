@@ -157,8 +157,24 @@ public:
         return open(path.c_str(), mode);
     }
 
-    bool exists(const char* path);
-    bool exists(const String& path);
+    bool exists(const char* path)
+    {
+        bool    itExists    = false;
+        FILE*   fd          = fopen("path", "r");
+
+        if (nullptr != fd)
+        {
+            itExists = true;
+            fclose(fd);
+        }
+
+        return itExists;
+    }
+
+    bool exists(const String& path)
+    {
+        return exists(path.c_str());
+    }
 
     bool remove(const char* path);
     bool remove(const String& path);

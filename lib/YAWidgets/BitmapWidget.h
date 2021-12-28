@@ -44,11 +44,10 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Widget.hpp>
-
-#ifndef NATIVE
 #include <FS.h>
-#endif  /* NATIVE */
+
+#include "Widget.hpp"
+#include "BmpImg.h"
 
 /******************************************************************************
  * Macros
@@ -70,10 +69,7 @@ public:
      */
     BitmapWidget() :
         Widget(WIDGET_TYPE),
-        m_buffer(nullptr),
-        m_bufferSize(0U),
-        m_width(0U),
-        m_height(0U)
+        m_image()
     {
     }
 
@@ -84,29 +80,8 @@ public:
      */
     BitmapWidget(const BitmapWidget& widget) :
         Widget(WIDGET_TYPE),
-        m_buffer(nullptr),
-        m_bufferSize(widget.m_bufferSize),
-        m_width(widget.m_width),
-        m_height(widget.m_height)
+        m_image(widget.m_image)
     {
-        if (nullptr != widget.m_buffer)
-        {
-            m_buffer = new Color[m_bufferSize];
-
-            if (nullptr == m_buffer)
-            {
-                m_bufferSize = 0U;
-            }
-            else
-            {
-                size_t index = 0U;
-
-                for(index = 0U; index < m_bufferSize; ++index)
-                {
-                    m_buffer[index] = widget.m_buffer[index];
-                }
-            }
-        }
     }
 
     /**
@@ -114,12 +89,6 @@ public:
      */
     ~BitmapWidget()
     {
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-            m_bufferSize = 0U;
-        }
     }
 
     /**
@@ -148,13 +117,11 @@ public:
      */
     const Color* get(uint16_t& width, uint16_t& height) const
     {
-        width   = m_width;
-        height  = m_height;
+        width   = m_image.getWidth();
+        height  = m_image.getHeight();
 
-        return m_buffer;
+        return m_image.get();
     }
-
-    #ifndef NATIVE
 
     /**
      * Load bitmap image from filesystem.
@@ -166,17 +133,12 @@ public:
      */
     bool load(FS& fs, const String& filename);
 
-    #endif  /* NATIVE */
-
     /** Widget type string */
     static const char* WIDGET_TYPE;
 
 private:
 
-    Color*      m_buffer;       /**< Raw bitmap buffer */
-    size_t      m_bufferSize;   /**< Raw bitmap buffer size in number of elements */
-    uint16_t    m_width;        /**< Bitmap width in pixel */
-    uint16_t    m_height;       /**< Bitmap height in pixel */
+    BmpImg  m_image;    /**< Bitmap image */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -185,9 +147,12 @@ private:
      */
     void paint(YAGfx& gfx) override
     {
-        if (nullptr != m_buffer)
+        if (nullptr != m_image.get())
         {
-            gfx.drawBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
+            uint16_t    width   = m_image.getWidth();
+            uint16_t    height  = m_image.getHeight();
+
+            gfx.drawBitmap(m_posX, m_posY, m_image.get(), width, height);
         }
 
         return;
