@@ -149,10 +149,7 @@ private:
     {
         if (nullptr != m_image.get())
         {
-            uint16_t    width   = m_image.getWidth();
-            uint16_t    height  = m_image.getHeight();
-
-            gfx.drawBitmap(m_posX, m_posY, m_image.get(), width, height);
+            gfx.drawBitmap(m_posX, m_posY, m_image.get(), m_image.getWidth(), m_image.getHeight());
         }
 
         return;
