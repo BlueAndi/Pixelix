@@ -86,16 +86,24 @@ extern void testLogging()
     TestLogger      myTestLogger;
     LogSinkPrinter  myLogSink("test", &myTestLogger);
     const char*     printBuffer     = nullptr;
-    const char*     LOG_MODULE      = strrchr(__FILE__, '\\');
+    const char*     LOG_MODULE      = strrchr(__FILE__, '\\'); /* Windows backslash */
     const char*     TEST_STRING_1   = "TestMessage";
     const String    TEST_STRING_2   = "TestMessageAsString";
     char            expectedLogMessage[128];
     int             lineNo          = 0;
 
+    /* If no windows backslash is found, maybe its a linux slash? */
+    if (nullptr == LOG_MODULE)
+    {
+        LOG_MODULE = strrchr(__FILE__, '/');
+    }
+
+    /* No directory found in filename. */
     if (nullptr == LOG_MODULE)
     {
         LOG_MODULE = __FILE__;
     }
+    /* Overstep backslash/slash. */
     else
     {
         ++LOG_MODULE;
