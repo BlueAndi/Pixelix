@@ -90,6 +90,7 @@ int main(int argc, char **argv)
     RUN_TEST(testWidget);
     RUN_TEST(testCanvas);
     RUN_TEST(testLampWidget);
+    RUN_TEST(testBmpImg);
     RUN_TEST(testBitmapWidget);
     RUN_TEST(testTextWidget);
     RUN_TEST(testColor);
@@ -98,7 +99,6 @@ int main(int argc, char **argv)
     RUN_TEST(testProgressBar);
     RUN_TEST(testLogging);
     RUN_TEST(testUtil);
-    RUN_TEST(testBmpImg);
 
     return UNITY_END();
 }
