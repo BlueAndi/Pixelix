@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <FreeRTOS.h>
+#include <freertos/FreeRTOS.h>
 #include <AsyncTCP.h>
 
 #include "HttpResponse.h"
