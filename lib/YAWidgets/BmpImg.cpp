@@ -235,8 +235,7 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
 
     if (RET_OK != ret)
     {
-        m_width     = 0;
-        m_height    = 0;
+        releasePixels();
     }
 
     return ret;
@@ -281,21 +280,31 @@ bool BmpImg::allocatePixels(uint16_t width, uint16_t height)
     if ((0U < width) &&
         (0U < height))
     {
-        if (nullptr != m_pixels)
-        {
-            delete[] m_pixels;
-            m_pixels = nullptr;
-        }
+        releasePixels();
 
         m_pixels = new Color[width * height];
 
         if (nullptr != m_pixels)
         {
-            isSuccessful = true;
+            m_width         = width;
+            m_height        = height;
+            isSuccessful    = true;
         }
     }
 
     return isSuccessful;
+}
+
+void BmpImg::releasePixels()
+{
+    if (nullptr != m_pixels)
+    {
+        delete[] m_pixels;
+        m_pixels = nullptr;
+    }
+
+    m_width     = 0U;
+    m_height    = 0U;
 }
 
 /******************************************************************************

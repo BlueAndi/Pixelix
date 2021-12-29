@@ -87,18 +87,10 @@ public:
      */
     BmpImg(const BmpImg& img) :
         m_pixels(nullptr),
-        m_width(img.m_width),
-        m_height(img.m_height)
+        m_width(0U),
+        m_height(0U)
     {
-        if (false == allocatePixels(img.m_width, img.m_height))
-        {
-            m_width     = 0U;
-            m_height    = 0U;
-        }
-        else
-        {
-            copy(img.m_pixels, m_width, m_height);
-        }
+        copy(img.m_pixels, img.m_width, img.m_height);
     }
 
     /**
@@ -106,12 +98,7 @@ public:
      */
     ~BmpImg()
     {
-        /* Release memory if necessary. */
-        if (nullptr != m_pixels)
-        {
-            delete[] m_pixels;
-            m_pixels = nullptr;
-        }
+        releasePixels();
     }
 
     /**
@@ -123,18 +110,7 @@ public:
     {
         if (this != (&img))
         {
-            m_width     = img.m_width;
-            m_height    = img.m_height;
-
-            if (false == allocatePixels(img.m_width, img.m_height))
-            {
-                m_width     = 0U;
-                m_height    = 0U;
-            }
-            else
-            {
-                copy(img.m_pixels, m_width, m_height);
-            }
+            copy(img.m_pixels, img.m_width, img.m_height);
         }
 
         return *this;
@@ -230,18 +206,10 @@ public:
             (0U < width) &&
             (0U < height))
         {
-            if (false == allocatePixels(width, height))
-            {
-                m_width     = 0U;
-                m_height    = 0U;
-            }
-            else
+            if (true == allocatePixels(width, height))
             {
                 uint16_t    x = 0U;
                 uint16_t    y = 0U;
-
-                m_width     = width;
-                m_height    = height;
 
                 while(m_height > y)
                 {
@@ -267,9 +235,41 @@ private:
     uint16_t    m_width;    /**< Image width in pixels. */
     uint16_t    m_height;   /**< Image height in pixels. */
 
+    /**
+     * Load bitmap file header from file system.
+     * 
+     * @param[in] fd        File descriptor
+     * @param[in] header    Bitmap file header
+     *
+     * @return If successful, it will return true otherwise false.
+     */
     bool loadBmpFileHeader(File& fd, BmpFileHeader& header);
+
+    /**
+     * Load device independent header (DIB header) from file system.
+     * 
+     * @param[in] fd        File descriptor
+     * @param[in] header    DIB header
+     *
+     * @return If successful, it will return true otherwise false.
+     */
     bool loadDibHeader(File& fd, BmpV5Header& header);
+
+    /**
+     * Allocate pixel memory and set width and height correspondingly.
+     * If memory already allocated, it will be released.
+     * 
+     * @param[in] width     Width in pixels
+     * @param[in] height    Height in pixels
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
     bool allocatePixels(uint16_t width, uint16_t height);
+
+    /**
+     * Release pixel memory and reset width and height to 0.
+     */
+    void releasePixels();
 
 };
 

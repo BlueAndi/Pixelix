@@ -114,6 +114,38 @@ extern void testBmpImg()
      * No color palette
      */
     TEST_ASSERT_EQUAL(BmpImg::RET_FILE_FORMAT_UNSUPPORTED, image.load(localFileSystem, "./test/test32bpp.bmp"));
+    TEST_ASSERT_EQUAL(nullptr, image.get());
+    TEST_ASSERT_EQUAL_UINT16(0, image.getWidth());
+    TEST_ASSERT_EQUAL_UINT16(0, image.getHeight());
+
+    /* Load valid bitmap file. */
+    TEST_ASSERT_EQUAL(BmpImg::RET_OK, image.load(localFileSystem, "./test/test24bpp.bmp"));
+
+    /* Construct bitmap image by copy. */
+    {
+        BmpImg  newImage(image);
+
+        TEST_ASSERT_EQUAL_UINT16(2, newImage.getWidth());
+        TEST_ASSERT_EQUAL_UINT16(2, newImage.getHeight());
+        TEST_ASSERT_EQUAL_UINT32(0x0000ff, newImage.get(0, 0));
+        TEST_ASSERT_EQUAL_UINT32(0x00ff00, newImage.get(1, 0));
+        TEST_ASSERT_EQUAL_UINT32(0xff0000, newImage.get(0, 1));
+        TEST_ASSERT_EQUAL_UINT32(0xffffff, newImage.get(1, 1));
+    }
+
+    /* Assign bitmap image. */
+    {
+        BmpImg  newImage;
+
+        newImage = image;
+
+        TEST_ASSERT_EQUAL_UINT16(2, newImage.getWidth());
+        TEST_ASSERT_EQUAL_UINT16(2, newImage.getHeight());
+        TEST_ASSERT_EQUAL_UINT32(0x0000ff, newImage.get(0, 0));
+        TEST_ASSERT_EQUAL_UINT32(0x00ff00, newImage.get(1, 0));
+        TEST_ASSERT_EQUAL_UINT32(0xff0000, newImage.get(0, 1));
+        TEST_ASSERT_EQUAL_UINT32(0xffffff, newImage.get(1, 1));
+    }
 
     return;
 }
