@@ -83,7 +83,7 @@ public:
     /**
      * Construct a bitmap image by copy.
      * 
-     * @param img 
+     * @param[in] img Bitmap image, which to copy.
      */
     BmpImg(const BmpImg& img) :
         m_pixels(nullptr),
@@ -117,6 +117,7 @@ public:
     /**
      * Assign bitmap image.
      * 
+     * @param[in] img   Bitmap image, which to assign.
      */
     BmpImg& operator=(const BmpImg& img)
     {
@@ -154,8 +155,8 @@ public:
     /**
      * Load bitmap image from file system.
      * 
-     * @param fs        File system
-     * @param fileName  Name of the file
+     * @param[in] fs        File system
+     * @param[in] fileName  Name of the file
      * 
      * @return If successful, it will return RET_OK. See Ret type for more informations.
      */
@@ -186,8 +187,8 @@ public:
      * If the location is invalid or no bitmap image is loaded,
      * it will return a "trash" pixel.
      * 
-     * @param x x-coordinate
-     * @param y y-coordinate
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
      * 
      * @return Pixel color at given location.
      */
@@ -218,6 +219,10 @@ public:
 
     /**
      * Copy ext. bitmap buffer.
+     * 
+     * @param[in] buffer    Ext. bitmap buffer
+     * @param[in] width     Bitmap width in pixels
+     * @param[in] height    Bitmap height in pixels
      */
     void copy(const Color* buffer, const uint16_t& width, const uint16_t& height)
     {
