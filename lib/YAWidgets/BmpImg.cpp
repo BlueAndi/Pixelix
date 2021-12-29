@@ -276,15 +276,26 @@ bool BmpImg::loadDibHeader(File& fd, BmpV5Header& header)
 
 bool BmpImg::allocatePixels(uint16_t width, uint16_t height)
 {
-    if (nullptr != m_pixels)
+    bool isSuccessful = false;
+
+    if ((0U < width) &&
+        (0U < height))
     {
-        delete[] m_pixels;
-        m_pixels = nullptr;
+        if (nullptr != m_pixels)
+        {
+            delete[] m_pixels;
+            m_pixels = nullptr;
+        }
+
+        m_pixels = new Color[width * height];
+
+        if (nullptr != m_pixels)
+        {
+            isSuccessful = true;
+        }
     }
 
-    m_pixels = new Color[width * height];
-
-    return (nullptr != m_pixels);
+    return isSuccessful;
 }
 
 /******************************************************************************

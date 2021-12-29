@@ -95,6 +95,10 @@ public:
             m_width     = 0U;
             m_height    = 0U;
         }
+        else
+        {
+            copy(img.m_pixels, m_width, m_height);
+        }
     }
 
     /**
@@ -125,6 +129,10 @@ public:
             {
                 m_width     = 0U;
                 m_height    = 0U;
+            }
+            else
+            {
+                copy(img.m_pixels, m_width, m_height);
             }
         }
 
@@ -213,32 +221,37 @@ public:
      */
     void copy(const Color* buffer, const uint16_t& width, const uint16_t& height)
     {
-        if (nullptr != m_pixels)
+        if ((nullptr != buffer) &&
+            (0U < width) &&
+            (0U < height))
         {
-            delete[] m_pixels;
-        }
-
-        if (true == allocatePixels(width, height))
-        {
-            uint16_t    x = 0U;
-            uint16_t    y = 0U;
-
-            m_width     = width;
-            m_height    = height;
-
-            while(m_height > y)
+            if (false == allocatePixels(width, height))
             {
-                x = 0U;
-                while(m_width > x)
+                m_width     = 0U;
+                m_height    = 0U;
+            }
+            else
+            {
+                uint16_t    x = 0U;
+                uint16_t    y = 0U;
+
+                m_width     = width;
+                m_height    = height;
+
+                while(m_height > y)
                 {
-                    uint32_t pos = x + y * m_width;
+                    x = 0U;
+                    while(m_width > x)
+                    {
+                        uint32_t pos = x + y * m_width;
 
-                    m_pixels[pos] = buffer[pos];
+                        m_pixels[pos] = buffer[pos];
 
-                    ++x;
+                        ++x;
+                    }
+
+                    ++y;
                 }
-
-                ++y;
             }
         }
     }
