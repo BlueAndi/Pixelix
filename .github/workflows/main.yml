@@ -31,36 +31,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install platformio
         platformio update
-    
-    - name: Compile target esp32doit-devkit-v1-usb
-      run: platformio run --environment esp32doit-devkit-v1-usb
-
-    - name: Compile target esp32-nodemcu-usb
-      run: platformio run --environment esp32-nodemcu-usb
-
-    - name: Compile target az-delivery-devkit-v4-usb
-      run: platformio run --environment az-delivery-devkit-v4-usb
-
-    - name: Compile target ttgo-t-display-usb
-      run: platformio run --environment ttgo-t-display-usb
-
-    - name: Perform static checks on target esp32doit-devkit-v1-usb
-      run: platformio check --environment esp32doit-devkit-v1-usb
-
-    - name: Perform static checks on native environment
-      run: platformio check --environment test
 
     - name: Run tests on native environment
       run: platformio test --environment test --without-testing
 
     - name: Test
-      run: gdb -x script.gdb
-
-    - name: Set up graphviz
-      uses: ts-graphviz/setup-graphviz@v1
-
-    - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1.1.0
-      with:
-        working-directory: './doc/doxygen'
-        doxyfile-path: './Doxyfile'
+      run: sudo apt-get update && sudo apt-get install gdb && gdb -x script.gdb
