@@ -130,7 +130,7 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
             ret = RET_FILE_FORMAT_INVALID;
         }
         /* Is it not a bitmap file? */
-        if (BMP_SIGNATURE != bmpFileHeader.signature)
+        else if (BMP_SIGNATURE != bmpFileHeader.signature)
         {
             ret = RET_FILE_FORMAT_UNSUPPORTED;
         }
@@ -144,11 +144,11 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
          * Palette colors are not supported.
          * 24 and 32 bits per pixel are supported.
          */
-        if ((sizeof(dibHeader) != dibHeader.headerSize) ||
-            (1 != dibHeader.planes) ||
-            (COMPRESSION_METHOD_RGB != dibHeader.compression) ||
-            (0 < dibHeader.paletteColors) ||
-            ((24 != dibHeader.bpp) && (32 != dibHeader.bpp)))
+        else if ((sizeof(dibHeader) != dibHeader.headerSize) ||
+                 (1 != dibHeader.planes) ||
+                 (COMPRESSION_METHOD_RGB != dibHeader.compression) ||
+                 (0 < dibHeader.paletteColors) ||
+                 ((24 != dibHeader.bpp) && (32 != dibHeader.bpp)))
         {
             ret = RET_FILE_FORMAT_UNSUPPORTED;
         }
