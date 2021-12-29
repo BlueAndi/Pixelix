@@ -51,7 +51,10 @@ jobs:
       run: platformio check --environment test
 
     - name: Run tests on native environment
-      run: platformio test --environment test
+      run: platformio test --environment test --without-testing
+
+    - name: Test
+      run: gdb -x script.gdb
 
     - name: Set up graphviz
       uses: ts-graphviz/setup-graphviz@v1
