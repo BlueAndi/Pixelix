@@ -143,7 +143,7 @@ void ConnectedState::process(StateMachine& sm)
         sm.setState(ConnectingState::getInstance());
     }
 
-    /* Connect to a remote wifi network? */
+    /* If the user button is triggered, the next display slot will be activated. */
     if (ButtonDrv::STATE_TRIGGERED == buttonState)
     {
         DisplayMgr::getInstance().activateNextSlot();
