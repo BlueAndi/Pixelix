@@ -32,7 +32,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "TestLampWidget.h"
+#include "TestBitmapWidget.h"
 #include "TestGfx.h"
 
 #include <unity.h>
