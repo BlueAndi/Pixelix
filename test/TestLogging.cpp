@@ -86,11 +86,20 @@ extern void testLogging()
     TestLogger      myTestLogger;
     LogSinkPrinter  myLogSink("test", &myTestLogger);
     const char*     printBuffer     = nullptr;
-    const char*     LOG_MODULE      = strrchr(__FILE__, '\\') + 1;
+    const char*     LOG_MODULE      = strrchr(__FILE__, '\\');
     const char*     TEST_STRING_1   = "TestMessage";
     const String    TEST_STRING_2   = "TestMessageAsString";
     char            expectedLogMessage[128];
     int             lineNo          = 0;
+
+    if (nullptr == LOG_MODULE)
+    {
+        LOG_MODULE = __FILE__;
+    }
+    else
+    {
+        ++LOG_MODULE;
+    }
 
     /* Check intial LogLevel. */
     TEST_ASSERT_TRUE(Logging::getInstance().registerSink(&myLogSink));
