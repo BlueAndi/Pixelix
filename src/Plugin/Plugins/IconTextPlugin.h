@@ -213,9 +213,13 @@ public:
     void setBitmap(const Color* bitmap, uint16_t width, uint16_t height);
 
     /**
-     * Load bitmap from filesystem.
+     * Load bitmap image / sprite sheet from filesystem.
+     * If a bitmap image is loaded, it will remove a corresponding sprite
+     * sheet file from filesystem.
+     * If a sprite sheet is loaded, it will load the texture file from
+     * filesystem. This assumes that the texture file was uploaded before!
      *
-     * @param[in] filename  Bitmap filename
+     * @param[in] filename  Bitmap image / Sprite sheet filename
      *
      * @return If successul, it will return true otherwise false.
      */
@@ -243,6 +247,16 @@ private:
      */
     static const uint16_t ICON_HEIGHT   = 8U;
 
+    /**
+     * Filename extension of bitmap image file.
+     */
+    static const char*      FILE_EXT_BITMAP;
+
+    /**
+     * Filename extension of sprite sheet parameter file.
+     */
+    static const char*      FILE_EXT_SPRITE_SHEET;
+
     Canvas*                 m_textCanvas;       /**< Canvas used for the text widget. */
     Canvas*                 m_iconCanvas;       /**< Canvas used for the bitmap widget. */
     BitmapWidget            m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
@@ -251,11 +265,13 @@ private:
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
 
     /**
-     * Get image filename with path.
+     * Get filename with path.
+     * 
+     * @param[in] ext   File extension
      *
-     * @return Image filename with path.
+     * @return Filename with path.
      */
-    String getFileName(void);
+    String getFileName(const String& ext);
 };
 
 /******************************************************************************

@@ -45,9 +45,11 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <FS.h>
+#include <SimpleTimer.hpp>
 
 #include "Widget.hpp"
 #include "BmpImg.h"
+#include "SpriteSheet.h"
 
 /******************************************************************************
  * Macros
@@ -69,7 +71,10 @@ public:
      */
     BitmapWidget() :
         Widget(WIDGET_TYPE),
-        m_image()
+        m_image(),
+        m_spriteSheet(),
+        m_timer(),
+        m_duration(0U)
     {
     }
 
@@ -80,7 +85,10 @@ public:
      */
     BitmapWidget(const BitmapWidget& widget) :
         Widget(WIDGET_TYPE),
-        m_image(widget.m_image)
+        m_image(widget.m_image),
+        m_spriteSheet(widget.m_spriteSheet),
+        m_timer(widget.m_timer),
+        m_duration(widget.m_duration)
     {
     }
 
@@ -99,7 +107,7 @@ public:
     BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
-     * Set a new bitmap.
+     * Set a new bitmap by copying the ext. bitmap buffer.
      *
      * @param[in] bitmap    Ext. bitmap buffer
      * @param[in] width     Bitmap width in pixel
@@ -108,7 +116,7 @@ public:
     void set(const Color* bitmap, uint16_t width, uint16_t height);
 
     /**
-     * Get the bitmap.
+     * Get the bitmap buffer.
      *
      * @param[out] width    Bitmap width in pixel
      * @param[out] height   Bitmap height in pixel
@@ -117,14 +125,28 @@ public:
      */
     const Color* get(uint16_t& width, uint16_t& height) const
     {
-        width   = m_image.getWidth();
-        height  = m_image.getHeight();
+        const Color*    buffer = nullptr;
 
-        return m_image.get();
+        /* Bitmap image loaded or sprite sheet? */
+        if (false == m_image.isEmpty())
+        {
+            width   = m_image.getWidth();
+            height  = m_image.getHeight();
+            buffer  = m_image.get();
+        }
+        else
+        {
+            width   = m_spriteSheet.getFrameWidth();
+            height  = m_spriteSheet.getFrameHeight();
+            buffer  = m_spriteSheet.getFrame();
+        }
+
+        return buffer;
     }
 
     /**
      * Load bitmap image from filesystem.
+     * If a sprite sheet is active, it will be disabled.
      *
      * @param[in] fs        Filesystem
      * @param[in] filename  Filename with full path
@@ -133,12 +155,26 @@ public:
      */
     bool load(FS& fs, const String& filename);
 
+    /**
+     * Load sprite sheet file (.sprite) from filesystem.
+     *
+     * @param[in] fs                    Filesystem
+     * @param[in] spriteSheetFileName   Name of the sprite sheet file in the filesystem
+     * @param[in] textureFileName       Name of the texture image file in the filesystem
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName);
+
     /** Widget type string */
     static const char* WIDGET_TYPE;
 
 private:
 
-    BmpImg  m_image;    /**< Bitmap image */
+    BmpImg      m_image;        /**< The bitmap image may contain one single image or a texture for the sprite sheet. */
+    SpriteSheet m_spriteSheet;  /**< Sprite sheet for animation with texture. */
+    SimpleTimer m_timer;        /**< Timer used for sprite sheet. */
+    uint32_t    m_duration;     /**< Duration of one frame in ms. */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -147,9 +183,34 @@ private:
      */
     void paint(YAGfx& gfx) override
     {
-        if (nullptr != m_image.get())
+        if (false == m_image.isEmpty())
         {
             gfx.drawBitmap(m_posX, m_posY, m_image.get(), m_image.getWidth(), m_image.getHeight());
+        }
+        else if (false == m_spriteSheet.isEmpty())
+        {
+            gfx.drawBitmap(m_posX, m_posY, m_spriteSheet.getFrame(), m_spriteSheet.getFrameWidth(), m_spriteSheet.getFrameHeight());
+
+            /* If timer is not running, start it. */
+            if (false == m_timer.isTimerRunning())
+            {
+                m_timer.start(m_duration);
+            }
+            /* If the timer has a timeout, select next sprite and restart timer. */
+            else if (true == m_timer.isTimeout())
+            {
+                m_spriteSheet.next();
+                m_timer.start(m_duration);
+            }
+            else
+            {
+                /* Nothing to do. */
+                ;
+            }
+        }
+        else
+        {
+            m_timer.stop();
         }
 
         return;

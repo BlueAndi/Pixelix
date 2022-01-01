@@ -82,7 +82,24 @@ public:
     size_t write(uint8_t data);
     size_t write(const uint8_t *buf, size_t size);
     int available();
-    int read();
+    
+    int read()
+    {
+        int data = -1;
+
+        if (nullptr != m_fd)
+        {
+            int8_t byte = 0;
+
+            if (1 != fread(&byte, 1, 1, m_fd))
+            {
+                data = -1;
+            }
+        }
+
+        return data;
+    }
+
     int peek();
     void flush();
     

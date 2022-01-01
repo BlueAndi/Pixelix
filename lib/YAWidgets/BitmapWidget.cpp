@@ -71,7 +71,10 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     {
         Widget::operator=(widget);
         
-        m_image = widget.m_image;
+        m_image         = widget.m_image;
+        m_spriteSheet   = widget.m_spriteSheet;
+        m_timer         = widget.m_timer;
+        m_duration      = widget.m_duration;
     }
 
     return *this;
@@ -81,12 +84,17 @@ void BitmapWidget::set(const Color* bitmap, uint16_t width, uint16_t height)
 {
     m_image.copy(bitmap, width, height);
 
+    /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
+     * shall be shown or the single bitmap image.
+     */
+    m_spriteSheet.release();
+
     return;
 }
 
 bool BitmapWidget::load(FS& fs, const String& filename)
 {
-    bool    status  = false;
+    bool isSuccessful = false;
 
     if (false == fs.exists(filename))
     {
@@ -121,11 +129,44 @@ bool BitmapWidget::load(FS& fs, const String& filename)
         }
         else
         {
-            status = true;
+            /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
+             * shall be shown or the single bitmap image.
+             */
+            m_spriteSheet.release();
+
+            isSuccessful = true;
         }
     }
 
-    return status;
+    return isSuccessful;
+}
+
+bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName)
+{
+    bool isSuccessful = false;
+
+    if (false == fs.exists(spriteSheetFileName))
+    {
+        LOG_WARNING("File %s doesn't exists.", spriteSheetFileName.c_str());
+    }
+    else if (false == fs.exists(textureFileName))
+    {
+        LOG_WARNING("File %s doesn't exists.", textureFileName.c_str());
+    }
+    else if (true == m_spriteSheet.load(fs, spriteSheetFileName, textureFileName))
+    {
+        /* Calculate duration per frame. */
+        m_duration = 1000U / m_spriteSheet.getFPS();
+
+        /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
+         * shall be shown or the single bitmap image.
+         */
+        m_image.release();        
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
 }
 
 /******************************************************************************

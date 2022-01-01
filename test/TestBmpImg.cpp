@@ -99,10 +99,14 @@ extern void testBmpImg()
     TEST_ASSERT_EQUAL(BmpImg::RET_OK, image.load(localFileSystem, "./test/test24bpp.bmp"));
     TEST_ASSERT_EQUAL_UINT16(2, image.getWidth());
     TEST_ASSERT_EQUAL_UINT16(2, image.getHeight());
-    TEST_ASSERT_EQUAL_UINT32(0x0000ff, image.get(0, 0));
-    TEST_ASSERT_EQUAL_UINT32(0x00ff00, image.get(1, 0));
-    TEST_ASSERT_EQUAL_UINT32(0xff0000, image.get(0, 1));
-    TEST_ASSERT_EQUAL_UINT32(0xffffff, image.get(1, 1));
+    TEST_ASSERT_NOT_EQUAL(nullptr, image.get(0, 0));
+    TEST_ASSERT_EQUAL_UINT32(0x0000ff, *image.get(0, 0));
+    TEST_ASSERT_NOT_EQUAL(nullptr, image.get(1, 0));
+    TEST_ASSERT_EQUAL_UINT32(0x00ff00, *image.get(1, 0));
+    TEST_ASSERT_NOT_EQUAL(nullptr, image.get(0, 1));
+    TEST_ASSERT_EQUAL_UINT32(0xff0000, *image.get(0, 1));
+    TEST_ASSERT_NOT_EQUAL(nullptr, image.get(1, 1));
+    TEST_ASSERT_EQUAL_UINT32(0xffffff, *image.get(1, 1));
 
     /* Load test image:
      * 2x2 pixels
@@ -127,10 +131,14 @@ extern void testBmpImg()
 
         TEST_ASSERT_EQUAL_UINT16(2, newImage.getWidth());
         TEST_ASSERT_EQUAL_UINT16(2, newImage.getHeight());
-        TEST_ASSERT_EQUAL_UINT32(0x0000ff, newImage.get(0, 0));
-        TEST_ASSERT_EQUAL_UINT32(0x00ff00, newImage.get(1, 0));
-        TEST_ASSERT_EQUAL_UINT32(0xff0000, newImage.get(0, 1));
-        TEST_ASSERT_EQUAL_UINT32(0xffffff, newImage.get(1, 1));
+        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(0, 0));
+        TEST_ASSERT_EQUAL_UINT32(0x0000ff, *newImage.get(0, 0));
+        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(1, 0));
+        TEST_ASSERT_EQUAL_UINT32(0x00ff00, *newImage.get(1, 0));
+        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(0, 1));
+        TEST_ASSERT_EQUAL_UINT32(0xff0000, *newImage.get(0, 1));
+        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(1, 1));
+        TEST_ASSERT_EQUAL_UINT32(0xffffff, *newImage.get(1, 1));
     }
 
     /* Assign bitmap image. */
@@ -141,10 +149,14 @@ extern void testBmpImg()
 
         TEST_ASSERT_EQUAL_UINT16(2, newImage.getWidth());
         TEST_ASSERT_EQUAL_UINT16(2, newImage.getHeight());
-        TEST_ASSERT_EQUAL_UINT32(0x0000ff, newImage.get(0, 0));
-        TEST_ASSERT_EQUAL_UINT32(0x00ff00, newImage.get(1, 0));
-        TEST_ASSERT_EQUAL_UINT32(0xff0000, newImage.get(0, 1));
-        TEST_ASSERT_EQUAL_UINT32(0xffffff, newImage.get(1, 1));
+        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(0, 0));
+        TEST_ASSERT_EQUAL_UINT32(0x0000ff, *newImage.get(0, 0));
+        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(1, 0));
+        TEST_ASSERT_EQUAL_UINT32(0x00ff00, *newImage.get(1, 0));
+        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(0, 1));
+        TEST_ASSERT_EQUAL_UINT32(0xff0000, *newImage.get(0, 1));
+        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(1, 1));
+        TEST_ASSERT_EQUAL_UINT32(0xffffff, *newImage.get(1, 1));
     }
 
     return;

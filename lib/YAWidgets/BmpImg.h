@@ -129,7 +129,7 @@ public:
     };
 
     /**
-     * Load bitmap image from file system.
+     * Load bitmap image (.bmp) from file system.
      * 
      * @param[in] fs        File system
      * @param[in] fileName  Name of the file
@@ -159,38 +159,27 @@ public:
     }
 
     /**
-     * Get single pixel at the given location.
-     * If the location is invalid or no bitmap image is loaded,
-     * it will return a "trash" pixel.
+     * Get access to the internal pixel buffer.
+     * If no bitmap image is loaded, it will return nullptr.
+     * If x/y-coordinates are out of range, it will return nullptr.
      * 
-     * @param[in] x x-coordinate
-     * @param[in] y y-coordinate
+     * @param[in] x x-coordinate (Default: 0)
+     * @param[in] y y-coordinate (Default: 0)
      * 
-     * @return Pixel color at given location.
+     * @return Internal pixel buffer or nullptr in case of any error.
      */
-    Color& get(uint16_t x, uint16_t y)
+    const Color* get(uint16_t x = 0U, uint16_t y = 0U) const
     {
-        static Color    trash;
-        Color*          pixel = &trash;
+        const Color* begin = nullptr;
 
         if ((nullptr != m_pixels) &&
             (m_width > x) &&
             (m_height > y))
         {
-            pixel = &m_pixels[x + m_width * y];
+            begin = &m_pixels[x + y * m_width];
         }
 
-        return *pixel;
-    }
-
-    /**
-     * Get access to the internal pixel buffer.
-     * 
-     * @return Internal pixel buffer.
-     */
-    const Color* get() const
-    {
-        return m_pixels;
+        return begin;
     }
 
     /**
@@ -227,6 +216,64 @@ public:
                 }
             }
         }
+    }
+
+    /**
+     * Copy part of an bitmap image.
+     * 
+     * @param[in] img       The bitmap image source.
+     * @param[in] offsX     The pixel offset on the x-axis in the source image.
+     * @param[in] offsY     The pixel offset on the y-axis in the source image.
+     * @param[in] width     The width in pixels of the canvas, which to copy.
+     * @param[in] height    The height in pixels of the canvas, which to copy.
+     */
+    void copy(const BmpImg& img, uint16_t offsX, uint16_t offsY, uint16_t width, uint16_t height)
+    {
+        if ((0U < width) &&
+            (0U < height) &&
+            (img.m_width >= (offsX + width)) &&
+            (img.m_height >= (offsY + height)))
+        {
+            if (true == allocatePixels(width, height))
+            {
+                uint16_t    x = 0U;
+                uint16_t    y = 0U;
+
+                while(m_height > y)
+                {
+                    x = 0U;
+                    while(m_width > x)
+                    {
+                        uint32_t    posDst  = x + y * m_width;
+                        uint32_t    posSrc  = (offsX + x) + (offsY + y) * img.m_width;
+
+                        m_pixels[posDst] = img.m_pixels[posSrc];
+
+                        ++x;
+                    }
+
+                    ++y;
+                }
+            }
+        }
+    }
+
+    /**
+     * Release allocated memory for the image.
+     */
+    void release()
+    {
+        releasePixels();
+    }
+
+    /**
+     * Use this function to determine whether a bitmap image is loaded or not.
+     * 
+     * @return If no bitmap image is loaded, it will return true otherwise false.
+     */
+    bool isEmpty() const
+    {
+        return (nullptr == m_pixels);
     }
 
 private:
