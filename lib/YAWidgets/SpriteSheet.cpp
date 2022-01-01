@@ -66,6 +66,7 @@ SpriteSheet& SpriteSheet::operator=(const SpriteSheet& spriteSheet)
     {
         copyFrames(spriteSheet.m_frames, spriteSheet.m_frameCnt);
 
+        m_frames            = m_frames; /* cppcheck-suppress selfAssignment */
         m_frameCnt          = spriteSheet.m_frameCnt;
         m_frameWidth        = spriteSheet.m_frameWidth;
         m_frameHeight       = spriteSheet.m_frameHeight;
