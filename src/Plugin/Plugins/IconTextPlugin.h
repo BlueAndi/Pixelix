@@ -155,7 +155,7 @@ public:
      * @return If successful it will return true otherwise false.
      */
     bool setTopic(const String& topic, const JsonObject& value) final;
-    
+
     /**
      * Is a upload request accepted or rejected?
      * 

@@ -60,16 +60,22 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_TEXT  = "/text";
+const char* IconTextLampPlugin::TOPIC_TEXT              = "/text";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMPS = "/lamps";
+const char* IconTextLampPlugin::TOPIC_LAMPS             = "/lamps";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMP  = "/lamp";
+const char* IconTextLampPlugin::TOPIC_LAMP              = "/lamp";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_ICON  = "/bitmap";
+const char* IconTextLampPlugin::TOPIC_ICON              = "/bitmap";
+
+/* Initialize bitmap image filename extension. */
+const char* IconTextLampPlugin::FILE_EXT_BITMAP         = ".bmp";
+
+/* Initialize sprite sheet parameter filename extension. */
+const char* IconTextLampPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
 
 /******************************************************************************
  * Public Methods
@@ -217,11 +223,23 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
     if (0U != topic.equals(TOPIC_ICON))
     {
         /* Accept upload of bitmap file. */
-        if (0U != srcFilename.endsWith(".bmp"))
+        if (0U != srcFilename.endsWith(FILE_EXT_BITMAP))
         {
-            dstFilename = getFileName();
+            dstFilename = getFileName(FILE_EXT_BITMAP);
 
             isAccepted = true;
+        }
+        /* Accept upload of a sprite sheet file. */
+        else if (0U != srcFilename.endsWith(FILE_EXT_SPRITE_SHEET))
+        {
+            dstFilename = getFileName(FILE_EXT_SPRITE_SHEET);
+
+            isAccepted = true;
+        }
+        else
+        {
+            /* Not accepted. */
+            ;
         }
     }
 
@@ -240,8 +258,14 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
         {
             (void)m_iconCanvas->addWidget(m_bitmapWidget);
 
-            /* If there is already an icon in the filesystem, load it. */
-            (void)m_bitmapWidget.load(FILESYSTEM, getFileName());
+            /* If there is already an icon in the filesystem, it will be loaded.
+             * First check whether it is a animated sprite sheet and if not, try
+             * to load just a bitmap image.
+             */
+            if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
+            {
+                (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
+            }
         }
     }
 
@@ -294,9 +318,14 @@ void IconTextLampPlugin::stop()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false != FILESYSTEM.remove(getFileName()))
+    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_BITMAP)))
     {
-        LOG_INFO("File %s removed", getFileName().c_str());
+        LOG_INFO("File %s removed", getFileName(FILE_EXT_BITMAP).c_str());
+    }
+
+    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_SPRITE_SHEET)))
+    {
+        LOG_INFO("File %s removed", getFileName(FILE_EXT_SPRITE_SHEET).c_str());
     }
 
     if (nullptr != m_iconCanvas)
@@ -380,7 +409,32 @@ bool IconTextLampPlugin::loadBitmap(const String& filename)
     bool                        status = false;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    status = m_bitmapWidget.load(FILESYSTEM, filename);
+    if (0U != filename.endsWith(FILE_EXT_BITMAP))
+    {
+        status = m_bitmapWidget.load(FILESYSTEM, filename);
+
+        /* Ensure that only the bitmap image file exists in the filesystem,
+         * otherwise after a restart, the obsolete sprite sheet will
+         * be loaded.
+         */
+        if (true == status)
+        {
+            (void)FILESYSTEM.remove(getFileName(FILE_EXT_SPRITE_SHEET));
+        }
+    }
+    else if (0U != filename.endsWith(FILE_EXT_SPRITE_SHEET))
+    {
+        String bmpFilename = filename;
+
+        bmpFilename.replace(FILE_EXT_SPRITE_SHEET, FILE_EXT_BITMAP);
+
+        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, filename,  bmpFilename);
+    }
+    else
+    {
+        /* Not supported. */
+        ;
+    }
 
     return status;
 }
@@ -419,9 +473,9 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
  * Private Methods
  *****************************************************************************/
 
-String IconTextLampPlugin::getFileName()
+String IconTextLampPlugin::getFileName(const String& ext)
 {
-    return generateFullPath(".bmp");
+    return generateFullPath(ext);
 }
 
 bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)
