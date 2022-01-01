@@ -341,14 +341,17 @@ public:
      */
     void drawBitmap(int16_t x, int16_t y, const TColor* bitmap, uint16_t width, uint16_t height)
     {
-        int16_t xIndex = 0;
-        int16_t yIndex = 0;
-
-        for(yIndex = 0; yIndex < height; ++yIndex)
+        if (nullptr != bitmap)
         {
-            for(xIndex = 0; xIndex < width; ++xIndex)
+            int16_t xIndex = 0;
+            int16_t yIndex = 0;
+
+            for(yIndex = 0; yIndex < height; ++yIndex)
             {
-                drawPixel(x + xIndex, y + yIndex, bitmap[xIndex + width * yIndex]);
+                for(xIndex = 0; xIndex < width; ++xIndex)
+                {
+                    drawPixel(x + xIndex, y + yIndex, bitmap[xIndex + width * yIndex]);
+                }
             }
         }
     }
