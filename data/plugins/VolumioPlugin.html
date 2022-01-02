@@ -55,10 +55,13 @@
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get VOLUMIO host address</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/host</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/host</code></pre>
                 <h3 class="mt-1">Set VOLUMIO host address</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/host?set=&lt;HOST-ADDRESS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/host?set=&lt;HOST-ADDRESS&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>HOST-ADDRESS: The host address of the VOLUMIO server.</li>
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
