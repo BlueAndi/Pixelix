@@ -126,20 +126,32 @@
                     var slotIndex   = 0;
                     var cnt         = 0;
                     var $option     = null;
-    
+                    var optionText  = ""
+
                     for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
+                            optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+                            
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
+
+                            optionText += ")";
+
                             $option = $("<option>")
                                         .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(rsp.data.slots[slotIndex].uid);
+                                        .text(optionText);
                             
                             $("#pluginUid").append($option);
-    
+
                             ++cnt;
                         }
                     }
-    
+
                     return Promise.resolve(cnt);
                 }).catch(function(rsp) {
                     alert("Internal error.");

@@ -151,15 +151,27 @@
                     var cnt         = 0;
                     var elements    = document.getElementsByName("pluginUid");
                     var $option     = null;
+                    var optionText  = ""
 
                     for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
 
                         for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                             if (rsp.data.slots[slotIndex].name === pluginName) {
 
+                                optionText = rsp.data.slots[slotIndex].uid;
+                                optionText += " (";
+                                
+                                if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                    optionText += "-"
+                                } else {
+                                    optionText += rsp.data.slots[slotIndex].alias
+                                }
+
+                                optionText += ")";
+
                                 $option = $("<option>")
                                         .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(rsp.data.slots[slotIndex].uid);
+                                        .text(optionText);
                                 
                                 $(elements[elemIndex]).append($option);
 
