@@ -127,6 +127,8 @@ void ConnectedState::entry(StateMachine& sm)
     /* Notify that Pixelix is online only if URL was set. */
     if (!notifyURL.equals("-"))
     {
+        initHttpClient();
+        
         if (true == m_client.begin(notifyURL))
         {
             if (false == m_client.GET())
@@ -135,7 +137,7 @@ void ConnectedState::entry(StateMachine& sm)
             }
             else
             {
-                LOG_ERROR("Notification triggered");
+                LOG_INFO("Notification triggered");
             }
         }
     }
@@ -149,7 +151,7 @@ void ConnectedState::initHttpClient()
 
         if (HttpStatus::STATUS_CODE_OK == statusCode)
         {
-            LOG_ERROR("Online state reported");
+            LOG_INFO("Online state reported");
         }
 
     });
