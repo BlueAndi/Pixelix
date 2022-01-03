@@ -97,11 +97,6 @@ public:
      */
     void exit(StateMachine& sm) final;
 
-    /**
-     * Register callback function on response reception.
-     */
-    void initHttpClient(void);
-
 private:
 
     AsyncHttpClient m_client;   /**< Asynchronous HTTP client. */
@@ -124,6 +119,11 @@ private:
     ConnectedState(const ConnectedState& state);
     ConnectedState& operator=(const ConnectedState& state);
 
+    /**
+     * Register callback function on response reception.
+     */
+    void initHttpClient(void);
+    
 };
 
 /******************************************************************************
