@@ -44,6 +44,7 @@
 #include "ConnectingState.h"
 #include "RestartState.h"
 #include "ErrorState.h"
+#include "HttpStatus.h"
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -78,18 +79,23 @@ void ConnectedState::entry(StateMachine& sm)
     String infoStr = "Hostname: ";
     String hostname;
     String infoStringIp = "IP: ";
+    String notifyURL = "-";
 
     LOG_INFO("Connected.");
 
-    /* Get hostname. */
+    /* Get hostname and notifyURL. */
     if (false == Settings::getInstance().open(true))
     {
         LOG_WARNING("Use default hostname.");
         hostname = Settings::getInstance().getHostname().getDefault();
+        notifyURL = Settings::getInstance().getNotifyURL().getDefault();
+
     }
     else
     {
         hostname = Settings::getInstance().getHostname().getValue();
+        notifyURL = Settings::getInstance().getNotifyURL().getValue();
+
         Settings::getInstance().close();
     }
 
@@ -118,7 +124,39 @@ void ConnectedState::entry(StateMachine& sm)
         LOG_INFO(infoStr);
     }
 
+    /* Notify that Pixelix is online only if URL was set. */
+    if (!notifyURL.equals("-"))
+    {
+        if (true == m_client.begin(notifyURL))
+        {
+            if (false == m_client.GET())
+            {
+                LOG_WARNING("GET %s failed.", notifyURL.c_str());
+            }
+            else
+            {
+                LOG_ERROR("Notification triggered");
+            }
+        }
+    }
     return;
+}
+
+void ConnectedState::initHttpClient()
+{
+    m_client.regOnResponse([this](const HttpResponse& rsp){
+        uint16_t statusCode = rsp.getStatusCode();
+
+        if (HttpStatus::STATUS_CODE_OK == statusCode)
+        {
+            LOG_ERROR("Online state reported");
+        }
+
+    });
+
+    m_client.regOnError([this]() {
+        LOG_WARNING("Connection error happened.");
+   });
 }
 
 void ConnectedState::process(StateMachine& sm)
