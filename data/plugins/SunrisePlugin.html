@@ -54,13 +54,17 @@
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get location</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/location</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/location</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set location</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>LONGITUDE: The longitude of the location.</li>
                     <li>LATITUDE: The latitude of the location.</li>
                 </ul>
