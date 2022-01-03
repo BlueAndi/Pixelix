@@ -256,6 +256,15 @@ public:
         return m_scrollPause;
     }
 
+   /**
+     * Get notifyURL.
+     *
+     * @return The URL to be triggered
+     */
+    KeyValueString& getNotifyURL()
+    {
+        return m_notifyURL;
+    }
     /**
      * Get a list of all key value pairs.
      *
@@ -286,7 +295,7 @@ public:
     KeyValue* getSettingByKey(const char* key);
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 16U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 17U;
 
 private:
 
@@ -309,6 +318,7 @@ private:
     KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
     KeyValueJson    m_slotConfig;           /**< Display slot configuration */
     KeyValueUInt32  m_scrollPause;          /**< Text scroll pause */
+    KeyValueString  m_notifyURL;            /**< URL to be triggered when PIXELIX has connected to a remote network. */
 
     /**
      * Constructs the settings instance.

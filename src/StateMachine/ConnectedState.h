@@ -43,6 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include "AsyncHttpClient.h"
+
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <WString.h>
@@ -95,12 +97,20 @@ public:
      */
     void exit(StateMachine& sm) final;
 
+    /**
+     * Register callback function on response reception.
+     */
+    void initHttpClient(void);
+
 private:
+
+    AsyncHttpClient m_client;   /**< Asynchronous HTTP client. */
 
     /**
      * Constructs the state.
      */
-    ConnectedState()
+    ConnectedState():
+        m_client()
     {
     }
 

@@ -113,6 +113,9 @@ static const char*  KEY_SLOT_CONFIG                 = "slot_cfg";
 /** Scroll pause key */
 static const char*  KEY_SCROLL_PAUSE                = "scroll_pause";
 
+/** NotifyURL key */
+static const char*  KEY_NOTIFY_URL                  = "notify_url";
+
 /* ---------- Key value pair names ---------- */
 
 /** Wifi network name of key value pair */
@@ -162,6 +165,9 @@ static const char*  NAME_SLOT_CONFIG                = "Display slot configuratio
 
 /** Scroll pause name */
 static const char*  NAME_SCROLL_PAUSE               = "Text scroll pause [ms]";
+
+/** NotifyURL name */
+static const char*  NAME_NOTIFY_URL                     = "URL to be triggered when PIXELIX has connected to a remote network.";
 
 /* ---------- Default values ---------- */
 
@@ -213,6 +219,10 @@ static const char*      DEFAULT_SLOT_CONFIG             = "";
 /** Scroll pause default value in ms */
 static uint32_t         DEFAULT_SCROLL_PAUSE            = 80U;
 
+/** NotifyURL default value */
+static const char*     DEFAULT_NOTIFY_URL               = "-";
+
+
 /* ---------- Minimum values ---------- */
 
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -260,6 +270,9 @@ static const size_t     MIN_VALUE_SLOT_CONFIG           = 0U;
 /** Scroll pause minimum value in ms */
 static uint32_t         MIN_VALUE_SCROLL_PAUSE          = 20U;
 
+/** NotifyURL min. length */
+static const size_t     MIN_VALUE_NOTIFY_URL            = 0U;
+
 /* ---------- Maximum values ---------- */
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -306,6 +319,9 @@ static const size_t     MAX_VALUE_SLOT_CONFIG           = 512U;
 
 /** Scroll pause maximum value in ms */
 static uint32_t         MAX_VALUE_SCROLL_PAUSE          = 500U;
+
+/** NotifyURL max. length */
+static const size_t     MAX_VALUE_NOTIFY_URL            = 64U;
 
 /******************************************************************************
  * Public Methods
@@ -386,7 +402,9 @@ Settings::Settings() :
     m_dateFormatCtrl        (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT_CTRL,      DEFAULT_DATE_FORMAT_CTRL),
     m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS),
     m_slotConfig            (m_preferences, KEY_SLOT_CONFIG,            NAME_SLOT_CONFIG,           DEFAULT_SLOT_CONFIG,            MIN_VALUE_SLOT_CONFIG,          MAX_VALUE_SLOT_CONFIG),
-    m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE)
+    m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE),
+    m_notifyURL             (m_preferences, KEY_NOTIFY_URL,             NAME_NOTIFY_URL,            DEFAULT_NOTIFY_URL,             MIN_VALUE_NOTIFY_URL,           MAX_VALUE_NOTIFY_URL)
+
 {
     uint8_t idx = 0;
 
@@ -421,6 +439,8 @@ Settings::Settings() :
     m_keyValueList[idx] = &m_slotConfig;
     ++idx;
     m_keyValueList[idx] = &m_scrollPause;
+    ++idx;
+    m_keyValueList[idx] = &m_notifyURL;
 }
 
 Settings::~Settings()
