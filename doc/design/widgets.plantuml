@@ -11,30 +11,35 @@ end note
 
 class YAGfx
 
-class Canvas {
+class WidgetGroup {
     - m_gfx : YAGfx&
     - m_widgets : LinkedList<Widget*>
-    + Canvas(width : uint16_t, height : uint16_t, x : uint16_t, y : uint16_t)
+    + WidgetGroup(width : uint16_t, height : uint16_t, x : uint16_t, y : uint16_t)
+    + getWidth() const : uint16_t
+    + getHeight() const : uint16_t
+    + getColor(x : int16_t, y : int16_t) = 0 : Color&
+    + getColor(x : int16_t, y : int16_t) const : const Color&
     + addWidget(widget : Widget&) : bool
     + removeWidget(widget : Widget&) : bool
     + children() : const LinkedList<Widget*>&
     + update() : void
     + find(name : const char*) : Widget*
+    - paint(gfx : YAGfx&) : void
     - drawPixel(x : int16_t, y : int16_t, color : uint16_t) : void
 }
 
-YAGfx <|-- Canvas
-Widget <|-- Canvas
-Canvas o--> Widget
+YAGfx <|-- WidgetGroup
+Widget <|-- WidgetGroup
+WidgetGroup o--> Widget
 
-note right of Canvas
-    A canvas can contain several widgets and
+note right of WidgetGroup
+    A widget group contains several widgets and
     will update them periodically. It ensures
     that a widget can not draw over the canvas
     borders.
 
-    The canvas itself is a widget too and therefore
-    a canvas can be inside a canvas.
+    The widget group itself is a widget too and therefore
+    can be inside another widget group.
 end note
 
 class Widget {
@@ -71,7 +76,7 @@ class TextWidget {
     + getFont() : const GFXfont*
     + {static} setScrollPause(pause : uint32_t) : bool
     + getScrollInfo(isScrollingEnabled : bool&, scrollingCnt : uint32_t&) : bool
-    # paint(gfx : YAGfx&) : void
+    - paint(gfx : YAGfx&) : void
 }
 
 Widget <|-- TextWidget
@@ -83,7 +88,7 @@ class BitmapWidget {
     + set(bitmap : const Color*, width : uint16_t, height : uint16_t)
     + get(width : uint16_t&, height: uint16_t&) : const Color*
     + load(fs : FS&, filename : const String&) : bool
-    # paint(gfx : YAGfx&) : void
+    - paint(gfx : YAGfx&) : void
 }
 
 Widget <|-- BitmapWidget
@@ -101,7 +106,7 @@ class LampWidget {
     + getColorOn() : const Color&
     + setWidth(width : uint16_t) : void
     + getWidth() const : uin16_t
-    # paint(gfx : YAGfx&) : void
+    - paint(gfx : YAGfx&) : void
 }
 
 Widget <|-- LampWidget
