@@ -47,7 +47,7 @@
 #include "Plugin.hpp"
 
 #include <FS.h>
-#include <Canvas.h>
+#include <WidgetGroup.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <Mutex.hpp>
@@ -76,8 +76,9 @@ public:
      */
     IconTextPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
-        m_textCanvas(nullptr),
-        m_iconCanvas(nullptr),
+        m_isInitialized(false),
+        m_textCanvas(),
+        m_iconCanvas(),
         m_bitmapWidget(),
         m_textWidget(),
         m_isUploadError(false),
@@ -91,18 +92,6 @@ public:
      */
     ~IconTextPlugin()
     {
-        if (nullptr != m_iconCanvas)
-        {
-            delete m_iconCanvas;
-            m_iconCanvas = nullptr;
-        }
-
-        if (nullptr != m_textCanvas)
-        {
-            delete m_textCanvas;
-            m_textCanvas = nullptr;
-        }
-
         m_mutex.destroy();
     }
 
@@ -204,15 +193,6 @@ public:
     void setText(const String& formatText);
 
     /**
-     * Set bitmap in raw RGB888 format.
-     *
-     * @param[in] bitmap    Bitmap buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
-     */
-    void setBitmap(const Color* bitmap, uint16_t width, uint16_t height);
-
-    /**
      * Load bitmap image / sprite sheet from filesystem.
      * If a bitmap image is loaded, it will remove a corresponding sprite
      * sheet file from filesystem.
@@ -257,8 +237,9 @@ private:
      */
     static const char*      FILE_EXT_SPRITE_SHEET;
 
-    Canvas*                 m_textCanvas;       /**< Canvas used for the text widget. */
-    Canvas*                 m_iconCanvas;       /**< Canvas used for the bitmap widget. */
+    bool                    m_isInitialized;    /**< Flag used to initialize once during start(). */
+    WidgetGroup             m_textCanvas;       /**< Canvas used for the text widget. */
+    WidgetGroup             m_iconCanvas;       /**< Canvas used for the bitmap widget. */
     BitmapWidget            m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
     TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
     bool                    m_isUploadError;    /**< Flag to signal a upload error. */

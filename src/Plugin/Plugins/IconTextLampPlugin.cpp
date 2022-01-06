@@ -250,65 +250,50 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr == m_iconCanvas)
-    {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
-
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_bitmapWidget);
-
-            /* If there is already an icon in the filesystem, it will be loaded.
-             * First check whether it is a animated sprite sheet and if not, try
-             * to load just a bitmap image.
-             */
-            if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
-            {
-                (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
-            }
-        }
-    }
-
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(width - ICON_WIDTH, height - 2U, ICON_WIDTH, 0);
-
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-        }
-    }
-
-    if (nullptr == m_lampCanvas)
+    if (false == m_isInitialized)
     {
         uint16_t        lampWidth       = 0U;
         uint16_t        lampDistance    = 0U;
         const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
         const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
         const uint16_t  canvasWidth     = width - ICON_WIDTH;
-        
+
+        m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+        (void)m_iconCanvas.addWidget(m_bitmapWidget);
+
+        /* If there is already an icon in the filesystem, it will be loaded.
+            * First check whether it is a animated sprite sheet and if not, try
+            * to load just a bitmap image.
+            */
+        if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
+        {
+            (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
+        }
+
+        m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height - 2U);
+        (void)m_textCanvas.addWidget(m_textWidget);
+
+        m_lampCanvas.setPosAndSize(ICON_WIDTH, height - 1, canvasWidth, 1U);
+
         if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
         {
-            m_lampCanvas = new Canvas(canvasWidth, 1U, ICON_WIDTH, height - 1);
+            /* Calculate the border to have the lamps shown aligned to center. */
+            uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
+            uint8_t     index   = 0U;
 
-            if (nullptr != m_lampCanvas)
+            for(index = 0U; index < MAX_LAMPS; ++index)
             {
-                /* Calculate the border to have the lamps shown aligned to center. */
-                uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
-                uint8_t     index   = 0U;
+                /* One space at the begin, two spaces between the lamps. */
+                int16_t x = (lampWidth + lampDistance) * index + border;
 
-                for(index = 0U; index < MAX_LAMPS; ++index)
-                {
-                    /* One space at the begin, two spaces between the lamps. */
-                    int16_t x = (lampWidth + lampDistance) * index + border;
+                m_lampWidgets[index].setWidth(lampWidth);
 
-                    m_lampWidgets[index].setWidth(lampWidth);
-
-                    (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
-                    m_lampWidgets[index].move(x, 0);
-                }
+                (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
+                m_lampWidgets[index].move(x, 0);
             }
         }
+
+        m_isInitialized = true;
     }
 
     return;
@@ -327,24 +312,6 @@ void IconTextLampPlugin::stop()
     {
         LOG_INFO("File %s removed", getFileName(FILE_EXT_SPRITE_SHEET).c_str());
     }
-
-    if (nullptr != m_iconCanvas)
-    {
-        delete m_iconCanvas;
-        m_iconCanvas = nullptr;
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        delete m_textCanvas;
-        m_textCanvas = nullptr;
-    }
-
-    if (nullptr != m_lampCanvas)
-    {
-        delete m_lampCanvas;
-        m_lampCanvas = nullptr;
-    }
 }
 
 void IconTextLampPlugin::update(YAGfx& gfx)
@@ -352,21 +319,9 @@ void IconTextLampPlugin::update(YAGfx& gfx)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    if (nullptr != m_lampCanvas)
-    {
-        m_lampCanvas->update(gfx);
-    }
+    m_iconCanvas.update(gfx);
+    m_textCanvas.update(gfx);
+    m_lampCanvas.update(gfx);
 
     return;
 }
@@ -386,20 +341,6 @@ void IconTextLampPlugin::setText(const String& formatText)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
-
-    return;
-}
-
-void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t height)
-{
-    if ((nullptr != bitmap) &&
-        (ICON_WIDTH >= width) &&
-        (ICON_HEIGHT >= height))
-    {
-        MutexGuard<MutexRecursive> guard(m_mutex);
-
-        m_bitmapWidget.set(bitmap, width, height);
-    }
 
     return;
 }

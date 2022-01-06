@@ -46,7 +46,7 @@
 #include <stdint.h>
 #include "Plugin.hpp"
 
-#include <Canvas.h>
+#include <WidgetGroup.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 
@@ -73,9 +73,9 @@ public:
      */
     WifiStatusPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
-        m_dsp(nullptr),
-        m_iconCanvas(nullptr),
-        m_textCanvas(nullptr),
+        m_isInitialized(false),
+        m_iconCanvas(),
+        m_textCanvas(),
         m_textWidget(),
         m_alertWidget(),
         m_timer(),
@@ -88,23 +88,6 @@ public:
      */
     ~WifiStatusPlugin()
     {
-        if (nullptr != m_dsp)
-        {
-            delete m_dsp;
-            m_dsp = nullptr;
-        }
-
-        if (nullptr != m_iconCanvas)
-        {
-            delete m_iconCanvas;
-            m_iconCanvas = nullptr;
-        }
-
-        if (nullptr != m_textCanvas)
-        {
-            delete m_textCanvas;
-            m_textCanvas = nullptr;
-        }
     }
 
     /**
@@ -195,20 +178,21 @@ private:
      */
     const uint16_t  WIFI_ICON_HEIGHT        = 8U;
 
-    Canvas*     m_dsp;          /**< Display drawing area */
-    Canvas*     m_iconCanvas;   /**< Drawing area of the wifi icon */
-    Canvas*     m_textCanvas;   /**< Drawing area of the text */
-    TextWidget  m_textWidget;   /**< Text widget, used for showing the text. */
-    TextWidget  m_alertWidget;  /**< Text widget, used for showing alert (wifi disconnected). */
-    SimpleTimer m_timer;        /**< Timer for periodic stuff */
-    bool        m_toggle;       /**< Toggles the alert in case wifi is disconnected */
+    bool        m_isInitialized;    /**< Flag used to initialize once during start(). */
+    WidgetGroup m_iconCanvas;       /**< Drawing area of the wifi icon */
+    WidgetGroup m_textCanvas;       /**< Drawing area of the text */
+    TextWidget  m_textWidget;       /**< Text widget, used for showing the text. */
+    TextWidget  m_alertWidget;      /**< Text widget, used for showing alert (wifi disconnected). */
+    SimpleTimer m_timer;            /**< Timer for periodic stuff */
+    bool        m_toggle;           /**< Toggles the alert in case wifi is disconnected */
 
     /**
-     * Update wifi status.
+     * Update wifi status on display.
      *
+     * @param[in] gfx       Graphic operations
      * @param[in] quality   Signal quality in percent [0; 100].
      */
-    void updateWifiStatus(uint8_t quality);
+    void updateWifiStatus(YAGfx& gfx, uint8_t quality);
 };
 
 /******************************************************************************

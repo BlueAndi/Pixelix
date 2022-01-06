@@ -77,37 +77,29 @@ void DatePlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr == m_textCanvas)
+    if (false == m_isInitialized)
     {
-        m_textCanvas = new Canvas(width, height - 2U, 0, 0);
+        uint8_t index = 0U;
 
-        if (nullptr != m_textCanvas)
+        m_textCanvas.setPosAndSize(0, 0, width, height - 2U);
+        (void)m_textCanvas.addWidget(m_textWidget);
+
+        m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
+
+        for(index = 0U; index < MAX_LAMPS; ++index)
         {
-            (void)m_textCanvas->addWidget(m_textWidget);
+            /* One space at the begin, two spaces between the lamps. */
+            int16_t x = (CUSTOM_LAMP_WIDTH + 1) * index + 1;
+
+            m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
+            m_lampWidgets[index].setColorOff(ColorDef::ULTRADARKGRAY);
+            m_lampWidgets[index].setWidth(CUSTOM_LAMP_WIDTH);
+
+            (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
+            m_lampWidgets[index].move(x, 0);
         }
-    }
 
-    if (nullptr == m_lampCanvas)
-    {
-        m_lampCanvas = new Canvas(width, 1U, 1, height - 1);
-
-        if (nullptr != m_lampCanvas)
-        {
-            uint8_t index = 0U;
-
-            for(index = 0U; index < MAX_LAMPS; ++index)
-            {
-                /* One space at the begin, two spaces between the lamps. */
-                int16_t x = (CUSTOM_LAMP_WIDTH + 1) * index + 1;
-
-                m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
-                m_lampWidgets[index].setColorOff(ColorDef::ULTRADARKGRAY);
-                m_lampWidgets[index].setWidth(CUSTOM_LAMP_WIDTH);
-
-                (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
-                m_lampWidgets[index].move(x, 0);
-            }
-        }
+        m_isInitialized = true;
     }
 
     return;
@@ -117,17 +109,7 @@ void DatePlugin::stop()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr != m_textCanvas)
-    {
-        delete m_textCanvas;
-        m_textCanvas = nullptr;
-    }
-
-    if (nullptr != m_lampCanvas)
-    {
-        delete m_lampCanvas;
-        m_lampCanvas = nullptr;
-    }
+    /* Nothing to do. */
 
     return;
 }
@@ -179,16 +161,8 @@ void DatePlugin::update(YAGfx& gfx)
     if (false != m_isUpdateAvailable)
     {
         gfx.fillScreen(ColorDef::BLACK);
-
-        if (nullptr != m_textCanvas)
-        {
-            m_textCanvas->update(gfx);
-        }
-
-        if (nullptr != m_lampCanvas)
-        {
-            m_lampCanvas->update(gfx);
-        }
+        m_textCanvas.update(gfx);
+        m_lampCanvas.update(gfx);
 
         m_isUpdateAvailable = false;
     }

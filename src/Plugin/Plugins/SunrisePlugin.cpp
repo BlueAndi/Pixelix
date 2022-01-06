@@ -144,27 +144,19 @@ void SunrisePlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr == m_iconCanvas)
+    if (false == m_isInitialized)
     {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
+        m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+        (void)m_iconCanvas.addWidget(m_bitmapWidget);
 
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_bitmapWidget);
+        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
 
-            /* Load  icon from filesystem. */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
-        }
-    }
+        m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+        (void)m_textCanvas.addWidget(m_textWidget);
 
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
+        initHttpClient();
 
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-        }
+        m_isInitialized = true;
     }
 
     /* Try to load configuration. If there is no configuration available, a default configuration
@@ -178,7 +170,6 @@ void SunrisePlugin::start(uint16_t width, uint16_t height)
         }
     }
 
-    initHttpClient();
     if (false == startHttpRequest())
     {
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
@@ -201,18 +192,6 @@ void SunrisePlugin::stop()
     if (false != FILESYSTEM.remove(configurationFilename))
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
-
-    if (nullptr != m_iconCanvas)
-    {
-        delete m_iconCanvas;
-        m_iconCanvas = nullptr;
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        delete m_textCanvas;
-        m_textCanvas = nullptr;
     }
 
     return;
@@ -267,16 +246,8 @@ void SunrisePlugin::update(YAGfx& gfx)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
+    m_iconCanvas.update(gfx);
+    m_textCanvas.update(gfx);
 
     return;
 }

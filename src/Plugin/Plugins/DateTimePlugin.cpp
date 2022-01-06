@@ -93,46 +93,38 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(width, height - 2, 0, 0);
-
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-        }
-    }
-
-    if (nullptr == m_lampCanvas)
+    if (false == m_isInitialized)
     {
         uint16_t        lampWidth       = 0U;
         uint16_t        lampDistance    = 0U;
         const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
         const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
-        
+
+        m_textCanvas.setPosAndSize(0, 0, width, height - 2U);
+        (void)m_textCanvas.addWidget(m_textWidget);
+
+        m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
+
         if (true == calcLayout(width, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
         {
-            m_lampCanvas = new Canvas(width, 1U, 1, height - 1);
+            /* Calculate the border to have the days (lamps) shown aligned to center. */
+            uint16_t    border  = (width - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
+            uint8_t     index   = 0U;
 
-            if (nullptr != m_lampCanvas)
+            for(index = 0U; index < MAX_LAMPS; ++index)
             {
-                /* Calculate the border to have the days (lamps) shown aligned to center. */
-                uint16_t    border  = (width - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
-                uint8_t     index   = 0U;
+                int16_t x = (lampWidth + lampDistance) * index + border;
 
-                for(index = 0U; index < MAX_LAMPS; ++index)
-                {
-                    int16_t x = (lampWidth + lampDistance) * index + border;
+                m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
+                m_lampWidgets[index].setColorOff(ColorDef::ULTRADARKGRAY);
+                m_lampWidgets[index].setWidth(lampWidth);
 
-                    m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
-                    m_lampWidgets[index].setColorOff(ColorDef::ULTRADARKGRAY);
-                    m_lampWidgets[index].setWidth(lampWidth);
-
-                    (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
-                    m_lampWidgets[index].move(x, 0);
-                }
+                (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
+                m_lampWidgets[index].move(x, 0);
             }
         }
+
+        m_isInitialized = true;
     }
 
     return;
@@ -142,17 +134,7 @@ void DateTimePlugin::stop()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr != m_textCanvas)
-    {
-        delete m_textCanvas;
-        m_textCanvas = nullptr;
-    }
-
-    if (nullptr != m_lampCanvas)
-    {
-        delete m_lampCanvas;
-        m_lampCanvas = nullptr;
-    }
+    /* Nothing to do. */
 
     return;
 }
@@ -203,16 +185,8 @@ void DateTimePlugin::update(YAGfx& gfx)
     if (false != m_isUpdateAvailable)
     {
         gfx.fillScreen(ColorDef::BLACK);
-
-        if (nullptr != m_textCanvas)
-        {
-            m_textCanvas->update(gfx);
-        }
-
-        if (nullptr != m_lampCanvas)
-        {
-            m_lampCanvas->update(gfx);
-        }
+        m_textCanvas.update(gfx);
+        m_lampCanvas.update(gfx);
 
         m_isUpdateAvailable = false;
     }

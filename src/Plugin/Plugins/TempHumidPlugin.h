@@ -46,7 +46,7 @@
 #include "Plugin.hpp"
 
 #include <SimpleTimer.hpp>
-#include <Canvas.h>
+#include <WidgetGroup.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <ISensorChannel.hpp>
@@ -77,8 +77,9 @@ public:
      */
     TempHumidPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
-        m_textCanvas(nullptr),
-        m_iconCanvas(nullptr),
+        m_isInitialized(false),
+        m_textCanvas(),
+        m_iconCanvas(),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
         m_page(TEMPERATURE),
@@ -113,18 +114,6 @@ public:
      */
     ~TempHumidPlugin()
     {
-        if (nullptr != m_iconCanvas)
-        {
-            delete m_iconCanvas;
-            m_iconCanvas = nullptr;
-        }
-
-        if (nullptr != m_textCanvas)
-        {
-            delete m_textCanvas;
-            m_textCanvas = nullptr;
-        }
-
         m_mutex.destroy();
     }
 
@@ -220,8 +209,9 @@ private:
      */
     static const uint32_t       SENSOR_UPDATE_PERIOD = (90U * 1000U);
 
-    Canvas*                     m_textCanvas;               /**< Canvas used for the text widget. */
-    Canvas*                     m_iconCanvas;               /**< Canvas used for the bitmap widget. */
+    bool                        m_isInitialized;            /**< Flag used to initialize once during start(). */
+    WidgetGroup                 m_textCanvas;               /**< Canvas used for the text widget. */
+    WidgetGroup                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     uint8_t                     m_page;                     /**< Number of page, which to show. */
