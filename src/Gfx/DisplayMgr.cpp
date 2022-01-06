@@ -87,7 +87,9 @@ struct Statistics
 
 bool DisplayMgr::begin()
 {
-    bool status = false;
+    bool    status  = false;
+    uint8_t idx     = 0U;
+    bool    isError = false;
 
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.
@@ -119,40 +121,23 @@ bool DisplayMgr::begin()
         }
     }
 
-    /* Canvas framebuffers for fading in/out created? */
-    if (nullptr == m_currCanvas)
+    /* Allocate framebuffer memory. */
+    for(idx = 0U; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
     {
-        uint8_t idx     = 0;
-        bool    isError = false;
-
-        for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
+        if (false == m_framebuffers[idx].isAllocated())
         {
-            m_framebuffers[idx] = new Canvas(Display::getInstance().getWidth(), Display::getInstance().getHeight(), 0, 0, true);
-
-            if (nullptr == m_framebuffers[idx])
+            if (false == m_framebuffers[idx].create(Display::getInstance().getWidth(), Display::getInstance().getHeight()))
             {
                 isError = true;
-                break;
+
+                LOG_WARNING("Couldn't create framebuffer canvas for fade effect.");
             }
         }
+    }
 
-        if (true == isError)
-        {
-            for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
-            {
-                if (nullptr != m_framebuffers[idx])
-                {
-                    delete m_framebuffers[idx];
-                    m_framebuffers[idx] = nullptr;
-                }
-            }
-
-            LOG_WARNING("Couldn't create framebuffer canvas for fade effect.");
-        }
-        else
-        {
-            m_currCanvas = m_framebuffers[0];
-        }
+    if (false == isError)
+    {
+        m_selectedFrameBuffer = &m_framebuffers[0U];
     }
 
     /* Not started yet? */
@@ -694,7 +679,7 @@ DisplayMgr::DisplayMgr() :
     m_requestedPlugin(nullptr),
     m_slotTimer(),
     m_displayFadeState(FADE_IN),
-    m_currCanvas(nullptr),
+    m_selectedFrameBuffer(nullptr),
     m_framebuffers(),
     m_fadeLinearEffect(),
     m_fadeMoveXEffect(),
@@ -703,28 +688,11 @@ DisplayMgr::DisplayMgr() :
     m_fadeEffectIndex(FADE_EFFECT_LINEAR),
     m_fadeEffectUpdate(false)
 {
-    uint8_t idx = 0U;
-
-    for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
-    {
-        m_framebuffers[idx] = nullptr;
-    }
 }
 
 DisplayMgr::~DisplayMgr()
 {
-    uint8_t idx = 0;
-
     end();
-
-    for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
-    {
-        if (nullptr != m_framebuffers[idx])
-        {
-            delete m_framebuffers[idx];
-            m_framebuffers[idx] = nullptr;
-        }
-    }
 }
 
 uint8_t DisplayMgr::nextSlot(uint8_t slotId)
@@ -774,13 +742,13 @@ void DisplayMgr::startFadeOut()
     /* Select next framebuffer and keep old content, until
      * the fade effect is finished.
      */
-    if (m_currCanvas == m_framebuffers[FB_ID_0])
+    if (m_selectedFrameBuffer == &m_framebuffers[FB_ID_0])
     {
-        m_currCanvas = m_framebuffers[FB_ID_1];
+        m_selectedFrameBuffer = &m_framebuffers[FB_ID_1];
     }
     else
     {
-        m_currCanvas = m_framebuffers[FB_ID_0];
+        m_selectedFrameBuffer = &m_framebuffers[FB_ID_0];
     }
 
     m_displayFadeState = FADE_OUT;
@@ -793,25 +761,25 @@ void DisplayMgr::startFadeOut()
 
 void DisplayMgr::fadeInOut(YAGfx& dst)
 {
-    if ((nullptr != m_currCanvas) &&
+    if ((nullptr != m_selectedFrameBuffer) &&
         (nullptr != m_fadeEffect))
     {
-        Canvas* prevFb = nullptr;
+        YAGfxBitmap* prevFb = nullptr;
 
         /* Determine previous frame buffer */
-        if (m_currCanvas == m_framebuffers[FB_ID_0])
+        if (m_selectedFrameBuffer == &m_framebuffers[FB_ID_0])
         {
-            prevFb = m_framebuffers[FB_ID_1];
+            prevFb = &m_framebuffers[FB_ID_1];
         }
         else
         {
-            prevFb = m_framebuffers[FB_ID_0];
+            prevFb = &m_framebuffers[FB_ID_0];
         }
 
         /* Continously update the current canvas with its framebuffer. */
         if (nullptr != m_selectedPlugin)
         {
-            m_selectedPlugin->update(*m_currCanvas);
+            m_selectedPlugin->update(*m_selectedFrameBuffer);
         }
 
         /* Handle fading */
@@ -819,12 +787,12 @@ void DisplayMgr::fadeInOut(YAGfx& dst)
         {
         /* No fading at all */
         case FADE_IDLE:
-            m_currCanvas->updateFromBuffer(dst);
+            dst.drawBitmap(0, 0, *m_selectedFrameBuffer);
             break;
 
         /* Fade new display content in */
         case FADE_IN:
-            if (true == m_fadeEffect->fadeIn(dst, *prevFb, *m_currCanvas))
+            if (true == m_fadeEffect->fadeIn(dst, *prevFb, *m_selectedFrameBuffer))
             {
                 m_displayFadeState = FADE_IDLE;
             }
@@ -832,7 +800,7 @@ void DisplayMgr::fadeInOut(YAGfx& dst)
 
         /* Fade old display content out! */
         case FADE_OUT:
-            if (true == m_fadeEffect->fadeOut(dst, *prevFb, *m_currCanvas))
+            if (true == m_fadeEffect->fadeOut(dst, *prevFb, *m_selectedFrameBuffer))
             {
                 m_displayFadeState = FADE_IN;
             }
@@ -985,9 +953,9 @@ void DisplayMgr::process()
                 m_slotTimer.start(duration);
             }
 
-            if (nullptr != m_currCanvas)
+            if (nullptr != m_selectedFrameBuffer)
             {
-                m_selectedPlugin->active(*m_currCanvas);
+                m_selectedPlugin->active(*m_selectedFrameBuffer);
             }
             else
             {
@@ -999,9 +967,9 @@ void DisplayMgr::process()
         /* No plugin is active, clear the display. */
         else
         {
-            if (nullptr != m_currCanvas)
+            if (nullptr != m_selectedFrameBuffer)
             {
-                m_currCanvas->fillScreen(ColorDef::BLACK);
+                m_selectedFrameBuffer->fillScreen(ColorDef::BLACK);
             }
             display.clear();
         }
@@ -1045,7 +1013,7 @@ void DisplayMgr::process()
     }
 
     /* Update display (main canvas available) */
-    if (nullptr != m_currCanvas)
+    if (nullptr != m_selectedFrameBuffer)
     {
         fadeInOut(display);
     }

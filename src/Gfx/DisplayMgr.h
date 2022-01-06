@@ -45,13 +45,13 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <Board.h>
-#include <Canvas.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <FadeLinear.h>
 #include <FadeMoveX.h>
 #include <FadeMoveY.h>
 #include <Mutex.hpp>
+#include <YAGfxBitmap.h>
 
 #include "IPluginMaintenance.hpp"
 #include "Slot.h"
@@ -363,8 +363,8 @@ private:
      * the old plugin out and from the new plugin in.
      */
     FadeState           m_displayFadeState;
-    Canvas*             m_currCanvas;                   /**< Points to the current canvas, used to update the display. */
-    Canvas*             m_framebuffers[FB_ID_MAX];      /**< Two framebuffers, which will contain the old and the new plugin content. */
+    YAGfxBitmap*        m_selectedFrameBuffer;          /**< Points to the current framebuffer, used to update the display. */
+    YAGfxDynamicBitmap  m_framebuffers[FB_ID_MAX];      /**< Two framebuffers, which will contain the old and the new plugin content. */
     FadeLinear          m_fadeLinearEffect;             /**< Linear fade effect. */
     FadeMoveX           m_fadeMoveXEffect;              /**< Moving along x-axis fade effect. */
     FadeMoveY           m_fadeMoveYEffect;              /**< Moving along y-axis fade effect. */
