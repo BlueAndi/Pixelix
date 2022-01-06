@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Yet anoterh GFX drawing pen class
+ * @brief  Yet anoterh GFX bitmap class
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAGFXPEN_H__
-#define __YAGFXPEN_H__
+#ifndef __YAGFX_BITMAP_H__
+#define __YAGFX_BITMAP_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,8 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <BaseGfxPen.hpp>
-#include "YAColor.h"
+#include <BaseGfxBitmap.hpp>
+#include <YAColor.h>
 
 /******************************************************************************
  * Macros
@@ -54,15 +54,27 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * GFX drawing pen with concrete color.
+/** GFX bitmap interface with concrete color. */
+using YAGfxBitmap = BaseGfxBitmap<Color>;
+
+/** GFX static bitmap with concrete color.
+ * 
+ * @tparam width    Bitmap width in pixels.
+ * @tparam height   Bitmap height in pixels.
  */
-using YAGfxPen = BaseGfxPen<Color>;
+template < uint16_t width, uint16_t height >
+using YAGfxStaticBitmap = BaseGfxStaticBitmap<Color, width, height>;
+
+/** GFX dynamic bitmap with concrete color. */
+using YAGfxDynamicBitmap = BaseGfxDynamicBitmap<Color>;
+
+/** GFX overlay bitmap with concrete color. */
+using YAGfxOverlayBitmap = BaseGfxOverlayBitmap<Color>;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAGFXPEN_H__ */
+#endif  /* __YAGFX_BITMAP_H__ */
 
 /** @} */

@@ -55,9 +55,10 @@
  *****************************************************************************/
 
 /**
- * GFX with concrete color.
+ * GFX with concrete color and additional features, which depend on the
+ * concrete color.
  */
-typedef BaseGfx<Color> YAGfx;
+using YAGfx = BaseGfx<Color>;
 
 /******************************************************************************
  * Functions

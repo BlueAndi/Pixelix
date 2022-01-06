@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Yet anoterh GFX drawing pen class
+ * @brief  Yet anoterh GFX bitmap canvas class
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAGFXPEN_H__
-#define __YAGFXPEN_H__
+#ifndef __YAGFX_MAP_H__
+#define __YAGFX_MAP_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,8 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <BaseGfxPen.hpp>
-#include "YAColor.h"
+#include <BaseGfxMap.hpp>
+#include <YAColor.h>
 
 /******************************************************************************
  * Macros
@@ -54,15 +54,13 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * GFX drawing pen with concrete color.
- */
-using YAGfxPen = BaseGfxPen<Color>;
+/** GFX map canvas with concrete color. A canvas maps always to a underlying bitmap. */
+using YAGfxMap = BaseGfxMap<Color>;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAGFXPEN_H__ */
+#endif  /* __YAGFX_MAP_H__ */
 
 /** @} */

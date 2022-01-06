@@ -57,7 +57,7 @@
 /**
  * Font with concrete color.
  */
-typedef BaseFont<Color> YAFont;
+using YAFont = BaseFont<Color>;
 
 /******************************************************************************
  * Functions

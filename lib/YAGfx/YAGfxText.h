@@ -57,7 +57,7 @@
 /**
  * Text with concrete color.
  */
-typedef BaseGfxText<Color> YAGfxText;
+using YAGfxText = BaseGfxText<Color>;
 
 /******************************************************************************
  * Functions

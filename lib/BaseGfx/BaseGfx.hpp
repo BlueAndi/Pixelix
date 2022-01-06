@@ -55,11 +55,15 @@
  * Types and Classes
  *****************************************************************************/
 
+template < typename TColor >
+class BaseGfxBitmap;
+
 /**
  * This class provides the base graphic functions, which are
  * color format agnostic. This way it can be used for different
  * kind of color formats, e.g. RGB565 or RGB888 format.
  *
+ * @tparam TColor The color representation.
  */
 template < typename TColor >
 class BaseGfx
@@ -74,52 +78,39 @@ public:
     }
 
     /**
-     * Assign properties of another base graphics functionality.
-     *
-     * @param[in] gfx   Base gfx which to copy
-     *
-     * @return Base graphics functionality
-     */
-    BaseGfx& operator=(const BaseGfx& gfx)
-    {
-        if (&gfx != this)
-        {
-            m_width     = gfx.m_width;
-            m_height    = gfx.m_height;
-        }
-
-        return *this;
-    }
-
-    /**
      * Get width in pixel.
      *
      * @return Canvas width in pixel
      */
-    uint16_t getWidth() const
-    {
-        return m_width;
-    };
+    virtual uint16_t getWidth() const = 0;
 
     /**
      * Get height in pixel.
      *
      * @return Canvas height in pixel
      */
-    uint16_t getHeight() const
-    {
-        return m_height;
-    }
+    virtual uint16_t getHeight() const = 0;
+
+    /**
+     * Get pixel color at given position.
+     * This is used for color manipulation in higher layers.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     *
+     * @return Color
+     */
+    virtual TColor& getColor(int16_t x, int16_t y) = 0;
 
     /**
      * Get pixel color at given position.
      *
-     * @param[in] x     x-coordinate
-     * @param[in] y     y-coordinate
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
      *
      * @return Color
      */
-    virtual TColor getColor(int16_t x, int16_t y) const = 0;
+    virtual const TColor& getColor(int16_t x, int16_t y) const = 0;
 
     /**
      * Draw a single pixel at given position.
@@ -131,30 +122,20 @@ public:
     virtual void drawPixel(int16_t x, int16_t y, const TColor& color) = 0;
 
     /**
-     * Dim color to black.
-     * A dim ratio of 255 means no change.
-     *
-     * Note, the base colors may be destroyed, depends on the color type.
-     *
-     * @param[in] x     x-coordinate
-     * @param[in] y     y-coordinate
-     * @param[in] ratio Dim ratio [0; 255]
-     */
-    virtual void dimPixel(int16_t x, int16_t y, uint8_t ratio) = 0;
-
-    /**
      * Copy framebuffer content.
      *
      * @param[in] gfx   Graphics interface of framebuffer source
      */
     void copy(const BaseGfx<TColor>& gfx)
     {
-        int16_t x   = 0;
-        int16_t y   = 0;
+        uint16_t    canvasWidth     = getWidth();
+        uint16_t    canvasHeight    = getHeight();
+        int16_t     x               = 0;
+        int16_t     y               = 0;
 
-        for(y = 0; y < m_height; ++y)
+        for(y = 0; y < canvasHeight; ++y)
         {
-            for(x = 0; x < m_width; ++x)
+            for(x = 0; x < canvasWidth; ++x)
             {
                 drawPixel(x, y, gfx.getColor(x, y));
             }
@@ -291,47 +272,11 @@ public:
      */
     void fillScreen(const TColor& color)
     {
-        fillRect(0, 0, m_width, m_height, color);
+        fillRect(0, 0, getWidth(), getHeight(), color);
     }
 
     /**
-     * Dim a rectangle with a given ratio.
-     * A ratio of 255 means no change.
-     *
-     * @param[in] x         x-coordinate of upper left point
-     * @param[in] y         y-coordinate of upper left point
-     * @param[in] width     Rectangle width in pixel
-     * @param[in] height    Rectangle height in pixel
-     * @param[in] ratio     Dim ratio [0; 255]
-     */
-    void dimRect(int16_t x, int16_t y, uint16_t width, uint16_t height, uint8_t ratio)
-    {
-        int16_t xIndex = 0;
-        int16_t yIndex = 0;
-
-        for(yIndex = 0; yIndex < height; ++yIndex)
-        {
-            for(xIndex = 0; xIndex < width; ++xIndex)
-            {
-                dimPixel(x + xIndex, y + yIndex, ratio);
-            }
-        }
-    }
-
-    /**
-     * Dim screen to black with a given ratio.
-     * A dim ratio of 255 means no change.
-     *
-     * @param[in] ratio Dim ratio [0; 255]
-     */
-    void dimScreen(uint8_t ratio)
-    {
-        dimRect(0, 0, m_width, m_height, ratio);
-    }
-
-    /**
-     * Draw bitmap buffer. It assumes that the pixel position in the buffer
-     * follows this algorithm: position in buffer = x + y * width
+     * Draw bitmap at specified location (upper left point).
      *
      * @param[in] x         x-coordinate of upper left point
      * @param[in] y         y-coordinate of upper left point
@@ -339,55 +284,30 @@ public:
      * @param[in] width     Bitmap width in pixel
      * @param[in] height    Bitmap height in pixel
      */
-    void drawBitmap(int16_t x, int16_t y, const TColor* bitmap, uint16_t width, uint16_t height)
+    void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap)
     {
-        if (nullptr != bitmap)
-        {
-            int16_t xIndex = 0;
-            int16_t yIndex = 0;
+        uint16_t    canvasWidth     = bitmap.getWidth();
+        uint16_t    canvasHeight    = bitmap.getHeight();
+        int16_t     xIndex          = 0;
+        int16_t     yIndex          = 0;
 
-            for(yIndex = 0; yIndex < height; ++yIndex)
+        for(yIndex = 0; yIndex < canvasHeight; ++yIndex)
+        {
+            for(xIndex = 0; xIndex < canvasWidth; ++xIndex)
             {
-                for(xIndex = 0; xIndex < width; ++xIndex)
-                {
-                    drawPixel(x + xIndex, y + yIndex, bitmap[xIndex + width * yIndex]);
-                }
+                drawPixel(x + xIndex, y + yIndex, bitmap.getColor(xIndex, yIndex));
             }
         }
     }
 
 protected:
 
-    uint16_t    m_width;    /**< Canvas width in pixel */
-    uint16_t    m_height;   /**< Canvas height in pixel */
-
-    /**
-     * Constructs the base graphics functionality.
-     *
-     * @param[in] width     Canvas width in pixel
-     * @param[in] height    Canvas height in pixel
-     */
-    BaseGfx(uint16_t width, uint16_t height) :
-        m_width(width),
-        m_height(height)
-    {
-    }
-
-    /**
-     * Constructs the base graphics functionality by copying one.
-     *
-     * @param[in] gfx   Base gfx which to copy
-     */
-    BaseGfx(const BaseGfx& gfx) :
-        m_width(gfx.m_width),
-        m_height(gfx.m_height)
+    /* Constructs the graphic functionality. */
+    BaseGfx()
     {
     }
 
 private:
-
-    /* Default constructor not allowed. */
-    BaseGfx();
 
 };
 
