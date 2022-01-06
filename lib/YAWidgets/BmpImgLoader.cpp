@@ -32,9 +32,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "BmpImg.h"
-
-#include <YAColor.h>
+#include "BmpImgLoader.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -111,7 +109,7 @@ typedef enum
  * Public Methods
  *****************************************************************************/
 
-BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
+BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynamicBitmap& bitmap)
 {
     Ret     ret = RET_OK;
     File    fd  = fs.open(fileName);
@@ -160,10 +158,12 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
         }
         else
         {
-            m_width     = abs(dibHeader.imageWidth);
-            m_height    = abs(dibHeader.imageHeight);
+            uint16_t width  = abs(dibHeader.imageWidth);
+            uint16_t height = abs(dibHeader.imageHeight);
 
-            if (false == allocatePixels(m_width, m_height))
+            bitmap.release();
+
+            if (false == bitmap.create(width, height))
             {
                 ret = RET_IMG_TOO_BIG;
             }
@@ -171,8 +171,8 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
             {
                 uint32_t    pos             = 0;
                 uint32_t    rowSize         = 0;
-                uint16_t    x               = 0;
-                uint16_t    y               = 0;
+                int16_t    x                = 0;
+                int16_t    y                = 0;
                 bool        isTopToBottom   = false;
                 uint16_t    bytePerPixel    = dibHeader.bpp / 8;
 
@@ -180,7 +180,7 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
                  * The size of each row is rounded up to a multiple of 4 bytes
                  * (a 32-bit DWORD) by padding.
                  */
-                rowSize     =  (dibHeader.bpp * m_width + 31) / 32 * 4;
+                rowSize     =  (dibHeader.bpp * bitmap.getWidth() + 31) / 32 * 4;
 
                 /* ImageHeight is expressed as a negative number for top-down images. */
                 if (0 > dibHeader.imageHeight)
@@ -188,17 +188,17 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
                     isTopToBottom = true;
                 }
 
-                while((m_height > y) && (RET_OK == ret))
+                while((bitmap.getHeight() > y) && (RET_OK == ret))
                 {
                     x = 0;
 
-                    while((m_width > x) && (RET_OK == ret))
+                    while((bitmap.getWidth() > x) && (RET_OK == ret))
                     {
                         uint8_t lineBuffer[bytePerPixel];
 
                         if (false == isTopToBottom)
                         {
-                            pos = x * bytePerPixel + (m_height - y - 1) * rowSize;
+                            pos = x * bytePerPixel + (bitmap.getHeight() - y - 1) * rowSize;
                         }
                         else
                         {
@@ -215,11 +215,9 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
                         }
                         else
                         {
-                            Color& thisPixel = m_pixels[x + y * m_width];
+                            Color color(lineBuffer[2], lineBuffer[1], lineBuffer[0]);
 
-                            thisPixel.setBlue(lineBuffer[0]);
-                            thisPixel.setGreen(lineBuffer[1]);
-                            thisPixel.setRed(lineBuffer[2]);
+                            bitmap.drawPixel(x, y, color);
                         }
 
                         ++x;
@@ -235,7 +233,7 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
 
     if (RET_OK != ret)
     {
-        releasePixels();
+        bitmap.release();
     }
 
     return ret;
@@ -249,7 +247,7 @@ BmpImg::Ret BmpImg::load(FS& fs, const String& fileName)
  * Private Methods
  *****************************************************************************/
 
-bool BmpImg::loadBmpFileHeader(File& fd, BmpFileHeader& header)
+bool BmpImgLoader::loadBmpFileHeader(File& fd, BmpFileHeader& header)
 {
     bool isSuccessful = true;
 
@@ -261,7 +259,7 @@ bool BmpImg::loadBmpFileHeader(File& fd, BmpFileHeader& header)
     return isSuccessful;
 }
 
-bool BmpImg::loadDibHeader(File& fd, BmpV5Header& header)
+bool BmpImgLoader::loadDibHeader(File& fd, BmpV5Header& header)
 {
     bool isSuccessful = true;
 
@@ -271,40 +269,6 @@ bool BmpImg::loadDibHeader(File& fd, BmpV5Header& header)
     }
 
     return isSuccessful;
-}
-
-bool BmpImg::allocatePixels(uint16_t width, uint16_t height)
-{
-    bool isSuccessful = false;
-
-    if ((0U < width) &&
-        (0U < height))
-    {
-        releasePixels();
-
-        m_pixels = new Color[width * height];
-
-        if (nullptr != m_pixels)
-        {
-            m_width         = width;
-            m_height        = height;
-            isSuccessful    = true;
-        }
-    }
-
-    return isSuccessful;
-}
-
-void BmpImg::releasePixels()
-{
-    if (nullptr != m_pixels)
-    {
-        delete[] m_pixels;
-        m_pixels = nullptr;
-    }
-
-    m_width     = 0U;
-    m_height    = 0U;
 }
 
 /******************************************************************************

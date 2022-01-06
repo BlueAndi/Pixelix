@@ -48,7 +48,6 @@
 #include <SimpleTimer.hpp>
 
 #include "Widget.hpp"
-#include "BmpImg.h"
 #include "SpriteSheet.h"
 
 /******************************************************************************
@@ -71,7 +70,7 @@ public:
      */
     BitmapWidget() :
         Widget(WIDGET_TYPE),
-        m_image(),
+        m_bitmap(),
         m_spriteSheet(),
         m_timer(),
         m_duration(0U)
@@ -85,7 +84,7 @@ public:
      */
     BitmapWidget(const BitmapWidget& widget) :
         Widget(WIDGET_TYPE),
-        m_image(widget.m_image),
+        m_bitmap(widget.m_bitmap),
         m_spriteSheet(widget.m_spriteSheet),
         m_timer(widget.m_timer),
         m_duration(widget.m_duration)
@@ -107,41 +106,31 @@ public:
     BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
-     * Set a new bitmap by copying the ext. bitmap buffer.
+     * Set a bitmap.
      *
-     * @param[in] bitmap    Ext. bitmap buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
+     * @param[in] bitmap    Bitmap
      */
-    void set(const Color* bitmap, uint16_t width, uint16_t height);
+    void set(const YAGfxBitmap& bitmap)
+    {
+        if (true == m_bitmap.create(bitmap.getWidth(), bitmap.getHeight()))
+        {
+            m_bitmap.copy(bitmap);
+        }
+
+        /* Release sprite sheet to avoid wasting memory. The widget can
+         * only show one of them.
+         */
+        m_spriteSheet.release();
+    }
 
     /**
-     * Get the bitmap buffer.
+     * Get the bitmap.
      *
-     * @param[out] width    Bitmap width in pixel
-     * @param[out] height   Bitmap height in pixel
-     *
-     * @return Bitmap buffer
+     * @return Bitmap
      */
-    const Color* get(uint16_t& width, uint16_t& height) const
+    const YAGfxBitmap& get() const
     {
-        const Color*    buffer = nullptr;
-
-        /* Bitmap image loaded or sprite sheet? */
-        if (false == m_image.isEmpty())
-        {
-            width   = m_image.getWidth();
-            height  = m_image.getHeight();
-            buffer  = m_image.get();
-        }
-        else
-        {
-            width   = m_spriteSheet.getFrameWidth();
-            height  = m_spriteSheet.getFrameHeight();
-            buffer  = m_spriteSheet.getFrame();
-        }
-
-        return buffer;
+        return m_bitmap;
     }
 
     /**
@@ -171,10 +160,10 @@ public:
 
 private:
 
-    BmpImg      m_image;        /**< The bitmap image may contain one single image or a texture for the sprite sheet. */
-    SpriteSheet m_spriteSheet;  /**< Sprite sheet for animation with texture. */
-    SimpleTimer m_timer;        /**< Timer used for sprite sheet. */
-    uint32_t    m_duration;     /**< Duration of one frame in ms. */
+    YAGfxDynamicBitmap  m_bitmap;       /**< Bitmap image which is shown if no sprite sheet is loaded. */
+    SpriteSheet         m_spriteSheet;  /**< Sprite sheet for animation with texture. */
+    SimpleTimer         m_timer;        /**< Timer used for sprite sheet. */
+    uint32_t            m_duration;     /**< Duration of one frame in ms. */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -183,13 +172,13 @@ private:
      */
     void paint(YAGfx& gfx) override
     {
-        if (false == m_image.isEmpty())
+        if (true == m_spriteSheet.isEmpty())
         {
-            gfx.drawBitmap(m_posX, m_posY, m_image.get(), m_image.getWidth(), m_image.getHeight());
+            gfx.drawBitmap(m_posX, m_posY, m_bitmap);
         }
-        else if (false == m_spriteSheet.isEmpty())
+        else
         {
-            gfx.drawBitmap(m_posX, m_posY, m_spriteSheet.getFrame(), m_spriteSheet.getFrameWidth(), m_spriteSheet.getFrameHeight());
+            gfx.drawBitmap(m_posX, m_posY, m_spriteSheet.getFrame());
 
             /* If timer is not running, start it. */
             if (false == m_timer.isTimerRunning())
@@ -207,10 +196,6 @@ private:
                 /* Nothing to do. */
                 ;
             }
-        }
-        else
-        {
-            m_timer.stop();
         }
 
         return;

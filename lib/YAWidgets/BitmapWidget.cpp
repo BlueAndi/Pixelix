@@ -36,7 +36,7 @@
 
 #include <YAColor.h>
 #include <Logging.h>
-#include <BmpImg.h>
+#include <BmpImgLoader.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -71,25 +71,13 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     {
         Widget::operator=(widget);
         
-        m_image         = widget.m_image;
+        m_bitmap        = widget.m_bitmap;
         m_spriteSheet   = widget.m_spriteSheet;
         m_timer         = widget.m_timer;
         m_duration      = widget.m_duration;
     }
 
     return *this;
-}
-
-void BitmapWidget::set(const Color* bitmap, uint16_t width, uint16_t height)
-{
-    m_image.copy(bitmap, width, height);
-
-    /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
-     * shall be shown or the single bitmap image.
-     */
-    m_spriteSheet.release();
-
-    return;
 }
 
 bool BitmapWidget::load(FS& fs, const String& filename)
@@ -102,23 +90,24 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
     else
     {
-        BmpImg::Ret ret = m_image.load(fs, filename);
+        BmpImgLoader        loader;
+        BmpImgLoader::Ret   ret = loader.load(fs, filename, m_bitmap);
 
-        if (BmpImg::RET_OK != ret)
+        if (BmpImgLoader::RET_OK != ret)
         {
-            if (BmpImg::RET_FILE_NOT_FOUND == ret)
+            if (BmpImgLoader::RET_FILE_NOT_FOUND == ret)
             {
                 LOG_ERROR("Failed to open file %s.", filename.c_str());
             }
-            else if (BmpImg::RET_FILE_FORMAT_INVALID == ret)
+            else if (BmpImgLoader::RET_FILE_FORMAT_INVALID == ret)
             {
                 LOG_ERROR("File %s has invalid format.", filename.c_str());
             }
-            else if (BmpImg::RET_FILE_FORMAT_UNSUPPORTED == ret)
+            else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
             {
                 LOG_ERROR("File %s has unsupported format.", filename.c_str());
             }
-            else if (BmpImg::RET_FILE_FORMAT_UNSUPPORTED == ret)
+            else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
             {
                 LOG_ERROR("File %s is too big.", filename.c_str());
             }
@@ -133,6 +122,7 @@ bool BitmapWidget::load(FS& fs, const String& filename)
              * shall be shown or the single bitmap image.
              */
             m_spriteSheet.release();
+            m_timer.stop();
 
             isSuccessful = true;
         }
@@ -161,7 +151,7 @@ bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, co
         /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
          * shall be shown or the single bitmap image.
          */
-        m_image.release();        
+        m_bitmap.release();        
 
         isSuccessful = true;
     }

@@ -25,14 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Canvas
+ * @brief  Widget group
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Canvas.h"
+#include "WidgetGroup.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -54,8 +54,8 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize canvas widget type. */
-const char* Canvas::WIDGET_TYPE = "canvas";
+/* Initialize group widget type. */
+const char* WidgetGroup::WIDGET_TYPE = "widgetGroup";
 
 /******************************************************************************
  * Public Methods

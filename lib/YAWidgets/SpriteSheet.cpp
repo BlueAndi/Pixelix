@@ -35,6 +35,7 @@
 #include "SpriteSheet.h"
 
 #include <ArduinoJson.h>
+#include <BmpImgLoader.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -64,14 +65,15 @@ SpriteSheet& SpriteSheet::operator=(const SpriteSheet& spriteSheet)
 {
     if (this != (&spriteSheet))
     {
-        copyFrames(spriteSheet.m_frames, spriteSheet.m_frameCnt);
-
-        m_frames            = m_frames; /* cppcheck-suppress selfAssignment */
-        m_frameCnt          = spriteSheet.m_frameCnt;
-        m_frameWidth        = spriteSheet.m_frameWidth;
-        m_frameHeight       = spriteSheet.m_frameHeight;
-        m_fps               = spriteSheet.m_fps;
-        m_currentFrameIdx   = spriteSheet.m_currentFrameIdx;
+        m_texture       = spriteSheet.m_texture;
+        m_textureMap    = spriteSheet.m_textureMap;
+        m_frame         = spriteSheet.m_frame;
+        m_frameCnt      = spriteSheet.m_frameCnt;
+        m_fps           = spriteSheet.m_fps;
+        m_framesX       = spriteSheet.m_framesX;
+        m_framesY       = spriteSheet.m_framesY;
+        m_currentFrameX = spriteSheet.m_currentFrameX;
+        m_currentFrameY = spriteSheet.m_currentFrameY;
     }
 
     return *this;
@@ -87,54 +89,43 @@ bool SpriteSheet::loadTexture(FS& fs, const String& fileName, uint16_t frameWidt
     if ((0U < frameWidth) &&
         (0U < frameHeight))
     {
-        BmpImg  texture;
+        BmpImgLoader loader;
 
-        if (BmpImg::RET_OK == texture.load(fs, fileName))
+        if (BmpImgLoader::RET_OK == loader.load(fs, fileName, m_texture))
         {
             /* The frame size must be lower or equal to the texture size. */
-            if ((texture.getWidth() >= frameWidth) &&
-                (texture.getHeight() >= frameHeight))
+            if ((m_texture.getWidth() >= frameWidth) &&
+                (m_texture.getHeight() >= frameHeight))
             {
-                uint8_t frameCntX   = texture.getWidth() / frameWidth;
-                uint8_t frameCntY   = texture.getHeight() / frameHeight;
+                m_framesX   = m_texture.getWidth() / frameWidth;
+                m_framesY   = m_texture.getHeight() / frameHeight;
 
                 /* A 0 number of frames requests the automatic frame count calculation.
                  * This assumes that there will be no frame gaps in the texture image.
                  */
                 if (0U == frameCnt)
                 {
-                    frameCnt = frameCntX * frameCntY;
+                    m_frameCnt = m_framesX * m_framesY;
                 }
-
-                if (true == allocateFrames(frameCnt))
+                else
                 {
-                    uint8_t frameIdxX       = 0U;
-                    uint8_t frameIdxY       = 0U;
-                    uint8_t frameIdxTotal   = 0U;
-
-                    m_frameCnt          = frameCnt;
-                    m_frameWidth        = frameWidth;
-                    m_frameHeight       = frameHeight;
-                    m_fps               = fps;
-                    m_currentFrameIdx   = 0U;
-
-                    /* Copy each frame in the texture and keep them as single frames. */
-                    while((frameCntY > frameIdxY) && (m_frameCnt > frameIdxTotal))
-                    {
-                        frameIdxX = 0U;
-                        while((frameCntX > frameIdxX) && (m_frameCnt > frameIdxTotal))
-                        {
-                            m_frames[frameIdxTotal].copy(texture, frameIdxX * m_frameWidth, frameIdxY * m_frameHeight, m_frameWidth, m_frameHeight);
-
-                            ++frameIdxX;
-                            ++frameIdxTotal;
-                        }
-
-                        ++frameIdxY;
-                    }
-
-                    isSuccessful = true;
+                    m_frameCnt = frameCnt;
                 }
+
+                m_textureMap.setOffsetX(0);
+                m_textureMap.setOffsetY(0);
+                m_textureMap.setWidth(frameWidth);
+                m_textureMap.setHeight(frameHeight);
+
+                m_fps           = fps;
+                m_currentFrameX = 0U;
+                m_currentFrameY = 0U;
+
+                isSuccessful = true;
+            }
+            else
+            {
+                m_texture.release();
             }
         }
     }
@@ -191,12 +182,32 @@ bool SpriteSheet::load(FS& fs, const String& spriteSheetFileName, const String& 
 
 void SpriteSheet::next()
 {
-    ++m_currentFrameIdx;
+    ++m_currentFrameX;
 
-    if (m_frameCnt <= m_currentFrameIdx)
+    if (m_framesX <= m_currentFrameX)
     {
-        m_currentFrameIdx = 0U;
+        m_currentFrameX = 0U;
+
+        ++m_currentFrameY;
+
+        if (m_framesY <= m_currentFrameY)
+        {
+            m_currentFrameY = 0U;
+        }
     }
+
+    /* The texture may be not complete filled with frames.
+     * This will be considered here.
+     */
+    if (m_frameCnt < (m_currentFrameX + m_currentFrameY * m_framesX))
+    {
+        m_currentFrameX = 0U;
+        m_currentFrameY = 0U;
+    }
+
+    /* Calculate and set the frame offset in the texture image. */
+    m_textureMap.setOffsetX(m_currentFrameX * m_frame.getWidth());
+    m_textureMap.setOffsetY(m_currentFrameY * m_frame.getHeight());
 }
 
 /******************************************************************************

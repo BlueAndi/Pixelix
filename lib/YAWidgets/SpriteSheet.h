@@ -44,8 +44,9 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-
-#include "BmpImg.h"
+#include <YAGfxMap.h>
+#include <YAGfxBitmap.h>
+#include <FS.h>
 
 /******************************************************************************
  * Macros
@@ -73,12 +74,15 @@ public:
      * Constructs a sprite sheet, without texture image.
      */
     SpriteSheet() :
-        m_frames(nullptr),
+        m_texture(),
+        m_textureMap(m_texture),
+        m_frame(m_textureMap),
         m_frameCnt(0U),
-        m_frameWidth(0U),
-        m_frameHeight(0U),
         m_fps(DEFAULT_FPS),
-        m_currentFrameIdx(0U)
+        m_framesX(0U),
+        m_framesY(0U),
+        m_currentFrameX(0U),
+        m_currentFrameY(0U)
     {
     }
 
@@ -88,14 +92,16 @@ public:
      * @param[in] spriteSheet   The sprite sheet, which to copy from.
      */
     SpriteSheet(const SpriteSheet& spriteSheet) :
-        m_frames(nullptr),
+        m_texture(spriteSheet.m_texture),
+        m_textureMap(spriteSheet.m_textureMap),
+        m_frame(spriteSheet.m_frame),
         m_frameCnt(spriteSheet.m_frameCnt),
-        m_frameWidth(spriteSheet.m_frameWidth),
-        m_frameHeight(spriteSheet.m_frameHeight),
         m_fps(spriteSheet.m_fps),
-        m_currentFrameIdx(spriteSheet.m_currentFrameIdx)
+        m_framesX(spriteSheet.m_framesX),
+        m_framesY(spriteSheet.m_framesY),
+        m_currentFrameX(spriteSheet.m_currentFrameX),
+        m_currentFrameY(spriteSheet.m_currentFrameY)
     {
-        copyFrames(spriteSheet.m_frames, spriteSheet.m_frameCnt);
     }
 
     /**
@@ -103,7 +109,6 @@ public:
      */
     ~SpriteSheet()
     {
-        releaseFrames();
     }
 
     /**
@@ -144,7 +149,7 @@ public:
      */
     uint16_t getFrameWidth() const
     {
-        return m_frameWidth;
+        return m_frame.getWidth();
     }
 
     /**
@@ -154,25 +159,17 @@ public:
      */
     uint16_t getFrameHeight() const
     {
-        return m_frameHeight;
+        return m_frame.getHeight();
     }
 
     /**
-     * Get current selected frame as color buffer. Or in other words, get current selected sprite
-     * out of the sprite sheet.
+     * @brief Get the Frame object
      * 
-     * @return If no texture image is available, it will return nullptr otherwise the frame buffer.
+     * @return YAGfxBitmap& 
      */
-    const Color* getFrame() const
+    const YAGfxBitmap& getFrame() const
     {
-        const Color*    frameBuffer = nullptr;
-
-        if (nullptr != m_frames)
-        {
-            frameBuffer = m_frames[m_currentFrameIdx].get();
-        }
-
-        return frameBuffer;
+        return m_frame;
     }
 
     /**
@@ -206,11 +203,11 @@ public:
     void next();
 
     /**
-     * Release the internal frame buffers.
+     * Release the internal pixel buffer with texture.
      */
     void release()
     {
-        releaseFrames();
+        m_texture.release();
     }
 
     /**
@@ -220,7 +217,7 @@ public:
      */
     bool isEmpty() const
     {
-        return (nullptr == m_frames);
+        return !m_texture.isAllocated();
     }
 
 private:
@@ -230,72 +227,15 @@ private:
      */
     static const uint8_t    DEFAULT_FPS = 12U;
 
-    BmpImg*     m_frames;           /**< Array of frames, derived from a texture image. */
-    uint8_t     m_frameCnt;         /**< Number of frames in the texture. */
-    uint16_t    m_frameWidth;       /**< Width in pixels of a frame, which contains one sprite. */
-    uint16_t    m_frameHeight;      /**< Height in pixels of a frame, which contains one sprite. */
-    uint8_t     m_fps;              /**< Number of frames per second. */
-    uint8_t     m_currentFrameIdx;  /**< Index of the current selected frame. */
-    
-    /**
-     * Copy all source frames.
-     * 
-     * @param[in] frames    Source frames
-     * @param[in] cnt       Number of frames
-     */
-    void copyFrames(BmpImg* frames, uint8_t cnt)
-    {
-        if (true == allocateFrames(cnt))
-        {
-            uint8_t idx = 0U;
-
-            while(cnt > idx)
-            {
-                m_frames[idx] = frames[idx];
-
-                ++idx;
-            }
-        }
-    }
-
-    /**
-     * Allocate frames. If frames already allocated, they will be released.
-     * 
-     * @param[in] frameCnt  Number of frames to allocate.
-     * 
-     * @return If successful, it will return true otherwise false.
-     */
-    bool allocateFrames(uint8_t frameCnt)
-    {
-        bool isSuccessful = false;
-
-        releaseFrames();
-
-        m_frames = new BmpImg[frameCnt];
-
-        if (nullptr != m_frames)
-        {
-            m_frameCnt = frameCnt;
-            isSuccessful = true;
-        }
-
-        return isSuccessful;
-    }
-
-    /**
-     * Release all frames.
-     * If no frames are allocated, nothing will happen.
-     */
-    void releaseFrames()
-    {
-        if (nullptr != m_frames)
-        {
-            delete[] m_frames;
-
-            m_frames    = nullptr;
-            m_frameCnt  = 0U;
-        }
-    }
+    YAGfxDynamicBitmap  m_texture;          /**< Texture image. */
+    YAGfxMap            m_textureMap;       /**< Map canvas over the texture image. */
+    YAGfxOverlayBitmap  m_frame;            /**< The current frame. */
+    uint8_t             m_frameCnt;         /**< Number of frames in the texture. */
+    uint8_t             m_fps;              /**< Number of frames per second. */
+    uint8_t             m_framesX;          /**< Number of frames on texture x-axis. */
+    uint8_t             m_framesY;          /**< Number of frames on texture y-axis. */
+    uint8_t             m_currentFrameX;    /**< x index of current selected frame. */
+    uint8_t             m_currentFrameY;    /**< y index of current selected frame. */
 };
 
 /******************************************************************************
