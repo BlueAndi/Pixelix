@@ -88,23 +88,23 @@ public:
      * Achieves a fade in effect. Call this method as long as the effect is not completed.
      *
      * @param[in] gfx   Graphics interface to display
-     * @param[in] prev  Graphics interface to previous framebuffer
-     * @param[in] next  Graphics interface to next framebuffer
+     * @param[in] prev  Previous framebuffer
+     * @param[in] next  Next framebuffer
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next) final;
+    bool fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next) final;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
      *
      * @param[in] gfx   Graphics interface to display
-     * @param[in] prev  Graphics interface to previous framebuffer
-     * @param[in] next  Graphics interface to next framebuffer
+     * @param[in] prev  Previous framebuffer
+     * @param[in] next  Next framebuffer
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    bool fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next) final;
+    bool fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next) final;
 
 private:
 

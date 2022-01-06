@@ -63,7 +63,7 @@ void FadeMoveY::init()
     m_state = FADE_STATE_INIT;
 }
 
-bool FadeMoveY::fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next)
+bool FadeMoveY::fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 {
     (void)prev;
 
@@ -72,7 +72,7 @@ bool FadeMoveY::fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next)
     return true;
 }
 
-bool FadeMoveY::fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next)
+bool FadeMoveY::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 {
     bool    isFinished  = false;
     int16_t x           = 0;
