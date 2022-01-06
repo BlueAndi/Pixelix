@@ -97,12 +97,12 @@ public:
      */
     void show() final
     {
-        int32_t x = 0U;
-        int32_t y = 0U;
+        int32_t x = 0;
+        int32_t y = 0;
 
-        for(y = 0U; y < MATRIX_HEIGHT; ++y)
+        for(y = 0; y < MATRIX_HEIGHT; ++y)
         {
-            for(x = 0U; x < MATRIX_WIDTH; ++x)
+            for(x = 0; x < MATRIX_WIDTH; ++x)
             {
                 Color       brightnessAdjustedColor = m_ledMatrix.getColor(x, y);
                 uint16_t    intensity               = brightnessAdjustedColor.getIntensity();

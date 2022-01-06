@@ -67,21 +67,15 @@
  *****************************************************************************/
 
 Display::Display() :
-    IDisplay(Board::LedMatrix::width, Board::LedMatrix::height),
+    IDisplay(),
     m_strip(Board::LedMatrix::width * Board::LedMatrix::height, Board::Pin::ledMatrixDataOutPinNo),
-    m_topo(Board::LedMatrix::width, Board::LedMatrix::height)
+    m_topo(Board::LedMatrix::width, Board::LedMatrix::height),
+    m_ledMatrix()
 {
 }
 
 Display::~Display()
 {
-}
-
-Color Display::getColor(int16_t x, int16_t y) const
-{
-    HtmlColor htmlColor = m_strip.GetPixelColor(m_topo.Map(x, y));
-
-    return Color(htmlColor.Color);
 }
 
 /******************************************************************************
