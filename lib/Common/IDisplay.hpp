@@ -64,7 +64,7 @@ public:
     /**
      * Destroys the display interface.
      */
-    ~IDisplay()
+    virtual ~IDisplay()
     {
     }
 
@@ -105,19 +105,13 @@ protected:
 
     /**
      * Constructs the display interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
      */
-    IDisplay(uint16_t width, uint16_t height) :
-        YAGfx(width, height)
+    IDisplay() :
+        YAGfx()
     {
     }
 
 private:
-
-    /* Don't allow standard constructor. */
-    IDisplay();
 
 };
 

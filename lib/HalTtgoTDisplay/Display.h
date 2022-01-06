@@ -47,6 +47,7 @@
 #include <IDisplay.hpp>
 #include <ColorDef.hpp>
 #include <TFT_eSPI.h>
+#include <YAGfxBitmap.h>
 
 #include "Board.h"
 
@@ -103,7 +104,7 @@ public:
         {
             for(x = 0U; x < MATRIX_WIDTH; ++x)
             {
-                Color       brightnessAdjustedColor = m_ledMatrix[x][y];
+                Color       brightnessAdjustedColor = m_ledMatrix.getColor(x, y);
                 uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
 
                 intensity *= (static_cast<uint16_t>(m_brightness) + 1U);
@@ -150,20 +151,30 @@ public:
      */
     void clear() final
     {
-        uint8_t x = 0U;
-        uint8_t y = 0U;
-
         m_tft.fillScreen(TFT_BLACK);
-
-        for(y = 0U; y < MATRIX_HEIGHT; ++y)
-        {
-            for(x = 0U; x < MATRIX_WIDTH; ++x)
-            {
-                m_ledMatrix[x][y] = ColorDef::BLACK;
-            }
-        }
+        m_ledMatrix.fillScreen(ColorDef::BLACK);
 
         return;
+    }
+
+    /**
+     * Get width in pixel.
+     *
+     * @return Canvas width in pixel
+     */
+    uint16_t getWidth() const final
+    {
+        return m_ledMatrix.getWidth();
+    }
+
+    /**
+     * Get height in pixel.
+     *
+     * @return Canvas height in pixel
+     */
+    uint16_t getHeight() const final
+    {
+        return m_ledMatrix.getHeight();
     }
 
     /**
@@ -174,7 +185,23 @@ public:
      *
      * @return Color in RGB888 format.
      */
-    Color getColor(int16_t x, int16_t y) const final;
+    Color& getColor(int16_t x, int16_t y) final
+    {
+        return m_ledMatrix.getColor(x, y);
+    }
+
+    /**
+     * Get pixel color at given position.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     *
+     * @return Color in RGB888 format.
+     */
+    const Color& getColor(int16_t x, int16_t y) const final
+    {
+        return m_ledMatrix.getColor(x, y);
+    }
 
 private:
 
@@ -199,9 +226,9 @@ private:
     /** T-Display y-axis border size in T-Display pixels */
     static const int32_t    BORDER_Y        = (TFT_WIDTH - (MATRIX_HEIGHT * (PIXEL_HEIGHT + PiXEL_DISTANCE))) / 2;
 
-    TFT_eSPI    m_tft;                                      /**< T-Display driver */
-    Color       m_ledMatrix[MATRIX_WIDTH][MATRIX_HEIGHT];   /**< Simulated LED matrix framebuffer */
-    uint8_t     m_brightness;                               /**< Display brightness [0; 255] value. 255 = max. brightness. */
+    TFT_eSPI                                        m_tft;          /**< T-Display driver */
+    YAGfxStaticBitmap<MATRIX_WIDTH, MATRIX_HEIGHT>  m_ledMatrix;    /**< Simulated LED matrix framebuffer */
+    uint8_t                                         m_brightness;   /**< Display brightness [0; 255] value. 255 = max. brightness. */
 
     /**
      * Construct display.
@@ -225,38 +252,7 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, const Color& color) final
     {
-        if ((0 <= x) &&
-            (MATRIX_WIDTH > x) &&
-            (0 <= y) &&
-            (MATRIX_HEIGHT > y))
-        {
-            m_ledMatrix[x][y] = color;
-        }
-
-        return;
-    }
-
-    /**
-     * Dim color to black.
-     * A dim ratio of 0 means no change.
-     * 
-     * Note, the base colors may be destroyed, depends on the color type.
-     *
-     * @param[in] x     x-coordinate
-     * @param[in] y     y-coordinate
-     * @param[in] ratio Dim ratio [0; 255]
-     */
-    void dimPixel(int16_t x, int16_t y, uint8_t ratio) final
-    {
-        if ((0 <= x) &&
-            (MATRIX_WIDTH > x) &&
-            (0 <= y) &&
-            (MATRIX_HEIGHT > y))
-        {
-            m_ledMatrix[x][y].setIntensity(UINT8_MAX - ratio);
-        }
-
-        return;
+        m_ledMatrix.drawPixel(x, y, color);
     }
 };
 
