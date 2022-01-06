@@ -39,7 +39,7 @@
 #include "TestDoublyLinkedList.h"
 #include "TestGfxText.h"
 #include "TestWidget.h"
-#include "TestCanvas.h"
+#include "TestWidgetGroup.h"
 #include "TestLampWidget.h"
 #include "TestBitmapWidget.h"
 #include "TestTextWidget.h"
@@ -49,7 +49,7 @@
 #include "TestProgressBar.h"
 #include "TestLogging.h"
 #include "TestUtil.h"
-#include "TestBmpImg.h"
+#include "TestBmpImgLoader.h"
 
 /******************************************************************************
  * Macros
@@ -88,9 +88,9 @@ int main(int argc, char **argv)
     RUN_TEST(testGfx);
     RUN_TEST(testGfxText);
     RUN_TEST(testWidget);
-    RUN_TEST(testCanvas);
+    RUN_TEST(testWidgetGroup);
     RUN_TEST(testLampWidget);
-    RUN_TEST(testBmpImg);
+    RUN_TEST(testBmpImgLoader);
     RUN_TEST(testBitmapWidget);
     RUN_TEST(testTextWidget);
     RUN_TEST(testColor);

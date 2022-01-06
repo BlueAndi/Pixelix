@@ -76,11 +76,11 @@
 extern void testGfx()
 {
     TestGfx     testGfx;
-    const Color COLOR       = 0x1234;
-    uint16_t    width       = 0U;
-    uint16_t    height      = 0U;
-    Color       color       = 0U;
-    Color       bitmap[TestGfx::WIDTH * TestGfx::HEIGHT];
+    const Color COLOR   = 0x1234;
+    int16_t     x       = 0;
+    int16_t     y       = 0;
+    Color       color   = 0U;
+    YAGfxStaticBitmap<TestGfx::WIDTH, TestGfx::HEIGHT>  bitmap;
 
     /* Verify screen size */
     TEST_ASSERT_EQUAL_UINT16(TestGfx::WIDTH, testGfx.getWidth());
@@ -154,21 +154,21 @@ extern void testGfx()
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestGfx::WIDTH, TestGfx::HEIGHT, 0U));
 
     /* Test drawing a bitmap. */
-    for(height = 0U; height < TestGfx::HEIGHT; ++height)
+    for(y = 0; y < TestGfx::HEIGHT; ++y)
     {
-        for(width = 0U; width < TestGfx::WIDTH; ++width)
+        for(x = 0U; x < TestGfx::WIDTH; ++x)
         {
-            bitmap[width + height * TestGfx::WIDTH] = rand() % 0xFFFFU;
+            bitmap.drawPixel(x, y, rand() % 0xFFFFU);
         }
     }
 
-    testGfx.drawBitmap(0, 0, bitmap, TestGfx::WIDTH, TestGfx::HEIGHT);
+    testGfx.drawBitmap(0, 0, bitmap);
 
-    for(height = 0U; height < TestGfx::HEIGHT; ++height)
+    for(y = 0U; y < TestGfx::HEIGHT; ++y)
     {
-        for(width = 0U; width < TestGfx::WIDTH; ++width)
+        for(x = 0U; x < TestGfx::WIDTH; ++x)
         {
-            TEST_ASSERT_EQUAL_UINT16(bitmap[width + height * TestGfx::WIDTH], testGfx.getColor(width, height));
+            TEST_ASSERT_EQUAL_UINT16(bitmap.getColor(x, y), testGfx.getColor(x, y));
         }
     }
 

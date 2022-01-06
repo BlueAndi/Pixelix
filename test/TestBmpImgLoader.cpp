@@ -32,12 +32,13 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "TestBmpImg.h"
+#include "TestBmpImgLoader.h"
 #include "TestGfx.h"
 
 #include <unity.h>
 #include <FS.h>
-#include <BmpImg.h>
+#include <BmpImgLoader.h>
+#include <YAGfxBitmap.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -78,14 +79,11 @@
 /**
  * Test bitmap image loader.
  */
-extern void testBmpImg()
+extern void testBmpImgLoader()
 {
-    BmpImg  image;
-    FS      localFileSystem;
-
-    /* If no image is loaded, width and height shall be 0. */
-    TEST_ASSERT_EQUAL_UINT16(0, image.getWidth());
-    TEST_ASSERT_EQUAL_UINT16(0, image.getHeight());
+    BmpImgLoader        loader;
+    YAGfxDynamicBitmap  bitmap;
+    FS                  localFileSystem;
 
     /* Load test image:
      * 2x2 pixels
@@ -96,17 +94,13 @@ extern void testBmpImg()
      * 24 bpp, no compression
      * No color palette
      */
-    TEST_ASSERT_EQUAL(BmpImg::RET_OK, image.load(localFileSystem, "./test/test24bpp.bmp"));
-    TEST_ASSERT_EQUAL_UINT16(2, image.getWidth());
-    TEST_ASSERT_EQUAL_UINT16(2, image.getHeight());
-    TEST_ASSERT_NOT_EQUAL(nullptr, image.get(0, 0));
-    TEST_ASSERT_EQUAL_UINT32(0x0000ff, *image.get(0, 0));
-    TEST_ASSERT_NOT_EQUAL(nullptr, image.get(1, 0));
-    TEST_ASSERT_EQUAL_UINT32(0x00ff00, *image.get(1, 0));
-    TEST_ASSERT_NOT_EQUAL(nullptr, image.get(0, 1));
-    TEST_ASSERT_EQUAL_UINT32(0xff0000, *image.get(0, 1));
-    TEST_ASSERT_NOT_EQUAL(nullptr, image.get(1, 1));
-    TEST_ASSERT_EQUAL_UINT32(0xffffff, *image.get(1, 1));
+    TEST_ASSERT_EQUAL(BmpImgLoader::RET_OK, loader.load(localFileSystem, "./test/test24bpp.bmp", bitmap));
+    TEST_ASSERT_EQUAL_UINT16(2, bitmap.getWidth());
+    TEST_ASSERT_EQUAL_UINT16(2, bitmap.getHeight());
+    TEST_ASSERT_EQUAL_UINT32(0x0000ff, bitmap.getColor(0, 0));
+    TEST_ASSERT_EQUAL_UINT32(0x00ff00, bitmap.getColor(1, 0));
+    TEST_ASSERT_EQUAL_UINT32(0xff0000, bitmap.getColor(0, 1));
+    TEST_ASSERT_EQUAL_UINT32(0xffffff, bitmap.getColor(1, 1));
 
     /* Load test image:
      * 2x2 pixels
@@ -117,47 +111,13 @@ extern void testBmpImg()
      * 32 bpp, bitfield (not supported)
      * No color palette
      */
-    TEST_ASSERT_EQUAL(BmpImg::RET_FILE_FORMAT_UNSUPPORTED, image.load(localFileSystem, "./test/test32bpp.bmp"));
-    TEST_ASSERT_EQUAL(nullptr, image.get());
-    TEST_ASSERT_EQUAL_UINT16(0, image.getWidth());
-    TEST_ASSERT_EQUAL_UINT16(0, image.getHeight());
+    TEST_ASSERT_EQUAL(BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED, loader.load(localFileSystem, "./test/test32bpp.bmp", bitmap));
+    TEST_ASSERT_FALSE(bitmap.isAllocated());
+    TEST_ASSERT_EQUAL_UINT16(0, bitmap.getWidth());
+    TEST_ASSERT_EQUAL_UINT16(0, bitmap.getHeight());
 
     /* Load valid bitmap file. */
-    TEST_ASSERT_EQUAL(BmpImg::RET_OK, image.load(localFileSystem, "./test/test24bpp.bmp"));
-
-    /* Construct bitmap image by copy. */
-    {
-        BmpImg  newImage(image);
-
-        TEST_ASSERT_EQUAL_UINT16(2, newImage.getWidth());
-        TEST_ASSERT_EQUAL_UINT16(2, newImage.getHeight());
-        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(0, 0));
-        TEST_ASSERT_EQUAL_UINT32(0x0000ff, *newImage.get(0, 0));
-        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(1, 0));
-        TEST_ASSERT_EQUAL_UINT32(0x00ff00, *newImage.get(1, 0));
-        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(0, 1));
-        TEST_ASSERT_EQUAL_UINT32(0xff0000, *newImage.get(0, 1));
-        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(1, 1));
-        TEST_ASSERT_EQUAL_UINT32(0xffffff, *newImage.get(1, 1));
-    }
-
-    /* Assign bitmap image. */
-    {
-        BmpImg  newImage;
-
-        newImage = image;
-
-        TEST_ASSERT_EQUAL_UINT16(2, newImage.getWidth());
-        TEST_ASSERT_EQUAL_UINT16(2, newImage.getHeight());
-        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(0, 0));
-        TEST_ASSERT_EQUAL_UINT32(0x0000ff, *newImage.get(0, 0));
-        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(1, 0));
-        TEST_ASSERT_EQUAL_UINT32(0x00ff00, *newImage.get(1, 0));
-        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(0, 1));
-        TEST_ASSERT_EQUAL_UINT32(0xff0000, *newImage.get(0, 1));
-        TEST_ASSERT_NOT_EQUAL(nullptr, newImage.get(1, 1));
-        TEST_ASSERT_EQUAL_UINT32(0xffffff, *newImage.get(1, 1));
-    }
+    TEST_ASSERT_EQUAL(BmpImgLoader::RET_OK, loader.load(localFileSystem, "./test/test24bpp.bmp", bitmap));
 
     return;
 }

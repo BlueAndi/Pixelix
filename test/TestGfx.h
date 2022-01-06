@@ -47,6 +47,7 @@
 #include <stdio.h>
 #include <Util.h>
 #include <YAGfx.h>
+#include <YAGfxBitmap.h>
 
 /******************************************************************************
  * Macros
@@ -68,7 +69,7 @@ public:
      * Constructs a graphic interface for testing purposes.
      */
     TestGfx() :
-        YAGfx(WIDTH, HEIGHT),
+        YAGfx(),
         m_buffer(),
         m_callCounterDrawPixel(0U)
     {
@@ -88,6 +89,26 @@ public:
     }
 
     /**
+     * Get with in pixels.
+     * 
+     * @return Width in pixels
+     */
+    uint16_t getWidth() const final
+    {
+        return WIDTH;
+    }
+
+    /**
+     * Get height in pixels.
+     * 
+     * @return Height in pixels
+     */
+    uint16_t getHeight() const final
+    {
+        return HEIGHT;
+    }
+
+    /**
      * Get pixel color at given position.
      *
      * @param[in] x x-coordinate
@@ -95,7 +116,26 @@ public:
      *
      * @return Color in RGB888 format.
      */
-    Color getColor(int16_t x, int16_t y) const final
+    Color& getColor(int16_t x, int16_t y) final
+    {
+        /* Out of bounds check */
+        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
+        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, y);
+        TEST_ASSERT_LESS_OR_EQUAL_INT16(WIDTH, x);
+        TEST_ASSERT_LESS_OR_EQUAL_INT16(HEIGHT, y);
+
+        return m_buffer[x + y * WIDTH];
+    }
+
+    /**
+     * Get pixel color at given position.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     *
+     * @return Color in RGB888 format.
+     */
+    const Color& getColor(int16_t x, int16_t y) const final
     {
         /* Out of bounds check */
         TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
@@ -133,29 +173,6 @@ public:
         m_buffer[x + y * WIDTH] = color;
 
         ++m_callCounterDrawPixel;
-
-        return;
-    }
-
-    /**
-     * Dim color to black.
-     * A dim ratio of 255 means no change.
-     * 
-     * Note, the base colors may be destroyed, depends on the color type.
-     *
-     * @param[in] x     x-coordinate
-     * @param[in] y     y-coordinate
-     * @param[in] ratio Dim ration [0; 255]
-     */
-    void dimPixel(int16_t x, int16_t y, uint8_t ratio) final
-    {
-        /* Out of bounds check */
-        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, x);
-        TEST_ASSERT_GREATER_OR_EQUAL_INT16(0, y);
-        TEST_ASSERT_LESS_OR_EQUAL_INT16(WIDTH, x);
-        TEST_ASSERT_LESS_OR_EQUAL_INT16(HEIGHT, y);
-
-        m_buffer[x + y * WIDTH].setIntensity(ratio);
 
         return;
     }

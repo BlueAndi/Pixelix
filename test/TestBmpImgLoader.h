@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Canvas tests.
+ * @brief  Test bitmap image loader.
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup common
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TEST_CANVAS_H__
-#define __TEST_CANVAS_H__
+#ifndef __TEST_BMP_IMG_LOADER_H__
+#define __TEST_BMP_IMG_LOADER_H__
 
 /******************************************************************************
  * Compile Switches
@@ -57,10 +57,10 @@
  *****************************************************************************/
 
 /**
- * Canvas tests.
+ * Test bitmap image loader.
  */
-extern void testCanvas();
+extern void testBmpImgLoader();
 
-#endif  /* __TEST_CANVAS_H__ */
+#endif  /* __TEST_BMP_IMG_LOADER_H__ */
 
 /** @} */

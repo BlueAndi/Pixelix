@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Test bitmap image loader.
+ * @brief  Widget group tests.
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup common
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TEST_BMP_IMG_H__
-#define __TEST_BMP_IMG_H__
+#ifndef __TEST_WIDGET_GROUP_H__
+#define __TEST_WIDGET_GROUP_H__
 
 /******************************************************************************
  * Compile Switches
@@ -57,10 +57,10 @@
  *****************************************************************************/
 
 /**
- * Test bitmap image loader.
+ * Widget group tests.
  */
-extern void testBmpImg();
+extern void testWidgetGroup();
 
-#endif  /* __TEST_BMP_IMG_H__ */
+#endif  /* __TEST_WIDGET_GROUP_H__ */
 
 /** @} */

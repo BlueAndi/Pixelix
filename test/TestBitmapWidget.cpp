@@ -79,15 +79,16 @@
  */
 extern void testBitmapWidget()
 {
-    const uint8_t BITMAP_WIDTH      = TestGfx::HEIGHT;  /* Use height as width here for a square */
-    const uint8_t BITMAP_HEIGHT     = TestGfx::HEIGHT;
+    const uint16_t BITMAP_WIDTH     = TestGfx::HEIGHT;  /* Use height as width here for a square */
+    const uint16_t BITMAP_HEIGHT    = TestGfx::HEIGHT;
     const char*   WIDGET_NAME       = "bmpWidgetName";
 
-    TestGfx         testGfx;
-    BitmapWidget    bitmapWidget;
-    Color           bitmap[BITMAP_WIDTH * BITMAP_HEIGHT];
-    uint8_t         x               = 0U;
-    uint8_t         y               = 0U;
+    TestGfx                                         testGfx;
+    BitmapWidget                                    bitmapWidget;
+    YAGfxStaticBitmap<BITMAP_WIDTH, BITMAP_HEIGHT>  bitmap;
+
+    int16_t         x               = 0;
+    int16_t         y               = 0;
     const Color*    bitmapPtr       = nullptr;
     uint16_t        width           = 0U;
     uint16_t        height          = 0U;
@@ -115,25 +116,24 @@ extern void testBitmapWidget()
     TEST_ASSERT_EQUAL_PTR(&bitmapWidget, bitmapWidget.find(WIDGET_NAME));
 
     /* Create bitmap */
-    for(y = 0U; y < BITMAP_HEIGHT; ++y)
+    for(y = 0; y < BITMAP_HEIGHT; ++y)
     {
-        for(x = 0U; x < BITMAP_WIDTH; ++x)
+        for(x = 0; x < BITMAP_WIDTH; ++x)
         {
-            bitmap[x + y * BITMAP_WIDTH] = x + y * BITMAP_WIDTH;
+            bitmap.drawPixel(x, y, x + y * BITMAP_WIDTH);
         }
     }
 
     /* Set bitmap and read back */
-    bitmapWidget.set(bitmap, BITMAP_WIDTH, BITMAP_HEIGHT);
-    bitmapPtr = bitmapWidget.get(width, height);
-    TEST_ASSERT_EQUAL_UINT16(BITMAP_WIDTH, width);
-    TEST_ASSERT_EQUAL_UINT16(BITMAP_HEIGHT, height);
+    bitmapWidget.set(bitmap);
+    TEST_ASSERT_EQUAL_UINT16(BITMAP_WIDTH, bitmapWidget.get().getWidth());
+    TEST_ASSERT_EQUAL_UINT16(BITMAP_HEIGHT, bitmapWidget.get().getHeight());
 
-    for(y = 0U; y < BITMAP_HEIGHT; ++y)
+    for(y = 0; y < BITMAP_HEIGHT; ++y)
     {
-        for(x = 0U; x < BITMAP_WIDTH; ++x)
+        for(x = 0; x < BITMAP_WIDTH; ++x)
         {
-            TEST_ASSERT_EQUAL_UINT32(bitmap[x + y * BITMAP_WIDTH], bitmapPtr[x + y * BITMAP_WIDTH]);
+            TEST_ASSERT_EQUAL_UINT32(bitmap.getColor(x, y), bitmapWidget.get().getColor(x, y));
         }
     }
 
@@ -141,9 +141,9 @@ extern void testBitmapWidget()
     bitmapWidget.update(testGfx);
     displayBuffer = testGfx.getBuffer();
 
-    for(y = 0U; y < BITMAP_HEIGHT; ++y)
+    for(y = 0; y < BITMAP_HEIGHT; ++y)
     {
-        for(x = 0U; x < BITMAP_WIDTH; ++x)
+        for(x = 0; x < BITMAP_WIDTH; ++x)
         {
             TEST_ASSERT_EQUAL_UINT16(x + y * BITMAP_WIDTH, displayBuffer[x + y * TestGfx::WIDTH]);
         }

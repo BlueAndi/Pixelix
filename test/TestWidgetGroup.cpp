@@ -25,19 +25,19 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Canvas tests.
+ * @brief  Widget group tests.
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "TestCanvas.h"
+#include "TestWidgetGroup.h"
 #include "TestGfx.h"
 #include "TestWidget.h"
 
 #include <unity.h>
-#include <Canvas.h>
+#include <WidgetGroup.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -79,9 +79,9 @@ static T getMin(const T value1, const T value2);
  *****************************************************************************/
 
 /**
- * Canvas tests.
+ * Widget group tests.
  */
-extern void testCanvas()
+extern void testWidgetGroup()
 {
     const uint16_t  CANVAS_WIDTH        = 8;
     const uint16_t  CANVAS_HEIGHT       = 8;
@@ -92,27 +92,27 @@ extern void testCanvas()
     const char*     TEST_WIDGET_NAME    = "testWidgetName";
 
     TestGfx     testGfx;
-    Canvas      testCanvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0, 0);
+    WidgetGroup testWGroup(CANVAS_WIDTH, CANVAS_HEIGHT, 0, 0);
     TestWidget  testWidget;
     TestWidget  testWidget2;
 
     /* Verify widget type name */
-    TEST_ASSERT_EQUAL_STRING(Canvas::WIDGET_TYPE, testCanvas.getType());
+    TEST_ASSERT_EQUAL_STRING(WidgetGroup::WIDGET_TYPE, testWGroup.getType());
 
     /* Canvas contains no other widget, so nothing should be drawn. */
     testGfx.setCallCounterDrawPixel(0);
-    testCanvas.update(testGfx);
+    testWGroup.update(testGfx);
     TEST_ASSERT_EQUAL_UINT32(0, testGfx.getCallCounterDrawPixel());
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, TestWidget::WIDTH, TestWidget::HEIGHT, 0));
 
     /* Add widget to canvas, move widget and set draw pen */
-    TEST_ASSERT_TRUE(testCanvas.addWidget(testWidget));
+    TEST_ASSERT_TRUE(testWGroup.addWidget(testWidget));
     testWidget.move(WIDGET_POS_X, WIDGET_POS_Y);
     testWidget.setPenColor(WIDGET_COLOR);
 
     /* Draw canvas with widget. Expected is a full drawn widget. */
     testGfx.fill(0);
-    testCanvas.update(testGfx);
+    testWGroup.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(WIDGET_POS_X,
                                     WIDGET_POS_Y,
                                     getMin<uint16_t>(TestWidget::WIDTH, CANVAS_WIDTH - WIDGET_POS_X),
@@ -122,7 +122,7 @@ extern void testCanvas()
     /* Move widget outside canvas and try to draw. Expected is no drawing at all. */
     testGfx.fill(0);
     testWidget.move(CANVAS_WIDTH, CANVAS_HEIGHT);
-    testCanvas.update(testGfx);
+    testWGroup.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(0,
                                     0,
                                     CANVAS_WIDTH,
@@ -132,7 +132,7 @@ extern void testCanvas()
     /* Move widget half outside canvas and draw. Expected is partly drawing. */
     testGfx.fill(0);
     testWidget.move(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
-    testCanvas.update(testGfx);
+    testWGroup.update(testGfx);
     TEST_ASSERT_TRUE(testGfx.verify(CANVAS_WIDTH / 2,
                                     CANVAS_HEIGHT / 2,
                                     CANVAS_WIDTH / 2,
@@ -140,46 +140,46 @@ extern void testCanvas()
                                     WIDGET_COLOR));
 
     /* No widget name is set, it must be empty. */
-    TEST_ASSERT_EQUAL_STRING("", testCanvas.getName().c_str());
+    TEST_ASSERT_EQUAL_STRING("", testWGroup.getName().c_str());
 
     /* Set widget name and read back. */
-    testCanvas.setName(CANVAS_NAME);
-    TEST_ASSERT_EQUAL_STRING(CANVAS_NAME, testCanvas.getName().c_str());
+    testWGroup.setName(CANVAS_NAME);
+    TEST_ASSERT_EQUAL_STRING(CANVAS_NAME, testWGroup.getName().c_str());
 
     /* Find widget with its name.
      * Expected: Widget is found
      */
-    TEST_ASSERT_NOT_NULL(testCanvas.find(CANVAS_NAME));
-    TEST_ASSERT_EQUAL_PTR(static_cast<Widget*>(&testCanvas), testCanvas.find(CANVAS_NAME));
+    TEST_ASSERT_NOT_NULL(testWGroup.find(CANVAS_NAME));
+    TEST_ASSERT_EQUAL_PTR(static_cast<Widget*>(&testWGroup), testWGroup.find(CANVAS_NAME));
 
     /* Find widget in container, but widget has no name.
      * Expected: Test widget not found
      */
-    TEST_ASSERT_NULL(testCanvas.find(TEST_WIDGET_NAME));
+    TEST_ASSERT_NULL(testWGroup.find(TEST_WIDGET_NAME));
 
     /* Find widget in container.
      * Expected: Test widget found
      */
     testWidget.setName(TEST_WIDGET_NAME);
-    TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
-    TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
+    TEST_ASSERT_NOT_NULL(testWGroup.find(TEST_WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&testWidget, testWGroup.find(TEST_WIDGET_NAME));
 
     /* Find widget in container and container has no name.
      * Expected: Test widget found
      */
     testWidget.setName(TEST_WIDGET_NAME);
-    testCanvas.setName("");
-    TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
-    TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
+    testWGroup.setName("");
+    TEST_ASSERT_NOT_NULL(testWGroup.find(TEST_WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&testWidget, testWGroup.find(TEST_WIDGET_NAME));
 
     /* Find widget in container, which contains 2 widgets.
      * Expected: Test widget found
      */
     testWidget.setName(TEST_WIDGET_NAME);
-    testCanvas.setName("");
-    TEST_ASSERT_TRUE(testCanvas.addWidget(testWidget2));
-    TEST_ASSERT_NOT_NULL(testCanvas.find(TEST_WIDGET_NAME));
-    TEST_ASSERT_EQUAL_PTR(&testWidget, testCanvas.find(TEST_WIDGET_NAME));
+    testWGroup.setName("");
+    TEST_ASSERT_TRUE(testWGroup.addWidget(testWidget2));
+    TEST_ASSERT_NOT_NULL(testWGroup.find(TEST_WIDGET_NAME));
+    TEST_ASSERT_EQUAL_PTR(&testWidget, testWGroup.find(TEST_WIDGET_NAME));
 
     return;
 }
