@@ -43,6 +43,9 @@ menu.data = [{
         "title": "JustText Plugin",
         "hyperRef": "/plugins/JustTextPlugin.html"
     }, {
+        "title": "Matrix Plugin",
+        "hyperRef": "/plugins/MatrixPlugin.html"
+    }, {
         "title": "OpenWeather Plugin",
         "hyperRef": "/plugins/OpenWeatherPlugin.html"
     }, {

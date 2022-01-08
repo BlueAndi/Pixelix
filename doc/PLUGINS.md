@@ -18,6 +18,7 @@
   - [GameOfLifePlugin](#gameoflifeplugin)
   - [GithubPlugin](#githubplugin)
   - [GruenbeckPlugin](#gruenbeckplugin)
+  - [MatrixPlugin](#matrixplugin)
   - [OpenWeatherPlugin](#openweatherplugin)
   - [RainbowPlugin](#rainbowplugin)
   - [SensorPlugin](#sensorplugin)
@@ -82,6 +83,9 @@ The plugin shows the stargazers count of a github repository.
 ## GruenbeckPlugin
 The GruenbeckPlugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.\
 The IP address of the Gruenbeck webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/GruenbeckPlugin).
+
+## MatrixPlugin
+The plugin shows the effect from the film "Matrix" over the whole display.
 
 ## OpenWeatherPlugin
 The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one aditional information (uvIndex, humidity or windspeed) .\

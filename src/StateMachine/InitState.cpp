@@ -71,6 +71,7 @@
 #include "IconTextLampPlugin.h"
 #include "IconTextPlugin.h"
 #include "JustTextPlugin.h"
+#include "MatrixPlugin.h"
 #include "OpenWeatherPlugin.h"
 #include "RainbowPlugin.h"
 #include "SensorPlugin.h"
@@ -394,6 +395,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
     pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
+    pluginMgr.registerPlugin("MatrixPlugin", MatrixPlugin::create);
     pluginMgr.registerPlugin("OpenWeatherPlugin", OpenWeatherPlugin::create);
     pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
     pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);

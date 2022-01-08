@@ -30,7 +30,7 @@
 
 ## Rules
 * Follow the [boy scout rule](https://biratkirat.medium.com/step-8-the-boy-scout-rule-robert-c-martin-uncle-bob-9ac839778385#:~:text=The%20Boy%20Scouts%20have%20a,not%20add%20more%20smelling%20code.), especially for coding style. Check other plugins or sourcecode in the repository, to know how to do it right.
-* All one time jobs shall be done in ```start()``` method. E.g. the initial layout creation with canvas.
+* All one time jobs shall be done in ```start()``` method. E.g. the initial layout creation.
 * The ```update()``` method shall be efficient, therefore
   * never read/write something from filesystem,
   * never perform any web related stuff,
