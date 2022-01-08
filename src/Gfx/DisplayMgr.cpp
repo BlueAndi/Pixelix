@@ -282,6 +282,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
                 }
                 else
                 {
+                    LOG_INFO("Start plugin %s (UID %u) in slot %u.", plugin->getName(), plugin->getUID(), slotId);
                     plugin->start(Display::getInstance().getWidth(), Display::getInstance().getHeight());
                 }
             }
@@ -303,6 +304,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
             }
             else
             {
+                LOG_INFO("Start plugin %s (UID %u) in slot %u.", plugin->getName(), plugin->getUID(), slotId);
                 plugin->start(Display::getInstance().getWidth(), Display::getInstance().getHeight());
             }
         }
@@ -313,7 +315,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (m_maxSlots > slotId)
         {
-            LOG_INFO("Plugin %s installed in slot %u.", plugin->getName(), slotId);
+            LOG_INFO("Plugin %s (UID %u) installed in slot %u.", plugin->getName(), plugin->getUID(), slotId);
         }
     }
 
@@ -342,6 +344,7 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
                     m_selectedPlugin = nullptr;
                 }
 
+                LOG_INFO("Stop plugin %s (UID %u) in slot %u.", plugin->getName(), plugin->getUID(), slotId);
                 plugin->stop();
                 if (false == m_slots[slotId].setPlugin(nullptr))
                 {
@@ -356,11 +359,11 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
 
         if (false == status)
         {
-            LOG_INFO("Couldn't remove plugin %s (uid %u) from slot %u, because slot is locked.", plugin->getName(), plugin->getUID(), slotId);
+            LOG_INFO("Couldn't remove plugin %s (UID %u) from slot %u, because slot is locked.", plugin->getName(), plugin->getUID(), slotId);
         }
         else
         {
-            LOG_INFO("Plugin %s (uid %u) removed from slot %u.", plugin->getName(), plugin->getUID(), slotId);
+            LOG_INFO("Plugin %s (UID %u) removed from slot %u.", plugin->getName(), plugin->getUID(), slotId);
         }
     }
 
@@ -829,7 +832,7 @@ void DisplayMgr::process()
         /* Requested plugin must be enabled, otherwise it won't be scheduled. */
         if (false == m_requestedPlugin->isEnabled())
         {
-            LOG_WARNING("Requested plugin %s (uid %u) in slot %u is disabled.",
+            LOG_WARNING("Requested plugin %s (UID %u) in slot %u is disabled.",
                 m_requestedPlugin->getName(),
                 m_requestedPlugin->getUID(),
                 getSlotIdByPluginUID(m_requestedPlugin->getUID()));

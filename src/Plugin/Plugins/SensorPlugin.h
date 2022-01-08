@@ -145,7 +145,10 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
-     * Start the plugin.
+     * Start the plugin. This is called only once during plugin lifetime.
+     * It can be used as deferred initialization (after the constructor)
+     * and provides the canvas size.
+     * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 
      * @param[in] width     Display width in pixel
@@ -154,7 +157,7 @@ public:
     void start(uint16_t width, uint16_t height) final;
     
     /**
-     * Stop the plugin.
+     * Stop the plugin. This is called only once during plugin lifetime.
      */
     void stop() final;
 

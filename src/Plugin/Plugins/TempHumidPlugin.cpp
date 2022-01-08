@@ -80,34 +80,28 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
 void TempHumidPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
+    SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
+    uint8_t                     sensorIdx       = 0U;
+    uint8_t                     channelIdx      = 0U;
 
-    if (false == m_isInitialized)
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+
+    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
+
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_textCanvas.addWidget(m_textWidget);
+
+    /* Use just the first found sensor for temperature. */
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))
     {
-        SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
-        uint8_t                     sensorIdx       = 0U;
-        uint8_t                     channelIdx      = 0U;
+        m_temperatureSensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
+    }
 
-        m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-        (void)m_iconCanvas.addWidget(m_bitmapWidget);
-
-        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-
-        m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-        (void)m_textCanvas.addWidget(m_textWidget);
-
-        /* Use just the first found sensor for temperature. */
-        if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))
-        {
-            m_temperatureSensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
-        }
-
-        /* Use just the first found sensor for humidity. */
-        if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_HUMIDITY_PERCENT, ISensorChannel::DATA_TYPE_FLOAT32))
-        {
-            m_humiditySensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
-        }
-
-        m_isInitialized = true;
+    /* Use just the first found sensor for humidity. */
+    if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_HUMIDITY_PERCENT, ISensorChannel::DATA_TYPE_FLOAT32))
+    {
+        m_humiditySensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
     }
 
     return;

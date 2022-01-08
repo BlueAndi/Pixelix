@@ -126,23 +126,16 @@ void GithubPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false == m_isInitialized)
-    {
-        m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-        (void)m_iconCanvas.addWidget(m_stdIconWidget);
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_stdIconWidget);
 
-        /* Load all icons from filesystem now, to prevent filesystem
-         * access during active/inactive/update methods.
-         */
-        (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+    /* Load all icons from filesystem now, to prevent filesystem
+     * access during active/inactive/update methods.
+     */
+    (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
 
-        m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-        (void)m_textCanvas.addWidget(m_textWidget);
-
-        initHttpClient();
-
-        m_isInitialized = true;
-    }
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -155,6 +148,7 @@ void GithubPlugin::start(uint16_t width, uint16_t height)
         }
     }
 
+    initHttpClient();
     if (false == startHttpRequest())
     {
         /* If a request fails, show standard icon and a '?' */

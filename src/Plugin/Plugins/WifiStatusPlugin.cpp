@@ -62,23 +62,18 @@
 
 void WifiStatusPlugin::start(uint16_t width, uint16_t height)
 {
-    if (false == m_isInitialized)
-    {
-        m_iconCanvas.setPosAndSize(0, 0, WIFI_ICON_WIDTH, WIFI_ICON_HEIGHT);
-        (void)m_iconCanvas.addWidget(m_alertWidget);
+    m_iconCanvas.setPosAndSize(0, 0, WIFI_ICON_WIDTH, WIFI_ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_alertWidget);
 
-        m_textCanvas.setPosAndSize(WIFI_ICON_WIDTH + 1, 0, width - WIFI_ICON_WIDTH - 1U, WIFI_ICON_HEIGHT);
-        (void)m_textCanvas.addWidget(m_textWidget);
+    m_textCanvas.setPosAndSize(WIFI_ICON_WIDTH + 1, 0, width - WIFI_ICON_WIDTH - 1U, WIFI_ICON_HEIGHT);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
-        m_alertWidget.move(0, 1);
-        m_alertWidget.setFormatStr("");
-        m_alertWidget.setTextColor(ColorDef::ORANGE);
+    m_alertWidget.move(0, 1);
+    m_alertWidget.setFormatStr("");
+    m_alertWidget.setTextColor(ColorDef::ORANGE);
 
-        m_textWidget.move(0, 1);
-        m_textWidget.setFormatStr("\\calignWiFi");
-
-        m_isInitialized = true;
-    }
+    m_textWidget.move(0, 1);
+    m_textWidget.setFormatStr("\\calignWiFi");
 
     return;
 }

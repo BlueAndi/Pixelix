@@ -248,52 +248,46 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint16_t                    lampWidth       = 0U;
+    uint16_t                    lampDistance    = 0U;
+    const uint16_t              minDistance     = 1U;   /* Min. distance between lamps. */
+    const uint16_t              minBorder       = 1U;   /* Min. border left and right of all lamps. */
+    const uint16_t              canvasWidth     = width - ICON_WIDTH;
 
-    if (false == m_isInitialized)
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+
+    /* If there is already an icon in the filesystem, it will be loaded.
+     * First check whether it is a animated sprite sheet and if not, try
+     * to load just a bitmap image.
+     */
+    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
     {
-        uint16_t        lampWidth       = 0U;
-        uint16_t        lampDistance    = 0U;
-        const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
-        const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
-        const uint16_t  canvasWidth     = width - ICON_WIDTH;
+        (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
+    }
 
-        m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-        (void)m_iconCanvas.addWidget(m_bitmapWidget);
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height - 2U);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
-        /* If there is already an icon in the filesystem, it will be loaded.
-            * First check whether it is a animated sprite sheet and if not, try
-            * to load just a bitmap image.
-            */
-        if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
+    m_lampCanvas.setPosAndSize(ICON_WIDTH, height - 1, canvasWidth, 1U);
+
+    if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
+    {
+        /* Calculate the border to have the lamps shown aligned to center. */
+        uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
+        uint8_t     index   = 0U;
+
+        for(index = 0U; index < MAX_LAMPS; ++index)
         {
-            (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
+            /* One space at the begin, two spaces between the lamps. */
+            int16_t x = (lampWidth + lampDistance) * index + border;
+
+            m_lampWidgets[index].setWidth(lampWidth);
+
+            (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
+            m_lampWidgets[index].move(x, 0);
         }
-
-        m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height - 2U);
-        (void)m_textCanvas.addWidget(m_textWidget);
-
-        m_lampCanvas.setPosAndSize(ICON_WIDTH, height - 1, canvasWidth, 1U);
-
-        if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
-        {
-            /* Calculate the border to have the lamps shown aligned to center. */
-            uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
-            uint8_t     index   = 0U;
-
-            for(index = 0U; index < MAX_LAMPS; ++index)
-            {
-                /* One space at the begin, two spaces between the lamps. */
-                int16_t x = (lampWidth + lampDistance) * index + border;
-
-                m_lampWidgets[index].setWidth(lampWidth);
-
-                (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
-                m_lampWidgets[index].move(x, 0);
-            }
-        }
-
-        m_isInitialized = true;
     }
 
     return;

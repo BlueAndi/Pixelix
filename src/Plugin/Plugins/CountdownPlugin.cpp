@@ -151,18 +151,13 @@ void CountdownPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false == m_isInitialized)
-    {
-        m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-        (void)m_iconCanvas.addWidget(m_bitmapWidget);
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_bitmapWidget);
 
-        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
+    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
 
-        m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-        (void)m_textCanvas.addWidget(m_textWidget);
-
-        m_isInitialized = true;
-    }
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.

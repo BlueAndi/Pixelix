@@ -91,40 +91,34 @@ void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void DateTimePlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint16_t                    lampWidth       = 0U;
+    uint16_t                    lampDistance    = 0U;
+    const uint16_t              minDistance     = 1U;   /* Min. distance between lamps. */
+    const uint16_t              minBorder       = 1U;   /* Min. border left and right of all lamps. */
 
-    if (false == m_isInitialized)
+    m_textCanvas.setPosAndSize(0, 0, width, height - 2U);
+    (void)m_textCanvas.addWidget(m_textWidget);
+
+    m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
+
+    if (true == calcLayout(width, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
     {
-        uint16_t        lampWidth       = 0U;
-        uint16_t        lampDistance    = 0U;
-        const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
-        const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
+        /* Calculate the border to have the days (lamps) shown aligned to center. */
+        uint16_t    border  = (width - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
+        uint8_t     index   = 0U;
 
-        m_textCanvas.setPosAndSize(0, 0, width, height - 2U);
-        (void)m_textCanvas.addWidget(m_textWidget);
-
-        m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
-
-        if (true == calcLayout(width, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
+        for(index = 0U; index < MAX_LAMPS; ++index)
         {
-            /* Calculate the border to have the days (lamps) shown aligned to center. */
-            uint16_t    border  = (width - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
-            uint8_t     index   = 0U;
+            int16_t x = (lampWidth + lampDistance) * index + border;
 
-            for(index = 0U; index < MAX_LAMPS; ++index)
-            {
-                int16_t x = (lampWidth + lampDistance) * index + border;
+            m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
+            m_lampWidgets[index].setColorOff(ColorDef::ULTRADARKGRAY);
+            m_lampWidgets[index].setWidth(lampWidth);
 
-                m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
-                m_lampWidgets[index].setColorOff(ColorDef::ULTRADARKGRAY);
-                m_lampWidgets[index].setWidth(lampWidth);
-
-                (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
-                m_lampWidgets[index].move(x, 0);
-            }
+            (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
+            m_lampWidgets[index].move(x, 0);
         }
-
-        m_isInitialized = true;
     }
 
     return;

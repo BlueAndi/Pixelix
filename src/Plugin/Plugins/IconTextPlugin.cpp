@@ -167,25 +167,20 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false == m_isInitialized)
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+
+    /* If there is already an icon in the filesystem, it will be loaded.
+     * First check whether it is a animated sprite sheet and if not, try
+     * to load just a bitmap image.
+     */
+    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
     {
-        m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-        (void)m_iconCanvas.addWidget(m_bitmapWidget);
-
-        /* If there is already an icon in the filesystem, it will be loaded.
-         * First check whether it is a animated sprite sheet and if not, try
-         * to load just a bitmap image.
-         */
-        if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
-        {
-            (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
-        }
-
-        m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-        (void)m_textCanvas.addWidget(m_textWidget);
-
-        m_isInitialized = true;
+        (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
     }
+
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
     return;
 }

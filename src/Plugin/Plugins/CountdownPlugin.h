@@ -177,7 +177,6 @@ public:
      */
     CountdownPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
-        m_isInitialized(false),
         m_textCanvas(),
         m_iconCanvas(),
         m_bitmapWidget(),
@@ -261,7 +260,10 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
-     * Start the plugin.
+     * Start the plugin. This is called only once during plugin lifetime.
+     * It can be used as deferred initialization (after the constructor)
+     * and provides the canvas size.
+     * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 
      * @param[in] width     Display width in pixel
@@ -270,7 +272,9 @@ public:
     void start(uint16_t width, uint16_t height) final;
 
    /**
-     * Stop the plugin.
+     * Stop the plugin. This is called only once during plugin lifetime.
+     * It can be used as a first clean-up, before the plugin will be destroyed.
+     * 
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
     void stop() final;
@@ -352,7 +356,6 @@ private:
      */
     static const uint32_t   CFG_RELOAD_PERIOD   = 30000U;
 
-    bool                    m_isInitialized;            /**< Flag used to initialize once during start(). */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */

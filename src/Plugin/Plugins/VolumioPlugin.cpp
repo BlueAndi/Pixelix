@@ -127,35 +127,28 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false == m_isInitialized)
-    {
-        m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
 
-        (void)m_iconCanvas.addWidget(m_stdIconWidget);
-        (void)m_iconCanvas.addWidget(m_stopIconWidget);
-        (void)m_iconCanvas.addWidget(m_playIconWidget);
-        (void)m_iconCanvas.addWidget(m_pauseIconWidget);
+    (void)m_iconCanvas.addWidget(m_stdIconWidget);
+    (void)m_iconCanvas.addWidget(m_stopIconWidget);
+    (void)m_iconCanvas.addWidget(m_playIconWidget);
+    (void)m_iconCanvas.addWidget(m_pauseIconWidget);
 
-        /* Load all icons from filesystem now, to prevent filesystem
-            * access during active/inactive/update methods.
-            */
-        (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-        (void)m_stopIconWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
-        (void)m_playIconWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
-        (void)m_pauseIconWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
+    /* Load all icons from filesystem now, to prevent filesystem
+     * access during active/inactive/update methods.
+     */
+    (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+    (void)m_stopIconWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
+    (void)m_playIconWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
+    (void)m_pauseIconWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
 
-        /* Disable all, except the standard icon. */
-        m_stopIconWidget.disable();
-        m_playIconWidget.disable();
-        m_pauseIconWidget.disable();
+    /* Disable all, except the standard icon. */
+    m_stopIconWidget.disable();
+    m_playIconWidget.disable();
+    m_pauseIconWidget.disable();
 
-        m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-        (void)m_textCanvas.addWidget(m_textWidget);
-
-        initHttpClient();
-
-        m_isInitialized = true;
-    }
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -168,6 +161,7 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
         }
     }
 
+    initHttpClient();
     if (false == startHttpRequest())
     {
         /* If a request fails, show standard icon and a '?' */
