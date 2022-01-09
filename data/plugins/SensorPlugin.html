@@ -125,8 +125,8 @@
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
                             $option = $("<option>")
-                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
-                                        .text(rsp.data.slots[slotIndex].uid);
+                                .val(rsp.data.slots[slotIndex].uid)
+                                .text(rsp.data.slots[slotIndex].uid);
                             
                             $("#pluginUid").append($option);
     
@@ -135,6 +135,9 @@
                     }
     
                     return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
                 });
             };
 
@@ -144,23 +147,26 @@
                     var $option = null;
 
                     sensors = rsp.data.sensors;
+
+                    $option = $("<option>")
+                        .val(-1)
+                        .text("-");
+
+                    $("#sensorList").append($option);
                     
                     for(index = 0; index < sensors.length; ++index) {
 
                         if (true === sensors[index].isAvailable) {
 
                             $option = $("<option>")
-                                .attr("value", sensors[index].index)
+                                .val(sensors[index].index)
                                 .text(sensors[index].name);
-
-                            if (0 === index) {
-                                $option.attr("selected", true);
-                                updateChannelList(sensors[index].index);
-                            }
 
                             $("#sensorList").append($option);
                         }
                     }
+
+                    $("#sensorList").val(-1);
 
                     return Promise.resolve();
                 });
@@ -185,21 +191,15 @@
 
                         if (false === sensors[sensorIndex].isAvailable) {
 
-                            $("#sensorList").empty();
+                            $("#sensorList").val(-1);
                             $("#channelList").empty();
 
                         } else {
-                            $("#sensorList")
-                                .removeAttr("selected")
-                                .filter("[value=" + rsp.data.sensorIndex + "]")
-                                .attr("selected", true);
+                            $("#sensorList").val(rsp.data.sensorIndex);
                             
                             updateChannelList(rsp.data.sensorIndex)
 
-                            $("#channelList")
-                                .removeAttr("selected")
-                                .filter("[value=" + rsp.data.channelIndex + "]")
-                                .attr("selected", true);
+                            $("#channelList").val(rsp.data.channelIndex);
                         }
                     }
 
@@ -236,17 +236,15 @@
 
                 $("#channelList").empty();
 
-                for(index = 0; index < sensors[sensorIndex].channels.length; ++index) {
+                if (0 <= sensorIndex) {
+                    for(index = 0; index < sensors[sensorIndex].channels.length; ++index) {
 
-                    $option = $("<option>")
-                        .attr("value", sensors[sensorIndex].channels[index].index)
-                        .text(sensors[sensorIndex].channels[index].name);
+                        $option = $("<option>")
+                            .val(sensors[sensorIndex].channels[index].index)
+                            .text(sensors[sensorIndex].channels[index].name);
 
-                    if (0 === index) {
-                        $option.attr("selected", "selected");
+                        $("#channelList").append($option);
                     }
-
-                    $("#channelList").append($option);
                 }
             }
 
