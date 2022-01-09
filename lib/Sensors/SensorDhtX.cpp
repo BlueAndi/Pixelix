@@ -114,18 +114,21 @@ ISensorChannel* SensorDhtX::getChannel(uint8_t index)
 {
     ISensorChannel* channel = nullptr;
 
-    switch(index)
+    if (true == m_isAvailable)
     {
-    case CHANNEL_ID_TEMPERATURE:
-        channel = &m_temperatureChannel;
-        break;
+        switch(index)
+        {
+        case CHANNEL_ID_TEMPERATURE:
+            channel = &m_temperatureChannel;
+            break;
 
-    case CHANNEL_ID_HUMIDITY:
-        channel = &m_humidityChannel;
-        break;
-    
-    default:
-        break;
+        case CHANNEL_ID_HUMIDITY:
+            channel = &m_humidityChannel;
+            break;
+        
+        default:
+            break;
+        }
     }
 
     return channel;

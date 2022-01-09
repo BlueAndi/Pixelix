@@ -127,6 +127,7 @@ public:
      * Constructs the driver or the GL5528.
      */
     SensorLdrGl5528() :
+        m_isAvailable(false),
         m_illuminanceChannel()
     {
         m_illuminanceChannel.setDriver(this);
@@ -175,6 +176,8 @@ public:
 
     /**
      * Get data channel by index.
+     * If sensor is not available or channel index is out of bounds, it will 
+     * return nullptr.
      * 
      * @return Data channel
      */
@@ -194,6 +197,7 @@ private:
      */
     static const uint16_t   NO_LDR_THRESHOLD;
 
+    bool                    m_isAvailable;          /**< Is a sensor available or not? */
     LdrChannelIluminance    m_illuminanceChannel;   /**< Illuminance channel */
 
     SensorLdrGl5528(const SensorLdrGl5528& sensor);

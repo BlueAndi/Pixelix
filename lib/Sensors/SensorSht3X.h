@@ -226,6 +226,8 @@ public:
 
     /**
      * Get data channel by index.
+     * If sensor is not available or channel index is out of bounds, it will 
+     * return nullptr.
      * 
      * @return Data channel
      */

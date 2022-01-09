@@ -59,6 +59,9 @@
 /* Set threshold to detect that no LDR is connected.
  * Expected voltage is lower or equal than 3 mV.
  * This corresponds to the absolute dark resistance of the LDR with 1 MOhm.
+ * 
+ * Attention: This is only valid if a external pull-down resistor is connected.
+ *            If the pin is floating, it will fail.
  */
 const uint16_t  SensorLdrGl5528::NO_LDR_THRESHOLD   = (3UL * (Board::adcResolution - 1U)) / Board::adcRefVoltage;
 
@@ -73,29 +76,33 @@ float LdrChannelIluminance::getValue()
 
 void SensorLdrGl5528::begin()
 {
-    /* Nothing to do. */
+    const uint16_t ADC_UINT16 = Board::ldrIn.read();
+
+    if (NO_LDR_THRESHOLD < ADC_UINT16)
+    {
+        m_isAvailable = true;
+    }
+    else
+    {
+        m_isAvailable = false;
+    }
 }
 
 bool SensorLdrGl5528::isAvailable() const
 {
-    const uint16_t  ADC_UINT16  = Board::ldrIn.read();
-    bool            isAvailable = false;
-
-    if (NO_LDR_THRESHOLD < ADC_UINT16)
-    {
-        isAvailable = true;
-    }
-
-    return isAvailable;
+    return m_isAvailable;
 }
 
 ISensorChannel* SensorLdrGl5528::getChannel(uint8_t index)
 {
     ISensorChannel* channel = nullptr;
 
-    if (0U == index)
+    if (true == m_isAvailable)
     {
-        channel = &m_illuminanceChannel;
+        if (0U == index)
+        {
+            channel = &m_illuminanceChannel;
+        }
     }
 
     return channel;

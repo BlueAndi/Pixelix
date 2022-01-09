@@ -212,7 +212,7 @@ public:
      * Constructs an digital output pin instance.
      */
     DInPin() :
-        IoPin(pinNo, pinMode)
+        IoPin(pinNo, INPUT)
     {
     }
 
