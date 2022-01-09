@@ -22,6 +22,8 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
   - [How to change text properties?](#how-to-change-text-properties)
   - [How can I use animated icons?](#how-can-i-use-animated-icons)
+  - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
+  - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -134,6 +136,15 @@ You can use the ```./doc/spritesheet/create_sprite_sheet.py``` to create it or m
 
 Limitations:
 * Only bitmap texture files (.bmp) are supported.
+
+## How do I know that my sensor is recognized?
+
+1. Check the log output from USB (not via web interface) right after startup (at this point WiFi is not connected yet).
+2. Install the SensorPlugin and open the SensorPlugin website. There the sensor should be shown in the drop-down.
+
+## Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?
+
+The LDR pin is configured as input (ADC) and it seems that the pin is foating, because there is the ext. pull-down missing.
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
