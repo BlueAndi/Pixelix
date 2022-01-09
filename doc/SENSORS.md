@@ -7,7 +7,7 @@
 - [Sensors](#sensors)
 
 # Sensors
-Here is a list of supported sensors. Where they are connected, depends on the used [hardware board](BOARDS.md).
+Here is a list of supported sensors. Where they are connected, depends on the used [hardware board](BOARDS.md). Some of them need additional external parts e.g. the DHTx need a ext. 4.7kOhm pull-up resistor. Please check the corresponding datasheets.
 
 * Ambient light sensor
   * Photoresistor GL5528
