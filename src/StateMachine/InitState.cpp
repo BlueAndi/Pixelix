@@ -51,6 +51,8 @@
 #include "PluginMgr.h"
 #include "WebConfig.h"
 #include "FileSystem.h"
+#include "JsonFile.h"
+#include "Version.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -111,8 +113,9 @@
 
 void InitState::entry(StateMachine& sm)
 {
-    bool                isError = false;
-    ErrorState::ErrorId errorId = ErrorState::ERROR_ID_UNKNOWN;
+    bool                isError             = false;
+    ErrorState::ErrorId errorId             = ErrorState::ERROR_ID_UNKNOWN;
+    const char*         VERSION_FILE_NAME   = "/version.json";
 
     /* Initialize hardware */
     Board::init();
@@ -138,6 +141,15 @@ void InitState::entry(StateMachine& sm)
     else if (false == FILESYSTEM.begin())
     {
         LOG_FATAL("Couldn't mount the filesystem.");
+        errorId = ErrorState::ERROR_ID_BAD_FS;
+        isError = true;
+    }
+    /* Check whether the filesystem is valid.
+     * This is simply done by checking for a specific file in the root directory.
+     */
+    else if (false == FILESYSTEM.exists(VERSION_FILE_NAME))
+    {
+        LOG_FATAL("Filesystem is invalid.");
         errorId = ErrorState::ERROR_ID_BAD_FS;
         isError = true;
     }
@@ -189,7 +201,10 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        Settings* settings = &Settings::getInstance();
+        Settings*           settings = &Settings::getInstance();
+        JsonFile            jsonFile(FILESYSTEM);
+        const size_t        JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
         /* Load some general configuration parameters from persistent memory. */
         if (true == settings->open(true))
@@ -223,6 +238,42 @@ void InitState::entry(StateMachine& sm)
 
         /* Show some informations on the display. */
         showStartupInfoOnDisplay();
+
+        /* Show a warning in case the filesystem may not be compatible to the firmware version. */
+        if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
+        {
+            JsonVariant jsonVersion             = jsonDoc["version"];
+            bool        isFileSystemCompatible  = true;
+
+            if (true == jsonVersion.isNull())
+            {
+                isFileSystemCompatible = false;
+            }
+            else
+            {
+                String fileSystemVersion    = jsonVersion.as<String>();
+                String firmwareVersion      = Version::SOFTWARE_VER;
+
+                /* Note that the firmware version may have a additional postfix.
+                 * Example: v4.1.2:b or v4.1.2:b:lc
+                 * See ./scripts/get_get_rev.py for the different postfixes.
+                 */
+                if (0U == firmwareVersion.startsWith(fileSystemVersion))
+                {
+                    isFileSystemCompatible = false;
+                }
+            }
+
+            if (false == isFileSystemCompatible)
+            {
+                const char* errMsg  = "WARN: Filesystem may not be compatible.";
+
+                LOG_WARNING(errMsg);
+
+                SysMsg::getInstance().show(errMsg, 3000U, 1U, true);
+                SysMsg::getInstance().show("", 500U, 0U, true);
+            }
+        }
     }
 
     /* Any error happened? */
