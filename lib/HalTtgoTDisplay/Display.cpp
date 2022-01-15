@@ -70,7 +70,7 @@ Display::Display() :
     IDisplay(),
     m_tft(),
     m_ledMatrix(),
-    m_brightness(UINT8_MAX)
+    m_brightness(DEFAULT_BRIGHTNESS)
 {
 }
 

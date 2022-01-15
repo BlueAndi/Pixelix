@@ -126,7 +126,7 @@ def get_version():
     Returns:
         str: Version
     """
-    version_filename = "version.json"
+    version_filename = "./data/version.json"
     version = "vX.X.X"
     branch_name = get_current_git_branch()
 

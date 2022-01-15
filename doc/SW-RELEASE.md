@@ -27,7 +27,7 @@ The concept behind the version number follows the [semantic versioning](https://
 # How to release?
 
 1. Integrate all related feature/bugfix branches to the **dev** branch.
-2. Update version number in [version.json](../version.json) in your local **dev** branch.
+2. Update version number in [version.json](../data/version.json) in your local **dev** branch.
 3. Update version number in [Doxyfile](./doxygen/Doxyfile), see ```PROJECT_NUMBER```.
 4. All must be comitted now!
 5. Test local **dev** branch.
