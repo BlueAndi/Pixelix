@@ -21,6 +21,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 - [FAQ](#faq)
   - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
   - [How to change text properties?](#how-to-change-text-properties)
+  - [The display only shows a error code, like "E4". What does that mean?](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -115,6 +116,19 @@ Sourcecode   | URL   | Result
 \\\calign\\#ff0000Hi! | %5Ccalign%23ff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
 \\\ralign\\#ff0000Hi! | %5Ccalign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
 
+## The display only shows a error code, like "E4". What does that mean?
+
+This is a low level error code. Please have a look into the following table.
+
+| Error code | Description |
+| ---------- | ----------- |
+| E1 | Something happended, which can not be further explained, but was fatal. |
+| E2 | There is a problem with the two-wire (i2c) interface. |
+| E3 | There is no user button available. |
+| E4 | Bad filesystem, did you explicit program the filesystem too? If not, please upload it. |
+| E5 | The display manager didn't start up. |
+| E6 | The system message handler didn't start up. |
+| E7 | The update manager didn't start up. |
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
