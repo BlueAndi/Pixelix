@@ -96,12 +96,12 @@ public:
      */
     void show() final
     {
-        int32_t x = 0U;
-        int32_t y = 0U;
+        int32_t x = 0;
+        int32_t y = 0;
 
-        for(y = 0U; y < MATRIX_HEIGHT; ++y)
+        for(y = 0; y < MATRIX_HEIGHT; ++y)
         {
-            for(x = 0U; x < MATRIX_WIDTH; ++x)
+            for(x = 0; x < MATRIX_WIDTH; ++x)
             {
                 Color       brightnessAdjustedColor = m_ledMatrix[x][y];
                 uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
@@ -179,25 +179,28 @@ public:
 private:
 
     /** Display matrix width in pixels (not T-Display width) */
-    static const uint16_t   MATRIX_WIDTH    = 32U;
+    static const uint16_t   MATRIX_WIDTH        = 32U;
 
     /** Display matrix height in pixels (not T-Display height) */
-    static const uint16_t   MATRIX_HEIGHT   = 8U;
+    static const uint16_t   MATRIX_HEIGHT       = 8U;
 
     /** Width of a single matrix pixel in T-Display pixels */
-    static const int32_t    PIXEL_WIDTH     = 6;
+    static const int32_t    PIXEL_WIDTH         = 6;
 
     /** Height of a single matrix pixel in T-Display pixels */
-    static const int32_t    PIXEL_HEIGHT    = 6;
+    static const int32_t    PIXEL_HEIGHT        = 6;
 
     /** Pixel distance in T-Display pixels */
-    static const int32_t    PiXEL_DISTANCE  = 1;
+    static const int32_t    PiXEL_DISTANCE      = 1;
 
     /** T-Display x-axis border size in T-Display pixels */
-    static const int32_t    BORDER_X        = (TFT_HEIGHT - (MATRIX_WIDTH * (PIXEL_WIDTH + PiXEL_DISTANCE))) / 2;
+    static const int32_t    BORDER_X            = (TFT_HEIGHT - (MATRIX_WIDTH * (PIXEL_WIDTH + PiXEL_DISTANCE))) / 2;
 
     /** T-Display y-axis border size in T-Display pixels */
-    static const int32_t    BORDER_Y        = (TFT_WIDTH - (MATRIX_HEIGHT * (PIXEL_HEIGHT + PiXEL_DISTANCE))) / 2;
+    static const int32_t    BORDER_Y            = (TFT_WIDTH - (MATRIX_HEIGHT * (PIXEL_HEIGHT + PiXEL_DISTANCE))) / 2;
+
+    /** Default brightness is 50%. */
+    static const uint8_t    DEFAULT_BRIGHTNESS  = (UINT8_MAX / 2U);
 
     TFT_eSPI    m_tft;                                      /**< T-Display driver */
     Color       m_ledMatrix[MATRIX_WIDTH][MATRIX_HEIGHT];   /**< Simulated LED matrix framebuffer */
