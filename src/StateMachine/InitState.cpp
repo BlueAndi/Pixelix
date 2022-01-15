@@ -111,7 +111,8 @@
 
 void InitState::entry(StateMachine& sm)
 {
-    bool    isError = false;
+    bool                isError = false;
+    ErrorState::ErrorId errorId = ErrorState::ERROR_ID_UNKNOWN;
 
     /* Initialize hardware */
     Board::init();
@@ -123,18 +124,21 @@ void InitState::entry(StateMachine& sm)
     if (false == Wire.begin())
     {
         LOG_FATAL("Couldn't initialize two-wire.");
+        errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
         isError = true;
     }
     /* Initialize button driver */
     else if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
     {
         LOG_FATAL("Couldn't initialize button driver.");
+        errorId = ErrorState::ERROR_ID_NO_USER_BUTTON;
         isError = true;
     }
     /* Mounting the filesystem. */
     else if (false == FILESYSTEM.begin())
     {
         LOG_FATAL("Couldn't mount the filesystem.");
+        errorId = ErrorState::ERROR_ID_BAD_FS;
         isError = true;
     }
     else
@@ -159,24 +163,28 @@ void InitState::entry(StateMachine& sm)
     else if (false == Display::getInstance().begin())
     {
         LOG_FATAL("Failed to initialize display.");
+        /* To set a error id here, makes no sense, because it can not be shown. */
         isError = true;
     }
     /* Initialize display manager */
     else if (false == DisplayMgr::getInstance().begin())
     {
         LOG_FATAL("Failed to initialize display manager.");
+        errorId = ErrorState::ERROR_ID_DISP_MGR;
         isError = true;
     }
     /* Initialize system message handler */
     else if (false == SysMsg::getInstance().init())
     {
         LOG_FATAL("Failed to initialize system message handler.");
+        errorId = ErrorState::ERROR_ID_SYS_MSG;
         isError = true;
     }
     /* Initialize over-the-air update server */
     else if (false == UpdateMgr::getInstance().init())
     {
         LOG_FATAL("Failed to initialize Arduino OTA.");
+        errorId = ErrorState::ERROR_ID_UPDATE_MGR;
         isError = true;
     }
     else
@@ -220,6 +228,7 @@ void InitState::entry(StateMachine& sm)
     /* Any error happened? */
     if (true == isError)
     {
+        ErrorState::getInstance().setErrorId(errorId);
         sm.setState(ErrorState::getInstance());
     }
 
@@ -253,85 +262,89 @@ void InitState::process(StateMachine& sm)
 
 void InitState::exit(StateMachine& sm)
 {
-    wifi_mode_t wifiMode = WIFI_MODE_NULL;
-    String      hostname;
-
-    /* Get hostname. */
-    if (false == Settings::getInstance().open(true))
+    /* Continue initialization steps only, if there was no low level error before. */
+    if (ErrorState::ERROR_ID_NO_ERROR == ErrorState::getInstance().getErrorId())
     {
-        LOG_WARNING("Use default hostname.");
-        hostname = Settings::getInstance().getHostname().getDefault();
-    }
-    else
-    {
-        hostname = Settings::getInstance().getHostname().getValue();
-        Settings::getInstance().close();
-    }
+        wifi_mode_t wifiMode = WIFI_MODE_NULL;
+        String      hostname;
 
-    /* Start wifi and initialize the LwIP stack here. */
-    if (false == m_isApModeRequested)
-    {
-        wifiMode = WIFI_MODE_STA;
-    }
-    else
-    {
-        wifiMode = WIFI_MODE_AP;
-    }
-
-    if (false == WiFi.mode(wifiMode))
-    {
-        String errorStr = "Set wifi mode failed.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
-    }
-    /* Enable mDNS */
-    else if (false == MDNS.begin(hostname.c_str()))
-    {
-        String errorStr = "Failed to setup mDNS.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
-    }
-    else
-    {
-        /* Initialize webserver. The filesystem must be mounted before! */
-        MyWebServer::init(m_isApModeRequested);
-        MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
-
-        /* Do some stuff only in wifi station mode. */
-        if (false == m_isApModeRequested)
+        /* Get hostname. */
+        if (false == Settings::getInstance().open(true))
         {
-            /* In the next step the plugins are loaded and would be automatically be shown.
-             * To avoid this until the connection establishment takes place, show the following
-             * message infinite.
-             */
-            SysMsg::getInstance().show("...");
-            delay(500U); /* Just to avoid a short splash */
-
-            /* Load last plugin installation. */
-            PluginMgr::getInstance().load();
-
-            /* Welcome the user on the very first time. */
-            welcome();
-
-            /* Start over-the-air update server. */
-            UpdateMgr::getInstance().begin();
-            MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
+            LOG_WARNING("Use default hostname.");
+            hostname = Settings::getInstance().getHostname().getDefault();
+        }
+        else
+        {
+            hostname = Settings::getInstance().getHostname().getValue();
+            Settings::getInstance().close();
         }
 
-        /* Start webserver after the wifi access point is running.
-         * If its done earlier, it will cause an exception because the LwIP stack
-         * is not initialized.
-         * The LwIP stack is initialized with wifiLowLevelInit()!
-         */
-        MyWebServer::begin();
+        /* Start wifi and initialize the LwIP stack here. */
+        if (false == m_isApModeRequested)
+        {
+            wifiMode = WIFI_MODE_STA;
+        }
+        else
+        {
+            wifiMode = WIFI_MODE_AP;
+        }
+
+        if (false == WiFi.mode(wifiMode))
+        {
+            String errorStr = "Set wifi mode failed.";
+
+            /* Fatal error */
+            LOG_FATAL(errorStr);
+            SysMsg::getInstance().show(errorStr);
+
+            sm.setState(ErrorState::getInstance());
+        }
+        /* Enable mDNS */
+        else if (false == MDNS.begin(hostname.c_str()))
+        {
+            String errorStr = "Failed to setup mDNS.";
+
+            /* Fatal error */
+            LOG_FATAL(errorStr);
+            SysMsg::getInstance().show(errorStr);
+
+            sm.setState(ErrorState::getInstance());
+        }
+        else
+        {
+            /* Initialize webserver. The filesystem must be mounted before! */
+            MyWebServer::init(m_isApModeRequested);
+            MDNS.addService("http", "tcp", WebConfig::WEBSERVER_PORT);
+
+            /* Do some stuff only in wifi station mode. */
+            if (false == m_isApModeRequested)
+            {
+                /* In the next step the plugins are loaded and would be automatically be shown.
+                * To avoid this until the connection establishment takes place, show the following
+                * message infinite.
+                */
+                SysMsg::getInstance().show("...");
+                delay(500U); /* Just to avoid a short splash */
+
+                /* Load last plugin installation. */
+                PluginMgr::getInstance().load();
+
+                /* Welcome the user on the very first time. */
+                welcome();
+
+                /* Start over-the-air update server. */
+                UpdateMgr::getInstance().begin();
+                MDNS.enableArduino(WebConfig::ARDUINO_OTA_PORT, true); /* This typically set by ArduinoOTA, but is disabled there. */
+            }
+
+            /* Start webserver after the wifi access point is running.
+            * If its done earlier, it will cause an exception because the LwIP stack
+            * is not initialized.
+            * The LwIP stack is initialized with wifiLowLevelInit()!
+            */
+            MyWebServer::begin();
+        }
     }
 
     return;

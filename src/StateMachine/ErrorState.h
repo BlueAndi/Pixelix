@@ -94,15 +94,53 @@ public:
      */
     void exit(StateMachine& sm) final;
 
-    /** Short wait time for showing a system message in ms */
-    static const uint32_t   SYS_MSG_WAIT_TIME_SHORT = 250U;
+    /**
+     * Low level errors which can happen.
+     * Low level means, it was before the display was initialized and the
+     * display manager, as well as the system message handler, were not
+     * active.
+     */
+    enum ErrorId
+    {
+        ERROR_ID_NO_ERROR = 0,      /**< No error */
+        ERROR_ID_UNKNOWN,           /**< Unknown error */
+        ERROR_ID_TWO_WIRE_ERROR,    /**< Two-wire (I2C) error */
+        ERROR_ID_NO_USER_BUTTON,    /**< User button is not available */
+        ERROR_ID_BAD_FS,            /**< Bad filesystem */
+        ERROR_ID_DISP_MGR,          /**< Display manager error */
+        ERROR_ID_SYS_MSG,           /**< System message handler error */
+        ERROR_ID_UPDATE_MGR         /**< Update manager error */
+    };
+
+    /**
+     * Set error cause, why this state will be entered.
+     * 
+     * @param[in] errorId   The error id of the root cause.
+     */
+    void setErrorId(ErrorId errorId)
+    {
+        m_errorId = errorId;
+    }
+
+    /**
+     * Get current set error id.
+     * 
+     * @return Error id, which is set.
+     */
+    ErrorId getErrorId() const
+    {
+        return m_errorId;
+    }
 
 private:
+
+    ErrorId m_errorId;  /**< The error cause, why this state is active. */
 
     /**
      * Constructs the state.
      */
-    ErrorState()
+    ErrorState() :
+        m_errorId(ERROR_ID_NO_ERROR)
     {
     }
 
