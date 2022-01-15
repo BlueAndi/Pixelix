@@ -21,6 +21,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 - [FAQ](#faq)
   - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
   - [How to change text properties?](#how-to-change-text-properties)
+  - [The display only shows a error code, like "E4". What does that mean?](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean)
   - [How can I use animated icons?](#how-can-i-use-animated-icons)
   - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
   - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
@@ -114,6 +115,20 @@ Sourcecode   | URL   | Result
 \\\lalign\\\\#ff0000Hi! | %5Clalign%23ff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
 \\\calign\\#ff0000Hi! | %5Ccalign%23ff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
 \\\ralign\\#ff0000Hi! | %5Ccalign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
+
+## The display only shows a error code, like "E4". What does that mean?
+
+This is a low level error code. Please have a look into the following table.
+
+| Error code | Description |
+| ---------- | ----------- |
+| E1 | Something happended, which can not be further explained, but was fatal. |
+| E2 | There is a problem with the two-wire (i2c) interface. |
+| E3 | There is no user button available. |
+| E4 | Bad filesystem, did you explicit program the filesystem too? If not, please upload it. |
+| E5 | The display manager didn't start up. |
+| E6 | The system message handler didn't start up. |
+| E7 | The update manager didn't start up. |
 
 ## How can I use animated icons?
 Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet file (.sprite).
