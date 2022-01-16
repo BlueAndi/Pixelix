@@ -117,7 +117,11 @@ void CaptivePortal::init(AsyncWebServer& srv)
     (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600")
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
-    /* Add the captive portal request handler at last, because it will handle everything. */
+    /* The about dialog is the only additional page, which shall be accessible. */
+    (void)srv.serveStatic("/about.html", FILESYSTEM, "/about.html")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
+    /* Add the captive portal request handler at last, because it will handle everything else. */
     (void)srv.addHandler(&gCaptivePortalReqHandler)
         .setFilter(ON_AP_FILTER)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());

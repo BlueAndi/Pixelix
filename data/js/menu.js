@@ -103,16 +103,22 @@ menu.data = [{
     "hyperRef": "/about.html"
 }];
 
-menu.create = function(ulId) {
-    var index       = 0;
-    var listItem    = null;
-    var anchor      = null;
+menu.captivePortal = [{
+    "title": "Home",
+    "hyperRef": "/index.html"
+}, {
+    "title": "About",
+    "hyperRef": "/about.html"
+}];
 
-    for(index = 0; index < menu.data.length; ++index) {
-        if ("undefined" === typeof menu.data[index].subMenu) {
-            menu._createMenuItem(ulId, menu.data[index]);
+menu.create = function(ulId, menuData) {
+    var index = 0;
+
+    for(index = 0; index < menuData.length; ++index) {
+        if ("undefined" === typeof menuData[index].subMenu) {
+            menu._createMenuItem(ulId, menuData[index]);
         } else {
-            menu._createSubMenu(ulId, menu.data[index]);
+            menu._createSubMenu(ulId, menuData[index]);
         }
     }
 };

@@ -147,7 +147,7 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
-                menu.create("menu");
+                menu.create("menu", menu.data);
                 
                 $("#inputFile").on("change", function() {
                     var fileName = $(this).val().split("\\").pop();

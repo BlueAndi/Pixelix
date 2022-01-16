@@ -535,7 +535,7 @@
                 var displayCanvas = document.getElementById("canvas");
                 ctx = displayCanvas.getContext("2d");
 
-                menu.create("menu");
+                menu.create("menu", menu.data);
 
                 /* Connect to pixelix */
                 wsClient.connect({

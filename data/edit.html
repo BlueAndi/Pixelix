@@ -368,7 +368,7 @@
             }
 
             $(document).ready(function() {
-                menu.create("menu");
+                menu.create("menu", menu.data);
 
                 ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12");
                 editor = ace.edit("editor");

@@ -251,7 +251,7 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
-                menu.create("menu");
+                menu.create("menu", menu.data);
 
                 $("#buttonInfo").click(function(e) {
                     e.preventDefault();

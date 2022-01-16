@@ -99,7 +99,7 @@
             $(document).ready(function() {
                 var index = 0;
 
-                menu.create("menu");
+                menu.create("menu", menu.data);
 
                 restClient.getSettingKeys().then(function(result) {
                     var promise = null;
