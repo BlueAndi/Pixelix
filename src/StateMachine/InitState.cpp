@@ -373,9 +373,9 @@ void InitState::exit(StateMachine& sm)
             if (false == m_isApModeRequested)
             {
                 /* In the next step the plugins are loaded and would be automatically be shown.
-                * To avoid this until the connection establishment takes place, show the following
-                * message infinite.
-                */
+                 * To avoid this until the connection establishment takes place, show the following
+                 * message infinite.
+                 */
                 SysMsg::getInstance().show("...");
                 delay(500U); /* Just to avoid a short splash */
 
@@ -391,10 +391,10 @@ void InitState::exit(StateMachine& sm)
             }
 
             /* Start webserver after the wifi access point is running.
-            * If its done earlier, it will cause an exception because the LwIP stack
-            * is not initialized.
-            * The LwIP stack is initialized with wifiLowLevelInit()!
-            */
+             * If its done earlier, it will cause an exception because the LwIP stack
+             * is not initialized.
+             * The LwIP stack is initialized with wifiLowLevelInit()!
+             */
             MyWebServer::begin();
         }
     }
