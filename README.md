@@ -114,7 +114,7 @@ Sourcecode   | URL   | Result
 ----------|--------------------|-------------
 \\\lalign\\\\#ff0000Hi! | %5Clalign%23ff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
 \\\calign\\#ff0000Hi! | %5Ccalign%23ff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
-\\\ralign\\#ff0000Hi! | %5Ccalign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
+\\\ralign\\#ff0000Hi! | %5Cralign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
 
 ## The display only shows a error code, like "E4". What does that mean?
 
