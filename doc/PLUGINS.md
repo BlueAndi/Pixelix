@@ -9,6 +9,7 @@
   - [IconTextPlugin](#icontextplugin)
   - [IconTextLampPlugin](#icontextlampplugin)
   - [JustTextPlugin](#justtextplugin)
+  - [ThreeIconPlugin](#threeiconplugin)
 - [Dedicated plugins](#dedicated-plugins)
   - [BTCQuotePlugin](#btcquoteplugin)
   - [CountdownPlugin](#countdownplugin)
@@ -44,7 +45,7 @@ The generic plugins allow the user to control the different UI elements describe
 
 ## IconTextPlugin
 The IconTextPlugin shows an icon on left side, text on right side.\
-Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/IconTextPlugin)
+Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/IconTextPlugin).
 
 ## IconTextLampPlugin
 The IconTextLampPlugin shows an icon on left side, text on right side and lamps at the bottom.\
@@ -52,14 +53,18 @@ Each part can be set separately via the [REST API](https://app.swaggerhub.com/ap
 
 ## JustTextPlugin
 The JustTextPlugin shows only text on the whole display.\
-The text to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/JustTextPlugin)
+The text to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/JustTextPlugin).
+
+## ThreIconPlugin
+The ThreeIconPlugin shows three icons on the display.\
+Each icon can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/ThreeIconPlugin).
 
 # Dedicated plugins
 Dedicated plugins are plugins which only serves one single purpose thy are only internaly cofigurable.
 
 ## BTCQuotePlugin
 The BTCQuotePlugin shows the current exchange rate from Bitcoin to USD.\
-Powered by [CoinDesk](https://www.coindesk.com/price/bitcoin)
+Powered by [CoinDesk](https://www.coindesk.com/price/bitcoin).
 
 ## CountdownPlugin
 The CountdownPlugin shows the remaining days until a configured target date.\
