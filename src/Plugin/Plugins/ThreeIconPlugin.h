@@ -77,7 +77,6 @@ public:
         Plugin(name, uid),
         m_threeIconCanvas(),
         m_bitmapWidget(),
-        m_textWidget(),
         m_isUploadError(false),
         m_mutex()
     {
@@ -220,7 +219,6 @@ private:
 
     WidgetGroup             m_threeIconCanvas;          /**< Canvas used for the bitmap widget. */
     BitmapWidget            m_bitmapWidget[MAX_ICONS];  /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
     bool                    m_isUploadError;            /**< Flag to signal a upload error. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
 

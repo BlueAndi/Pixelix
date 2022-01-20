@@ -55,7 +55,7 @@ Each part can be set separately via the [REST API](https://app.swaggerhub.com/ap
 The JustTextPlugin shows only text on the whole display.\
 The text to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/JustTextPlugin).
 
-## ThreIconPlugin
+## ThreeIconPlugin
 The ThreeIconPlugin shows three icons on the display.\
 Each icon can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/ThreeIconPlugin).
 
