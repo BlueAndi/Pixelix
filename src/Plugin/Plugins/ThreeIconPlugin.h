@@ -46,10 +46,8 @@
 #include <stdint.h>
 #include "Plugin.hpp"
 
-#include <FS.h>
 #include <WidgetGroup.h>
 #include <BitmapWidget.h>
-#include <TextWidget.h>
 #include <Mutex.hpp>
 
 /******************************************************************************

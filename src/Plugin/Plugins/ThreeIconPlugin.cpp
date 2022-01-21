@@ -38,7 +38,6 @@
 #include "FileSystem.h"
 
 #include <Logging.h>
-#include <ArduinoJson.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -105,10 +104,11 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
         String      iconIdStr           = topic.substring(indexBeginIconId);
         uint8_t     iconId              = MAX_ICONS;
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
+        JsonVariant jsonIconPath        = value["fullPath"];
 
-        if ((false != status) && (MAX_ICONS > iconId) && (false == value["fullPath"].isNull()))
+        if ((false != status) && (MAX_ICONS > iconId) && (false == jsonIconPath.isNull()))
         {
-            String iconPath = value["fullPath"].as<String>();
+            String iconPath = jsonIconPath.as<String>();
             isSuccessful = loadBitmap(iconPath, iconId);  
         }
     }
@@ -158,21 +158,22 @@ bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
 void ThreeIconPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
-    uint8_t                     iconId = 0U;
+    uint8_t                     iconId      = 0U;
+    const int16_t               DISTANCE    = (width - (MAX_ICONS * ICON_WIDTH)) / MAX_ICONS;
 
     m_threeIconCanvas.setPosAndSize(0, 0, width, height);
 
     for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
     { 
-        int16_t x = (ICON_WIDTH + 2) * iconId + 2;
+        int16_t x = (ICON_WIDTH + DISTANCE) * iconId + DISTANCE;
 
         (void)m_threeIconCanvas.addWidget(m_bitmapWidget[iconId]);
         m_bitmapWidget[iconId].move(x, 0);
     
         /* If there is already an icon in the filesystem for the respective icon-slot, it will be loaded.
-        * First check whether it is a animated sprite sheet and if not, try
-        * to load just a bitmap image.
-        */
+         * First check whether it is a animated sprite sheet and if not, try
+         * to load just a bitmap image.
+         */
         if (false == m_bitmapWidget[iconId].loadSpriteSheet(FILESYSTEM, getFileName(iconId, FILE_EXT_SPRITE_SHEET), getFileName(iconId, FILE_EXT_BITMAP)))
         {   
             (void)m_bitmapWidget[iconId].load(FILESYSTEM, getFileName(iconId, FILE_EXT_BITMAP));
