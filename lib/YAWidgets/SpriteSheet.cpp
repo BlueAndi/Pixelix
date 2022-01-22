@@ -70,6 +70,8 @@ SpriteSheet& SpriteSheet::operator=(const SpriteSheet& spriteSheet)
         m_frame         = spriteSheet.m_frame;
         m_frameCnt      = spriteSheet.m_frameCnt;
         m_fps           = spriteSheet.m_fps;
+        m_repeat        = spriteSheet.m_repeat;
+        m_isForward     = spriteSheet.m_isForward;
         m_framesX       = spriteSheet.m_framesX;
         m_framesY       = spriteSheet.m_framesY;
         m_currentFrameX = spriteSheet.m_currentFrameX;
@@ -117,9 +119,8 @@ bool SpriteSheet::loadTexture(FS& fs, const String& fileName, uint16_t frameWidt
                 m_textureMap.setWidth(frameWidth);
                 m_textureMap.setHeight(frameHeight);
 
-                m_fps           = fps;
-                m_currentFrameX = 0U;
-                m_currentFrameY = 0U;
+                m_fps = fps;
+                reset();
 
                 isSuccessful = true;
             }
@@ -152,6 +153,7 @@ bool SpriteSheet::load(FS& fs, const String& spriteSheetFileName, const String& 
             JsonVariant jsonFrameHeight = jsonDoc["texture"]["frame"]["height"];
             JsonVariant jsonFrameCnt    = jsonDoc["texture"]["frames"];
             JsonVariant jsonFps         = jsonDoc["texture"]["fps"];
+            JsonVariant jsonRepeat      = jsonDoc["texture"]["repeat"];
 
             if ((false == jsonFrameWidth.isNull()) &&
                 (false == jsonFrameHeight.isNull()) &&
@@ -162,10 +164,23 @@ bool SpriteSheet::load(FS& fs, const String& spriteSheetFileName, const String& 
                 uint16_t    frameHeight = jsonFrameHeight.as<uint16_t>();
                 uint8_t     fps         = jsonFps.as<uint8_t>();
 
+                /* The number of frames is optional. */
                 if (false == jsonFrameCnt.isNull())
                 {
                     frameCnt = jsonFrameCnt.as<uint8_t>();
                 }
+
+                /* The repeat parameter is optional. */
+                if (false == jsonRepeat.isNull())
+                {
+                    m_repeat = jsonRepeat.as<bool>();
+                }
+                else
+                {
+                    m_repeat = true;
+                }
+
+                m_isForward = true;
 
                 isSuccessful = loadTexture( fs, 
                                             textureFileName, 
@@ -182,27 +197,31 @@ bool SpriteSheet::load(FS& fs, const String& spriteSheetFileName, const String& 
 
 void SpriteSheet::next()
 {
-    ++m_currentFrameX;
-
-    if (m_framesX <= m_currentFrameX)
+    if (false == m_isForward)
     {
-        m_currentFrameX = 0U;
-
-        ++m_currentFrameY;
-
-        if (m_framesY <= m_currentFrameY)
-        {
-            m_currentFrameY = 0U;
-        }
+        moveBackward();
+    }
+    else
+    {
+        moveForward();
     }
 
-    /* The texture may be not complete filled with frames.
-     * This will be considered here.
-     */
-    if (m_frameCnt < (m_currentFrameX + m_currentFrameY * m_framesX))
+    LOG_INFO("x = %u, y = %u", m_currentFrameX, m_currentFrameY);
+
+    /* Calculate and set the frame offset in the texture image. */
+    m_textureMap.setOffsetX(m_currentFrameX * m_frame.getWidth());
+    m_textureMap.setOffsetY(m_currentFrameY * m_frame.getHeight());
+}
+
+void SpriteSheet::reset()
+{
+    if (false == m_isForward)
     {
-        m_currentFrameX = 0U;
-        m_currentFrameY = 0U;
+        moveToBegin();
+    }
+    else
+    {
+        moveToEnd();
     }
 
     /* Calculate and set the frame offset in the texture image. */
@@ -217,6 +236,145 @@ void SpriteSheet::next()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+bool SpriteSheet::isBegin() const
+{
+    bool isBegin = false;
+
+    if ((0U == m_currentFrameX) &&
+        (0U == m_currentFrameY))
+    {
+        isBegin = true;
+    }
+
+    return isBegin;
+}
+
+bool SpriteSheet::isEnd() const
+{
+    bool isEnd = false;
+
+    /* Not any frame available? */
+    if (0 == m_frameCnt)
+    {
+        isEnd = true;
+    }
+    /* The texture may be not complete filled with frames.
+     * This will be considered here.
+     */
+    else
+    {
+        uint8_t x = m_frameCnt % m_framesX;
+        uint8_t y = m_framesY - 1U;
+
+        if (0U == x)
+        {
+            x = m_framesX - 1U;
+        }
+
+        if ((x == m_currentFrameX) &&
+            (y == m_currentFrameY))
+        {
+            isEnd = true;
+        }
+    }
+
+    return isEnd;
+}
+
+void SpriteSheet::moveToBegin()
+{
+    m_currentFrameX = 0U;
+    m_currentFrameY = 0U;
+}
+
+void SpriteSheet::moveToEnd()
+{
+    /* Not any frame available? */
+    if (0 == m_frameCnt)
+    {
+        m_currentFrameX = 0U;
+        m_currentFrameY = 0U;
+    }
+    /* The texture may be not complete filled with frames.
+     * This will be considered here.
+     */
+    else
+    {
+        m_currentFrameX = m_frameCnt % m_framesX;
+
+        if (0 == m_currentFrameX)
+        {
+            m_currentFrameX = m_framesX - 1U;
+        }
+
+        m_currentFrameY = m_framesY - 1U;
+    }
+}
+
+void SpriteSheet::moveForward()
+{
+    /* At the last frame? */
+    if (true == isEnd())
+    {
+        /* If animation repeats infinite, it will be set to the begin agin. */
+        if (true == m_repeat)
+        {
+            moveToBegin();
+        }
+    }
+    /* Move to the next one. */
+    else
+    {
+        ++m_currentFrameX;
+
+        if (m_framesX <= m_currentFrameX)
+        {
+            m_currentFrameX = 0U;
+
+            ++m_currentFrameY;
+
+            if (m_framesY <= m_currentFrameY)
+            {
+                m_currentFrameY = 0U;
+            }
+        }
+    }
+}
+
+void SpriteSheet::moveBackward()
+{
+    /* At the first frame? */
+    if (true == isBegin())
+    {
+        /* If animation repeats infinite, it will be set to the end agin. */
+        if (true == m_repeat)
+        {
+            moveToEnd();
+        }
+    }
+    /* Move to the next one. */
+    else
+    {
+        if (0U == m_currentFrameX)
+        {
+            m_currentFrameX = m_framesX - 1U;
+
+            if (0U == m_currentFrameY)
+            {
+                m_currentFrameY = m_framesY - 1U;
+            }
+            else
+            {
+                --m_currentFrameY;
+            }
+        }
+        else
+        {
+            --m_currentFrameX;
+        }
+    }
+}
 
 /******************************************************************************
  * External Functions
