@@ -133,26 +133,7 @@ This is a low level error code. Please have a look into the following table.
 | E7 | The update manager didn't start up. |
 
 ## How can I use animated icons?
-Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet file (.sprite).
-The sprite sheet file format is JSON and shall look like:
-```json
-{
-    "texture": {
-        "width": 40,
-        "height": 8,
-        "frames": 5,
-        "frame": {
-            "width": 8,
-            "height": 8
-        },
-        "fps": 5
-    }
-}
-```
-You can use the ```./doc/spritesheet/create_sprite_sheet.py``` to create it or manually.
-
-Limitations:
-* Only bitmap texture files (.bmp) are supported.
+Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet file (.sprite). See the details [here](./doc/SPRITESHEET.md).
 
 ## How do I know that my sensor is recognized?
 

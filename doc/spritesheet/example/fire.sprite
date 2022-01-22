@@ -1,0 +1,13 @@
+{
+    "texture": {
+        "width": 40,
+        "height": 8,
+        "frames": 5,
+        "frame": {
+            "width": 8,
+            "height": 8
+        },
+        "fps": 5,
+        "repeat": true
+    }
+}
