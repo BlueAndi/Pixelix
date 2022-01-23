@@ -206,8 +206,6 @@ void SpriteSheet::next()
         moveForward();
     }
 
-    LOG_INFO("x = %u, y = %u", m_currentFrameX, m_currentFrameY);
-
     /* Calculate and set the frame offset in the texture image. */
     m_textureMap.setOffsetX(m_currentFrameX * m_frame.getWidth());
     m_textureMap.setOffsetY(m_currentFrameY * m_frame.getHeight());
