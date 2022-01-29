@@ -107,6 +107,7 @@ private:
     ConnectedState():
         m_client()
     {
+        initHttpClient();
     }
 
     /**

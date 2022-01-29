@@ -127,8 +127,6 @@ void ConnectedState::entry(StateMachine& sm)
     /* Notify that Pixelix is online only if URL was set. */
     if (!notifyURL.equals("-"))
     {
-        initHttpClient();
-        
         if (true == m_client.begin(notifyURL))
         {
             if (false == m_client.GET())
