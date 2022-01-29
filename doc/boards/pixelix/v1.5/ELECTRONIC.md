@@ -1,5 +1,5 @@
 # PIXELIX
-![PIXELIX](./images/LogoBlack.png)
+![PIXELIX](../../../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
@@ -11,7 +11,7 @@
 
 ## ESP32 DevKit V1
 
-![ESP32 DevKitV1 Pinout](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/datasheets/pinoutDOIT32devkitv1.png)
+![ESP32 DevKitV1 Pinout](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/boards/pixelix/datasheets/pinoutDOIT32devkitv1.png)
 
 | ESP32 DevKit V1 Pin | ESP32 DevKit V1 Pin Header | WROOM32 Pin | Notes | Usage |
 | --- | --- | --- | --- | --- |
