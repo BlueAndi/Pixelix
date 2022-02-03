@@ -18,7 +18,7 @@
 
 ## Hardware
 
-* [Boards](BOARDS.md)
+* [Boards](./boards/README.md)
 * [Sensors](SENSORS.md)
 
 ## Software

@@ -127,8 +127,6 @@ void ConnectedState::entry(StateMachine& sm)
     /* Notify that Pixelix is online only if URL was set. */
     if (!notifyURL.equals("-"))
     {
-        initHttpClient();
-        
         if (true == m_client.begin(notifyURL))
         {
             if (false == m_client.GET())
@@ -146,7 +144,7 @@ void ConnectedState::entry(StateMachine& sm)
 
 void ConnectedState::initHttpClient()
 {
-    m_client.regOnResponse([this](const HttpResponse& rsp){
+    m_client.regOnResponse([](const HttpResponse& rsp){
         uint16_t statusCode = rsp.getStatusCode();
 
         if (HttpStatus::STATUS_CODE_OK == statusCode)
@@ -156,7 +154,7 @@ void ConnectedState::initHttpClient()
 
     });
 
-    m_client.regOnError([this]() {
+    m_client.regOnError([]() {
         LOG_WARNING("Connection error happened.");
    });
 }
