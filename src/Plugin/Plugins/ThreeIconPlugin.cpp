@@ -234,9 +234,9 @@ bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
 
 void ThreeIconPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
     uint8_t                     iconId      = 0U;
     const int16_t               DISTANCE    = (width - (MAX_ICONS * ICON_WIDTH)) / MAX_ICONS;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_threeIconCanvas.setPosAndSize(0, 0, width, height);
 
@@ -264,8 +264,8 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
 
 void ThreeIconPlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
     uint8_t                     iconId = 0U;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
     { 
@@ -285,8 +285,8 @@ void ThreeIconPlugin::stop()
 
 void ThreeIconPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
-    uint8_t iconId = 0U;
+    uint8_t                     iconId = 0U;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
     { 
@@ -356,7 +356,8 @@ String ThreeIconPlugin::getFileName(uint8_t iconId, const String& ext)
 
 bool ThreeIconPlugin::getIsForward(uint8_t iconId) const
 {
-    bool state = false;
+    bool                        state = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if (MAX_ICONS > iconId)
     {
@@ -372,6 +373,8 @@ bool ThreeIconPlugin::getIsForward(uint8_t iconId) const
 
 void ThreeIconPlugin::setIsForward(uint8_t iconId, bool state)
 {
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
     if (MAX_ICONS > iconId)
     {
         m_isForward[iconId] = state;
@@ -385,7 +388,8 @@ void ThreeIconPlugin::setIsForward(uint8_t iconId, bool state)
 
 bool ThreeIconPlugin::getIsRepeat(uint8_t iconId) const
 {
-    bool state = false;
+    bool                        state = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     if (MAX_ICONS > iconId)
     {
@@ -401,6 +405,8 @@ bool ThreeIconPlugin::getIsRepeat(uint8_t iconId) const
 
 void ThreeIconPlugin::setIsRepeat(uint8_t iconId, bool state)
 {
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
     if (MAX_ICONS > iconId)
     {
         m_isRepeat[iconId] = state;
