@@ -75,6 +75,9 @@ public:
         Plugin(name, uid),
         m_threeIconCanvas(),
         m_bitmapWidget(),
+        m_isSpriteSheetAvailable{false},
+        m_isForward{false},
+        m_isRepeat{false},
         m_isUploadError(false),
         m_mutex()
     {
@@ -189,6 +192,11 @@ private:
      */
     static const char*      TOPIC_ICON;
 
+   /**
+     * Plugin topic, used for animation control.
+     */
+    static const char*      TOPIC_ANIMATION;
+
     /**
      * Max. number of icons.
      */
@@ -215,10 +223,13 @@ private:
     static const char*      FILE_EXT_SPRITE_SHEET;
 
 
-    WidgetGroup             m_threeIconCanvas;          /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidget[MAX_ICONS];  /**< Bitmap widget, used to show the icon. */
-    bool                    m_isUploadError;            /**< Flag to signal a upload error. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
+    WidgetGroup             m_threeIconCanvas;                      /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidget[MAX_ICONS];              /**< Bitmap widget, used to show the icon. */
+    bool                    m_isSpriteSheetAvailable[MAX_ICONS];    /**< Flag to indicate whether a spritesheet is used or just a bitmap. */
+    bool                    m_isForward[MAX_ICONS];                 /**< Flag to hold the FORWARD animation control state of an icon. */
+    bool                    m_isRepeat[MAX_ICONS];                  /**< Flag to hold the REPEAT animation control state of an icon. */
+    bool                    m_isUploadError;                        /**< Flag to signal a upload error. */
+    mutable MutexRecursive  m_mutex;                                /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.
@@ -229,6 +240,42 @@ private:
      * @return Image filename with path.
      */
     String getFileName(uint8_t iconId, const String& ext);
+
+   /**
+     * Get the state of the FORWARD control flag of an icon.
+     *
+     * @param[in] iconId    The icon Id.
+     *
+     * @return The state of the isForward animation control flag.
+     */  
+    bool getIsForward(uint8_t iconId) const;
+
+    /**
+     * Set the state of the FORWARD control flag of an icon.
+     *
+     * @param[in] iconId    The icon Id.
+     * @param[in] state     The state to be set.
+     */  
+    void setIsForward(uint8_t iconId, bool state);
+
+   /**
+     * Get the state of the REPEAT control flag of an icon.
+     *
+     * @param[in] iconId    The icon Id.
+     * 
+     * @return The state of the isRepeat animation control flag.
+     */  
+    bool getIsRepeat(uint8_t iconId) const;
+
+    /**
+     * Set the state of the REPEAT control flag of an icon.
+     *
+     * @param[in] iconId    The icon Id.
+     * @param[in] state     The state to be set.
+     */  
+    void setIsRepeat(uint8_t iconId, bool state);
+
+
 };
 
 /******************************************************************************

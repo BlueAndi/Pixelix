@@ -68,6 +68,10 @@ const char* ThreeIconPlugin::FILE_EXT_BITMAP            = ".bmp";
 /* Initialize sprite sheet parameter filename extension. */
 const char* ThreeIconPlugin::FILE_EXT_SPRITE_SHEET      = ".sprite";
 
+/* Initialize animation control topic. */
+const char* ThreeIconPlugin::TOPIC_ANIMATION            = "/animation";
+
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -78,7 +82,8 @@ void ThreeIconPlugin::getTopics(JsonArray& topics) const
 
     for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
     {
-        (void)topics.add(String(TOPIC_ICON) + "/" + iconId);
+        (void)topics.add(String(TOPIC_ICON)         + "/" + iconId);
+        (void)topics.add(String(TOPIC_ANIMATION)    + "/" + iconId);
     }
 }
 
@@ -89,6 +94,32 @@ bool ThreeIconPlugin::getTopic(const String& topic, JsonObject& value) const
     if (0U != topic.startsWith(String(TOPIC_ICON) + "/"))
     {
         isSuccessful = true;
+    }
+    else if (0U != topic.startsWith(String(TOPIC_ANIMATION) + "/"))
+    {
+        uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
+        String      iconIdStr           = topic.substring(indexBeginIconId);
+        uint8_t     iconId              = MAX_ICONS;
+        bool        status              = Util::strToUInt8(iconIdStr, iconId);
+
+        if ((true == status) &&
+            (MAX_ICONS > iconId))
+        {
+            bool    isForward       = getIsForward(iconId);
+            bool    isRepeat        = getIsRepeat(iconId);
+            String  isForwardStr    = (false == isForward) ? "false" : "true";
+            String  isRepeatStr     = (false == isRepeat) ? "false" : "true";
+    
+            value["id"]         = iconId;
+            value["repeat"]     = isRepeatStr;
+            value["forward"]    = isForwardStr;
+
+            isSuccessful = true;
+        }
+    }
+    else
+    {
+        ;
     }
 
     return isSuccessful;
@@ -112,11 +143,57 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
             isSuccessful = loadBitmap(iconPath, iconId);  
         }
     }
+    else if (0U != topic.startsWith(String(TOPIC_ANIMATION) + "/"))
+    {
+        uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
+        String      iconIdStr           = topic.substring(indexBeginIconId);
+        uint8_t     iconId              = MAX_ICONS;
+        bool        status              = Util::strToUInt8(iconIdStr, iconId);
+
+        if(false != m_isSpriteSheetAvailable[iconId])
+        {
+            if ((true == status) &&
+                (MAX_ICONS > iconId) &&
+                (false == value["forward"].isNull()))
+            {
+                String isForward = value["forward"].as<String>();
+
+                if (isForward == "false")
+                {
+                    setIsForward(iconId, false);
+                    isSuccessful = true;
+                }
+                else if (isForward == "true")
+                {
+                    setIsForward(iconId, true);
+                    isSuccessful = true;
+                }
+            }
+
+            if ((true == status) &&
+                (MAX_ICONS > iconId) &&
+                (false == value["repeat"].isNull()))
+            {
+                String isRepeat = value["repeat"].as<String>();
+
+                if (isRepeat == "false")
+                {
+                    setIsRepeat(iconId, false);
+                    isSuccessful = true;
+                }
+                else if (isRepeat == "true")
+                {
+                    setIsRepeat(iconId, true);
+                    isSuccessful = true;
+                }
+            }
+        }
+    }
     else
     {
         ;
     }
-
+    
     return isSuccessful;
 }
 
@@ -174,7 +251,9 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
          * First check whether it is a animated sprite sheet and if not, try
          * to load just a bitmap image.
          */
-        if (false == m_bitmapWidget[iconId].loadSpriteSheet(FILESYSTEM, getFileName(iconId, FILE_EXT_SPRITE_SHEET), getFileName(iconId, FILE_EXT_BITMAP)))
+        m_isSpriteSheetAvailable[iconId] = m_bitmapWidget[iconId].loadSpriteSheet(FILESYSTEM, getFileName(iconId, FILE_EXT_SPRITE_SHEET), getFileName(iconId, FILE_EXT_BITMAP));
+
+        if (false == m_isSpriteSheetAvailable[iconId])
         {   
             (void)m_bitmapWidget[iconId].load(FILESYSTEM, getFileName(iconId, FILE_EXT_BITMAP));
         }
@@ -207,6 +286,16 @@ void ThreeIconPlugin::stop()
 void ThreeIconPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
+    uint8_t iconId = 0U;
+
+    for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
+    { 
+        if(false != m_isSpriteSheetAvailable[iconId])
+        {
+            m_bitmapWidget[iconId].setSpriteSheetForward(m_isForward[iconId]);
+            m_bitmapWidget[iconId].setSpriteSheetRepeatInfinite(m_isRepeat[iconId]);
+        }
+    }   
 
     gfx.fillScreen(ColorDef::BLACK);
     m_threeIconCanvas.update(gfx);
@@ -230,6 +319,8 @@ bool ThreeIconPlugin::loadBitmap(const String& filename, uint8_t iconId)
         if (false != status)
         {
             (void)FILESYSTEM.remove(getFileName(iconId, FILE_EXT_SPRITE_SHEET));
+
+            m_isSpriteSheetAvailable[iconId] = false;
         }
     }
     else if (0U != filename.endsWith(FILE_EXT_SPRITE_SHEET))
@@ -239,6 +330,8 @@ bool ThreeIconPlugin::loadBitmap(const String& filename, uint8_t iconId)
         bmpFilename.replace(FILE_EXT_SPRITE_SHEET, FILE_EXT_BITMAP);
 
         status = m_bitmapWidget[iconId].loadSpriteSheet(FILESYSTEM, filename,  bmpFilename);
+        
+        m_isSpriteSheetAvailable[iconId] = status;
     }
     else
     {
@@ -261,6 +354,62 @@ String ThreeIconPlugin::getFileName(uint8_t iconId, const String& ext)
     return generateFullPath("_" + String(iconId) + ext);
 }
 
+bool ThreeIconPlugin::getIsForward(uint8_t iconId) const
+{
+    bool state = false;
+
+    if (MAX_ICONS > iconId)
+    {
+        state = m_isForward[iconId];
+    }
+    else
+    {
+        LOG_ERROR("Get isForward failed, invalid iconId.");
+    }
+    
+    return state;
+}
+
+void ThreeIconPlugin::setIsForward(uint8_t iconId, bool state)
+{
+    if (MAX_ICONS > iconId)
+    {
+        m_isForward[iconId] = state;
+    }
+    else
+    {
+        LOG_ERROR("Set isForward failed, invalid iconId.");
+    }
+}
+
+
+bool ThreeIconPlugin::getIsRepeat(uint8_t iconId) const
+{
+    bool state = false;
+
+    if (MAX_ICONS > iconId)
+    {
+        state = m_isRepeat[iconId];
+    }
+    else
+    {
+        LOG_ERROR("Get isRepeat failed, invalid iconId.");
+    }
+    
+    return state;
+}
+
+void ThreeIconPlugin::setIsRepeat(uint8_t iconId, bool state)
+{
+    if (MAX_ICONS > iconId)
+    {
+        m_isRepeat[iconId] = state;
+    }
+    else
+    {
+        LOG_ERROR("Set isRepeat failed, invalid iconId.");
+    }
+}
 /******************************************************************************
  * External Functions
  *****************************************************************************/

@@ -52,6 +52,7 @@
                 <p><img src="/images/ThreeIconPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin is able to show three different icons.</p>
                 <p>Each icon can be set separately via the REST API.</p>
+                <p>If a Sprite Sheet is used the animation of an can be controlled via the REST API (see <a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/Development/doc/SPRITESHEET.md"> Sprite Sheet</a>).</p>
                 <p>Show bitmap in one of the three slots. Supported are bitmap files (.bmp) with:</p>
                 <ul>
                     <li>24 or 32 bits per pixel.</li>
@@ -70,6 +71,18 @@
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>ICON-ID: The id of the icon (starting with 0 from left).</li>
+                </ul>
+                <h3 class="mt-1">Control animation (Sprite Sheet required)</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;</code></pre>
+
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>ICON-ID: The id of the icon (starting with 0 from left).</li>
+                    <li>STATE: <code>true </code>or <code>false</code></li>.</li>
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Icon 0</h3>
