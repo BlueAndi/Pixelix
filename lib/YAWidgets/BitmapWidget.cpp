@@ -159,6 +159,16 @@ bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, co
     return isSuccessful;
 }
 
+void BitmapWidget::setSpriteSheetForward(bool forward)
+{
+    m_spriteSheet.setForward(forward);
+}
+
+void BitmapWidget::setSpriteSheetRepeatInfinite(bool repeat)
+{
+    m_spriteSheet.repeatInfinite(repeat);
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
