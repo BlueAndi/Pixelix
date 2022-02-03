@@ -55,7 +55,7 @@ Although Pixelix was designed to show information, that is pushed or pulled via 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
 
-Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the webintervface.
+Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the webinterface.
 
 Restart and voila!
 
