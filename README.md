@@ -55,7 +55,9 @@ Although Pixelix was designed to show information, that is pushed or pulled via 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
 
-Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Restart and voila!
+Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the webinterface.
+
+Restart and voila!
 
 # User Interface
 * The user button activates always the next slot.
@@ -114,7 +116,7 @@ Sourcecode   | URL   | Result
 ----------|--------------------|-------------
 \\\lalign\\\\#ff0000Hi! | %5Clalign%23ff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
 \\\calign\\#ff0000Hi! | %5Ccalign%23ff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
-\\\ralign\\#ff0000Hi! | %5Ccalign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
+\\\ralign\\#ff0000Hi! | %5Cralign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
 
 ## The display only shows a error code, like "E4". What does that mean?
 
@@ -131,26 +133,7 @@ This is a low level error code. Please have a look into the following table.
 | E7 | The update manager didn't start up. |
 
 ## How can I use animated icons?
-Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet file (.sprite).
-The sprite sheet file format is JSON and shall look like:
-```json
-{
-    "texture": {
-        "width": 40,
-        "height": 8,
-        "frames": 5,
-        "frame": {
-            "width": 8,
-            "height": 8
-        },
-        "fps": 5
-    }
-}
-```
-You can use the ```./doc/spritesheet/create_sprite_sheet.py``` to create it or manually.
-
-Limitations:
-* Only bitmap texture files (.bmp) are supported.
+Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet file (.sprite). See the details [here](./doc/SPRITESHEET.md).
 
 ## How do I know that my sensor is recognized?
 

@@ -82,6 +82,7 @@
 #include "SysMsgPlugin.h"
 #include "TempHumidPlugin.h"
 #include "TestPlugin.h"
+#include "ThreeIconPlugin.h"
 #include "TimePlugin.h"
 #include "VolumioPlugin.h"
 #include "WifiStatusPlugin.h"
@@ -468,6 +469,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
     pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
     pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
+    pluginMgr.registerPlugin("ThreeIconPlugin", ThreeIconPlugin::create);
     pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
     pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
     pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);

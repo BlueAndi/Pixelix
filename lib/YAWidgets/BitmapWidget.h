@@ -155,6 +155,18 @@ public:
      */
     bool loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName);
 
+    /** Set the animation control flag FORWARD of a sprite sheet 
+     * 
+     * @param[in] forward The state to be set.
+     */
+    void setSpriteSheetForward(bool forward);
+
+    /** Set the animation control flag REPEAT of a sprite sheet 
+     * 
+     * @param[in] isRepeat The state to be set.
+     */
+    void setSpriteSheetRepeatInfinite(bool repeat);
+    
     /** Widget type string */
     static const char* WIDGET_TYPE;
 

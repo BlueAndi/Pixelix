@@ -253,8 +253,6 @@ private:
     /**
      * Period in ms for requesting data from server.
      * This is used in case the last request to the server was successful.
-     * The period is shorter than the UPDATE_PERIOD_SHORT, because if the music
-     * changes, the display shall be updated more or less immediately.
      */
     static const uint32_t   UPDATE_PERIOD       = (4U * 60U * 60U * 1000U);
 

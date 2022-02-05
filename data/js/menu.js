@@ -73,6 +73,9 @@ menu.data = [{
         "title": "Time Plugin",
         "hyperRef": "/plugins/TimePlugin.html"
     }, {
+        "title": "ThreeIcon Plugin",
+        "hyperRef": "/plugins/ThreeIconPlugin.html"
+    }, {
         "title": "Volumio Plugin",
         "hyperRef": "/plugins/VolumioPlugin.html"
     }, {

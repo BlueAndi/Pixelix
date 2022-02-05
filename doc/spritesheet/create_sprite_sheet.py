@@ -74,6 +74,15 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--repeat",
+        dest="repeat",
+        type=str,
+        required=False,
+        default="true",
+        help="Repeat animation infinite. If false it will run just once. (Default: true)"
+    )
+
+    parser.add_argument(
         "texture_filename",
         metavar="textureFilename",
         type=str,
@@ -116,6 +125,10 @@ if __name__ == "__main__":
         frames_cnt = frames_x * frames_y
 
     print(f'{frames_cnt} frames in the sprite sheet.')
+    
+    repeat = True
+    if args.repeat.lower() == "false":
+        repeat = False
 
     doc = {
         "texture": {
@@ -126,7 +139,8 @@ if __name__ == "__main__":
                 "width": args.frame_width,
                 "height": args.frame_height
             },
-            "fps": args.fps
+            "fps": args.fps,
+            "repeat": repeat
         }
     }
 
