@@ -78,6 +78,7 @@
 #include "RainbowPlugin.h"
 #include "SensorPlugin.h"
 #include "ShellyPlugSPlugin.h"
+#include "SoundReactivePlugin.h"
 #include "SunrisePlugin.h"
 #include "SysMsgPlugin.h"
 #include "TempHumidPlugin.h"
@@ -465,6 +466,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
     pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);
     pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
+    pluginMgr.registerPlugin("SoundReactivePlugin", SoundReactivePlugin::create);
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
     pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
