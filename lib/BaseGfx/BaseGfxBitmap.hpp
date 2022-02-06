@@ -151,6 +151,8 @@ public:
                 while(PIXEL_BUFFER_SIZE > idx)
                 {
                     m_pixels[idx] = bitmap.m_pixels[idx];
+
+                    ++idx;
                 }
             }
         }
@@ -369,6 +371,8 @@ public:
                     while(PIXEL_BUFFER_SIZE > idx)
                     {
                         m_pixels[idx] = bitmap.m_pixels[idx];
+
+                        ++idx;
                     }
 
                     m_width     = bitmap.m_width;
