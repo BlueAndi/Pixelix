@@ -13,7 +13,7 @@ PCB board v1.5
 
 ## ESP32 DevKit V1
 
-![ESP32 DevKitV1 Pinout](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/boards/pixelix/datasheets/pinoutDOIT32devkitv1.png)
+![ESP32 DevKitV1 Pinout](../datasheets/pinoutDOIT32devkitv1.png)
 
 | ESP32 DevKit V1 Pin | ESP32 DevKit V1 Pin Header | WROOM32 Pin | Notes | Usage |
 | --- | --- | --- | --- | --- |
