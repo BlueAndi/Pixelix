@@ -228,18 +228,23 @@ void SoundReactivePlugin::process()
                     {
                         octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx]);
                         ++divisor; /* Count number of added frequency bins. */
+                    }
 
-                        /* If the current frequency bin is equal than the current
-                         * high edge frequency of the band, the following frequency
-                         * bin's will be assigned to the next band.
-                         */
-                        if (bandHighEdgeFreqs[bandIdx] == freqBinIdx)
+                    /* If the current frequency bin is equal than the current
+                     * high edge frequency of the band, the following frequency
+                     * bin's will be assigned to the next band.
+                     */
+                    if (bandHighEdgeFreqs[bandIdx] == freqBinIdx)
+                    {
+                        /* Any frequency band added? */
+                        if (0 < divisor)
                         {
-                            octaveFreqBands[bandIdx] /= static_cast<float>(divisor);    /* Depends on how many frequency bins were added. */
-
-                            ++bandIdx;
-                            divisor = 0;
+                            /* Depends on how many frequency bins were added. */
+                            octaveFreqBands[bandIdx] /= static_cast<float>(divisor);
                         }
+
+                        ++bandIdx;
+                        divisor = 0;
                     }
                 }
 
@@ -251,7 +256,17 @@ void SoundReactivePlugin::process()
                  */
                 for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
                 {
-                    octaveFreqBands[bandIdx] = 20.0f * log10f(abs(octaveFreqBands[bandIdx]) / (VALUE_PER_1_UPA * ABS_THRESHOLD_OF_HEARING));
+                    float tmpValue = abs(octaveFreqBands[bandIdx]) / (VALUE_PER_1_UPA * ABS_THRESHOLD_OF_HEARING);
+
+                    /* If the value is lower than 1, the result will be negative. */
+                    if (1.0f > tmpValue)
+                    {
+                        octaveFreqBands[bandIdx] = 0.0f;
+                    }
+                    else
+                    {
+                        octaveFreqBands[bandIdx] = 20.0f * log10f(tmpValue);
+                    }
                 }
 
                 /* Downscale to the bar height in relation to 120 dB.
