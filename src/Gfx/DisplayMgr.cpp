@@ -158,7 +158,7 @@ bool DisplayMgr::begin()
 
                 osRet = xTaskCreateUniversal(   updateTask,
                                                 "displayTask",
-                                                TASK_STACKE_SIZE,
+                                                TASK_STACK_SIZE,
                                                 this,
                                                 TASK_PRIORITY,
                                                 &m_taskHandle,
@@ -1040,10 +1040,10 @@ void DisplayMgr::process()
 
 void DisplayMgr::updateTask(void* parameters)
 {
-    DisplayMgr* displayMgr = reinterpret_cast<DisplayMgr*>(parameters);
+    DisplayMgr* tthis = reinterpret_cast<DisplayMgr*>(parameters);
 
-    if ((nullptr != displayMgr) &&
-        (nullptr != displayMgr->m_xSemaphore))
+    if ((nullptr != tthis) &&
+        (nullptr != tthis->m_xSemaphore))
     {
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
         Statistics      statistics;
@@ -1055,9 +1055,9 @@ void DisplayMgr::updateTask(void* parameters)
 
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
-        (void)xSemaphoreTake(displayMgr->m_xSemaphore, portMAX_DELAY);
+        (void)xSemaphoreTake(tthis->m_xSemaphore, portMAX_DELAY);
 
-        while(false == displayMgr->m_taskExit)
+        while(false == tthis->m_taskExit)
         {
             uint32_t    timestamp           = millis();
             uint32_t    duration            = 0U;
@@ -1069,7 +1069,7 @@ void DisplayMgr::updateTask(void* parameters)
             const uint32_t  MAX_LOOP_TIME   = (TASK_PERIOD * 7U) / (10U);
 
             /* Refresh display content periodically */
-            displayMgr->process();
+            tthis->process();
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
             statistics.pluginProcessing.update(millis() - timestamp);
@@ -1143,7 +1143,7 @@ void DisplayMgr::updateTask(void* parameters)
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
         }
 
-        (void)xSemaphoreGive(displayMgr->m_xSemaphore);
+        (void)xSemaphoreGive(tthis->m_xSemaphore);
     }
 
     vTaskDelete(nullptr);
