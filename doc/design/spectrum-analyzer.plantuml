@@ -22,8 +22,6 @@ end note
 
 specAnalyzer <-- specAnalyzer
 plugin <-- specAnalyzer
-plugin -> specAnalyzer: register event queue
-plugin <-- specAnalyzer
 <-- plugin
 
 end alt
@@ -39,10 +37,10 @@ alt setup spectrum analyzer task
         * Sample rate: 40 kHz
         * Samples: 1024 (power of 2)
         * Bits per sample: 16
-        * DMA block size: 64
-        * DMA blocks: 8
+        * DMA block size: 128 bytes (64 samples)
+        * DMA blocks: 4
         * Sample period: 25 us (per sample)
-        * Sample time: 25.6 ms (all samples)
+        * Block sample time: 1.6 ms
         * Trigger by I2S_EVENT_RX_DONE event
     end note
 
@@ -72,11 +70,8 @@ alt spectrum analyzer task triggered by I2S_EVENT_RX_DONE
 
         specAnalyzer -> specAnalyzer: calculate FFT
         specAnalyzer <-- specAnalyzer
-        specAnalyzer -> specAnalyzer: calculate frequency bands
+        specAnalyzer -> specAnalyzer: copy frequency bins and set ready flag
         specAnalyzer <-- specAnalyzer
-
-        plugin <<- specAnalyzer: RX_DONE
-        plugin -->> specAnalyzer
 
     end alt
 
@@ -87,13 +82,16 @@ end alt
 alt Every 20 ms
 
 -> plugin: process
+plugin -> specAnalyzer: Are frequency bins ready?
+plugin <-- specAnalyzer: true/false
 
-alt If RX_DONE received
+alt If frequency bins are ready
 
-    plugin -> specAnalyzer: read frequency bands
-    specAnalyzer -> specAnalyzer: by copy
-    specAnalyzer <-- specAnalyzer
-    plugin <-- specAnalyzer: frequency bands
+    plugin -> specAnalyzer: get frequency bins by copy
+    plugin <-- specAnalyzer: frequency bins
+
+    plugin -> plugin: post-processing
+    plugin <-- plugin
 
 end alt
 

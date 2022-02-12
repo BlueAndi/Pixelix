@@ -33,6 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "SoundReactivePlugin.h"
+#include "SpectrumAnalyzer.h"
+
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -55,7 +58,41 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* SoundReactivePlugin::TOPIC_CHANNEL = "/channel";
+const char*     SoundReactivePlugin::TOPIC_CHANNEL                      = "/cfg";
+
+/* Initialize the list with the high edge frequency bin of the center band frequency. */
+const uint16_t  SoundReactivePlugin::LIST_8_BAND_HIGH_EDGE_FREQ_BIN[]  =
+{
+    3U,
+    6U,
+    14U,
+    29U,
+    62U,
+    132U,
+    281U,
+    598U
+};
+
+/* Initialize the list with the high edge frequency bin of the center band frequency. */
+const uint16_t  SoundReactivePlugin::LIST_16_BAND_HIGH_EDGE_FREQ_BIN[]  =
+{
+    2U,
+    3U,
+    5U,
+    7U,
+    10U,
+    14U,
+    20U,
+    29U,
+    41U,
+    59U,
+    84U,
+    119U,
+    169U,
+    241U,
+    343U,
+    489U
+};
 
 /******************************************************************************
  * Public Methods
@@ -101,6 +138,17 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
+    m_freqBins = new double[SpectrumAnalyzer::getInstance().getFreqBinsLen()];
+
+    if (nullptr == m_freqBins)
+    {
+        LOG_ERROR("Couldn't get memory for frequency bins.");
+    }
+    else
+    {
+        SpectrumAnalyzer::getInstance().start();
+    }
+
     m_decayPeakTimer.start(DECAY_PEAK_PERIOD);
     m_maxHeight = height;
 
@@ -113,6 +161,14 @@ void SoundReactivePlugin::stop()
 
     m_decayPeakTimer.stop();
 
+    SpectrumAnalyzer::getInstance().stop();
+
+    if (nullptr != m_freqBins)
+    {
+        delete[] m_freqBins;
+        m_freqBins = nullptr;
+    }
+
     return;
 }
 
@@ -124,7 +180,7 @@ void SoundReactivePlugin::process()
     /* Decay peak periodically */
     if (true == m_decayPeakTimer.isTimeout())
     {
-        for(bandIdx = 0U; bandIdx < m_bars; ++bandIdx)
+        for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
         {
             if (0U < m_peakHeight[bandIdx])
             {
@@ -135,32 +191,91 @@ void SoundReactivePlugin::process()
         m_decayPeakTimer.restart();
     }
 
-    /* Update bar height */
-    for(bandIdx = 0U; bandIdx < m_bars; ++bandIdx)
+    if (true == SpectrumAnalyzer::getInstance().areFreqBinsReady())
     {
-        /* TODO */
-        if (0U == bandIdx)
-        {
-            m_barHeight[bandIdx] = 0U;
-        }
-        else if (1U == bandIdx)
-        {
-            m_barHeight[bandIdx] = m_maxHeight / 2U;
-        }
-        else if (2U == bandIdx)
-        {
-            m_barHeight[bandIdx] = m_maxHeight;
-        }
-        else
-        {
-            m_barHeight[bandIdx] += random(m_maxHeight);
-            m_barHeight[bandIdx] /= 2U;
-        }
+        const size_t freqBinLen = SpectrumAnalyzer::getInstance().getFreqBinsLen();
 
-        /* Move peak up */
-        if (m_barHeight[bandIdx] > m_peakHeight[bandIdx])
+        if (nullptr != m_freqBins)
         {
-            m_peakHeight[bandIdx] = m_barHeight[bandIdx];
+            /* Copy frequency bins from spectrum analyzer. */
+            if (true == SpectrumAnalyzer::getInstance().getFreqBins(m_freqBins, freqBinLen))
+            {
+                float           octaveFreqBands[m_numOfFreqBands]   = { 0.0f };
+                uint16_t        freqBinIdx                          = 0U;
+                const uint16_t* bandHighEdgeFreqs                   = nullptr;
+                int32_t         divisor                             = 0;
+
+                /* Choose the right list of high edge frequency bins. */
+                if (NUM_OF_BANDS_8 == m_numOfFreqBands)
+                {
+                    bandHighEdgeFreqs = LIST_8_BAND_HIGH_EDGE_FREQ_BIN;
+                }
+                else
+                {
+                    bandHighEdgeFreqs = LIST_16_BAND_HIGH_EDGE_FREQ_BIN;
+                }
+
+                /* Analyze the frequency bin results of the spectrum analyzer and
+                 * create the octave frequency bands.
+                 *
+                 * Don't use the first frequency bin, because it contains the DC part.
+                 */
+                bandIdx = 0U;
+                for(freqBinIdx = 1U; freqBinIdx < freqBinLen; ++freqBinIdx)
+                {
+                    /* Crude static noise filter */
+                    if (NOISE_LEVEL < m_freqBins[freqBinIdx])
+                    {
+                        octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx]);
+                        ++divisor; /* Count number of added frequency bins. */
+
+                        /* If the current frequency bin is equal than the current
+                         * high edge frequency of the band, the following frequency
+                         * bin's will be assigned to the next band.
+                         */
+                        if (bandHighEdgeFreqs[bandIdx] == freqBinIdx)
+                        {
+                            octaveFreqBands[bandIdx] /= static_cast<float>(divisor);    /* Depends on how many frequency bins were added. */
+
+                            ++bandIdx;
+                            divisor = 0;
+                        }
+                    }
+                }
+
+                /* Calculate the amplitude in dB.
+                 * The shown frequency spectrum amplitudes consider now the silent and loud parts better.
+                 *
+                 * L_p = 20 * log10(p/p0) [dB]
+                 * See https://en.wikipedia.org/wiki/Sound_pressure
+                 */
+                for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
+                {
+                    octaveFreqBands[bandIdx] = 20.0f * log10f(abs(octaveFreqBands[bandIdx]) / (VALUE_PER_1_UPA * ABS_THRESHOLD_OF_HEARING));
+                }
+
+                /* Downscale to the bar height in relation to 120 dB.
+                 *
+                 * Note, there is currently no behaviour like automatic gain control.
+                 */
+                for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
+                {
+                    uint16_t barHeight = static_cast<uint16_t>((octaveFreqBands[bandIdx] * m_maxHeight) / 120.0f);
+
+                    if (m_maxHeight < barHeight)
+                    {
+                        barHeight = m_maxHeight;
+                    }
+
+                    m_barHeight[bandIdx] = barHeight;
+
+                    /* Move peak up, if necessary. */
+                    if (m_barHeight[bandIdx] > m_peakHeight[bandIdx])
+                    {
+                        m_peakHeight[bandIdx] = m_barHeight[bandIdx];
+                    }
+                }
+            }
         }
     }
 
@@ -185,12 +300,12 @@ void SoundReactivePlugin::inactive()
 void SoundReactivePlugin::update(YAGfx& gfx)
 {
     int8_t                      bandIdx         = 0U;
-    uint16_t                    barWidth        = gfx.getWidth() / m_bars;
+    uint16_t                    barWidth        = gfx.getWidth() / m_numOfFreqBands;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
     
-    for(bandIdx = 0U; bandIdx < m_bars; ++bandIdx)
+    for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
     {
         int16_t peakY = 0;
 
@@ -202,7 +317,7 @@ void SoundReactivePlugin::update(YAGfx& gfx)
         {
             Color   barColor;
 
-            barColor.turnColorWheel((255U / (m_bars + 1U) * bandIdx));
+            barColor.turnColorWheel((255U / (m_numOfFreqBands + 1U) * bandIdx));
 
             gfx.fillRect(   bandIdx * barWidth,
                             gfx.getHeight() - m_barHeight[bandIdx] + 1,
@@ -221,7 +336,7 @@ void SoundReactivePlugin::update(YAGfx& gfx)
             peakY++;
         }
         gfx.drawHLine(  bandIdx * barWidth,
-                        gfx.getHeight() - m_peakHeight[bandIdx] + 1,
+                        peakY,
                         barWidth,
                         ColorDef::WHITE);
     }
