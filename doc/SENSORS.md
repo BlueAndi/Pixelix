@@ -17,3 +17,5 @@ Here is a list of supported sensors. Where they are connected, depends on the us
   * DHT21 (Propritary one-wire)
   * DHT22 (Propritary one-wire)
   * SHT3x (I2C)
+* Digital microphone
+  * INMP441
