@@ -296,7 +296,7 @@ public:
     static const uint8_t        SLOT_ID_INVALID     = UINT8_MAX;
 
     /** Task stack size in bytes */
-    static const uint32_t       TASK_STACKE_SIZE    = 4096U;
+    static const uint32_t       TASK_STACK_SIZE     = 4096U;
 
     /** Task period in ms */
     static const uint32_t       TASK_PERIOD         = 20U;
