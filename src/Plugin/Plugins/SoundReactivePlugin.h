@@ -76,9 +76,10 @@ public:
         m_mutex(),
         m_barHeight{0U},
         m_peakHeight{0U},
-        m_bars(16U),
+        m_numOfFreqBands(NUM_OF_BANDS_16),
         m_decayPeakTimer(),
-        m_maxHeight(0U)
+        m_maxHeight(0U),
+        m_freqBins(nullptr)
     {
         (void)m_mutex.create();
     }
@@ -88,6 +89,11 @@ public:
      */
     ~SoundReactivePlugin()
     {
+        if (nullptr != m_freqBins)
+        {
+            delete[] m_freqBins;
+        }
+
         m_mutex.destroy();
     }
 
@@ -189,6 +195,13 @@ public:
 
 private:
 
+    /* Supported number of frequency bands. */
+    enum NumOfBands
+    {
+        NUM_OF_BANDS_8  = 8,    /**< 8 bands */
+        NUM_OF_BANDS_16 = 16    /**< 16 bands */
+    };
+
     /**
      * Plugin topic, used for parameter exchange.
      */
@@ -197,19 +210,56 @@ private:
     /**
      * The max. number of frequency bands, which the plugin is able to show.
      */
-    static const uint8_t    MAX_FREQ_BANDS      = 32U;
+    static const uint8_t    MAX_FREQ_BANDS              = 16U;
 
     /**
      * Period in which the peak of a bar will be decayed in ms.
      */
-    static const uint32_t   DECAY_PEAK_PERIOD   = 100U;
+    static const uint32_t   DECAY_PEAK_PERIOD           = 100U;
+
+    /* Commonly used reference sound pressure: 20 uPa */
+    static const constexpr float    ABS_THRESHOLD_OF_HEARING    = 20.0f;
+
+    /* IMP441 nominal sensitivity is -26 dbFS (from datasheet) at 1 kHz.
+     * Full scale: 2^23 - 1
+     * 
+     * => (2^23 - 1) * 10 ^ (-26/20) = 420426
+     *
+     * A pure acoustic tone at 1 kHz having 1 Pa RMS amplitude results in
+     * 420426 digital peak amplitude.
+     * 
+     * => 420426 <-> 1 Pa RMS
+     * => 0.420426 <-> 1 uPa RMS
+     */
+    static const constexpr float    VALUE_PER_1_UPA             = 0.420426f;
+
+    /* INMP441 noise floor -87 dBFS (from datasheet) + 10%
+     * Full scale: 2^23 - 1
+     *
+     * => (2^23 - 1) * 10 ^ (-87/20) = 374.71
+     * => + 10 % = 412.18
+     */
+    static const constexpr double   NOISE_LEVEL                 = 412.18f;
+
+    /**
+     * List with the high edge frequency bin of the center band frequency.
+     * This list is valid for 8 bands.
+     */
+    static const uint16_t   LIST_8_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_8];
+
+    /**
+     * List with the high edge frequency bin of the center band frequency.
+     * This list is valid for 16 bands.
+     */
+    static const uint16_t   LIST_16_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_16];
 
     mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
     uint16_t                m_barHeight[MAX_FREQ_BANDS];    /**< The current height of every bar, which represents a frequency band. */
     uint16_t                m_peakHeight[MAX_FREQ_BANDS];   /**< The peak of every bar, which represents the peak in the frequency band. */
-    uint8_t                 m_bars;                         /**< Current configured number of bars (frequency bands), which to show. */
+    NumOfBands              m_numOfFreqBands;               /**< Current configured number of frequency bands, which to show. 8/16 are supported. */
     SimpleTimer             m_decayPeakTimer;               /**< Periodically decays the peak of a bar. */
     uint16_t                m_maxHeight;                    /**< Max. height of a bar in pixel. */
+    double*                 m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
 };
 
 /******************************************************************************

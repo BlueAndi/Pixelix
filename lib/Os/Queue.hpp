@@ -183,6 +183,16 @@ public:
         return isSuccessful;
     }
 
+    /**
+     * Get the internal event queue handle.
+     * 
+     * @return Event queue handle
+     */
+    const QueueHandle_t& getHandle() const
+    {
+        return m_queueHandle;
+    }
+
 private:
 
     QueueHandle_t   m_queueHandle;  /**< Queue handle */
