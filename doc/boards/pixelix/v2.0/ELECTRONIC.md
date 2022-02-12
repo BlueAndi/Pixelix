@@ -5,11 +5,16 @@
 
 # Electronic
 
-PCB board v1.5
+PCB board v2.0
 
 ## System Diagram
 
 ![system-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/design/system.plantuml)
+
+## Differences to v1.5
+
+* The clock crystal in v1.5 was removed, because it wasn't used.
+* The I2S interface was added for digital microphones, like the INMP441.
 
 ## ESP32 DevKit V1
 
@@ -23,10 +28,10 @@ PCB board v1.5
 | D12 | J1-4 | GPIO 12 | Strapping pin; Fails if high at power-up, therefore not used. | JTAG MTDI |
 | D14 | J1-5 | GPIO 14 | Output PWM at power-up! | JTAG MTMS |
 | D27 | J1-6 | GPIO 27 | - | Data Out to LED matrix |
-| D26 | J1-7 | GPIO 26 (A9) | - | - |
-| D25 | J1-8 | GPIO 25 (A8) | - | - |
-| D33 | J1-9 | GPIO 33 (A5) | - | 32.768 kHz crystal (32K_XN) |
-| D32 | J1-10 | GPIO 32 (A4) | - | 32.768 kHz crystal (32K_XP) |
+| D26 | J1-7 | GPIO 26 (A9) | I2S microphone serial clock. | I2S Serial clock (out) |
+| D25 | J1-8 | GPIO 25 (A8) | I2S microphone word select. | I2S Word select (out) |
+| D33 | J1-9 | GPIO 33 (A5) | I2S microphone serial data. | I2S Serial data (in) |
+| D32 | J1-10 | GPIO 32 (A4) | - | - |
 | D35 | J1-11 | GPIO 35 (A7) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
 | D34 | J1-12 | GPIO 34 (A6) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | LDR analog in |
 | VN | J1-13 | GPIO 39 (VN) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
