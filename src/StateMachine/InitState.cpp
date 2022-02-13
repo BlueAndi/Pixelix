@@ -470,7 +470,7 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
     pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
-    pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
+    //pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
     pluginMgr.registerPlugin("ThreeIconPlugin", ThreeIconPlugin::create);
     pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
     pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
