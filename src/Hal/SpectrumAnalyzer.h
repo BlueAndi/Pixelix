@@ -220,17 +220,17 @@ private:
      */
     static const uint32_t               DMA_BLOCK_TIMEOUT       = ((SAMPLES_PER_DMA_BLOCK * 1000U) + (SAMPLE_RATE / 2U)) / SAMPLE_RATE;
 
-    mutable Mutex               m_mutex;                /**< Mutex used for concurrent access protection. */
-    TaskHandle_t                m_taskHandle;           /**< Task handle */
-    bool                        m_taskExit;             /**< Flag to signal the task to exit. */
-    SemaphoreHandle_t           m_xSemaphore;           /**< Binary semaphore used to signal the task exit. */
-    double                      m_real[SAMPLES];        /**< The real values. */
-    double                      m_imag[SAMPLES];        /**< The imaginary values. */
-    arduinoFFT                  m_fft;                  /**< The FFT algorithm. */
-    Queue<i2s_event_type_t>     m_i2sEventQueue;        /**< The I2S event queue, used for rx done notification. */
-    uint16_t                    m_sampleWriteIndex;     /**< The current sample write index to the input buffer. */
-    double                      m_freqBins[FREQ_BINS];  /**< The frequency bins as result of the FFT, with linear magnitude. */
-    bool                        m_freqBinsAreReady;     /**< Are the frequency bins ready for the application? */
+    mutable Mutex       m_mutex;                /**< Mutex used for concurrent access protection. */
+    TaskHandle_t        m_taskHandle;           /**< Task handle */
+    bool                m_taskExit;             /**< Flag to signal the task to exit. */
+    SemaphoreHandle_t   m_xSemaphore;           /**< Binary semaphore used to signal the task exit. */
+    double              m_real[SAMPLES];        /**< The real values. */
+    double              m_imag[SAMPLES];        /**< The imaginary values. */
+    arduinoFFT          m_fft;                  /**< The FFT algorithm. */
+    Queue<i2s_event_t>  m_i2sEventQueue;        /**< The I2S event queue, used for rx done notification. */
+    uint16_t            m_sampleWriteIndex;     /**< The current sample write index to the input buffer. */
+    double              m_freqBins[FREQ_BINS];  /**< The frequency bins as result of the FFT, with linear magnitude. */
+    bool                m_freqBinsAreReady;     /**< Are the frequency bins ready for the application? */
 
     /**
      * Constructs the spectrum analyzer instance.

@@ -195,18 +195,18 @@ void SpectrumAnalyzer::processTask(void* parameters)
 
 void SpectrumAnalyzer::process()
 {
-    i2s_event_type_t i2sEvt = I2S_EVENT_MAX;
+    i2s_event_t i2sEvt;
 
     /* Handle all ready DMA blocks. */
     while(true == m_i2sEventQueue.receive(&i2sEvt, DMA_BLOCK_TIMEOUT * portTICK_PERIOD_MS))
     {
         /* Any DMA error? */
-        if (I2S_EVENT_DMA_ERROR == i2sEvt)
+        if (I2S_EVENT_DMA_ERROR == i2sEvt.type)
         {
             LOG_WARNING("DMA error");
         }
         /* One DMA block finished? */
-        else if (I2S_EVENT_RX_DONE == i2sEvt)
+        else if (I2S_EVENT_RX_DONE == i2sEvt.type)
         {
             uint16_t sampleIdx = 0U;
 
