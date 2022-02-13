@@ -64,7 +64,6 @@
 
 #include "BTCQuotePlugin.h"
 #include "CountdownPlugin.h"
-#include "DatePlugin.h"
 #include "DateTimePlugin.h"
 #include "FirePlugin.h"
 #include "GameOfLifePlugin.h"
@@ -84,7 +83,6 @@
 #include "TempHumidPlugin.h"
 #include "TestPlugin.h"
 #include "ThreeIconPlugin.h"
-#include "TimePlugin.h"
 #include "VolumioPlugin.h"
 #include "WifiStatusPlugin.h"
 
@@ -452,7 +450,6 @@ void InitState::registerPlugins()
 
     pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);
     pluginMgr.registerPlugin("CountdownPlugin", CountdownPlugin::create);
-    pluginMgr.registerPlugin("DatePlugin", DatePlugin::create);
     pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
     pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
     pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
@@ -470,9 +467,8 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
     pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
-    //pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
+    pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
     pluginMgr.registerPlugin("ThreeIconPlugin", ThreeIconPlugin::create);
-    pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
     pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
     pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
 

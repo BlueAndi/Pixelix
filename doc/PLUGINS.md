@@ -13,7 +13,6 @@
 - [Dedicated plugins](#dedicated-plugins)
   - [BTCQuotePlugin](#btcquoteplugin)
   - [CountdownPlugin](#countdownplugin)
-  - [DatePlugin](#dateplugin)
   - [DateTimePlugin](#datetimeplugin)
   - [FirePlugin](#fireplugin)
   - [GameOfLifePlugin](#gameoflifeplugin)
@@ -28,7 +27,6 @@
   - [SysMsgPlugin](#sysmsgplugin)
   - [TempHumidPlugin](#temphumidplugin)
   - [TestPlugin](#testplugin)
-  - [TimePlugin](#timeplugin)
   - [VolumioPlugin](#volumioplugin)
   - [WifiStatusPlugin](#wifistatusplugin)
 
@@ -70,11 +68,8 @@ Powered by [CoinDesk](https://www.coindesk.com/price/bitcoin).
 The CountdownPlugin shows the remaining days until a configured target date.\
 Target date and the description of the target day (plural/singular form) can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/CountdownPlugin).
 
-## DatePlugin
-The DatePlugin shows the current date. At the bottom the day of the week is shown, starting from the left with Monday.
-
 ## DateTimePlugin
-The DateTimePlugin shows the current time and date. First the time is shown for half of the slot duration and after it the date. At the bottom the day of the week is shown, starting from the left with Monday.
+The DateTimePlugin shows the current time and date. First the time is shown for half of the slot duration and after it the date. At the bottom the day of the week is shown, starting from the left with Monday. It can be configured to show only the date or only the time as well.
 
 ## FirePlugin
 The FirePlugin shows a animated fire on the display.
@@ -121,9 +116,6 @@ Th TempHumidPlugin displays the temperature (in °C) and Humidity (in %) based o
 
 ## TestPlugin
 The TestPlugin can be used to check whether the LED matrix topology (layout) is correct or not.
-
-## TimePlugin
-The TimePlugin shows the current time.
 
 ## VolumioPlugin
 The VolumioPlugin shows the current VOLUMIO state as icon and the played artist/title.\
