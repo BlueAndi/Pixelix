@@ -184,6 +184,8 @@ void SpectrumAnalyzer::processTask(void* parameters)
 
             LOG_INFO("I2S driver uninstalled.");
         }
+
+        (void)xSemaphoreGive(tthis->m_xSemaphore);
     }
 
     vTaskDelete(nullptr);
