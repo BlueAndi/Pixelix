@@ -107,26 +107,26 @@ bool SpectrumAnalyzer::start()
                 }
             }
         }
-    }
 
-    /* Any error happened? */
-    if (false == isSuccessful)
-    {
-        m_i2sEventQueue.destroy();
-
-        if (nullptr != m_xSemaphore)
+        /* Any error happened? */
+        if (false == isSuccessful)
         {
-            vSemaphoreDelete(m_xSemaphore);
-            m_xSemaphore = nullptr;
+            m_i2sEventQueue.destroy();
+
+            if (nullptr != m_xSemaphore)
+            {
+                vSemaphoreDelete(m_xSemaphore);
+                m_xSemaphore = nullptr;
+            }
+
+            m_mutex.destroy();
         }
+        else
+        {
+            m_sampleWriteIndex = 0U;
 
-        m_mutex.destroy();
-    }
-    else
-    {
-        m_sampleWriteIndex = 0U;
-
-        LOG_INFO("Spectrum analyzer task is up.");
+            LOG_INFO("Spectrum analyzer task is up.");
+        }
     }
 
     return isSuccessful;
@@ -140,7 +140,6 @@ void SpectrumAnalyzer::stop()
 
         /* Join */
         (void)xSemaphoreTake(m_xSemaphore, portMAX_DELAY);
-        m_taskHandle = nullptr;
 
         LOG_INFO("Spectrum analyzer task is down.");
 
@@ -150,6 +149,8 @@ void SpectrumAnalyzer::stop()
         m_mutex.destroy();
 
         m_i2sEventQueue.destroy();
+
+        m_taskHandle = nullptr;
     }
 }
 
