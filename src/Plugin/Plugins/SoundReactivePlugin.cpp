@@ -36,6 +36,8 @@
 #include "SpectrumAnalyzer.h"
 
 #include <Logging.h>
+#include <FileSystem.h>
+#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -109,11 +111,9 @@ bool SoundReactivePlugin::getTopic(const String& topic, JsonObject& value) const
 
     if (0U != topic.equals(TOPIC_CHANNEL))
     {
+        value["freqBandLen"] = getFreqBandLen();
+
         isSuccessful = true;
-    }
-    else
-    {
-        ;
     }
 
     return isSuccessful;
@@ -125,10 +125,27 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_CHANNEL))
     {
-    }
-    else
-    {
-        ;
+        JsonVariant jsonFreqBandLen = value["freqBandLen"];
+
+        if (false == jsonFreqBandLen.isNull())
+        {
+            uint8_t freqBandLen = value["freqBandLen"].as<uint8_t>();
+
+            if (NUM_OF_BANDS_8 == freqBandLen)
+            {
+                setFreqBandLen(NUM_OF_BANDS_8);
+                isSuccessful = true;
+            }
+            else if (NUM_OF_BANDS_16 == freqBandLen)
+            {
+                setFreqBandLen(NUM_OF_BANDS_16);
+                isSuccessful = true;
+            }
+            else
+            {
+                ;
+            }
+        }
     }
 
     return isSuccessful;
@@ -152,12 +169,24 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
     m_decayPeakTimer.start(DECAY_PEAK_PERIOD);
     m_maxHeight = height;
 
+    /* Try to load configuration. If there is no configuration available, a default configuration
+     * will be created.
+     */
+    if (false == loadConfiguration())
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
+        }
+    }
+
     return;
 }
 
 void SoundReactivePlugin::stop()
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
+    String                      configurationFilename   = getFullPathToConfiguration();
 
     m_decayPeakTimer.stop();
 
@@ -167,6 +196,11 @@ void SoundReactivePlugin::stop()
     {
         delete[] m_freqBins;
         m_freqBins = nullptr;
+    }
+
+    if (false != FILESYSTEM.remove(configurationFilename))
+    {
+        LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 
     return;
@@ -297,21 +331,6 @@ void SoundReactivePlugin::process()
     return;
 }
 
-void SoundReactivePlugin::active(YAGfx& gfx)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    UTIL_NOT_USED(gfx);
-
-    return;
-}
-
-void SoundReactivePlugin::inactive()
-{
-    /* Nothing to do. */
-    return;
-}
-
 void SoundReactivePlugin::update(YAGfx& gfx)
 {
     int8_t                      bandIdx         = 0U;
@@ -366,6 +385,61 @@ void SoundReactivePlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+bool SoundReactivePlugin::saveConfiguration() const
+{
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              configurationFilename   = getFullPathToConfiguration();
+
+    jsonDoc["freqBandLen"] = m_numOfFreqBands;
+    
+    if (false == jsonFile.save(configurationFilename, jsonDoc))
+    {
+        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
+        status = false;
+    }
+    else
+    {
+        LOG_INFO("File %s saved.", configurationFilename.c_str());
+    }
+
+    return status;
+}
+
+bool SoundReactivePlugin::loadConfiguration()
+{
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              configurationFilename   = getFullPathToConfiguration();
+
+    if (false == jsonFile.load(configurationFilename, jsonDoc))
+    {
+        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
+        status = false;
+    }
+    else
+    {
+        JsonVariant jsonFreqBandLen = jsonDoc["freqBandLen"];
+
+        if ((true == jsonFreqBandLen.isNull()) ||
+            (false == jsonFreqBandLen.is<uint8_t>()))
+        {
+            LOG_WARNING("freqBandLen not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_numOfFreqBands = static_cast<NumOfBands>(jsonFreqBandLen.as<uint8_t>());
+        }
+    }
+
+    return status;
+}
 
 /******************************************************************************
  * External Functions

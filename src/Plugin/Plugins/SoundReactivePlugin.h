@@ -172,20 +172,6 @@ public:
     void process(void) final;
 
     /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    void active(YAGfx& gfx) final;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() final;
-
-    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
@@ -193,14 +179,46 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-private:
-
     /* Supported number of frequency bands. */
     enum NumOfBands
     {
         NUM_OF_BANDS_8  = 8,    /**< 8 bands */
         NUM_OF_BANDS_16 = 16    /**< 16 bands */
     };
+
+    /**
+     * Get current number of shown frequency bands.
+     * 
+     * @return Number of frequency bands
+     */
+    NumOfBands getFreqBandLen() const
+    {
+        NumOfBands                  freqBandLen     = NUM_OF_BANDS_8;
+        MutexGuard<MutexRecursive>  guard(m_mutex);
+
+        freqBandLen = m_numOfFreqBands;
+
+        return freqBandLen;
+    }
+
+    /**
+     * Set number of shown frequency bands.
+     * 
+     * @param[in] freqBandLen   Number of frequency bands to show
+     */
+    void setFreqBandLen(NumOfBands freqBandLen)
+    {
+        MutexGuard<MutexRecursive>  guard(m_mutex);
+
+        if (freqBandLen != m_numOfFreqBands)
+        {
+            m_numOfFreqBands = freqBandLen;
+
+            (void)saveConfiguration();
+        }
+    }
+
+private:
 
     /**
      * Plugin topic, used for parameter exchange.
@@ -260,6 +278,16 @@ private:
     SimpleTimer             m_decayPeakTimer;               /**< Periodically decays the peak of a bar. */
     uint16_t                m_maxHeight;                    /**< Max. height of a bar in pixel. */
     double*                 m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
+
+    /**
+     * Saves current configuration to JSON file.
+     */
+    bool saveConfiguration() const;
+
+    /**
+     * Load configuration from JSON file.
+     */
+    bool loadConfiguration();
 };
 
 /******************************************************************************
