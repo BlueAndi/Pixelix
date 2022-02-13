@@ -129,7 +129,7 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObject& value)
 
         if (false == jsonFreqBandLen.isNull())
         {
-            uint8_t freqBandLen = value["freqBandLen"].as<uint8_t>();
+            uint8_t freqBandLen = jsonFreqBandLen.as<uint8_t>();
 
             if (NUM_OF_BANDS_8 == freqBandLen)
             {
