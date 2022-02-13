@@ -42,7 +42,6 @@
 #include <stdint.h>
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
-#include <Queue.hpp>
 #include <Mutex.hpp>
 
 /******************************************************************************
@@ -227,7 +226,7 @@ private:
     double              m_real[SAMPLES];        /**< The real values. */
     double              m_imag[SAMPLES];        /**< The imaginary values. */
     arduinoFFT          m_fft;                  /**< The FFT algorithm. */
-    Queue<i2s_event_t>  m_i2sEventQueue;        /**< The I2S event queue, used for rx done notification. */
+    QueueHandle_t       m_i2sEventQueueHandle;  /**< The I2S event queue handle, used for rx done notification. Note, the queue is created by I2S driver. */
     uint16_t            m_sampleWriteIndex;     /**< The current sample write index to the input buffer. */
     double              m_freqBins[FREQ_BINS];  /**< The frequency bins as result of the FFT, with linear magnitude. */
     bool                m_freqBinsAreReady;     /**< Are the frequency bins ready for the application? */
@@ -243,7 +242,7 @@ private:
         m_real{0.0f},
         m_imag{0.0f},
         m_fft(m_real, m_imag, SAMPLES, SAMPLE_RATE),
-        m_i2sEventQueue(),
+        m_i2sEventQueueHandle(nullptr),
         m_sampleWriteIndex(0U),
         m_freqBins{0.0f},
         m_freqBinsAreReady(false)

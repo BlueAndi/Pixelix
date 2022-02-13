@@ -67,11 +67,7 @@ bool SpectrumAnalyzer::start()
 
     if (nullptr == m_taskHandle)
     {
-        if (false == m_i2sEventQueue.create(I2S_EVENT_QUEUE_SIZE))
-        {
-            isSuccessful = false;
-        }
-        else if (false == m_mutex.create())
+        if (false == m_mutex.create())
         {
             isSuccessful = false;
         }
@@ -111,8 +107,6 @@ bool SpectrumAnalyzer::start()
         /* Any error happened? */
         if (false == isSuccessful)
         {
-            m_i2sEventQueue.destroy();
-
             if (nullptr != m_xSemaphore)
             {
                 vSemaphoreDelete(m_xSemaphore);
@@ -147,8 +141,6 @@ void SpectrumAnalyzer::stop()
         m_xSemaphore = nullptr;
 
         m_mutex.destroy();
-
-        m_i2sEventQueue.destroy();
 
         m_taskHandle = nullptr;
     }
@@ -198,7 +190,7 @@ void SpectrumAnalyzer::process()
     i2s_event_t i2sEvt;
 
     /* Handle all ready DMA blocks. */
-    while(true == m_i2sEventQueue.receive(&i2sEvt, DMA_BLOCK_TIMEOUT * portTICK_PERIOD_MS))
+    while(pdPASS == xQueueReceive(m_i2sEventQueueHandle, &i2sEvt, DMA_BLOCK_TIMEOUT * portTICK_PERIOD_MS))
     {
         /* Any DMA error? */
         if (I2S_EVENT_DMA_ERROR == i2sEvt.type)
@@ -276,7 +268,7 @@ bool SpectrumAnalyzer::initI2S()
         .data_in_num    = Board::Pin::i2sSerialDataIn
     };
 
-    i2sRet = i2s_driver_install(I2S_PORT, &i2sConfig, I2S_EVENT_QUEUE_SIZE, const_cast<QueueHandle_t*>(&m_i2sEventQueue.getHandle()));
+    i2sRet = i2s_driver_install(I2S_PORT, &i2sConfig, I2S_EVENT_QUEUE_SIZE, &m_i2sEventQueueHandle);
 
     if (ESP_OK != i2sRet)
     {
@@ -304,6 +296,7 @@ bool SpectrumAnalyzer::initI2S()
 void SpectrumAnalyzer::deInitI2S()
 {
     (void)i2s_driver_uninstall(I2S_PORT);
+    m_i2sEventQueueHandle = nullptr;
 }
 
 void SpectrumAnalyzer::calculateFFT()
