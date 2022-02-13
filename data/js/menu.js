@@ -56,7 +56,7 @@ menu.data = [{
         "hyperRef": "/plugins/ShellyPlugSPlugin.html"
     }, {
         "title": "Sound Reactive Plugin",
-        "hyperRef": "/plugins/SoundReactivePlugi.html"
+        "hyperRef": "/plugins/SoundReactivePlug.html"
     }, {
         "title": "Sunrise Plugin",
         "hyperRef": "/plugins/SunrisePlugin.html"
