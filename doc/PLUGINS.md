@@ -23,6 +23,7 @@
   - [RainbowPlugin](#rainbowplugin)
   - [SensorPlugin](#sensorplugin)
   - [ShellyPlugSPlugin](#shellyplugsplugin)
+  - [SoundReactivePlugin](#soundreactiveplugin)
   - [SunrisePlugin](#sunriseplugin)
   - [SysMsgPlugin](#sysmsgplugin)
   - [TempHumidPlugin](#temphumidplugin)
@@ -70,6 +71,7 @@ Target date and the description of the target day (plural/singular form) can be 
 
 ## DateTimePlugin
 The DateTimePlugin shows the current time and date. First the time is shown for half of the slot duration and after it the date. At the bottom the day of the week is shown, starting from the left with Monday. It can be configured to show only the date or only the time as well.
+It can be set what shall be shown via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/DateTimePlugin).
 
 ## FirePlugin
 The FirePlugin shows a animated fire on the display.
@@ -102,6 +104,11 @@ The plugin shows sensor values of the selected sensor channel.
 ## ShellyPlugSPlugin
 The ShellyPlugSPlugin shows the current AC power being drawn via a Shelly PlugS, in watts.\
 The IP address of the Shelly PlugS webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/ShellyPlugSPlugin).
+
+## SoundReactivePlugin
+The plugin shows octave frequency bands, depended on the environment sound.
+Required: A digital microphone (INMP441) is required, connected to the I2S port.
+The number of shown frequency bands can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/SoundReactivePlugin).
 
 ## SunrisePlugin
 The SunrisePlugin shows the current sunrise / sunset times for a configured location.\
