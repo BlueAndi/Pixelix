@@ -205,8 +205,8 @@ void SpectrumAnalyzer::process()
             /* Read the whole DMA block. */
             for(sampleIdx = 0U; sampleIdx < SAMPLES_PER_DMA_BLOCK; ++sampleIdx)
             {
-                uint32_t    sample      = 0U;   /* Attention, this datatype must correlate to the configuration, see bits per sample! */
-                size_t      bytesRead   = 0;
+                int32_t sample      = 0U;   /* Attention, this datatype must correlate to the configuration, see bits per sample! */
+                size_t  bytesRead   = 0;
 
                 (void)i2s_read(I2S_PORT, &sample, sizeof(sample), &bytesRead, portMAX_DELAY);
 
