@@ -48,6 +48,7 @@
 
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
+#include <math.h>
 
 /******************************************************************************
  * Macros

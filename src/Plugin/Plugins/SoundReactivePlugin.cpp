@@ -211,23 +211,23 @@ void SoundReactivePlugin::process()
     uint8_t                     bandIdx         = 0U;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    /* Decay peak periodically */
-    if (true == m_decayPeakTimer.isTimeout())
-    {
-        for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
-        {
-            if (0U < m_peakHeight[bandIdx])
-            {
-                --m_peakHeight[bandIdx];
-            }
-        }
-
-        m_decayPeakTimer.restart();
-    }
-
     if (true == SpectrumAnalyzer::getInstance().areFreqBinsReady())
     {
         const size_t freqBinLen = SpectrumAnalyzer::getInstance().getFreqBinsLen();
+
+        /* Decay peak periodically */
+        if (true == m_decayPeakTimer.isTimeout())
+        {
+            for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
+            {
+                if (0U < m_peakHeight[bandIdx])
+                {
+                    --m_peakHeight[bandIdx];
+                }
+            }
+
+            m_decayPeakTimer.restart();
+        }
 
         if (nullptr != m_freqBins)
         {
@@ -250,14 +250,14 @@ void SoundReactivePlugin::process()
                 }
 
                 /* Analyze the frequency bin results of the spectrum analyzer and
-                 * create the octave frequency bands.
+                 * create the octave frequency bands by RMS.
                  *
                  * Don't use the first frequency bin, because it contains the DC part.
                  */
                 bandIdx = 0U;
                 for(freqBinIdx = 1U; freqBinIdx < freqBinLen; ++freqBinIdx)
                 {
-                    octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx]);
+                    octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx] * m_freqBins[freqBinIdx]);
                     ++divisor; /* Count number of added frequency bins. */
 
                     /* If the current frequency bin is equal than the current
@@ -272,6 +272,7 @@ void SoundReactivePlugin::process()
                         {
                             /* Depends on how many frequency bins were added. */
                             octaveFreqBands[bandIdx] /= static_cast<float>(divisor);
+                            octaveFreqBands[bandIdx] = sqrtf(octaveFreqBands[bandIdx]);
 
                             divisor = 0;
                         }
@@ -284,6 +285,7 @@ void SoundReactivePlugin::process()
                 {
                     /* Depends on how many frequency bins were added. */
                     octaveFreqBands[bandIdx] /= static_cast<float>(divisor);
+                    octaveFreqBands[bandIdx] = sqrtf(octaveFreqBands[bandIdx]);
                 }
 
                 /* Calculate the amplitude in dB SPL.
@@ -293,10 +295,11 @@ void SoundReactivePlugin::process()
                  */
                 for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
                 {
-                    octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0f * log10f(abs(octaveFreqBands[bandIdx]) / IMMP441_SENSITIVITY_DIGITAL);
+                    octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0f * log10f(octaveFreqBands[bandIdx] / IMMP441_SENSITIVITY_DIGITAL);
 
-                    /* Remove noise */
-                    if (INMP441_NOISE_SPL > octaveFreqBands[bandIdx])
+                    /* Show only the dynamic range by removing the equivalent input noise. */
+                    octaveFreqBands[bandIdx] -= INMP441_NOISE_SPL;
+                    if (0.0f > octaveFreqBands[bandIdx])
                     {
                         octaveFreqBands[bandIdx] = 0.0f;
                     }
@@ -304,13 +307,13 @@ void SoundReactivePlugin::process()
                     printf("f%u = %f\n", bandIdx, octaveFreqBands[bandIdx]);
                 }
 
-                /* Downscale to the bar height in relation to 120 dB.
+                /* Downscale to the bar height in relation to dynamic range.
                  *
                  * Note, there is currently no behaviour like automatic gain control.
                  */
                 for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
                 {
-                    uint16_t barHeight = static_cast<uint16_t>((octaveFreqBands[bandIdx] * m_maxHeight) / 120.0f);
+                    uint16_t barHeight = static_cast<uint16_t>((octaveFreqBands[bandIdx] * m_maxHeight) / (INMP441_MAX_SPL - INMP441_NOISE_SPL));
 
                     if (m_maxHeight < barHeight)
                     {
