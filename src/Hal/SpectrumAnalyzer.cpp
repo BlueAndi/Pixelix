@@ -225,6 +225,28 @@ void SpectrumAnalyzer::process()
                     {
                         m_sampleWriteIndex = 0U;
                         
+#if 0
+
+                        /* Simulate the sampling of a sinusoidal 1000 Hz signal
+                         * with an amplitude of 94 db SPL, sampled at 40000 Hz.
+                         */
+                        {
+                            double signalFrequency  = 1000.0f;
+                            double cycles           = (((SAMPLES - 1U) * signalFrequency) / SAMPLE_RATE);   /* Number of signal cycles that the sampling will read. */
+                            double amplitude        = 420426.0f; /* 94 db SPL */
+
+                            for (uint16_t sampleIdx = 0U; sampleIdx < SAMPLES; ++sampleIdx)
+                            {
+                                /* Build data with positive and negative values. */
+                                m_real[sampleIdx] = (amplitude * (sin((sampleIdx * (twoPi * cycles)) / SAMPLES))) / 2.0f;
+                                
+                                /* Imaginary part must be zeroed in case of looping to avoid wrong calculations and overflows. */
+                                m_imag[sampleIdx] = 0.0f;
+                            }
+                        }
+
+#endif
+
                         /* Transform the time discrete values to the frequency spectrum. */
                         calculateFFT();
 
@@ -301,7 +323,7 @@ void SpectrumAnalyzer::deInitI2S()
 
 void SpectrumAnalyzer::calculateFFT()
 {
-    m_fft.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+    m_fft.Windowing(FFT_WIN_TYP_BLACKMAN_HARRIS, FFT_FORWARD);
     m_fft.Compute(FFT_FORWARD);
     m_fft.ComplexToMagnitude();
 }
