@@ -257,50 +257,51 @@ void SoundReactivePlugin::process()
                 bandIdx = 0U;
                 for(freqBinIdx = 1U; freqBinIdx < freqBinLen; ++freqBinIdx)
                 {
-                    /* Crude static noise filter */
-                    if (NOISE_LEVEL < m_freqBins[freqBinIdx])
-                    {
-                        octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx]);
-                        ++divisor; /* Count number of added frequency bins. */
-                    }
+                    octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx]);
+                    ++divisor; /* Count number of added frequency bins. */
 
                     /* If the current frequency bin is equal than the current
                      * high edge frequency of the band, the following frequency
                      * bin's will be assigned to the next band.
                      */
-                    if (bandHighEdgeFreqs[bandIdx] == freqBinIdx)
+                    if ((m_numOfFreqBands > bandIdx) &&
+                        (bandHighEdgeFreqs[bandIdx] == freqBinIdx))
                     {
                         /* Any frequency band added? */
                         if (0 < divisor)
                         {
                             /* Depends on how many frequency bins were added. */
                             octaveFreqBands[bandIdx] /= static_cast<float>(divisor);
+
+                            divisor = 0;
                         }
 
                         ++bandIdx;
-                        divisor = 0;
                     }
                 }
 
-                /* Calculate the amplitude in dB.
+                if (0 < divisor)
+                {
+                    /* Depends on how many frequency bins were added. */
+                    octaveFreqBands[bandIdx] /= static_cast<float>(divisor);
+                }
+
+                /* Calculate the amplitude in dB SPL.
                  * The shown frequency spectrum amplitudes consider now the silent and loud parts better.
                  *
-                 * L_p = 20 * log10(p/p0) [dB]
-                 * See https://en.wikipedia.org/wiki/Sound_pressure
+                 * = sensitivity [db SPL] + 20 * log10(frequency amplitude digital / sensitivity digital)
                  */
                 for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
                 {
-                    float tmpValue = abs(octaveFreqBands[bandIdx]) / (VALUE_PER_1_UPA * ABS_THRESHOLD_OF_HEARING);
+                    octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0f * log10f(abs(octaveFreqBands[bandIdx]) / IMMP441_SENSITIVITY_DIGITAL);
 
-                    /* If the value is lower than 1, the result will be negative. */
-                    if (1.0f > tmpValue)
+                    /* Remove noise */
+                    if (INMP441_NOISE_SPL > octaveFreqBands[bandIdx])
                     {
                         octaveFreqBands[bandIdx] = 0.0f;
                     }
-                    else
-                    {
-                        octaveFreqBands[bandIdx] = 20.0f * log10f(tmpValue);
-                    }
+
+                    printf("f%u = %f\n", bandIdx, octaveFreqBands[bandIdx]);
                 }
 
                 /* Downscale to the bar height in relation to 120 dB.

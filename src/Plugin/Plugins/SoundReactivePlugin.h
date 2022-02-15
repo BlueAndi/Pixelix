@@ -228,36 +228,62 @@ private:
     /**
      * The max. number of frequency bands, which the plugin is able to show.
      */
-    static const uint8_t    MAX_FREQ_BANDS              = 16U;
+    static const uint8_t    MAX_FREQ_BANDS                      = 16U;
 
     /**
      * Period in which the peak of a bar will be decayed in ms.
      */
-    static const uint32_t   DECAY_PEAK_PERIOD           = 100U;
+    static const uint32_t   DECAY_PEAK_PERIOD                   = 100U;
 
-    /* Commonly used reference sound pressure: 20 uPa */
-    static const constexpr float    ABS_THRESHOLD_OF_HEARING    = 20.0f;
-
-    /* IMP441 nominal sensitivity is -26 dbFS (from datasheet) at 1 kHz.
-     * Full scale: 2^23 - 1
-     * 
-     * => (2^23 - 1) * 10 ^ (-26/20) = 420426
-     *
-     * A pure acoustic tone at 1 kHz having 1 Pa RMS amplitude results in
-     * 420426 digital peak amplitude.
-     * 
-     * => 420426 <-> 1 Pa RMS
-     * => 0.420426 <-> 1 uPa RMS
+    /**
+     * INMP441 data word bit width.
      */
-    static const constexpr float    VALUE_PER_1_UPA             = 0.420426f;
+    static const constexpr uint8_t  INMP441_DATA_WORD_BITS      = 24U;
 
-    /* INMP441 noise floor -87 dBFS (from datasheet) + 10%
-     * Full scale: 2^23 - 1
-     *
-     * => (2^23 - 1) * 10 ^ (-87/20) = 374.71
-     * => + 10 % = 412.18
+    /**
+     * INMP441 nominal sensitivity in dbFS at 1 kHz.
      */
-    static const constexpr double   NOISE_LEVEL                 = 412.18f;
+    static const constexpr float    INMP441_SENSITIVITY         = -26.0f;
+
+    /**
+     * INMP441 the applied sound pressure level by measuring the sensitivity
+     * at 1 kHz.
+     */
+    static const constexpr float    INMP441_SENSITIVITY_SPL     = 94.0f;
+
+    /**
+     * INMP441 the noise floor in dbFS.
+     */
+    static const constexpr float    INMP441_NOISE_FLOOR         = -87.0f;
+
+    /**
+     * The calculated full scale value of the INMP441.
+     */
+    static const constexpr int32_t  INMP441_FULL_SCALE          = (1 << (INMP441_DATA_WORD_BITS - 1)) - 1;
+
+    /**
+     * INMP441 the nominal sensitivity as digital value.
+     * = 10^(sensitivity [dbFS] / 20) * full scale
+     */
+    static const constexpr int32_t  IMMP441_SENSITIVITY_DIGITAL = powf(10.0f, INMP441_SENSITIVITY / 20.0f) * INMP441_FULL_SCALE;
+
+    /**
+     * INMP441 the noise floor as digital value.
+     * = 10^(noise floor [dbFS] / 20) * full scale
+     */
+    static const constexpr int32_t  INMP441_NOISE_FLOOR_DIGITAL = powf(10.0f, INMP441_NOISE_FLOOR / 20.0f) * INMP441_FULL_SCALE;
+
+    /**
+     * INMP441 the max. sound pressure level in db SPL.
+     * = sensitivity [db SPL] + 20 * log10(full scale / sensitivity digital)
+     */
+    static const constexpr int32_t  INMP441_MAX_SPL             = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_FULL_SCALE) / IMMP441_SENSITIVITY_DIGITAL);
+
+    /**
+     * INMP441 the equivalent input noise in db SPL.
+     * = sensitivity [db SPL] + 20 * log10(noise floor digital / sensitivity digital)
+     */
+    static const constexpr int32_t  INMP441_NOISE_SPL           = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_NOISE_FLOOR_DIGITAL) / IMMP441_SENSITIVITY_DIGITAL);
 
     /**
      * List with the high edge frequency bin of the center band frequency.
