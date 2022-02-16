@@ -251,11 +251,11 @@ void SoundReactivePlugin::process()
 
                 /* Analyze the frequency bin results of the spectrum analyzer and
                  * create the octave frequency bands by RMS.
-                 *
-                 * Don't use the first frequency bin, because it contains the DC part.
                  */
-                bandIdx = 0U;
-                for(freqBinIdx = 1U; freqBinIdx < freqBinLen; ++freqBinIdx)
+                freqBinIdx  = 1U; /* Don't use the first frequency bin, because it contains the DC part. */
+                bandIdx     = 0U;
+                octaveFreqBands[bandIdx] = 0.0f;
+                while((freqBinLen > freqBinIdx) && (m_numOfFreqBands > bandIdx))
                 {
                     octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx] * m_freqBins[freqBinIdx]);
                     ++divisor; /* Count number of added frequency bins. */
@@ -278,14 +278,15 @@ void SoundReactivePlugin::process()
                         }
 
                         ++bandIdx;
-                    }
-                }
 
-                if (0 < divisor)
-                {
-                    /* Depends on how many frequency bins were added. */
-                    octaveFreqBands[bandIdx] /= static_cast<float>(divisor);
-                    octaveFreqBands[bandIdx] = sqrtf(octaveFreqBands[bandIdx]);
+                        if (m_numOfFreqBands > bandIdx)
+                        {
+                            octaveFreqBands[bandIdx] = static_cast<float>(m_freqBins[freqBinIdx] * m_freqBins[freqBinIdx]);
+                            ++divisor; /* Count number of added frequency bins. */
+                        }
+                    }
+
+                    ++freqBinIdx;
                 }
 
                 /* Calculate the amplitude in dB SPL.
@@ -303,8 +304,6 @@ void SoundReactivePlugin::process()
                     {
                         octaveFreqBands[bandIdx] = 0.0f;
                     }
-
-                    printf("f%u = %f\n", bandIdx, octaveFreqBands[bandIdx]);
                 }
 
                 /* Downscale to the bar height in relation to dynamic range.
