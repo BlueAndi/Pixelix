@@ -80,9 +80,18 @@ public:
         m_numOfFreqBands(NUM_OF_BANDS_16),
         m_decayPeakTimer(),
         m_maxHeight(0U),
-        m_freqBins(nullptr)
+        m_freqBins(nullptr),
+        m_corrFactors(),
+        m_peak(INMP441_MAX_SPL)
     {
+        uint8_t bandIdx = 0U;
+
         (void)m_mutex.create();
+
+        for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
+        {
+            m_corrFactors[bandIdx] = 1.0f;
+        }
     }
 
     /**
@@ -287,6 +296,16 @@ private:
     static const constexpr int32_t  INMP441_NOISE_SPL           = INMP441_SENSITIVITY_SPL + 20.0f * log10f((1.0f * INMP441_NOISE_FLOOR_DIGITAL) / IMMP441_SENSITIVITY_DIGITAL);
 
     /**
+     * The human hearing threshold in dB SPL.
+     */
+    static const constexpr float    HEARING_THRESHOLD           = 0.0f;
+
+    /**
+     * Minimum dynamic range in dB SPL, on the y-axis.
+     */
+    static const constexpr float    MIN_DYNAMIC_RANGE           = 40.0f;
+
+    /**
      * List with the high edge frequency bin of the center band frequency.
      * This list is valid for 8 bands.
      */
@@ -305,6 +324,8 @@ private:
     SimpleTimer             m_decayPeakTimer;               /**< Periodically decays the peak of a bar. */
     uint16_t                m_maxHeight;                    /**< Max. height of a bar in pixel. */
     double*                 m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
+    float                   m_corrFactors[MAX_FREQ_BANDS];  /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
+    float                   m_peak;                         /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
 
     /**
      * Saves current configuration to JSON file.

@@ -78,22 +78,22 @@ const uint16_t  SoundReactivePlugin::LIST_8_BAND_HIGH_EDGE_FREQ_BIN[]  =
 /* Initialize the list with the high edge frequency bin of the center band frequency. */
 const uint16_t  SoundReactivePlugin::LIST_16_BAND_HIGH_EDGE_FREQ_BIN[]  =
 {
-    2U,
-    3U,
+    4U,
     5U,
     7U,
-    10U,
-    14U,
-    20U,
-    29U,
-    41U,
-    59U,
+    9U,
+    12U,
+    16U,
+    21U,
+    27U,
+    36U,
+    48U,
+    63U,
     84U,
-    119U,
-    169U,
-    241U,
-    343U,
-    489U
+    111U,
+    146U,
+    193U,
+    255U
 };
 
 /******************************************************************************
@@ -238,6 +238,8 @@ void SoundReactivePlugin::process()
                 uint16_t        freqBinIdx                          = 0U;
                 const uint16_t* bandHighEdgeFreqs                   = nullptr;
                 int32_t         divisor                             = 0;
+                float           peak                                = 0.0f;
+                float           avgDigital                          = 0.0f;
 
                 /* Choose the right list of high edge frequency bins. */
                 if (NUM_OF_BANDS_8 == m_numOfFreqBands)
@@ -249,15 +251,15 @@ void SoundReactivePlugin::process()
                     bandHighEdgeFreqs = LIST_16_BAND_HIGH_EDGE_FREQ_BIN;
                 }
 
-                /* Analyze the frequency bin results of the spectrum analyzer and
-                 * create the octave frequency bands by RMS.
+                /* Sum up the frequency bin results of the spectrum analyzer and
+                 * create the octave frequency bands.
                  */
                 freqBinIdx  = 1U; /* Don't use the first frequency bin, because it contains the DC part. */
                 bandIdx     = 0U;
                 octaveFreqBands[bandIdx] = 0.0f;
                 while((freqBinLen > freqBinIdx) && (m_numOfFreqBands > bandIdx))
                 {
-                    octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx] * m_freqBins[freqBinIdx]);
+                    octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx]);
                     ++divisor; /* Count number of added frequency bins. */
 
                     /* If the current frequency bin is equal than the current
@@ -272,7 +274,6 @@ void SoundReactivePlugin::process()
                         {
                             /* Depends on how many frequency bins were added. */
                             octaveFreqBands[bandIdx] /= static_cast<float>(divisor);
-                            octaveFreqBands[bandIdx] = sqrtf(octaveFreqBands[bandIdx]);
 
                             divisor = 0;
                         }
@@ -281,7 +282,7 @@ void SoundReactivePlugin::process()
 
                         if (m_numOfFreqBands > bandIdx)
                         {
-                            octaveFreqBands[bandIdx] = static_cast<float>(m_freqBins[freqBinIdx] * m_freqBins[freqBinIdx]);
+                            octaveFreqBands[bandIdx] = static_cast<float>(m_freqBins[freqBinIdx]);
                             ++divisor; /* Count number of added frequency bins. */
                         }
                     }
@@ -289,20 +290,69 @@ void SoundReactivePlugin::process()
                     ++freqBinIdx;
                 }
 
-                /* Calculate the amplitude in dB SPL.
-                 * The shown frequency spectrum amplitudes consider now the silent and loud parts better.
-                 *
-                 * = sensitivity [db SPL] + 20 * log10(frequency amplitude digital / sensitivity digital)
-                 */
+                /* Calculate the amplitude average over the spectrum. */
                 for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
                 {
+                    avgDigital += octaveFreqBands[bandIdx];
+                }
+                avgDigital /= m_numOfFreqBands;
+
+                for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
+                {
+                    /* If the ampltiude average is lower than the equivalent input noise (from datasheet),
+                     * the correction factors will be calculated. The amplitude average is used to detect
+                     * silence, which is necessary for this automatic calibration.
+                     */
+                    if (INMP441_NOISE_FLOOR_DIGITAL > avgDigital)
+                    {
+                        constexpr const float   WEIGHT_NEW_VALUE    = 0.1f;
+                        constexpr const float   WEIGHT_OLD_VALUE    = 1.0f - WEIGHT_NEW_VALUE;
+
+                        /* Calculate with weighted average to avoid jumping. */
+                        m_corrFactors[bandIdx] = WEIGHT_OLD_VALUE * m_corrFactors[bandIdx] + WEIGHT_NEW_VALUE * (INMP441_NOISE_FLOOR_DIGITAL / octaveFreqBands[bandIdx]);
+                    }
+
+                    /* Normalize */
+                    octaveFreqBands[bandIdx] *= m_corrFactors[bandIdx];
+
+                    /* Calculate the spectrum amplitude in dB SPL
+                     * The shown frequency spectrum amplitudes consider now the silent and loud parts better.
+                     *
+                     * = sensitivity [dB SPL] + 20 * log10(frequency amplitude digital / sensitivity digital)
+                     */
                     octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0f * log10f(octaveFreqBands[bandIdx] / IMMP441_SENSITIVITY_DIGITAL);
 
-                    /* Show only the dynamic range by removing the equivalent input noise. */
-                    octaveFreqBands[bandIdx] -= INMP441_NOISE_SPL;
-                    if (0.0f > octaveFreqBands[bandIdx])
+                    /* The amplitude shall consider only the dynamic range
+                     * by removing the equivalent input noise level.
+                     */
+                    if (INMP441_NOISE_SPL >= octaveFreqBands[bandIdx])
                     {
-                        octaveFreqBands[bandIdx] = 0.0f;
+                        octaveFreqBands[bandIdx] = HEARING_THRESHOLD;
+                    }
+                    else
+                    {
+                        octaveFreqBands[bandIdx] -= INMP441_NOISE_SPL;
+                    }
+
+                    /* Determine peak over all frequency bands for automatic gain control. */
+                    if (octaveFreqBands[bandIdx] > peak)
+                    {
+                        peak = octaveFreqBands[bandIdx];
+                    }
+                }
+
+                /* Adapt the dynamic range on the y-axis, but limit it to a minimum,
+                 * otherwise the bar's will jump driven by silent tones.
+                 */
+                {
+                    constexpr const float   WEIGHT_NEW_VALUE    = 0.25f;
+                    constexpr const float   WEIGHT_OLD_VALUE    = 1.0f - WEIGHT_NEW_VALUE;
+                    
+                    m_peak = WEIGHT_NEW_VALUE * peak + WEIGHT_OLD_VALUE * m_peak;
+
+                    if (MIN_DYNAMIC_RANGE > m_peak)
+                    {
+                        m_peak = MIN_DYNAMIC_RANGE;
                     }
                 }
 
@@ -312,7 +362,7 @@ void SoundReactivePlugin::process()
                  */
                 for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
                 {
-                    uint16_t barHeight = static_cast<uint16_t>((octaveFreqBands[bandIdx] * m_maxHeight) / (INMP441_MAX_SPL - INMP441_NOISE_SPL));
+                    uint16_t barHeight = static_cast<uint16_t>((octaveFreqBands[bandIdx] * static_cast<float>(m_maxHeight)) / m_peak);
 
                     if (m_maxHeight < barHeight)
                     {

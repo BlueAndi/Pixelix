@@ -158,16 +158,16 @@ private:
      * The sample rate in Hz. According to the Nyquist theorem, it shall be
      * twice as the max. audio frequency, which to support.
      */
-    static const uint32_t               SAMPLE_RATE             = 40000;
+    static const uint32_t               SAMPLE_RATE             = 14080U;
 
     /**
      * The number of samples over the spectrum. This shall be always a power of 2!
      */
-    static const uint32_t               SAMPLES                 = 1024U;
+    static const uint32_t               SAMPLES                 = 512U;
 
     /**
      * The number of frequency bins over the spectrum. Note, this is always
-     * half of the samples.
+     * half of the samples, because they are symmetrical around DC.
      */
     static const uint32_t               FREQ_BINS               = SAMPLES / 2U;
 
@@ -202,7 +202,7 @@ private:
     /**
      * I2S DMA block size in bytes.
      */
-    static const int32_t                DMA_BLOCK_SIZE          = 128;
+    static const int32_t                DMA_BLOCK_SIZE          = 256;
 
     /**
      * I2S DMA number of blocks.
