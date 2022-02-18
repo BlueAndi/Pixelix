@@ -236,7 +236,9 @@ private:
     static const char*      TOPIC_CHANNEL;
 
     /**
-     * The max. number of frequency bands, which the plugin is able to show.
+     * The max. number of frequency bands, the plugin supports.
+     * If you change this, the number of frequency bins which to sum up
+     * must be calculated again.
      */
     static const uint8_t    MAX_FREQ_BANDS                      = 16U;
 
@@ -304,12 +306,6 @@ private:
      * Minimum dynamic range in dB SPL, on the y-axis.
      */
     static const constexpr float    MIN_DYNAMIC_RANGE           = 40.0f;
-
-    /**
-     * List with the high edge frequency bin of the center band frequency.
-     * This list is valid for 8 bands.
-     */
-    static const uint16_t   LIST_8_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_8];
 
     /**
      * List with the high edge frequency bin of the center band frequency.

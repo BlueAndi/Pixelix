@@ -63,19 +63,6 @@
 const char*     SoundReactivePlugin::TOPIC_CHANNEL                      = "/cfg";
 
 /* Initialize the list with the high edge frequency bin of the center band frequency. */
-const uint16_t  SoundReactivePlugin::LIST_8_BAND_HIGH_EDGE_FREQ_BIN[]  =
-{
-    3U,
-    6U,
-    14U,
-    29U,
-    62U,
-    132U,
-    281U,
-    598U
-};
-
-/* Initialize the list with the high edge frequency bin of the center band frequency. */
 const uint16_t  SoundReactivePlugin::LIST_16_BAND_HIGH_EDGE_FREQ_BIN[]  =
 {
     4U,
@@ -234,22 +221,11 @@ void SoundReactivePlugin::process()
             /* Copy frequency bins from spectrum analyzer. */
             if (true == SpectrumAnalyzer::getInstance().getFreqBins(m_freqBins, freqBinLen))
             {
-                float           octaveFreqBands[m_numOfFreqBands]   = { 0.0f };
-                uint16_t        freqBinIdx                          = 0U;
-                const uint16_t* bandHighEdgeFreqs                   = nullptr;
-                int32_t         divisor                             = 0;
-                float           peak                                = 0.0f;
-                float           avgDigital                          = 0.0f;
-
-                /* Choose the right list of high edge frequency bins. */
-                if (NUM_OF_BANDS_8 == m_numOfFreqBands)
-                {
-                    bandHighEdgeFreqs = LIST_8_BAND_HIGH_EDGE_FREQ_BIN;
-                }
-                else
-                {
-                    bandHighEdgeFreqs = LIST_16_BAND_HIGH_EDGE_FREQ_BIN;
-                }
+                float           octaveFreqBands[MAX_FREQ_BANDS];
+                uint16_t        freqBinIdx                      = 0U;
+                int32_t         divisor                         = 0;
+                float           peak                            = 0.0f;
+                float           avgDigital                      = 0.0f;
 
                 /* Sum up the frequency bin results of the spectrum analyzer and
                  * create the octave frequency bands.
@@ -257,7 +233,7 @@ void SoundReactivePlugin::process()
                 freqBinIdx  = 1U; /* Don't use the first frequency bin, because it contains the DC part. */
                 bandIdx     = 0U;
                 octaveFreqBands[bandIdx] = 0.0f;
-                while((freqBinLen > freqBinIdx) && (m_numOfFreqBands > bandIdx))
+                while((freqBinLen > freqBinIdx) && (MAX_FREQ_BANDS > bandIdx))
                 {
                     octaveFreqBands[bandIdx] += static_cast<float>(m_freqBins[freqBinIdx]);
                     ++divisor; /* Count number of added frequency bins. */
@@ -266,8 +242,8 @@ void SoundReactivePlugin::process()
                      * high edge frequency of the band, the following frequency
                      * bin's will be assigned to the next band.
                      */
-                    if ((m_numOfFreqBands > bandIdx) &&
-                        (bandHighEdgeFreqs[bandIdx] == freqBinIdx))
+                    if ((MAX_FREQ_BANDS > bandIdx) &&
+                        (LIST_16_BAND_HIGH_EDGE_FREQ_BIN[bandIdx] == freqBinIdx))
                     {
                         /* Any frequency band added? */
                         if (0 < divisor)
@@ -280,7 +256,7 @@ void SoundReactivePlugin::process()
 
                         ++bandIdx;
 
-                        if (m_numOfFreqBands > bandIdx)
+                        if (MAX_FREQ_BANDS > bandIdx)
                         {
                             octaveFreqBands[bandIdx] = static_cast<float>(m_freqBins[freqBinIdx]);
                             ++divisor; /* Count number of added frequency bins. */
@@ -291,13 +267,13 @@ void SoundReactivePlugin::process()
                 }
 
                 /* Calculate the amplitude average over the spectrum. */
-                for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
+                for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
                 {
                     avgDigital += octaveFreqBands[bandIdx];
                 }
-                avgDigital /= m_numOfFreqBands;
+                avgDigital /= MAX_FREQ_BANDS;
 
-                for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
+                for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
                 {
                     /* If the ampltiude average is lower than the equivalent input noise (from datasheet),
                      * the correction factors will be calculated. The amplitude average is used to detect
@@ -347,7 +323,7 @@ void SoundReactivePlugin::process()
                 {
                     constexpr const float   WEIGHT_NEW_VALUE    = 0.25f;
                     constexpr const float   WEIGHT_OLD_VALUE    = 1.0f - WEIGHT_NEW_VALUE;
-                    
+
                     m_peak = WEIGHT_NEW_VALUE * peak + WEIGHT_OLD_VALUE * m_peak;
 
                     if (MIN_DYNAMIC_RANGE > m_peak)
@@ -357,12 +333,27 @@ void SoundReactivePlugin::process()
                 }
 
                 /* Downscale to the bar height in relation to dynamic range.
-                 *
-                 * Note, there is currently no behaviour like automatic gain control.
+                 * If less frequency bands are shown, they will be simply averaged.
                  */
-                for(bandIdx = 0U; bandIdx < m_numOfFreqBands; ++bandIdx)
+                freqBinIdx = 0U;
+                for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
                 {
-                    uint16_t barHeight = static_cast<uint16_t>((octaveFreqBands[bandIdx] * static_cast<float>(m_maxHeight)) / m_peak);
+                    float       avg         = 0.0f;
+                    uint16_t    barHeight   = 0U;
+                    const float MAX_HEIGHT  = static_cast<float>(m_maxHeight);
+
+                    if (NUM_OF_BANDS_8 == m_numOfFreqBands)
+                    {
+                        avg = (octaveFreqBands[freqBinIdx] + octaveFreqBands[freqBinIdx + 1U]) / 2.0f;
+                        freqBinIdx += 2U;
+                    }
+                    else
+                    {
+                        avg = octaveFreqBands[freqBinIdx];
+                        freqBinIdx += 1U;
+                    }
+
+                    barHeight = static_cast<uint16_t>((avg * MAX_HEIGHT) / m_peak);
 
                     if (m_maxHeight < barHeight)
                     {
