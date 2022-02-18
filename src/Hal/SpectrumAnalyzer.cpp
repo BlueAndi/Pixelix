@@ -49,6 +49,64 @@
  * Types and classes
  *****************************************************************************/
 
+/**
+ * Provides the FFT window correction factor.
+ * See the National Instruments application note 041:
+ * The Fundamentals of FFT-Based Signal Analysis and Measurement
+ * 
+ * @tparam windowType The window type, see arduinoFFT.
+ */
+template < uint8_t windowType >
+struct WindowCorrection
+{
+    /* No implementation to force a compile errr. */
+};
+
+/**
+ * The FFT rectangle window correction factor. 
+ */
+template <>
+struct WindowCorrection<FFT_WIN_TYP_RECTANGLE>
+{
+    static constexpr const double factor = 1.0f;
+};
+
+/**
+ * The FFT hamming window correction factor. 
+ */
+template <>
+struct WindowCorrection<FFT_WIN_TYP_HAMMING>
+{
+    static constexpr const double factor = 0.54f;
+};
+
+/**
+ * The FFT hann window correction factor. 
+ */
+template <>
+struct WindowCorrection<FFT_WIN_TYP_HANN>
+{
+    static constexpr const double factor = 0.50f;
+};
+
+/**
+ * The FFT blackman-harris window correction factor. 
+ */
+template <>
+struct WindowCorrection<FFT_WIN_TYP_BLACKMAN_HARRIS>
+{
+    static constexpr const double factor = 0.42f;
+};
+
+/**
+ * The FFT flat top window correction factor. 
+ */
+template <>
+struct WindowCorrection<FFT_WIN_TYP_FLT_TOP>
+{
+    static constexpr const double factor = 0.22f;
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -323,9 +381,31 @@ void SpectrumAnalyzer::deInitI2S()
 
 void SpectrumAnalyzer::calculateFFT()
 {
-    m_fft.Windowing(FFT_WIN_TYP_BLACKMAN_HARRIS, FFT_FORWARD);
+    static const constexpr double   HALF_SPECTRUM_ENERGY_CORRECTON_FACTOR   = 2.0f;
+    static const constexpr uint8_t  WINDOW_TYPE                             = FFT_WIN_TYP_HAMMING;
+    uint16_t idx = 0U;
+
+    /* Note, current arduinoFFT version has a wrong Hann window calculation! */
+    m_fft.Windowing(WINDOW_TYPE, FFT_FORWARD);
     m_fft.Compute(FFT_FORWARD);
     m_fft.ComplexToMagnitude();
+
+    /* In a two-sided spectrum, half the energy is displayed at the positive
+     * frequency, and half the energy is displayed at the negative frequency.
+     * Therefore, to convert from a two-sided spectrum to a single-sided
+     * spectrum, discard the second half of the array and multiply every
+     * point except for DC by two.
+     * 
+     * Depended on the kind of window, it is compensated by multiplication of
+     * the corresponding correction factor.
+     * 
+     * Result is the amplitude spectrum.
+     */
+    for(idx = 1U; idx < FREQ_BINS; ++idx)
+    {
+        m_real[idx] *= HALF_SPECTRUM_ENERGY_CORRECTON_FACTOR;
+        m_real[idx] /= SAMPLES * WindowCorrection<WINDOW_TYPE>::factor;
+    }
 }
 
 void SpectrumAnalyzer::copyFreqBins()
