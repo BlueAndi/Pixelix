@@ -2,27 +2,29 @@ name: master
 
 # Controls when the action will run.
 on:
-  # Triggers the workflow on push events for all branches
-  # Triggers the workflow on pull request events but only for the master branch
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Allows you to run this workflow manually from the Actions tab.
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  # Setup the toolchain and checkout the repository.
+  setup:
+    # The type of runner that the job will run on.
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - uses: actions/checkout@v2
+    - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+    - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
     
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
     - name: Cache pip
       uses: actions/cache@v2
       with:
@@ -45,18 +47,35 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade platformio
     
-    - name: Compile target esp32doit-devkit-v1-usb
-      run: platformio run --environment esp32doit-devkit-v1-usb
+    - name: Create release artifcats folder
+      if: github.ref_type == 'tag'
+      run: |
+        mkdir ${{ github.workspace }}/artifacts
 
-    - name: Compile target esp32-nodemcu-usb
-      run: platformio run --environment esp32-nodemcu-usb
+  # Build all targets
+  build:
+    needs: setup
+    strategy:
+      matrix:
+        environment: ["esp32doit-devkit-v1-usb", "esp32-nodemcu-usb", "az-delivery-devkit-v4-usb", "ttgo-t-display-usb"]
+    steps:
+    - name: Compile ${{ matrix.environment }} firmware
+      run: platformio run --environment ${{ matrix.environment }}
+    
+    - name: Build ${{ matrix.environment }} filesystem image
+      run: platformio run --environment ${{ matrix.environment }} --target buildfs
 
-    - name: Compile target az-delivery-devkit-v4-usb
-      run: platformio run --environment az-delivery-devkit-v4-usb
+    - name: Deploy ${{ matrix.environment }}
+      if: github.ref_type == 'tag'
+      run: |
+        mkdir ${{ github.workspace }}/artifacts/${{ matrix.environment }}
+        cp ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin ${{ github.workspace }}/artifacts/${{ matrix.environment }}
+        cp ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin ${{ github.workspace }}/artifacts/${{ matrix.environment }}      
 
-    - name: Compile target ttgo-t-display-usb
-      run: platformio run --environment ttgo-t-display-usb
-
+  # Static checks
+  checks:
+    needs: setup
+    steps:
     - name: Perform static checks on target esp32doit-devkit-v1-usb
       run: platformio check --environment esp32doit-devkit-v1-usb
 
@@ -66,6 +85,10 @@ jobs:
     - name: Run tests on native environment
       run: platformio test --environment test
 
+  # Build documentation
+  docs:
+    needs: setup
+    steps:
     - name: Set up graphviz
       uses: ts-graphviz/setup-graphviz@v1
 
@@ -74,3 +97,13 @@ jobs:
       with:
         working-directory: './doc/doxygen'
         doxyfile-path: './Doxyfile'
+
+  # Deploy release artifacts
+  deploy:
+    needs: [setup, build, checks, docs]
+    steps:
+    - name: Deploy release artifacts
+      uses: actions/upload-artifact@v2
+      if: github.ref_type == 'tag'
+      with:
+        path: ${{ github.workspace }}/artifacts
