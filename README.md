@@ -42,15 +42,25 @@ I want to have a remote display to show multiple kind of information, running 24
 
 # Overview
 
-A [rough overview](./doc/Overview.pdf) of the first idea.
+The firmware contains a plugin concept (at compile time) to provide different functionalities. Each plugin can create its own layout and place the information as required. If you are only interesting in showing just text provided via REST API, choose the JustTextPlugin. It uses the whole display size and will scroll text automatically. Sometimes in front of the text a nice icon is required in which case choose the IconTextPlugin. These are only examples and you will find more in the [plugin list](./doc/PLUGINS.md).
+
+A little bit more detail about the generic plugins and the first idea can be found in this [rough overview](./doc/Overview.pdf).
 
 ## Original setup
+The original setup during development and the first release was:
 * [ESP32 DevKitV1](https://github.com/playelek/pinout-doit-32devkitv1)
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 
+The following shows the absolute minimal wiring setup:
+
+![PixelixMinimalSetup](./doc/images/PixelixMinimalSetup.png)
+
+> :warning: **If you power all via USB**: Be very careful, because it may destroy your esp32 board if the LED current gets too high. Avoid increasing the LED display brightness or filling it complete with white pixels.
+
 ## Others
-In the meantime other esp32 based boards are supported as well. They are not listed here, but you can see them in the platformio configuration (platformio.ini).
+
+In the meantime several other board are supported as well. You can see them in the platformio configuration (platformio.ini) or the [list of boards](./doc/boards/README.md).
 
 Additional supported variants, which were original not in focus:
 * [TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
@@ -61,7 +71,7 @@ Although Pixelix was designed to show information, that is pushed or pulled via 
 * Digitial microphone INMP441 for some sound reactive stuff.
 
 # Very First Startup
-If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
+If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
 
 Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the webinterface.
 
@@ -69,8 +79,8 @@ Restart and voila!
 
 # User Interface
 * The user button activates always the next slot.
-* If the display is at a place, which is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
-* If a LDR is connected, the display brightness is automatically adapted.
+* If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
+* If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
 * The web interface provides the possibilty to install plugins, control their duration in the slots and etc.
 * Some plugin's spawn a dedicated REST API, see the web page of the plugin or have a look to the REST API documentation.
 
