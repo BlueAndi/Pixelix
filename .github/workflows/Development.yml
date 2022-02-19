@@ -57,11 +57,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade platformio
     
-    - name: Create release artifcats folder
-      if: github.ref_type == 'tag'
-      run: |
-        mkdir ${{ github.workspace }}/artifacts
-
     - name: Compile ${{ matrix.environment }} firmware
       run: platformio run --environment ${{ matrix.environment }}
     
