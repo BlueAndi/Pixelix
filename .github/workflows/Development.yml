@@ -48,12 +48,6 @@ jobs:
     - name: Compile target esp32doit-devkit-v1-usb
       run: platformio run --environment esp32doit-devkit-v1-usb
 
-    - name: Compile target esp32-nodemcu-usb
-      run: platformio run --environment esp32-nodemcu-usb
-
-    - name: Compile target az-delivery-devkit-v4-usb
-      run: platformio run --environment az-delivery-devkit-v4-usb
-
     - name: Compile target ttgo-t-display-usb
       run: platformio run --environment ttgo-t-display-usb
 
