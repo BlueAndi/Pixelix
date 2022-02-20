@@ -167,7 +167,7 @@ static const char*  NAME_SLOT_CONFIG                = "Display slot configuratio
 static const char*  NAME_SCROLL_PAUSE               = "Text scroll pause [ms]";
 
 /** NotifyURL name */
-static const char*  NAME_NOTIFY_URL                     = "URL to be triggered when PIXELIX has connected to a remote network.";
+static const char*  NAME_NOTIFY_URL                 = "URL to be triggered when PIXELIX has connected to a remote network.";
 
 /* ---------- Default values ---------- */
 
@@ -226,13 +226,13 @@ static const char*     DEFAULT_NOTIFY_URL               = "-";
 /* ---------- Minimum values ---------- */
 
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t     MIN_VALUE_WIFI_SSID            = 0;
+static const size_t     MIN_VALUE_WIFI_SSID             = 0;
 
 /** Wifi network passphrase min. length */
-static const size_t     MIN_VALUE_WIFI_PASSPHRASE      = 8U;
+static const size_t     MIN_VALUE_WIFI_PASSPHRASE       = 8U;
 
 /** Wifi access point network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t     MIN_VALUE_WIFI_AP_SSID         = 0;
+static const size_t     MIN_VALUE_WIFI_AP_SSID          = 0;
 
 /** Wifi access point network passphrase min. length */
 static const size_t     MIN_VALUE_WIFI_AP_PASSPHRASE    = 8U;
@@ -244,7 +244,7 @@ static const size_t     MIN_VALUE_WEB_LOGIN_USER        = 4U;
 static const size_t     MIN_VALUE_WEB_LOGIN_PASSWORD    = 4U;
 
 /** Hostname min. length */
-static const size_t     MIN_VALUE_HOSTNAME             = 1U;
+static const size_t     MIN_VALUE_HOSTNAME              = 1U;
 
 /*                      MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
 
@@ -276,16 +276,16 @@ static const size_t     MIN_VALUE_NOTIFY_URL            = 0U;
 /* ---------- Maximum values ---------- */
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t     MAX_VALUE_WIFI_SSID            = 32U;
+static const size_t     MAX_VALUE_WIFI_SSID             = 32U;
 
 /** Wifi network passphrase max. length */
-static const size_t     MAX_VALUE_WIFI_PASSPHRASE      = 64U;
+static const size_t     MAX_VALUE_WIFI_PASSPHRASE       = 64U;
 
 /** Wifi access point network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t     MAX_VALUE_WIFI_AP_SSID         = 32U;
+static const size_t     MAX_VALUE_WIFI_AP_SSID          = 32U;
 
 /** Wifi access point network passphrase max. length */
-static const size_t     MAX_VALUE_WIFI_AP_PASSPHRASE   = 64U;
+static const size_t     MAX_VALUE_WIFI_AP_PASSPHRASE    = 64U;
 
 /** Website login user account max. length */
 static const size_t     MAX_VALUE_WEB_LOGIN_USER        = 16U;
@@ -294,15 +294,15 @@ static const size_t     MAX_VALUE_WEB_LOGIN_USER        = 16U;
 static const size_t     MAX_VALUE_WEB_LOGIN_PASSWORD    = 32U;
 
 /** Hostname max. length */
-static const size_t     MAX_VALUE_HOSTNAME             = 63U;
+static const size_t     MAX_VALUE_HOSTNAME              = 63U;
 
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** Plugin installation max. length */
-static const size_t     MAX_VALUE_PLUGIN_INSTALLATION  = 1024U;
+static const size_t     MAX_VALUE_PLUGIN_INSTALLATION   = 1024U;
 
 /** POSIX timezone max. length */
-static const size_t     MAX_VALUE_TIMEZONE             = 128U;
+static const size_t     MAX_VALUE_TIMEZONE              = 128U;
 
 /** NTP server address max. length */
 static const size_t     MAX_VALUE_NTP_SERVER            = 30U;
