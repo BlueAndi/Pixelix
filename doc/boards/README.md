@@ -12,7 +12,9 @@
   * [Hardware description](./pixelix/v1.5/ELECTRONIC.md)
   * [Bill of material](./pixelix/v1.5/BOM.md)
   * [Pinning](../../lib/HalLedMatrix/Board.h)
-* **Pixelix board v2.0**, the successor of v1.5. It is connected with a ESP32 DevKit V1 module as piggy bag.
+  * [Schematic](./pixelix/v1.5/schematics/)
+  * [PCB](./pixelix/v1.5/pcb/)
+* :construction: **Pixelix board v2.0**, the successor of v1.5. It is connected with a ESP32 DevKit V1 module as piggy bag.
   * [Hardware description](./pixelix/v2.0/ELECTRONIC.md)
 * **ESP32 NodeMCU**
   * [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix board)
