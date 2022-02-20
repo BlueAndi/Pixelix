@@ -307,9 +307,6 @@ public:
     /** Task priority, note Arduino loop and AsyncTcp have lower priorities. */
     static const UBaseType_t    TASK_PRIORITY       = 4U;
 
-    /** If no ambient light sensor is available, the default brightness shall be 40%. */
-    static const uint8_t        BRIGHTNESS_DEFAULT  = (UINT8_MAX * 40U) / 100U;
-
 private:
 
     /** Mutex to lock/unlock display update. */

@@ -87,32 +87,40 @@ struct Statistics
 
 bool DisplayMgr::begin()
 {
-    bool    status  = false;
-    uint8_t idx     = 0U;
-    bool    isError = false;
+    bool        status              = false;
+    uint8_t     idx                 = 0U;
+    bool        isError             = false;
+    uint8_t     maxSlots            = 0U;
+    uint8_t     brightnessPercent   = 0U;
+    uint16_t    brightness          = 0U;
+    Settings&   settings            = Settings::getInstance();
+
+    if (false == settings.open(true))
+    {
+        maxSlots            = settings.getMaxSlots().getDefault();
+        brightnessPercent   = settings.getBrightness().getDefault();
+    }
+    else
+    {
+        maxSlots            = settings.getMaxSlots().getValue();
+        brightnessPercent   = settings.getBrightness().getValue();
+
+        settings.close();
+    }
 
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.
      */
     BrightnessCtrl::getInstance().init(Display::getInstance());
-    BrightnessCtrl::getInstance().setBrightness(BRIGHTNESS_DEFAULT);
+    brightness = (static_cast<uint16_t>(brightnessPercent) * UINT8_MAX) / 100U; /* Calculate brightness in digits */
+    BrightnessCtrl::getInstance().setBrightness(static_cast<uint8_t>(brightness));
 
     /* No slots available? */
     if (nullptr == m_slots)
     {
-        if (false == Settings::getInstance().open(true))
-        {
-            m_maxSlots = Settings::getInstance().getMaxSlots().getDefault();
+        m_maxSlots = maxSlots;
 
-            LOG_WARNING("Using default number of max. slots.");
-        }
-        else
-        {
-            m_maxSlots = Settings::getInstance().getMaxSlots().getValue();
-            Settings::getInstance().close();
-        }
-
-        if (0 < m_maxSlots)
+        if (0U < m_maxSlots)
         {
             m_slots = new Slot[m_maxSlots];
 
