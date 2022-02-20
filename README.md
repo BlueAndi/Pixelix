@@ -56,7 +56,7 @@ The following shows the absolute minimal wiring setup:
 
 ![PixelixMinimalSetup](./doc/images/PixelixMinimalSetup.png)
 
-> :warning: **If you power all via USB**: Be very careful, because it may destroy your esp32 board if the LED current gets too high. Avoid increasing the LED display brightness or filling it complete with white pixels.
+> :warning: **If you power all via USB**: Be very careful, because it may destroy your esp32 board if the LED current gets too high. Avoid increasing the LED display brightness or filling it complete with white pixels. Please use a external power supply with at least 5V / 4A.
 
 ## Others
 
