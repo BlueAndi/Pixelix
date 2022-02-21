@@ -60,7 +60,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char*     DateTimePlugin::TOPIC_CFG   = "/cfg";
+const char*     DateTimePlugin::TOPIC_CFG   = "/dateTime";
 
 /******************************************************************************
  * Public Methods
