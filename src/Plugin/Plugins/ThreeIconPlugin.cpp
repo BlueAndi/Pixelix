@@ -147,9 +147,9 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
         uint8_t     iconId              = MAX_ICONS;
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
 
-        if ((false != m_isSpriteSheetAvailable[iconId]) &&
-            (true == status) &&
-            (MAX_ICONS > iconId))
+        if ((true == status) &&
+            (MAX_ICONS > iconId) &&
+            (false != m_isSpriteSheetAvailable[iconId]))
         {
             JsonVariant jsonIsForward   = value["forward"];
             JsonVariant jsonIsRepeat    = value["repeat"];
