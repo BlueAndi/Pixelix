@@ -105,14 +105,9 @@ bool ThreeIconPlugin::getTopic(const String& topic, JsonObject& value) const
         if ((true == status) &&
             (MAX_ICONS > iconId))
         {
-            bool    isForward       = getIsForward(iconId);
-            bool    isRepeat        = getIsRepeat(iconId);
-            String  isForwardStr    = (false == isForward) ? "false" : "true";
-            String  isRepeatStr     = (false == isRepeat) ? "false" : "true";
-    
             value["id"]         = iconId;
-            value["repeat"]     = isRepeatStr;
-            value["forward"]    = isForwardStr;
+            value["repeat"]     = getIsRepeat(iconId);
+            value["forward"]    = getIsForward(iconId);
 
             isSuccessful = true;
         }
@@ -137,7 +132,9 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
         JsonVariant jsonIconPath        = value["fullPath"];
 
-        if ((false != status) && (MAX_ICONS > iconId) && (false == jsonIconPath.isNull()))
+        if ((true == status) &&
+            (MAX_ICONS > iconId) &&
+            (false == jsonIconPath.isNull()))
         {
             String iconPath = jsonIconPath.as<String>();
             isSuccessful = loadBitmap(iconPath, iconId);  
@@ -150,42 +147,25 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
         uint8_t     iconId              = MAX_ICONS;
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
 
-        if(false != m_isSpriteSheetAvailable[iconId])
+        if ((false != m_isSpriteSheetAvailable[iconId]) &&
+            (true == status) &&
+            (MAX_ICONS > iconId))
         {
-            if ((true == status) &&
-                (MAX_ICONS > iconId) &&
-                (false == value["forward"].isNull()))
-            {
-                String isForward = value["forward"].as<String>();
+            JsonVariant jsonIsForward   = value["forward"];
+            JsonVariant jsonIsRepeat    = value["repeat"];
 
-                if (isForward == "false")
-                {
-                    setIsForward(iconId, false);
-                    isSuccessful = true;
-                }
-                else if (isForward == "true")
-                {
-                    setIsForward(iconId, true);
-                    isSuccessful = true;
-                }
+            if (false == jsonIsForward.is<bool>())
+            {
+                bool isForward = jsonIsForward.as<bool>();
+
+                setIsForward(iconId, isForward);
             }
 
-            if ((true == status) &&
-                (MAX_ICONS > iconId) &&
-                (false == value["repeat"].isNull()))
+            if (false == jsonIsRepeat.is<bool>())
             {
-                String isRepeat = value["repeat"].as<String>();
+                bool isRepeat = jsonIsRepeat.as<bool>();
 
-                if (isRepeat == "false")
-                {
-                    setIsRepeat(iconId, false);
-                    isSuccessful = true;
-                }
-                else if (isRepeat == "true")
-                {
-                    setIsRepeat(iconId, true);
-                    isSuccessful = true;
-                }
+                setIsRepeat(iconId, isRepeat);
             }
         }
     }
