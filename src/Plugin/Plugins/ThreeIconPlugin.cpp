@@ -159,6 +159,7 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
                 bool isForward = jsonIsForward.as<bool>();
 
                 setIsForward(iconId, isForward);
+                isSuccessful = true;
             }
 
             if (false == jsonIsRepeat.is<bool>())
@@ -166,6 +167,7 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
                 bool isRepeat = jsonIsRepeat.as<bool>();
 
                 setIsRepeat(iconId, isRepeat);
+                isSuccessful = true;
             }
         }
     }
