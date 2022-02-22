@@ -154,20 +154,40 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
             JsonVariant jsonIsForward   = value["forward"];
             JsonVariant jsonIsRepeat    = value["repeat"];
 
-            if (false == jsonIsForward.is<bool>())
+            if (false == jsonIsForward.isNull())
             {
-                bool isForward = jsonIsForward.as<bool>();
-
-                setIsForward(iconId, isForward);
-                isSuccessful = true;
+                if (jsonIsForward.as<String>() == "false")
+                {
+                    setIsForward(iconId, false);
+                    isSuccessful = true;
+                }
+                else if (jsonIsForward.as<String>() == "true")
+                {
+                    setIsForward(iconId, true);
+                    isSuccessful = true;
+                }
+                else
+                {
+                    ;
+                }
             }
 
-            if (false == jsonIsRepeat.is<bool>())
+            if (false == jsonIsRepeat.isNull())
             {
-                bool isRepeat = jsonIsRepeat.as<bool>();
-
-                setIsRepeat(iconId, isRepeat);
-                isSuccessful = true;
+                if (jsonIsRepeat.as<String>() == "false")
+                {
+                    setIsRepeat(iconId, false);
+                    isSuccessful = true;
+                }
+                else if (jsonIsRepeat.as<String>() == "true")
+                {
+                    setIsRepeat(iconId, true);
+                    isSuccessful = true;
+                }
+                else
+                {
+                    ;
+                }
             }
         }
     }
