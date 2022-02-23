@@ -230,6 +230,7 @@ private:
     uint16_t            m_sampleWriteIndex;     /**< The current sample write index to the input buffer. */
     double              m_freqBins[FREQ_BINS];  /**< The frequency bins as result of the FFT, with linear magnitude. */
     bool                m_freqBinsAreReady;     /**< Are the frequency bins ready for the application? */
+    bool                m_isMicAvailable;       /**< Is a microphone as input device available? */
 
     /**
      * Constructs the spectrum analyzer instance.
@@ -245,7 +246,8 @@ private:
         m_i2sEventQueueHandle(nullptr),
         m_sampleWriteIndex(0U),
         m_freqBins{0.0f},
-        m_freqBinsAreReady(false)
+        m_freqBinsAreReady(false),
+        m_isMicAvailable(false)
     {
     }
 

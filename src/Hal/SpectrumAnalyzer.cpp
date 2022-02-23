@@ -278,6 +278,15 @@ void SpectrumAnalyzer::process()
 
                     ++m_sampleWriteIndex;
 
+                    /* Check for ext. microphone */
+                    if (false == m_isMicAvailable)
+                    {
+                        if (0 != sample)
+                        {
+                            m_isMicAvailable = true;
+                        }
+                    }
+
                     /* All samples read? */
                     if (SAMPLES <= m_sampleWriteIndex)
                     {
@@ -301,15 +310,20 @@ void SpectrumAnalyzer::process()
                                 /* Imaginary part must be zeroed in case of looping to avoid wrong calculations and overflows. */
                                 m_imag[sampleIdx] = 0.0f;
                             }
+
+                            m_isMicAvailable = true;
                         }
 
 #endif
 
-                        /* Transform the time discrete values to the frequency spectrum. */
-                        calculateFFT();
+                        if (true == m_isMicAvailable)
+                        {
+                            /* Transform the time discrete values to the frequency spectrum. */
+                            calculateFFT();
 
-                        /* Store the frequency bins and provide it to the application. */
-                        copyFreqBins();
+                            /* Store the frequency bins and provide it to the application. */
+                            copyFreqBins();
+                        }
                     }
                 }
             }

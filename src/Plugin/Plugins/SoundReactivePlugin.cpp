@@ -271,7 +271,7 @@ void SoundReactivePlugin::process()
                 {
                     avgDigital += octaveFreqBands[bandIdx];
                 }
-                avgDigital /= MAX_FREQ_BANDS;
+                avgDigital /= static_cast<float>(MAX_FREQ_BANDS);
 
                 for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
                 {
@@ -279,13 +279,14 @@ void SoundReactivePlugin::process()
                      * the correction factors will be calculated. The amplitude average is used to detect
                      * silence, which is necessary for this automatic calibration.
                      */
-                    if (INMP441_NOISE_FLOOR_DIGITAL > avgDigital)
+                    if (INMP441_NOISE_FLOOR_DIGITAL > static_cast<int32_t>(avgDigital))
                     {
                         constexpr const float   WEIGHT_NEW_VALUE    = 0.1f;
                         constexpr const float   WEIGHT_OLD_VALUE    = 1.0f - WEIGHT_NEW_VALUE;
+                        constexpr const float   NOISE_FLOOR         = static_cast<float>(INMP441_NOISE_FLOOR_DIGITAL);
 
                         /* Calculate with weighted average to avoid jumping. */
-                        m_corrFactors[bandIdx] = WEIGHT_OLD_VALUE * m_corrFactors[bandIdx] + WEIGHT_NEW_VALUE * (INMP441_NOISE_FLOOR_DIGITAL / octaveFreqBands[bandIdx]);
+                        m_corrFactors[bandIdx] = WEIGHT_OLD_VALUE * m_corrFactors[bandIdx] + WEIGHT_NEW_VALUE * (NOISE_FLOOR / octaveFreqBands[bandIdx]);
                     }
 
                     /* Normalize */
@@ -296,7 +297,7 @@ void SoundReactivePlugin::process()
                      *
                      * = sensitivity [dB SPL] + 20 * log10(frequency amplitude digital / sensitivity digital)
                      */
-                    octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0f * log10f(octaveFreqBands[bandIdx] / IMMP441_SENSITIVITY_DIGITAL);
+                    octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0f * log10f(octaveFreqBands[bandIdx] / static_cast<float>(IMMP441_SENSITIVITY_DIGITAL));
 
                     /* The amplitude shall consider only the dynamic range
                      * by removing the equivalent input noise level.
