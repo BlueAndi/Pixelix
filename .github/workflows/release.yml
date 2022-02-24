@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-    - name: Deploy release artifacts
+    - name: Download release artifacts
       uses: actions/download-artifact@v2
       with:
         path: ${{ github.workspace }}/artifacts
@@ -91,7 +91,7 @@ jobs:
       working-directory: ${{ github.workspace }}/artifacts
 
     - name: Zip release artifacts folder
-      run: zip -r ${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip ${{ github.workspace }}/artifacts
+      run: zip -r ${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip ${{ github.workspace }}/artifacts/*
 
     - name: Release
       uses: softprops/action-gh-release@v1
