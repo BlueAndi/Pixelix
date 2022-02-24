@@ -86,13 +86,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2021 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2022 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.6.0.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
@@ -120,20 +120,32 @@
                     var slotIndex   = 0;
                     var cnt         = 0;
                     var $option     = null;
-    
+                    var optionText  = ""
+
                     for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
                         if (rsp.data.slots[slotIndex].name === pluginName) {
 
+                            optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+                            
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
+
+                            optionText += ")";
+
                             $option = $("<option>")
                                 .val(rsp.data.slots[slotIndex].uid)
-                                .text(rsp.data.slots[slotIndex].uid);
+                                .text(optionText);
                             
                             $("#pluginUid").append($option);
-    
+
                             ++cnt;
                         }
                     }
-    
+
                     return Promise.resolve(cnt);
                 }).catch(function(rsp) {
                     alert("Internal error.");
@@ -249,7 +261,7 @@
             }
 
             $(document).ready(function() {
-                menu.create("menu");
+                menu.create("menu", menu.data);
                 
                 utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
 

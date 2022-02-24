@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -126,30 +126,16 @@ void GithubPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr == m_iconCanvas)
-    {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_stdIconWidget);
 
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_stdIconWidget);
+    /* Load all icons from filesystem now, to prevent filesystem
+     * access during active/inactive/update methods.
+     */
+    (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
 
-            /* Load all icons from filesystem now, to prevent filesystem
-             * access during active/inactive/update methods.
-             */
-            (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-        }
-    }
-
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
-
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-        }
-    }
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -188,18 +174,6 @@ void GithubPlugin::stop()
     if (false != FILESYSTEM.remove(configurationFilename))
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
-
-    if (nullptr != m_iconCanvas)
-    {
-        delete m_iconCanvas;
-        m_iconCanvas = nullptr;
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        delete m_textCanvas;
-        m_textCanvas = nullptr;
     }
 
     return;
@@ -275,16 +249,8 @@ void GithubPlugin::update(YAGfx& gfx)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
+    m_iconCanvas.update(gfx);
+    m_textCanvas.update(gfx);
 
     return;
 }

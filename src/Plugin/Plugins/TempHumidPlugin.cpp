@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -79,33 +79,18 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void TempHumidPlugin::start(uint16_t width, uint16_t height)
 {
+    MutexGuard<MutexRecursive>  guard(m_mutex);
     SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
     uint8_t                     sensorIdx       = 0U;
     uint8_t                     channelIdx      = 0U;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (nullptr == m_iconCanvas)
-    {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_bitmapWidget);
 
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_bitmapWidget);
+    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
 
-            /* Load icon from filesystem. */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-        }
-    }
-
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(width - ICON_WIDTH, width, ICON_WIDTH, 0);
-
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-        }
-    }
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
     /* Use just the first found sensor for temperature. */
     if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))
@@ -126,17 +111,7 @@ void TempHumidPlugin::stop()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr != m_iconCanvas)
-    {
-        delete m_iconCanvas;
-        m_iconCanvas = nullptr;
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        delete m_textCanvas;
-        m_textCanvas = nullptr;
-    }
+    /* Nothing to do. */
 
     return;
 }
@@ -197,16 +172,8 @@ void TempHumidPlugin::active(YAGfx& gfx)
     }
 
     gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
+    m_iconCanvas.update(gfx);
+    m_textCanvas.update(gfx);
 
     return;
 }
@@ -245,16 +212,9 @@ void TempHumidPlugin::update(YAGfx& gfx)
     {
         /* Clear display */
         gfx.fillScreen(ColorDef::BLACK);
-
-        if (nullptr != m_iconCanvas)
-        {
-            m_iconCanvas->update(gfx);
-        }
-
-        if (nullptr != m_textCanvas) 
-        {
-            m_textCanvas->update(gfx);
-        }
+        
+        m_iconCanvas.update(gfx);
+        m_textCanvas.update(gfx);
 
         switch(m_page)
         {

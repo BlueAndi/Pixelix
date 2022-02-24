@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -145,7 +145,10 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
-     * Start the plugin.
+     * Start the plugin. This is called only once during plugin lifetime.
+     * It can be used as deferred initialization (after the constructor)
+     * and provides the canvas size.
+     * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 
      * @param[in] width     Display width in pixel
@@ -154,7 +157,7 @@ public:
     void start(uint16_t width, uint16_t height) final;
     
     /**
-     * Stop the plugin.
+     * Stop the plugin. This is called only once during plugin lifetime.
      */
     void stop() final;
 

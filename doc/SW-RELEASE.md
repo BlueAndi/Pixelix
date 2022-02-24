@@ -27,11 +27,13 @@ The concept behind the version number follows the [semantic versioning](https://
 # How to release?
 
 1. Integrate all related feature/bugfix branches to the **dev** branch.
-2. Update version number in [version.json](../data/version.json) in your local **dev** branch.
-3. Update version number in [Doxyfile](./doxygen/Doxyfile), see ```PROJECT_NUMBER```.
-4. All must be comitted now!
-5. Test local **dev** branch.
-6. Push local **dev** branch to remote repository.
-7. Wait till all CI actions successful finished. If CI run fails, fix it and repeat.
-8. Merge remote **dev** branch to remote **master** branch.
-9. Release version on github.
+2. Update the [REST API on Swagger](https://app.swaggerhub.com/apis/BlueAndi/Pixelix) and publish it.
+3. Update the hyperlink to the REST API version on Swagger in the [./doc/README.md](README.md)
+4. Update version number in [version.json](../data/version.json) in your local **dev** branch.
+5. Update version number in [Doxyfile](./doxygen/Doxyfile), see ```PROJECT_NUMBER```.
+6. All must be comitted now!
+7. Test local **dev** branch.
+8. Push local **dev** branch to remote repository.
+9. Wait till all CI actions successful finished. If CI run fails, fix it and repeat.
+10. Merge remote **dev** branch to remote **master** branch.
+11. Release version on github.

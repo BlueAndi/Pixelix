@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,16 +60,22 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_TEXT  = "/text";
+const char* IconTextLampPlugin::TOPIC_TEXT              = "/text";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMPS = "/lamps";
+const char* IconTextLampPlugin::TOPIC_LAMPS             = "/lamps";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMP  = "/lamp";
+const char* IconTextLampPlugin::TOPIC_LAMP              = "/lamp";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_ICON  = "/bitmap";
+const char* IconTextLampPlugin::TOPIC_ICON              = "/bitmap";
+
+/* Initialize bitmap image filename extension. */
+const char* IconTextLampPlugin::FILE_EXT_BITMAP         = ".bmp";
+
+/* Initialize sprite sheet parameter filename extension. */
+const char* IconTextLampPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
 
 /******************************************************************************
  * Public Methods
@@ -217,11 +223,23 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
     if (0U != topic.equals(TOPIC_ICON))
     {
         /* Accept upload of bitmap file. */
-        if (0U != srcFilename.endsWith(".bmp"))
+        if (0U != srcFilename.endsWith(FILE_EXT_BITMAP))
         {
-            dstFilename = getFileName();
+            dstFilename = getFileName(FILE_EXT_BITMAP);
 
             isAccepted = true;
+        }
+        /* Accept upload of a sprite sheet file. */
+        else if (0U != srcFilename.endsWith(FILE_EXT_SPRITE_SHEET))
+        {
+            dstFilename = getFileName(FILE_EXT_SPRITE_SHEET);
+
+            isAccepted = true;
+        }
+        else
+        {
+            /* Not accepted. */
+            ;
         }
     }
 
@@ -230,60 +248,45 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint16_t                    lampWidth       = 0U;
+    uint16_t                    lampDistance    = 0U;
+    const uint16_t              minDistance     = 1U;   /* Min. distance between lamps. */
+    const uint16_t              minBorder       = 1U;   /* Min. border left and right of all lamps. */
+    const uint16_t              canvasWidth     = width - ICON_WIDTH;
 
-    if (nullptr == m_iconCanvas)
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+
+    /* If there is already an icon in the filesystem, it will be loaded.
+     * First check whether it is a animated sprite sheet and if not, try
+     * to load just a bitmap image.
+     */
+    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
     {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
-
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_bitmapWidget);
-
-            /* If there is already an icon in the filesystem, load it. */
-            (void)m_bitmapWidget.load(FILESYSTEM, getFileName());
-        }
+        (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
     }
 
-    if (nullptr == m_textCanvas)
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height - 2U);
+    (void)m_textCanvas.addWidget(m_textWidget);
+
+    m_lampCanvas.setPosAndSize(ICON_WIDTH, height - 1, canvasWidth, 1U);
+
+    if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
     {
-        m_textCanvas = new Canvas(width - ICON_WIDTH, height - 2U, ICON_WIDTH, 0);
+        /* Calculate the border to have the lamps shown aligned to center. */
+        uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
+        uint8_t     index   = 0U;
 
-        if (nullptr != m_textCanvas)
+        for(index = 0U; index < MAX_LAMPS; ++index)
         {
-            (void)m_textCanvas->addWidget(m_textWidget);
-        }
-    }
+            /* One space at the begin, two spaces between the lamps. */
+            int16_t x = (lampWidth + lampDistance) * index + border;
 
-    if (nullptr == m_lampCanvas)
-    {
-        uint16_t        lampWidth       = 0U;
-        uint16_t        lampDistance    = 0U;
-        const uint16_t  minDistance     = 1U;   /* Min. distance between lamps. */
-        const uint16_t  minBorder       = 1U;   /* Min. border left and right of all lamps. */
-        const uint16_t  canvasWidth     = width - ICON_WIDTH;
-        
-        if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
-        {
-            m_lampCanvas = new Canvas(canvasWidth, 1U, ICON_WIDTH, height - 1);
+            m_lampWidgets[index].setWidth(lampWidth);
 
-            if (nullptr != m_lampCanvas)
-            {
-                /* Calculate the border to have the lamps shown aligned to center. */
-                uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
-                uint8_t     index   = 0U;
-
-                for(index = 0U; index < MAX_LAMPS; ++index)
-                {
-                    /* One space at the begin, two spaces between the lamps. */
-                    int16_t x = (lampWidth + lampDistance) * index + border;
-
-                    m_lampWidgets[index].setWidth(lampWidth);
-
-                    (void)m_lampCanvas->addWidget(m_lampWidgets[index]);
-                    m_lampWidgets[index].move(x, 0);
-                }
-            }
+            (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
+            m_lampWidgets[index].move(x, 0);
         }
     }
 
@@ -294,27 +297,14 @@ void IconTextLampPlugin::stop()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false != FILESYSTEM.remove(getFileName()))
+    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_BITMAP)))
     {
-        LOG_INFO("File %s removed", getFileName().c_str());
+        LOG_INFO("File %s removed", getFileName(FILE_EXT_BITMAP).c_str());
     }
 
-    if (nullptr != m_iconCanvas)
+    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_SPRITE_SHEET)))
     {
-        delete m_iconCanvas;
-        m_iconCanvas = nullptr;
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        delete m_textCanvas;
-        m_textCanvas = nullptr;
-    }
-
-    if (nullptr != m_lampCanvas)
-    {
-        delete m_lampCanvas;
-        m_lampCanvas = nullptr;
+        LOG_INFO("File %s removed", getFileName(FILE_EXT_SPRITE_SHEET).c_str());
     }
 }
 
@@ -323,21 +313,9 @@ void IconTextLampPlugin::update(YAGfx& gfx)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
-
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        m_textCanvas->update(gfx);
-    }
-
-    if (nullptr != m_lampCanvas)
-    {
-        m_lampCanvas->update(gfx);
-    }
+    m_iconCanvas.update(gfx);
+    m_textCanvas.update(gfx);
+    m_lampCanvas.update(gfx);
 
     return;
 }
@@ -361,26 +339,37 @@ void IconTextLampPlugin::setText(const String& formatText)
     return;
 }
 
-void IconTextLampPlugin::setBitmap(const Color* bitmap, uint16_t width, uint16_t height)
-{
-    if ((nullptr != bitmap) &&
-        (ICON_WIDTH >= width) &&
-        (ICON_HEIGHT >= height))
-    {
-        MutexGuard<MutexRecursive> guard(m_mutex);
-
-        m_bitmapWidget.set(bitmap, width, height);
-    }
-
-    return;
-}
-
 bool IconTextLampPlugin::loadBitmap(const String& filename)
 {
     bool                        status = false;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    status = m_bitmapWidget.load(FILESYSTEM, filename);
+    if (0U != filename.endsWith(FILE_EXT_BITMAP))
+    {
+        status = m_bitmapWidget.load(FILESYSTEM, filename);
+
+        /* Ensure that only the bitmap image file exists in the filesystem,
+         * otherwise after a restart, the obsolete sprite sheet will
+         * be loaded.
+         */
+        if (true == status)
+        {
+            (void)FILESYSTEM.remove(getFileName(FILE_EXT_SPRITE_SHEET));
+        }
+    }
+    else if (0U != filename.endsWith(FILE_EXT_SPRITE_SHEET))
+    {
+        String bmpFilename = filename;
+
+        bmpFilename.replace(FILE_EXT_SPRITE_SHEET, FILE_EXT_BITMAP);
+
+        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, filename,  bmpFilename);
+    }
+    else
+    {
+        /* Not supported. */
+        ;
+    }
 
     return status;
 }
@@ -419,9 +408,9 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
  * Private Methods
  *****************************************************************************/
 
-String IconTextLampPlugin::getFileName()
+String IconTextLampPlugin::getFileName(const String& ext)
 {
-    return generateFullPath(".bmp");
+    return generateFullPath(ext);
 }
 
 bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)

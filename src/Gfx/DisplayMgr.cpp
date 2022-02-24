@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -87,30 +87,40 @@ struct Statistics
 
 bool DisplayMgr::begin()
 {
-    bool status = false;
+    bool        status              = false;
+    uint8_t     idx                 = 0U;
+    bool        isError             = false;
+    uint8_t     maxSlots            = 0U;
+    uint8_t     brightnessPercent   = 0U;
+    uint16_t    brightness          = 0U;
+    Settings&   settings            = Settings::getInstance();
+
+    if (false == settings.open(true))
+    {
+        maxSlots            = settings.getMaxSlots().getDefault();
+        brightnessPercent   = settings.getBrightness().getDefault();
+    }
+    else
+    {
+        maxSlots            = settings.getMaxSlots().getValue();
+        brightnessPercent   = settings.getBrightness().getValue();
+
+        settings.close();
+    }
 
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.
      */
     BrightnessCtrl::getInstance().init(Display::getInstance());
-    BrightnessCtrl::getInstance().setBrightness(BRIGHTNESS_DEFAULT);
+    brightness = (static_cast<uint16_t>(brightnessPercent) * UINT8_MAX) / 100U; /* Calculate brightness in digits */
+    BrightnessCtrl::getInstance().setBrightness(static_cast<uint8_t>(brightness));
 
     /* No slots available? */
     if (nullptr == m_slots)
     {
-        if (false == Settings::getInstance().open(true))
-        {
-            m_maxSlots = Settings::getInstance().getMaxSlots().getDefault();
+        m_maxSlots = maxSlots;
 
-            LOG_WARNING("Using default number of max. slots.");
-        }
-        else
-        {
-            m_maxSlots = Settings::getInstance().getMaxSlots().getValue();
-            Settings::getInstance().close();
-        }
-
-        if (0 < m_maxSlots)
+        if (0U < m_maxSlots)
         {
             m_slots = new Slot[m_maxSlots];
 
@@ -119,40 +129,23 @@ bool DisplayMgr::begin()
         }
     }
 
-    /* Canvas framebuffers for fading in/out created? */
-    if (nullptr == m_currCanvas)
+    /* Allocate framebuffer memory. */
+    for(idx = 0U; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
     {
-        uint8_t idx     = 0;
-        bool    isError = false;
-
-        for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
+        if (false == m_framebuffers[idx].isAllocated())
         {
-            m_framebuffers[idx] = new Canvas(Display::getInstance().getWidth(), Display::getInstance().getHeight(), 0, 0, true);
-
-            if (nullptr == m_framebuffers[idx])
+            if (false == m_framebuffers[idx].create(Display::getInstance().getWidth(), Display::getInstance().getHeight()))
             {
                 isError = true;
-                break;
+
+                LOG_WARNING("Couldn't create framebuffer canvas for fade effect.");
             }
         }
+    }
 
-        if (true == isError)
-        {
-            for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
-            {
-                if (nullptr != m_framebuffers[idx])
-                {
-                    delete m_framebuffers[idx];
-                    m_framebuffers[idx] = nullptr;
-                }
-            }
-
-            LOG_WARNING("Couldn't create framebuffer canvas for fade effect.");
-        }
-        else
-        {
-            m_currCanvas = m_framebuffers[0];
-        }
+    if (false == isError)
+    {
+        m_selectedFrameBuffer = &m_framebuffers[0U];
     }
 
     /* Not started yet? */
@@ -173,7 +166,7 @@ bool DisplayMgr::begin()
 
                 osRet = xTaskCreateUniversal(   updateTask,
                                                 "displayTask",
-                                                TASK_STACKE_SIZE,
+                                                TASK_STACK_SIZE,
                                                 this,
                                                 TASK_PRIORITY,
                                                 &m_taskHandle,
@@ -297,6 +290,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
                 }
                 else
                 {
+                    LOG_INFO("Start plugin %s (UID %u) in slot %u.", plugin->getName(), plugin->getUID(), slotId);
                     plugin->start(Display::getInstance().getWidth(), Display::getInstance().getHeight());
                 }
             }
@@ -318,6 +312,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
             }
             else
             {
+                LOG_INFO("Start plugin %s (UID %u) in slot %u.", plugin->getName(), plugin->getUID(), slotId);
                 plugin->start(Display::getInstance().getWidth(), Display::getInstance().getHeight());
             }
         }
@@ -328,7 +323,7 @@ uint8_t DisplayMgr::installPlugin(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (m_maxSlots > slotId)
         {
-            LOG_INFO("Plugin %s installed in slot %u.", plugin->getName(), slotId);
+            LOG_INFO("Plugin %s (UID %u) installed in slot %u.", plugin->getName(), plugin->getUID(), slotId);
         }
     }
 
@@ -357,6 +352,7 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
                     m_selectedPlugin = nullptr;
                 }
 
+                LOG_INFO("Stop plugin %s (UID %u) in slot %u.", plugin->getName(), plugin->getUID(), slotId);
                 plugin->stop();
                 if (false == m_slots[slotId].setPlugin(nullptr))
                 {
@@ -371,11 +367,11 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
 
         if (false == status)
         {
-            LOG_INFO("Couldn't remove plugin %s (uid %u) from slot %u, because slot is locked.", plugin->getName(), plugin->getUID(), slotId);
+            LOG_INFO("Couldn't remove plugin %s (UID %u) from slot %u, because slot is locked.", plugin->getName(), plugin->getUID(), slotId);
         }
         else
         {
-            LOG_INFO("Plugin %s (uid %u) removed from slot %u.", plugin->getName(), plugin->getUID(), slotId);
+            LOG_INFO("Plugin %s (UID %u) removed from slot %u.", plugin->getName(), plugin->getUID(), slotId);
         }
     }
 
@@ -694,7 +690,7 @@ DisplayMgr::DisplayMgr() :
     m_requestedPlugin(nullptr),
     m_slotTimer(),
     m_displayFadeState(FADE_IN),
-    m_currCanvas(nullptr),
+    m_selectedFrameBuffer(nullptr),
     m_framebuffers(),
     m_fadeLinearEffect(),
     m_fadeMoveXEffect(),
@@ -703,28 +699,11 @@ DisplayMgr::DisplayMgr() :
     m_fadeEffectIndex(FADE_EFFECT_LINEAR),
     m_fadeEffectUpdate(false)
 {
-    uint8_t idx = 0U;
-
-    for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
-    {
-        m_framebuffers[idx] = nullptr;
-    }
 }
 
 DisplayMgr::~DisplayMgr()
 {
-    uint8_t idx = 0;
-
     end();
-
-    for(idx = 0; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
-    {
-        if (nullptr != m_framebuffers[idx])
-        {
-            delete m_framebuffers[idx];
-            m_framebuffers[idx] = nullptr;
-        }
-    }
 }
 
 uint8_t DisplayMgr::nextSlot(uint8_t slotId)
@@ -774,13 +753,13 @@ void DisplayMgr::startFadeOut()
     /* Select next framebuffer and keep old content, until
      * the fade effect is finished.
      */
-    if (m_currCanvas == m_framebuffers[FB_ID_0])
+    if (m_selectedFrameBuffer == &m_framebuffers[FB_ID_0])
     {
-        m_currCanvas = m_framebuffers[FB_ID_1];
+        m_selectedFrameBuffer = &m_framebuffers[FB_ID_1];
     }
     else
     {
-        m_currCanvas = m_framebuffers[FB_ID_0];
+        m_selectedFrameBuffer = &m_framebuffers[FB_ID_0];
     }
 
     m_displayFadeState = FADE_OUT;
@@ -793,25 +772,25 @@ void DisplayMgr::startFadeOut()
 
 void DisplayMgr::fadeInOut(YAGfx& dst)
 {
-    if ((nullptr != m_currCanvas) &&
+    if ((nullptr != m_selectedFrameBuffer) &&
         (nullptr != m_fadeEffect))
     {
-        Canvas* prevFb = nullptr;
+        YAGfxBitmap* prevFb = nullptr;
 
         /* Determine previous frame buffer */
-        if (m_currCanvas == m_framebuffers[FB_ID_0])
+        if (m_selectedFrameBuffer == &m_framebuffers[FB_ID_0])
         {
-            prevFb = m_framebuffers[FB_ID_1];
+            prevFb = &m_framebuffers[FB_ID_1];
         }
         else
         {
-            prevFb = m_framebuffers[FB_ID_0];
+            prevFb = &m_framebuffers[FB_ID_0];
         }
 
         /* Continously update the current canvas with its framebuffer. */
         if (nullptr != m_selectedPlugin)
         {
-            m_selectedPlugin->update(*m_currCanvas);
+            m_selectedPlugin->update(*m_selectedFrameBuffer);
         }
 
         /* Handle fading */
@@ -819,12 +798,12 @@ void DisplayMgr::fadeInOut(YAGfx& dst)
         {
         /* No fading at all */
         case FADE_IDLE:
-            m_currCanvas->updateFromBuffer(dst);
+            dst.drawBitmap(0, 0, *m_selectedFrameBuffer);
             break;
 
         /* Fade new display content in */
         case FADE_IN:
-            if (true == m_fadeEffect->fadeIn(dst, *prevFb, *m_currCanvas))
+            if (true == m_fadeEffect->fadeIn(dst, *prevFb, *m_selectedFrameBuffer))
             {
                 m_displayFadeState = FADE_IDLE;
             }
@@ -832,7 +811,7 @@ void DisplayMgr::fadeInOut(YAGfx& dst)
 
         /* Fade old display content out! */
         case FADE_OUT:
-            if (true == m_fadeEffect->fadeOut(dst, *prevFb, *m_currCanvas))
+            if (true == m_fadeEffect->fadeOut(dst, *prevFb, *m_selectedFrameBuffer))
             {
                 m_displayFadeState = FADE_IN;
             }
@@ -861,7 +840,7 @@ void DisplayMgr::process()
         /* Requested plugin must be enabled, otherwise it won't be scheduled. */
         if (false == m_requestedPlugin->isEnabled())
         {
-            LOG_WARNING("Requested plugin %s (uid %u) in slot %u is disabled.",
+            LOG_WARNING("Requested plugin %s (UID %u) in slot %u is disabled.",
                 m_requestedPlugin->getName(),
                 m_requestedPlugin->getUID(),
                 getSlotIdByPluginUID(m_requestedPlugin->getUID()));
@@ -985,9 +964,9 @@ void DisplayMgr::process()
                 m_slotTimer.start(duration);
             }
 
-            if (nullptr != m_currCanvas)
+            if (nullptr != m_selectedFrameBuffer)
             {
-                m_selectedPlugin->active(*m_currCanvas);
+                m_selectedPlugin->active(*m_selectedFrameBuffer);
             }
             else
             {
@@ -999,9 +978,9 @@ void DisplayMgr::process()
         /* No plugin is active, clear the display. */
         else
         {
-            if (nullptr != m_currCanvas)
+            if (nullptr != m_selectedFrameBuffer)
             {
-                m_currCanvas->fillScreen(ColorDef::BLACK);
+                m_selectedFrameBuffer->fillScreen(ColorDef::BLACK);
             }
             display.clear();
         }
@@ -1045,7 +1024,7 @@ void DisplayMgr::process()
     }
 
     /* Update display (main canvas available) */
-    if (nullptr != m_currCanvas)
+    if (nullptr != m_selectedFrameBuffer)
     {
         fadeInOut(display);
     }
@@ -1069,10 +1048,10 @@ void DisplayMgr::process()
 
 void DisplayMgr::updateTask(void* parameters)
 {
-    DisplayMgr* displayMgr = reinterpret_cast<DisplayMgr*>(parameters);
+    DisplayMgr* tthis = reinterpret_cast<DisplayMgr*>(parameters);
 
-    if ((nullptr != displayMgr) &&
-        (nullptr != displayMgr->m_xSemaphore))
+    if ((nullptr != tthis) &&
+        (nullptr != tthis->m_xSemaphore))
     {
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
         Statistics      statistics;
@@ -1084,9 +1063,9 @@ void DisplayMgr::updateTask(void* parameters)
 
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
 
-        (void)xSemaphoreTake(displayMgr->m_xSemaphore, portMAX_DELAY);
+        (void)xSemaphoreTake(tthis->m_xSemaphore, portMAX_DELAY);
 
-        while(false == displayMgr->m_taskExit)
+        while(false == tthis->m_taskExit)
         {
             uint32_t    timestamp           = millis();
             uint32_t    duration            = 0U;
@@ -1098,7 +1077,7 @@ void DisplayMgr::updateTask(void* parameters)
             const uint32_t  MAX_LOOP_TIME   = (TASK_PERIOD * 7U) / (10U);
 
             /* Refresh display content periodically */
-            displayMgr->process();
+            tthis->process();
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
             statistics.pluginProcessing.update(millis() - timestamp);
@@ -1172,7 +1151,7 @@ void DisplayMgr::updateTask(void* parameters)
 #endif /* (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS) */
         }
 
-        (void)xSemaphoreGive(displayMgr->m_xSemaphore);
+        (void)xSemaphoreGive(tthis->m_xSemaphore);
     }
 
     vTaskDelete(nullptr);

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -167,6 +167,16 @@ public:
     }
 
     /**
+     * Get brightness in %.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt8& getBrightness()
+    {
+        return m_brightness;
+    }
+
+    /**
      * Get state of automatic brightness adjustment.
      *
      * @return Key value pair
@@ -256,6 +266,15 @@ public:
         return m_scrollPause;
     }
 
+   /**
+     * Get notifyURL.
+     *
+     * @return The URL to be triggered
+     */
+    KeyValueString& getNotifyURL()
+    {
+        return m_notifyURL;
+    }
     /**
      * Get a list of all key value pairs.
      *
@@ -286,7 +305,7 @@ public:
     KeyValue* getSettingByKey(const char* key);
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 16U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 18U;
 
 private:
 
@@ -300,6 +319,7 @@ private:
     KeyValueString  m_webLoginUser;         /**< Website login user account */
     KeyValueString  m_webLoginPassword;     /**< Website login user password */
     KeyValueString  m_hostname;             /**< Hostname */
+    KeyValueUInt8   m_brightness;           /**< The brightness level in % set at startup. */
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
     KeyValueJson    m_pluginInstallation;   /**< Plugin installation */
     KeyValueString  m_timezone;             /**< POSIX timezone string */
@@ -309,6 +329,7 @@ private:
     KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
     KeyValueJson    m_slotConfig;           /**< Display slot configuration */
     KeyValueUInt32  m_scrollPause;          /**< Text scroll pause */
+    KeyValueString  m_notifyURL;            /**< URL to be triggered when PIXELIX has connected to a remote network. */
 
     /**
      * Constructs the settings instance.

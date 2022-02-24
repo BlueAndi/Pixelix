@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,7 +64,7 @@ public:
     /**
      * Destroys the display interface.
      */
-    ~IDisplay()
+    virtual ~IDisplay()
     {
     }
 
@@ -105,19 +105,13 @@ protected:
 
     /**
      * Constructs the display interface.
-     *
-     * @param[in] width     Display width in pixel
-     * @param[in] height    Display height in pixel
      */
-    IDisplay(uint16_t width, uint16_t height) :
-        YAGfx(width, height)
+    IDisplay() :
+        YAGfx()
     {
     }
 
 private:
-
-    /* Don't allow standard constructor. */
-    IDisplay();
 
 };
 

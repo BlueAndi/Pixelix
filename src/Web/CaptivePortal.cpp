@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -117,7 +117,11 @@ void CaptivePortal::init(AsyncWebServer& srv)
     (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600")
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
-    /* Add the captive portal request handler at last, because it will handle everything. */
+    /* The about dialog is the only additional page, which shall be accessible. */
+    (void)srv.serveStatic("/about.html", FILESYSTEM, "/about.html")
+        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+
+    /* Add the captive portal request handler at last, because it will handle everything else. */
     (void)srv.addHandler(&gCaptivePortalReqHandler)
         .setFilter(ON_AP_FILTER)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());

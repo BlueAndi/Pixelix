@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,15 +73,23 @@ namespace Pin
     /** Pin number of I2C SDL */
     static const uint8_t    i2cSdlPinNo             = 22U;
 
+    /** Pin number of I2S word select (chooses between left and right channel) */
+    static const uint8_t    i2sWordSelect           = 25U;
+
+    /** Pin number of I2S serial clock (bit clock line BCLK) */
+    static const uint8_t    i2sSerialClock          = 26U;
+
     /** Pin number of dht sensor in */
     static const uint8_t    dhtInPinNo              = 27U;
 
     /** Pin number of LDR in */
     static const uint8_t    ldrInPinNo              = 32U;
 
+    /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
+    static const uint8_t    i2sSerialDataIn         = 33U;
+
     /** Pin number of user button */
     static const uint8_t    userButtonPinNo         = 35U;
-
 };
 
 /** Digital output pin: Onboard LED */

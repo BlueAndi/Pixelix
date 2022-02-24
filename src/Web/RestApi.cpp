@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -328,12 +328,14 @@ static void handleSlots(AsyncWebServerRequest* request)
             IPluginMaintenance* plugin      = displayMgr.getPluginInSlot(slotId);
             const char*         name        = (nullptr != plugin) ? plugin->getName() : "";
             uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
+            String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
             bool                isLocked    = displayMgr.isSlotLocked(slotId);
             uint32_t            duration    = displayMgr.getSlotDuration(slotId);
             JsonObject          slot        = slotArray.createNestedObject();
 
             slot["name"]        = name;
             slot["uid"]         = uid;
+            slot["alias"]       = alias;
             slot["isLocked"]    = isLocked;
             slot["duration"]    = duration;
         }

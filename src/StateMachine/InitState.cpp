@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -64,7 +64,6 @@
 
 #include "BTCQuotePlugin.h"
 #include "CountdownPlugin.h"
-#include "DatePlugin.h"
 #include "DateTimePlugin.h"
 #include "FirePlugin.h"
 #include "GameOfLifePlugin.h"
@@ -73,15 +72,17 @@
 #include "IconTextLampPlugin.h"
 #include "IconTextPlugin.h"
 #include "JustTextPlugin.h"
+#include "MatrixPlugin.h"
 #include "OpenWeatherPlugin.h"
 #include "RainbowPlugin.h"
 #include "SensorPlugin.h"
 #include "ShellyPlugSPlugin.h"
+#include "SoundReactivePlugin.h"
 #include "SunrisePlugin.h"
 #include "SysMsgPlugin.h"
 #include "TempHumidPlugin.h"
 #include "TestPlugin.h"
-#include "TimePlugin.h"
+#include "ThreeIconPlugin.h"
 #include "VolumioPlugin.h"
 #include "WifiStatusPlugin.h"
 
@@ -372,9 +373,9 @@ void InitState::exit(StateMachine& sm)
             if (false == m_isApModeRequested)
             {
                 /* In the next step the plugins are loaded and would be automatically be shown.
-                * To avoid this until the connection establishment takes place, show the following
-                * message infinite.
-                */
+                 * To avoid this until the connection establishment takes place, show the following
+                 * message infinite.
+                 */
                 SysMsg::getInstance().show("...");
                 delay(500U); /* Just to avoid a short splash */
 
@@ -390,10 +391,10 @@ void InitState::exit(StateMachine& sm)
             }
 
             /* Start webserver after the wifi access point is running.
-            * If its done earlier, it will cause an exception because the LwIP stack
-            * is not initialized.
-            * The LwIP stack is initialized with wifiLowLevelInit()!
-            */
+             * If its done earlier, it will cause an exception because the LwIP stack
+             * is not initialized.
+             * The LwIP stack is initialized with wifiLowLevelInit()!
+             */
             MyWebServer::begin();
         }
     }
@@ -449,7 +450,6 @@ void InitState::registerPlugins()
 
     pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);
     pluginMgr.registerPlugin("CountdownPlugin", CountdownPlugin::create);
-    pluginMgr.registerPlugin("DatePlugin", DatePlugin::create);
     pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
     pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
     pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
@@ -458,15 +458,17 @@ void InitState::registerPlugins()
     pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
     pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
     pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
+    pluginMgr.registerPlugin("MatrixPlugin", MatrixPlugin::create);
     pluginMgr.registerPlugin("OpenWeatherPlugin", OpenWeatherPlugin::create);
     pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
     pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);
     pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
+    pluginMgr.registerPlugin("SoundReactivePlugin", SoundReactivePlugin::create);
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
     pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
     pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
-    pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
+    pluginMgr.registerPlugin("ThreeIconPlugin", ThreeIconPlugin::create);
     pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
     pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
 

@@ -52,9 +52,38 @@
                 <p><img src="/images/DateTimePlugin1.jpg" alt="Screenshot" /></p>
                 <p><img src="/images/DateTimePlugin2.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows the current time and date. First the time is shown for half of the slot duration and after it the date.</p>
-                <p>Below the day of the week is shown, starting from the left with Monday.</p>            
+                <p>Below the day of the week is shown, starting from the left with Monday. It can be configured to show only the date or only the time as well.</p>
                 <h2 class="mt-1">REST API</h2>
                 <pre class="text-light"><code>-</code></pre>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Get configuration about what the plugin shows.</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg</code></pre>
+                <h3 class="mt-1">Set configuration about what the plugin shall show.</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg?cfg=&lt;CFG&gt;</code></pre>
+                <ul>
+                    <li>CFG: Configuration id
+                        <ul>
+                            <li>0: Show date and time.</li>
+                            <li>1: Show only the date.</li>
+                            <li>2: Show only the time.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h3 class="mt-1">Configuration</h3>
+                <form id="myForm" action="javascript:setCfg(pluginUid.options[pluginUid.selectedIndex].value, cfg.options[cfg.selectedIndex].value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUid" size="1" onChange="getCfg(pluginUid.options[pluginUid.selectedIndex].value, 'cfg')">
+                    </select>
+                    <br />
+                    <label for="sensor">Configuration:</label><br />
+                    <select id="cfg">
+                        <option value="0">Show date and time.</option>
+                        <option value="1">Show only the date.</option>
+                        <option value="2">Show only the time.</option>
+                    </select>
+                    <br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>   
             </div>
         </main>
   
@@ -62,20 +91,129 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2021 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2022 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.6.0.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
 
         <script>
+            var pluginName  = "DateTimePlugin";
+            var restClient  = new pixelix.rest.Client();
+
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+    
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+                            
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
+
+                            optionText += ")";
+
+                            $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+                            
+                            $("#pluginUid").append($option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+
+            function getCfg(pluginUid, cfg) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var cfgInput = document.getElementById(cfg);
+
+                    cfgInput.value = rsp.data.cfg;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setCfg(pluginUid, cfg) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg",
+                    isJsonResponse: true,
+                    parameter: {
+                        cfg: cfg
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
             $(document).ready(function() {
-                menu.create("menu");
+                menu.create("menu", menu.data);
+
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+
+                        return getCfg(
+                            select.options[select.selectedIndex].value,
+                            "cfg"
+                        );
+                    }
+                });
+
             });
         </script>
     </body>

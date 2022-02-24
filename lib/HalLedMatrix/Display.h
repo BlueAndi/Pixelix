@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,7 @@
 #include <IDisplay.hpp>
 #include <NeoPixelBrightnessBus.h>
 #include <ColorDef.hpp>
+#include <YAGfxBitmap.h>
 
 #include "Board.h"
 
@@ -96,6 +97,19 @@ public:
      */
     void show() final
     {
+        int16_t x = 0;
+        int16_t y = 0;
+
+        for(y = 0; y < m_ledMatrix.getHeight(); ++y)
+        {
+            for(x = 0; x < m_ledMatrix.getWidth(); ++x)
+            {
+                HtmlColor htmlColor = static_cast<uint32_t>(m_ledMatrix.getColor(x, y));
+
+                m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
+            }
+        }
+
         m_strip.Show();
         return;
     }
@@ -135,7 +149,29 @@ public:
     void clear() final
     {
         m_strip.ClearTo(ColorDef::BLACK);
+        m_ledMatrix.fillScreen(ColorDef::BLACK);
+
         return;
+    }
+
+    /**
+     * Get width in pixel.
+     *
+     * @return Canvas width in pixel
+     */
+    uint16_t getWidth() const final
+    {
+        return m_ledMatrix.getWidth();
+    }
+
+    /**
+     * Get height in pixel.
+     *
+     * @return Canvas height in pixel
+     */
+    uint16_t getHeight() const final
+    {
+        return m_ledMatrix.getHeight();
     }
 
     /**
@@ -146,15 +182,37 @@ public:
      *
      * @return Color in RGB888 format.
      */
-    Color getColor(int16_t x, int16_t y) const final;
+    Color& getColor(int16_t x, int16_t y) final
+    {
+        return m_ledMatrix.getColor(x, y);
+    }
+
+    /**
+     * Get pixel color at given position.
+     *
+     * @param[in] x x-coordinate
+     * @param[in] y y-coordinate
+     *
+     * @return Color in RGB888 format.
+     */
+    const Color& getColor(int16_t x, int16_t y) const final
+    {
+        return m_ledMatrix.getColor(x, y);
+    }
 
 private:
 
     /** Pixel representation of the LED matrix */
-    NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod>  m_strip;
+    NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod>                  m_strip;
 
     /** Panel topology, used to map coordinates to the framebuffer. */
-    NeoTopology<ColumnMajorAlternatingLayout>               m_topo;
+    NeoTopology<ColumnMajorAlternatingLayout>                               m_topo;
+
+    /**
+     * The LED matrix framebuffer.
+     * This is the drawback for the direct color manipulation via getColor().
+     */
+    YAGfxStaticBitmap<Board::LedMatrix::width, Board::LedMatrix::height>    m_ledMatrix;
 
     /**
      * Construct display.
@@ -178,42 +236,7 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, const Color& color) final
     {
-        if ((0 <= x) &&
-            (Board::LedMatrix::width > x) &&
-            (0 <= y) &&
-            (Board::LedMatrix::height > y))
-        {
-            HtmlColor htmlColor = static_cast<uint32_t>(color);
-
-            m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
-        }
-
-        return;
-    }
-
-    /**
-     * Dim color to black.
-     * A dim ratio of 0 means no change.
-     * 
-     * Note, the base colors may be destroyed, depends on the color type.
-     *
-     * @param[in] x     x-coordinate
-     * @param[in] y     y-coordinate
-     * @param[in] ratio Dim ratio [0; 255]
-     */
-    void dimPixel(int16_t x, int16_t y, uint8_t ratio) final
-    {
-        if ((0 <= x) &&
-            (Board::LedMatrix::width > x) &&
-            (0 <= y) &&
-            (Board::LedMatrix::height > y))
-        {
-            RgbColor rgbColor = m_strip.GetPixelColor(m_topo.Map(x, y)).Dim(UINT8_MAX - ratio);
-
-            m_strip.SetPixelColor(m_topo.Map(x, y), rgbColor);
-        }
-
-        return;
+        m_ledMatrix.drawPixel(x, y, color);
     }
 };
 

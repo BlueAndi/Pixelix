@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ void FadeLinear::init()
     m_state = FADE_STATE_INIT;
 }
 
-bool FadeLinear::fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next)
+bool FadeLinear::fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 {
     bool isFinished = false;
 
@@ -78,13 +78,13 @@ bool FadeLinear::fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next)
 
     if ((Color::MAX_BRIGHT - FADING_STEP) <= m_intensity)
     {
-        next.dimScreen(Color::MAX_BRIGHT);
+        dimBitmap(next, Color::MAX_BRIGHT);
         m_state     = FADE_STATE_INIT;
         isFinished  = true;
     }
     else
     {
-        next.dimScreen(m_intensity);
+        dimBitmap(next, m_intensity);
         m_intensity += FADING_STEP;
     }
 
@@ -93,7 +93,7 @@ bool FadeLinear::fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next)
     return isFinished;
 }
 
-bool FadeLinear::fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next)
+bool FadeLinear::fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next)
 {
     bool isFinished = false;
 
@@ -108,13 +108,13 @@ bool FadeLinear::fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next)
 
     if ((Color::MIN_BRIGHT + FADING_STEP) >= m_intensity)
     {
-        prev.dimScreen(Color::MIN_BRIGHT);
+        dimBitmap(prev, Color::MIN_BRIGHT);
         m_state     = FADE_STATE_INIT;
         isFinished  = true;
     }
     else
     {
-        prev.dimScreen(m_intensity);
+        dimBitmap(prev, m_intensity);
         m_intensity -= FADING_STEP;
     }
 
@@ -130,6 +130,22 @@ bool FadeLinear::fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void FadeLinear::dimBitmap(YAGfxBitmap& bitmap, uint8_t intensity)
+{
+    uint16_t    width   = bitmap.getWidth();
+    uint16_t    height  = bitmap.getHeight();
+    int16_t     x       = 0;
+    int16_t     y       = 0;
+
+    for(y = 0; y < height; ++y)
+    {
+        for(x = 0; x < width; ++x)
+        {
+            bitmap.getColor(x, y).setIntensity(intensity);
+        }
+    }
+}
 
 /******************************************************************************
  * External Functions

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -127,41 +127,28 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (nullptr == m_iconCanvas)
-    {
-        m_iconCanvas = new Canvas(ICON_WIDTH, ICON_HEIGHT, 0, 0);
+    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
 
-        if (nullptr != m_iconCanvas)
-        {
-            (void)m_iconCanvas->addWidget(m_stdIconWidget);
-            (void)m_iconCanvas->addWidget(m_stopIconWidget);
-            (void)m_iconCanvas->addWidget(m_playIconWidget);
-            (void)m_iconCanvas->addWidget(m_pauseIconWidget);
+    (void)m_iconCanvas.addWidget(m_stdIconWidget);
+    (void)m_iconCanvas.addWidget(m_stopIconWidget);
+    (void)m_iconCanvas.addWidget(m_playIconWidget);
+    (void)m_iconCanvas.addWidget(m_pauseIconWidget);
 
-            /* Load all icons from filesystem now, to prevent filesystem
-             * access during active/inactive/update methods.
-             */
-            (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-            (void)m_stopIconWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
-            (void)m_playIconWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
-            (void)m_pauseIconWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
+    /* Load all icons from filesystem now, to prevent filesystem
+     * access during active/inactive/update methods.
+     */
+    (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+    (void)m_stopIconWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
+    (void)m_playIconWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
+    (void)m_pauseIconWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
 
-            /* Disable all, except the standard icon. */
-            m_stopIconWidget.disable();
-            m_playIconWidget.disable();
-            m_pauseIconWidget.disable();
-        }
-    }
+    /* Disable all, except the standard icon. */
+    m_stopIconWidget.disable();
+    m_playIconWidget.disable();
+    m_pauseIconWidget.disable();
 
-    if (nullptr == m_textCanvas)
-    {
-        m_textCanvas = new Canvas(width - ICON_WIDTH, height, ICON_WIDTH, 0);
-
-        if (nullptr != m_textCanvas)
-        {
-            (void)m_textCanvas->addWidget(m_textWidget);
-        }
-    }
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_textCanvas.addWidget(m_textWidget);
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -204,18 +191,6 @@ void VolumioPlugin::stop()
     if (false != FILESYSTEM.remove(configurationFilename))
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
-
-    if (nullptr != m_iconCanvas)
-    {
-        delete m_iconCanvas;
-        m_iconCanvas = nullptr;
-    }
-
-    if (nullptr != m_textCanvas)
-    {
-        delete m_textCanvas;
-        m_textCanvas = nullptr;
     }
 
     return;
@@ -299,28 +274,20 @@ void VolumioPlugin::process()
 
 void VolumioPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    int16_t                     tcX         = 0;
+    int16_t                     tcY         = 0;
+    uint16_t                    posWidth    = m_textCanvas.getWidth() * m_pos / 100U;
+    Color                       posColor    = ColorDef::RED;
 
     gfx.fillScreen(ColorDef::BLACK);
+    m_iconCanvas.update(gfx);
 
-    if (nullptr != m_iconCanvas)
-    {
-        m_iconCanvas->update(gfx);
-    }
+    m_textCanvas.getPos(tcX, tcY);
+    m_textCanvas.update(gfx);
 
-    if (nullptr != m_textCanvas)
-    {
-        int16_t     tcX         = 0;
-        int16_t     tcY         = 0;
-        uint16_t    posWidth    = m_textCanvas->getWidth() * m_pos / 100U;
-        Color       posColor(ColorDef::RED);
-
-        m_textCanvas->getPos(tcX, tcY);
-        m_textCanvas->update(gfx);
-
-        /* Draw a nice line to represent the current music position. */
-        gfx.drawHLine(tcX, m_textCanvas->getHeight() - 1, posWidth, posColor);
-    }
+    /* Draw a nice line to represent the current music position. */
+    gfx.drawHLine(tcX, m_textCanvas.getHeight() - 1, posWidth, posColor);
 
     return;
 }

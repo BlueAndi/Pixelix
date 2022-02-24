@@ -8,7 +8,6 @@
   - [Requirements](#requirements)
   - [Hardware](#hardware)
   - [Software](#software)
-  - [Structure](#structure)
 
 # Documentation
 
@@ -18,7 +17,7 @@
 
 ## Hardware
 
-* [Boards](BOARDS.md)
+* [Boards](./boards/README.md)
 * [Sensors](SENSORS.md)
 
 ## Software
@@ -31,24 +30,4 @@
 * [Plugin Development](PLUGIN-DEV.md)
 * [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0)
 * [Websocket API description](WEBSOCKET.md)
-
-## Structure
-
-<pre>
-+---data            (All filesystem files (SPIFFS))
-+---doc             (Documentation)
-    +---datasheets  (Datasheets of electronic parts)
-    +---design      (Design related documents)
-    +---doxygen     (Sourcecode documentation)
-    +---eagle-libs  (Eagle libraries)
-    +---images      (Images used for documentation)
-    +---pcb         (Electronic PCB images)
-    +---rfc         (Requests for Comments specifications)
-    \---schematics  (Schematics)
-+---include         (Include files)
-+---lib             (Project specific (private) libraries)
-+---scripts         (PlatformIO specific Python scripts)
-+---src             (Sourcecode)
-+---test            (Unit tests)
-\---platform.ini    (Project configuration file)
-</pre>
+* [Sprite sheet](SPRITESHEET.md)

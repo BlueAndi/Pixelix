@@ -14,6 +14,8 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 - [PIXELIX](#pixelix)
 - [Motivation](#motivation)
 - [Overview](#overview)
+  - [Original setup](#original-setup)
+  - [Others](#others)
 - [Very First Startup](#very-first-startup)
 - [User Interface](#user-interface)
 - [Documentation](#documentation)
@@ -22,6 +24,9 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
   - [How to change text properties?](#how-to-change-text-properties)
   - [The display only shows a error code, like "E4". What does that mean?](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean)
+  - [How can I use animated icons?](#how-can-i-use-animated-icons)
+  - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
+  - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -37,10 +42,25 @@ I want to have a remote display to show multiple kind of information, running 24
 
 # Overview
 
+The firmware contains a plugin concept (at compile time) to provide different functionalities. Each plugin can create its own layout and place the information as required. If you are only interesting in showing just text provided via REST API, choose the JustTextPlugin. It uses the whole display size and will scroll text automatically. Sometimes in front of the text a nice icon is required in which case choose the IconTextPlugin. These are only examples and you will find more in the [plugin list](./doc/PLUGINS.md).
+
+A little bit more detail about the generic plugins and the first idea can be found in this [rough overview](./doc/Overview.pdf).
+
+## Original setup
+The original setup during development and the first release was:
 * [ESP32 DevKitV1](https://github.com/playelek/pinout-doit-32devkitv1)
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
-* [Rough overview](./doc/Overview.pdf)
+
+The following shows the absolute minimal wiring setup:
+
+![PixelixMinimalSetup](./doc/images/PixelixMinimalSetup.png)
+
+> :warning: **If you power all via USB**: Be very careful, because it may destroy your esp32 board if the LED current gets too high. Avoid increasing the LED display brightness or filling it complete with white pixels. Please use a external power supply with at least 5V / 4A.
+
+## Others
+
+In the meantime several other board are supported as well. You can see them in the platformio configuration (platformio.ini) or the [list of boards](./doc/boards/README.md).
 
 Additional supported variants, which were original not in focus:
 * [TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
@@ -48,23 +68,25 @@ Additional supported variants, which were original not in focus:
 Although Pixelix was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
 * Temperature and humidity sensors DHTx
 * Temperature and humidity sensors SHT3x
+* Digitial microphone INMP441 for some sound reactive stuff.
 
 # Very First Startup
-If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
+If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
 
-Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Restart and voila!
+Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the webinterface.
+
+Restart and voila!
 
 # User Interface
 * The user button activates always the next slot.
-* If the display is at a place, which is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
-* If a LDR is connected, the display brightness is automatically adapted.
+* If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
+* If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
 * The web interface provides the possibilty to install plugins, control their duration in the slots and etc.
 * Some plugin's spawn a dedicated REST API, see the web page of the plugin or have a look to the REST API documentation.
 
 Note, the websocket interface is currently only used as a service in the web interface.
 
 # Documentation
-
 For more information, see the [documentation](./doc/README.md).
 
 # Used Libraries
@@ -81,6 +103,7 @@ For more information, see the [documentation](./doc/README.md).
 * [Adafruit DHT sensor library](https://github.com/adafruit/DHT-sensor-library) - An Arduino library for the DHT series of low-cost temperature/humidity sensors. - MIT License
 * [arduino-sht](https://github.com/Sensirion/arduino-sht) - An Arduino library for reading the SHT3x family of temperature and humidity sensors. - BSD-3-Clause License
 * [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) - Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips - Mixed licenses: MIT, BSD, FreeBSD
+* [arduinoFFT](https://github.com/kosme/arduinoFFT) - Fast Fourier Transform for Arduino. - GPL 3.0 License
 
 # FAQ
 
@@ -90,7 +113,6 @@ First adapt in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ accordi
 In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 ## How to change text properties?
-
 Text properties can be changed using different keywords added to the string to be displayed.  
 In order to be able to use these keywords, they must be prefixed by a backslash, otherwise they will only be treated as text.
 
@@ -101,7 +123,6 @@ Keyword   | Description
 \lalign   | Alignment left
 \ralign   | Alignment right
 \calign   | Alignment center
-
 
 **Note**
 - If theses keywords are used within the sourcecode they have to be prefixed with two backslashes (one additional for escaping).
@@ -114,7 +135,7 @@ Sourcecode   | URL   | Result
 ----------|--------------------|-------------
 \\\lalign\\\\#ff0000Hi! | %5Clalign%23ff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
 \\\calign\\#ff0000Hi! | %5Ccalign%23ff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
-\\\ralign\\#ff0000Hi! | %5Ccalign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
+\\\ralign\\#ff0000Hi! | %5Cralign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
 
 ## The display only shows a error code, like "E4". What does that mean?
 
@@ -129,6 +150,18 @@ This is a low level error code. Please have a look into the following table.
 | E5 | The display manager didn't start up. |
 | E6 | The system message handler didn't start up. |
 | E7 | The update manager didn't start up. |
+
+## How can I use animated icons?
+Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet file (.sprite). See the details [here](./doc/SPRITESHEET.md).
+
+## How do I know that my sensor is recognized?
+
+1. Check the log output from USB (not via web interface) right after startup (at this point WiFi is not connected yet).
+2. Install the SensorPlugin and open the SensorPlugin website. There the sensor should be shown in the drop-down.
+
+## Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?
+
+The LDR pin is configured as input (ADC) and it seems that the pin is foating, because there is the ext. pull-down missing.
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

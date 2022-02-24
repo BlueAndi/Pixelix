@@ -1,48 +1,113 @@
-name: PlatformIO CI
+name: master
 
 # Controls when the action will run.
 on:
-  # Triggers the workflow on push events for all branches
-  # Triggers the workflow on pull request events but only for the master branch
   push:
-    branches: [ master, Development ]
+    branches: [ master ]
   pull_request:
-    branches: [ master, Development ]
+    branches: [ master ]
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Allows you to run this workflow manually from the Actions tab.
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  # The introduction just shows some useful informations.
+  intro:
+    # The type of runner that the job will run on.
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
-    - uses: actions/checkout@v1
+    - run: echo "The job was automatically triggered by a ${{ github.event_name }} event."
+    - run: echo "The name of the branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
+
+  # Build all targets
+  build:
+    # The type of runner that the job will run on.
+    runs-on: ubuntu-latest
+    needs: intro
+    strategy:
+      matrix:
+        environment: ["esp32doit-devkit-v1-usb", "esp32-nodemcu-usb", "az-delivery-devkit-v4-usb", "ttgo-t-display-usb"]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job.
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Cache PlatformIO
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
     
-    - name: Install dependencies
+    - name: Install PlatformIO
       run: |
         python -m pip install --upgrade pip
-        pip install platformio
-        platformio update
+        pip install --upgrade platformio
     
-    - name: Compile target esp32doit-devkit-v1-usb
-      run: platformio run --environment esp32doit-devkit-v1-usb
+    - name: Create release artifcats folder
+      if: startsWith(github.ref_type, 'refs/tags/v')
+      run: |
+        mkdir ${{ github.workspace }}/artifacts
 
-    - name: Compile target esp32-nodemcu-usb
-      run: platformio run --environment esp32-nodemcu-usb
+    - name: Compile ${{ matrix.environment }} firmware
+      run: platformio run --environment ${{ matrix.environment }}
+    
+    - name: Build ${{ matrix.environment }} filesystem image
+      run: platformio run --environment ${{ matrix.environment }} --target buildfs
 
-    - name: Compile target az-delivery-devkit-v4-usb
-      run: platformio run --environment az-delivery-devkit-v4-usb
+    - name: Deploy ${{ matrix.environment }}
+      if: startsWith(github.ref_type, 'refs/tags/v')
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.environment }}
+        path: |
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
+        retention-days: 5
 
-    - name: Compile target ttgo-t-display-usb
-      run: platformio run --environment ttgo-t-display-usb
+  # Perform static checks and test
+  check:
+    # The type of runner that the job will run on.
+    runs-on: ubuntu-latest
+    needs: intro
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Cache PlatformIO
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+    
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
 
     - name: Perform static checks on target esp32doit-devkit-v1-usb
       run: platformio check --environment esp32doit-devkit-v1-usb
@@ -53,6 +118,37 @@ jobs:
     - name: Run tests on native environment
       run: platformio test --environment test
 
+  # Build documentation
+  doc:
+    # The type of runner that the job will run on.
+    runs-on: ubuntu-latest
+    needs: intro
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Cache PlatformIO
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+    
+    - name: Install PlatformIO
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade platformio
+
     - name: Set up graphviz
       uses: ts-graphviz/setup-graphviz@v1
 
@@ -61,3 +157,29 @@ jobs:
       with:
         working-directory: './doc/doxygen'
         doxyfile-path: './Doxyfile'
+
+  # Deploy release artifacts
+  deploy:
+    if: startsWith(github.ref_type, 'refs/tags/v')
+    # The type of runner that the job will run on.
+    runs-on: ubuntu-latest
+    needs: [build, check, doc]
+    steps:
+    - name: Deploy release artifacts
+      uses: actions/download-artifact@v2
+      with:
+        path: ${{ github.workspace }}/artifacts
+
+    - name: Display structure of release artifacts
+      run: ls -R
+      working-directory: ${{ github.workspace }}/artifacts
+
+    - name: Zip release artifacts folder
+      run: zip -r ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip ${{ github.workspace }}/artifacts
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

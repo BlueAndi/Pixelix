@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -55,9 +55,10 @@
  *****************************************************************************/
 
 /**
- * GFX with concrete color.
+ * GFX with concrete color and additional features, which depend on the
+ * concrete color.
  */
-typedef BaseGfx<Color> YAGfx;
+using YAGfx = BaseGfx<Color>;
 
 /******************************************************************************
  * Functions

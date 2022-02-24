@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,6 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include "AsyncHttpClient.h"
+
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <WString.h>
@@ -97,11 +99,15 @@ public:
 
 private:
 
+    AsyncHttpClient m_client;   /**< Asynchronous HTTP client. */
+
     /**
      * Constructs the state.
      */
-    ConnectedState()
+    ConnectedState():
+        m_client()
     {
+        initHttpClient();
     }
 
     /**
@@ -114,6 +120,11 @@ private:
     ConnectedState(const ConnectedState& state);
     ConnectedState& operator=(const ConnectedState& state);
 
+    /**
+     * Register callback function on response reception.
+     */
+    void initHttpClient(void);
+    
 };
 
 /******************************************************************************

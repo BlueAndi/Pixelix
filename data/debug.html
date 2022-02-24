@@ -65,8 +65,8 @@
                             <div class="btn-group mr-2" role="group" aria-label="Log Levels">
                                 <button type="button" class="btn btn-outline-info active" id="buttonInfo" aria-pressed="true">INFO</button>
                                 <button type="button" class="btn btn-outline-warning active" id="buttonWarning" aria-pressed="true">WARNING</button>
-                                <button type="button" class="btn btn-outline-danger active" id="buttonError" aria-pressed="true"">ERROR</button>
-                                <button type="button" class="btn btn-outline-danger active" id="buttonFatal" aria-pressed="true"">FATAL</button>
+                                <button type="button" class="btn btn-outline-danger active" id="buttonError" aria-pressed="true">ERROR</button>
+                                <button type="button" class="btn btn-outline-danger active" id="buttonFatal" aria-pressed="true">FATAL</button>
                             </div>
                         </div>
                         <p>Note, only the last 40 messages are shown.</p>
@@ -105,13 +105,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2021 by Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2022 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.5.1.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.6.0.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix websocket library -->
         <script type="text/javascript" src="/js/ws.js"></script>
@@ -251,7 +251,7 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
-                menu.create("menu");
+                menu.create("menu", menu.data);
 
                 $("#buttonInfo").click(function(e) {
                     e.preventDefault();

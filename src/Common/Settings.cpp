@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -86,6 +86,9 @@ static const char*  KEY_WEB_LOGIN_PASSWORD          = "web_login_pass";
 /** Hostname key */
 static const char*  KEY_HOSTNAME                    = "hostname";
 
+/** Brightness key */
+static const char*  KEY_BRIGHTNESS                  = "brightness";
+
 /** Automatic brightness control key */
 static const char*  KEY_AUTO_BRIGHTNESS_CTRL        = "a_brightn_ctrl";
 
@@ -113,6 +116,9 @@ static const char*  KEY_SLOT_CONFIG                 = "slot_cfg";
 /** Scroll pause key */
 static const char*  KEY_SCROLL_PAUSE                = "scroll_pause";
 
+/** NotifyURL key */
+static const char*  KEY_NOTIFY_URL                  = "notify_url";
+
 /* ---------- Key value pair names ---------- */
 
 /** Wifi network name of key value pair */
@@ -135,6 +141,9 @@ static const char*  NAME_WEB_LOGIN_PASSWORD         = "Website login password";
 
 /** Hostname name of key value pair */
 static const char*  NAME_HOSTNAME                   = "Hostname";
+
+/** Brightness name of key value pair */
+static const char*  NAME_BRIGHTNESS                 = "Brightness set at startup in %";
 
 /** Automatic brightness control name of key value pair */
 static const char*  NAME_AUTO_BRIGHTNESS_CTRL       = "Autom. brightness control";
@@ -163,6 +172,9 @@ static const char*  NAME_SLOT_CONFIG                = "Display slot configuratio
 /** Scroll pause name */
 static const char*  NAME_SCROLL_PAUSE               = "Text scroll pause [ms]";
 
+/** NotifyURL name */
+static const char*  NAME_NOTIFY_URL                 = "URL to be triggered when PIXELIX has connected to a remote network.";
+
 /* ---------- Default values ---------- */
 
 /** Wifi network default value */
@@ -185,6 +197,9 @@ static const char*      DEFAULT_WEB_LOGIN_PASSWORD      = "skywalker";
 
 /** Hostname default value */
 static const char*      DEFAULT_HOSTNAME                = "pixelix";
+
+/** Brightness default value in % */
+static const uint8_t    DEFAULT_BRIGHTNESS              = 10U; /* If powered via USB, keep this at 10% to avoid damage. */
 
 /** Automatic brightness control default value */
 static bool             DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
@@ -213,16 +228,19 @@ static const char*      DEFAULT_SLOT_CONFIG             = "";
 /** Scroll pause default value in ms */
 static uint32_t         DEFAULT_SCROLL_PAUSE            = 80U;
 
+/** NotifyURL default value */
+static const char*     DEFAULT_NOTIFY_URL               = "-";
+
 /* ---------- Minimum values ---------- */
 
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t     MIN_VALUE_WIFI_SSID            = 0;
+static const size_t     MIN_VALUE_WIFI_SSID             = 0;
 
 /** Wifi network passphrase min. length */
-static const size_t     MIN_VALUE_WIFI_PASSPHRASE      = 8U;
+static const size_t     MIN_VALUE_WIFI_PASSPHRASE       = 8U;
 
 /** Wifi access point network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t     MIN_VALUE_WIFI_AP_SSID         = 0;
+static const size_t     MIN_VALUE_WIFI_AP_SSID          = 0;
 
 /** Wifi access point network passphrase min. length */
 static const size_t     MIN_VALUE_WIFI_AP_PASSPHRASE    = 8U;
@@ -234,7 +252,10 @@ static const size_t     MIN_VALUE_WEB_LOGIN_USER        = 4U;
 static const size_t     MIN_VALUE_WEB_LOGIN_PASSWORD    = 4U;
 
 /** Hostname min. length */
-static const size_t     MIN_VALUE_HOSTNAME             = 1U;
+static const size_t     MIN_VALUE_HOSTNAME              = 1U;
+
+/** Brightness min. value in % */
+static const uint8_t    MIN_VALUE_BRIGHTNESS            = 0U;
 
 /*                      MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
 
@@ -260,19 +281,22 @@ static const size_t     MIN_VALUE_SLOT_CONFIG           = 0U;
 /** Scroll pause minimum value in ms */
 static uint32_t         MIN_VALUE_SCROLL_PAUSE          = 20U;
 
+/** NotifyURL min. length */
+static const size_t     MIN_VALUE_NOTIFY_URL            = 0U;
+
 /* ---------- Maximum values ---------- */
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t     MAX_VALUE_WIFI_SSID            = 32U;
+static const size_t     MAX_VALUE_WIFI_SSID             = 32U;
 
 /** Wifi network passphrase max. length */
-static const size_t     MAX_VALUE_WIFI_PASSPHRASE      = 64U;
+static const size_t     MAX_VALUE_WIFI_PASSPHRASE       = 64U;
 
 /** Wifi access point network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
-static const size_t     MAX_VALUE_WIFI_AP_SSID         = 32U;
+static const size_t     MAX_VALUE_WIFI_AP_SSID          = 32U;
 
 /** Wifi access point network passphrase max. length */
-static const size_t     MAX_VALUE_WIFI_AP_PASSPHRASE   = 64U;
+static const size_t     MAX_VALUE_WIFI_AP_PASSPHRASE    = 64U;
 
 /** Website login user account max. length */
 static const size_t     MAX_VALUE_WEB_LOGIN_USER        = 16U;
@@ -281,15 +305,18 @@ static const size_t     MAX_VALUE_WEB_LOGIN_USER        = 16U;
 static const size_t     MAX_VALUE_WEB_LOGIN_PASSWORD    = 32U;
 
 /** Hostname max. length */
-static const size_t     MAX_VALUE_HOSTNAME             = 63U;
+static const size_t     MAX_VALUE_HOSTNAME              = 63U;
+
+/** Brightness max. value in % */
+static const uint8_t    MAX_VALUE_BRIGHTNESS            = 100U;
 
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** Plugin installation max. length */
-static const size_t     MAX_VALUE_PLUGIN_INSTALLATION  = 1024U;
+static const size_t     MAX_VALUE_PLUGIN_INSTALLATION   = 1024U;
 
 /** POSIX timezone max. length */
-static const size_t     MAX_VALUE_TIMEZONE             = 128U;
+static const size_t     MAX_VALUE_TIMEZONE              = 128U;
 
 /** NTP server address max. length */
 static const size_t     MAX_VALUE_NTP_SERVER            = 30U;
@@ -306,6 +333,9 @@ static const size_t     MAX_VALUE_SLOT_CONFIG           = 512U;
 
 /** Scroll pause maximum value in ms */
 static uint32_t         MAX_VALUE_SCROLL_PAUSE          = 500U;
+
+/** NotifyURL max. length */
+static const size_t     MAX_VALUE_NOTIFY_URL            = 64U;
 
 /******************************************************************************
  * Public Methods
@@ -378,6 +408,7 @@ Settings::Settings() :
     m_webLoginUser          (m_preferences, KEY_WEB_LOGIN_USER,         NAME_WEB_LOGIN_USER,        DEFAULT_WEB_LOGIN_USER,         MIN_VALUE_WEB_LOGIN_USER,       MAX_VALUE_WEB_LOGIN_USER),
     m_webLoginPassword      (m_preferences, KEY_WEB_LOGIN_PASSWORD,     NAME_WEB_LOGIN_PASSWORD,    DEFAULT_WEB_LOGIN_PASSWORD,     MIN_VALUE_WEB_LOGIN_PASSWORD,   MAX_VALUE_WEB_LOGIN_PASSWORD,   true),
     m_hostname              (m_preferences, KEY_HOSTNAME,               NAME_HOSTNAME,              DEFAULT_HOSTNAME,               MIN_VALUE_HOSTNAME,             MAX_VALUE_HOSTNAME),
+    m_brightness            (m_preferences, KEY_BRIGHTNESS,             NAME_BRIGHTNESS,            DEFAULT_BRIGHTNESS,             MIN_VALUE_BRIGHTNESS,           MAX_VALUE_BRIGHTNESS),
     m_autoBrightnessCtrl    (m_preferences, KEY_AUTO_BRIGHTNESS_CTRL,   NAME_AUTO_BRIGHTNESS_CTRL,  DEFAULT_AUTO_BRIGHTNESS_CTRL),
     m_pluginInstallation    (m_preferences, KEY_PLUGIN_INSTALLATION,    NAME_PLUGIN_INSTALLATION,   DEFAULT_PLUGIN_INSTALLATION,    MIN_VALUE_PLUGIN_INSTALLATION,  MAX_VALUE_PLUGIN_INSTALLATION),
     m_timezone              (m_preferences, KEY_TIMEZONE,               NAME_TIMEZONE,              DEFAULT_TIMEZONE,               MIN_VALUE_TIMEZONE,             MAX_VALUE_TIMEZONE),
@@ -386,7 +417,8 @@ Settings::Settings() :
     m_dateFormatCtrl        (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT_CTRL,      DEFAULT_DATE_FORMAT_CTRL),
     m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS),
     m_slotConfig            (m_preferences, KEY_SLOT_CONFIG,            NAME_SLOT_CONFIG,           DEFAULT_SLOT_CONFIG,            MIN_VALUE_SLOT_CONFIG,          MAX_VALUE_SLOT_CONFIG),
-    m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE)
+    m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE),
+    m_notifyURL             (m_preferences, KEY_NOTIFY_URL,             NAME_NOTIFY_URL,            DEFAULT_NOTIFY_URL,             MIN_VALUE_NOTIFY_URL,           MAX_VALUE_NOTIFY_URL)
 {
     uint8_t idx = 0;
 
@@ -403,6 +435,8 @@ Settings::Settings() :
     m_keyValueList[idx] = &m_webLoginPassword;
     ++idx;
     m_keyValueList[idx] = &m_hostname;
+    ++idx;
+    m_keyValueList[idx] = &m_brightness;
     ++idx;
     m_keyValueList[idx] = &m_autoBrightnessCtrl;
     ++idx;
@@ -421,6 +455,8 @@ Settings::Settings() :
     m_keyValueList[idx] = &m_slotConfig;
     ++idx;
     m_keyValueList[idx] = &m_scrollPause;
+    ++idx;
+    m_keyValueList[idx] = &m_notifyURL;
 }
 
 Settings::~Settings()

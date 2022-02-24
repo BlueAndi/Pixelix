@@ -56,6 +56,7 @@ Response:
   * ```<max-slots>```: Max. number of slots.
   * ```<plugin-type>```: The name of the installed plugin in ```"..."```.
   * ```<plugin-uid>```: The plugin UID.
+  * ```<plugin-alias>```: The plugin alias name.
   * ```<slot-locked>```: Whether slot is locked (1) or not (0).
   * ```<slot-duration>```: Slot duration in ms.
   * The plugin type, plugin UID and whether slot is locked or not will be repeated for all slots. If a slot is empty, nothing will be in.

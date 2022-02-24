@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,13 +34,9 @@
  *****************************************************************************/
 #include "BitmapWidget.h"
 
-#ifndef NATIVE
-
-#include <NeoPixelBus.h>
 #include <YAColor.h>
 #include <Logging.h>
-
-#endif  /* NATIVE */
+#include <BmpImgLoader.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -75,79 +71,18 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     {
         Widget::operator=(widget);
         
-        m_bufferSize    = widget.m_bufferSize;
-        m_width         = widget.m_width;
-        m_height        = widget.m_height;
-
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-        }
-
-        if (nullptr != widget.m_buffer)
-        {
-            m_buffer = new Color[m_bufferSize];
-
-            if (nullptr == m_buffer)
-            {
-                m_bufferSize = 0U;
-            }
-            else
-            {
-                size_t index = 0U;
-
-                for(index = 0U; index < m_bufferSize; ++index)
-                {
-                    m_buffer[index] = widget.m_buffer[index];
-                }
-            }
-        }
+        m_bitmap        = widget.m_bitmap;
+        m_spriteSheet   = widget.m_spriteSheet;
+        m_timer         = widget.m_timer;
+        m_duration      = widget.m_duration;
     }
 
     return *this;
 }
 
-void BitmapWidget::set(const Color* bitmap, uint16_t width, uint16_t height)
-{
-    if (nullptr != bitmap)
-    {
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-        }
-
-        m_bufferSize    = width * height;
-        m_width         = width;
-        m_height        = height;
-
-        m_buffer = new Color[m_bufferSize];
-
-        if (nullptr == m_buffer)
-        {
-            m_bufferSize = 0U;
-        }
-        else
-        {
-            size_t index = 0U;
-
-            for(index = 0U; index < m_bufferSize; ++index)
-            {
-                m_buffer[index] = bitmap[index];
-            }
-        }
-    }
-
-    return;
-}
-
-#ifndef NATIVE
-
 bool BitmapWidget::load(FS& fs, const String& filename)
 {
-    bool    status  = false;
-    File    fd;
+    bool isSuccessful = false;
 
     if (false == fs.exists(filename))
     {
@@ -155,61 +90,84 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
     else
     {
-        NeoBitmapFile<NeoGrbFeature, File>  neoFile;
+        BmpImgLoader        loader;
+        BmpImgLoader::Ret   ret = loader.load(fs, filename, m_bitmap);
 
-        fd = fs.open(filename, "r");
-
-        if (false == fd)
+        if (BmpImgLoader::RET_OK != ret)
         {
-            LOG_ERROR("Failed to open file %s.", filename.c_str());
-        }
-        else
-        {
-            if (false == neoFile.Begin(fd))
+            if (BmpImgLoader::RET_FILE_NOT_FOUND == ret)
             {
-                LOG_ERROR("File %s has incompatible bitmap file format.", filename.c_str());
+                LOG_ERROR("Failed to open file %s.", filename.c_str());
+            }
+            else if (BmpImgLoader::RET_FILE_FORMAT_INVALID == ret)
+            {
+                LOG_ERROR("File %s has invalid format.", filename.c_str());
+            }
+            else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
+            {
+                LOG_ERROR("File %s has unsupported format.", filename.c_str());
+            }
+            else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
+            {
+                LOG_ERROR("File %s is too big.", filename.c_str());
             }
             else
             {
-                m_width         = neoFile.Width();
-                m_height        = neoFile.Height();
-                m_bufferSize    = m_width * m_height;
-
-                if (nullptr != m_buffer)
-                {
-                    delete[] m_buffer;
-                    m_buffer = nullptr;
-                }
-
-                m_buffer = new Color[m_bufferSize];
-
-                if (nullptr != m_buffer)
-                {
-                    uint16_t x = 0U;
-                    uint16_t y = 0U;
-
-                    for(y = 0U; y < m_height; ++y)
-                    {
-                        for(x = 0U; x < m_width; ++x)
-                        {
-                            RgbColor rgbColor = neoFile.GetPixelColor(x, y);
-
-                            m_buffer[x + y * m_width].set(rgbColor.R, rgbColor.G, rgbColor.B);
-                        }
-                    }
-
-                    status = true;
-                }
+                LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
             }
+        }
+        else
+        {
+            /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
+             * shall be shown or the single bitmap image.
+             */
+            m_spriteSheet.release();
+            m_timer.stop();
 
-            fd.close();
+            isSuccessful = true;
         }
     }
 
-    return status;
+    return isSuccessful;
 }
 
-#endif  /* NATIVE */
+bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName)
+{
+    bool isSuccessful = false;
+
+    if (false == fs.exists(spriteSheetFileName))
+    {
+        LOG_WARNING("File %s doesn't exists.", spriteSheetFileName.c_str());
+    }
+    else if (false == fs.exists(textureFileName))
+    {
+        LOG_WARNING("File %s doesn't exists.", textureFileName.c_str());
+    }
+    else if (true == m_spriteSheet.load(fs, spriteSheetFileName, textureFileName))
+    {
+        /* Calculate duration per frame. */
+        m_duration = 1000U / m_spriteSheet.getFPS();
+
+        /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
+         * shall be shown or the single bitmap image.
+         */
+        m_bitmap.release();        
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+void BitmapWidget::setSpriteSheetForward(bool forward)
+{
+    m_spriteSheet.setForward(forward);
+}
+
+void BitmapWidget::setSpriteSheetRepeatInfinite(bool repeat)
+{
+    m_spriteSheet.repeatInfinite(repeat);
+}
 
 /******************************************************************************
  * Protected Methods

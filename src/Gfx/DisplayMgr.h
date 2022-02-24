@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,13 +45,13 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <Board.h>
-#include <Canvas.h>
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <FadeLinear.h>
 #include <FadeMoveX.h>
 #include <FadeMoveY.h>
 #include <Mutex.hpp>
+#include <YAGfxBitmap.h>
 
 #include "IPluginMaintenance.hpp"
 #include "Slot.h"
@@ -296,7 +296,7 @@ public:
     static const uint8_t        SLOT_ID_INVALID     = UINT8_MAX;
 
     /** Task stack size in bytes */
-    static const uint32_t       TASK_STACKE_SIZE    = 4096U;
+    static const uint32_t       TASK_STACK_SIZE     = 4096U;
 
     /** Task period in ms */
     static const uint32_t       TASK_PERIOD         = 20U;
@@ -306,9 +306,6 @@ public:
 
     /** Task priority, note Arduino loop and AsyncTcp have lower priorities. */
     static const UBaseType_t    TASK_PRIORITY       = 4U;
-
-    /** If no ambient light sensor is available, the default brightness shall be 40%. */
-    static const uint8_t        BRIGHTNESS_DEFAULT  = (UINT8_MAX * 40U) / 100U;
 
 private:
 
@@ -363,8 +360,8 @@ private:
      * the old plugin out and from the new plugin in.
      */
     FadeState           m_displayFadeState;
-    Canvas*             m_currCanvas;                   /**< Points to the current canvas, used to update the display. */
-    Canvas*             m_framebuffers[FB_ID_MAX];      /**< Two framebuffers, which will contain the old and the new plugin content. */
+    YAGfxBitmap*        m_selectedFrameBuffer;          /**< Points to the current framebuffer, used to update the display. */
+    YAGfxDynamicBitmap  m_framebuffers[FB_ID_MAX];      /**< Two framebuffers, which will contain the old and the new plugin content. */
     FadeLinear          m_fadeLinearEffect;             /**< Linear fade effect. */
     FadeMoveX           m_fadeMoveXEffect;              /**< Moving along x-axis fade effect. */
     FadeMoveY           m_fadeMoveYEffect;              /**< Moving along y-axis fade effect. */

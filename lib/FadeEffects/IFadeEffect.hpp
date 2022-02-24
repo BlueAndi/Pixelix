@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <YAGfx.h>
+#include <YAGfxBitmap.h>
 
 /******************************************************************************
  * Macros
@@ -78,23 +79,23 @@ public:
      * Achieves a fade in effect. Call this method as long as the effect is not completed.
      *
      * @param[in] gfx   Graphics interface to display
-     * @param[in] prev  Graphics interface to previous framebuffer
-     * @param[in] next  Graphics interface to next framebuffer
+     * @param[in] prev  Previous framebuffer
+     * @param[in] next  Next framebuffer
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    virtual bool fadeIn(YAGfx& gfx, YAGfx& prev, YAGfx& next) = 0;
+    virtual bool fadeIn(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next) = 0;
 
     /**
      * Achieves a fade out effect. Call this method as long as the effect is not completed.
      *
      * @param[in] gfx   Graphics interface to display
-     * @param[in] prev  Graphics interface to previous framebuffer
-     * @param[in] next  Graphics interface to next framebuffer
+     * @param[in] prev  Previous framebuffer
+     * @param[in] next  Next framebuffer
      *
      * @return If the effect is complete, it will return true otherwise false.
      */
-    virtual bool fadeOut(YAGfx& gfx, YAGfx& prev, YAGfx& next) = 0;
+    virtual bool fadeOut(YAGfx& gfx, YAGfxBitmap& prev, YAGfxBitmap& next) = 0;
 
 protected:
 

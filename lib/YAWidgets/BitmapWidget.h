@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,11 +44,11 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <Widget.hpp>
-
-#ifndef NATIVE
 #include <FS.h>
-#endif  /* NATIVE */
+#include <SimpleTimer.hpp>
+
+#include "Widget.hpp"
+#include "SpriteSheet.h"
 
 /******************************************************************************
  * Macros
@@ -70,10 +70,10 @@ public:
      */
     BitmapWidget() :
         Widget(WIDGET_TYPE),
-        m_buffer(nullptr),
-        m_bufferSize(0U),
-        m_width(0U),
-        m_height(0U)
+        m_bitmap(),
+        m_spriteSheet(),
+        m_timer(),
+        m_duration(0U)
     {
     }
 
@@ -84,29 +84,11 @@ public:
      */
     BitmapWidget(const BitmapWidget& widget) :
         Widget(WIDGET_TYPE),
-        m_buffer(nullptr),
-        m_bufferSize(widget.m_bufferSize),
-        m_width(widget.m_width),
-        m_height(widget.m_height)
+        m_bitmap(widget.m_bitmap),
+        m_spriteSheet(widget.m_spriteSheet),
+        m_timer(widget.m_timer),
+        m_duration(widget.m_duration)
     {
-        if (nullptr != widget.m_buffer)
-        {
-            m_buffer = new Color[m_bufferSize];
-
-            if (nullptr == m_buffer)
-            {
-                m_bufferSize = 0U;
-            }
-            else
-            {
-                size_t index = 0U;
-
-                for(index = 0U; index < m_bufferSize; ++index)
-                {
-                    m_buffer[index] = widget.m_buffer[index];
-                }
-            }
-        }
     }
 
     /**
@@ -114,12 +96,6 @@ public:
      */
     ~BitmapWidget()
     {
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-            m_bufferSize = 0U;
-        }
     }
 
     /**
@@ -130,34 +106,36 @@ public:
     BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
-     * Set a new bitmap.
+     * Set a bitmap.
      *
-     * @param[in] bitmap    Ext. bitmap buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
+     * @param[in] bitmap    Bitmap
      */
-    void set(const Color* bitmap, uint16_t width, uint16_t height);
+    void set(const YAGfxBitmap& bitmap)
+    {
+        if (true == m_bitmap.create(bitmap.getWidth(), bitmap.getHeight()))
+        {
+            m_bitmap.copy(bitmap);
+        }
+
+        /* Release sprite sheet to avoid wasting memory. The widget can
+         * only show one of them.
+         */
+        m_spriteSheet.release();
+    }
 
     /**
      * Get the bitmap.
      *
-     * @param[out] width    Bitmap width in pixel
-     * @param[out] height   Bitmap height in pixel
-     *
-     * @return Bitmap buffer
+     * @return Bitmap
      */
-    const Color* get(uint16_t& width, uint16_t& height) const
+    const YAGfxBitmap& get() const
     {
-        width   = m_width;
-        height  = m_height;
-
-        return m_buffer;
+        return m_bitmap;
     }
-
-    #ifndef NATIVE
 
     /**
      * Load bitmap image from filesystem.
+     * If a sprite sheet is active, it will be disabled.
      *
      * @param[in] fs        Filesystem
      * @param[in] filename  Filename with full path
@@ -166,17 +144,38 @@ public:
      */
     bool load(FS& fs, const String& filename);
 
-    #endif  /* NATIVE */
+    /**
+     * Load sprite sheet file (.sprite) from filesystem.
+     *
+     * @param[in] fs                    Filesystem
+     * @param[in] spriteSheetFileName   Name of the sprite sheet file in the filesystem
+     * @param[in] textureFileName       Name of the texture image file in the filesystem
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName);
 
+    /** Set the animation control flag FORWARD of a sprite sheet 
+     * 
+     * @param[in] forward The state to be set.
+     */
+    void setSpriteSheetForward(bool forward);
+
+    /** Set the animation control flag REPEAT of a sprite sheet 
+     * 
+     * @param[in] isRepeat The state to be set.
+     */
+    void setSpriteSheetRepeatInfinite(bool repeat);
+    
     /** Widget type string */
     static const char* WIDGET_TYPE;
 
 private:
 
-    Color*      m_buffer;       /**< Raw bitmap buffer */
-    size_t      m_bufferSize;   /**< Raw bitmap buffer size in number of elements */
-    uint16_t    m_width;        /**< Bitmap width in pixel */
-    uint16_t    m_height;       /**< Bitmap height in pixel */
+    YAGfxDynamicBitmap  m_bitmap;       /**< Bitmap image which is shown if no sprite sheet is loaded. */
+    SpriteSheet         m_spriteSheet;  /**< Sprite sheet for animation with texture. */
+    SimpleTimer         m_timer;        /**< Timer used for sprite sheet. */
+    uint32_t            m_duration;     /**< Duration of one frame in ms. */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -185,9 +184,30 @@ private:
      */
     void paint(YAGfx& gfx) override
     {
-        if (nullptr != m_buffer)
+        if (true == m_spriteSheet.isEmpty())
         {
-            gfx.drawBitmap(m_posX, m_posY, m_buffer, m_width, m_height);
+            gfx.drawBitmap(m_posX, m_posY, m_bitmap);
+        }
+        else
+        {
+            gfx.drawBitmap(m_posX, m_posY, m_spriteSheet.getFrame());
+
+            /* If timer is not running, start it. */
+            if (false == m_timer.isTimerRunning())
+            {
+                m_timer.start(m_duration);
+            }
+            /* If the timer has a timeout, select next sprite and restart timer. */
+            else if (true == m_timer.isTimeout())
+            {
+                m_spriteSheet.next();
+                m_timer.start(m_duration);
+            }
+            else
+            {
+                /* Nothing to do. */
+                ;
+            }
         }
 
         return;

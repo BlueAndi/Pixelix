@@ -22,7 +22,7 @@
 1. The plugin sources (.h/.cpp) shall be in ```/src/Plugin/Plugins``` folder.
 2. The plugin shall be registered in the module ```/src/StateMachine/InitState.cpp```, function ```void InitState::registerPlugins()```.
 3. A short plugin description shall be in ```/doc/PLUGINS.md```.
-4. A plugin specific HTML page shall be in ```/data/plugins```.
+4. A plugin specific HTML page shall be in ```/data/plugins```. Add the page to the menu in ```/data/js/menu.js```.
 5. Place a plugin screenshot as image in ```/data/images```, using the plugin name and the file extension. It shall be shown in the HTML page.
 6. If the plugin spawns a REST API:
    1. The HTML page must be able to get/set the corresponding information via REST API.
@@ -30,7 +30,7 @@
 
 ## Rules
 * Follow the [boy scout rule](https://biratkirat.medium.com/step-8-the-boy-scout-rule-robert-c-martin-uncle-bob-9ac839778385#:~:text=The%20Boy%20Scouts%20have%20a,not%20add%20more%20smelling%20code.), especially for coding style. Check other plugins or sourcecode in the repository, to know how to do it right.
-* All one time jobs shall be done in ```start()``` method. E.g. the initial layout creation with canvas.
+* All one time jobs shall be done in ```start()``` method. E.g. the initial layout creation.
 * The ```update()``` method shall be efficient, therefore
   * never read/write something from filesystem,
   * never perform any web related stuff,

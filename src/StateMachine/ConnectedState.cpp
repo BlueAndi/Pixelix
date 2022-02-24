@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2021 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@
 #include "ConnectingState.h"
 #include "RestartState.h"
 #include "ErrorState.h"
+#include "HttpStatus.h"
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -78,18 +79,23 @@ void ConnectedState::entry(StateMachine& sm)
     String infoStr = "Hostname: ";
     String hostname;
     String infoStringIp = "IP: ";
+    String notifyURL = "-";
 
     LOG_INFO("Connected.");
 
-    /* Get hostname. */
+    /* Get hostname and notifyURL. */
     if (false == Settings::getInstance().open(true))
     {
         LOG_WARNING("Use default hostname.");
         hostname = Settings::getInstance().getHostname().getDefault();
+        notifyURL = Settings::getInstance().getNotifyURL().getDefault();
+
     }
     else
     {
         hostname = Settings::getInstance().getHostname().getValue();
+        notifyURL = Settings::getInstance().getNotifyURL().getValue();
+
         Settings::getInstance().close();
     }
 
@@ -118,7 +124,39 @@ void ConnectedState::entry(StateMachine& sm)
         LOG_INFO(infoStr);
     }
 
+    /* Notify that Pixelix is online only if URL was set. */
+    if (!notifyURL.equals("-"))
+    {
+        if (true == m_client.begin(notifyURL))
+        {
+            if (false == m_client.GET())
+            {
+                LOG_WARNING("GET %s failed.", notifyURL.c_str());
+            }
+            else
+            {
+                LOG_INFO("Notification triggered");
+            }
+        }
+    }
     return;
+}
+
+void ConnectedState::initHttpClient()
+{
+    m_client.regOnResponse([](const HttpResponse& rsp){
+        uint16_t statusCode = rsp.getStatusCode();
+
+        if (HttpStatus::STATUS_CODE_OK == statusCode)
+        {
+            LOG_INFO("Online state reported");
+        }
+
+    });
+
+    m_client.regOnError([]() {
+        LOG_WARNING("Connection error happened.");
+   });
 }
 
 void ConnectedState::process(StateMachine& sm)
@@ -143,7 +181,7 @@ void ConnectedState::process(StateMachine& sm)
         sm.setState(ConnectingState::getInstance());
     }
 
-    /* Connect to a remote wifi network? */
+    /* If the user button is triggered, the next display slot will be activated. */
     if (ButtonDrv::STATE_TRIGGERED == buttonState)
     {
         DisplayMgr::getInstance().activateNextSlot();
