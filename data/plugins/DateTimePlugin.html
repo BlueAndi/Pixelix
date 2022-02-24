@@ -58,9 +58,13 @@
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Get configuration about what the plugin shows.</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg</code></pre>
                 <h3 class="mt-1">Set configuration about what the plugin shall show.</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg?cfg=&lt;CFG&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg?cfg=&lt;CFG&gt;</code></pre>
                 <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>CFG: Configuration id
                         <ul>
                             <li>0: Show date and time.</li>
