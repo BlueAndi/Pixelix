@@ -126,7 +126,7 @@ Keyword   | Description
 
 **Note**
 - If theses keywords are used within the sourcecode they have to be prefixed with two backslashes (one additional for escaping).
-- If these keywords are used via the [REST API](REST.md) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
+- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
 - The keywords can be combined.  
 
 **Examples**
