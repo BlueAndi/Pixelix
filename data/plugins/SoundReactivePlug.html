@@ -57,9 +57,13 @@
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Get configuration about how many frequency bands are shown.</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg</code></pre>
                 <h3 class="mt-1">Set configuration about how many frequency bands shall be shown.</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
                 <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>FREQ-BAND-LEN: Number of frequency bands to show.
                         <ul>
                             <li>8: Show 8 frequency bands.</li>
