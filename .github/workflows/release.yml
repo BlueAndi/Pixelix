@@ -2,12 +2,12 @@ name: release
 
 # Controls when the action will run.
 on:
-  release:
-    # A release, pre-release, or draft of a release is published.
-    types: [ published ]
-
   # Allows you to run this workflow manually from the Actions tab.
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Enter the name of the tag which to release.'
+        required: true
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel.
 jobs:
@@ -91,11 +91,11 @@ jobs:
       working-directory: ${{ github.workspace }}/artifacts
 
     - name: Zip release artifacts folder
-      run: zip -r ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip ${{ github.workspace }}/artifacts
+      run: zip -r ${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip ${{ github.workspace }}/artifacts
 
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
+        files: ${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
