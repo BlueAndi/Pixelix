@@ -54,14 +54,12 @@
                 <p>The plugin shows the current time and date. First the time is shown for half of the slot duration and after it the date.</p>
                 <p>Below the day of the week is shown, starting from the left with Monday. It can be configured to show only the date or only the time as well.</p>
                 <h2 class="mt-1">REST API</h2>
-                <pre class="text-light"><code>-</code></pre>
-                <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Get configuration about what the plugin shows.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime</code></pre>
                 <h3 class="mt-1">Set configuration about what the plugin shall show.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg?cfg=&lt;CFG&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg?cfg=&lt;CFG&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime?cfg=&lt;CFG&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime?cfg=&lt;CFG&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -73,7 +71,8 @@
                         </ul>
                     </li>
                 </ul>
-                <h3 class="mt-1">Configuration</h3>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Display</h3>
                 <form id="myForm" action="javascript:setCfg(pluginUid.options[pluginUid.selectedIndex].value, cfg.options[cfg.selectedIndex].value)">
                     <label for="pluginUid">Plugin UID:</label><br />
                     <select id="pluginUid" size="1" onChange="getCfg(pluginUid.options[pluginUid.selectedIndex].value, 'cfg')">
@@ -164,7 +163,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var cfgInput = document.getElementById(cfg);
@@ -183,7 +182,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true,
                     parameter: {
                         cfg: cfg
