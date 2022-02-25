@@ -98,6 +98,6 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ github.event.inputs.tag_name }}
-        files: ${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip
+        files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
