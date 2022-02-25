@@ -107,7 +107,7 @@ bool BitmapWidget::load(FS& fs, const String& filename)
             {
                 LOG_ERROR("File %s has unsupported format.", filename.c_str());
             }
-            else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
+            else if (BmpImgLoader::RET_IMG_TOO_BIG == ret)
             {
                 LOG_ERROR("File %s is too big.", filename.c_str());
             }
