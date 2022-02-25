@@ -91,7 +91,8 @@ jobs:
       working-directory: ${{ github.workspace }}/artifacts
 
     - name: Zip release artifacts folder
-      run: zip -rj ${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip ${{ github.workspace }}/artifacts/*
+      run: zip -r ${{ github.event.repository.name }}-${{ github.event.inputs.tag_name }}.zip .
+      working-directory: ${{ github.workspace }}/artifacts
 
     - name: Release
       uses: softprops/action-gh-release@v1
