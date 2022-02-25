@@ -183,6 +183,6 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-        files: ${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
+        files: ${{ github.workspace }}/artifacts/${{ github.event.repository.name }}-${{ github.event.release.tag_name }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
