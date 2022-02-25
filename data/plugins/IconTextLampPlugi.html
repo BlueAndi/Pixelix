@@ -227,7 +227,7 @@
                 });
             };
 
-            function setIcon(pluginUid, fileName) {
+            function setIcon(pluginUid, file) {
                 disableUI();
 
                 return utils.makeRequest({
@@ -235,7 +235,10 @@
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
                     isJsonResponse: true,
                     parameter: {
-                        file: fileName
+                        file: file
+                    },
+                    headers: {
+                        "X-File-Size": file.size
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
