@@ -53,8 +53,6 @@
                 <p>The plugin shows octave frequency bands, depended on the environment sound.</p>
                 <p>Required: A digital microphone (INMP441) is required, connected to the I2S port.</p>
                 <h2 class="mt-1">REST API</h2>
-                <pre class="text-light"><code>-</code></pre>
-                <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Get configuration about how many frequency bands are shown.</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg</code></pre>
@@ -71,7 +69,8 @@
                         </ul>
                     </li>
                 </ul>
-                <h3 class="mt-1">Configuration</h3>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Number of frequency bands</h3>
                 <form id="myForm" action="javascript:setCfg(pluginUid.options[pluginUid.selectedIndex].value, freqBandLen.options[freqBandLen.selectedIndex].value)">
                     <label for="pluginUid">Plugin UID:</label><br />
                     <select id="pluginUid" size="1" onChange="getCfg(pluginUid.options[pluginUid.selectedIndex].value, 'freqBandLen')">
