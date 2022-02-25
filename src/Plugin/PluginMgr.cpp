@@ -408,7 +408,7 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
         /* Handle each topic */
         if (0U < topics.size())
         {
-            PluginObjData*  metaData = new PluginObjData();
+            PluginObjData*  metaData = new(std::nothrow) PluginObjData();
 
             if (nullptr != metaData)
             {

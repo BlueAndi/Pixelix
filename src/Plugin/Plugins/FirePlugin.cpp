@@ -63,7 +63,7 @@ void FirePlugin::start(uint16_t width, uint16_t height)
     if (nullptr == m_heat)
     {
         m_heatSize = width * height;
-        m_heat = new uint8_t[m_heatSize];
+        m_heat = new(std::nothrow) uint8_t[m_heatSize];
 
         if (nullptr == m_heat)
         {

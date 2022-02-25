@@ -47,6 +47,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <BaseGfx.hpp>
+#include <new>
 
 /******************************************************************************
  * Macros
@@ -572,7 +573,7 @@ private:
         if ((0U < width) &&
             (0U < height))
         {
-            buffer = new TColor[width * height];
+            buffer = new(std::nothrow) TColor[width * height];
         }
 
         return buffer;

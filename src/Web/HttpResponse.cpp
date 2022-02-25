@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "HttpResponse.h"
+#include <new>
 
 /******************************************************************************
  * Compiler Switches
@@ -75,7 +76,7 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
 
         if (nullptr != rsp.m_payload)
         {
-            m_payload = new uint8_t[rsp.m_size];
+            m_payload = new(std::nothrow) uint8_t[rsp.m_size];
 
             if (nullptr == m_payload)
             {
@@ -94,7 +95,7 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
         {
             do
             {
-                HttpHeader* header = new HttpHeader;
+                HttpHeader* header = new(std::nothrow) HttpHeader;
 
                 if (nullptr != header)
                 {
@@ -154,7 +155,7 @@ void HttpResponse::addStatusLine(const String& line)
 
 void HttpResponse::addHeader(const String& line)
 {
-    HttpHeader* header = new HttpHeader(line);
+    HttpHeader* header = new(std::nothrow) HttpHeader(line);
 
     if (nullptr != header)
     {
@@ -166,7 +167,7 @@ void HttpResponse::extendPayload(size_t size)
 {
     uint8_t* tmp = m_payload;
 
-    m_payload = new uint8_t[m_size + size];
+    m_payload = new(std::nothrow) uint8_t[m_size + size];
 
     if (nullptr != m_payload)
     {

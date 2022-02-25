@@ -122,7 +122,7 @@ bool DisplayMgr::begin()
 
         if (0U < m_maxSlots)
         {
-            m_slots = new Slot[m_maxSlots];
+            m_slots = new(std::nothrow) Slot[m_maxSlots];
 
             /* Load slot configuration */
             load();

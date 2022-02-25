@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stddef.h>
+#include <new>
 
 /******************************************************************************
  * Macros
@@ -674,7 +675,7 @@ public:
 
         if (UINT32_MAX > m_count)
         {
-            ListElement<T>* listElement = new ListElement<T>(element, m_tail, nullptr);
+            ListElement<T>* listElement = new(std::nothrow) ListElement<T>(element, m_tail, nullptr);
 
             if (nullptr != listElement)
             {
