@@ -86,9 +86,9 @@
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Icon 0</h3>
-                <form id="myFormIcon_0" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon_0.files[0], 0)">
+                <form id="myFormIcon_0" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon0.options[pluginUidIcon0.selectedIndex].value, icon_0.files[0], 0)">
                     <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUidIcon" name="pluginUid" size="1">
+                    <select id="pluginUidIcon0" name="pluginUid" size="1">
                     </select>
                     <br />
                     <label for="icon">Icon:</label><br />
@@ -96,9 +96,9 @@
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h3 class="mt-1">Icon 1</h3>
-                <form id="myFormIcon_1" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon_1.files[0], 1)">
+                <form id="myFormIcon_1" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon1.options[pluginUidIcon1.selectedIndex].value, icon_1.files[0], 1)">
                     <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUidIcon" name="pluginUid" size="1">
+                    <select id="pluginUidIcon1" name="pluginUid" size="1">
                     </select>
                     <br />
                     <label for="icon">Icon:</label><br />
@@ -106,9 +106,9 @@
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h3 class="mt-1">Icon 2</h3>
-                <form id="myFormIcon_2" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon_2.files[0], 2)">
+                <form id="myFormIcon_2" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon2.options[pluginUidIcon2.selectedIndex].value, icon_2.files[0], 2)">
                     <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUidIcon" name="pluginUid" size="1">
+                    <select id="pluginUidIcon2" name="pluginUid" size="1">
                     </select>
                     <br />
                     <label for="icon">Icon:</label><br />
@@ -197,7 +197,7 @@
                 });
             };
 
-            function setIcon(pluginUid, fileName, index) {
+            function setIcon(pluginUid, file, index) {
                 disableUI();
 
                 return utils.makeRequest({
@@ -205,7 +205,10 @@
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap/" + index,
                     isJsonResponse: true,
                     parameter: {
-                        file: fileName
+                        file: file
+                    },
+                    headers: {
+                        "X-File-Size": file.size
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
