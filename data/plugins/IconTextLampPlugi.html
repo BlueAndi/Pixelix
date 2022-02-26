@@ -89,7 +89,7 @@
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Icon</h3>
                 <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
-                    <label for="pluginUid">Plugin UID:</label><br />
+                    <label for="pluginUidIcon">Plugin UID:</label><br />
                     <select id="pluginUidIcon" name="pluginUid" size="1">
                     </select>
                     <br />
@@ -99,7 +99,7 @@
                 </form>
                 <h3 class="mt-1">Text</h3>
                 <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
+                    <label for="pluginUidText">Plugin UID:</label><br />
                     <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
                     </select>
                     <br />
@@ -109,7 +109,7 @@
                 </form>
                 <h3 class="mt-1">Lamp</h3>
                 <form id="myFormLamp" action="javascript:setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampId.options[lampId.selectedIndex].value, lampState.options[lampState.selectedIndex].value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
+                    <label for="pluginUidLamp">Plugin UID:</label><br />
                     <select id="pluginUidLamp" name="pluginUid" size="1">
                     </select>
                     <br />
