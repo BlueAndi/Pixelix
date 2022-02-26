@@ -66,39 +66,102 @@
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>ICON-ID: The id of the icon (starting with 0 from left).</li>
-                    <li>STATE: <code>true </code>or <code>false</code></li>.</li>
+                    <li>STATE: <code>true</code> or <code>false</code></li>
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
-                <h3 class="mt-1">Icon 0</h3>
+                <h3 class="mt-1">Icon left (0)</h3>
+                <h4 class="mt-1">Bitmap/Sprite sheet</h4>
                 <form id="myFormIcon_0" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon0.options[pluginUidIcon0.selectedIndex].value, icon_0.files[0], 0)">
-                    <label for="pluginUid">Plugin UID:</label><br />
+                    <label for="pluginUidIcon0">Plugin UID:</label><br />
                     <select id="pluginUidIcon0" name="pluginUid" size="1">
                     </select>
                     <br />
-                    <label for="icon">Icon:</label><br />
+                    <label for="icon_0">Icon:</label><br />
                     <input id="icon_0" type="file" /><br />
                     <input name="submit" type="submit" value="Update"/>
                 </form>
-                <h3 class="mt-1">Icon 1</h3>
+                <h4 class="mt-1">Animation configuration</h4>
+                <form id="myFormAnimation_0" enctype="multipart/form-data" action="javascript:setAnimation(pluginUidAnimation0.options[pluginUidAnimation0.selectedIndex].value, forward_0.options[forward_0.selectedIndex].value, repeat_0.options[repeat_0.selectedIndex].value, 0)">
+                    <label for="pluginUidAnimation0">Plugin UID:</label><br />
+                    <select id="pluginUidAnimation0" name="pluginUid" size="1">
+                    </select>
+                    <br />
+                    <label for="forward_0">Forward:</label><br />
+                    <select id="forward_0" size="1">
+                        <option>false</option>
+                        <option>true</option>
+                    </select>
+                    <br />
+                    <label for="repeat_0">Repeat:</label><br />
+                    <select id="repeat_0" size="1">
+                        <option>false</option>
+                        <option>true</option>
+                    </select>
+                    <br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Icon middle (1)</h3>
+                <h4 class="mt-1">Bitmap/Sprite sheet</h4>
                 <form id="myFormIcon_1" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon1.options[pluginUidIcon1.selectedIndex].value, icon_1.files[0], 1)">
-                    <label for="pluginUid">Plugin UID:</label><br />
+                    <label for="pluginUidIcon1">Plugin UID:</label><br />
                     <select id="pluginUidIcon1" name="pluginUid" size="1">
                     </select>
                     <br />
-                    <label for="icon">Icon:</label><br />
+                    <label for="icon_1">Icon:</label><br />
                     <input id="icon_1" type="file" /><br />
                     <input name="submit" type="submit" value="Update"/>
                 </form>
-                <h3 class="mt-1">Icon 2</h3>
+                <h4 class="mt-1">Animation configuration</h4>
+                <form id="myFormAnimation_1" enctype="multipart/form-data" action="javascript:setAnimation(pluginUidAnimation1.options[pluginUidAnimation1.selectedIndex].value, forward_1.options[forward_1.selectedIndex].value, repeat_1.options[repeat_1.selectedIndex].value, 1)">
+                    <label for="pluginUidAnimation1">Plugin UID:</label><br />
+                    <select id="pluginUidAnimation1" name="pluginUid" size="1">
+                    </select>
+                    <br />
+                    <label for="forward_1">Forward:</label><br />
+                    <select id="forward_1" size="1">
+                        <option>false</option>
+                        <option>true</option>
+                    </select>
+                    <br />
+                    <label for="repeat_1">Repeat:</label><br />
+                    <select id="repeat_1" size="1">
+                        <option>false</option>
+                        <option>true</option>
+                    </select>
+                    <br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Icon right (2)</h3>
+                <h4 class="mt-1">Bitmap/Sprite sheet</h4>
                 <form id="myFormIcon_2" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon2.options[pluginUidIcon2.selectedIndex].value, icon_2.files[0], 2)">
-                    <label for="pluginUid">Plugin UID:</label><br />
+                    <label for="pluginUidIcon2">Plugin UID:</label><br />
                     <select id="pluginUidIcon2" name="pluginUid" size="1">
                     </select>
                     <br />
-                    <label for="icon">Icon:</label><br />
+                    <label for="icon_2">Icon:</label><br />
                     <input id="icon_2" type="file" /><br />
                     <input name="submit" type="submit" value="Update"/>
                 </form>
+                <h4 class="mt-1">Animation configuration</h4>
+                    <form id="myFormAnimation_2" enctype="multipart/form-data" action="javascript:setAnimation(pluginUidAnimation2.options[pluginUidAnimation2.selectedIndex].value, forward_2.options[forward_2.selectedIndex].value, repeat_2.options[repeat_2.selectedIndex].value, 2)">
+                        <label for="pluginUidAnimation2">Plugin UID:</label><br />
+                        <select id="pluginUidAnimation2" name="pluginUid" size="1">
+                        </select>
+                        <br />
+                        <label for="forward_2">Forward:</label><br />
+                        <select id="forward_2" size="1">
+                            <option value="false">false</option>
+                            <option value="true">true</option>
+                        </select>
+                        <br />
+                        <label for="repeat_2">Repeat:</label><br />
+                        <select id="repeat_2" size="1">
+                            <option value="false">false</option>
+                            <option value="true">true</option>
+                        </select>
+                        <br />
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
             </div>
         </main>
   
@@ -130,12 +193,19 @@
                 utils.enableForm("myFormIcon_0", true);
                 utils.enableForm("myFormIcon_1", true);
                 utils.enableForm("myFormIcon_2", true);
+                utils.enableForm("myFormAnimation_0", true);
+                utils.enableForm("myFormAnimation_1", true);
+                utils.enableForm("myFormAnimation_2", true);
+
             }
 
             function disableUI() {
-                utils.enableForm("myFormIcon_0", true);
-                utils.enableForm("myFormIcon_1", true);
-                utils.enableForm("myFormIcon_2", true);
+                utils.enableForm("myFormIcon_0", false);
+                utils.enableForm("myFormIcon_1", false);
+                utils.enableForm("myFormIcon_2", false);
+                utils.enableForm("myFormAnimation_0", false);
+                utils.enableForm("myFormAnimation_1", false);
+                utils.enableForm("myFormAnimation_2", false);
             }
 
             function getPluginInstances() {
@@ -203,6 +273,55 @@
                 });
             }
 
+            function getAnimation(pluginUid, index) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var forwardElement = document.getElementById("forward_" + index);
+                    var repeatElement = document.getElementById("repeat_" + index);
+
+                    if (false == rsp.data.forward) {
+                        forwardElement.selectedIndex = 0;
+                    } else {
+                        forwardElement.selectedIndex = 1;
+                    }
+
+                    if (false == rsp.data.repeat) {
+                        repeatElement.selectedIndex = 0;
+                    } else {
+                        repeatElement.selectedIndex = 1;
+                    }
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setAnimation(pluginUid, isForward, isRepeat, index) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
+                    isJsonResponse: true,
+                    parameter: {
+                        forward: isForward,
+                        repeat: isRepeat
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
             $(document).ready(function() {
                 menu.create("menu", menu.data);
                 
@@ -212,8 +331,28 @@
                 disableUI();
     
                 /* Load all plugin instances. */
-                getPluginInstances().then(function(){
-                    enableUI()
+                getPluginInstances().then(function(cnt) {
+                    var selectAnimation0 = document.getElementById("pluginUidAnimation0");
+                    var selectAnimation1 = document.getElementById("pluginUidAnimation1");
+                    var selectAnimation2 = document.getElementById("pluginUidAnimation2");
+    
+                    if (0 < cnt) {
+    
+                        return getAnimation(
+                            selectAnimation0.options[selectAnimation0.selectedIndex].value,
+                            0
+                        ).then(function() {
+                            return getAnimation(
+                                selectAnimation1.options[selectAnimation1.selectedIndex].value,
+                                1
+                            );
+                        }).then(function() {
+                            return getAnimation(
+                                selectAnimation2.options[selectAnimation2.selectedIndex].value,
+                                2
+                            );
+                        });
+                    }
                 });
             });
         </script>
