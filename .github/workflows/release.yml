@@ -34,7 +34,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        ref: github.event.inputs.tag_name
+        ref: ${{ github.event.inputs.tag_name }}
 
     - name: Cache pip
       uses: actions/cache@v2
