@@ -40,7 +40,7 @@ There are two types of plugins available at the moment:
 * [Dedicated plugins](#Dedicated-plugins)
 
 # Generic plugins
-The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix).
+The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0).
 
 ## IconTextPlugin
 The IconTextPlugin shows an icon on left side, text on right side.\
@@ -112,7 +112,7 @@ The number of shown frequency bands can be set via the [REST API](https://app.sw
 
 ## SunrisePlugin
 The SunrisePlugin shows the current sunrise / sunset times for a configured location.\
-The coordinates (latitude & longitude) of your location can be set via the [REST API](REST.md#endpoint-base-uridisplayuidplugin-uidlocation).\
+The coordinates (latitude & longitude) of your location can be set via the [REST API]([REST.md#endpoint-base-uridisplayuidplugin-uidlocation](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/SunrisePlugin)).\
 Powered by sunrise-sunset.org
 
 ## SysMsgPlugin

@@ -62,7 +62,7 @@
 
 void PluginFactory::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
 {
-    PluginRegEntry* entry = new PluginRegEntry();
+    PluginRegEntry* entry = new(std::nothrow) PluginRegEntry();
 
     if (nullptr != entry)
     {

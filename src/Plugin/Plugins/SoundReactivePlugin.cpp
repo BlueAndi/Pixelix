@@ -142,7 +142,7 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_freqBins = new double[SpectrumAnalyzer::getInstance().getFreqBinsLen()];
+    m_freqBins = new(std::nothrow) double[SpectrumAnalyzer::getInstance().getFreqBinsLen()];
 
     if (nullptr == m_freqBins)
     {

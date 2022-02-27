@@ -515,8 +515,8 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     /* Begin of upload? */
     if (0 == index)
     {
-        AsyncWebHeader* header      = request->getHeader("X-File-Size");
-        uint32_t        fileSize    = UPDATE_SIZE_UNKNOWN;
+        AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
+        uint32_t        fileSize        = UPDATE_SIZE_UNKNOWN;
 
         /* If there is a pending upload, abort it. */
         if (true == Update.isRunning())
@@ -529,10 +529,10 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
 
         /* File size available? */
-        if (nullptr != header)
+        if (nullptr != headerXFileSize)
         {
             /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
-            (void)Util::strToUInt32(header->value(), fileSize);
+            (void)Util::strToUInt32(headerXFileSize->value(), fileSize);
         }
 
         if (UPDATE_SIZE_UNKNOWN == fileSize)

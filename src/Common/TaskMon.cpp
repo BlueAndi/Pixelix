@@ -79,7 +79,7 @@ void TaskMon::process()
     if (true == isProcessingTime)
     {
         UBaseType_t     numOfTasks      = uxTaskGetNumberOfTasks();
-        TaskStatus_t*   taskStatus      = new TaskStatus_t[numOfTasks];
+        TaskStatus_t*   taskStatus      = new(std::nothrow) TaskStatus_t[numOfTasks];
 
         if (nullptr != taskStatus)
         {

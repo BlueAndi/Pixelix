@@ -408,7 +408,7 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
         /* Handle each topic */
         if (0U < topics.size())
         {
-            PluginObjData*  metaData = new PluginObjData();
+            PluginObjData*  metaData = new(std::nothrow) PluginObjData();
 
             if (nullptr != metaData)
             {
@@ -540,6 +540,12 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
 
             jsonDoc.remove("data");
 
+            /* If a file is available, it will be removed now. */
+            if (false == webHandlerData->fullPath.isEmpty())
+            {
+                (void)FILESYSTEM.remove(webHandlerData->fullPath);
+            }
+
             /* Prepare response */
             jsonDoc["status"]   = "error";
             errorObj["msg"]     = "Requested topic not supported or invalid data.";
@@ -583,27 +589,51 @@ void PluginMgr::uploadHandler(AsyncWebServerRequest *request, const String& file
     /* Begin of upload? */
     if (0 == index)
     {
-        LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
-        webHandlerData->isUploadError = false;
-        webHandlerData->fullPath.clear();
+        AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
+        size_t          fileSize        = request->contentLength();
+        size_t          fileSystemSpace = FILESYSTEM.totalBytes() - FILESYSTEM.usedBytes();
 
-        /* Ask plugin, whether the upload is allowed or not. */
-        if (false == plugin->isUploadAccepted(topic, filename, webHandlerData->fullPath))
+        /* File size available? */
+        if (nullptr != headerXFileSize)
         {
-            LOG_WARNING("[%s][%u] Upload not supported.", plugin->getName(), plugin->getUID());
+            uint32_t u32FileSize = 0U;
+
+            if (true == Util::strToUInt32(headerXFileSize->value(), u32FileSize))
+            {
+                fileSize = u32FileSize;
+            }
+        }
+
+        if (fileSystemSpace <= fileSize)
+        {
+            LOG_WARNING("Upload of %s aborted. Not enough space.", filename.c_str());
             webHandlerData->isUploadError = true;
             webHandlerData->fullPath.clear();
         }
         else
         {
-            /* Create a new file and overwrite a existing one. */
-            webHandlerData->fd = FILESYSTEM.open(webHandlerData->fullPath, "w");
+            LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), fileSize);
+            webHandlerData->isUploadError = false;
+            webHandlerData->fullPath.clear();
 
-            if (false == webHandlerData->fd)
+            /* Ask plugin, whether the upload is allowed or not. */
+            if (false == plugin->isUploadAccepted(topic, filename, webHandlerData->fullPath))
             {
-                LOG_ERROR("Couldn't create file: %s", webHandlerData->fullPath.c_str());
+                LOG_WARNING("[%s][%u] Upload not supported.", plugin->getName(), plugin->getUID());
                 webHandlerData->isUploadError = true;
                 webHandlerData->fullPath.clear();
+            }
+            else
+            {
+                /* Create a new file and overwrite a existing one. */
+                webHandlerData->fd = FILESYSTEM.open(webHandlerData->fullPath, "w");
+
+                if (false == webHandlerData->fd)
+                {
+                    LOG_ERROR("Couldn't create file: %s", webHandlerData->fullPath.c_str());
+                    webHandlerData->isUploadError = true;
+                    webHandlerData->fullPath.clear();
+                }
             }
         }
     }

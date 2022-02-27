@@ -273,7 +273,7 @@ bool GameOfLifePlugin::createGrids()
 
     while((GRIDS > index) && (true == status))
     {
-        m_grids[index] = new uint32_t[m_gridSize];
+        m_grids[index] = new(std::nothrow) uint32_t[m_gridSize];
 
         if (nullptr == m_grids[index])
         {

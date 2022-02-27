@@ -34,10 +34,8 @@
  *****************************************************************************/
 #include "CaptivePortal.h"
 #include "HttpStatus.h"
-#include "Settings.h"
 #include "CaptivePortalHandler.h"
 #include "FileSystem.h"
-#include "Settings.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -89,42 +87,27 @@ static bool                     gIsRestartRequested         = false;
 
 void CaptivePortal::init(AsyncWebServer& srv)
 {
-    String      webLoginUser;
-    String      webLoginPassword;
-
-    if (false == Settings::getInstance().open(true))
-    {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getDefault();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getDefault();
-    }
-    else
-    {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getValue();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getValue();
-
-        Settings::getInstance().close();
-    }
+    /* Don't use authentication, because this has a bad influence on some
+     * mobile devices with special connectivity checkers.
+     * Not nice from a security point of view, but because the captive portal
+     * is only active in WiFi access point mode and this must be started
+     * manually, we keep one eye closed here.
+     */
 
     /* Serve files with static content with enabled cache control.
      * The client may cache files from filesystem for 1 hour.
      */
-    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
-    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600");
+    (void)srv.serveStatic("/images/", FILESYSTEM, "/images/", "max-age=3600");
+    (void)srv.serveStatic("/js/", FILESYSTEM, "/js/", "max-age=3600");
+    (void)srv.serveStatic("/style/", FILESYSTEM, "/style/", "max-age=3600");
 
     /* The about dialog is the only additional page, which shall be accessible. */
-    (void)srv.serveStatic("/about.html", FILESYSTEM, "/about.html")
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+    (void)srv.serveStatic("/about.html", FILESYSTEM, "/about.html");
 
     /* Add the captive portal request handler at last, because it will handle everything else. */
     (void)srv.addHandler(&gCaptivePortalReqHandler)
-        .setFilter(ON_AP_FILTER)
-        .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
+        .setFilter(ON_AP_FILTER);
 
     return;
 }
