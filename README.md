@@ -25,6 +25,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [How to change text properties?](#how-to-change-text-properties)
   - [The display only shows a error code, like "E4". What does that mean?](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean)
   - [How can I use animated icons?](#how-can-i-use-animated-icons)
+  - [How can I use alternative icons?](./doc/ICONS.md)
   - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
   - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
