@@ -16,6 +16,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 - [Overview](#overview)
   - [Original setup](#original-setup)
   - [Others](#others)
+- [Installation](#installation)
 - [Very First Startup](#very-first-startup)
 - [User Interface](#user-interface)
 - [Documentation](#documentation)
@@ -25,9 +26,9 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [How to change text properties?](#how-to-change-text-properties)
   - [The display only shows a error code, like "E4". What does that mean?](#the-display-only-shows-a-error-code-like-e4-what-does-that-mean)
   - [How can I use animated icons?](#how-can-i-use-animated-icons)
-  - [How can I use alternative icons?](./doc/ICONS.md)
   - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
   - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
+  - [How can I use alternative icons?](#how-can-i-use-alternative-icons)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -70,6 +71,13 @@ Although Pixelix was designed to show information, that is pushed or pulled via 
 * Temperature and humidity sensors DHTx
 * Temperature and humidity sensors SHT3x
 * Digitial microphone INMP441 for some sound reactive stuff.
+
+# Installation
+The following steps are necessary for the first time and to get PIXELIX initial running on the target. Once it runs, later on the firmware and filesystem can be updated via the PIXELIX webinterface.
+
+1. Setup the [toolchain](./doc/TOOLCHAIN-INSTALLATION.md).
+2. [Build the software](./doc/SW-BUILD.md) and check whether the toolchain works.
+3. [Upload/Update the software and firmware](./doc/SW-UPDATE.md) to the target.
 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
@@ -163,6 +171,10 @@ Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet fil
 ## Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?
 
 The LDR pin is configured as input (ADC) and it seems that the pin is foating, because there is the ext. pull-down missing.
+
+## How can I use alternative icons?
+
+Find details [here](./doc/ICONS.md).
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
