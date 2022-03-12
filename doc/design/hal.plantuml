@@ -14,21 +14,21 @@ package "Common" as commonPkg {
         note bottom of AnalogPin: Analog input pin
     }
 
-    note bottom of io
+    note top of io
         Abstract interfaces used to configure the GPIO, which
         providing methods depended on its type.
     end note
 
     interface "IDisplay" as iDisplay
 
-    note right of iDisplay
+    note bottom of iDisplay
         The abstract interface to control
         a display.
     end note
 
     interface "ISensor" as iSensor
 
-    note left of iSensor
+    note bottom of iSensor
         Abstract sensor interface, used for 
         generic sensor handling. A sensor may provide
         one ore more data channels, depending on its
@@ -37,7 +37,7 @@ package "Common" as commonPkg {
 
     interface "ISensorChannel" as iSensorChannel
 
-    note right of iSensorChannel
+    note bottom of iSensorChannel
         Abstract sensor channel interface, used
         for generic channel handling.
     end note
@@ -66,7 +66,7 @@ package "Common" as commonPkg {
         SensorFloat32 ..> sensorChannelType: <<bind>>\nT -> float\ndataType = DATA_TYPE_FLOAT
     }
 
-    note bottom of sensorChannelPkg
+    note top of sensorChannelPkg
         Considers the different data types a
         sensor may provide.
     end note
@@ -75,7 +75,7 @@ package "Common" as commonPkg {
     iSensor .> iSensorChannel: <<use>>
 }
 
-note right of commonPkg
+note top of commonPkg
     Common interfaces and classes, used by
     the HAL.
 end note
@@ -86,25 +86,19 @@ package "HAL" as halPkg {
 
         class "Display" as display <<singleton>>
         class "Board" as board <<namespace>>
-        class "Sensors" as sensors <<namespace>>
-
-        note right of sensors
-            Provides the sensor data provider
-            implementation (pimpl idiom), which contains
-            all instantiated sensors.
-        end note
 
         display .> board: <<use>>
     }
 
-    note left of halXXXPkg
+    note top of halXXXPkg
         The hardware is a combination
-        of a board, a display and sensors.
+        of a board and a display.
     end note
 
     package "Sensors" as sensorsPkg {
 
         class "SensorDhtX" as sensorDhtX
+        class "Sensors" as sensors <<namespace>>
 
         note right of sensorDhtX
             The DHTx sensor is just
@@ -112,19 +106,25 @@ package "HAL" as halPkg {
             One for temperature and one for
             humidity.
         end note
+
+        note right of sensors
+            Provides the sensor data provider
+            implementation (pimpl idiom), which contains
+            all instantiated sensors.
+        end note
     }
 
     display ..|> iDisplay: <<realize>>
     board --> DOutPin
     board --> DInPin
     board --> AnalogPin
-    board <.. sensorDhtX: <<use>>
+    board <.... sensorDhtX: <<use>>
     sensors *--> sensorDhtX
-    sensorDhtX ..|> iSensor: <<realize>>
-    sensorDhtX *--> "2" SensorFloat32
+    sensorDhtX ...|> iSensor: <<realize>>
+    sensorDhtX *-----> "2" SensorFloat32
 }
 
-note left of halPkg
+note top of halPkg
     Virtual hardware abstraction layer (HAL).
     Its a combination of the concrete HAL and
     the provided sensors.
@@ -149,8 +149,8 @@ package "App" as appPkg {
     end note
 }
 
-app ..> board: <<use>>
-app ..> display: <<use>>
+app ....> board: <<use>>
+app ....> display: <<use>>
 app .r.> sensorDataProvider: <<use>>
 
 sensorDataProvider ..> sensors: <<use>>
