@@ -40,6 +40,7 @@
 #include "FileSystem.h"
 #include "Plugin.hpp"
 #include "HttpStatus.h"
+#include "RestUtil.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
@@ -506,14 +507,11 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
     {
         if (false == plugin->getTopic(topic, dataObj))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
+            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported.");
 
             jsonDoc.remove("data");
 
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Requested topic not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -541,7 +539,7 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
 
         if (false == plugin->setTopic(topic, jsonDocPar.as<JsonObject>()))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
+            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
 
             jsonDoc.remove("data");
 
@@ -551,10 +549,7 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
                 (void)FILESYSTEM.remove(webHandlerData->fullPath);
             }
 
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Requested topic not supported or invalid data.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -564,20 +559,14 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
     }
     else
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
 
         jsonDoc.remove("data");
 
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    checkJsonDocOverflow(jsonDoc, __LINE__);
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
