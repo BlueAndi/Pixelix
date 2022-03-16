@@ -40,6 +40,30 @@
  * Compile Switches
  *****************************************************************************/
 
+#ifndef LOG_FATAL_ENABLE
+#define LOG_FATAL_ENABLE    (1)
+#endif  /* LOG_FATAL_ENABLE */
+
+#ifndef LOG_ERROR_ENABLE
+#define LOG_ERROR_ENABLE    (1)
+#endif  /* LOG_ERROR_ENABLE */
+
+#ifndef LOG_WARNING_ENABLE
+#define LOG_WARNING_ENABLE  (1)
+#endif  /* LOG_WARNING_ENABLE */
+
+#ifndef LOG_INFO_ENABLE
+#define LOG_INFO_ENABLE     (1)
+#endif  /* LOG_INFO_ENABLE */
+
+#ifndef LOG_DEBUG_ENABLE
+#define LOG_DEBUG_ENABLE    (0)
+#endif  /* LOG_DEBUG_ENABLE */
+
+#ifndef LOG_TRACE_ENABLE
+#define LOG_TRACE_ENABLE    (0)
+#endif  /* LOG_TRACE_ENABLE */
+
 /******************************************************************************
  * Includes
  *****************************************************************************/
@@ -51,32 +75,71 @@
  * Macros
  *****************************************************************************/
 
-/** Severity: InfoLevel. */
-#define LL_INFO                         (Logging::LOGLEVEL_INFO)
+#if (0 == LOG_FATAL_ENABLE)
 
-/** Severity: WarningLevel. */
-#define LL_WARNING                      (Logging::LOGLEVEL_WARNING)
+    #define LOG_FATAL(...)
 
-/** Severity: ErrorLevel. */
-#define LL_ERROR                        (Logging::LOGLEVEL_ERROR)
+#else/* (0 == LOG_FATAL_ENABLE) */
 
-/** Severity: FatalLevel. */
-#define LL_FATAL                        (Logging::LOGLEVEL_FATAL)
+    /** Log fatal error message. */
+    #define LOG_FATAL(...)      (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_FATAL, __VA_ARGS__))
 
-/** Macro for Logging with LOGLEVEL_INFO. */
-#define LOG_INFO(...)                   (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_INFO, __VA_ARGS__))
+#endif  /* (0 == LOG_FATAL_ENABLE) */
 
-/** Macro for Logging with LOGLEVEL_WARNING. */
-#define LOG_WARNING(...)                (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_WARNING, __VA_ARGS__))
+#if (0 == LOG_ERROR_ENABLE)
 
-/** Macro for Logging with LOGLEVEL_ERROR. */
-#define LOG_ERROR(...)                  (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_ERROR, __VA_ARGS__))
+    #define LOG_ERROR(...)
 
-/** Macro for Logging with LOGLEVEL_FATAL. */
-#define LOG_FATAL(...)                  (Logging::getInstance().processLogMessage(__FILE__, __LINE__, LL_FATAL, __VA_ARGS__))
+#else/* (0 == LOG_ERROR_ENABLE) */
 
-/** Macro for switching the LogLevel. */
-#define SWITCH_LOG_LEVEL_TO(logLevel)   (Logging::getInstance().setLogLevel(logLevel))
+    /** Log error message. */
+    #define LOG_ERROR(...)      (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_ERROR, __VA_ARGS__))
+
+#endif  /* (0 == LOG_ERROR_ENABLE) */
+
+#if (0 == LOG_WARNING_ENABLE)
+
+    #define LOG_WARNING(...)
+
+#else/* (0 == LOG_WARNING_ENABLE) */
+
+    /** Log warning message. */
+    #define LOG_WARNING(...)    (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_WARNING, __VA_ARGS__))
+
+#endif  /* (0 == LOG_WARNING_ENABLE) */
+
+#if (0 == LOG_INFO_ENABLE)
+
+    #define LOG_INFO(...)
+
+#else/* (0 == LOG_INFO_ENABLE) */
+
+    /** Log info error message. */
+    #define LOG_INFO(...)       (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_INFO, __VA_ARGS__))
+
+#endif  /* (0 == LOG_INFO_ENABLE) */
+
+#if (0 == LOG_DEBUG_ENABLE)
+
+    #define LOG_DEBUG(...)
+
+#else  /* (0 == LOG_DEBUG_ENABLE) */
+
+    /** Log debug message. */
+    #define LOG_DEBUG(...)      (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_DEBUG, __VA_ARGS__))
+
+#endif  /* (0 == LOG_DEBUG_ENABLE) */
+
+#if (0 == LOG_TRACE_ENABLE)
+
+    #define LOG_TRACE(...)
+
+#else/* (0 == LOG_TRACE_ENABLE) */
+
+    /** Log trace message. */
+    #define LOG_TRACE(...)      (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_TRACE, __VA_ARGS__))
+
+#endif  /* (0 == LOG_TRACE_ENABLE) */
 
 /******************************************************************************
  * Types and Classes
@@ -97,10 +160,12 @@ public:
      */
     enum LogLevel
     {
-        LOGLEVEL_INFO = 0,  /**< Log information interested for the user. */
-        LOGLEVEL_WARNING,   /**< Log warning messages to show the user to pay attention. */
-        LOGLEVEL_ERROR,     /**< Log error messages in case of a fault with an alternative solution. */
-        LOGLEVEL_FATAL      /**< Log fatal messages in case there is no way out. */
+        LOG_LEVEL_FATAL = 0,    /**< Any error that is forcing a shutdown of service or application, because there is no way out. */
+        LOG_LEVEL_ERROR,        /**< Any error that is fatal for the operating, but not for the service or application. */
+        LOG_LEVEL_WARNING,      /**< Anything that shows the user to pay attention, but can be automatically be recovered. */
+        LOG_LEVEL_INFO,         /**< General useful information for the user. */
+        LOG_LEVEL_DEBUG,        /**< A diagnostic message helpful for the developer. */
+        LOG_LEVEL_TRACE         /**< Only used for tracing code. */
     };
 
     /**
@@ -119,7 +184,7 @@ public:
          */
         Msg() :
             timestamp(0U),
-            level(LOGLEVEL_INFO),
+            level(LOG_LEVEL_INFO),
             filename(nullptr),
             line(0),
             str(nullptr)
@@ -243,13 +308,13 @@ private:
     LogSink*    m_selectedSink;
 
     /**
-     * Checks wether the given severity of a logMessage is valid to be printed.
+     * Checks wether the given severity of a logMessage is enabled to be printed.
      *
-     * @param[in] logLevel the logLevel that has to be checked.
+     * @param[in] logLevel The logLevel that has to be checked.
      *
-     * @return True if the severity is >= the current logLevel, otherwise false.
+     * @return If the severity is enabled, it will return true otherwise false.
     */
-    bool isSeverityValid(const LogLevel logLevel);
+    bool isSeverityEnabled(LogLevel logLevel) const;
 
     /**
      * Extracts the basename of a file from a given path.
@@ -264,7 +329,7 @@ private:
      * Construct Logging.
      */
     Logging() :
-        m_currentLogLevel(LOGLEVEL_ERROR),
+        m_currentLogLevel(LOG_LEVEL_INFO),
         m_sinks(),
         m_selectedSink(nullptr)
     {
