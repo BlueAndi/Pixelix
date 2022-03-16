@@ -236,6 +236,15 @@ private:
     PluginMgr& operator=(const PluginMgr& fab);
 
     /**
+     * Check dynamic JSON document for overflow and log a corresponding message,
+     * otherwise log its document size.
+     * 
+     * @param[in] jsonDoc   Dynamic JSON document, which to check.
+     * @param[in] line      Line number where the document is handled in the module.
+     */
+    void checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line);
+
+    /**
      * If configuration directory doesn't exists, it will be created.
      * Otherwise nothing happens.
      */

@@ -417,13 +417,15 @@ void GithubPlugin::initHttpClient()
 
 void GithubPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (false == jsonDoc["stargazers_count"].is<uint32_t>())
+    JsonVariant jsonStargazersCount = jsonDoc["stargazers_count"];
+
+    if (false == jsonStargazersCount.is<uint32_t>())
     {
         LOG_WARNING("JSON stargazers_count type missmatch or missing.");
     }
     else
     {
-        uint32_t    stargazersCount = jsonDoc["stargazers_count"].as<uint32_t>();
+        uint32_t    stargazersCount = jsonStargazersCount.as<uint32_t>();
         String      info            = "\\calign";
         
         info += stargazersCount;
@@ -469,20 +471,26 @@ bool GithubPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["user"].is<String>())
-    {
-        LOG_WARNING("User not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["repository"].is<String>())
-    {
-        LOG_WARNING("Repository not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_githubUser        = jsonDoc["user"].as<String>();
-        m_githubRepository  = jsonDoc["repository"].as<String>();
+        JsonVariant jsonUser        = jsonDoc["user"];
+        JsonVariant jsonRepository  = jsonDoc["repository"];
+
+        if (false == jsonUser.is<String>())
+        {
+            LOG_WARNING("JSON user not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonRepository.is<String>())
+        {
+            LOG_WARNING("JSON repository not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_githubUser        = jsonUser.as<String>();
+            m_githubRepository  = jsonRepository.as<String>();
+        }
     }
 
     return status;

@@ -514,7 +514,7 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
      *                [ message-body ]
      */
 
-    LOG_INFO("onData(): len = %u", len);
+    LOG_DEBUG("onData(): len = %u", len);
 
     while((len > index) && (false == isError))
     {
@@ -523,9 +523,9 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
         case RESPONSE_PART_STATUS_LINE:
             if (true == parseRspStatusLine(asciiData, len, index))
             {
-                LOG_INFO("Rsp. HTTP-Version: %s", m_rsp.getHttpVersion().c_str());
-                LOG_INFO("Rsp. Status-Code: %u", m_rsp.getStatusCode());
-                LOG_INFO("Rsp. Reason-Phrase: %s", m_rsp.getReasonPhrase().c_str());
+                LOG_DEBUG("Rsp. HTTP-Version: %s", m_rsp.getHttpVersion().c_str());
+                LOG_DEBUG("Rsp. Status-Code: %u", m_rsp.getStatusCode());
+                LOG_DEBUG("Rsp. Reason-Phrase: %s", m_rsp.getReasonPhrase().c_str());
 
                 m_rspPart = RESPONSE_PART_HEADER;
             }
@@ -974,11 +974,11 @@ bool AsyncHttpClient::parseChunkedResponseTrailer(const char* data, size_t len, 
             {
                 m_rspLine.remove(m_rspLine.length() - terminatorLen);
 
-                LOG_INFO("Rsp. trailer: %s", m_rspLine.c_str());
+                LOG_DEBUG("Rsp. trailer: %s", m_rspLine.c_str());
             }
             else
             {
-                LOG_INFO("Rsp. chunked transfer finished.");
+                LOG_DEBUG("Rsp. chunked transfer finished.");
 
                 isTrailerEOF = true;
             }
@@ -1111,7 +1111,7 @@ bool AsyncHttpClient::parseRspHeader(const char* data, size_t len, size_t& index
             {
                 m_rspLine.remove(m_rspLine.length() - terminatorLen);
 
-                LOG_INFO("Rsp. header: %s", m_rspLine.c_str());
+                LOG_DEBUG("Rsp. header: %s", m_rspLine.c_str());
 
                 m_rsp.addHeader(m_rspLine);
             }

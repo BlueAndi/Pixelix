@@ -145,7 +145,7 @@ Logging::LogLevel Logging::getLogLevel() const
 
 void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const char* format, ...)
 {
-    if ((true == isSeverityValid(messageLogLevel)) &&
+    if ((true == isSeverityEnabled(messageLogLevel)) &&
         (nullptr != m_selectedSink))
     {
         char            buffer[MESSAGE_BUFFER_SIZE];
@@ -184,7 +184,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
 
 void Logging::processLogMessage(const char* file, int line, const Logging::LogLevel messageLogLevel, const String& message)
 {
-    if ((true == isSeverityValid(messageLogLevel)) &&
+    if ((true == isSeverityEnabled(messageLogLevel)) &&
         (nullptr != m_selectedSink))
     {
         Msg msg;
@@ -205,7 +205,7 @@ void Logging::processLogMessage(const char* file, int line, const Logging::LogLe
 
 void Logging::processLogMessage(uint32_t timestamp, const String& logger, const LogLevel messageLogLevel, const String& message)
 {
-    if ((true == isSeverityValid(messageLogLevel)) &&
+    if ((true == isSeverityEnabled(messageLogLevel)) &&
         (nullptr != m_selectedSink))
     {
         Msg msg;
@@ -232,9 +232,9 @@ void Logging::processLogMessage(uint32_t timestamp, const String& logger, const 
  * Private Methods
  *****************************************************************************/
 
-bool Logging::isSeverityValid(const Logging::LogLevel logLevel)
+bool Logging::isSeverityEnabled(Logging::LogLevel logLevel) const
 {
-    return (logLevel >= m_currentLogLevel);
+    return (logLevel <= m_currentLogLevel);
 }
 
 const char* Logging::getBaseNameFromPath(const char* path) const

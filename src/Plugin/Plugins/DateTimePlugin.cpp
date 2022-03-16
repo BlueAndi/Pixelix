@@ -473,10 +473,9 @@ bool DateTimePlugin::loadConfiguration()
     {
         JsonVariant jsonCfg = jsonDoc["cfg"];
 
-        if ((true == jsonCfg.isNull()) ||
-            (false == jsonCfg.is<uint8_t>()))
+        if (false == jsonCfg.is<uint8_t>())
         {
-            LOG_WARNING("cfg not found or invalid type.");
+            LOG_WARNING("JSON cfg not found or invalid type.");
             status = false;
         }
         else

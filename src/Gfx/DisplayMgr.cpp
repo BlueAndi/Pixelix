@@ -1104,13 +1104,13 @@ void DisplayMgr::updateTask(void* parameters)
 
             if (true == statisticsLogTimer.isTimeout())
             {
-                LOG_INFO("[ %2u, %2u, %2u ]", 
+                LOG_DEBUG("[ %2u, %2u, %2u ]", 
                     statistics.refreshPeriod.getMin(),
                     statistics.refreshPeriod.getAvg(),
                     statistics.refreshPeriod.getMax()
                 );
                 
-                LOG_INFO("[ %2u, %2u, %2u ] [ %2u, %2u, %2u ] [ %2u, %2u, %2u ]",
+                LOG_DEBUG("[ %2u, %2u, %2u ] [ %2u, %2u, %2u ] [ %2u, %2u, %2u ]",
                     statistics.pluginProcessing.getMin(),
                     statistics.pluginProcessing.getAvg(),
                     statistics.pluginProcessing.getMax(),

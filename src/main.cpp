@@ -105,7 +105,7 @@ void setup()
     (void)Logging::getInstance().registerSink(&gLogSinkWebsocket);
 
     /* Set severity */
-    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
+    Logging::getInstance().setLogLevel(Logging::LOG_LEVEL_INFO);
 
     /* The setup routine shall handle only the initialization state.
      * All other states are handled in the loop routine.
@@ -157,7 +157,7 @@ static int main_espLogVPrintf(const char* szFormat, va_list args)
 
     if (0 <= ret)
     {
-        Logging::LogLevel   logLevel    = Logging::LOGLEVEL_INFO;
+        Logging::LogLevel   logLevel    = Logging::LOG_LEVEL_INFO;
         int                 index       = 0;
         String              timestamp;
         String              logger;
@@ -169,23 +169,23 @@ static int main_espLogVPrintf(const char* szFormat, va_list args)
             switch(gLogPrintBuffer[index])
             {
             case 'E':
-                logLevel = Logging::LOGLEVEL_ERROR;
+                logLevel = Logging::LOG_LEVEL_ERROR;
                 break;
 
             case 'W':
-                logLevel = Logging::LOGLEVEL_WARNING;
+                logLevel = Logging::LOG_LEVEL_WARNING;
                 break;
 
             case 'I':
-                logLevel = Logging::LOGLEVEL_INFO;
+                logLevel = Logging::LOG_LEVEL_INFO;
                 break;
 
             case 'D':
-                logLevel = Logging::LOGLEVEL_INFO;
+                logLevel = Logging::LOG_LEVEL_DEBUG;
                 break;
 
             case 'V':
-                logLevel = Logging::LOGLEVEL_INFO;
+                logLevel = Logging::LOG_LEVEL_TRACE;
                 break;
 
             default:

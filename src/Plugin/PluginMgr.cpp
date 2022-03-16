@@ -40,6 +40,7 @@
 #include "FileSystem.h"
 #include "Plugin.hpp"
 #include "HttpStatus.h"
+#include "RestUtil.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
@@ -187,14 +188,7 @@ void PluginMgr::load()
             DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
             DeserializationError    error           = deserializeJson(jsonDoc, installation);
 
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
+            checkJsonDocOverflow(jsonDoc, __LINE__);
 
             if (DeserializationError::Ok != error.code())
             {
@@ -291,14 +285,7 @@ void PluginMgr::save()
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     if (false == settings.open(false))
     {
@@ -320,6 +307,25 @@ void PluginMgr::save()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+/**
+ * Check dynamic JSON document for overflow and log a corresponding message,
+ * otherwise log its document size.
+ * 
+ * @param[in] jsonDoc   Dynamic JSON document, which to check.
+ * @param[in] line      Line number where the document is handled in the module.
+ */
+void PluginMgr::checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line)
+{
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document @%d has less memory available.", line);
+    }
+    else
+    {
+        LOG_INFO("JSON document @%d size: %u", line, jsonDoc.memoryUsage());
+    }
+}
 
 void PluginMgr::createPluginConfigDirectory()
 {
@@ -501,14 +507,11 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
     {
         if (false == plugin->getTopic(topic, dataObj))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
+            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported.");
 
             jsonDoc.remove("data");
 
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Requested topic not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -536,7 +539,7 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
 
         if (false == plugin->setTopic(topic, jsonDocPar.as<JsonObject>()))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
+            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
 
             jsonDoc.remove("data");
 
@@ -546,10 +549,7 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
                 (void)FILESYSTEM.remove(webHandlerData->fullPath);
             }
 
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Requested topic not supported or invalid data.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -559,27 +559,14 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
     }
     else
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
 
         jsonDoc.remove("data");
 
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }

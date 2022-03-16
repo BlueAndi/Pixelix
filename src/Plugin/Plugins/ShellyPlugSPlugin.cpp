@@ -332,13 +332,15 @@ void ShellyPlugSPlugin::initHttpClient()
 
 void ShellyPlugSPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (false == jsonDoc["power"].is<float>())
+    JsonVariant jsonPower = jsonDoc["power"];
+
+    if (false == jsonPower.is<float>())
     {
         LOG_WARNING("JSON power type missmatch or missing.");
     }
     else
     {
-        float       powerRaw                = jsonDoc["power"].as<float>();
+        float       powerRaw                = jsonPower.as<float>();
         String      power;
         const char* reducePrecision;
         char        powerReducedPrecison[6] = { 0 };
@@ -398,14 +400,19 @@ bool ShellyPlugSPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["shellyPlugSIP"].is<String>())
-    {
-        LOG_WARNING("shellyPlugSIP not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_ipAddress = jsonDoc["shellyPlugSIP"].as<String>();
+        JsonVariant jsonIP  = jsonDoc["shellyPlugSIP"];
+
+        if (false == jsonIP.is<String>())
+        {
+            LOG_WARNING("shellyPlugSIP not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_ipAddress = jsonIP.as<String>();
+        }
     }
 
     return status;

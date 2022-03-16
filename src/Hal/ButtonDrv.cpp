@@ -150,7 +150,7 @@ void ButtonDrv::buttonTask(void *parameters)
                         buttonDrv->m_buttonTaskHandle,
                         CHANGE);
 
-    LOG_INFO("ButtonDrv task is ready.");
+    LOG_DEBUG("ButtonDrv task is ready.");
 
     /* The main loop scans several times during one debounce period
      * for any pin change. If there is no change, the state is

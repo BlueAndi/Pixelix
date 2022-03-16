@@ -121,7 +121,7 @@ void TaskMon::process()
                 }
 
 #if configTASKLIST_INCLUDE_COREID
-                LOG_INFO("Task \"%s\": c %d, p %2u, %s, %3u%%, stack high water mark: %u",
+                LOG_DEBUG("Task \"%s\": c %d, p %2u, %s, %3u%%, stack high water mark: %u",
                     taskStatus[index].xCoreID,
                     fillUpSpaces(taskStatus[index].pcTaskName, taskNameMaxLen).c_str(),
                     taskStatus[index].uxCurrentPriority,
@@ -129,7 +129,7 @@ void TaskMon::process()
                     statsAsPercentage,
                     taskStatus[index].usStackHighWaterMark);
     #else
-                LOG_INFO("Task \"%s\": p %2u, %s, %3u%%, stack high water mark: %u",
+                LOG_DEBUG("Task \"%s\": p %2u, %s, %3u%%, stack high water mark: %u",
                     fillUpSpaces(taskStatus[index].pcTaskName, taskNameMaxLen).c_str(),
                     taskStatus[index].uxCurrentPriority,
                     fillUpSpaces(taskState2Str(taskStatus[index].eCurrentState).c_str(), taskStateMaxLen).c_str(),

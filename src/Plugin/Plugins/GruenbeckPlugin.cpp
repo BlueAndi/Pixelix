@@ -406,13 +406,15 @@ void GruenbeckPlugin::initHttpClient()
 
 void GruenbeckPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (false == jsonDoc["restCapacity"].is<String>())
+    JsonVariant jsonRestCapacity = jsonDoc["restCapacity"];
+
+    if (false == jsonRestCapacity.is<String>())
     {
         LOG_WARNING("JSON rest capacity missmatch or missing.");
     }
     else
     {
-        m_relevantResponsePart = jsonDoc["restCapacity"].as<String>();
+        m_relevantResponsePart = jsonRestCapacity.as<String>();
         m_httpResponseReceived = true;
     }
 }
@@ -455,7 +457,17 @@ bool GruenbeckPlugin::loadConfiguration()
     }
     else
     {
-        m_ipAddress = jsonDoc["gruenbeckIP"].as<String>();
+        JsonVariant jsonIP = jsonDoc["gruenbeckIP"];
+
+        if (false == jsonIP.is<String>())
+        {
+            LOG_WARNING("JSON gruenbeckIP not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_ipAddress = jsonIP.as<String>();
+        }
     }
 
     return status;

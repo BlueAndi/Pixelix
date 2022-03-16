@@ -471,8 +471,7 @@ bool SoundReactivePlugin::loadConfiguration()
     {
         JsonVariant jsonFreqBandLen = jsonDoc["freqBandLen"];
 
-        if ((true == jsonFreqBandLen.isNull()) ||
-            (false == jsonFreqBandLen.is<uint8_t>()))
+        if (false == jsonFreqBandLen.is<uint8_t>())
         {
             LOG_WARNING("freqBandLen not found or invalid type.");
             status = false;
