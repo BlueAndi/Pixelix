@@ -706,35 +706,40 @@ void OpenWeatherPlugin::initHttpClient()
 
 void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    JsonObject current = jsonDoc["current"];
+    JsonVariant jsonCurrent     = jsonDoc["current"];
+    JsonVariant jsonTemperature = jsonCurrent["temp"];
+    JsonVariant jsonUvi         = jsonCurrent["uvi"];
+    JsonVariant jsonHumidity    = jsonCurrent["humidity"];
+    JsonVariant jsonWindSpeed   = jsonCurrent["wind_speed"];
+    JsonVariant jsonIcon        = jsonCurrent["weather"][0]["icon"];
 
-    if (false == current["temp"].is<float>())
+    if (false == jsonTemperature.is<float>())
     {
-        LOG_WARNING("JSON temperature type missmatch or missing.");
+        LOG_WARNING("JSON temp type missmatch or missing.");
     }
-    else if (false == current["uvi"].is<float>())
+    else if (false == jsonUvi.is<float>())
     {
         LOG_WARNING("JSON uvi type missmatch or missing.");
     }
-    else if (false == current["humidity"].is<int>())
+    else if (false == jsonHumidity.is<int>())
+    {
+        LOG_WARNING("JSON humidity type missmatch or missing.");
+    }
+    else if (false == jsonWindSpeed.is<float>())
     {
         LOG_WARNING("JSON wind_speed type missmatch or missing.");
     }
-    else if (false == current["wind_speed"].is<float>())
-    {
-        LOG_WARNING("JSON uvi type missmatch or missing.");
-    }
-    else if (false == current["weather"][0]["icon"].is<String>())
+    else if (false == jsonIcon.is<String>())
     {
         LOG_WARNING("JSON weather icon id type missmatch or missing.");
     }
     else
     {
-        float   temperature             = current["temp"].as<float>();
-        String  weatherIconId           = current["weather"][0]["icon"].as<String>();
-        float   uvIndex                 = current["uvi"].as<float>();
-        int     humidity                = current["humidity"].as<int>();
-        float   windSpeed               = current["wind_speed"].as<float>();
+        float   temperature             = jsonTemperature.as<float>();
+        String  weatherIconId           = jsonIcon.as<String>();
+        float   uvIndex                 = jsonUvi.as<float>();
+        int     humidity                = jsonHumidity.as<int>();
+        float   windSpeed               = jsonWindSpeed.as<float>();
         char    tempReducedPrecison[6]  = { 0 };
         char    windReducedPrecison[5]  = { 0 };
         String  weatherConditionIcon;
@@ -826,38 +831,47 @@ bool OpenWeatherPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["apiKey"].is<String>())
-    {
-        LOG_WARNING("API key not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["lat"].is<String>())
-    {
-        LOG_WARNING("Latitude not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["lon"].is<String>())
-    {
-        LOG_WARNING("Longitude not found or invalid type.");
-        status = false;
-    }
-     else if (false == jsonDoc["other"].is<int>())
-    {
-        LOG_WARNING("other not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["units"].is<String>())
-    {
-        LOG_WARNING("Units not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_apiKey                = jsonDoc["apiKey"].as<String>();
-        m_latitude              = jsonDoc["lat"].as<String>();
-        m_longitude             = jsonDoc["lon"].as<String>();
-        m_additionalInformation = static_cast<OtherWeatherInformation>(jsonDoc["other"].as<int>());
-        m_units                 = jsonDoc["units"].as<String>();
+        JsonVariant jsonApiKey  = jsonDoc["apiKey"];
+        JsonVariant jsonLat     = jsonDoc["lat"];
+        JsonVariant jsonLon     = jsonDoc["lon"];
+        JsonVariant jsonOther   = jsonDoc["other"];
+        JsonVariant jsonUnits   = jsonDoc["units"];
+
+        if (false == jsonApiKey.is<String>())
+        {
+            LOG_WARNING("API key not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonLat.is<String>())
+        {
+            LOG_WARNING("Latitude not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonLon.is<String>())
+        {
+            LOG_WARNING("Longitude not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonOther.is<int>())
+        {
+            LOG_WARNING("other not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonUnits.is<String>())
+        {
+            LOG_WARNING("Units not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_apiKey                = jsonApiKey.as<String>();
+            m_latitude              = jsonLat.as<String>();
+            m_longitude             = jsonLon.as<String>();
+            m_additionalInformation = static_cast<OtherWeatherInformation>(jsonOther.as<int>());
+            m_units                 = jsonUnits.as<String>();
+        }
     }
 
     return status;

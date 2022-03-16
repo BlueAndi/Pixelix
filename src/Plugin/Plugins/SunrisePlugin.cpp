@@ -377,19 +377,29 @@ void SunrisePlugin::initHttpClient()
 
 void SunrisePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    String      sunrise;
-    String      sunset;
-    JsonObject  results;
-    
-    results = jsonDoc["results"];
-    sunrise = results["sunrise"].as<String>();
-    sunset  = results["sunset"].as<String>();
+    JsonVariant jsonResults = jsonDoc["results"];
+    JsonVariant jsonSunrise = jsonResults["sunrise"];
+    JsonVariant jsonSunset  = jsonResults["sunset"];
 
-    sunrise = addCurrentTimezoneValues(sunrise);
-    sunset  = addCurrentTimezoneValues(sunset);
+    if ((false == jsonSunrise.is<String>()))
+    {
+        LOG_WARNING("JSON sunrise type missmatch or missing.");
+    }
+    else if ((false == jsonSunset.is<String>()))
+    {
+        LOG_WARNING("JSON sunset type missmatch or missing.");
+    }
+    else
+    {
+        String sunrise  = jsonSunrise.as<String>();
+        String sunset   = jsonSunset.as<String>();
+        
+        sunrise = addCurrentTimezoneValues(sunrise);
+        sunset  = addCurrentTimezoneValues(sunset);
 
-    m_relevantResponsePart = sunrise + " / " + sunset;
-    m_textWidget.setFormatStr(m_relevantResponsePart);
+        m_relevantResponsePart = sunrise + " / " + sunset;
+        m_textWidget.setFormatStr(m_relevantResponsePart);
+    }
 }
 
 String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) const
@@ -454,8 +464,24 @@ bool SunrisePlugin::loadConfiguration()
     }
     else
     {
-        m_longitude = jsonDoc["longitude"].as<String>();
-        m_latitude  = jsonDoc["latitude"].as<String>();
+        JsonVariant jsonLon = jsonDoc["longitude"];
+        JsonVariant jsonLat = jsonDoc["latitude"];
+
+        if (false == jsonLon.is<String>())
+        {
+            LOG_WARNING("longitude not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonLat.is<String>())
+        {
+            LOG_WARNING("latitude not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_longitude = jsonLon.as<String>();
+            m_latitude  = jsonLat.as<String>();
+        }
     }
 
     return status;

@@ -478,37 +478,44 @@ void VolumioPlugin::initHttpClient()
 
 void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (false == jsonDoc["status"].is<String>())
+    JsonVariant jsonStatus  = jsonDoc["status"];
+    JsonVariant jsonTitle   = jsonDoc["title"];
+    JsonVariant jsonSeek    = jsonDoc["seek"];
+    JsonVariant jsonService = jsonDoc["service"];
+
+    if (false == jsonStatus.is<String>())
     {
         LOG_WARNING("JSON status type missmatch or missing.");
     }
-    else if (false == jsonDoc["title"].is<String>())
+    else if (false == jsonTitle.is<String>())
     {
         LOG_WARNING("JSON title type missmatch or missing.");
     }
-    else if (false == jsonDoc["seek"].is<uint32_t>())
+    else if (false == jsonSeek.is<uint32_t>())
     {
         LOG_WARNING("JSON seek type missmatch or missing.");
     }
-    else if (false == jsonDoc["service"].is<String>())
+    else if (false == jsonService.is<String>())
     {
         LOG_WARNING("JSON service type missmatch or missing.");
     }
     else
     {
-        String          status          = jsonDoc["status"].as<String>();
+        JsonVariant     jsonArtist      = jsonDoc["artist"];
+        JsonVariant     jsonDuration    = jsonDoc["duration"];
+        String          status          = jsonStatus.as<String>();
         String          artist;
-        String          title           = jsonDoc["title"].as<String>();
-        uint32_t        seekValue       = jsonDoc["seek"].as<uint32_t>();
-        String          service         = jsonDoc["service"].as<String>();
+        String          title           = jsonTitle.as<String>();
+        uint32_t        seekValue       = jsonSeek.as<uint32_t>();
+        String          service         = jsonService.as<String>();
         String          infoOnDisplay;
         uint32_t        pos             = 0U;
         VolumioState    state           = STATE_UNKNOWN;
 
         /* Artist may exist */
-        if (true == jsonDoc["artist"].is<String>())
+        if (true == jsonArtist.is<String>())
         {
-            artist = jsonDoc["artist"].as<String>();
+            artist = jsonArtist.as<String>();
         }
 
         if (true == title.isEmpty())
@@ -543,9 +550,9 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         }
 
         /* Determine position */
-        if (true == jsonDoc["duration"].is<uint32_t>())
+        if (true == jsonDuration.is<uint32_t>())
         {
-            uint32_t duration = jsonDoc["duration"].as<uint32_t>();
+            uint32_t duration = jsonDuration.as<uint32_t>();
 
             if (0U == duration)
             {
@@ -647,14 +654,19 @@ bool VolumioPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["host"].is<String>())
-    {
-        LOG_WARNING("Host not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_volumioHost = jsonDoc["host"].as<String>();
+        JsonVariant jsonHost = jsonDoc["host"];
+
+        if (false == jsonHost.is<String>())
+        {
+            LOG_WARNING("Host not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_volumioHost = jsonHost.as<String>();
+        }
     }
 
     return status;

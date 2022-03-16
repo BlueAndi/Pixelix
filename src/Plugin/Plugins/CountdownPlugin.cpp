@@ -323,11 +323,45 @@ bool CountdownPlugin::loadConfiguration()
     }
     else
     {
-        m_targetDate.day                    = jsonDoc["day"].as<uint8_t>();
-        m_targetDate.month                  = jsonDoc["month"].as<uint8_t>();
-        m_targetDate.year                   = jsonDoc["year"].as<uint16_t>();
-        m_targetDateInformation.plural      = jsonDoc["descriptionPlural"].as<String>();
-        m_targetDateInformation.singular    = jsonDoc["descriptionSingular"].as<String>();
+        JsonVariant jsonDay             = jsonDoc["day"];
+        JsonVariant jsonMonth           = jsonDoc["month"];
+        JsonVariant jsonYear            = jsonDoc["year"];
+        JsonVariant jsonDescPlural      = jsonDoc["descriptionPlural"];
+        JsonVariant jsonDescSingular    = jsonDoc["descriptionSingular"];
+
+        if (false == jsonDay.is<uint8_t>())
+        {
+            LOG_WARNING("JSON day not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonMonth.is<uint8_t>())
+        {
+            LOG_WARNING("JSON month not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonYear.is<uint16_t>())
+        {
+            LOG_WARNING("JSON year not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonDescPlural.is<String>())
+        {
+            LOG_WARNING("JSON descriptionPlural not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonDescSingular.is<String>())
+        {
+            LOG_WARNING("JSON descriptionSingular not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_targetDate.day                    = jsonDay.as<uint8_t>();
+            m_targetDate.month                  = jsonMonth.as<uint8_t>();
+            m_targetDate.year                   = jsonYear.as<uint16_t>();
+            m_targetDateInformation.plural      = jsonDescPlural.as<String>();
+            m_targetDateInformation.singular    = jsonDescSingular.as<String>();
+        }
     }
 
     return status;
