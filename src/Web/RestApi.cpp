@@ -64,6 +64,7 @@
  * Prototypes
  *****************************************************************************/
 
+static void checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line);
 static void handleButton(AsyncWebServerRequest* request);
 static void handleFadeEffect(AsyncWebServerRequest* request);
 static void handleSlots(AsyncWebServerRequest* request);
@@ -146,14 +147,7 @@ void RestApi::error(AsyncWebServerRequest* request)
     errorObj["msg"]     = "Invalid path requested.";
     httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -164,6 +158,25 @@ void RestApi::error(AsyncWebServerRequest* request)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/**
+ * Check dynamic JSON document for overflow and log a corresponding message,
+ * otherwise log its document size.
+ * 
+ * @param[in] jsonDoc   Dynamic JSON document, which to check.
+ * @param[in] line      Line number where the document is handled in the module.
+ */
+static void checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line)
+{
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document @%d has less memory available.", line);
+    }
+    else
+    {
+        LOG_INFO("JSON document @%d size: %u", line, jsonDoc.memoryUsage());
+    }
+}
 
 /**
  * Trigger virtual user button.
@@ -202,14 +215,7 @@ static void handleButton(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -270,14 +276,7 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -345,14 +344,7 @@ static void handleSlots(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -433,14 +425,7 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -566,14 +551,7 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -625,14 +603,7 @@ static void handlePlugins(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -714,14 +685,7 @@ static void handleSensors(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -778,14 +742,7 @@ static void handleSettings(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -1004,14 +961,7 @@ static void handleSetting(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -1321,14 +1271,7 @@ static void handleStatus(AsyncWebServerRequest* request)
         httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -1432,10 +1375,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
                 }
             }
 
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_WARNING("JSON document has less memory.");
-            }
+            checkJsonDocOverflow(jsonDoc, __LINE__);
 
             fdRoot.close();
         }
@@ -1446,14 +1386,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -1489,14 +1422,7 @@ static void handleFileGet(AsyncWebServerRequest* request)
         errorObj["msg"]     = "HTTP method not supported.";
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-        if (true == jsonDoc.overflowed())
-        {
-            LOG_ERROR("JSON document has less memory available.");
-        }
-        else
-        {
-            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-        }
+        checkJsonDocOverflow(jsonDoc, __LINE__);
 
         (void)serializeJsonPretty(jsonDoc, content);
         request->send(httpStatusCode, "application/json", content);
@@ -1516,14 +1442,7 @@ static void handleFileGet(AsyncWebServerRequest* request)
             errorObj["msg"]     = String("Invalid path ") + path;
             httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
+            checkJsonDocOverflow(jsonDoc, __LINE__);
 
             (void)serializeJsonPretty(jsonDoc, content);
             request->send(httpStatusCode, "application/json", content);
@@ -1632,14 +1551,7 @@ static void handleFilePost(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
@@ -1757,14 +1669,7 @@ static void handleFileDelete(AsyncWebServerRequest* request)
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);

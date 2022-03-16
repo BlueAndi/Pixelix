@@ -285,7 +285,7 @@ void BrightnessCtrl::setAmbientLight(float light)
     m_brighteningThreshold  = m_ambientLight * (1.0f + BRIGHTENING_LIGHT_HYSTERESIS);
     m_darkeningThreshold    = m_ambientLight * (1.0f - DARKENING_LIGHT_HYSTERESIS);
 
-    LOG_INFO("Light: %0.3f (b-thr %0.3f < x < d-thr %0.3f)", m_ambientLight, m_brighteningThreshold, m_darkeningThreshold);
+    LOG_DEBUG("Light: %0.3f (b-thr %0.3f < x < d-thr %0.3f)", m_ambientLight, m_brighteningThreshold, m_darkeningThreshold);
 
     return;
 }
@@ -295,7 +295,7 @@ void BrightnessCtrl::applyLightSensorMeasurement(uint32_t dTime, float light)
     (void)m_recentShortTermAverage.calc(light, dTime);
     (void)m_recentLongTermAverage.calc(light, dTime);
 
-    //LOG_INFO("Light: m %0.3f s-avg %0.3f l-avg %0.3f", light, m_recentShortTermAverage, m_recentLongTermAverage);
+    LOG_DEBUG("Light: m %0.3f s-avg %0.3f l-avg %0.3f", light, m_recentShortTermAverage, m_recentLongTermAverage);
 
     return;
 }
@@ -307,7 +307,7 @@ void BrightnessCtrl::updateBrightnessGoal()
 
     m_brightnessGoal = static_cast<uint8_t>(fBrightness);
 
-    LOG_INFO("Change brightness goal to %u.", m_brightnessGoal);
+    LOG_DEBUG("Change brightness goal to %u.", m_brightnessGoal);
 
     return;
 }

@@ -187,14 +187,7 @@ void PluginMgr::load()
             DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
             DeserializationError    error           = deserializeJson(jsonDoc, installation);
 
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
+            checkJsonDocOverflow(jsonDoc, __LINE__);
 
             if (DeserializationError::Ok != error.code())
             {
@@ -291,14 +284,7 @@ void PluginMgr::save()
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     if (false == settings.open(false))
     {
@@ -320,6 +306,25 @@ void PluginMgr::save()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+/**
+ * Check dynamic JSON document for overflow and log a corresponding message,
+ * otherwise log its document size.
+ * 
+ * @param[in] jsonDoc   Dynamic JSON document, which to check.
+ * @param[in] line      Line number where the document is handled in the module.
+ */
+void PluginMgr::checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line)
+{
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document @%d has less memory available.", line);
+    }
+    else
+    {
+        LOG_INFO("JSON document @%d size: %u", line, jsonDoc.memoryUsage());
+    }
+}
 
 void PluginMgr::createPluginConfigDirectory()
 {
@@ -569,14 +574,7 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
         httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     (void)serializeJsonPretty(jsonDoc, content);
     request->send(httpStatusCode, "application/json", content);
