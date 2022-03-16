@@ -112,14 +112,14 @@ extern void testLogging()
     /* Check intial LogLevel. */
     TEST_ASSERT_TRUE(Logging::getInstance().registerSink(&myLogSink));
     TEST_ASSERT_TRUE(Logging::getInstance().selectSink("test"));
-    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOGLEVEL_ERROR);
+    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOG_LEVEL_INFO);
 
     /* Set LogLevel to LOGLEVEL_INFO. */
-    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_INFO);
-    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOGLEVEL_INFO);
+    Logging::getInstance().setLogLevel(Logging::LOG_LEVEL_INFO);
+    TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOG_LEVEL_INFO);
 
-    /* Set LogLevel to LOGLEVEL_ERROR and trigger a LOG_INFO message. */
-    Logging::getInstance().setLogLevel(Logging::LOGLEVEL_ERROR);
+    /* Set LogLevel to LOG_LEVEL_ERROR and trigger a LOG_INFO message. */
+    Logging::getInstance().setLogLevel(Logging::LOG_LEVEL_ERROR);
     LOG_INFO(TEST_STRING_1);
     (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "%s", "");
     printBuffer = myTestLogger.getBuffer();
