@@ -11,7 +11,7 @@
   - [Brightness](#brightness)
     - [Get brightness information](#get-brightness-information)
     - [Set brightness](#set-brightness)
-    - [Set brightness and enable/eisable automatic brightness adjustment](#set-brightness-and-enableeisable-automatic-brightness-adjustment)
+    - [Set brightness and enable/enable automatic brightness adjustment](#set-brightness-and-enableenable-automatic-brightness-adjustment)
     - [Response](#response)
   - [Get plugins information](#get-plugins-information)
   - [Install a plugin](#install-a-plugin)
@@ -89,7 +89,7 @@ Command: ```BRIGHTNESS;<brightness>```
 Parameter:
 * ```<brightness>```: Brightness in percent [0; 100].
 
-### Set brightness and enable/eisable automatic brightness adjustment
+### Set brightness and enable/enable automatic brightness adjustment
 Command: ```BRIGHTNESS;<brightness>;<automatic-brightness-control>```
 
 Parameter:

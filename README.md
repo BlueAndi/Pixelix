@@ -82,7 +82,7 @@ The following steps are necessary for the first time and to get PIXELIX initial 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
 
-Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the webinterface.
+Connect to the captive portal and configure via web interface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the web interface.
 
 Restart and voila!
 
@@ -90,7 +90,7 @@ Restart and voila!
 * The user button activates always the next slot.
 * If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
 * If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
-* The web interface provides the possibilty to install plugins, control their duration in the slots and etc.
+* The web interface provides the possibility to install plugins, control their duration in the slots and etc.
 * Some plugin's spawn a dedicated REST API, see the web page of the plugin or have a look to the REST API documentation.
 
 Note, the websocket interface is currently only used as a service in the web interface.
@@ -152,7 +152,7 @@ This is a low level error code. Please have a look into the following table.
 
 | Error code | Description |
 | ---------- | ----------- |
-| E1 | Something happended, which can not be further explained, but was fatal. |
+| E1 | Something happened, which can not be further explained, but was fatal. |
 | E2 | There is a problem with the two-wire (i2c) interface. |
 | E3 | There is no user button available. |
 | E4 | Bad filesystem, did you explicit program the filesystem too? If not, please upload it. |
@@ -170,7 +170,7 @@ Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet fil
 
 ## Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?
 
-The LDR pin is configured as input (ADC) and it seems that the pin is foating, because there is the ext. pull-down missing.
+The LDR pin is configured as input (ADC) and it seems that the pin is floating, because there is the ext. pull-down missing.
 
 ## How can I use alternative icons?
 

@@ -31,7 +31,7 @@ The concept behind the version number follows the [semantic versioning](https://
 3. Update the hyperlink to the REST API version on Swagger at all references. To find them search for ```https://app.swaggerhub.com/apis/BlueAndi/Pixelix```.
 4. Update version number in [version.json](../data/version.json) in your local **dev** branch.
 5. Update version number in [Doxyfile](./doxygen/Doxyfile), see ```PROJECT_NUMBER```.
-6. All must be comitted now!
+6. All must be committed now!
 7. Test local **dev** branch.
 8. Push local **dev** branch to remote repository.
 9. Wait till all CI actions successful finished. If CI run fails, fix it and repeat.

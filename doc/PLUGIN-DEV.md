@@ -9,7 +9,7 @@
   - [Rules](#rules)
   - [Recommendations](#recommendations)
   - [Typical use cases](#typical-use-cases)
-    - [Initial configuration in fileystem](#initial-configuration-in-fileystem)
+    - [Initial configuration in filesystem](#initial-configuration-in-filesystem)
     - [Reload configuration from filesystem periodically](#reload-configuration-from-filesystem-periodically)
     - [Request information from URL periodically](#request-information-from-url-periodically)
   - [Traps and pitfalls](#traps-and-pitfalls)
@@ -42,7 +42,7 @@
 
 ## Typical use cases
 
-### Initial configuration in fileystem
+### Initial configuration in filesystem
 The first time a plugin instance starts up, it will try to load a configuration from the filesystem (if applicable) in ```start()``` method. If this fails, it creates a default one.
 
 ### Reload configuration from filesystem periodically

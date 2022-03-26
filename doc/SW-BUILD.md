@@ -32,7 +32,7 @@ Now its time to build the software for the appropriate target.
 
 ![VSCodePIOIcon](./images/VSCodePIOIcon.png)
 
-3. Lets now build the software independed of your specific board, just to see whether it works by _Project Tasks -> Default -> Build All_ or via hotkey ctrl-alt-b
+3. Lets now build the software independent of your specific board, just to see whether it works by _Project Tasks -> Default -> Build All_ or via hotkey ctrl-alt-b
 
 ![VSCodePIODefault](./images/VSCodePIODefault.png)
 

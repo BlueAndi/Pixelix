@@ -12,10 +12,10 @@ Here is a list of supported sensors. Where they are connected, depends on the us
 * Ambient light sensor
   * Photoresistor GL5528
 * Temperature and humidity sensors
-  * DHT11 (Propritary one-wire)
-  * DHT12 (Propritary one-wire)
-  * DHT21 (Propritary one-wire)
-  * DHT22 (Propritary one-wire)
+  * DHT11 (Proprietary one-wire)
+  * DHT12 (Proprietary one-wire)
+  * DHT21 (Proprietary one-wire)
+  * DHT22 (Proprietary one-wire)
   * SHT3x (I2C)
 * Digital microphone
   * INMP441

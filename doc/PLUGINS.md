@@ -59,7 +59,7 @@ The ThreeIconPlugin shows three icons on the display.\
 Each icon can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/ThreeIconPlugin).
 
 # Dedicated plugins
-Dedicated plugins are plugins which only serves one single purpose thy are only internaly cofigurable.
+Dedicated plugins are plugins which only serves one single purpose thy are only internally configurable.
 
 ## BTCQuotePlugin
 The BTCQuotePlugin shows the current exchange rate from Bitcoin to USD.\
@@ -90,7 +90,7 @@ The IP address of the Gruenbeck webserver can be set via the [REST API](https://
 The plugin shows the effect from the film "Matrix" over the whole display.
 
 ## OpenWeatherPlugin
-The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one aditional information (uvIndex, humidity or windspeed) .\
+The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
 Information provided by [OpenWeather](https://openweathermap.org/).\
 In order to use the plugin an API key is necessary, see https://openweathermap.org/appid for further information.\
 The coordinates (latitude & longitude) of your location, your API key and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/OpenWeatherPlugin).
@@ -116,7 +116,7 @@ The coordinates (latitude & longitude) of your location can be set via the [REST
 Powered by sunrise-sunset.org
 
 ## SysMsgPlugin
-The SysMsgPlugin is a system plugin, which is used to splash important informtions to the user. Note, it can not be uninstalled.
+The SysMsgPlugin is a system plugin, which is used to splash important information's to the user. Note, it can not be uninstalled.
 
 ## TempHumidPlugin
 Th TempHumidPlugin displays the temperature (in °C) and Humidity (in %) based on the readings of sensor connected to Pixelix.
