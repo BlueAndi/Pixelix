@@ -112,6 +112,9 @@ void ConnectedState::entry(StateMachine& sm)
     }
     else
     {
+        const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
+        const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+
         /* Start the ClockDriver */
         ClockDrv::getInstance().init();
 
@@ -119,7 +122,7 @@ void ConnectedState::entry(StateMachine& sm)
         infoStr += WiFi.getHostname(); /* Don't believe its the same as set before. */
         infoStr += " IP: ";
         infoStr += WiFi.localIP().toString();
-        SysMsg::getInstance().show(infoStr, 4000U, 2U);
+        SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
         LOG_INFO(infoStr);
     }

@@ -166,7 +166,7 @@ void InitState::entry(StateMachine& sm)
         registerPlugins();
     }
 
-    /* Continoue only if there is no error yet. */
+    /* Continue only if there is no error yet. */
     if (true == isError)
     {
         /* Error detected. */
@@ -218,7 +218,7 @@ void InitState::entry(StateMachine& sm)
 
             if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
             {
-                LOG_WARNING("Failed to enable autom. brigthness adjustment.");
+                LOG_WARNING("Failed to enable autom. brightness adjustment.");
             }
 
             /* Set text scroll pause for all text widgets. */
@@ -267,12 +267,16 @@ void InitState::entry(StateMachine& sm)
 
             if (false == isFileSystemCompatible)
             {
-                const char* errMsg  = "WARN: Filesystem may not be compatible.";
+                const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+                const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
+                const uint32_t  DURATION_PAUSE          = 500U; /* ms */
+                const uint32_t  SCROLLING_NO_REPEAT     = 0U;
+                const char*     errMsg                  = "WARN: Filesystem may not be compatible.";
 
                 LOG_WARNING(errMsg);
 
-                SysMsg::getInstance().show(errMsg, 3000U, 1U, true);
-                SysMsg::getInstance().show("", 500U, 0U, true);
+                SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+                SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
             }
         }
     }
@@ -413,31 +417,35 @@ void InitState::exit(StateMachine& sm)
 void InitState::showStartupInfoOnSerial()
 {
     LOG_INFO("PIXELIX starts up ...");
-    LOG_INFO(String("SW version: ") + Version::SOFTWARE_VER);
-    LOG_INFO(String("SW revision: ") + Version::SOFTWARE_REV);
-    LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
-    LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
-    LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
-    LOG_INFO(String("LwIP version: ") + LWIP_VERSION_STRING);
+    LOG_INFO("SW version: %s", Version::SOFTWARE_VER);
+    LOG_INFO("SW revision: %s", Version::SOFTWARE_REV);
+    LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
+    LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
+    LOG_INFO("Wifi MAC: %s", WiFi.macAddress().c_str());
+    LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
 
     return;
 }
 
 void InitState::showStartupInfoOnDisplay()
 {
-    SysMsg& sysMsg = SysMsg::getInstance();
+    const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+    const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+    const uint32_t  DURATION_PAUSE          = 500U; /* ms */
+    const uint32_t  SCROLLING_NO_REPEAT     = 0U;
+    SysMsg&         sysMsg                  = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\calign\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X", 3000U, 2U, true);
+    sysMsg.show("\\calign\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X", DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
     /* Clear and wait */
-    sysMsg.show("", 500U, 0U, true);
+    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
 
     /* Show sw version (short) */
-    sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, 3000U, 2U, true);
+    sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
     /* Clear and wait */
-    sysMsg.show("", 500U, 0U, true);
+    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
 
     return;
 }
