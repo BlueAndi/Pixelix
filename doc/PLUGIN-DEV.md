@@ -36,6 +36,8 @@
   * never perform any web related stuff,
   * never do one time jobs inside,
   * just update the display!
+* Remove the metadata from jpeg files to avoid wasting filesystem space, which can be done e.g. with [Exiv2](https://exiv2.org/).
+  * ```$ exiv2 rm image.jpg```
 
 ## Recommendations
 * Update the display only, if the content changed.
