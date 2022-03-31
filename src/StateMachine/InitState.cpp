@@ -441,10 +441,10 @@ void InitState::welcome()
 
         if (true == pluginInstallation.isEmpty())
         {
-            IconTextLampPlugin* plugin = nullptr;
+            IconTextPlugin* plugin = nullptr;
 
             /* Install default plugin. */
-            plugin = static_cast<IconTextLampPlugin*>(PluginMgr::getInstance().install("IconTextLampPlugin"));
+            plugin = static_cast<IconTextPlugin*>(PluginMgr::getInstance().install("IconTextPlugin"));
 
             if (nullptr != plugin)
             {
