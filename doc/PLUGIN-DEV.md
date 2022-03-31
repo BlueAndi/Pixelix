@@ -20,7 +20,7 @@
 ## What must be done?
 
 1. The plugin sources (.h/.cpp) shall be in ```/src/Plugin/Plugins``` folder.
-2. The plugin shall be registered in the module ```/src/StateMachine/InitState.cpp```, function ```void InitState::registerPlugins()```.
+2. The plugin shall be registered in the module ```/src/Plugin/PlugnList.hpp```, function ```void PluginList::registerAll()```.
 3. A short plugin description shall be in ```/doc/PLUGINS.md```.
 4. A plugin specific HTML page shall be in ```/data/plugins```. Add the page to the menu in ```/data/js/menu.js```.
 5. Place a plugin screenshot as image in ```/data/images```, using the plugin name and the file extension. It shall be shown in the HTML page.

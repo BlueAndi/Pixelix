@@ -62,29 +62,7 @@
 #include <Util.h>
 #include <ESPmDNS.h>
 
-#include "BTCQuotePlugin.h"
-#include "CountdownPlugin.h"
-#include "DateTimePlugin.h"
-#include "FirePlugin.h"
-#include "GameOfLifePlugin.h"
-#include "GithubPlugin.h"
-#include "GruenbeckPlugin.h"
-#include "IconTextLampPlugin.h"
-#include "IconTextPlugin.h"
-#include "JustTextPlugin.h"
-#include "MatrixPlugin.h"
-#include "OpenWeatherPlugin.h"
-#include "RainbowPlugin.h"
-#include "SensorPlugin.h"
-#include "ShellyPlugSPlugin.h"
-#include "SoundReactivePlugin.h"
-#include "SunrisePlugin.h"
-#include "SysMsgPlugin.h"
-#include "TempHumidPlugin.h"
-#include "TestPlugin.h"
-#include "ThreeIconPlugin.h"
-#include "VolumioPlugin.h"
-#include "WifiStatusPlugin.h"
+#include <PluginList.hpp>
 
 #include <lwip/init.h>
 
@@ -163,7 +141,7 @@ void InitState::entry(StateMachine& sm)
         PluginMgr::getInstance().begin();
 
         /* Register plugins. This must be done before system message handler is initialized! */
-        registerPlugins();
+        PluginList::registerAll();
     }
 
     /* Continue only if there is no error yet. */
@@ -446,39 +424,6 @@ void InitState::showStartupInfoOnDisplay()
 
     /* Clear and wait */
     sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
-
-    return;
-}
-
-void InitState::registerPlugins()
-{
-    PluginMgr&  pluginMgr = PluginMgr::getInstance();
-
-    /* Register in alphabetic order. */
-
-    pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);
-    pluginMgr.registerPlugin("CountdownPlugin", CountdownPlugin::create);
-    pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
-    pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
-    pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
-    pluginMgr.registerPlugin("GithubPlugin", GithubPlugin::create);
-    pluginMgr.registerPlugin("GruenbeckPlugin", GruenbeckPlugin::create);
-    pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
-    pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
-    pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
-    pluginMgr.registerPlugin("MatrixPlugin", MatrixPlugin::create);
-    pluginMgr.registerPlugin("OpenWeatherPlugin", OpenWeatherPlugin::create);
-    pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
-    pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);
-    pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
-    pluginMgr.registerPlugin("SoundReactivePlugin", SoundReactivePlugin::create);
-    pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
-    pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
-    pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
-    pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
-    pluginMgr.registerPlugin("ThreeIconPlugin", ThreeIconPlugin::create);
-    pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
-    pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
 
     return;
 }
