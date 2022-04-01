@@ -14,6 +14,9 @@
   - [Request information from URL periodically](#request-information-from-url-periodically)
 - [Traps and pitfalls](#traps-and-pitfalls)
   - [active/inactive](#activeinactive)
+- [SW Architecture](#sw-architecture)
+  - [Static View](#static-view)
+  - [Dynamic View](#dynamic-view)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -60,6 +63,16 @@ Any http request can be started in the ```process()``` method. The response will
 The ```active()``` and ```inactive()``` methods are called once before a plugin instance is activated or deactivated. But consider the case, that only one plugin instance is installed at all (except SysMsgPlugin). ```active()``` will be called just once and stays active.
 
 Therefore if you need periodically stuff, but you can't do it in the ```update()``` method, use the ```process()``` method.
+
+# SW Architecture
+
+## Static View
+
+![plugin-service-dynamic](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/design/plugin-service.plantuml)
+
+## Dynamic View
+
+![plugin-service-dynamic](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/design/plugin-service-dynamic.plantuml)
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
