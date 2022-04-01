@@ -1,10 +1,12 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [PIXELIX](#pixelix)
-- [Plugins](#plugins)
+# Plugins <!-- omit in toc -->
+The content of the display can be configured by installing an individual set of plugins.
+Each plugin is identified by its unique UID.
+
 - [Generic plugins](#generic-plugins)
   - [IconTextPlugin](#icontextplugin)
   - [IconTextLampPlugin](#icontextlampplugin)
@@ -30,14 +32,9 @@
   - [TestPlugin](#testplugin)
   - [VolumioPlugin](#volumioplugin)
   - [WifiStatusPlugin](#wifistatusplugin)
-
-# Plugins
-The content of the display can be configured by installing an individual set of plugins.
-Each plugin is identified by its unique UID.
-
-There are two types of plugins available at the moment:
-* [Generic plugins](#Generic-plugins)
-* [Dedicated plugins](#Dedicated-plugins)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
 # Generic plugins
 The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0).
@@ -131,3 +128,14 @@ The host address of the Volumio webserver can be set via the [REST API](https://
 
 ## WifiStatusPlugin
 The WifiStatusPlugin shows the current wireless signal strength.
+
+# Issues, Ideas And Bugs
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+
+# License
+The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

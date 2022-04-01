@@ -1,4 +1,4 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./doc/images/LogoBlack.png)
 
 Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
@@ -11,7 +11,6 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/0.jpg)](https://www.youtube.com/watch?v=dik8Rm6f3o0 "Pixelix")
 [![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/0.jpg)](https://www.youtube.com/watch?v=UCjJCI5JShY "Pixelix - Remote Button")
 
-- [PIXELIX](#pixelix)
 - [Motivation](#motivation)
 - [Overview](#overview)
   - [Original setup](#original-setup)

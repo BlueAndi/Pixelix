@@ -1,15 +1,19 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [PIXELIX](#pixelix)
-- [Update The Software](#update-the-software)
-  - [Update via USB](#update-via-usb)
-  - [Update via OTA (over-the-air)](#update-via-ota-over-the-air)
-  - [Update via browser](#update-via-browser)
+# Update The Software <!-- omit in toc -->
 
-# Update The Software
+- [Purpose](#purpose)
+- [Update via USB](#update-via-usb)
+- [Update via OTA (over-the-air)](#update-via-ota-over-the-air)
+- [Update via browser](#update-via-browser)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
+
+# Purpose
 The software can be uploaded/updated in three different ways.
 Note, replace the ```<choose-your-board>``` below in the description with your board.
 
@@ -19,7 +23,7 @@ The update consists of two parts:
 * The software.
 * The filesystem.
 
-## Update via USB
+# Update via USB
 Steps:
 1. Load workspace in VSCode.
 2. Change to PlatformIO toolbar (click on the head of the ant in the left column).
@@ -34,7 +38,7 @@ Example:
 
 ![VSCodeUpdate](./images/VSCodeUpdate.png)
 
-## Update via OTA (over-the-air)
+# Update via OTA (over-the-air)
 Preconditions:
 * PIXELIX runs already on the target.
 * No major version update.
@@ -59,7 +63,7 @@ Example:
 ![VSCodeUpdateOta](./images/VSCodeUpdateOta.png)
 ![UploadUtility](./images/UploadUtility.png)
 
-## Update via browser
+# Update via browser
 Preconditions:
 * PIXELIX runs already on the target.
 * No major version update.
@@ -73,3 +77,14 @@ Steps:
 4. Open browser add enter ip address of the device.
 5. Jump to Update site.
 6. Select firmware binary (```firmware.bin```) or filesystem binary (```spiffs.bin```) and click on upload button.
+
+# Issues, Ideas And Bugs
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+
+# License
+The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

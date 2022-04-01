@@ -1,23 +1,24 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [PIXELIX](#pixelix)
-- [Plugin development](#plugin-development)
-  - [What must be done?](#what-must-be-done)
-  - [Rules](#rules)
-  - [Recommendations](#recommendations)
-  - [Typical use cases](#typical-use-cases)
-    - [Initial configuration in filesystem](#initial-configuration-in-filesystem)
-    - [Reload configuration from filesystem periodically](#reload-configuration-from-filesystem-periodically)
-    - [Request information from URL periodically](#request-information-from-url-periodically)
-  - [Traps and pitfalls](#traps-and-pitfalls)
-    - [active/inactive](#activeinactive)
+# Plugin development <!-- omit in toc -->
 
-# Plugin development
+- [What must be done?](#what-must-be-done)
+- [Rules](#rules)
+- [Recommendations](#recommendations)
+- [Typical use cases](#typical-use-cases)
+  - [Initial configuration in filesystem](#initial-configuration-in-filesystem)
+  - [Reload configuration from filesystem periodically](#reload-configuration-from-filesystem-periodically)
+  - [Request information from URL periodically](#request-information-from-url-periodically)
+- [Traps and pitfalls](#traps-and-pitfalls)
+  - [active/inactive](#activeinactive)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
-## What must be done?
+# What must be done?
 
 1. The plugin sources (.h/.cpp) shall be in ```/src/Plugin/Plugins``` folder.
 2. The plugin shall be registered in the module ```/src/Plugin/PlugnList.hpp```, function ```void PluginList::registerAll()```.
@@ -28,7 +29,7 @@
    1. The HTML page must be able to get/set the corresponding information via REST API.
    2. The [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix) shall be extended. Ask the owner to do this via issue or pull-request.
 
-## Rules
+# Rules
 * Follow the [boy scout rule](https://biratkirat.medium.com/step-8-the-boy-scout-rule-robert-c-martin-uncle-bob-9ac839778385#:~:text=The%20Boy%20Scouts%20have%20a,not%20add%20more%20smelling%20code.), especially for coding style. Check other plugins or sourcecode in the repository, to know how to do it right.
 * All one time jobs shall be done in ```start()``` method. E.g. the initial layout creation.
 * The ```update()``` method shall be efficient, therefore
@@ -39,24 +40,34 @@
 * Remove the metadata from jpeg files to avoid wasting filesystem space, which can be done e.g. with [Exiv2](https://exiv2.org/).
   * ```$ exiv2 rm image.jpg```
 
-## Recommendations
+# Recommendations
 * Update the display only, if the content changed.
 
-## Typical use cases
+# Typical use cases
 
-### Initial configuration in filesystem
+## Initial configuration in filesystem
 The first time a plugin instance starts up, it will try to load a configuration from the filesystem (if applicable) in ```start()``` method. If this fails, it creates a default one.
 
-### Reload configuration from filesystem periodically
+## Reload configuration from filesystem periodically
 Because a plugin instance configuration in the filesystem can be edited via file browser too, it makes sense to periodically reload it. It is recommended to do this in the ```process()``` method.
 
-### Request information from URL periodically
+## Request information from URL periodically
 Any http request can be started in the ```process()``` method. The response will be evaluated in the context of the corresponding web task. Only the take over of the relevant data shall be protected against concurrent access.
 
-## Traps and pitfalls
+# Traps and pitfalls
 
-### active/inactive
+## active/inactive
 The ```active()``` and ```inactive()``` methods are called once before a plugin instance is activated or deactivated. But consider the case, that only one plugin instance is installed at all (except SysMsgPlugin). ```active()``` will be called just once and stays active.
 
 Therefore if you need periodically stuff, but you can't do it in the ```update()``` method, use the ```process()``` method.
 
+# Issues, Ideas And Bugs
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+
+# License
+The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

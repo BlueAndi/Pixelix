@@ -1,16 +1,16 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [PIXELIX](#pixelix)
-- [Configuration Management](#configuration-management)
+# Configuration Management <!-- omit in toc -->
+
 - [Version Numbers](#version-numbers)
 - [Strategy](#strategy)
 - [How to release?](#how-to-release)
-
-# Configuration Management
-The following chapters explain the general configuration management.
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
 # Version Numbers
 The concept behind the version number follows the [semantic versioning](https://semver.org/).
@@ -37,3 +37,14 @@ The concept behind the version number follows the [semantic versioning](https://
 9. Wait till all CI actions successful finished. If CI run fails, fix it and repeat.
 10. Merge remote **dev** branch to remote **master** branch.
 11. Release version on github.
+
+# Issues, Ideas And Bugs
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+
+# License
+The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

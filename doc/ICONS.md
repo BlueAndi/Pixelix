@@ -1,4 +1,19 @@
+# PIXELIX <!-- omit in toc -->
+![PIXELIX](./images/LogoBlack.png)
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
+
 # Alternative icons
+
+- [Alternative icons](#alternative-icons)
+- [Purpose](#purpose)
+- [OpenWeatherPlugin](#openweatherplugin)
+- [BTCQuotePlugin](#btcquoteplugin)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
+
+# Purpose
 
 In order to use an alternative icon you simply have to replace the respective ```<iconName>```.bmp in your local /data/images folder with the one from /doc/images/icons/alternativeIcons before building the filesystem image.
 
@@ -6,7 +21,7 @@ In order to use an alternative icon you simply have to replace the respective ``
 
 In the following you find all available alternative icons classified according to plugin.
 
-## OpenWeatherPlugin
+# OpenWeatherPlugin
 
 |  |  |  |  |
 | -------- | -------- | -------- | -------- |
@@ -18,10 +33,21 @@ In the following you find all available alternative icons classified according t
 
 Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
 
-## BTCQuotePlugin
+# BTCQuotePlugin
 
 |  |  |  |  |
 | -------- | -------- | -------- | -------- |
 |![BTC_USD](./../doc/images/icons/alternativeIcons/BTC_USD.png)||||
 
 Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
+
+# Issues, Ideas And Bugs
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+
+# License
+The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.
