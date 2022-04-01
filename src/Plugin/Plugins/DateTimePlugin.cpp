@@ -169,9 +169,11 @@ void DateTimePlugin::stop()
     return;
 }
 
-void DateTimePlugin::process()
+void DateTimePlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
+
+    UTIL_NOT_USED(isConnected);
 
     if ((true == m_checkUpdateTimer.isTimerRunning()) &&
         (true == m_checkUpdateTimer.isTimeout()))

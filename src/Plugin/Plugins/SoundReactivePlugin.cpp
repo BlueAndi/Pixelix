@@ -193,10 +193,12 @@ void SoundReactivePlugin::stop()
     return;
 }
 
-void SoundReactivePlugin::process()
+void SoundReactivePlugin::process(bool isConnected)
 {
     uint8_t                     bandIdx         = 0U;
     MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    UTIL_NOT_USED(isConnected);
 
     if (true == SpectrumAnalyzer::getInstance().areFreqBinsReady())
     {

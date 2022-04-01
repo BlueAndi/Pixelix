@@ -178,8 +178,11 @@ public:
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
+     * 
+     * @param[in] isConnected   The network connection status. If network
+     *                          connection is established, it will be true otherwise false.
      */
-    void process(void) final;
+    void process(bool isConnected) final;
 
     /**
      * Update the display.

@@ -118,6 +118,9 @@ void ConnectedState::entry(StateMachine& sm)
         /* Start the ClockDriver */
         ClockDrv::getInstance().init();
 
+        /* Notify about successful network connection. */
+        DisplayMgr::getInstance().setNetworkStatus(true);
+
         /* Show hostname and IP. */
         infoStr += WiFi.getHostname(); /* Don't believe its the same as set before. */
         infoStr += " IP: ";
@@ -142,6 +145,7 @@ void ConnectedState::entry(StateMachine& sm)
             }
         }
     }
+
     return;
 }
 
@@ -199,6 +203,9 @@ void ConnectedState::exit(StateMachine& sm)
 
     /* Disconnect all connections */
     (void)WiFi.disconnect();
+
+    /* Notify about lost network connection. */
+    DisplayMgr::getInstance().setNetworkStatus(false);
 
     return;
 }

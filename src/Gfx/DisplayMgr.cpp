@@ -670,6 +670,13 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
     return;
 }
 
+void DisplayMgr::setNetworkStatus(bool isConnected)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    m_isNetworkConnected = isConnected;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -697,7 +704,8 @@ DisplayMgr::DisplayMgr() :
     m_fadeMoveYEffect(),
     m_fadeEffect(&m_fadeLinearEffect),
     m_fadeEffectIndex(FADE_EFFECT_LINEAR),
-    m_fadeEffectUpdate(false)
+    m_fadeEffectUpdate(false),
+    m_isNetworkConnected(false)
 {
 }
 
@@ -1019,7 +1027,7 @@ void DisplayMgr::process()
 
         if (nullptr != plugin)
         {
-            plugin->process();
+            plugin->process(m_isNetworkConnected);
         }
     }
 

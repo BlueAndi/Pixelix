@@ -203,8 +203,11 @@ public:
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
+     * 
+     * @param[in] isConnected   The network connection status. If network
+     *                          connection is established, it will be true otherwise false.
      */
-    virtual void process() = 0;
+    virtual void process(bool isConnected) = 0;
 
     /**
      * This method will be called in case the plugin is set active, which means
