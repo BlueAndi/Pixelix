@@ -82,7 +82,7 @@ public:
      */
     void enter()
     {
-        taskENTER_CRITICAL(&m_spinlock);
+        portENTER_CRITICAL(&m_spinlock);
     }
 
     /**
