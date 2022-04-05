@@ -82,7 +82,7 @@ public:
      */
     void enter()
     {
-        vTaskEnterCritical(&m_spinlock);
+        taskENTER_CRITICAL(&m_spinlock);
     }
 
     /**
@@ -90,7 +90,7 @@ public:
      */
     void exit()
     {
-        vTaskExitCritical(&m_spinlock);
+        portEXIT_CRITICAL(&m_spinlock);
     }
 
 private:
