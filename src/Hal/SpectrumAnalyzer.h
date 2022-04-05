@@ -42,7 +42,7 @@
 #include <stdint.h>
 #include <arduinoFFT.h>
 #include <driver/i2s.h>
-#include <Mutex.hpp>
+#include <CriticalSection.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -109,8 +109,8 @@ public:
      */
     bool getFreqBins(double* freqBins, size_t len)
     {
-        bool                isSuccessful    = false;
-        MutexGuard<Mutex>   guard(m_mutex);
+        bool                    isSuccessful    = false;
+        CriticalSectionGuard    guard(m_critSec);
 
         if ((nullptr != freqBins) &&
             (0U < len) &&
@@ -138,7 +138,7 @@ public:
      */
     bool areFreqBinsReady() const
     {
-        MutexGuard<Mutex>   guard(m_mutex);
+        CriticalSectionGuard    guard(m_critSec);
 
         return m_freqBinsAreReady;
     }
@@ -219,24 +219,24 @@ private:
      */
     static const uint32_t               DMA_BLOCK_TIMEOUT       = ((SAMPLES_PER_DMA_BLOCK * 1000U) + (SAMPLE_RATE / 2U)) / SAMPLE_RATE;
 
-    mutable Mutex       m_mutex;                /**< Mutex used for concurrent access protection. */
-    TaskHandle_t        m_taskHandle;           /**< Task handle */
-    bool                m_taskExit;             /**< Flag to signal the task to exit. */
-    SemaphoreHandle_t   m_xSemaphore;           /**< Binary semaphore used to signal the task exit. */
-    double              m_real[SAMPLES];        /**< The real values. */
-    double              m_imag[SAMPLES];        /**< The imaginary values. */
-    arduinoFFT          m_fft;                  /**< The FFT algorithm. */
-    QueueHandle_t       m_i2sEventQueueHandle;  /**< The I2S event queue handle, used for rx done notification. Note, the queue is created by I2S driver. */
-    uint16_t            m_sampleWriteIndex;     /**< The current sample write index to the input buffer. */
-    double              m_freqBins[FREQ_BINS];  /**< The frequency bins as result of the FFT, with linear magnitude. */
-    bool                m_freqBinsAreReady;     /**< Are the frequency bins ready for the application? */
-    bool                m_isMicAvailable;       /**< Is a microphone as input device available? */
+    mutable CriticalSection m_critSec;              /**< Critical section used to protect concurrent access over cores. */
+    TaskHandle_t            m_taskHandle;           /**< Task handle */
+    bool                    m_taskExit;             /**< Flag to signal the task to exit. */
+    SemaphoreHandle_t       m_xSemaphore;           /**< Binary semaphore used to signal the task exit. */
+    double                  m_real[SAMPLES];        /**< The real values. */
+    double                  m_imag[SAMPLES];        /**< The imaginary values. */
+    arduinoFFT              m_fft;                  /**< The FFT algorithm. */
+    QueueHandle_t           m_i2sEventQueueHandle;  /**< The I2S event queue handle, used for rx done notification. Note, the queue is created by I2S driver. */
+    uint16_t                m_sampleWriteIndex;     /**< The current sample write index to the input buffer. */
+    double                  m_freqBins[FREQ_BINS];  /**< The frequency bins as result of the FFT, with linear magnitude. */
+    bool                    m_freqBinsAreReady;     /**< Are the frequency bins ready for the application? */
+    bool                    m_isMicAvailable;       /**< Is a microphone as input device available? */
 
     /**
      * Constructs the spectrum analyzer instance.
      */
     SpectrumAnalyzer() :
-        m_mutex(),
+        m_critSec(),
         m_taskHandle(nullptr),
         m_taskExit(false),
         m_xSemaphore(nullptr),
