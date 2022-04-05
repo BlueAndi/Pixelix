@@ -149,7 +149,7 @@ private:
     static const uint32_t               TASK_STACK_SIZE         = 8096U;
 
     /** MCU core where the task shall run */
-    static const BaseType_t             TASK_RUN_CORE           = 0;
+    static const BaseType_t             TASK_RUN_CORE           = PRO_CPU_NUM;
 
     /** Task priority. */
     static const UBaseType_t            TASK_PRIORITY           = 1U;

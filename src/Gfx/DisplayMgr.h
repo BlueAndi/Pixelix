@@ -309,7 +309,7 @@ public:
     static const uint32_t       TASK_PERIOD         = 20U;
 
     /** MCU core where the task shall run */
-    static const BaseType_t     TASK_RUN_CORE       = 1;
+    static const BaseType_t     TASK_RUN_CORE       = APP_CPU_NUM;
 
     /** Task priority, note Arduino loop and AsyncTcp have lower priorities. */
     static const UBaseType_t    TASK_PRIORITY       = 4U;
