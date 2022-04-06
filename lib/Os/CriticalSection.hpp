@@ -25,25 +25,26 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Button driver
+ * @brief  freeRTOS critical section wrapper
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup os
  *
  * @{
  */
 
-#ifndef __BUTTONDRV_H__
-#define __BUTTONDRV_H__
+#ifndef __CRITICAL_SECTION_HPP__
+#define __CRITICAL_SECTION_HPP__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Arduino.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+#include <stdint.h>
+#include <freertos/FreeRTOS.h>
 
 /******************************************************************************
  * Macros
@@ -54,113 +55,94 @@
  *****************************************************************************/
 
 /**
- * Button driver.
+ * Wrapper for the freeRTOS critical section with spinlock to protect
+ * concurrent access by cores.
  */
-class ButtonDrv
+class CriticalSection
 {
 public:
 
     /**
-     * Get the button driver instance.
-     * 
-     * @return Button driver instance.
+     * Create critical section wrapper.
      */
-    static ButtonDrv&   getInstance()
+    CriticalSection() :
+        m_spinlock(portMUX_INITIALIZER_UNLOCKED)
     {
-        static ButtonDrv instance; /* singleton idiom to force initialization in the first usage. */
-
-        return instance;
     }
 
-    /** Status return values */
-    enum Ret
+    /**
+     * Destroys critical section wrapper.
+     */
+    ~CriticalSection()
     {
-        RET_OK = 0, /**< Execution successful */
-        RET_ERROR   /**< Execution failed */
-    };
+    }
 
     /**
-     * Initialize the driver.
-     * 
-     * @return Status
+     * Enter the critical section.
      */
-    Ret init();
-
-    /**
-     * Button states
-     */
-    enum State
+    void enter()
     {
-        STATE_UNKNOWN = 0,  /**< Button state is unknown yet */
-        STATE_RELEASED,     /**< Button is released. */
-        STATE_PRESSED,      /**< Button is pressed. */
-        STATE_TRIGGERED     /**< Button was triggered (released -> pressed -> released) */
-    };
+        portENTER_CRITICAL(&m_spinlock);
+    }
 
     /**
-     * Get button state.
-     * 
-     * @return Button state
+     * Exit critical section.
      */
-    State getState();
+    void exit()
+    {
+        portEXIT_CRITICAL(&m_spinlock);
+    }
 
 private:
 
-    TaskHandle_t        m_buttonTaskHandle; /**< Button task handle */
-    State               m_state;            /**< Current button state */
-    SemaphoreHandle_t   m_semaphore;        /**< Semaphore lock */
+    portMUX_TYPE    m_spinlock; /**< Spinlock */
 
-    /** Button task stack size in bytes */
-    static const uint32_t   BUTTON_TASK_STACKE_SIZE = 2048U;
+    CriticalSection(const CriticalSection& CriticalSection);
+    CriticalSection& operator=(const CriticalSection& CriticalSection);
 
-    /** MCU core where the button task shall run */
-    static const BaseType_t BUTTON_TASK_RUN_CORE    = APP_CPU_NUM;
-
-    /** Task period in ms */
-    static const uint32_t   BUTTON_TASK_PERIOD      = 10U;
-
-    /** Button debouncing time in ms */
-    static const uint32_t   BUTTON_DEBOUNCE_TIME    = 100U;
-
-    /**
-     * Constructs the button driver instance.
-     */
-    ButtonDrv() :
-        m_buttonTaskHandle(nullptr),
-        m_state(STATE_UNKNOWN),
-        m_semaphore(nullptr)
-    {
-    }
-
-    /**
-     * Destroys the button driver instance.
-     */
-    ~ButtonDrv()
-    {
-        /* Never called. */
-    }
-
-    /* Singleton */
-    ButtonDrv(const ButtonDrv& drv);
-    ButtonDrv& operator=(const ButtonDrv& drv);
-
-    /**
-     * Button task is responsible for debouncing and updating the user button state
-     * accordingly.
-     * 
-     * @param[in]   parameters  Task pParameters
-     */
-    static void buttonTask(void* parameters);
 };
 
-/******************************************************************************
- * Variables
- *****************************************************************************/
+/**
+ * The critical section guard enters the critical section at creation and exits during
+ * destruction.
+ */
+class CriticalSectionGuard
+{
+public:
+
+    /**
+     * Creates the critical section guard and enters it.
+     * 
+     * @param[in] critSec The guard uses this critical section for protection.
+     */
+    CriticalSectionGuard(CriticalSection& critSec) :
+        m_criticalSection(critSec)
+    {
+        m_criticalSection.enter();
+    }
+
+    /**
+     * Destroys the critical section guard and exits the critical section.
+     */
+    ~CriticalSectionGuard()
+    {
+        m_criticalSection.exit();
+    }
+
+private:
+
+    CriticalSection&    m_criticalSection;  /**< Critical section used for the guard. */
+
+    CriticalSectionGuard();
+    CriticalSectionGuard(const CriticalSectionGuard& guard);
+    CriticalSectionGuard&  operator=(const CriticalSectionGuard& guard);
+
+};
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __BUTTONDRV_H__ */
+#endif  /* __CRITICAL_SECTION_HPP__ */
 
 /** @} */
