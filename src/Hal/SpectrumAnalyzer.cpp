@@ -125,33 +125,40 @@ bool SpectrumAnalyzer::start()
 
     if (nullptr == m_taskHandle)
     {
-        /* Create binary semaphore to signal task exit. */
-        m_xSemaphore = xSemaphoreCreateBinary();
-
-        if (nullptr == m_xSemaphore)
+        if (false == m_mutex.create())
         {
             isSuccessful = false;
         }
         else
         {
-            BaseType_t  osRet   = pdFAIL;
+            /* Create binary semaphore to signal task exit. */
+            m_xSemaphore = xSemaphoreCreateBinary();
 
-            /* Task shall run */
-            m_taskExit = false;
-
-            osRet = xTaskCreateUniversal(   processTask,
-                                            "spectrumAnalyzerTask",
-                                            TASK_STACK_SIZE,
-                                            this,
-                                            TASK_PRIORITY,
-                                            &m_taskHandle,
-                                            TASK_RUN_CORE);
-
-            /* Task successful created? */
-            if (pdPASS == osRet)
+            if (nullptr == m_xSemaphore)
             {
-                (void)xSemaphoreGive(m_xSemaphore);
-                isSuccessful = true;
+                isSuccessful = false;
+            }
+            else
+            {
+                BaseType_t  osRet   = pdFAIL;
+
+                /* Task shall run */
+                m_taskExit = false;
+
+                osRet = xTaskCreateUniversal(   processTask,
+                                                "spectrumAnalyzerTask",
+                                                TASK_STACK_SIZE,
+                                                this,
+                                                TASK_PRIORITY,
+                                                &m_taskHandle,
+                                                TASK_RUN_CORE);
+
+                /* Task successful created? */
+                if (pdPASS == osRet)
+                {
+                    (void)xSemaphoreGive(m_xSemaphore);
+                    isSuccessful = true;
+                }
             }
         }
 
@@ -163,6 +170,8 @@ bool SpectrumAnalyzer::start()
                 vSemaphoreDelete(m_xSemaphore);
                 m_xSemaphore = nullptr;
             }
+
+            m_mutex.destroy();
         }
         else
         {
@@ -188,6 +197,8 @@ void SpectrumAnalyzer::stop()
 
         vSemaphoreDelete(m_xSemaphore);
         m_xSemaphore = nullptr;
+
+        m_mutex.destroy();
 
         m_taskHandle = nullptr;
     }
@@ -413,8 +424,8 @@ void SpectrumAnalyzer::calculateFFT()
 
 void SpectrumAnalyzer::copyFreqBins()
 {
-    uint16_t                idx = 0U;
-    CriticalSectionGuard    guard(m_critSec);
+    uint16_t            idx             = 0U;
+    MutexGuard<Mutex>   guard(m_mutex);
 
     for(idx = 0U; idx < FREQ_BINS; ++idx)
     {
