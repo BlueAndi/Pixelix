@@ -8,21 +8,29 @@ pixelix.ws.getLogLevelStr = function(logLevel) {
     switch(logLevel)
     {
     case 0:
-        str = "INFO";
-        break;
-
-    case 1:
-        str = "WARNING";
-        break;
-
-    case 2:
-        str = "ERROR";
-        break;
-
-    case 3:
         str = "FATAL";
         break;
 
+    case 1:
+        str = "ERROR";
+        break;
+
+    case 2:
+        str = "WARNING";
+        break;
+
+    case 3:
+        str = "INFO";
+        break;
+
+    case 4:
+        str = "DEBUG";
+        break;
+
+    case 5:
+        str = "TRACE";
+        break;
+    
     default:
         str = "UNKNWON";
         break;

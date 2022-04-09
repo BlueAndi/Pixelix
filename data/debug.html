@@ -51,6 +51,8 @@
                                 <button type="button" class="btn btn-outline-warning active" id="buttonWarning" aria-pressed="true">WARNING</button>
                                 <button type="button" class="btn btn-outline-danger active" id="buttonError" aria-pressed="true">ERROR</button>
                                 <button type="button" class="btn btn-outline-danger active" id="buttonFatal" aria-pressed="true">FATAL</button>
+                                <button type="button" class="btn btn-light active" id="buttonDebug" aria-pressed="true">DEBUG</button>
+                                <button type="button" class="btn btn-light active" id="buttonTrace" aria-pressed="true">TRACE</button>
                             </div>
                         </div>
                         <p>Note, only the last 40 messages are shown.</p>
@@ -110,7 +112,7 @@
             var isPageUnload            = false;
             var isLoggingEnabled        = false;
             var isMeasurementEnabled    = false;
-            var filter                  = ["INFO", "WARNING", "ERROR", "FATAL"];
+            var filter                  = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
 
             function toggleLogLevel(logLevel) {
                 var index = filter.indexOf(logLevel);
@@ -256,6 +258,18 @@
                 });
 
                 $("#buttonFatal").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
+
+                $("#buttonDebug").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    toggleLogLevel($(this).text());
+                });
+
+                $("#buttonTrace").click(function(e) {
                     e.preventDefault();
                     $(this).toggleClass("active");
                     toggleLogLevel($(this).text());
