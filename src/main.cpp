@@ -47,6 +47,10 @@
  * Macros
  *****************************************************************************/
 
+#ifndef CONFIG_LOG_SEVERITY
+#define CONFIG_LOG_SEVERITY (Logging::LOG_LEVEL_INFO)
+#endif /* CONFIG_LOG_SEVERITY */
+
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
@@ -105,7 +109,7 @@ void setup()
     (void)Logging::getInstance().registerSink(&gLogSinkWebsocket);
 
     /* Set severity */
-    Logging::getInstance().setLogLevel(Logging::LOG_LEVEL_INFO);
+    Logging::getInstance().setLogLevel(CONFIG_LOG_SEVERITY);
 
     /* The setup routine shall handle only the initialization state.
      * All other states are handled in the loop routine.
