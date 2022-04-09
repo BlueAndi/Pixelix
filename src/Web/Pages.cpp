@@ -225,7 +225,7 @@ void Pages::init(AsyncWebServer& srv)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     /* Serve files with static content with enabled cache control.
-     * The client may cache files from filesytem for 1 hour.
+     * The client may cache files from filesystem for 1 hour.
      */
     (void)srv.serveStatic("/favicon.png", FILESYSTEM, "/favicon.png", "max-age=3600")
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());

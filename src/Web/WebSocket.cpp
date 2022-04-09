@@ -278,8 +278,8 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
     }
     /* Is the whole message in a single frame and we got all of it's data? */
     else if ((0U < info->final) &&
-                (0U == info->index) &&
-                (len == info->len ))
+             (0U == info->index) &&
+             (len == info->len ))
     {
         /* Empty text message? */
         if ((nullptr == data) ||
