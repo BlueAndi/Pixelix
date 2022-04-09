@@ -72,22 +72,20 @@ void WsCmdEffect::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String rsp              = "ACK";
-        const char  DELIMITER   = ';';
+        String msg;
 
         if (1U == m_parCnt)
         {
             DisplayMgr::getInstance().activateNextFadeEffect(static_cast<DisplayMgr::FadeEffect>(m_fadeEffect));
         }
 
-        rsp += DELIMITER;
-        rsp += DisplayMgr::getInstance().getFadeEffect();
+        msg = DisplayMgr::getInstance().getFadeEffect();
 
-        server->text(client->id(), rsp);
+        sendPositiveResponse(server, client, msg);
     }
 
     m_isError = false;

@@ -73,29 +73,27 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
         uint32_t    index       = 0U;
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
+        String      msg;
         IDisplay&   display     = Display::getInstance();
         uint32_t    framebuffer[display.getWidth() * display.getHeight()];
         uint8_t     slotId      = DisplayMgr::SLOT_ID_INVALID;
 
         DisplayMgr::getInstance().getFBCopy(framebuffer, UTIL_ARRAY_NUM(framebuffer), &slotId);
 
-        rsp += DELIMITER;
-        rsp += slotId;
+        msg = slotId;
 
         for(index = 0U; index <  UTIL_ARRAY_NUM(framebuffer); ++index)
         {
-            rsp += DELIMITER;
-            rsp += Util::uint32ToHex(framebuffer[index]);
+            msg += DELIMITER;
+            msg += Util::uint32ToHex(framebuffer[index]);
         }
-
-        server->text(client->id(), rsp);
+        
+        sendPositiveResponse(server, client, msg);
     }
 
     m_isError = false;

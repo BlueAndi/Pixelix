@@ -73,22 +73,20 @@ void WsCmdSlotDuration::execute(AsyncWebSocket* server, AsyncWebSocketClient* cl
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
+        String msg;
 
         if (2U == m_parCnt)
         {
             (void)DisplayMgr::getInstance().setSlotDuration(m_slotId, m_slotDuration);
         }
 
-        rsp += DELIMITER;
-        rsp += DisplayMgr::getInstance().getSlotDuration(m_slotId);
+        msg = DisplayMgr::getInstance().getSlotDuration(m_slotId);
 
-        server->text(client->id(), rsp);
+        sendPositiveResponse(server, client, msg);
     }
 
     m_isError = false;

@@ -73,7 +73,7 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
@@ -82,25 +82,23 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
 
         if (nullptr == plugin)
         {
-            rsp = "NACK;\"Slot is empty.\"";
+            sendNegativeResponse(server, client, "\"Slot is empty.\"");
         }
         else if (true == DisplayMgr::getInstance().isSlotLocked(m_slotId))
         {
-            rsp = "NACK;\"Slot is locked.\"";
+            sendNegativeResponse(server, client, "\"Slot is locked.\"");
         }
         else if (false == PluginMgr::getInstance().uninstall(plugin))
         {
-            rsp = "NACK;\"Failed to uninstall.\"";
+            sendNegativeResponse(server, client, "\"Failed to uninstall.\"");
         }
         else
         {
             /* Save current installed plugins to persistent memory. */
             PluginMgr::getInstance().save();
 
-            rsp = "ACK";
+            sendPositiveResponse(server, client);
         }
-
-        server->text(client->id(), rsp);
     }
 
     m_isError   = false;

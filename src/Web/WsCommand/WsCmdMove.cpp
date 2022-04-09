@@ -73,35 +73,32 @@ void WsCmdMove::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String              rsp;
         uint8_t             srcSlotId   = DisplayMgr::getInstance().getSlotIdByPluginUID(m_uid);
         IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(srcSlotId);
 
         if (DisplayMgr::SLOT_ID_INVALID == srcSlotId)
         {
-            rsp = "NACK;\"Plugin UID not found.\"";
+            sendNegativeResponse(server, client, "\"Plugin UID not found.\"");
         }
         else if (nullptr == plugin)
         {
-            rsp = "NACK;\"Plugin not found.\"";
+            sendNegativeResponse(server, client, "\"Plugin not found.\"");
         }
         else if (false == DisplayMgr::getInstance().movePluginToSlot(plugin, m_slotId))
         {
-            rsp = "NACK;\"Move failed.\"";
+            sendNegativeResponse(server, client, "\"Move failed.\"");
         }
         else
         {
-            rsp = "ACK";
-
             /* Save new location of plugin in persistent memory. */
             PluginMgr::getInstance().save();
-        }
 
-        server->text(client->id(), rsp);
+            sendPositiveResponse(server, client);
+        }
     }
 
     m_isError = false;

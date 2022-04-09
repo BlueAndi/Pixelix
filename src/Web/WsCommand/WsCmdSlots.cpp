@@ -72,17 +72,15 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
+        String      msg;
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
         uint8_t     slotId      = DisplayMgr::SLOT_ID_INVALID;
 
-        rsp += DELIMITER;
-        rsp += displayMgr.getMaxSlots();
+        msg = displayMgr.getMaxSlots();
 
         /* Provides for every slot:
          * - Name of plugin.
@@ -100,23 +98,23 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             bool                isLocked    = displayMgr.isSlotLocked(slotId);
             uint32_t            duration    = displayMgr.getSlotDuration(slotId);
 
-            rsp += DELIMITER;
-            rsp += "\"";
-            rsp += name;
-            rsp += "\"";
-            rsp += DELIMITER;
-            rsp += uid;
-            rsp += DELIMITER;
-            rsp += "\"";
-            rsp += alias;
-            rsp += "\"";
-            rsp += DELIMITER;
-            rsp += (false == isLocked) ? "0" : "1";
-            rsp += DELIMITER;
-            rsp += duration;
+            msg += DELIMITER;
+            msg += "\"";
+            msg += name;
+            msg += "\"";
+            msg += DELIMITER;
+            msg += uid;
+            msg += DELIMITER;
+            msg += "\"";
+            msg += alias;
+            msg += "\"";
+            msg += DELIMITER;
+            msg += (false == isLocked) ? "0" : "1";
+            msg += DELIMITER;
+            msg += duration;
         }
 
-        server->text(client->id(), rsp);
+        sendPositiveResponse(server, client, msg);
     }
 
     m_isError = false;

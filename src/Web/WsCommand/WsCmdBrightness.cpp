@@ -73,12 +73,11 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
+        String msg;
 
         if (1U == m_parCnt)
         {
@@ -94,12 +93,11 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
             ;
         }
 
-        rsp += DELIMITER;
-        rsp += DisplayMgr::getInstance().getBrightness();
-        rsp += DELIMITER;
-        rsp += (true == DisplayMgr::getInstance().getAutoBrightnessAdjustment()) ? 1 : 0;
+        msg  = DisplayMgr::getInstance().getBrightness();
+        msg += DELIMITER;
+        msg += (true == DisplayMgr::getInstance().getAutoBrightnessAdjustment()) ? 1 : 0;
 
-        server->text(client->id(), rsp);
+        sendPositiveResponse(server, client, msg);
     }
 
     m_isError = false;

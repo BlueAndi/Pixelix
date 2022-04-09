@@ -54,6 +54,15 @@
  * Local Variables
  *****************************************************************************/
 
+/* Delimiter of websocket parameters */
+const char*    WsCmd::DELIMITER = ";";
+
+/* Positive response code */
+const char*    WsCmd::ACK       = "ACK";
+
+/* Negative response code. */
+const char*    WsCmd::NACK      = "NACK";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -61,6 +70,42 @@
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
+
+void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg)
+{
+    if ((nullptr != server) &&
+        (nullptr != client))
+    {
+        String rsp = ACK;
+
+        if (false == msg.isEmpty())
+        {
+            rsp += DELIMITER;
+            rsp += msg;
+        }
+
+        server->text(client->id(), rsp);
+    }
+}
+
+void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client)
+{
+    sendPositiveResponse(server, client, "");
+}
+
+void WsCmd::sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg)
+{
+    if ((nullptr != server) &&
+        (nullptr != client))
+    {
+        String rsp = NACK;
+
+        rsp += DELIMITER;
+        rsp += msg;
+
+        server->text(client->id(), rsp);
+    }
+}
 
 /******************************************************************************
  * Private Methods

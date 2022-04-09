@@ -72,15 +72,13 @@ void WsCmdButton::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String rsp = "ACK";
-
         DisplayMgr::getInstance().activateNextSlot();
 
-        server->text(client->id(), rsp);
+        sendPositiveResponse(server, client);
     }
 
     m_isError = false;

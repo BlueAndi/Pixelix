@@ -73,22 +73,22 @@ void WsCmdAlias::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
+        String msg;
 
         if (2U == m_parCnt)
         {                    
             (void)DisplayMgr::getInstance().setPluginAliasName(m_pluginUid, m_alias);
         }
 
-        rsp += DELIMITER;
-        rsp += DisplayMgr::getInstance().getPluginAliasName(m_pluginUid);
+        msg = "\"";
+        msg += DisplayMgr::getInstance().getPluginAliasName(m_pluginUid);
+        msg += "\"";
 
-        server->text(client->id(), rsp);
+        sendPositiveResponse(server, client, msg);
     }
 
     m_isError = false;
