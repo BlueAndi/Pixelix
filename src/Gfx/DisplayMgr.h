@@ -300,7 +300,9 @@ public:
     void setNetworkStatus(bool isConnected);
 
     /** Invalid slot id. */
-    static const uint8_t        SLOT_ID_INVALID     = UINT8_MAX;
+    static const uint8_t    SLOT_ID_INVALID = UINT8_MAX;
+
+private:
 
     /** The process task stack size in bytes */
     static const uint32_t       PROCESS_TASK_STACK_SIZE = 4096U;
@@ -325,8 +327,6 @@ public:
 
     /** The update task priority shall be higher than the other application tasks. */
     static const UBaseType_t    UPDATE_TASK_PRIORITY    = 4U;
-
-private:
 
     /** Mutex to protect concurrent access through the public interface. */
     MutexRecursive      m_mutexInterf;
