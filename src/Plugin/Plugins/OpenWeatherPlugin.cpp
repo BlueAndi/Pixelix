@@ -612,10 +612,10 @@ bool OpenWeatherPlugin::startHttpRequest()
 {
     bool status = false;
 
-    if ((0 < m_latitude.length()) &&
-        (0 < m_longitude.length()) &&
-        (0 < m_units.length()) &&
-        (0 < m_apiKey.length()))
+    if ((false == m_latitude.isEmpty()) &&
+        (false == m_longitude.isEmpty()) &&
+        (false == m_units.isEmpty()) &&
+        (false == m_apiKey.isEmpty()))
     {
         String url = OPEN_WEATHER_BASE_URI;
 

@@ -399,7 +399,7 @@ bool VolumioPlugin::startHttpRequest()
 {
     bool status = false;
 
-    if (0 < m_volumioHost.length())
+    if (false == m_volumioHost.isEmpty())
     {
         String url = String("http://") + m_volumioHost + "/api/v1/getState";
 

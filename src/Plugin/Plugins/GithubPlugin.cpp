@@ -342,8 +342,8 @@ bool GithubPlugin::startHttpRequest()
 {
     bool status = false;
 
-    if ((0 < m_githubUser.length()) &&
-        (0 < m_githubRepository.length()))
+    if ((false == m_githubUser.isEmpty()) &&
+        (false == m_githubRepository.isEmpty()))
     {
         String url = String("https://api.github.com/repos/") + m_githubUser + "/" + m_githubRepository;
 

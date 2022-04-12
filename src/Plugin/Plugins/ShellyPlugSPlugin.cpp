@@ -279,12 +279,12 @@ String ShellyPlugSPlugin::getIPAddress() const
 
 bool ShellyPlugSPlugin::startHttpRequest()
 {
-    bool    status  = false;
-    String  url     = String("http://") + m_ipAddress + "/meter/0/";
-    wl_status_t connectionStatus    = WiFi.status();
+    bool status = false;
 
-    if (WL_CONNECTED == connectionStatus)
+    if (false == m_ipAddress.isEmpty())
     {
+        String url = String("http://") + m_ipAddress + "/meter/0/";
+
         if (true == m_client.begin(url))
         {
             if (false == m_client.GET())
@@ -300,6 +300,7 @@ bool ShellyPlugSPlugin::startHttpRequest()
 
     return status;
 }
+
 void ShellyPlugSPlugin::initHttpClient()
 {
     /* Note: All registered callbacks are running in a different task context!

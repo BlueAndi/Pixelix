@@ -324,7 +324,7 @@ bool GruenbeckPlugin::startHttpRequest()
 {
     bool status  = false;
 
-    if (0 < m_ipAddress.length())
+    if (false == m_ipAddress.isEmpty())
     {
         String url = String("http://") + m_ipAddress + "/mux_http";
 

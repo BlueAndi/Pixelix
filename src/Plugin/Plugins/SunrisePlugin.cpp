@@ -306,18 +306,23 @@ void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
 
 bool SunrisePlugin::startHttpRequest()
 {
-    bool    status  = false;
-    String  url     = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+    bool status = false;
 
-    if (true == m_client.begin(url))
+    if ((false == m_latitude.isEmpty()) &&
+        (false == m_longitude.isEmpty()))
     {
-        if (false == m_client.GET())
+        String url = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+
+        if (true == m_client.begin(url))
         {
-            LOG_WARNING("GET %s failed.", url.c_str());
-        }
-        else
-        {
-            status = true;
+            if (false == m_client.GET())
+            {
+                LOG_WARNING("GET %s failed.", url.c_str());
+            }
+            else
+            {
+                status = true;
+            }
         }
     }
 
