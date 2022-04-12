@@ -101,11 +101,12 @@ bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String  ipAddress;
+        String      ipAddress;
+        JsonVariant jsonSet     = value["set"];
 
-        if (false == value["set"].isNull())
+        if (false == jsonSet.isNull())
         {
-            ipAddress = value["set"].as<String>();
+            ipAddress = jsonSet.as<String>();
             isSuccessful = true;
         }
 

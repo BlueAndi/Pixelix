@@ -157,11 +157,12 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
-        String  text;
+        String      text;
+        JsonVariant jsonShow    = value["show"];
 
-        if (false == value["show"].isNull())
+        if (false == jsonShow.isNull())
         {
-            text = value["show"].as<String>();
+            text = jsonShow.as<String>();
             isSuccessful = true;
         }
 
@@ -176,12 +177,13 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
         String      lampIdStr           = topic.substring(indexBeginLampId);
         uint8_t     lampId              = MAX_LAMPS;
         bool        status              = Util::strToUInt8(lampIdStr, lampId);
+        JsonVariant jsonSet             = value["set"];
 
         if ((true == status) &&
             (MAX_LAMPS > lampId) &&
-            (false == value["set"].isNull()))
+            (false == jsonSet.isNull()))
         {
-            String state = value["set"].as<String>();
+            String state = jsonSet.as<String>();
 
             if (state == "off")
             {
@@ -201,9 +203,11 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
     }
     else if (0U != topic.equals(TOPIC_ICON))
     {
-        if (false == value["fullPath"].isNull())
+        JsonVariant jsonFullPath = value["fullPath"];
+
+        if (false == jsonFullPath.isNull())
         {
-            String fullPath = value["fullPath"].as<String>();
+            String fullPath = jsonFullPath.as<String>();
 
             isSuccessful = loadBitmap(fullPath);
         }

@@ -205,11 +205,14 @@ void PluginMgr::load()
 
                 for(JsonObject jsonSlot: jsonSlots)
                 {
-                    if ((true == jsonSlot["name"].is<String>()) &&
-                        (true == jsonSlot["uid"].is<uint16_t>()))
+                    JsonVariant jsonName    = jsonSlot["name"];
+                    JsonVariant jsonUid     = jsonSlot["uid"];
+
+                    if ((true == jsonName.is<String>()) &&
+                        (true == jsonUid.is<uint16_t>()))
                     {
-                        String      name    = jsonSlot["name"].as<String>();
-                        uint16_t    uid     = jsonSlot["uid"].as<uint16_t>();
+                        String      name    = jsonName.as<String>();
+                        uint16_t    uid     = jsonUid.as<uint16_t>();
 
                         if (false == name.isEmpty())
                         {
@@ -221,10 +224,12 @@ void PluginMgr::load()
                             }
                             else
                             {
+                                JsonVariant jsonAlias = jsonSlot["alias"];
+
                                 /* Plugin instance alias available? */
-                                if (false == jsonSlot["alias"].isNull())
+                                if (false == jsonAlias.isNull())
                                 {
-                                    String alias = jsonSlot["alias"].as<String>();
+                                    String alias = jsonAlias.as<String>();
 
                                     plugin->setAlias(alias);
                                 }
