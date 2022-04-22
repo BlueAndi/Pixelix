@@ -114,20 +114,22 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String  longitude;
-        String  latitude;
+        String      longitude;
+        String      latitude;
+        JsonVariant jsonLongitude   = value["longitude"];
+        JsonVariant jsonLatitude    = value["latitude"];
 
         getLocation(longitude, latitude);
 
-        if (false == value["longitude"].isNull())
+        if (false == jsonLongitude.isNull())
         {
-            longitude = value["longitude"].as<String>();
+            longitude = jsonLongitude.as<String>();
             isSuccessful = true;
         }
 
-        if (false == value["latitude"].isNull())
+        if (false == jsonLatitude.isNull())
         {
-            latitude = value["latitude"].as<String>();
+            latitude = jsonLatitude.as<String>();
             isSuccessful = true;
         }
 

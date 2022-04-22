@@ -103,11 +103,12 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
-        String  text;
+        String      text;
+        JsonVariant jsonShow    = value["show"];
 
-        if (false == value["show"].isNull())
+        if (false == jsonShow.isNull())
         {
-            text = value["show"].as<String>();
+            text = jsonShow.as<String>();
             isSuccessful = true;
         }
 
@@ -118,9 +119,11 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObject& value)
     }
     else if (0U != topic.equals(TOPIC_ICON))
     {
-        if (false == value["fullPath"].isNull())
+        JsonVariant jsonFullPath = value["fullPath"];
+
+        if (false == jsonFullPath.isNull())
         {
-            String fullPath = value["fullPath"].as<String>();
+            String fullPath = jsonFullPath.as<String>();
 
             isSuccessful = loadBitmap(fullPath);
         }

@@ -123,35 +123,41 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        if (false == value["apiKey"].isNull())
+        JsonVariant jsonApiKey  = value["apiKey"];
+        JsonVariant jsonLat     = value["lat"];
+        JsonVariant jsonLon     = value["lon"];
+        JsonVariant jsonOther   = value["other"];
+        JsonVariant jsonUnits   = value["units"];
+
+        if (false == jsonApiKey.isNull())
         {
-            setApiKey(value["apiKey"].as<String>());
+            setApiKey(jsonApiKey.as<String>());
             isSuccessful = true;
         }
 
-        if (false == value["lat"].isNull())
+        if (false == jsonLat.isNull())
         {
-            setLatitude(value["lat"].as<String>());
+            setLatitude(jsonLat.as<String>());
             isSuccessful = true;
         }
         
-        if (false == value["lon"].isNull())
+        if (false == jsonLon.isNull())
         {
-            setLongitude(value["lon"].as<String>());
+            setLongitude(jsonLon.as<String>());
             isSuccessful = true;
         }
 
-        if (false == value["other"].isNull())
+        if (false == jsonOther.isNull())
         {
-            OtherWeatherInformation other = static_cast<OtherWeatherInformation>(value["other"].as<uint8_t>());
+            OtherWeatherInformation other = static_cast<OtherWeatherInformation>(jsonOther.as<uint8_t>());
 
             setAdditionalInformation(other);
             isSuccessful = true;
         }
 
-        if (false == value["units"].isNull())
+        if (false == jsonUnits.isNull())
         {
-            setUnits(value["units"].as<String>());
+            setUnits(jsonUnits.as<String>());
             isSuccessful = true;
         }
     }

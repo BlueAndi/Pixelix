@@ -104,11 +104,14 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_CHANNEL))
     {
-        if ((false == value["sensorIndex"].isNull()) &&
-            (false == value["channelIndex"].isNull()))
+        JsonVariant jsonSensorIndex     = value["sensorIndex"];
+        JsonVariant jsonChannelIndex    = value["channelIndex"];
+
+        if ((false == jsonSensorIndex.isNull()) &&
+            (false == jsonChannelIndex.isNull()))
         {
-            uint8_t sensorIdx   = value["sensorIndex"].as<uint8_t>();
-            uint8_t channelIdx  = value["channelIndex"].as<uint8_t>();
+            uint8_t sensorIdx   = jsonSensorIndex.as<uint8_t>();
+            uint8_t channelIdx  = jsonChannelIndex.as<uint8_t>();
         
             (void)setSensorChannel(sensorIdx, channelIdx);
 

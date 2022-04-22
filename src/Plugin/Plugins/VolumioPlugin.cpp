@@ -106,11 +106,12 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String  host;
+        String      host;
+        JsonVariant jsonHost = value["host"];
 
-        if (false == value["host"].isNull())
+        if (false == jsonHost.isNull())
         {
-            host = value["host"].as<String>();
+            host = jsonHost.as<String>();
             isSuccessful = true;
         }
 

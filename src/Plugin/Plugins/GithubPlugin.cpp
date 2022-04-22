@@ -99,20 +99,22 @@ bool GithubPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String  user;
-        String  repository;
+        String      user;
+        String      repository;
+        JsonVariant jsonUser        = value["user"];
+        JsonVariant jsonRepository  = value["repository"];
 
-        if (false == value["user"].isNull())
+        if (false == jsonUser.isNull())
         {
-            user = value["user"].as<String>();
+            user = jsonUser.as<String>();
             setUser(user);
 
             isSuccessful = true;
         }
 
-        if (false == value["repository"].isNull())
+        if (false == jsonRepository.isNull())
         {
-            repository = value["repository"].as<String>();
+            repository = jsonRepository.as<String>();
             setRepository(repository);
 
             isSuccessful = true;

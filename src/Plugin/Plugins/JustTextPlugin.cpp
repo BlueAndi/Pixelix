@@ -93,11 +93,12 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
-        String  text;
+        String      text;
+        JsonVariant jsonShow    = value["show"];
 
-        if (false == value["show"].isNull())
+        if (false == jsonShow.isNull())
         {
-            text = value["show"].as<String>();
+            text = jsonShow.as<String>();
             isSuccessful = true;
         }
 
