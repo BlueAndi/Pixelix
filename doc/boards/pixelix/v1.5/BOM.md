@@ -1,9 +1,16 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](../../../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# BOM
+# BOM <!-- omit in toc -->
+
+- [List](#list)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
+
+# List
 
 | Amount | Description | Package | Part | URL |
 | --- | --- | --- | --- | --- |
@@ -37,3 +44,8 @@ If you have further ideas or you found some bugs, great! Create a [issue](https:
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

@@ -164,14 +164,6 @@ void SunrisePlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-    if (false == startHttpRequest())
-    {
-        m_requestTimer.start(UPDATE_PERIOD_SHORT);
-    }
-    else
-    {
-        m_requestTimer.start(UPDATE_PERIOD);
-    }
 
     return;
 }
@@ -191,21 +183,50 @@ void SunrisePlugin::stop()
     return;
 }
 
-void SunrisePlugin::process()
+void SunrisePlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if ((true == m_requestTimer.isTimerRunning()) &&
-        (true == m_requestTimer.isTimeout()))
+    /* Only if a network connection is established the required information
+     * shall be periodically requested via REST API.
+     */
+    if (false == m_requestTimer.isTimerRunning())
     {
-        if (false == startHttpRequest())
+        if (true == isConnected)
         {
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            if (false == startHttpRequest())
+            {
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
-        else
+    }
+    else
+    {
+        /* If the connection is lost, stop periodically requesting information
+         * via REST API.
+         */
+        if (false == isConnected)
         {
-            m_requestTimer.start(UPDATE_PERIOD);
+            m_requestTimer.stop();
+        }
+        /* Network connection is available and next request may be necessary for
+         * information update.
+         */
+        else if (true == m_requestTimer.isTimeout())
+        {
+            if (false == startHttpRequest())
+            {
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
     }
 
@@ -285,18 +306,23 @@ void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
 
 bool SunrisePlugin::startHttpRequest()
 {
-    bool    status  = false;
-    String  url     = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+    bool status = false;
 
-    if (true == m_client.begin(url))
+    if ((false == m_latitude.isEmpty()) &&
+        (false == m_longitude.isEmpty()))
     {
-        if (false == m_client.GET())
+        String url = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+
+        if (true == m_client.begin(url))
         {
-            LOG_WARNING("GET %s failed.", url.c_str());
-        }
-        else
-        {
-            status = true;
+            if (false == m_client.GET())
+            {
+                LOG_WARNING("GET %s failed.", url.c_str());
+            }
+            else
+            {
+                status = true;
+            }
         }
     }
 
@@ -314,7 +340,7 @@ void SunrisePlugin::initHttpClient()
         {
 
             const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
             if (nullptr != jsonDoc)
             {
@@ -377,19 +403,29 @@ void SunrisePlugin::initHttpClient()
 
 void SunrisePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    String      sunrise;
-    String      sunset;
-    JsonObject  results;
-    
-    results = jsonDoc["results"];
-    sunrise = results["sunrise"].as<String>();
-    sunset  = results["sunset"].as<String>();
+    JsonVariant jsonResults = jsonDoc["results"];
+    JsonVariant jsonSunrise = jsonResults["sunrise"];
+    JsonVariant jsonSunset  = jsonResults["sunset"];
 
-    sunrise = addCurrentTimezoneValues(sunrise);
-    sunset  = addCurrentTimezoneValues(sunset);
+    if ((false == jsonSunrise.is<String>()))
+    {
+        LOG_WARNING("JSON sunrise type missmatch or missing.");
+    }
+    else if ((false == jsonSunset.is<String>()))
+    {
+        LOG_WARNING("JSON sunset type missmatch or missing.");
+    }
+    else
+    {
+        String sunrise  = jsonSunrise.as<String>();
+        String sunset   = jsonSunset.as<String>();
+        
+        sunrise = addCurrentTimezoneValues(sunrise);
+        sunset  = addCurrentTimezoneValues(sunset);
 
-    m_relevantResponsePart = sunrise + " / " + sunset;
-    m_textWidget.setFormatStr(m_relevantResponsePart);
+        m_relevantResponsePart = sunrise + " / " + sunset;
+        m_textWidget.setFormatStr(m_relevantResponsePart);
+    }
 }
 
 String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) const
@@ -454,8 +490,24 @@ bool SunrisePlugin::loadConfiguration()
     }
     else
     {
-        m_longitude = jsonDoc["longitude"].as<String>();
-        m_latitude  = jsonDoc["latitude"].as<String>();
+        JsonVariant jsonLon = jsonDoc["longitude"];
+        JsonVariant jsonLat = jsonDoc["latitude"];
+
+        if (false == jsonLon.is<String>())
+        {
+            LOG_WARNING("longitude not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonLat.is<String>())
+        {
+            LOG_WARNING("latitude not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_longitude = jsonLon.as<String>();
+            m_latitude  = jsonLat.as<String>();
+        }
     }
 
     return status;

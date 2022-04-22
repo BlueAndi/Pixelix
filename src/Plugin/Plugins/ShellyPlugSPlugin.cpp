@@ -142,14 +142,6 @@ void ShellyPlugSPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-    if (false == startHttpRequest())
-    {
-        m_requestTimer.start(UPDATE_PERIOD_SHORT);
-    }
-    else
-    {
-        m_requestTimer.start(UPDATE_PERIOD);
-    }
 
     return;
 }
@@ -169,21 +161,50 @@ void ShellyPlugSPlugin::stop()
     return;
 }
 
-void ShellyPlugSPlugin::process()
+void ShellyPlugSPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if ((true == m_requestTimer.isTimerRunning()) &&
-        (true == m_requestTimer.isTimeout()))
+    /* Only if a network connection is established the required information
+     * shall be periodically requested via REST API.
+     */
+    if (false == m_requestTimer.isTimerRunning())
     {
-        if (false == startHttpRequest())
+        if (true == isConnected)
         {
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            if (false == startHttpRequest())
+            {
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
-        else
+    }
+    else
+    {
+        /* If the connection is lost, stop periodically requesting information
+         * via REST API.
+         */
+        if (false == isConnected)
         {
-            m_requestTimer.start(UPDATE_PERIOD);
+            m_requestTimer.stop();
+        }
+        /* Network connection is available and next request may be necessary for
+         * information update.
+         */
+        else if (true == m_requestTimer.isTimeout())
+        {
+            if (false == startHttpRequest())
+            {
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
     }
 
@@ -258,12 +279,12 @@ String ShellyPlugSPlugin::getIPAddress() const
 
 bool ShellyPlugSPlugin::startHttpRequest()
 {
-    bool    status  = false;
-    String  url     = String("http://") + m_ipAddress + "/meter/0/";
-    wl_status_t connectionStatus    = WiFi.status();
+    bool status = false;
 
-    if (WL_CONNECTED == connectionStatus)
+    if (false == m_ipAddress.isEmpty())
     {
+        String url = String("http://") + m_ipAddress + "/meter/0/";
+
         if (true == m_client.begin(url))
         {
             if (false == m_client.GET())
@@ -279,6 +300,7 @@ bool ShellyPlugSPlugin::startHttpRequest()
 
     return status;
 }
+
 void ShellyPlugSPlugin::initHttpClient()
 {
     /* Note: All registered callbacks are running in a different task context!
@@ -289,7 +311,7 @@ void ShellyPlugSPlugin::initHttpClient()
         [this](const HttpResponse& rsp)
         {
             const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
             if (nullptr != jsonDoc)
             {
@@ -332,13 +354,15 @@ void ShellyPlugSPlugin::initHttpClient()
 
 void ShellyPlugSPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (false == jsonDoc["power"].is<float>())
+    JsonVariant jsonPower = jsonDoc["power"];
+
+    if (false == jsonPower.is<float>())
     {
         LOG_WARNING("JSON power type missmatch or missing.");
     }
     else
     {
-        float       powerRaw                = jsonDoc["power"].as<float>();
+        float       powerRaw                = jsonPower.as<float>();
         String      power;
         const char* reducePrecision;
         char        powerReducedPrecison[6] = { 0 };
@@ -398,14 +422,19 @@ bool ShellyPlugSPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["shellyPlugSIP"].is<String>())
-    {
-        LOG_WARNING("shellyPlugSIP not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_ipAddress = jsonDoc["shellyPlugSIP"].as<String>();
+        JsonVariant jsonIP  = jsonDoc["shellyPlugSIP"];
+
+        if (false == jsonIP.is<String>())
+        {
+            LOG_WARNING("shellyPlugSIP not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_ipAddress = jsonIP.as<String>();
+        }
     }
 
     return status;

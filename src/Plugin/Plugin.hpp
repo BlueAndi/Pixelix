@@ -76,7 +76,7 @@ public:
      *
      * @param[in] slotInterf    Slot interface
      */
-    virtual void setSlot(const ISlotPlugin* slotInterf) override
+    void setSlot(const ISlotPlugin* slotInterf) override
     {
         UTIL_NOT_USED(slotInterf);
         return;
@@ -126,7 +126,7 @@ public:
      * 
      * @param[out] topics   Topis in JSON format
      */
-    virtual void getTopics(JsonArray& topics) const
+    void getTopics(JsonArray& topics) const override
     {
         UTIL_NOT_USED(topics);
         return;
@@ -141,7 +141,7 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    virtual bool getTopic(const String& topic, JsonObject& value) const
+    bool getTopic(const String& topic, JsonObject& value) const override
     {
         UTIL_NOT_USED(topic);
         UTIL_NOT_USED(value);
@@ -158,7 +158,7 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    virtual bool setTopic(const String& topic, const JsonObject& value)
+    bool setTopic(const String& topic, const JsonObject& value) override
     {
         UTIL_NOT_USED(topic);
         UTIL_NOT_USED(value);
@@ -234,7 +234,7 @@ public:
      * @param[in] width     Display width in pixel
      * @param[in] height    Display height in pixel
      */
-    virtual void start(uint16_t width, uint16_t height) override
+    void start(uint16_t width, uint16_t height) override
     {
         UTIL_NOT_USED(width);
         UTIL_NOT_USED(height);
@@ -247,7 +247,7 @@ public:
      * 
      * Overwrite it if your plugin needs to know that it will be uninstalled.
      */
-    virtual void stop() override
+    void stop() override
     {
         return;
     }
@@ -256,9 +256,13 @@ public:
      * Process the plugin.
      * Overwrite it if your plugin has cyclic stuff to do without being in a
      * active slot.
+     * 
+     * @param[in] isConnected   The network connection status. If network
+     *                          connection is established, it will be true otherwise false.
      */
-    virtual void process() override
+    void process(bool isConnected) override
     {
+        UTIL_NOT_USED(isConnected);
         return;
     }
 
@@ -269,7 +273,7 @@ public:
      *
      * @param[in] gfx   Display graphics interface
      */
-    virtual void active(YAGfx& gfx) override
+    void active(YAGfx& gfx) override
     {
         UTIL_NOT_USED(gfx);
         return;
@@ -280,19 +284,10 @@ public:
      * it won't be shown on the display anymore.
      * Overwrite it if your plugin needs to know this.
      */
-    virtual void inactive() override
+    void inactive() override
     {
         return;
     }
-
-    /**
-     * Update the display.
-     * If the plugin is in active slot, this function will be called cyclic
-     * as long as the slot is active.
-     *
-     * @param[in] gfx   Display graphics interface
-     */
-    virtual void update(YAGfx& gfx) = 0;
 
     /**
      * Path where plugin specific configuration files shall be stored.

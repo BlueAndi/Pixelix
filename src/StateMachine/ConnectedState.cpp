@@ -112,33 +112,41 @@ void ConnectedState::entry(StateMachine& sm)
     }
     else
     {
+        const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
+        const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+
         /* Start the ClockDriver */
         ClockDrv::getInstance().init();
+
+        /* Notify about successful network connection. */
+        DisplayMgr::getInstance().setNetworkStatus(true);
 
         /* Show hostname and IP. */
         infoStr += WiFi.getHostname(); /* Don't believe its the same as set before. */
         infoStr += " IP: ";
         infoStr += WiFi.localIP().toString();
-        SysMsg::getInstance().show(infoStr, 4000U, 2U);
+        SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
         LOG_INFO(infoStr);
-    }
 
-    /* Notify that Pixelix is online only if URL was set. */
-    if (!notifyURL.equals("-"))
-    {
-        if (true == m_client.begin(notifyURL))
+        /* If a push URL is set, notify about the online status. */
+        if ((false == notifyURL.equals("-")) &&
+            (false == notifyURL.isEmpty()))
         {
-            if (false == m_client.GET())
+            if (true == m_client.begin(notifyURL))
             {
-                LOG_WARNING("GET %s failed.", notifyURL.c_str());
-            }
-            else
-            {
-                LOG_INFO("Notification triggered");
+                if (false == m_client.GET())
+                {
+                    LOG_WARNING("GET %s failed.", notifyURL.c_str());
+                }
+                else
+                {
+                    LOG_INFO("Notification triggered");
+                }
             }
         }
     }
+
     return;
 }
 
@@ -196,6 +204,9 @@ void ConnectedState::exit(StateMachine& sm)
 
     /* Disconnect all connections */
     (void)WiFi.disconnect();
+
+    /* Notify about lost network connection. */
+    DisplayMgr::getInstance().setNetworkStatus(false);
 
     return;
 }

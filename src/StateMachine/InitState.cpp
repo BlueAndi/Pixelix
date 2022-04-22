@@ -62,30 +62,7 @@
 #include <Util.h>
 #include <ESPmDNS.h>
 
-#include "BTCQuotePlugin.h"
-#include "CountdownPlugin.h"
-#include "DatePlugin.h"
-#include "DateTimePlugin.h"
-#include "FirePlugin.h"
-#include "GameOfLifePlugin.h"
-#include "GithubPlugin.h"
-#include "GruenbeckPlugin.h"
-#include "IconTextLampPlugin.h"
-#include "IconTextPlugin.h"
-#include "JustTextPlugin.h"
-#include "MatrixPlugin.h"
-#include "OpenWeatherPlugin.h"
-#include "RainbowPlugin.h"
-#include "SensorPlugin.h"
-#include "ShellyPlugSPlugin.h"
-#include "SunrisePlugin.h"
-#include "SysMsgPlugin.h"
-#include "TempHumidPlugin.h"
-#include "TestPlugin.h"
-#include "ThreeIconPlugin.h"
-#include "TimePlugin.h"
-#include "VolumioPlugin.h"
-#include "WifiStatusPlugin.h"
+#include <PluginList.hpp>
 
 #include <lwip/init.h>
 
@@ -164,10 +141,10 @@ void InitState::entry(StateMachine& sm)
         PluginMgr::getInstance().begin();
 
         /* Register plugins. This must be done before system message handler is initialized! */
-        registerPlugins();
+        PluginList::registerAll();
     }
 
-    /* Continoue only if there is no error yet. */
+    /* Continue only if there is no error yet. */
     if (true == isError)
     {
         /* Error detected. */
@@ -219,7 +196,7 @@ void InitState::entry(StateMachine& sm)
 
             if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
             {
-                LOG_WARNING("Failed to enable autom. brigthness adjustment.");
+                LOG_WARNING("Failed to enable autom. brightness adjustment.");
             }
 
             /* Set text scroll pause for all text widgets. */
@@ -268,12 +245,16 @@ void InitState::entry(StateMachine& sm)
 
             if (false == isFileSystemCompatible)
             {
-                const char* errMsg  = "WARN: Filesystem may not be compatible.";
+                const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+                const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
+                const uint32_t  DURATION_PAUSE          = 500U; /* ms */
+                const uint32_t  SCROLLING_NO_REPEAT     = 0U;
+                const char*     errMsg                  = "WARN: Filesystem may not be compatible.";
 
                 LOG_WARNING(errMsg);
 
-                SysMsg::getInstance().show(errMsg, 3000U, 1U, true);
-                SysMsg::getInstance().show("", 500U, 0U, true);
+                SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+                SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
             }
         }
     }
@@ -414,65 +395,35 @@ void InitState::exit(StateMachine& sm)
 void InitState::showStartupInfoOnSerial()
 {
     LOG_INFO("PIXELIX starts up ...");
-    LOG_INFO(String("SW version: ") + Version::SOFTWARE_VER);
-    LOG_INFO(String("SW revision: ") + Version::SOFTWARE_REV);
-    LOG_INFO(String("ESP32 chip rev.: ") + ESP.getChipRevision());
-    LOG_INFO(String("ESP32 SDK version: ") + ESP.getSdkVersion());
-    LOG_INFO(String("Wifi MAC: ") + WiFi.macAddress());
-    LOG_INFO(String("LwIP version: ") + LWIP_VERSION_STRING);
+    LOG_INFO("SW version: %s", Version::SOFTWARE_VER);
+    LOG_INFO("SW revision: %s", Version::SOFTWARE_REV);
+    LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
+    LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
+    LOG_INFO("Wifi MAC: %s", WiFi.macAddress().c_str());
+    LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
 
     return;
 }
 
 void InitState::showStartupInfoOnDisplay()
 {
-    SysMsg& sysMsg = SysMsg::getInstance();
+    const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+    const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+    const uint32_t  DURATION_PAUSE          = 500U; /* ms */
+    const uint32_t  SCROLLING_NO_REPEAT     = 0U;
+    SysMsg&         sysMsg                  = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\calign\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X", 3000U, 2U, true);
+    sysMsg.show("\\calign\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X", DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
     /* Clear and wait */
-    sysMsg.show("", 500U, 0U, true);
+    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
 
     /* Show sw version (short) */
-    sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, 3000U, 2U, true);
+    sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
     /* Clear and wait */
-    sysMsg.show("", 500U, 0U, true);
-
-    return;
-}
-
-void InitState::registerPlugins()
-{
-    PluginMgr&  pluginMgr = PluginMgr::getInstance();
-
-    /* Register in alphabetic order. */
-
-    pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);
-    pluginMgr.registerPlugin("CountdownPlugin", CountdownPlugin::create);
-    pluginMgr.registerPlugin("DatePlugin", DatePlugin::create);
-    pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
-    pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
-    pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
-    pluginMgr.registerPlugin("GithubPlugin", GithubPlugin::create);
-    pluginMgr.registerPlugin("GruenbeckPlugin", GruenbeckPlugin::create);
-    pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
-    pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
-    pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
-    pluginMgr.registerPlugin("MatrixPlugin", MatrixPlugin::create);
-    pluginMgr.registerPlugin("OpenWeatherPlugin", OpenWeatherPlugin::create);
-    pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
-    pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);
-    pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
-    pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
-    pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
-    pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
-    pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
-    pluginMgr.registerPlugin("ThreeIconPlugin", ThreeIconPlugin::create);
-    pluginMgr.registerPlugin("TimePlugin", TimePlugin::create);
-    pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
-    pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
+    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
 
     return;
 }
@@ -490,10 +441,10 @@ void InitState::welcome()
 
         if (true == pluginInstallation.isEmpty())
         {
-            IconTextLampPlugin* plugin = nullptr;
+            IconTextPlugin* plugin = nullptr;
 
             /* Install default plugin. */
-            plugin = static_cast<IconTextLampPlugin*>(PluginMgr::getInstance().install("IconTextLampPlugin"));
+            plugin = static_cast<IconTextPlugin*>(PluginMgr::getInstance().install("IconTextPlugin"));
 
             if (nullptr != plugin)
             {

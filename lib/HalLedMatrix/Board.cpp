@@ -60,7 +60,7 @@ using namespace Board;
  * Local Variables
  *****************************************************************************/
 
-/** A list of all used i/o pins, used for intializaton. */
+/** A list of all used i/o pins, used for initialization. */
 static const IoPin* ioPinList[] =
 {
     &onBoardLedOut,

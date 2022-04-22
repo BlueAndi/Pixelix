@@ -337,20 +337,26 @@ bool SensorPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["sensorIndex"].is<uint8_t>())
-    {
-        LOG_WARNING("Sensor index not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["channelIndex"].is<uint8_t>())
-    {
-        LOG_WARNING("Channel index not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_sensorIdx     = jsonDoc["sensorIndex"].as<uint8_t>();
-        m_channelIdx    = jsonDoc["channelIndex"].as<uint8_t>();
+        JsonVariant jsonSensorIndex     = jsonDoc["sensorIndex"];
+        JsonVariant jsonChannelIndex    = jsonDoc["channelIndex"];
+
+        if (false == jsonSensorIndex.is<uint8_t>())
+        {
+            LOG_WARNING("Sensor index not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonChannelIndex.is<uint8_t>())
+        {
+            LOG_WARNING("Channel index not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_sensorIdx     = jsonSensorIndex.as<uint8_t>();
+            m_channelIdx    = jsonChannelIndex.as<uint8_t>();
+        }
     }
 
     return status;

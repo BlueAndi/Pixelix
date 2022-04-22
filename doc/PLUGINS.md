@@ -1,10 +1,12 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [PIXELIX](#pixelix)
-- [Plugins](#plugins)
+# Plugins <!-- omit in toc -->
+The content of the display can be configured by installing an individual set of plugins.
+Each plugin is identified by its unique UID.
+
 - [Generic plugins](#generic-plugins)
   - [IconTextPlugin](#icontextplugin)
   - [IconTextLampPlugin](#icontextlampplugin)
@@ -13,7 +15,6 @@
 - [Dedicated plugins](#dedicated-plugins)
   - [BTCQuotePlugin](#btcquoteplugin)
   - [CountdownPlugin](#countdownplugin)
-  - [DatePlugin](#dateplugin)
   - [DateTimePlugin](#datetimeplugin)
   - [FirePlugin](#fireplugin)
   - [GameOfLifePlugin](#gameoflifeplugin)
@@ -24,24 +25,19 @@
   - [RainbowPlugin](#rainbowplugin)
   - [SensorPlugin](#sensorplugin)
   - [ShellyPlugSPlugin](#shellyplugsplugin)
+  - [SoundReactivePlugin](#soundreactiveplugin)
   - [SunrisePlugin](#sunriseplugin)
   - [SysMsgPlugin](#sysmsgplugin)
   - [TempHumidPlugin](#temphumidplugin)
   - [TestPlugin](#testplugin)
-  - [TimePlugin](#timeplugin)
   - [VolumioPlugin](#volumioplugin)
   - [WifiStatusPlugin](#wifistatusplugin)
-
-# Plugins
-The content of the display can be configured by installing an individual set of plugins.
-Each plugin is identified by its unique UID.
-
-There are two types of plugins available at the moment:
-* [Generic plugins](#Generic-plugins)
-* [Dedicated plugins](#Dedicated-plugins)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
 # Generic plugins
-The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix).
+The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0).
 
 ## IconTextPlugin
 The IconTextPlugin shows an icon on left side, text on right side.\
@@ -60,7 +56,7 @@ The ThreeIconPlugin shows three icons on the display.\
 Each icon can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/ThreeIconPlugin).
 
 # Dedicated plugins
-Dedicated plugins are plugins which only serves one single purpose thy are only internaly cofigurable.
+Dedicated plugins are plugins which only serves one single purpose thy are only internally configurable.
 
 ## BTCQuotePlugin
 The BTCQuotePlugin shows the current exchange rate from Bitcoin to USD.\
@@ -70,11 +66,9 @@ Powered by [CoinDesk](https://www.coindesk.com/price/bitcoin).
 The CountdownPlugin shows the remaining days until a configured target date.\
 Target date and the description of the target day (plural/singular form) can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/CountdownPlugin).
 
-## DatePlugin
-The DatePlugin shows the current date. At the bottom the day of the week is shown, starting from the left with Monday.
-
 ## DateTimePlugin
-The DateTimePlugin shows the current time and date. First the time is shown for half of the slot duration and after it the date. At the bottom the day of the week is shown, starting from the left with Monday.
+The DateTimePlugin shows the current time and date. First the time is shown for half of the slot duration and after it the date. At the bottom the day of the week is shown, starting from the left with Monday. It can be configured to show only the date or only the time as well.
+It can be set what shall be shown via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/DateTimePlugin).
 
 ## FirePlugin
 The FirePlugin shows a animated fire on the display.
@@ -93,7 +87,7 @@ The IP address of the Gruenbeck webserver can be set via the [REST API](https://
 The plugin shows the effect from the film "Matrix" over the whole display.
 
 ## OpenWeatherPlugin
-The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one aditional information (uvIndex, humidity or windspeed) .\
+The OpenWeatherPlugin shows the current weather condition (icon and temperature) and one additional information (uvIndex, humidity or windspeed) .\
 Information provided by [OpenWeather](https://openweathermap.org/).\
 In order to use the plugin an API key is necessary, see https://openweathermap.org/appid for further information.\
 The coordinates (latitude & longitude) of your location, your API key and the desired additional information to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/OpenWeatherPlugin).
@@ -108,22 +102,24 @@ The plugin shows sensor values of the selected sensor channel.
 The ShellyPlugSPlugin shows the current AC power being drawn via a Shelly PlugS, in watts.\
 The IP address of the Shelly PlugS webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/ShellyPlugSPlugin).
 
+## SoundReactivePlugin
+The plugin shows octave frequency bands, depended on the environment sound.
+Required: A digital microphone (INMP441) is required, connected to the I2S port.
+The number of shown frequency bands can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/SoundReactivePlugin).
+
 ## SunrisePlugin
 The SunrisePlugin shows the current sunrise / sunset times for a configured location.\
-The coordinates (latitude & longitude) of your location can be set via the [REST API](REST.md#endpoint-base-uridisplayuidplugin-uidlocation).\
+The coordinates (latitude & longitude) of your location can be set via the [REST API]([REST.md#endpoint-base-uridisplayuidplugin-uidlocation](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/SunrisePlugin)).\
 Powered by sunrise-sunset.org
 
 ## SysMsgPlugin
-The SysMsgPlugin is a system plugin, which is used to splash important informtions to the user. Note, it can not be uninstalled.
+The SysMsgPlugin is a system plugin, which is used to splash important information's to the user. Note, it can not be uninstalled.
 
 ## TempHumidPlugin
 Th TempHumidPlugin displays the temperature (in °C) and Humidity (in %) based on the readings of sensor connected to Pixelix.
 
 ## TestPlugin
 The TestPlugin can be used to check whether the LED matrix topology (layout) is correct or not.
-
-## TimePlugin
-The TimePlugin shows the current time.
 
 ## VolumioPlugin
 The VolumioPlugin shows the current VOLUMIO state as icon and the played artist/title.\
@@ -132,3 +128,14 @@ The host address of the Volumio webserver can be set via the [REST API](https://
 
 ## WifiStatusPlugin
 The WifiStatusPlugin shows the current wireless signal strength.
+
+# Issues, Ideas And Bugs
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
+
+# License
+The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

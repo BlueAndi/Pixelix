@@ -167,6 +167,16 @@ public:
     }
 
     /**
+     * Get brightness in %.
+     *
+     * @return Key value pair
+     */
+    KeyValueUInt8& getBrightness()
+    {
+        return m_brightness;
+    }
+
+    /**
      * Get state of automatic brightness adjustment.
      *
      * @return Key value pair
@@ -295,7 +305,7 @@ public:
     KeyValue* getSettingByKey(const char* key);
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 17U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 18U;
 
 private:
 
@@ -309,6 +319,7 @@ private:
     KeyValueString  m_webLoginUser;         /**< Website login user account */
     KeyValueString  m_webLoginPassword;     /**< Website login user password */
     KeyValueString  m_hostname;             /**< Hostname */
+    KeyValueUInt8   m_brightness;           /**< The brightness level in % set at startup. */
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
     KeyValueJson    m_pluginInstallation;   /**< Plugin installation */
     KeyValueString  m_timezone;             /**< POSIX timezone string */

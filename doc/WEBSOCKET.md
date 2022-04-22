@@ -1,36 +1,35 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [PIXELIX](#pixelix)
-- [Websocket API](#websocket-api)
-  - [Get display pixel colors](#get-display-pixel-colors)
-  - [Get slots information](#get-slots-information)
-  - [Reset](#reset)
-  - [Brightness](#brightness)
-    - [Get brightness information](#get-brightness-information)
-    - [Set brightness](#set-brightness)
-    - [Set brightness and enable/eisable automatic brightness adjustment](#set-brightness-and-enableeisable-automatic-brightness-adjustment)
-    - [Response](#response)
+# Websocket API <!-- omit in toc -->
+
+- [Get display pixel colors](#get-display-pixel-colors)
+- [Get slots information](#get-slots-information)
+- [Reset](#reset)
+- [Brightness](#brightness)
+  - [Get brightness information](#get-brightness-information)
+  - [Set brightness](#set-brightness)
+  - [Set brightness and enable/enable automatic brightness adjustment](#set-brightness-and-enableenable-automatic-brightness-adjustment)
+  - [Response](#response)
   - [Get plugins information](#get-plugins-information)
-  - [Install a plugin](#install-a-plugin)
-  - [Uninstall a plugin](#uninstall-a-plugin)
-  - [Move a plugin](#move-a-plugin)
-  - [Enable/Disable logging](#enabledisable-logging)
-    - [Is logging enabled?](#is-logging-enabled)
-    - [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
-  - [Enable/Disable iperf](#enabledisable-iperf)
-    - [Is iperf enabled?](#is-iperf-enabled)
-    - [Start/Stop iperf server](#startstop-iperf-server)
-  - [Trigger virtual user button](#trigger-virtual-user-button)
-  - [Switch to next fade effect](#switch-to-next-fade-effect)
+- [Install a plugin](#install-a-plugin)
+- [Uninstall a plugin](#uninstall-a-plugin)
+- [Move a plugin](#move-a-plugin)
+- [Enable/Disable logging](#enabledisable-logging)
+  - [Is logging enabled?](#is-logging-enabled)
+  - [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
+- [Enable/Disable iperf](#enabledisable-iperf)
+  - [Is iperf enabled?](#is-iperf-enabled)
+  - [Start/Stop iperf server](#startstop-iperf-server)
+- [Trigger virtual user button](#trigger-virtual-user-button)
+- [Switch to next fade effect](#switch-to-next-fade-effect)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
+- [Contribution](#contribution)
 
-# Websocket API
-
-## Get display pixel colors
+# Get display pixel colors
 Command: ```GETDISP```
 
 Parameter:
@@ -44,7 +43,7 @@ Response:
 * Failed:
   * ```NACK```
 
-## Get slots information
+# Get slots information
 Command: ```SLOTS```
 
 Parameter:
@@ -63,7 +62,7 @@ Response:
 * Failed:
   * ```NACK```
 
-## Reset
+# Reset
 Command: ```RESET```
 
 Parameter:
@@ -75,28 +74,28 @@ Response:
 * Failed:
     * ```NACK```
 
-## Brightness
+# Brightness
 
-### Get brightness information
+## Get brightness information
 Command: ```BRIGHTNESS```
 
 Parameter:
 * N/A
 
-### Set brightness
+## Set brightness
 Command: ```BRIGHTNESS;<brightness>```
 
 Parameter:
 * ```<brightness>```: Brightness in percent [0; 100].
 
-### Set brightness and enable/eisable automatic brightness adjustment
+## Set brightness and enable/enable automatic brightness adjustment
 Command: ```BRIGHTNESS;<brightness>;<automatic-brightness-control>```
 
 Parameter:
 * ```<brightness>```: Brightness in percent [0; 100].
 * ```<automatic-brightness-control>```: Enable (```1```) or disable (```0```) it.
 
-### Response
+## Response
 
 Response:
 * Successful:
@@ -117,7 +116,7 @@ Response:
 * Failed:
   * ```NACK```
 
-## Install a plugin
+# Install a plugin
 Command: ```INSTALL;<plugin-name>```
 
 Parameter:
@@ -131,7 +130,7 @@ Response:
 * Failed:
   * ```NACK```
 
-## Uninstall a plugin
+# Uninstall a plugin
 Command: ```UNINSTALL;<slot-id>```
 
 Parameter:
@@ -143,7 +142,7 @@ Response:
 * Failed:
   * ```NACK```
 
-## Move a plugin
+# Move a plugin
 Command: ```MOVE;<plugin-uid>;<slot-id>```
 
 Parameter:
@@ -156,9 +155,9 @@ Response:
 * Failed:
   * ```NACK```
 
-## Enable/Disable logging
+# Enable/Disable logging
 
-### Is logging enabled?
+## Is logging enabled?
 Command: ```LOG```
 
 Response:
@@ -168,7 +167,7 @@ Response:
 * Failed:
   * ```NACK```
 
-### Enable/Disable logging to websocket
+## Enable/Disable logging to websocket
 Command: ```LOG;<enable>```
 
 Parameter:
@@ -189,9 +188,9 @@ Event: If logging is enabled, a event will be automatically be sent for every lo
 * ```<line>```: Line number if in the file where the log message comes from.
 * ```<text>```: Logged text, emphasized in "".
 
-## Enable/Disable iperf
+# Enable/Disable iperf
 
-### Is iperf enabled?
+## Is iperf enabled?
 Command: ```IPERF```
 
 Response:
@@ -201,7 +200,7 @@ Response:
 * Failed:
   * ```NACK```
 
-### Start/Stop iperf server
+## Start/Stop iperf server
 Command: ```IPERF;<CMD>;<OPTIONS>```
 
 Parameter:
@@ -218,7 +217,7 @@ Response:
 * Failed:
   * ```NACK```
 
-## Trigger virtual user button
+# Trigger virtual user button
 Command: ```BUTTON```
 
 Parameter:
@@ -230,7 +229,7 @@ Response:
 * Failed:
     * ```NACK```
 
-## Switch to next fade effect
+# Switch to next fade effect
 Command: ```EFFECT```
 
 Parameter:
@@ -249,3 +248,8 @@ If you have further ideas or you found some bugs, great! Create a [issue](https:
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

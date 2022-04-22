@@ -1,10 +1,18 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# Sprite Sheet
+# Sprite Sheet <!-- omit in toc -->
 
+- [Purpose](#purpose)
+- [Tools And Scripts](#tools-and-scripts)
+- [Limitations](#limitations)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
+
+# Purpose
 Use a sprite sheet for 2d animations.
 The sprite sheet parameters are defined in a additional file to the bitmap file in JSON format. The file shall have the file extension ".sprite".
 
@@ -35,11 +43,11 @@ The order of each frame is from top left to the right and in the next row again 
 
 The frames per second (fps) specifiy how fast the animation runs.
 
-## Tools And Scripts
+# Tools And Scripts
 
 Use the ```./doc/spritesheet/create_sprite_sheet.py``` to create it or manually.
 
-## Limitations
+# Limitations
 
 * Only .bmp format is currently supported, uncompressed and without color palette.
 
@@ -48,3 +56,8 @@ If you have further ideas or you found some bugs, great! Create a [issue](https:
 
 # License
 The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

@@ -180,6 +180,9 @@ void APState::entry(StateMachine& sm)
         }
         else
         {
+            /* If any other hostname than our is requested, it shall not send a error back,
+             * otherwise the client stops instead of continue to the captive portal.
+             */
             m_dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
         }
 

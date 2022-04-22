@@ -115,6 +115,8 @@ void ConnectingState::process(StateMachine& sm)
     /* No retry mechanism is running? */
     if (false == m_retryTimer.isTimerRunning())
     {
+        const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
+        const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
         wl_status_t status      = WL_IDLE_STATUS;
         String      infoStr     = "Connecting to ";
 
@@ -122,7 +124,7 @@ void ConnectingState::process(StateMachine& sm)
         infoStr += ".";
 
         LOG_INFO(infoStr);
-        SysMsg::getInstance().show(infoStr, 2000U, 1U, true);
+        SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
         /* Remote wifi network informations are available, try to establish a connection. */
         status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());

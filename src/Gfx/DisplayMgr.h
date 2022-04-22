@@ -292,37 +292,65 @@ public:
         return m_maxSlots;
     }
 
+    /**
+     * Set network connection status.
+     * 
+     * @param[in] isConnected   Set to true for a established network connection, otherwise false.
+     */
+    void setNetworkStatus(bool isConnected);
+
     /** Invalid slot id. */
-    static const uint8_t        SLOT_ID_INVALID     = UINT8_MAX;
-
-    /** Task stack size in bytes */
-    static const uint32_t       TASK_STACKE_SIZE    = 4096U;
-
-    /** Task period in ms */
-    static const uint32_t       TASK_PERIOD         = 20U;
-
-    /** MCU core where the task shall run */
-    static const BaseType_t     TASK_RUN_CORE       = 1;
-
-    /** Task priority, note Arduino loop and AsyncTcp have lower priorities. */
-    static const UBaseType_t    TASK_PRIORITY       = 4U;
-
-    /** If no ambient light sensor is available, the default brightness shall be 40%. */
-    static const uint8_t        BRIGHTNESS_DEFAULT  = (UINT8_MAX * 40U) / 100U;
+    static const uint8_t    SLOT_ID_INVALID = UINT8_MAX;
 
 private:
 
-    /** Mutex to lock/unlock display update. */
-    MutexRecursive      m_mutex;
+    /** The process task stack size in bytes */
+    static const uint32_t       PROCESS_TASK_STACK_SIZE = 4096U;
 
-    /** Display update task handle */
-    TaskHandle_t        m_taskHandle;
+    /** The process task period in ms. */
+    static const uint32_t       PROCESS_TASK_PERIOD     = 100U;
 
-    /** Flag to signal the task to exit. */
-    bool                m_taskExit;
+    /** The process task shall run on the APP MCU core. */
+    static const BaseType_t     PROCESS_TASK_RUN_CORE   = APP_CPU_NUM;
 
-    /** Binary semaphore used to signal the task exit. */
-    SemaphoreHandle_t   m_xSemaphore;
+    /** The process task priority shall be equal than the Arduino loop task priority. */
+    static const UBaseType_t    PROCESS_TASK_PRIORITY   = 1U;
+
+    /** The update task stack size in bytes */
+    static const uint32_t       UPDATE_TASK_STACK_SIZE  = 4096U;
+
+    /** The update task period in ms. */
+    static const uint32_t       UPDATE_TASK_PERIOD      = 20U;
+
+    /** The update task shall run on the MCU core with less load. */
+    static const BaseType_t     UPDATE_TASK_RUN_CORE    = tskNO_AFFINITY;
+
+    /** The update task priority shall be higher than the other application tasks. */
+    static const UBaseType_t    UPDATE_TASK_PRIORITY    = 4U;
+
+    /** Mutex to protect concurrent access through the public interface. */
+    MutexRecursive      m_mutexInterf;
+
+    /** Mutex to protect the display update against concurrent access. */
+    MutexRecursive      m_mutexUpdate;
+
+    /** Process task handle */
+    TaskHandle_t        m_processTaskHandle;
+
+    /** Flag to signal the process task to exit. */
+    bool                m_processTaskExit;
+
+    /** Binary semaphore used to signal the process task exited. */
+    SemaphoreHandle_t   m_processTaskSemaphore;
+
+    /** Update task handle */
+    TaskHandle_t        m_updateTaskHandle;
+
+    /** Flag to signal the update task to exit. */
+    bool                m_updateTaskExit;
+
+    /** Binary semaphore used to signal the update task exited. */
+    SemaphoreHandle_t   m_updateTaskSemaphore;
 
     /** List of all slots with their connected plugins. */
     Slot*               m_slots;
@@ -371,6 +399,7 @@ private:
     IFadeEffect*        m_fadeEffect;                   /**< The fade effect itself. */
     FadeEffect          m_fadeEffectIndex;              /**< Fade effect index to determine the next fade effect. */
     bool                m_fadeEffectUpdate;             /**< Flag to indicate that the fadeEffect was updated. */
+    bool                m_isNetworkConnected;           /**< Is a network connection established? */
 
     /**
      * Constructs the display manager.
@@ -414,6 +443,45 @@ private:
      * It will handle which slot to show on the display.
      */
     void process(void);
+
+    /**
+     * Process the slots. This shall be called periodically in
+     * a higher period than the DEFAULT_PERIOD.
+     *
+     * It will handle which slot to show on the display.
+     */
+    void update(void);
+
+    /**
+     * Create the process task which is responsible to process all plugins.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool createProcessTask();
+
+    /**
+     * Destroy the process task gracefully.
+     */
+    void destroyProcessTask();
+
+    /**
+     * Create the update task which is responsible to update the display content.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool createUpdateTask();
+
+    /**
+     * Destroy the update task gracefully.
+     */
+    void destroyUpdateTask();
+
+    /**
+     * Display update task is responsible to refresh the display content.
+     *
+     * @param[in]   parameters  Task pParameters
+     */
+    static void processTask(void* parameters);
 
     /**
      * Display update task is responsible to refresh the display content.

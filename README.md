@@ -1,4 +1,4 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./doc/images/LogoBlack.png)
 
 Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
@@ -11,9 +11,11 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/0.jpg)](https://www.youtube.com/watch?v=dik8Rm6f3o0 "Pixelix")
 [![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/0.jpg)](https://www.youtube.com/watch?v=UCjJCI5JShY "Pixelix - Remote Button")
 
-- [PIXELIX](#pixelix)
 - [Motivation](#motivation)
 - [Overview](#overview)
+  - [Original setup](#original-setup)
+  - [Others](#others)
+- [Installation](#installation)
 - [Very First Startup](#very-first-startup)
 - [User Interface](#user-interface)
 - [Documentation](#documentation)
@@ -25,6 +27,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [How can I use animated icons?](#how-can-i-use-animated-icons)
   - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
   - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
+  - [How can I use alternative icons?](#how-can-i-use-alternative-icons)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -40,10 +43,25 @@ I want to have a remote display to show multiple kind of information, running 24
 
 # Overview
 
+The firmware contains a plugin concept (at compile time) to provide different functionalities. Each plugin can create its own layout and place the information as required. If you are only interesting in showing just text provided via REST API, choose the JustTextPlugin. It uses the whole display size and will scroll text automatically. Sometimes in front of the text a nice icon is required in which case choose the IconTextPlugin. These are only examples and you will find more in the [plugin list](./doc/PLUGINS.md).
+
+A little bit more detail about the generic plugins and the first idea can be found in this [rough overview](./doc/Overview.pdf).
+
+## Original setup
+The original setup during development and the first release was:
 * [ESP32 DevKitV1](https://github.com/playelek/pinout-doit-32devkitv1)
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
-* [Rough overview](./doc/Overview.pdf)
+
+The following shows the absolute minimal wiring setup:
+
+![PixelixMinimalSetup](./doc/images/PixelixMinimalSetup.png)
+
+> :warning: **If you power all via USB**: Be very careful, because it may destroy your esp32 board if the LED current gets too high. Avoid increasing the LED display brightness or filling it complete with white pixels. Please use a external power supply with at least 5V / 4A.
+
+## Others
+
+In the meantime several other board are supported as well. You can see them in the platformio configuration (platformio.ini) or the [list of boards](./doc/boards/README.md).
 
 Additional supported variants, which were original not in focus:
 * [TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
@@ -51,19 +69,27 @@ Additional supported variants, which were original not in focus:
 Although Pixelix was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
 * Temperature and humidity sensors DHTx
 * Temperature and humidity sensors SHT3x
+* Digitial microphone INMP441 for some sound reactive stuff.
+
+# Installation
+The following steps are necessary for the first time and to get PIXELIX initial running on the target. Once it runs, later on the firmware and filesystem can be updated via the PIXELIX webinterface.
+
+1. Setup the [toolchain](./doc/TOOLCHAIN-INSTALLATION.md).
+2. [Build the software](./doc/SW-BUILD.md) and check whether the toolchain works.
+3. [Upload/Update the software and firmware](./doc/SW-UPDATE.md) to the target.
 
 # Very First Startup
-If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
+If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
 
-Connect to the captive portal and configure via webinterface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the webinterface.
+Connect to the captive portal and configure via web interface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the web interface.
 
 Restart and voila!
 
 # User Interface
 * The user button activates always the next slot.
-* If the display is at a place, which is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
-* If a LDR is connected, the display brightness is automatically adapted.
-* The web interface provides the possibilty to install plugins, control their duration in the slots and etc.
+* If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
+* If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
+* The web interface provides the possibility to install plugins, control their duration in the slots and etc.
 * Some plugin's spawn a dedicated REST API, see the web page of the plugin or have a look to the REST API documentation.
 
 Note, the websocket interface is currently only used as a service in the web interface.
@@ -85,6 +111,7 @@ For more information, see the [documentation](./doc/README.md).
 * [Adafruit DHT sensor library](https://github.com/adafruit/DHT-sensor-library) - An Arduino library for the DHT series of low-cost temperature/humidity sensors. - MIT License
 * [arduino-sht](https://github.com/Sensirion/arduino-sht) - An Arduino library for reading the SHT3x family of temperature and humidity sensors. - BSD-3-Clause License
 * [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) - Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips - Mixed licenses: MIT, BSD, FreeBSD
+* [arduinoFFT](https://github.com/kosme/arduinoFFT) - Fast Fourier Transform for Arduino. - GPL 3.0 License
 
 # FAQ
 
@@ -107,7 +134,7 @@ Keyword   | Description
 
 **Note**
 - If theses keywords are used within the sourcecode they have to be prefixed with two backslashes (one additional for escaping).
-- If these keywords are used via the [REST API](REST.md) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
+- If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
 - The keywords can be combined.  
 
 **Examples**
@@ -124,7 +151,7 @@ This is a low level error code. Please have a look into the following table.
 
 | Error code | Description |
 | ---------- | ----------- |
-| E1 | Something happended, which can not be further explained, but was fatal. |
+| E1 | Something happened, which can not be further explained, but was fatal. |
 | E2 | There is a problem with the two-wire (i2c) interface. |
 | E3 | There is no user button available. |
 | E4 | Bad filesystem, did you explicit program the filesystem too? If not, please upload it. |
@@ -142,7 +169,11 @@ Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet fil
 
 ## Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?
 
-The LDR pin is configured as input (ADC) and it seems that the pin is foating, because there is the ext. pull-down missing.
+The LDR pin is configured as input (ADC) and it seems that the pin is floating, because there is the ext. pull-down missing.
+
+## How can I use alternative icons?
+
+Find details [here](./doc/ICONS.md).
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

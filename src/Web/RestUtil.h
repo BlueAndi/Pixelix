@@ -25,81 +25,79 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Sensor data provider
+ * @brief  REST API Utilities
  * @author Andreas Merkle <web@blue-andi.de>
+ *
+ * @addtogroup web
+ *
+ * @{
  */
+
+#ifndef __REST_UTIL_H__
+#define __REST_UTIL_H__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Sensors.h"
+#include <stdint.h>
+#include <ArduinoJson.h>
+#include <ESPAsyncWebServer.h>
 
-#include <Util.h>
-#include <SensorLdrGl5528.h>
-#include <SensorSht3X.h>
-#include <SensorDhtX.h>
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
+/** REST API Utilities */
+namespace RestUtil
+{
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
 /******************************************************************************
- * Prototypes
+ * Functions
  *****************************************************************************/
 
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
+/**
+ * Prepare JSON document for success response.
+ * 
+ * @param[out]  jsonDoc JSON document
+ * 
+ * @return JSON object where to add additional data.
+ */
+JsonVariant prepareRspSuccess(JsonDocument& jsonDoc);
 
-/** The LDR GL5528 is used for automatic display brightness control. */
-static SensorLdrGl5528          gLdrGl5528;
+/**
+ * Prepare JSON document for error response.
+ * 
+ * @param[out]  jsonDoc JSON document where to add error response.
+ * @param[in]   msg     Error message
+ */
+void prepareRspError(JsonDocument& jsonDoc, const char* msg);
 
-/** The SHT3x sensor in autodetect mode (for two-wire sensors only). */
-static SensorSht3X              gSht3x(SHTSensor::AUTO_DETECT);
+/**
+ * Prepare JSON document for concrete error response: HTTP method not supported.
+ * 
+ * @param[out]  jsonDoc JSON document where to add error response.
+ */
+void prepareRspErrorHttpMethodNotSupported(JsonDocument& jsonDoc);
 
-/** The DHT11 sensor. */
-static SensorDhtX               gDht11(SensorDhtX::MODEL_DHT11);
+/**
+ * Send a application/json response to the client back.
+ * 
+ * @param[in] request           Client request
+ * @param[in] jsonDoc           JSON response document
+ * @param[in] httpStatusCode    HTTP status code
+ */
+void sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& jsonDoc, uint32_t httpStatusCode);
 
-/** A list with all registered sensors. */
-static ISensor*                 gSensors[] =
-{
-    &gLdrGl5528,
-    &gSht3x,
-    &gDht11
-};
-
-/** The concrete sensor data provider implementation. */
-static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors));
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-/******************************************************************************
- * External Functions
- *****************************************************************************/
-
-extern SensorDataProviderImpl* Sensors::getSensorDataProviderImpl()
-{
-    return &gSensorDataProviderImpl;
 }
 
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+#endif  /* __REST_UTIL_H__ */
+
+/** @} */

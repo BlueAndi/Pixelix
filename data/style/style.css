@@ -28,3 +28,68 @@ main > .container {
 code {
     font-size: 80%;
 }
+
+.bd-placeholder-img {
+    font-size: 1.125rem;
+    text-anchor: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+@media (min-width: 768px) {
+    .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+    }
+}
+
+div.divSlot {
+    height: 12em;
+    width: 12em;
+    border: 2px solid #666666;
+    background-color: #ccc;
+    margin-right: 5px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 3px #000;
+    text-align: center;
+    float: left;
+}
+div.locked {
+    background-image: repeating-linear-gradient(45deg, #ccc 0%, #ccc 2%, red 2%, red 4%, #ccc 4%);
+}
+p.dragableSlot {
+    border: 2px solid red;
+    padding: 4px 4px 4px 4px;
+    background-color: #666666;
+    margin: 1em 1em 1em 1em;
+    width: auto;
+}
+/* Prevent the text contents of draggable elements from being selectable. */
+[draggable] {
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: move;
+    /* Required to make elements draggable in old WebKit */
+    -khtml-user-drag: element;
+    -webkit-user-drag: element;
+}
+.divSlot header {
+    color: #fff;
+    background: red;
+    text-shadow: #000 0 1px;
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+#editor { 
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}

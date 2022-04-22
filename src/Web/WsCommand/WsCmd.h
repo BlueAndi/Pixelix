@@ -102,6 +102,44 @@ public:
      */
     virtual void setPar(const char* par) = 0;
 
+protected:
+
+    /** Delimiter of websocket parameters */
+    static const char*    DELIMITER;
+
+    /** Positive response code */
+    static const char*    ACK;
+
+    /** Negative response code. */
+    static const char*    NACK;
+
+    /**
+     * Send positive response to the client.
+     * 
+     * @param[in] server    Websocket server which is used to send a message to the client.
+     * @param[in] client    The client the message belongs to.
+     * @param[in] msg       The negative response messsage.
+     */
+    void sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg);
+
+    /**
+     * Send negative response to the client.
+     * 
+     * @param[in] server    Websocket server which is used to send a message to the client.
+     * @param[in] client    The client the message belongs to.
+     * @param[in] msg       The negative response messsage.
+     */
+    void sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client);
+
+    /**
+     * Send negative response to the client.
+     * 
+     * @param[in] server    Websocket server which is used to send a message to the client.
+     * @param[in] client    The client the message belongs to.
+     * @param[in] msg       The negative response messsage.
+     */
+    void sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg);
+
 private:
 
     String  m_cmd;  /**< Command */

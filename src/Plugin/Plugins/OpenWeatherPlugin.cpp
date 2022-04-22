@@ -189,18 +189,6 @@ void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-    if (false == startHttpRequest())
-    {
-        /* If a request fails, show standard icon and a '?' */
-        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-        m_textWidget.setFormatStr("\\calign?");
-
-        m_requestTimer.start(UPDATE_PERIOD_SHORT);
-    }
-    else
-    {
-        m_requestTimer.start(UPDATE_PERIOD);
-    }
 
     return;
 }
@@ -220,25 +208,58 @@ void OpenWeatherPlugin::stop()
     return;
 }
 
-void OpenWeatherPlugin::process()
+void OpenWeatherPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if ((true == m_requestTimer.isTimerRunning()) &&
-        (true == m_requestTimer.isTimeout()))
+    /* Only if a network connection is established the required information
+     * shall be periodically requested via REST API.
+     */
+    if (false == m_requestTimer.isTimerRunning())
     {
-        if (false == startHttpRequest())
+        if (true == isConnected)
         {
-            /* If a request fails, show standard icon and a '?' */
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-            m_textWidget.setFormatStr("\\calign?");
+            if (false == startHttpRequest())
+            {
+                /* If a request fails, show standard icon and a '?' */
+                (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                m_textWidget.setFormatStr("\\calign?");
 
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
-        else
+    }
+    else
+    {
+        /* If the connection is lost, stop periodically requesting information
+         * via REST API.
+         */
+        if (false == isConnected)
         {
-            m_requestTimer.start(UPDATE_PERIOD);
+            m_requestTimer.stop();
+        }
+        /* Network connection is available and next request may be necessary for
+         * information update.
+         */
+        else if (true == m_requestTimer.isTimeout())
+        {
+            if (false == startHttpRequest())
+            {
+                /* If a request fails, show standard icon and a '?' */
+                (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                m_textWidget.setFormatStr("\\calign?");
+
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
     }
 
@@ -591,10 +612,10 @@ bool OpenWeatherPlugin::startHttpRequest()
 {
     bool status = false;
 
-    if ((0 < m_latitude.length()) &&
-        (0 < m_longitude.length()) &&
-        (0 < m_units.length()) &&
-        (0 < m_apiKey.length()))
+    if ((false == m_latitude.isEmpty()) &&
+        (false == m_longitude.isEmpty()) &&
+        (false == m_units.isEmpty()) &&
+        (false == m_apiKey.isEmpty()))
     {
         String url = OPEN_WEATHER_BASE_URI;
 
@@ -635,7 +656,7 @@ void OpenWeatherPlugin::initHttpClient()
         [this](const HttpResponse& rsp)
         {
             const size_t            JSON_DOC_SIZE   = 256U;
-            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
             if (nullptr != jsonDoc)
             {
@@ -706,35 +727,40 @@ void OpenWeatherPlugin::initHttpClient()
 
 void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    JsonObject current = jsonDoc["current"];
+    JsonVariant jsonCurrent     = jsonDoc["current"];
+    JsonVariant jsonTemperature = jsonCurrent["temp"];
+    JsonVariant jsonUvi         = jsonCurrent["uvi"];
+    JsonVariant jsonHumidity    = jsonCurrent["humidity"];
+    JsonVariant jsonWindSpeed   = jsonCurrent["wind_speed"];
+    JsonVariant jsonIcon        = jsonCurrent["weather"][0]["icon"];
 
-    if (false == current["temp"].is<float>())
+    if (false == jsonTemperature.is<float>())
     {
-        LOG_WARNING("JSON temperature type missmatch or missing.");
+        LOG_WARNING("JSON temp type missmatch or missing.");
     }
-    else if (false == current["uvi"].is<float>())
+    else if (false == jsonUvi.is<float>())
     {
         LOG_WARNING("JSON uvi type missmatch or missing.");
     }
-    else if (false == current["humidity"].is<int>())
+    else if (false == jsonHumidity.is<int>())
+    {
+        LOG_WARNING("JSON humidity type missmatch or missing.");
+    }
+    else if (false == jsonWindSpeed.is<float>())
     {
         LOG_WARNING("JSON wind_speed type missmatch or missing.");
     }
-    else if (false == current["wind_speed"].is<float>())
-    {
-        LOG_WARNING("JSON uvi type missmatch or missing.");
-    }
-    else if (false == current["weather"][0]["icon"].is<String>())
+    else if (false == jsonIcon.is<String>())
     {
         LOG_WARNING("JSON weather icon id type missmatch or missing.");
     }
     else
     {
-        float   temperature             = current["temp"].as<float>();
-        String  weatherIconId           = current["weather"][0]["icon"].as<String>();
-        float   uvIndex                 = current["uvi"].as<float>();
-        int     humidity                = current["humidity"].as<int>();
-        float   windSpeed               = current["wind_speed"].as<float>();
+        float   temperature             = jsonTemperature.as<float>();
+        String  weatherIconId           = jsonIcon.as<String>();
+        float   uvIndex                 = jsonUvi.as<float>();
+        int     humidity                = jsonHumidity.as<int>();
+        float   windSpeed               = jsonWindSpeed.as<float>();
         char    tempReducedPrecison[6]  = { 0 };
         char    windReducedPrecison[5]  = { 0 };
         String  weatherConditionIcon;
@@ -826,38 +852,47 @@ bool OpenWeatherPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["apiKey"].is<String>())
-    {
-        LOG_WARNING("API key not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["lat"].is<String>())
-    {
-        LOG_WARNING("Latitude not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["lon"].is<String>())
-    {
-        LOG_WARNING("Longitude not found or invalid type.");
-        status = false;
-    }
-     else if (false == jsonDoc["other"].is<int>())
-    {
-        LOG_WARNING("other not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["units"].is<String>())
-    {
-        LOG_WARNING("Units not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_apiKey                = jsonDoc["apiKey"].as<String>();
-        m_latitude              = jsonDoc["lat"].as<String>();
-        m_longitude             = jsonDoc["lon"].as<String>();
-        m_additionalInformation = static_cast<OtherWeatherInformation>(jsonDoc["other"].as<int>());
-        m_units                 = jsonDoc["units"].as<String>();
+        JsonVariant jsonApiKey  = jsonDoc["apiKey"];
+        JsonVariant jsonLat     = jsonDoc["lat"];
+        JsonVariant jsonLon     = jsonDoc["lon"];
+        JsonVariant jsonOther   = jsonDoc["other"];
+        JsonVariant jsonUnits   = jsonDoc["units"];
+
+        if (false == jsonApiKey.is<String>())
+        {
+            LOG_WARNING("API key not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonLat.is<String>())
+        {
+            LOG_WARNING("Latitude not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonLon.is<String>())
+        {
+            LOG_WARNING("Longitude not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonOther.is<int>())
+        {
+            LOG_WARNING("other not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonUnits.is<String>())
+        {
+            LOG_WARNING("Units not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_apiKey                = jsonApiKey.as<String>();
+            m_latitude              = jsonLat.as<String>();
+            m_longitude             = jsonLon.as<String>();
+            m_additionalInformation = static_cast<OtherWeatherInformation>(jsonOther.as<int>());
+            m_units                 = jsonUnits.as<String>();
+        }
     }
 
     return status;

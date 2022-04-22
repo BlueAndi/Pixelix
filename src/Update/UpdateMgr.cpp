@@ -347,7 +347,10 @@ void UpdateMgr::onError(ota_error_t error)
          */
         if (true == getInstance().m_updateIsRunning)
         {
-            SysMsg::getInstance().show(infoStr, 4000U, 2U, true);
+            const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
+            const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
             /* Request a restart */
             getInstance().reqRestart();

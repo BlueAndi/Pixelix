@@ -72,25 +72,31 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String      rsp         = "ACK";
-        const char  DELIMITER   = ';';
+        String      msg;
+        uint8_t     cnt         = 0U;
         const char* pluginName  = PluginMgr::getInstance().findFirst();
 
         while(nullptr != pluginName)
         {
-            rsp += DELIMITER;
-            rsp += "\"";
-            rsp += pluginName;
-            rsp += "\"";
+            if (0 < cnt)
+            {
+                msg += DELIMITER;
+            }
+
+            msg += "\"";
+            msg += pluginName;
+            msg += "\"";
 
             pluginName = PluginMgr::getInstance().findNext();
+
+            ++cnt;
         }
 
-        server->text(client->id(), rsp);
+        sendPositiveResponse(server, client, msg);
     }
 
     m_isError = false;

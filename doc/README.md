@@ -1,27 +1,27 @@
-# PIXELIX
+# PIXELIX <!-- omit in toc -->
 ![PIXELIX](./images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-- [PIXELIX](#pixelix)
-- [Documentation](#documentation)
-  - [Requirements](#requirements)
-  - [Hardware](#hardware)
-  - [Software](#software)
-  - [Structure](#structure)
+# Documentation  <!-- omit in toc -->
 
-# Documentation
+- [Requirements](#requirements)
+- [Hardware](#hardware)
+- [Software](#software)
+- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+- [License](#license)
+- [Contribution](#contribution)
 
-## Requirements
+# Requirements
 
 * [Requirements](REQUIREMENTS.md)
 
-## Hardware
+# Hardware
 
 * [Boards](./boards/README.md)
 * [Sensors](SENSORS.md)
 
-## Software
+# Software
 
 * [Toolchain installation](TOOLCHAIN-INSTALLATION.md)
 * [Software build](SW-BUILD.md)
@@ -33,23 +33,13 @@
 * [Websocket API description](WEBSOCKET.md)
 * [Sprite sheet](SPRITESHEET.md)
 
-## Structure
+# Issues, Ideas And Bugs
+If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
-<pre>
-+---data            (All filesystem files (SPIFFS))
-+---doc             (Documentation)
-    +---datasheets  (Datasheets of electronic parts)
-    +---design      (Design related documents)
-    +---doxygen     (Sourcecode documentation)
-    +---eagle-libs  (Eagle libraries)
-    +---images      (Images used for documentation)
-    +---pcb         (Electronic PCB images)
-    +---rfc         (Requests for Comments specifications)
-    \---schematics  (Schematics)
-+---include         (Include files)
-+---lib             (Project specific (private) libraries)
-+---scripts         (PlatformIO specific Python scripts)
-+---src             (Sourcecode)
-+---test            (Unit tests)
-\---platform.ini    (Project configuration file)
-</pre>
+# License
+The whole source code is published under the [MIT license](http://choosealicense.com/licenses/mit/).
+Consider the different licenses of the used third party libraries too!
+
+# Contribution
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, shall be licensed as above, without any
+additional terms or conditions.

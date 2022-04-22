@@ -16,9 +16,6 @@ menu.data = [{
         "title": "Countdown Plugin",
         "hyperRef": "/plugins/CountdownPlugin.html"
     }, {
-        "title": "Date Plugin",
-        "hyperRef": "/plugins/DatePlugin.html"
-    }, {
         "title": "DateTime Plugin",
         "hyperRef": "/plugins/DateTimePlugin.html"
     }, {
@@ -58,6 +55,9 @@ menu.data = [{
         "title": "ShellyPlugS Plugin",
         "hyperRef": "/plugins/ShellyPlugSPlugin.html"
     }, {
+        "title": "Sound Reactive Plugin",
+        "hyperRef": "/plugins/SoundReactivePlug.html"
+    }, {
         "title": "Sunrise Plugin",
         "hyperRef": "/plugins/SunrisePlugin.html"
     }, {
@@ -69,9 +69,6 @@ menu.data = [{
     }, {
         "title": "Test Plugin",
         "hyperRef": "/plugins/TestPlugin.html"
-    }, {
-        "title": "Time Plugin",
-        "hyperRef": "/plugins/TimePlugin.html"
     }, {
         "title": "ThreeIcon Plugin",
         "hyperRef": "/plugins/ThreeIconPlugin.html"

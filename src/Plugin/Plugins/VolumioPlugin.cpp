@@ -162,18 +162,6 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-    if (false == startHttpRequest())
-    {
-        /* If a request fails, show standard icon and a '?' */
-        changeState(STATE_UNKNOWN);
-        m_textWidget.setFormatStr("\\calign?");
-
-        m_requestTimer.start(UPDATE_PERIOD_SHORT);
-    }
-    else
-    {
-        m_requestTimer.start(UPDATE_PERIOD);
-    }
 
     m_offlineTimer.start(OFFLINE_PERIOD);
 
@@ -196,25 +184,58 @@ void VolumioPlugin::stop()
     return;
 }
 
-void VolumioPlugin::process()
+void VolumioPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if ((true == m_requestTimer.isTimerRunning()) &&
-        (true == m_requestTimer.isTimeout()))
+    /* Only if a network connection is established the required information
+     * shall be periodically requested via REST API.
+     */
+    if (false == m_requestTimer.isTimerRunning())
     {
-        if (false == startHttpRequest())
+        if (true == isConnected)
         {
-            /* If a request fails, show standard icon and a '?' */
-            changeState(STATE_UNKNOWN);
-            m_textWidget.setFormatStr("\\calign?");
+            if (false == startHttpRequest())
+            {
+                /* If a request fails, show standard icon and a '?' */
+                changeState(STATE_UNKNOWN);
+                m_textWidget.setFormatStr("\\calign?");
 
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
-        else
+    }
+    else
+    {
+        /* If the connection is lost, stop periodically requesting information
+         * via REST API.
+         */
+        if (false == isConnected)
         {
-            m_requestTimer.start(UPDATE_PERIOD);
+            m_requestTimer.stop();
+        }
+        /* Network connection is available and next request may be necessary for
+         * information update.
+         */
+        else if (true == m_requestTimer.isTimeout())
+        {
+            if (false == startHttpRequest())
+            {
+                /* If a request fails, show standard icon and a '?' */
+                changeState(STATE_UNKNOWN);
+                m_textWidget.setFormatStr("\\calign?");
+
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
     }
 
@@ -378,7 +399,7 @@ bool VolumioPlugin::startHttpRequest()
 {
     bool status = false;
 
-    if (0 < m_volumioHost.length())
+    if (false == m_volumioHost.isEmpty())
     {
         String url = String("http://") + m_volumioHost + "/api/v1/getState";
 
@@ -408,7 +429,7 @@ void VolumioPlugin::initHttpClient()
         [this](const HttpResponse& rsp)
         {
             const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
             if (nullptr != jsonDoc)
             {
@@ -478,37 +499,44 @@ void VolumioPlugin::initHttpClient()
 
 void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (false == jsonDoc["status"].is<String>())
+    JsonVariant jsonStatus  = jsonDoc["status"];
+    JsonVariant jsonTitle   = jsonDoc["title"];
+    JsonVariant jsonSeek    = jsonDoc["seek"];
+    JsonVariant jsonService = jsonDoc["service"];
+
+    if (false == jsonStatus.is<String>())
     {
         LOG_WARNING("JSON status type missmatch or missing.");
     }
-    else if (false == jsonDoc["title"].is<String>())
+    else if (false == jsonTitle.is<String>())
     {
         LOG_WARNING("JSON title type missmatch or missing.");
     }
-    else if (false == jsonDoc["seek"].is<uint32_t>())
+    else if (false == jsonSeek.is<uint32_t>())
     {
         LOG_WARNING("JSON seek type missmatch or missing.");
     }
-    else if (false == jsonDoc["service"].is<String>())
+    else if (false == jsonService.is<String>())
     {
         LOG_WARNING("JSON service type missmatch or missing.");
     }
     else
     {
-        String          status          = jsonDoc["status"].as<String>();
+        JsonVariant     jsonArtist      = jsonDoc["artist"];
+        JsonVariant     jsonDuration    = jsonDoc["duration"];
+        String          status          = jsonStatus.as<String>();
         String          artist;
-        String          title           = jsonDoc["title"].as<String>();
-        uint32_t        seekValue       = jsonDoc["seek"].as<uint32_t>();
-        String          service         = jsonDoc["service"].as<String>();
+        String          title           = jsonTitle.as<String>();
+        uint32_t        seekValue       = jsonSeek.as<uint32_t>();
+        String          service         = jsonService.as<String>();
         String          infoOnDisplay;
         uint32_t        pos             = 0U;
         VolumioState    state           = STATE_UNKNOWN;
 
         /* Artist may exist */
-        if (true == jsonDoc["artist"].is<String>())
+        if (true == jsonArtist.is<String>())
         {
-            artist = jsonDoc["artist"].as<String>();
+            artist = jsonArtist.as<String>();
         }
 
         if (true == title.isEmpty())
@@ -543,9 +571,9 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         }
 
         /* Determine position */
-        if (true == jsonDoc["duration"].is<uint32_t>())
+        if (true == jsonDuration.is<uint32_t>())
         {
-            uint32_t duration = jsonDoc["duration"].as<uint32_t>();
+            uint32_t duration = jsonDuration.as<uint32_t>();
 
             if (0U == duration)
             {
@@ -647,14 +675,19 @@ bool VolumioPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["host"].is<String>())
-    {
-        LOG_WARNING("Host not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_volumioHost = jsonDoc["host"].as<String>();
+        JsonVariant jsonHost = jsonDoc["host"];
+
+        if (false == jsonHost.is<String>())
+        {
+            LOG_WARNING("Host not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_volumioHost = jsonHost.as<String>();
+        }
     }
 
     return status;

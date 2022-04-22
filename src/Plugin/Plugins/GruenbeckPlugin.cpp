@@ -139,17 +139,6 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-    if (false == startHttpRequest())
-    {
-        /* If a request fails, show a '?' */
-        m_textWidget.setFormatStr("\\calign?");
-
-        m_requestTimer.start(UPDATE_PERIOD_SHORT);
-    }
-    else
-    {
-        m_requestTimer.start(UPDATE_PERIOD);
-    }
 
     return;
 }
@@ -169,24 +158,56 @@ void GruenbeckPlugin::stop()
     return;
 }
 
-void GruenbeckPlugin::process()
+void GruenbeckPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if ((true == m_requestTimer.isTimerRunning()) &&
-        (true == m_requestTimer.isTimeout()))
+    /* Only if a network connection is established the required information
+     * shall be periodically requested via REST API.
+     */
+    if (false == m_requestTimer.isTimerRunning())
     {
-        if (false == startHttpRequest())
+        if (true == isConnected)
         {
-            /* If a request fails, show a '?' */
-            m_textWidget.setFormatStr("\\calign?");
+            if (false == startHttpRequest())
+            {
+                /* If a request fails, show standard icon and a '?' */
+                m_textWidget.setFormatStr("\\calign?");
 
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
-        else
+    }
+    else
+    {
+        /* If the connection is lost, stop periodically requesting information
+         * via REST API.
+         */
+        if (false == isConnected)
         {
-            m_requestTimer.start(UPDATE_PERIOD);
+            m_requestTimer.stop();
+        }
+        /* Network connection is available and next request may be necessary for
+         * information update.
+         */
+        else if (true == m_requestTimer.isTimeout())
+        {
+            if (false == startHttpRequest())
+            {
+                /* If a request fails, show standard icon and a '?' */
+                m_textWidget.setFormatStr("\\calign?");
+
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
     }
 
@@ -303,7 +324,7 @@ bool GruenbeckPlugin::startHttpRequest()
 {
     bool status  = false;
 
-    if (0 < m_ipAddress.length())
+    if (false == m_ipAddress.isEmpty())
     {
         String url = String("http://") + m_ipAddress + "/mux_http";
 
@@ -332,7 +353,7 @@ void GruenbeckPlugin::initHttpClient()
         [this](const HttpResponse& rsp)
         {
             const size_t            JSON_DOC_SIZE   = 256U;
-            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
             if (nullptr != jsonDoc)
             {
@@ -406,13 +427,15 @@ void GruenbeckPlugin::initHttpClient()
 
 void GruenbeckPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (false == jsonDoc["restCapacity"].is<String>())
+    JsonVariant jsonRestCapacity = jsonDoc["restCapacity"];
+
+    if (false == jsonRestCapacity.is<String>())
     {
         LOG_WARNING("JSON rest capacity missmatch or missing.");
     }
     else
     {
-        m_relevantResponsePart = jsonDoc["restCapacity"].as<String>();
+        m_relevantResponsePart = jsonRestCapacity.as<String>();
         m_httpResponseReceived = true;
     }
 }
@@ -455,7 +478,17 @@ bool GruenbeckPlugin::loadConfiguration()
     }
     else
     {
-        m_ipAddress = jsonDoc["gruenbeckIP"].as<String>();
+        JsonVariant jsonIP = jsonDoc["gruenbeckIP"];
+
+        if (false == jsonIP.is<String>())
+        {
+            LOG_WARNING("JSON gruenbeckIP not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_ipAddress = jsonIP.as<String>();
+        }
     }
 
     return status;

@@ -40,6 +40,7 @@
 #include "FileSystem.h"
 #include "Plugin.hpp"
 #include "HttpStatus.h"
+#include "RestUtil.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
@@ -187,14 +188,7 @@ void PluginMgr::load()
             DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
             DeserializationError    error           = deserializeJson(jsonDoc, installation);
 
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
+            checkJsonDocOverflow(jsonDoc, __LINE__);
 
             if (DeserializationError::Ok != error.code())
             {
@@ -291,14 +285,7 @@ void PluginMgr::save()
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
+    checkJsonDocOverflow(jsonDoc, __LINE__);
 
     if (false == settings.open(false))
     {
@@ -320,6 +307,25 @@ void PluginMgr::save()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+/**
+ * Check dynamic JSON document for overflow and log a corresponding message,
+ * otherwise log its document size.
+ * 
+ * @param[in] jsonDoc   Dynamic JSON document, which to check.
+ * @param[in] line      Line number where the document is handled in the module.
+ */
+void PluginMgr::checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line)
+{
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document @%d has less memory available.", line);
+    }
+    else
+    {
+        LOG_INFO("JSON document @%d size: %u", line, jsonDoc.memoryUsage());
+    }
+}
 
 void PluginMgr::createPluginConfigDirectory()
 {
@@ -408,7 +414,7 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
         /* Handle each topic */
         if (0U < topics.size())
         {
-            PluginObjData*  metaData = new PluginObjData();
+            PluginObjData*  metaData = new(std::nothrow) PluginObjData();
 
             if (nullptr != metaData)
             {
@@ -501,14 +507,11 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
     {
         if (false == plugin->getTopic(topic, dataObj))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
+            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported.");
 
             jsonDoc.remove("data");
 
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Requested topic not supported.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -536,14 +539,17 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
 
         if (false == plugin->setTopic(topic, jsonDocPar.as<JsonObject>()))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
+            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
 
             jsonDoc.remove("data");
 
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Requested topic not supported or invalid data.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            /* If a file is available, it will be removed now. */
+            if (false == webHandlerData->fullPath.isEmpty())
+            {
+                (void)FILESYSTEM.remove(webHandlerData->fullPath);
+            }
+
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -553,27 +559,14 @@ void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance
     }
     else
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
 
         jsonDoc.remove("data");
 
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -583,27 +576,51 @@ void PluginMgr::uploadHandler(AsyncWebServerRequest *request, const String& file
     /* Begin of upload? */
     if (0 == index)
     {
-        LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), request->contentLength());
-        webHandlerData->isUploadError = false;
-        webHandlerData->fullPath.clear();
+        AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
+        size_t          fileSize        = request->contentLength();
+        size_t          fileSystemSpace = FILESYSTEM.totalBytes() - FILESYSTEM.usedBytes();
 
-        /* Ask plugin, whether the upload is allowed or not. */
-        if (false == plugin->isUploadAccepted(topic, filename, webHandlerData->fullPath))
+        /* File size available? */
+        if (nullptr != headerXFileSize)
         {
-            LOG_WARNING("[%s][%u] Upload not supported.", plugin->getName(), plugin->getUID());
+            uint32_t u32FileSize = 0U;
+
+            if (true == Util::strToUInt32(headerXFileSize->value(), u32FileSize))
+            {
+                fileSize = u32FileSize;
+            }
+        }
+
+        if (fileSystemSpace <= fileSize)
+        {
+            LOG_WARNING("Upload of %s aborted. Not enough space.", filename.c_str());
             webHandlerData->isUploadError = true;
             webHandlerData->fullPath.clear();
         }
         else
         {
-            /* Create a new file and overwrite a existing one. */
-            webHandlerData->fd = FILESYSTEM.open(webHandlerData->fullPath, "w");
+            LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), fileSize);
+            webHandlerData->isUploadError = false;
+            webHandlerData->fullPath.clear();
 
-            if (false == webHandlerData->fd)
+            /* Ask plugin, whether the upload is allowed or not. */
+            if (false == plugin->isUploadAccepted(topic, filename, webHandlerData->fullPath))
             {
-                LOG_ERROR("Couldn't create file: %s", webHandlerData->fullPath.c_str());
+                LOG_WARNING("[%s][%u] Upload not supported.", plugin->getName(), plugin->getUID());
                 webHandlerData->isUploadError = true;
                 webHandlerData->fullPath.clear();
+            }
+            else
+            {
+                /* Create a new file and overwrite a existing one. */
+                webHandlerData->fd = FILESYSTEM.open(webHandlerData->fullPath, "w");
+
+                if (false == webHandlerData->fd)
+                {
+                    LOG_ERROR("Couldn't create file: %s", webHandlerData->fullPath.c_str());
+                    webHandlerData->isUploadError = true;
+                    webHandlerData->fullPath.clear();
+                }
             }
         }
     }

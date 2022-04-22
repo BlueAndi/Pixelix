@@ -72,12 +72,11 @@ void WsCmdLog::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        server->text(client->id(), "NACK;\"Parameter invalid.\"");
+        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
     }
     else
     {
-        String      rsp             = "ACK";
-        const char  DELIMITER       = ';';
+        String      msg;
         LogSink*    selectedSink    = nullptr;
 
         /* Set logging on/off? */
@@ -93,21 +92,19 @@ void WsCmdLog::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             }
         }
 
-        rsp += DELIMITER;
-
         selectedSink = Logging::getInstance().getSelectedSink();
 
         if ((nullptr == selectedSink) ||
             (selectedSink->getName() != "Websocket"))
         {
-            rsp += "0";
+            msg = "0";
         }
         else
         {
-            rsp += "1";
+            msg = "1";
         }
 
-        server->text(client->id(), rsp);
+        sendPositiveResponse(server, client, msg);
     }
 
     m_cnt       = 0U;

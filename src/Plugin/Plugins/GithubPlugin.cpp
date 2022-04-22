@@ -149,17 +149,6 @@ void GithubPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-    if (false == startHttpRequest())
-    {
-        /* If a request fails, show standard icon and a '?' */
-        m_textWidget.setFormatStr("\\calign?");
-
-        m_requestTimer.start(UPDATE_PERIOD_SHORT);
-    }
-    else
-    {
-        m_requestTimer.start(UPDATE_PERIOD);
-    }
 
     return;
 }
@@ -179,24 +168,56 @@ void GithubPlugin::stop()
     return;
 }
 
-void GithubPlugin::process()
+void GithubPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if ((true == m_requestTimer.isTimerRunning()) &&
-        (true == m_requestTimer.isTimeout()))
+    /* Only if a network connection is established the required information
+     * shall be periodically requested via REST API.
+     */
+    if (false == m_requestTimer.isTimerRunning())
     {
-        if (false == startHttpRequest())
+        if (true == isConnected)
         {
-            /* If a request fails, show standard icon and a '?' */
-            m_textWidget.setFormatStr("\\calign?");
+            if (false == startHttpRequest())
+            {
+                /* If a request fails, show standard icon and a '?' */
+                m_textWidget.setFormatStr("\\calign?");
 
-            m_requestTimer.start(UPDATE_PERIOD_SHORT);
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
-        else
+    }
+    else
+    {
+        /* If the connection is lost, stop periodically requesting information
+         * via REST API.
+         */
+        if (false == isConnected)
         {
-            m_requestTimer.start(UPDATE_PERIOD);
+            m_requestTimer.stop();
+        }
+        /* Network connection is available and next request may be necessary for
+         * information update.
+         */
+        else if (true == m_requestTimer.isTimeout())
+        {
+            if (false == startHttpRequest())
+            {
+                /* If a request fails, show standard icon and a '?' */
+                m_textWidget.setFormatStr("\\calign?");
+
+                m_requestTimer.start(UPDATE_PERIOD_SHORT);
+            }
+            else
+            {
+                m_requestTimer.start(UPDATE_PERIOD);
+            }
         }
     }
 
@@ -321,8 +342,8 @@ bool GithubPlugin::startHttpRequest()
 {
     bool status = false;
 
-    if ((0 < m_githubUser.length()) &&
-        (0 < m_githubRepository.length()))
+    if ((false == m_githubUser.isEmpty()) &&
+        (false == m_githubRepository.isEmpty()))
     {
         String url = String("https://api.github.com/repos/") + m_githubUser + "/" + m_githubRepository;
 
@@ -352,7 +373,7 @@ void GithubPlugin::initHttpClient()
         [this](const HttpResponse& rsp)
         {
             const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new DynamicJsonDocument(JSON_DOC_SIZE);
+            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
             if (nullptr != jsonDoc)
             {
@@ -417,13 +438,15 @@ void GithubPlugin::initHttpClient()
 
 void GithubPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    if (false == jsonDoc["stargazers_count"].is<uint32_t>())
+    JsonVariant jsonStargazersCount = jsonDoc["stargazers_count"];
+
+    if (false == jsonStargazersCount.is<uint32_t>())
     {
         LOG_WARNING("JSON stargazers_count type missmatch or missing.");
     }
     else
     {
-        uint32_t    stargazersCount = jsonDoc["stargazers_count"].as<uint32_t>();
+        uint32_t    stargazersCount = jsonStargazersCount.as<uint32_t>();
         String      info            = "\\calign";
         
         info += stargazersCount;
@@ -469,20 +492,26 @@ bool GithubPlugin::loadConfiguration()
         LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
         status = false;
     }
-    else if (false == jsonDoc["user"].is<String>())
-    {
-        LOG_WARNING("User not found or invalid type.");
-        status = false;
-    }
-    else if (false == jsonDoc["repository"].is<String>())
-    {
-        LOG_WARNING("Repository not found or invalid type.");
-        status = false;
-    }
     else
     {
-        m_githubUser        = jsonDoc["user"].as<String>();
-        m_githubRepository  = jsonDoc["repository"].as<String>();
+        JsonVariant jsonUser        = jsonDoc["user"];
+        JsonVariant jsonRepository  = jsonDoc["repository"];
+
+        if (false == jsonUser.is<String>())
+        {
+            LOG_WARNING("JSON user not found or invalid type.");
+            status = false;
+        }
+        else if (false == jsonRepository.is<String>())
+        {
+            LOG_WARNING("JSON repository not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_githubUser        = jsonUser.as<String>();
+            m_githubRepository  = jsonRepository.as<String>();
+        }
     }
 
     return status;

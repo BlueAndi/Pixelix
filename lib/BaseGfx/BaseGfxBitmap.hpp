@@ -47,6 +47,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <BaseGfx.hpp>
+#include <new>
 
 /******************************************************************************
  * Macros
@@ -151,6 +152,8 @@ public:
                 while(PIXEL_BUFFER_SIZE > idx)
                 {
                     m_pixels[idx] = bitmap.m_pixels[idx];
+
+                    ++idx;
                 }
             }
         }
@@ -369,6 +372,8 @@ public:
                     while(PIXEL_BUFFER_SIZE > idx)
                     {
                         m_pixels[idx] = bitmap.m_pixels[idx];
+
+                        ++idx;
                     }
 
                     m_width     = bitmap.m_width;
@@ -568,7 +573,7 @@ private:
         if ((0U < width) &&
             (0U < height))
         {
-            buffer = new TColor[width * height];
+            buffer = new(std::nothrow) TColor[width * height];
         }
 
         return buffer;

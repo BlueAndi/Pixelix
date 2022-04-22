@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Sensors
+ * @brief  freeRTOS critical section wrapper
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup os
  *
  * @{
  */
 
-#ifndef __SENSORS_H__
-#define __SENSORS_H__
+#ifndef __CRITICAL_SECTION_HPP__
+#define __CRITICAL_SECTION_HPP__
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <SensorDataProviderImpl.h>
+#include <freertos/FreeRTOS.h>
 
 /******************************************************************************
  * Macros
@@ -54,25 +54,95 @@
  * Types and Classes
  *****************************************************************************/
 
+/**
+ * Wrapper for the freeRTOS critical section with spinlock to protect
+ * concurrent access by cores.
+ */
+class CriticalSection
+{
+public:
+
+    /**
+     * Create critical section wrapper.
+     */
+    CriticalSection() :
+        m_spinlock(portMUX_INITIALIZER_UNLOCKED)
+    {
+    }
+
+    /**
+     * Destroys critical section wrapper.
+     */
+    ~CriticalSection()
+    {
+    }
+
+    /**
+     * Enter the critical section.
+     */
+    void enter()
+    {
+        portENTER_CRITICAL(&m_spinlock);
+    }
+
+    /**
+     * Exit critical section.
+     */
+    void exit()
+    {
+        portEXIT_CRITICAL(&m_spinlock);
+    }
+
+private:
+
+    portMUX_TYPE    m_spinlock; /**< Spinlock */
+
+    CriticalSection(const CriticalSection& CriticalSection);
+    CriticalSection& operator=(const CriticalSection& CriticalSection);
+
+};
+
+/**
+ * The critical section guard enters the critical section at creation and exits during
+ * destruction.
+ */
+class CriticalSectionGuard
+{
+public:
+
+    /**
+     * Creates the critical section guard and enters it.
+     * 
+     * @param[in] critSec The guard uses this critical section for protection.
+     */
+    CriticalSectionGuard(CriticalSection& critSec) :
+        m_criticalSection(critSec)
+    {
+        m_criticalSection.enter();
+    }
+
+    /**
+     * Destroys the critical section guard and exits the critical section.
+     */
+    ~CriticalSectionGuard()
+    {
+        m_criticalSection.exit();
+    }
+
+private:
+
+    CriticalSection&    m_criticalSection;  /**< Critical section used for the guard. */
+
+    CriticalSectionGuard();
+    CriticalSectionGuard(const CriticalSectionGuard& guard);
+    CriticalSectionGuard&  operator=(const CriticalSectionGuard& guard);
+
+};
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-/**
- * Available sensors.
- */
-namespace Sensors
-{
-
-/**
- * Get the concrete sensor data provider, which contains all available sensors.
- * 
- * @return Sensor data provider implementation instance
- */
-extern SensorDataProviderImpl* getSensorDataProviderImpl();
-
-}
-
-#endif  /* __SENSORS_H__ */
+#endif  /* __CRITICAL_SECTION_HPP__ */
 
 /** @} */

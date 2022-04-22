@@ -129,11 +129,6 @@ private:
     void showStartupInfoOnDisplay(void);
 
     /**
-     * Register plugins on the plugin manager.
-     */
-    void registerPlugins();
-
-    /**
      * Welcome the user on the very first start.
      */
     void welcome();

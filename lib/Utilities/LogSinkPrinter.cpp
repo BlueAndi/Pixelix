@@ -113,20 +113,28 @@ const char* LogSinkPrinter::logLevelToString(const Logging::LogLevel LogLevel) c
 
     switch (LogLevel)
     {
-        case Logging::LOGLEVEL_INFO:
-            logLevelString = "INFO   ";
+        case Logging::LOG_LEVEL_FATAL:
+            logLevelString = "FATAL  ";
             break;
 
-        case Logging::LOGLEVEL_WARNING :
-            logLevelString = "WARNING";
-            break;
-
-        case Logging::LOGLEVEL_ERROR :
+        case Logging::LOG_LEVEL_ERROR:
             logLevelString = "ERROR  ";
         break;
 
-        case Logging::LOGLEVEL_FATAL :
-            logLevelString = "FATAL  ";
+        case Logging::LOG_LEVEL_WARNING:
+            logLevelString = "WARNING";
+            break;
+
+        case Logging::LOG_LEVEL_INFO:
+            logLevelString = "INFO   ";
+            break;
+
+        case Logging::LOG_LEVEL_DEBUG:
+            logLevelString = "DEBUG  ";
+            break;
+
+        case Logging::LOG_LEVEL_TRACE:
+            logLevelString = "TRACE  ";
             break;
 
         default:

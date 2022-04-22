@@ -40,6 +40,7 @@
 #include "PluginMgr.h"
 #include "WiFiUtil.h"
 #include "FileSystem.h"
+#include "RestUtil.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -130,33 +131,18 @@ void RestApi::init(AsyncWebServer& srv)
  */
 void RestApi::error(AsyncWebServerRequest* request)
 {
-    String              content;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    JsonObject          errorObj        = jsonDoc.createNestedObject("error");
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_NOT_FOUND;
 
     if (nullptr == request)
     {
         return;
     }
 
-    /* Prepare response */
-    jsonDoc["status"]   = "error";
-    errorObj["msg"]     = "Invalid path requested.";
-    httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+    RestUtil::prepareRspError(jsonDoc, "Invalid path requested.");
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -173,7 +159,6 @@ void RestApi::error(AsyncWebServerRequest* request)
  */
 static void handleButton(AsyncWebServerRequest* request)
 {
-    String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -185,34 +170,18 @@ static void handleButton(AsyncWebServerRequest* request)
 
     if (HTTP_POST != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
         DisplayMgr::getInstance().activateNextSlot();
  
-        /* Prepare response */
-        (void)jsonDoc.createNestedObject("data");
-        jsonDoc["status"]   = "ok";
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        (void)RestUtil::prepareRspSuccess(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -225,7 +194,6 @@ static void handleButton(AsyncWebServerRequest* request)
  */
 static void handleFadeEffect(AsyncWebServerRequest* request)
 {
-    String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -237,50 +205,31 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
 
     if (HTTP_GET == request->method())
     {
-        JsonObject data = jsonDoc.createNestedObject("data");
+        JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
         
-        data["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
-
-        /* Prepare response */
-        jsonDoc["status"]   = "ok";
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        dataObj["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
     }
     else if (HTTP_POST == request->method())
     {
-        JsonObject              data                = jsonDoc.createNestedObject("data");
+        JsonVariant             dataObj             = RestUtil::prepareRspSuccess(jsonDoc);
         DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
         uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
         DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1);
 
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+
         DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
 
-        data["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
-
-        /* Prepare response */
-        jsonDoc["status"]   = "ok";
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        dataObj["fadeEffect"] = DisplayMgr::getInstance().getFadeEffect();
     }
     else
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -293,7 +242,6 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
  */
 static void handleSlots(AsyncWebServerRequest* request)
 {
-    String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -305,16 +253,12 @@ static void handleSlots(AsyncWebServerRequest* request)
 
     if (HTTP_GET != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
-        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+        JsonVariant dataObj     = RestUtil::prepareRspSuccess(jsonDoc);
         JsonArray   slotArray   = dataObj.createNestedArray("slots");
         uint8_t     slotId      = 0U;
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
@@ -340,22 +284,10 @@ static void handleSlots(AsyncWebServerRequest* request)
             slot["duration"]    = duration;
         }
 
-        /* Prepare response */
-        jsonDoc["status"]   = "ok";
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -368,7 +300,6 @@ static void handleSlots(AsyncWebServerRequest* request)
  */
 static void handlePluginInstall(AsyncWebServerRequest* request)
 {
-    String              content;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -380,24 +311,16 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
 
     if (HTTP_POST != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
         /* Plugin name missing? */
         if (false == request->hasArg("name"))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Plugin name is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, "Plugin name is missing.");
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -407,17 +330,13 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
             /* Plugin not found? */
             if (nullptr == plugin)
             {
-                JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                /* Prepare response */
-                jsonDoc["status"]   = "error";
-                errorObj["msg"]     = "Plugin unknown.";
-                httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                RestUtil::prepareRspError(jsonDoc, "Plugin unknown.");
+                httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
             }
             /* Plugin successful installed. */
             else
             {
-                JsonObject dataObj = jsonDoc.createNestedObject("data");
+                JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
 
                 plugin->enable();
 
@@ -427,23 +346,12 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
                 /* Prepare response */
                 dataObj["slotId"]   = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
                 dataObj["uid"]      = plugin->getUID();
-                jsonDoc["status"]   = "ok";
                 httpStatusCode      = HttpStatus::STATUS_CODE_OK;
             }
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -456,7 +364,6 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
  */
 static void handlePluginUninstall(AsyncWebServerRequest* request)
 {
-    String              content;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -468,34 +375,22 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
 
     if (HTTP_POST != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
         /* Plugin name missing? */
         if (false == request->hasArg("name"))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Plugin name is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, "Plugin name is missing.");
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         /* Slot id missing? */
         else if (false == request->hasArg("slotId"))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Slot id is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, "Slot id is missing.");
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -504,12 +399,8 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
 
             if (false == slotIdStatus)
             {
-                JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                /* Prepare response */
-                jsonDoc["status"]   = "error";
-                errorObj["msg"]     = "Invalid slot id.";
-                httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
+                httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
             }
             else
             {
@@ -518,65 +409,37 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
 
                 if (nullptr == plugin)
                 {
-                    JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                    /* Prepare response */
-                    jsonDoc["status"]   = "error";
-                    errorObj["msg"]     = "No plugin in slot.";
-                    httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                    RestUtil::prepareRspError(jsonDoc, "No plugin in slot.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
                 }
                 else if (0 != pluginName.compareTo(plugin->getName()))
                 {
-                    JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                    /* Prepare response */
-                    jsonDoc["status"]   = "error";
-                    errorObj["msg"]     = "Wrong plugin in slot.";
-                    httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                    RestUtil::prepareRspError(jsonDoc, "Wrong plugin in slot.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
                 }
                 else if (true == DisplayMgr::getInstance().isSlotLocked(slotId))
                 {
-                    JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                    /* Prepare response */
-                    jsonDoc["status"]   = "error";
-                    errorObj["msg"]     = "Slot is locked.";
-                    httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                    RestUtil::prepareRspError(jsonDoc, "Slot is locked.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
                 }
                 else if (false == PluginMgr::getInstance().uninstall(plugin))
                 {
-                    JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                    /* Prepare response */
-                    jsonDoc["status"]   = "error";
-                    errorObj["msg"]     = "Failed to uninstall.";
-                    httpStatusCode      = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                    RestUtil::prepareRspError(jsonDoc, "Failed to uninstall.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
                 }
                 else
                 {
                     /* Save current installed plugins to persistent memory. */
                     PluginMgr::getInstance().save();
 
-                    /* Prepare response */
-                    (void)jsonDoc.createNestedObject("data");
-                    jsonDoc["status"]   = "ok";
-                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+                    (void)RestUtil::prepareRspSuccess(jsonDoc);
+                    httpStatusCode = HttpStatus::STATUS_CODE_OK;
                 }
             }
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -589,7 +452,6 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
  */
 static void handlePlugins(AsyncWebServerRequest* request)
 {
-    String              content;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -601,16 +463,12 @@ static void handlePlugins(AsyncWebServerRequest* request)
 
     if (HTTP_GET != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
-        JsonObject  dataObj     = jsonDoc.createNestedObject("data");
+        JsonVariant dataObj     = RestUtil::prepareRspSuccess(jsonDoc);
         JsonArray   pluginArray = dataObj.createNestedArray("plugins");
         const char* pluginName  = PluginMgr::getInstance().findFirst();
 
@@ -620,22 +478,10 @@ static void handlePlugins(AsyncWebServerRequest* request)
             pluginName = PluginMgr::getInstance().findNext();
         }
 
-        /* Prepare response */
-        jsonDoc["status"]   = "ok";
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -648,7 +494,6 @@ static void handlePlugins(AsyncWebServerRequest* request)
  */
 static void handleSensors(AsyncWebServerRequest* request)
 {
-    String              content;
     const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -660,16 +505,12 @@ static void handleSensors(AsyncWebServerRequest* request)
 
     if (HTTP_GET != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
-        JsonObject          dataObj         = jsonDoc.createNestedObject("data");
+        JsonVariant         dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
         JsonArray           sensorsArray    = dataObj.createNestedArray("sensors");
         SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
         uint8_t             numSensors      = sensorDataProv.getNumSensors();
@@ -709,22 +550,10 @@ static void handleSensors(AsyncWebServerRequest* request)
             }
         }
 
-        /* Prepare response */
-        jsonDoc["status"]   = "ok";
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -737,7 +566,6 @@ static void handleSensors(AsyncWebServerRequest* request)
  */
 static void handleSettings(AsyncWebServerRequest* request)
 {
-    String              content;
     const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -749,16 +577,12 @@ static void handleSettings(AsyncWebServerRequest* request)
 
     if (HTTP_GET != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
-        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
+        JsonVariant dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
         JsonArray   settingsArray   = dataObj.createNestedArray("settings");
         uint8_t     settingIdx      = 0U;
         KeyValue**  settings        = Settings::getInstance().getList();
@@ -773,22 +597,10 @@ static void handleSettings(AsyncWebServerRequest* request)
             }
         }
 
-        /* Prepare response */
-        jsonDoc["status"]   = "ok";
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -802,7 +614,6 @@ static void handleSettings(AsyncWebServerRequest* request)
  */
 static void handleSetting(AsyncWebServerRequest* request)
 {
-    String              content;
     const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -816,24 +627,17 @@ static void handleSetting(AsyncWebServerRequest* request)
     {
         if (false == request->hasArg("key"))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Key is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, "Key is missing.");
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else if (false == Settings::getInstance().open(true))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Internal error.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_BAD_REQUEST;
+            RestUtil::prepareRspError(jsonDoc, "Internal error.");
+            httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
         }
         else
         {
-            JsonObject      dataObj = jsonDoc.createNestedObject("data");
+            JsonVariant     dataObj = RestUtil::prepareRspSuccess(jsonDoc);
             const String&   key     = request->arg("key");
             KeyValue*       setting = Settings::getInstance().getSettingByKey(key.c_str());
 
@@ -919,30 +723,20 @@ static void handleSetting(AsyncWebServerRequest* request)
 
             Settings::getInstance().close();
 
-            /* Prepare response */
-            jsonDoc["status"]   = "ok";
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+            httpStatusCode = HttpStatus::STATUS_CODE_OK;
         }
     }
     else if (HTTP_POST == request->method())
     {
         if (false == request->hasArg("key"))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Key is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, "Key is missing.");
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else if (false == request->hasArg("value"))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Value is missing.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, "Value is missing.");
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
@@ -951,43 +745,29 @@ static void handleSetting(AsyncWebServerRequest* request)
 
             if (nullptr == setting)
             {
-                JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                /* Prepare response */
-                jsonDoc["status"]   = "error";
-                errorObj["msg"]     = "Key not found.";
-                httpStatusCode      = HttpStatus::STATUS_CODE_BAD_REQUEST;
+                RestUtil::prepareRspError(jsonDoc, "Key not found.");
+                httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
             }
             else if (false == Settings::getInstance().open(false))
             {
-                JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-                jsonDoc["status"]   = "error";
-                errorObj["msg"]     = "Internal error.";
-                httpStatusCode      = HttpStatus::STATUS_CODE_BAD_REQUEST;
+                RestUtil::prepareRspError(jsonDoc, "Internal error.");
+                httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
             }
             else
             {
-                String error;
+                String errorMsg;
 
-                if (false == storeSetting(setting, request->arg("value"), error))
+                if (false == storeSetting(setting, request->arg("value"), errorMsg))
                 {
-                    JsonObject errorObj = jsonDoc.createNestedObject("error");
+                    RestUtil::prepareRspError(jsonDoc, errorMsg.c_str());
+                    httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
 
-                    LOG_WARNING(error);
-
-                    jsonDoc["status"]   = "error";
-                    errorObj["msg"]     = error;
-                    httpStatusCode      = HttpStatus::STATUS_CODE_BAD_REQUEST;
+                    LOG_WARNING(errorMsg);
                 }
                 else
                 {
-                    JsonObject dataObj = jsonDoc.createNestedObject("data");
-
-                    UTIL_NOT_USED(dataObj);
-
-                    jsonDoc["status"]   = "ok";
-                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+                    (void)RestUtil::prepareRspSuccess(jsonDoc);
+                    httpStatusCode = HttpStatus::STATUS_CODE_OK;
                 }
 
                 Settings::getInstance().close();
@@ -996,25 +776,11 @@ static void handleSetting(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -1258,7 +1024,6 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
  */
 static void handleStatus(AsyncWebServerRequest* request)
 {
-    String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -1270,18 +1035,14 @@ static void handleStatus(AsyncWebServerRequest* request)
 
     if (HTTP_GET != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
         String      ssid;
         int8_t      rssi            = -100; // dbm
-        JsonObject  dataObj         = jsonDoc.createNestedObject("data");
+        JsonVariant dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
         JsonObject  hwObj           = dataObj.createNestedObject("hardware");
         JsonObject  swObj           = dataObj.createNestedObject("software");
         JsonObject  internalRamObj  = swObj.createNestedObject("internalRam");
@@ -1302,8 +1063,6 @@ static void handleStatus(AsyncWebServerRequest* request)
         }
 
         /* Prepare response */
-        jsonDoc["status"]       = "ok";
-
         hwObj["chipRev"]        = ESP.getChipRevision();
         hwObj["cpuFreqMhz"]     = ESP.getCpuFreqMHz();
 
@@ -1321,17 +1080,7 @@ static void handleStatus(AsyncWebServerRequest* request)
         httpStatusCode          = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -1357,12 +1106,8 @@ static void handleFilesystem(AsyncWebServerRequest* request)
 
     if (HTTP_GET != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
@@ -1432,11 +1177,6 @@ static void handleFilesystem(AsyncWebServerRequest* request)
                 }
             }
 
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_WARNING("JSON document has less memory.");
-            }
-
             fdRoot.close();
         }
 
@@ -1446,17 +1186,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
         httpStatusCode      = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -1470,7 +1200,6 @@ static void handleFilesystem(AsyncWebServerRequest* request)
  */
 static void handleFileGet(AsyncWebServerRequest* request)
 {
-    String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -1482,24 +1211,10 @@ static void handleFileGet(AsyncWebServerRequest* request)
 
     if (HTTP_GET != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
-
-        if (true == jsonDoc.overflowed())
-        {
-            LOG_ERROR("JSON document has less memory available.");
-        }
-        else
-        {
-            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-        }
-
-        (void)serializeJsonPretty(jsonDoc, content);
-        request->send(httpStatusCode, "application/json", content);
+        RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
     }
     else
     {
@@ -1509,24 +1224,13 @@ static void handleFileGet(AsyncWebServerRequest* request)
 
         if (false == FILESYSTEM.exists(path))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
+            String errorMsg = "Invalid path ";
+            errorMsg += path;
 
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = String("Invalid path ") + path;
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, errorMsg.c_str());
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
 
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
-
-            (void)serializeJsonPretty(jsonDoc, content);
-            request->send(httpStatusCode, "application/json", content);
+            RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
         }
         else
         {
@@ -1605,7 +1309,6 @@ static String getContentType(const String& filename)
  */
 static void handleFilePost(AsyncWebServerRequest* request)
 {
-    String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -1617,32 +1320,16 @@ static void handleFilePost(AsyncWebServerRequest* request)
 
     if (HTTP_POST != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
-        /* Prepare response */
-        (void)jsonDoc.createNestedObject("data");
-        jsonDoc["status"]   = "ok";
-        httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+        (void)RestUtil::prepareRspSuccess(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }
@@ -1714,7 +1401,6 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
  */
 static void handleFileDelete(AsyncWebServerRequest* request)
 {
-    String              content;
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
     const size_t        JSON_DOC_SIZE   = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -1726,12 +1412,8 @@ static void handleFileDelete(AsyncWebServerRequest* request)
 
     if (HTTP_DELETE != request->method())
     {
-        JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-        /* Prepare response */
-        jsonDoc["status"]   = "error";
-        errorObj["msg"]     = "HTTP method not supported.";
-        httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
     }
     else
     {
@@ -1741,33 +1423,17 @@ static void handleFileDelete(AsyncWebServerRequest* request)
 
         if (false == FILESYSTEM.remove(path))
         {
-            JsonObject errorObj = jsonDoc.createNestedObject("error");
-
-            /* Prepare response */
-            jsonDoc["status"]   = "error";
-            errorObj["msg"]     = "Failed to remove file.";
-            httpStatusCode      = HttpStatus::STATUS_CODE_NOT_FOUND;
+            RestUtil::prepareRspError(jsonDoc, "Failed to remove file.");
+            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
         else
         {
-            /* Prepare response */
-            (void)jsonDoc.createNestedObject("data");
-            jsonDoc["status"]   = "ok";
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+            (void)RestUtil::prepareRspSuccess(jsonDoc);
+            httpStatusCode = HttpStatus::STATUS_CODE_OK;
         }
     }
 
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document has less memory available.");
-    }
-    else
-    {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-    }
-
-    (void)serializeJsonPretty(jsonDoc, content);
-    request->send(httpStatusCode, "application/json", content);
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 
     return;
 }

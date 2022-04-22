@@ -35,6 +35,10 @@
 #include "DateTimePlugin.h"
 #include "ClockDrv.h"
 
+#include <Logging.h>
+#include <FileSystem.h>
+#include <JsonFile.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -42,30 +46,6 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
-
-/**
- * Size of formatted date string in the form of DD:MM / MM:DD / HH:MM
- *
- *      "\\calign"          = 8  (Alignment center )
- *      "Day/Month/Hour"    = 2
- *      "separator"         = 1
- *      "Month/Day"/Minute  = 2
- *      "separator"         = 1  (only valid for date)
- *      "AM/PM"             = 2 (only at time strings)
- *      "\0"                = 1
- *      ------------------------
- *                          = 17
- */
-#define SIZE_OF_FORMATED_DATE_TIME_STRING       (17U)
-
-/** Divider to convert ms in s */
-#define MS_TO_SEC_DIVIDER                       (1000U)
-
-/**
- * Toggle counter value to switch between date and time
- * if DURATION_INFINITE was set for the plugin.
- */
-#define MAX_COUNTER_VALUE_FOR_DURATION_INFINITE (15U)
 
 /******************************************************************************
  * Types and classes
@@ -79,9 +59,50 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize plugin topic. */
+const char*     DateTimePlugin::TOPIC_CFG   = "/dateTime";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void DateTimePlugin::getTopics(JsonArray& topics) const
+{
+    (void)topics.add(TOPIC_CFG);
+}
+
+bool DateTimePlugin::getTopic(const String& topic, JsonObject& value) const
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC_CFG))
+    {
+        value["cfg"] = getCfg();
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+bool DateTimePlugin::setTopic(const String& topic, const JsonObject& value)
+{
+    bool isSuccessful = false;
+
+    if (0U != topic.equals(TOPIC_CFG))
+    {
+        JsonVariant jsonCfg = value["cfg"];
+
+        if (false == jsonCfg.isNull())
+        {
+            setCfg(static_cast<Cfg>(jsonCfg.as<uint8_t>()));
+
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
 
 void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 {
@@ -121,25 +142,43 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
         }
     }
 
+    /* Try to load configuration. If there is no configuration available, a default configuration
+     * will be created.
+     */
+    if (false == loadConfiguration())
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
+        }
+    }
+
     return;
 }
 
 void DateTimePlugin::stop()
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    String                      configurationFilename   = getFullPathToConfiguration();
 
-    /* Nothing to do. */
+    if (false != FILESYSTEM.remove(configurationFilename))
+    {
+        LOG_INFO("File %s removed", configurationFilename.c_str());
+    }
 
     return;
 }
 
-void DateTimePlugin::process()
+void DateTimePlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
+
+    UTIL_NOT_USED(isConnected);
 
     if ((true == m_checkUpdateTimer.isTimerRunning()) &&
         (true == m_checkUpdateTimer.isTimeout()))
     {
+        ++m_durationCounter;
         updateDateTime(false);
 
         m_checkUpdateTimer.restart();
@@ -188,27 +227,6 @@ void DateTimePlugin::update(YAGfx& gfx)
     return;
 }
 
-void DateTimePlugin::setText(const String& formatText)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_textWidget.setFormatStr(formatText);
-
-    return;
-}
-
-void DateTimePlugin::setLamp(uint8_t lampId, bool state)
-{
-    if (MAX_LAMPS > lampId)
-    {
-        MutexGuard<MutexRecursive> guard(m_mutex);
-
-        m_lampWidgets[lampId].setOnState(state);
-    }
-
-    return;
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -219,26 +237,106 @@ void DateTimePlugin::setLamp(uint8_t lampId, bool state)
 
 void DateTimePlugin::updateDateTime(bool force)
 {
-    struct tm   timeinfo = { 0 };
-    bool        showTime = ((0U == m_durationCounter) ? true : false);
-    bool        showDate = false;
-    uint32_t    duration = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
-
-    /* If infinite duration was set switch every 15s between time and date. */
-    if (0U == duration)
-    {
-        showDate = ((MAX_COUNTER_VALUE_FOR_DURATION_INFINITE == m_durationCounter) ? true : false);
-    }
-    else
-    {
-        showDate = ((duration / (2U * MS_TO_SEC_DIVIDER) == m_durationCounter) ? true : false);
-    }
-
-    m_durationCounter++;
-
+    struct tm   timeinfo    = { 0 };
+    
     if (true == ClockDrv::getInstance().getTime(&timeinfo))
     {
-        if ((false != showTime) || (true == force))
+        bool    showDate = false;
+        bool    showTime = false;
+        
+        /* Decide what to show. */
+        switch(m_cfg)
+        {
+        case CFG_DATE_TIME:
+            {
+                uint32_t    duration            = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
+                uint8_t     halfDurationTicks   = 0U;
+                uint8_t     fullDurationTicks   = 0U;
+
+                /* If infinite duration was set, switch between time and date with a fix period. */
+                if (0U == duration)
+                {
+                    halfDurationTicks   = MAX_COUNTER_VALUE_FOR_DURATION_INFINITE;
+                    fullDurationTicks   = 2U * halfDurationTicks;
+                }
+                else
+                {
+                    halfDurationTicks   = (duration / (2U * MS_TO_SEC_DIVIDER));
+                    fullDurationTicks   = 2U * halfDurationTicks;
+                }
+
+                if (false == force)
+                {
+                    /* Show time in the first period. */
+                    if (0U == m_durationCounter)
+                    {
+                        showTime = true;
+                    }
+                    /* Show date in the second period. */
+                    else if (halfDurationTicks == m_durationCounter)
+                    {
+                        showDate = true;
+                    }
+                    else
+                    {
+                        ;
+                    }
+                }
+                else
+                {
+                    if (halfDurationTicks > m_durationCounter)
+                    {
+                        showTime = true;
+                    }
+                    else
+                    {
+                        showDate = true;
+                    }
+                }
+
+                /* Reset duration after a complete plugin slot duration is finished. */
+                if (fullDurationTicks <= m_durationCounter)
+                {
+                    m_durationCounter = 0U;
+                }
+            }
+            break;
+
+        case CFG_DATE_ONLY:
+            if (false == force)
+            {
+                if (0U == m_durationCounter)
+                {
+                    showDate = true;
+                }
+            }
+            else
+            {
+                showDate = true;
+            }
+            break;
+        
+        case CFG_TIME_ONLY:
+            if (false == force)
+            {
+                if (0U == m_durationCounter)
+                {
+                    showTime = true;
+                }
+            }
+            else
+            {
+                showTime = true;
+            }
+            break;
+        
+        default:
+            /* Should never happen. */
+            m_cfg = CFG_DATE_TIME;
+            break;
+        };
+
+        if (true == showTime)
         {
             char timeBuffer [SIZE_OF_FORMATED_DATE_TIME_STRING];
             const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "\\calign%H:%M":"\\calign%I:%M %p";
@@ -246,11 +344,10 @@ void DateTimePlugin::updateDateTime(bool force)
             setWeekdayIndicator(timeinfo);
 
             strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeinfo);
-            setText(timeBuffer);
+            m_textWidget.setFormatStr(timeBuffer);
             m_isUpdateAvailable = true;
         }
-
-        if (false != showDate)
+        else if (true == showDate)
         {
             char dateBuffer [SIZE_OF_FORMATED_DATE_TIME_STRING];
             const char* formattedDateString = ClockDrv::getInstance().getDateFormat() ? "\\calign%d.%m.":"\\calign%m/%d";
@@ -258,25 +355,14 @@ void DateTimePlugin::updateDateTime(bool force)
             setWeekdayIndicator(timeinfo);
 
             strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeinfo);
-            setText(dateBuffer);
+            m_textWidget.setFormatStr(dateBuffer);
 
             m_isUpdateAvailable = true;
         }
-
-        /* If infinite duration was switch every 15s between time and date. */
-        if (0U == duration)
-        {
-            if ((2U * MAX_COUNTER_VALUE_FOR_DURATION_INFINITE) == m_durationCounter)
-            {
-                m_durationCounter = 0U;
-            }
-        }
         else
         {
-            if ((duration / MS_TO_SEC_DIVIDER) == m_durationCounter)
-            {
-                m_durationCounter = 0U;
-            }
+            /* Nothing to update. */
+            ;
         }
     }
 }
@@ -289,8 +375,8 @@ void DateTimePlugin::setWeekdayIndicator(tm timeinfo)
     /* Last active lamp has to be deactivated. */
     uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);
 
-    setLamp(activeLamp, true);
-    setLamp(lampToDeactivate, false);
+    m_lampWidgets[activeLamp].setOnState(true);
+    m_lampWidgets[lampToDeactivate].setOnState(false);
 }
 
 bool DateTimePlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)
@@ -343,6 +429,60 @@ bool DateTimePlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistan
             }
 
             status = true;
+        }
+    }
+
+    return status;
+}
+
+bool DateTimePlugin::saveConfiguration() const
+{
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              configurationFilename   = getFullPathToConfiguration();
+
+    jsonDoc["cfg"] = m_cfg;
+    
+    if (false == jsonFile.save(configurationFilename, jsonDoc))
+    {
+        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
+        status = false;
+    }
+    else
+    {
+        LOG_INFO("File %s saved.", configurationFilename.c_str());
+    }
+
+    return status;
+}
+
+bool DateTimePlugin::loadConfiguration()
+{
+    bool                status                  = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              configurationFilename   = getFullPathToConfiguration();
+
+    if (false == jsonFile.load(configurationFilename, jsonDoc))
+    {
+        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
+        status = false;
+    }
+    else
+    {
+        JsonVariant jsonCfg = jsonDoc["cfg"];
+
+        if (false == jsonCfg.is<uint8_t>())
+        {
+            LOG_WARNING("JSON cfg not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_cfg = static_cast<Cfg>(jsonCfg.as<uint8_t>());
         }
     }
 

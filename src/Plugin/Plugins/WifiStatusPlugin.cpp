@@ -112,8 +112,8 @@ void WifiStatusPlugin::update(YAGfx& gfx)
         wl_status_t connectionStatus    = WiFi.status();
 
         /* Only in station mode it makes sense to retrieve the RSSI.
-            * Otherwise keep it -100 dbm.
-            */
+         * Otherwise keep it -100 dbm.
+         */
         if (WIFI_MODE_STA == WiFi.getMode())
         {
             rssi = WiFi.RSSI();
