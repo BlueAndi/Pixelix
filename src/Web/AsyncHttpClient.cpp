@@ -274,11 +274,13 @@ void AsyncHttpClient::end()
 
 bool AsyncHttpClient::connect()
 {
+    LOG_INFO("Connecting to %s:%u ...", m_hostname.c_str(), m_port);
     return m_tcpClient.connect(m_hostname.c_str(), m_port, m_isSecure);
 }
 
 void AsyncHttpClient::disconnect()
 {
+    LOG_INFO("Disconnecting ...");
     m_tcpClient.close();
 }
 
