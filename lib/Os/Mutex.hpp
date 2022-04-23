@@ -112,6 +112,16 @@ public:
     }
 
     /**
+     * Is mutex allocated?
+     * 
+     * @return If mutex is allocated it will return true otherwise false.
+     */
+    bool isAllocated() const
+    {
+        return (nullptr != m_mutexHandle);
+    }
+
+    /**
      * Take the mutex.
      * If blockTime is portMAX_DELAY, it will wait infinite.
      * 
@@ -218,6 +228,16 @@ public:
             vSemaphoreDelete(m_mutexHandle);
             m_mutexHandle = nullptr;
         }
+    }
+
+    /**
+     * Is mutex allocated?
+     * 
+     * @return If mutex is allocated it will return true otherwise false.
+     */
+    bool isAllocated() const
+    {
+        return (nullptr != m_mutexHandle);
     }
 
     /**

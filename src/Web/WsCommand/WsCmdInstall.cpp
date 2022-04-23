@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "WsCmdInstall.h"
 #include "PluginMgr.h"
+#include "DisplayMgr.h"
 
 #include <Util.h>
 

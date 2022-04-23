@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include "WsCmd.h"
 #include "DisplayMgr.h"
+#include "SlotList.h"
 
 /******************************************************************************
  * Macros
@@ -69,7 +70,7 @@ public:
         m_isError(false),
         m_parCnt(0U),
         m_uid(0U),
-        m_slotId(DisplayMgr::SLOT_ID_INVALID)
+        m_slotId(SlotList::SLOT_ID_INVALID)
     {
     }
 

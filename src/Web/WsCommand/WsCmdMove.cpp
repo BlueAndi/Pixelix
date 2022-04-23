@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "WsCmdMove.h"
 #include "PluginMgr.h"
+#include "SlotList.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -80,7 +81,7 @@ void WsCmdMove::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         uint8_t             srcSlotId   = DisplayMgr::getInstance().getSlotIdByPluginUID(m_uid);
         IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(srcSlotId);
 
-        if (DisplayMgr::SLOT_ID_INVALID == srcSlotId)
+        if (SlotList::SLOT_ID_INVALID == srcSlotId)
         {
             sendNegativeResponse(server, client, "\"Plugin UID not found.\"");
         }

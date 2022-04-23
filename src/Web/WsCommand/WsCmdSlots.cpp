@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "WsCmdSlots.h"
 #include "DisplayMgr.h"
+#include "SlotList.h"
 
 #include <Util.h>
 
@@ -78,7 +79,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     {
         String      msg;
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
-        uint8_t     slotId      = DisplayMgr::SLOT_ID_INVALID;
+        uint8_t     slotId      = SlotList::SLOT_ID_INVALID;
 
         msg = displayMgr.getMaxSlots();
 

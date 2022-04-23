@@ -54,7 +54,7 @@
 #include <YAGfxBitmap.h>
 
 #include "IPluginMaintenance.hpp"
-#include "Slot.h"
+#include "SlotList.h"
 
 /******************************************************************************
  * Macros
@@ -150,7 +150,7 @@ public:
      *
      * @return Returns slot id. If it fails, it will return SLOT_ID_INVALID.
      */
-    uint8_t installPlugin(IPluginMaintenance* plugin, uint8_t slotId = SLOT_ID_INVALID);
+    uint8_t installPlugin(IPluginMaintenance* plugin, uint8_t slotId = SlotList::SLOT_ID_INVALID);
 
     /**
      * Remove plugin from slot.
@@ -287,10 +287,7 @@ public:
      *
      * @return Max. number of display slots.
      */
-    uint8_t getMaxSlots() const
-    {
-        return m_maxSlots;
-    }
+    uint8_t getMaxSlots() const;
 
     /**
      * Set network connection status.
@@ -298,9 +295,6 @@ public:
      * @param[in] isConnected   Set to true for a established network connection, otherwise false.
      */
     void setNetworkStatus(bool isConnected);
-
-    /** Invalid slot id. */
-    static const uint8_t    SLOT_ID_INVALID = UINT8_MAX;
 
 private:
 
@@ -329,46 +323,43 @@ private:
     static const UBaseType_t    UPDATE_TASK_PRIORITY    = 4U;
 
     /** Mutex to protect concurrent access through the public interface. */
-    MutexRecursive      m_mutexInterf;
+    mutable MutexRecursive      m_mutexInterf;
 
     /** Mutex to protect the display update against concurrent access. */
-    MutexRecursive      m_mutexUpdate;
+    MutexRecursive              m_mutexUpdate;
 
     /** Process task handle */
-    TaskHandle_t        m_processTaskHandle;
+    TaskHandle_t                m_processTaskHandle;
 
     /** Flag to signal the process task to exit. */
-    bool                m_processTaskExit;
+    bool                        m_processTaskExit;
 
     /** Binary semaphore used to signal the process task exited. */
-    SemaphoreHandle_t   m_processTaskSemaphore;
+    SemaphoreHandle_t           m_processTaskSemaphore;
 
     /** Update task handle */
-    TaskHandle_t        m_updateTaskHandle;
+    TaskHandle_t                m_updateTaskHandle;
 
     /** Flag to signal the update task to exit. */
-    bool                m_updateTaskExit;
+    bool                        m_updateTaskExit;
 
     /** Binary semaphore used to signal the update task exited. */
-    SemaphoreHandle_t   m_updateTaskSemaphore;
+    SemaphoreHandle_t           m_updateTaskSemaphore;
 
     /** List of all slots with their connected plugins. */
-    Slot*               m_slots;
-
-    /** Max. number of slots. */
-    uint8_t             m_maxSlots;
+    SlotList                    m_slotList;
 
     /** Current selected slot. */
-    uint8_t             m_selectedSlot;
+    uint8_t                     m_selectedSlotId;
 
     /** Current selected plugin, which is active shown. */
-    IPluginMaintenance* m_selectedPlugin;
+    IPluginMaintenance*         m_selectedPlugin;
 
     /** Plugin which is requested to be activated immediately. */
-    IPluginMaintenance* m_requestedPlugin;
+    IPluginMaintenance*         m_requestedPlugin;
 
     /** Timer, used for changing the slot after a specific duration. */
-    SimpleTimer         m_slotTimer;
+    SimpleTimer                 m_slotTimer;
 
     /** Display fade state */
     enum FadeState

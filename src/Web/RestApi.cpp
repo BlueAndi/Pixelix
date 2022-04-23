@@ -41,6 +41,7 @@
 #include "WiFiUtil.h"
 #include "FileSystem.h"
 #include "RestUtil.h"
+#include "SlotList.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -394,7 +395,7 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
         }
         else
         {
-            uint8_t slotId          = DisplayMgr::SLOT_ID_INVALID;
+            uint8_t slotId          = SlotList::SLOT_ID_INVALID;
             bool    slotIdStatus    = Util::strToUInt8(request->arg("slotId"), slotId);
 
             if (false == slotIdStatus)

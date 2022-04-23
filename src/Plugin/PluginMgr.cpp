@@ -349,7 +349,7 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
     if (nullptr != plugin)
     {
-        if (DisplayMgr::SLOT_ID_INVALID == slotId)
+        if (SlotList::SLOT_ID_INVALID == slotId)
         {
             isSuccessful = installToAutoSlot(plugin);
         }
@@ -373,7 +373,7 @@ bool PluginMgr::installToAutoSlot(IPluginMaintenance* plugin)
 
     if (nullptr != plugin)
     {
-        if (DisplayMgr::SLOT_ID_INVALID == DisplayMgr::getInstance().installPlugin(plugin))
+        if (SlotList::SLOT_ID_INVALID == DisplayMgr::getInstance().installPlugin(plugin))
         {
             LOG_ERROR("Couldn't install plugin %s.", plugin->getName());
         }
@@ -392,7 +392,7 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
 
     if (nullptr != plugin)
     {
-        if (DisplayMgr::SLOT_ID_INVALID == DisplayMgr::getInstance().installPlugin(plugin, slotId))
+        if (SlotList::SLOT_ID_INVALID == DisplayMgr::getInstance().installPlugin(plugin, slotId))
         {
             LOG_ERROR("Couldn't install plugin %s to slot %u.", plugin->getName(), slotId);
         }

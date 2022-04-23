@@ -25,20 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Websocket command to uninstall a plugin
+ * @brief  Slot list
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "WsCmdUninstall.h"
-#include "DisplayMgr.h"
-#include "PluginMgr.h"
 #include "SlotList.h"
-
-#include <Util.h>
-#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -64,70 +58,200 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+bool SlotList::create(uint8_t maxSlots)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
-    {
-        return;
-    }
+    bool isSuccessful = false;
 
-    /* Any error happended? */
-    if (true == m_isError)
+    if ((nullptr == m_slots) &&
+        (0 < maxSlots) &&
+        (SLOT_ID_INVALID > maxSlots))
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
-    }
-    else
-    {
-        String              rsp;
-        IPluginMaintenance* plugin  = DisplayMgr::getInstance().getPluginInSlot(m_slotId);
+        m_slots = new(std::nothrow) Slot[maxSlots];
 
-        if (nullptr == plugin)
+        if (nullptr != m_slots)
         {
-            sendNegativeResponse(server, client, "\"Slot is empty.\"");
-        }
-        else if (true == DisplayMgr::getInstance().isSlotLocked(m_slotId))
-        {
-            sendNegativeResponse(server, client, "\"Slot is locked.\"");
-        }
-        else if (false == PluginMgr::getInstance().uninstall(plugin))
-        {
-            sendNegativeResponse(server, client, "\"Failed to uninstall.\"");
-        }
-        else
-        {
-            /* Save current installed plugins to persistent memory. */
-            PluginMgr::getInstance().save();
+            m_maxSlots = maxSlots;
 
-            sendPositiveResponse(server, client);
+            isSuccessful = true;
         }
     }
 
-    m_isError   = false;
-    m_slotId    = SlotList::SLOT_ID_INVALID;
-
-    return;
+    return isSuccessful;
 }
 
-void WsCmdUninstall::setPar(const char* par)
+void SlotList::destroy()
 {
-    if (false == m_isError)
+    if (nullptr != m_slots)
     {
-        if (SlotList::SLOT_ID_INVALID == m_slotId)
+        delete[] m_slots;
+        
+        m_slots     = nullptr;
+        m_maxSlots  = 0U;
+    }
+}
+
+IPluginMaintenance* SlotList::getPlugin(uint8_t slotId)
+{
+    IPluginMaintenance* plugin = nullptr;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        plugin = m_slots[slotId].getPlugin();
+    }
+
+    return plugin;
+}
+
+bool SlotList::setPlugin(uint8_t slotId, IPluginMaintenance* plugin)
+{
+    bool isSuccessful = false;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        m_slots[slotId].setPlugin(plugin);
+    }
+
+    return isSuccessful;
+}
+
+Slot* SlotList::getSlot(uint8_t slotId)
+{
+    Slot* slot = nullptr;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        slot = &m_slots[slotId];
+    }
+
+    return slot;
+}
+
+uint8_t SlotList::getEmptyUnlockedSlot()
+{
+    uint8_t slotId = SLOT_ID_INVALID;
+
+    if (nullptr != m_slots)
+    {
+        slotId = 0U;
+
+        while((m_maxSlots > slotId) && (false == isSlotEmptyAndUnlocked(slotId)))
         {
-            if (false == Util::strToUInt8(String(par), m_slotId))
-            {
-                LOG_ERROR("Conversion failed: %s", par);
-                m_isError = true;
-            }
+            ++slotId;
         }
-        else
+
+        if (m_maxSlots <= slotId)
         {
-            m_isError = true;
+            slotId = SLOT_ID_INVALID;
         }
     }
 
-    return;
+    return slotId;
+}
+
+bool SlotList::isSlotEmpty(uint8_t slotId) const
+{
+    bool isEmpty = false;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        isEmpty = m_slots[slotId].isEmpty();
+    }
+
+    return isEmpty;
+}
+
+uint32_t SlotList::getDuration(uint8_t slotId) const
+{
+    uint32_t duration = Slot::DURATION_DEFAULT;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        duration = m_slots[slotId].getDuration();
+    }
+
+    return duration;
+}
+
+void SlotList::setDuration(uint8_t slotId, uint32_t duration)
+{
+    if (true == isSlotIdValid(slotId))
+    {
+        m_slots[slotId].setDuration(duration);
+    }
+}
+
+void SlotList::lock(uint8_t slotId)
+{
+    if (true == isSlotIdValid(slotId))
+    {
+        m_slots[slotId].lock();
+    }
+}
+
+void SlotList::unlock(uint8_t slotId)
+{
+    if (true == isSlotIdValid(slotId))
+    {
+        m_slots[slotId].unlock();
+    }
+}
+
+bool SlotList::isSlotLocked(uint8_t slotId) const
+{
+    bool isLocked = false;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        isLocked = m_slots[slotId].isLocked();
+    }
+
+    return isLocked;
+}
+
+bool SlotList::isSlotEmptyAndUnlocked(uint8_t slotId)
+{
+    bool isEmptyAndUnlocked = false;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        if (true == m_slots[slotId].isEmpty())
+        {
+            if (false == m_slots[slotId].isLocked())
+            {
+                isEmptyAndUnlocked = true;
+            }
+        }
+    }
+
+    return isEmptyAndUnlocked;
+}
+
+uint8_t SlotList::getSlotIdByPluginUID(uint16_t pluginUid)
+{
+    uint8_t slotId = 0U;
+
+    if (nullptr != m_slots)
+    {
+        while(m_maxSlots > slotId)
+        {
+            if (false == m_slots[slotId].isEmpty())
+            {
+                if (pluginUid == m_slots[slotId].getPlugin()->getUID())
+                {
+                    break;
+                }
+            }
+
+            ++slotId;
+        }
+
+        if (m_maxSlots <= slotId)
+        {
+            slotId = SLOT_ID_INVALID;
+        }
+    }
+
+    return slotId;
 }
 
 /******************************************************************************

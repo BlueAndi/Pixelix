@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include "WsCmd.h"
-#include "DisplayMgr.h"
+#include "SlotList.h"
 
 /******************************************************************************
  * Macros
@@ -67,7 +67,7 @@ public:
     WsCmdUninstall() :
         WsCmd("UNINSTALL"),
         m_isError(false),
-        m_slotId(DisplayMgr::SLOT_ID_INVALID)
+        m_slotId(SlotList::SLOT_ID_INVALID)
     {
     }
 

@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "WsCmdGetDisp.h"
 #include "DisplayMgr.h"
+#include "SlotList.h"
 
 #include <Util.h>
 #include <Display.h>
@@ -81,7 +82,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         String      msg;
         IDisplay&   display     = Display::getInstance();
         uint32_t    framebuffer[display.getWidth() * display.getHeight()];
-        uint8_t     slotId      = DisplayMgr::SLOT_ID_INVALID;
+        uint8_t     slotId      = SlotList::SLOT_ID_INVALID;
 
         DisplayMgr::getInstance().getFBCopy(framebuffer, UTIL_ARRAY_NUM(framebuffer), &slotId);
 
