@@ -69,6 +69,25 @@ Slot::~Slot()
 {
 }
 
+Slot::Slot(const Slot& slot) :
+    m_plugin(slot.m_plugin),
+    m_duration(slot.m_duration),
+    m_isLocked(slot.m_isLocked)
+{
+}
+
+Slot& Slot::operator=(const Slot& slot)
+{
+    if (this != (&slot))
+    {
+        m_plugin    = slot.m_plugin;
+        m_duration  = slot.m_duration;
+        m_isLocked  = slot.m_isLocked;
+    }
+
+    return *this;
+}
+
 IPluginMaintenance* Slot::getPlugin()
 {
     return m_plugin;

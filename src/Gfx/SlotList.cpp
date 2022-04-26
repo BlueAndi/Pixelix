@@ -58,6 +58,47 @@
  * Public Methods
  *****************************************************************************/
 
+SlotList& SlotList::operator=(const SlotList& list)
+{
+    if (this != (&list))
+    {
+        if (m_maxSlots != list.m_maxSlots)
+        {
+            destroy();
+            (void)create(list.m_maxSlots);
+        }
+
+        if (nullptr != m_slots)
+        {
+            uint8_t idx = 0U;
+
+            for(idx = 0U; idx < m_maxSlots; ++idx)
+            {
+                m_slots[idx] = list.m_slots[idx];
+            }
+        }
+    }
+
+    return *this;
+}
+
+bool SlotList::isSlotIdValid(uint8_t slotId) const
+{
+    bool isValid = false;
+
+    /* As long as no slots are allocated, every slot id is invalid. */
+    if (nullptr != m_slots)
+    {
+        /* The slot id corresponds to the slot array index. */
+        if (m_maxSlots > slotId)
+        {
+            isValid = true;
+        }
+    }
+
+    return isValid;
+}
+
 bool SlotList::create(uint8_t maxSlots)
 {
     bool isSuccessful = false;

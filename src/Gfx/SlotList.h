@@ -82,6 +82,28 @@ public:
     }
 
     /**
+     * Constructs the slot list by copy of the given list.
+     * 
+     * @param[in] list  Slot list which shall be copied.
+     */
+    SlotList(const SlotList& list) :
+        m_maxSlots(0U),
+        m_slots(nullptr)
+    {
+        *this = list;
+    }
+
+    /**
+     * Assigns a slot list, which will recreate the slot list and copy the
+     * given one.
+     * 
+     * @param[in] list  Slot list which shall be assigned.
+     * 
+     * @return Current slot list
+     */
+    SlotList& operator=(const SlotList& list);
+
+    /**
      * Are slots available or not?
      * If slots are not available, create them first @see create().
      * 
@@ -100,22 +122,7 @@ public:
      * 
      * @return If slot id is valid, it will return true otherwise false.
      */
-    bool isSlotIdValid(uint8_t slotId) const
-    {
-        bool isValid = false;
-
-        /* As long as no slots are allocated, every slot id is invalid. */
-        if (nullptr != m_slots)
-        {
-            /* The slot id corresponds to the slot array index. */
-            if (m_maxSlots > slotId)
-            {
-                isValid = true;
-            }
-        }
-
-        return isValid;
-    }
+    bool isSlotIdValid(uint8_t slotId) const;
 
     /**
      * Create slots in the list.
