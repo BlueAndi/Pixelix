@@ -91,7 +91,7 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
             if (MAX_LOG_MSG_LEN < written)
             {
                 buffer[MAX_LOG_MSG_LEN] = '\0';
-                strncat(buffer, STR_CUT_OFF_SEQ, STR_CUT_OFF_SEQ_LEN);
+                strcat(buffer, STR_CUT_OFF_SEQ);
             }
 
             (void)m_output->print(buffer);

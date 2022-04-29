@@ -82,7 +82,7 @@
 #else/* (0 == LOG_FATAL_ENABLE) */
 
     /** Log fatal error message. */
-    #define LOG_FATAL(...)      (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_FATAL, __VA_ARGS__))
+    #define LOG_FATAL(...)      do{ Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_FATAL, __VA_ARGS__); }while(0)
 
 #endif  /* (0 == LOG_FATAL_ENABLE) */
 
@@ -93,7 +93,7 @@
 #else/* (0 == LOG_ERROR_ENABLE) */
 
     /** Log error message. */
-    #define LOG_ERROR(...)      (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_ERROR, __VA_ARGS__))
+    #define LOG_ERROR(...)      do{ Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_ERROR, __VA_ARGS__); }while(0)
 
 #endif  /* (0 == LOG_ERROR_ENABLE) */
 
@@ -104,7 +104,7 @@
 #else/* (0 == LOG_WARNING_ENABLE) */
 
     /** Log warning message. */
-    #define LOG_WARNING(...)    (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_WARNING, __VA_ARGS__))
+    #define LOG_WARNING(...)    do{ Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_WARNING, __VA_ARGS__); }while(0)
 
 #endif  /* (0 == LOG_WARNING_ENABLE) */
 
@@ -115,7 +115,7 @@
 #else/* (0 == LOG_INFO_ENABLE) */
 
     /** Log info error message. */
-    #define LOG_INFO(...)       (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_INFO, __VA_ARGS__))
+    #define LOG_INFO(...)       do{ Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_INFO, __VA_ARGS__); }while(0)
 
 #endif  /* (0 == LOG_INFO_ENABLE) */
 
@@ -126,7 +126,7 @@
 #else  /* (0 == LOG_DEBUG_ENABLE) */
 
     /** Log debug message. */
-    #define LOG_DEBUG(...)      (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_DEBUG, __VA_ARGS__))
+    #define LOG_DEBUG(...)      do{ Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_DEBUG, __VA_ARGS__); }while(0)
 
 #endif  /* (0 == LOG_DEBUG_ENABLE) */
 
@@ -137,7 +137,7 @@
 #else/* (0 == LOG_TRACE_ENABLE) */
 
     /** Log trace message. */
-    #define LOG_TRACE(...)      (Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_TRACE, __VA_ARGS__))
+    #define LOG_TRACE(...)      do{ Logging::getInstance().processLogMessage(__FILE__, __LINE__, Logging::LOG_LEVEL_TRACE, __VA_ARGS__); }while(0)
 
 #endif  /* (0 == LOG_TRACE_ENABLE) */
 
