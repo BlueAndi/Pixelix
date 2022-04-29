@@ -41,6 +41,15 @@
  *****************************************************************************/
 
 /**
+ * Defines LittleFS as filesystem format (must be 1).
+ */
+#define FILESYSTEM_USE_LITTLEFS (0)
+
+#if FILESYSTEM_USE_LITTLEFS
+#define FILESYSTEM              LittleFS
+#endif  /* FILESYSTEM_USE_LITTLEFS */
+
+/**
  * Defines SPIFFS as filesystem format (must be 1).
  */
 #define FILESYSTEM_USE_SPIFFS   (1)
@@ -52,6 +61,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#if FILESYSTEM_USE_LITTLEFS
+#include <LittleFS.h>
+#endif  /* FILESYSTEM_USE_LITTLEFS */
+
 #if FILESYSTEM_USE_SPIFFS
 #include <SPIFFS.h>
 #endif  /* FILESYSTEM_USE_SPIFFS */
