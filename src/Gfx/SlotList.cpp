@@ -150,6 +150,8 @@ bool SlotList::setPlugin(uint8_t slotId, IPluginMaintenance* plugin)
     if (true == isSlotIdValid(slotId))
     {
         m_slots[slotId].setPlugin(plugin);
+
+        isSuccessful = true;
     }
 
     return isSuccessful;
