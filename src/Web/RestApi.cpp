@@ -1154,7 +1154,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
                     {
                         JsonObject jsonFile = jsonData.createNestedObject();
 
-                        jsonFile["name"] = String(fd.name());
+                        jsonFile["name"] = String(fd.path());
                         jsonFile["size"] = fd.size();
 
                         if (true == fd.isDirectory())
