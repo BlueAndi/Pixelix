@@ -86,7 +86,11 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         DisplayMgr::getInstance().getFBCopy(framebuffer, UTIL_ARRAY_NUM(framebuffer), &slotId);
 
-        msg = slotId;
+        msg  = slotId;
+        msg += DELIMITER;
+        msg += display.getWidth();
+        msg += DELIMITER;
+        msg += display.getHeight();
 
         for(index = 0U; index <  UTIL_ARRAY_NUM(framebuffer); ++index)
         {

@@ -81,8 +81,6 @@
 
         <!-- Custom javascript -->
         <script>
-            var matrixWidth         = 32;       // LED matrix width in number of LEDs
-            var matrixHeight        = 8;        // LED matrix height in number of LEDs
             var ctx                 = null;     // Canvas context
             var pixelWidth          = 10;       // Width of a single LED in pixels
             var pixelHeight         = 10;       // Height of a single LED in pixels
@@ -132,8 +130,8 @@
                     $("#slotId").text(rsp.slotId);
 
                     /* Handle display data */
-                    for(y = 0; y < matrixHeight; ++y) {
-                        for(x = 0; x < matrixWidth; ++x) {
+                    for(y = 0; y < rsp.height; ++y) {
+                        for(x = 0; x < rsp.width; ++x) {
                             if (rsp.data.length > index) {
                                 color   = parseInt(rsp.data[index]);
                                 red     = (color & 0xff0000) >> 16;

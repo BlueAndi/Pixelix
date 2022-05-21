@@ -165,6 +165,8 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 this._pendingCmd.resolve(rsp);
             } else if ("GETDISP" === this._pendingCmd.name) {
                 rsp.slotId = data.shift();
+                rsp.width = data.shift();
+                rsp.height = data.shift();
                 rsp.data = [];
                 for(index = 0; index < data.length; ++index) {
                     rsp.data.push(parseInt(data[index], 16));
