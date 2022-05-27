@@ -79,11 +79,11 @@ The following steps are necessary for the first time and to get PIXELIX initial 
 3. [Upload/Update the software and firmware](./doc/SW-UPDATE.md) to the target.
 
 # Very First Startup
-If the device starts the very first time, the wifi station SSID and passphrase are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.". The display itself will show the SSID of the webserver.
+If the device starts the very first time, the wifi station SSID and passphrase settings are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.".
 
-Connect to the captive portal and configure via web interface the wifi station SSID and passphrase. Use the default user name "luke" and the default password "skywalker" for authentification to access the web interface.
+Use the browser to connect to the captive portal and configure the wifi station SSID and passphrase. Depended on the type of device you are using for connecting to Pixelix, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
 
-Restart and voila!
+After configuration restart and voila, Pixelix will be available in your wifi network.
 
 # User Interface
 * The user button activates always the next slot.
