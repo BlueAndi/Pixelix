@@ -103,6 +103,22 @@ int main(int argc, char **argv)
     return UNITY_END();
 }
 
+/**
+ * Setup a test. This function will be called before every test by unity.
+ */
+void setUp(void)
+{
+    /* Not used. */
+}
+
+/**
+ * Clean up test. This function will be called after every test by unity.
+ */
+void tearDown(void)
+{
+    /* Not used. */
+}
+
 /******************************************************************************
  * Local functions
  *****************************************************************************/
