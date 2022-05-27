@@ -282,7 +282,7 @@ private:
     String          m_userAgent;            /**< User agent */
     bool            m_isHttpVer10;          /**< Use HTTP/1.0 (true) instead of HTTP/1.1 (false) */
     bool            m_isKeepAlive;          /**< Keep connection alive or not? */
-    String          m_urlEncodedPars;       /**< URL encoded paramters (application/x-www-form-urlencoded) */
+    String          m_urlEncodedPars;       /**< URL encoded parameters (application/x-www-form-urlencoded) */
     const uint8_t*  m_payload;              /**< Request payload */
     size_t          m_payloadSize;          /**< Request payload size in byte */
 
