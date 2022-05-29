@@ -561,7 +561,7 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
             break;
 
         case RESPONSE_PART_BODY:
-            if (TRANSFER_CODING_CHUNCKED == m_transferCoding)
+            if (TRANSFER_CODING_CHUNKED == m_transferCoding)
             {
                 if (true == parseChunkedResponse(data, len, index))
                 {
@@ -871,7 +871,7 @@ bool AsyncHttpClient::handleRspHeader()
         /* Only IDENTITY (default) and CHUNKED transfer coding are supported. */
         if (0U != value.equalsIgnoreCase("chunked"))
         {
-            m_transferCoding = TRANSFER_CODING_CHUNCKED;
+            m_transferCoding = TRANSFER_CODING_CHUNKED;
         }
         /* Unsupported transfer coding */
         else
