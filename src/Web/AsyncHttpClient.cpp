@@ -63,7 +63,15 @@
  *****************************************************************************/
 
 AsyncHttpClient::AsyncHttpClient() :
+    m_processTaskHandle(nullptr),
+    m_processTaskExit(false),
+    m_processTaskSemaphore(nullptr),
     m_tcpClient(),
+    m_cmdQueue(),
+    m_evtQueue(),
+    m_mutex(),
+    m_isConnected(false),
+    m_isReqOpen(false),
     m_onRspCallback(nullptr),
     m_onClosedCallback(),
     m_onErrorCallback(),
@@ -73,7 +81,6 @@ AsyncHttpClient::AsyncHttpClient() :
     m_base64Authorization(),
     m_uri(),
     m_headers(),
-    m_isReqOpen(false),
     m_method(),
     m_userAgent("AsyncHttpClient"),
     m_isHttpVer10(false),
@@ -91,53 +98,129 @@ AsyncHttpClient::AsyncHttpClient() :
     m_chunkIndex(0U),
     m_chunkBodyPart(CHUNK_SIZE)
 {
+    (void)m_cmdQueue.create(CMD_QUEUE_SIZE);
+    (void)m_evtQueue.create(EVT_QUEUE_SIZE);
+    (void)m_mutex.create();
+
     m_tcpClient.onConnect(  [this](void* arg, AsyncClient* client)
                             {
-                                UTIL_NOT_USED(arg);
+                                Event   evt;
 
-                                onConnect(client);
+                                UTIL_NOT_USED(arg);
+                                UTIL_NOT_USED(client);
+
+                                memset(&evt, 0, sizeof(evt));
+                                evt.id = EVENT_ID_CONNECTED;
+
+                                (void)m_evtQueue.sendToBack(evt, portMAX_DELAY);
                             });
 
     m_tcpClient.onDisconnect(   [this](void* arg, AsyncClient* client)
                                 {
+                                    Event   evt;
+                                    
                                     UTIL_NOT_USED(arg);
+                                    UTIL_NOT_USED(client);
 
-                                    onDisconnect(client);
+                                    memset(&evt, 0, sizeof(evt));
+                                    evt.id = EVENT_ID_DISCONNECTED;
+                                    
+                                    (void)m_evtQueue.sendToBack(evt, portMAX_DELAY);
                                 });
 
     m_tcpClient.onError(    [this](void* arg, AsyncClient* client, int8_t error)
                             {
-                                UTIL_NOT_USED(arg);
+                                Event   evt;
 
-                                onError(client, error);
+                                UTIL_NOT_USED(arg);
+                                UTIL_NOT_USED(client);
+
+                                memset(&evt, 0, sizeof(evt));
+                                evt.id      = EVENT_ID_ERROR;
+                                evt.u.error = error;
+
+                                (void)m_evtQueue.sendToBack(evt, portMAX_DELAY);
                             });
 
     m_tcpClient.onData( [this](void* arg, AsyncClient* client, void* data, size_t len)
                         {
+                            Event   evt;
+
                             UTIL_NOT_USED(arg);
 
-                            onData(client, static_cast<uint8_t*>(data), len);
+                            memset(&evt, 0, sizeof(evt));
+                            evt.id          = EVENT_ID_DATA;
+                            evt.u.data.data = new uint8_t[len];
+
+                            if (nullptr == evt.u.data.data)
+                            {
+                                evt.u.data.size = 0U;
+                            }
+                            else
+                            {
+                                evt.u.data.size = len;
+                                memcpy(evt.u.data.data, data, len);
+                            }
+
+                            (void)m_evtQueue.sendToBack(evt, portMAX_DELAY);
                         });
 
     m_tcpClient.onTimeout(  [this](void* arg, AsyncClient* client, uint32_t timeout)
                             {
+                                Event   evt;
+
                                 UTIL_NOT_USED(arg);
 
-                                onTimeout(client, timeout);
+                                memset(&evt, 0, sizeof(evt));
+                                evt.id          = EVENT_ID_TIMEOUT;
+                                evt.u.timeout   = timeout;
+
+                                (void)m_evtQueue.sendToBack(evt, portMAX_DELAY);
                             });
 }
 
 AsyncHttpClient::~AsyncHttpClient()
 {
+    /* Unregister first all callbacks before cleaning the
+     * event queue.
+     */
+    m_tcpClient.onConnect(nullptr);
+    m_tcpClient.onDisconnect(nullptr);
+    m_tcpClient.onError(nullptr);
+    m_tcpClient.onData(nullptr);
+    m_tcpClient.onTimeout(nullptr);
+    m_mutex.destroy();
+    clearEvtQueue();
+    clearCmdQueue();
+    m_evtQueue.destroy();
+    m_cmdQueue.destroy();
 }
 
 bool AsyncHttpClient::begin(const String& url)
 {
-    bool    status  = true;
-    int     index   = url.indexOf(':');
+    bool    status      = true;
+    int     index       = url.indexOf(':');
+    bool    isReqOpen   = false;
 
+    if (nullptr == m_processTaskHandle)
+    {
+        status = createProcessTask();
+    }
+
+    /* Protect against concurrent access. */
+    {
+        MutexGuard<Mutex>   guard(m_mutex);
+        
+        isReqOpen = m_isReqOpen;
+    }
+
+    /* Task couldn't be created? */
+    if (false == status)
+    {
+        ;
+    }
     /* If a response is pending, abort. */
-    if (true == m_isReqOpen)
+    else if (true == isReqOpen)
     {
         status = false;
     }
@@ -268,35 +351,18 @@ bool AsyncHttpClient::begin(const String& url)
 
 void AsyncHttpClient::end()
 {
-    disconnect();
+    destroyProcessTask();
+    clearCmdQueue();
+    clearEvtQueue();
     clear();
-}
-
-bool AsyncHttpClient::connect()
-{
-    LOG_INFO("Connecting to %s:%u ...", m_hostname.c_str(), m_port);
-    return m_tcpClient.connect(m_hostname.c_str(), m_port, m_isSecure);
-}
-
-void AsyncHttpClient::disconnect()
-{
-    LOG_INFO("Disconnecting ...");
-    m_tcpClient.close();
-}
-
-void AsyncHttpClient::abort()
-{
-    m_tcpClient.abort();
 }
 
 bool AsyncHttpClient::isConnected()
 {
-    return m_tcpClient.connected();
-}
+    MutexGuard<Mutex>   guard(m_mutex);
+    bool                isConnected = m_isConnected;
 
-bool AsyncHttpClient::isDisconnected()
-{
-    return m_tcpClient.freeable();
+    return m_isConnected;
 }
 
 void AsyncHttpClient::setHttpVersion(bool useHttp10)
@@ -369,86 +435,36 @@ void AsyncHttpClient::regOnError(const OnError& onError)
 
 bool AsyncHttpClient::GET()
 {
-    bool status = false;
+    Cmd cmd;
+    
+    memset(&cmd, 0, sizeof(cmd));
+    cmd.id = CMD_ID_GET;
 
-    if (false == m_isReqOpen)
-    {
-        m_method        = "GET";
-        m_payload       = nullptr;
-        m_payloadSize   = 0U;
-
-        if (false == isConnected())
-        {
-            status = connect();
-            m_isReqOpen = status;
-        }
-        else
-        {
-            status = sendRequest();
-            m_isReqOpen = false;
-        }
-    }
-
-    return status;
+    return m_cmdQueue.sendToBack(cmd, portMAX_DELAY);
 }
 
 bool AsyncHttpClient::POST(const uint8_t* payload, size_t size)
 {
-    bool status = false;
+    Cmd cmd;
+    
+    memset(&cmd, 0, sizeof(cmd));
+    cmd.id = CMD_ID_POST;
+    cmd.u.data.data = payload;
+    cmd.u.data.size = size;
 
-    if (false == m_isReqOpen)
-    {
-        m_method        = "POST";
-        m_payload       = payload;
-        m_payloadSize   = size;
-
-        if (false == isConnected())
-        {
-            status = connect();
-            m_isReqOpen = status;
-        }
-        else
-        {
-            status = sendRequest();
-            m_isReqOpen = false;
-        }
-    }
-
-    return status;
+    return m_cmdQueue.sendToBack(cmd, portMAX_DELAY);
 }
 
 bool AsyncHttpClient::POST(const String& payload)
 {
-    bool status = false;
+    Cmd cmd;
+    
+    memset(&cmd, 0, sizeof(cmd));
+    cmd.id = CMD_ID_POST;
+    cmd.u.data.data = reinterpret_cast<const uint8_t*>(payload.c_str());
+    cmd.u.data.size = payload.length();
 
-    if (false == m_isReqOpen)
-    {
-        m_method = "POST";
-
-        if (true == payload.isEmpty())
-        {
-            m_payload       = nullptr;
-            m_payloadSize   = 0U;
-        }
-        else
-        {
-            m_payload       = reinterpret_cast<const uint8_t*>(payload.c_str());
-            m_payloadSize   = payload.length();
-        }
-
-        if (false == isConnected())
-        {
-            status = connect();
-            m_isReqOpen = status;
-        }
-        else
-        {
-            status = sendRequest();
-            m_isReqOpen = false;
-        }
-    }
-
-    return status;
+    return m_cmdQueue.sendToBack(cmd, portMAX_DELAY);
 }
 
 /******************************************************************************
@@ -459,35 +475,227 @@ bool AsyncHttpClient::POST(const String& payload)
  * Private Methods
  *****************************************************************************/
 
-void AsyncHttpClient::onConnect(AsyncClient* client)
+bool AsyncHttpClient::createProcessTask()
 {
-    LOG_INFO("Connected.");
+    bool isSuccessful = false;
 
-    /* Is there a queued request, which to send? */
-    if (true == m_isReqOpen)
+    if (nullptr == m_processTaskSemaphore)
     {
-        m_isReqOpen = false;
+        /* Create binary semaphore to signal task exit. */
+        m_processTaskSemaphore = xSemaphoreCreateBinary();
 
-        if (false == sendRequest())
+        if (nullptr != m_processTaskSemaphore)
         {
-            client->close();
+            BaseType_t  osRet   = pdFAIL;
+
+            /* Task shall run */
+            m_processTaskExit = false;
+
+            osRet = xTaskCreateUniversal(   processTask,
+                                            "AsyncHttpClientTask",
+                                            PROCESS_TASK_STACK_SIZE,
+                                            this,
+                                            PROCESS_TASK_PRIORITY,
+                                            &m_processTaskHandle,
+                                            PROCESS_TASK_RUN_CORE);
+
+            /* Couldn't task be created? */
+            if (pdPASS != osRet)
+            {
+                vSemaphoreDelete(m_processTaskSemaphore);
+                m_processTaskSemaphore = nullptr;
+            }
+            else
+            {
+                (void)xSemaphoreGive(m_processTaskSemaphore);
+                isSuccessful = true;
+            }
+        }
+    }
+    
+    return isSuccessful;
+}
+
+void AsyncHttpClient::destroyProcessTask()
+{
+    /* Is the task running? */
+    if (nullptr != m_processTaskSemaphore)
+    {
+        /* Request task to exit and wait until its done. */
+        m_processTaskExit = true;
+        (void)xSemaphoreTake(m_processTaskSemaphore, portMAX_DELAY);
+        m_processTaskHandle = nullptr;
+
+        /* After task is destroyed, the signal semaphore can safely be destroyed. */
+        vSemaphoreDelete(m_processTaskSemaphore);
+        m_processTaskSemaphore = nullptr;
+    }
+    
+    return;
+}
+
+void AsyncHttpClient::clearCmdQueue()
+{
+    Cmd cmd;
+
+    while(true == m_cmdQueue.receive(&cmd, 0U))
+    {
+        (void)cmd;
+    }
+}
+
+void AsyncHttpClient::clearEvtQueue()
+{
+    Event evt;
+
+    while(true == m_evtQueue.receive(&evt, 0U))
+    {
+        if (EVENT_ID_DATA == evt.id)
+        {
+            if (nullptr != evt.u.data.data)
+            {
+                delete[] evt.u.data.data;
+                evt.u.data.data = nullptr;
+                evt.u.data.size = 0U;
+            }
         }
     }
 }
 
-void AsyncHttpClient::onDisconnect(AsyncClient* client)
+void AsyncHttpClient::processTask(void* parameters)
 {
-    UTIL_NOT_USED(client);
+    AsyncHttpClient* tthis = reinterpret_cast<AsyncHttpClient*>(parameters);
 
+    if ((nullptr != tthis) &&
+        (nullptr != tthis->m_processTaskSemaphore))
+    {
+        (void)xSemaphoreTake(tthis->m_processTaskSemaphore, portMAX_DELAY);
+
+        while(false == tthis->m_processTaskExit)
+        {
+            tthis->processCmdQueue();
+            tthis->processEvtQueue();
+
+            delay(PROCESS_TASK_PERIOD);
+        }
+
+        /* Ensure that any pending request/connection is aborted. */
+        tthis->abort();
+
+        (void)xSemaphoreGive(tthis->m_processTaskSemaphore);
+    }
+
+    vTaskDelete(nullptr);
+
+    return;
+}
+
+void AsyncHttpClient::processCmdQueue()
+{
+    Cmd cmd;
+
+    while(true == m_cmdQueue.receive(&cmd, 0U))
+    {
+        switch(cmd.id)
+        {
+        case CMD_ID_GET:
+            (void)getRequest();
+            break;
+
+        case CMD_ID_POST:
+            (void)postRequest(cmd.u.data.data, cmd.u.data.size);
+            break;
+
+        default:
+            break;
+        };
+    }
+}
+
+void AsyncHttpClient::processEvtQueue()
+{
+    Event evt;
+
+    while(true == m_evtQueue.receive(&evt, 0U))
+    {
+        switch(evt.id)
+        {
+        case EVENT_ID_CONNECTED:
+            onConnect();
+            break;
+
+        case EVENT_ID_DISCONNECTED:
+            onDisconnect();
+            break;
+
+        case EVENT_ID_ERROR:
+            onError(evt.u.error);
+            break;
+
+        case EVENT_ID_DATA:
+            onData(evt.u.data.data, evt.u.data.size);
+
+            if (nullptr != evt.u.data.data)
+            {
+                delete[] evt.u.data.data;
+                evt.u.data.data = nullptr;
+                evt.u.data.size = 0U;
+            }
+            break;
+
+        case EVENT_ID_TIMEOUT:
+            onTimeout(evt.u.timeout);
+            break;
+
+        default:
+            break;
+        };
+    }
+}
+
+void AsyncHttpClient::onConnect()
+{
+    bool isReqOpen = false;
+
+    LOG_INFO("Connected.");
+
+    /* Protect against concurrent access. */
+    {
+        MutexGuard<Mutex>   guard(m_mutex);
+
+        m_isConnected   = true;
+        isReqOpen       = m_isReqOpen;
+        m_isReqOpen     = false;
+    }
+
+    /* Is there a queued request, which to send? */
+    if (true == isReqOpen)
+    {
+        if (false == sendRequest())
+        {
+            m_tcpClient.close();
+        }
+    }
+}
+
+void AsyncHttpClient::onDisconnect()
+{
     LOG_INFO("Disconnected.");
+
+    /* Protect against concurrent access. */
+    {
+        MutexGuard<Mutex>   guard(m_mutex);
+        
+        m_isConnected = false;
+    }
+
     clear();
     notifyClosed();
 }
 
-void AsyncHttpClient::onError(AsyncClient* client, int8_t error)
+void AsyncHttpClient::onError(int8_t error)
 {
     const char* errorDescription = errorToStr(error);
-    UTIL_NOT_USED(client);
 
     if (nullptr != errorDescription)
     {
@@ -495,14 +703,21 @@ void AsyncHttpClient::onError(AsyncClient* client, int8_t error)
     }
     else
     {
+        const int8_t HOST_IS_UNREACHABLE    = 113; /* https://github.com/yubox-node-org/AsyncTCPSock/issues/13 */
+
         LOG_WARNING("Error occurred: %d", error);
+
+        if (HOST_IS_UNREACHABLE == error)
+        {
+            LOG_WARNING("Host is unreachable.");
+        }
     }
 
     notifyError();
     disconnect();
 }
 
-void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t len)
+void AsyncHttpClient::onData(const uint8_t* data, size_t len)
 {
     size_t      index       = 0U;
     const char* asciiData   = reinterpret_cast<const char*>(data);
@@ -545,7 +760,7 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
                 {
                     /* Not nice, but anyway. */
                     LOG_ERROR("Header error.");
-                    client->close();
+                    m_tcpClient.close();
                     isError = true;
                 }
                 else if (TRANSFER_CODING_IDENTITY == m_transferCoding)
@@ -605,19 +820,124 @@ void AsyncHttpClient::onData(AsyncClient* client, const uint8_t* data, size_t le
 
         default:
             LOG_FATAL("Internal error.");
-            client->close();
+            m_tcpClient.close();
             isError = true;
             break;
         }
     }
 }
 
-void AsyncHttpClient::onTimeout(AsyncClient* client, uint32_t timeout)
+void AsyncHttpClient::onTimeout(uint32_t timeout)
 {
     UTIL_NOT_USED(timeout);
 
     LOG_WARNING("Timeout.");
-    client->close();
+    m_tcpClient.close();
+}
+
+bool AsyncHttpClient::connect()
+{
+    LOG_INFO("Connecting to %s:%u ...", m_hostname.c_str(), m_port);
+
+    return m_tcpClient.connect(m_hostname.c_str(), m_port, m_isSecure);
+}
+
+void AsyncHttpClient::disconnect()
+{
+    if (true == m_tcpClient.connected())
+    {
+        LOG_INFO("Disconnecting ...");
+        m_tcpClient.close();
+    }
+}
+
+void AsyncHttpClient::abort()
+{
+    if (true == m_tcpClient.connected())
+    {
+        LOG_INFO("Aborting ...");
+        m_tcpClient.abort();
+    }
+}
+
+bool AsyncHttpClient::getRequest()
+{
+    bool status     = false;
+    bool isReqOpen  = false;
+
+    /* Protect against concurrent access. */
+    {
+        MutexGuard<Mutex>   guard(m_mutex);
+
+        isReqOpen = m_isReqOpen;
+    }
+
+    if (false == isReqOpen)
+    {
+        m_method        = "GET";
+        m_payload       = nullptr;
+        m_payloadSize   = 0U;
+
+        if (false == m_tcpClient.connected())
+        {
+            status = connect();
+            isReqOpen = status;
+        }
+        else
+        {
+            status = sendRequest();
+            isReqOpen = false;
+        }
+
+        /* Protect against concurrent access. */
+        {
+            MutexGuard<Mutex>   guard(m_mutex);
+
+            m_isReqOpen = isReqOpen;
+        }
+    }
+
+    return status;
+}
+
+bool AsyncHttpClient::postRequest(const uint8_t* payload, size_t size)
+{
+    bool status     = false;
+    bool isReqOpen  = false;
+
+    /* Protect against concurrent access. */
+    {
+        MutexGuard<Mutex>   guard(m_mutex);
+
+        isReqOpen = m_isReqOpen;
+    }
+
+    if (false == isReqOpen)
+    {
+        m_method        = "POST";
+        m_payload       = payload;
+        m_payloadSize   = size;
+
+        if (false == m_tcpClient.connected())
+        {
+            status = connect();
+            isReqOpen = status;
+        }
+        else
+        {
+            status = sendRequest();
+            isReqOpen = false;
+        }
+
+        /* Protect against concurrent access. */
+        {
+            MutexGuard<Mutex>   guard(m_mutex);
+
+            m_isReqOpen = isReqOpen;
+        }
+    }
+
+    return status;
 }
 
 bool AsyncHttpClient::sendRequest()
@@ -780,8 +1100,6 @@ void AsyncHttpClient::clear()
     m_headers.clear();
     m_urlEncodedPars.clear();
 
-    m_isReqOpen = false;
-
     m_rspPart = RESPONSE_PART_STATUS_LINE;
     m_rsp.clear();
     m_rspLine.clear();
@@ -791,6 +1109,13 @@ void AsyncHttpClient::clear()
     m_chunkSize = 0U;
     m_chunkIndex = 0U;
     m_chunkBodyPart = CHUNK_SIZE;
+
+    /* Protect against concurrent access. */
+    {
+        MutexGuard<Mutex>   guard(m_mutex);
+
+        m_isReqOpen = false;
+    }
 
     return;
 }
@@ -1237,7 +1562,7 @@ const char* AsyncHttpClient::errorToStr(int8_t error)
         break;
 
     case ERR_INPROGRESS:
-        errorDescription = "Operatin in progress.";
+        errorDescription = "Operation in progress.";
         break;
 
     case ERR_VAL:

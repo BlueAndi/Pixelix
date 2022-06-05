@@ -113,7 +113,7 @@ public:
         /* Abort any pending TCP request to avoid getting a callback after the
          * object is destroyed.
          */
-        m_client.abort();
+        m_client.end();
         
         clearQueue();
 

@@ -45,6 +45,8 @@
  *****************************************************************************/
 #include <freertos/FreeRTOS.h>
 #include <AsyncTCP.h>
+#include <Queue.hpp>
+#include <Mutex.hpp>
 
 #include "HttpResponse.h"
 
@@ -108,35 +110,11 @@ public:
     void end();
 
     /**
-     * Establish TCP connection.
-     *
-     * @return If the connection procedure is pending, it will return true otherwise false.
-     */
-    bool connect();
-
-    /**
-     * Disconnect TCP connection gracefully.
-     */
-    void disconnect();
-
-    /**
-     * Abort TCP connection (non-gracefully) and avoid any follow up callback.
-     */
-    void abort();
-
-    /**
      * Is connection established?
      *
      * @return If connection is established, it will return true otherwise false.
      */
     bool isConnected();
-
-    /**
-     * Is connection disconnected?
-     *
-     * @return If connection is disconnected, it will return true otherwise false.
-     */
-    bool isDisconnected();
 
     /**
      * Use HTTP/1.0 instead of HTTP/1.1
@@ -231,6 +209,102 @@ public:
 
 private:
 
+    /** The process task stack size in bytes */
+    static const uint32_t       PROCESS_TASK_STACK_SIZE = 4096U;
+
+    /** The process task period in ms. */
+    static const uint32_t       PROCESS_TASK_PERIOD     = 20U;
+
+    /** The process task shall run on the APP MCU core. */
+    static const BaseType_t     PROCESS_TASK_RUN_CORE   = APP_CPU_NUM;
+
+    /** The process task priority shall be equal than the Arduino loop task priority. */
+    static const UBaseType_t    PROCESS_TASK_PRIORITY   = 1U;
+
+    /**
+     * Max. number of commands which can be queued.
+     */
+    static const size_t CMD_QUEUE_SIZE  = 10U;
+
+    /**
+     * Max. number of events which can be queued.
+     */
+    static const size_t EVT_QUEUE_SIZE  = 10U;
+
+    /**
+     * Command ids are used to identify what the user requests.
+     */
+    enum CmdId
+    {
+        CMD_ID_GET = 0, /**< GET request */
+        CMD_ID_POST     /**< POST request */
+    };
+
+    /**
+     * A command is a combination of request and its corresponding data.
+     */
+    struct Cmd
+    {
+        CmdId   id;     /**< The command id identifies the kind of request. */
+
+        /**
+         * The union contains the event id specific parameters.
+         * Note not every command id must have parameters.
+         */
+        union
+        {
+            /**
+             * Data parameters, only valid for CMD_ID_POST.
+             */
+            struct
+            {
+                const uint8_t*  data;   /**< Command specific data. */
+                size_t          size;   /**< Command specific data size in byte. */
+            } data;
+
+        } u;
+    };
+
+    /**
+     * Event ids used to identify the informations notified by the TCP/IP stack.
+     */
+    enum EventId
+    {
+        EVENT_ID_CONNECTED = 0, /**< Connection is established. */
+        EVENT_ID_DISCONNECTED,  /**< Connection is disconnected. */
+        EVENT_ID_ERROR,         /**< A error happened. */
+        EVENT_ID_DATA,          /**< Data is received. */
+        EVENT_ID_TIMEOUT        /**< A connection timeout happened. */
+
+    };
+
+    /**
+     * A event is a combination of notification and its corresponding data.
+     */
+    struct Event
+    {
+        EventId     id;     /**< Event id to identify the kind of notification. */
+
+        /**
+         * The union contains the event id specific parameters.
+         * Note not every event id must have parameters.
+         */
+        union
+        {
+            /**
+             * Data parameters, only valid for EVENT_ID_DATA.
+             */
+            struct
+            {
+                uint8_t*    data;   /**< Event specific data. */
+                size_t      size;   /**< Event specific data size in byte. */
+            } data;
+
+            int8_t      error;      /**< Error id, valid only for EVENT_ID_ERROR */
+            uint32_t    timeout;    /**< Timeout in ms, valid only for EVENT_ID_TIMEOUT */
+        } u;
+    };
+
     /**
      * HTTP response parts.
      */
@@ -247,7 +321,7 @@ private:
     enum TransferCoding
     {
         TRANSFER_CODING_IDENTITY = 0,   /**< Identity */
-        TRANSFER_CODING_CHUNCKED        /**< Chunked */
+        TRANSFER_CODING_CHUNKED         /**< Chunked */
     };
 
     /**
@@ -267,7 +341,21 @@ private:
     /** HTTPS port */
     static const uint16_t   HTTPS_PORT  = 443U;
 
+    TaskHandle_t        m_processTaskHandle;    /**< Process task handle */
+    bool                m_processTaskExit;      /**< Flag to signal the process task to exit. */
+    SemaphoreHandle_t   m_processTaskSemaphore; /**< Binary semaphore used to signal the process task exited. */
+
+
     AsyncClient     m_tcpClient;            /**< Asynchronous TCP client */
+    Queue<Cmd>      m_cmdQueue;             /**< Command queue */
+    Queue<Event>    m_evtQueue;             /**< Event queue */
+    Mutex           m_mutex;                /**< Used to protect against concurrent access. */
+
+    /* Protected data */
+    bool            m_isConnected;          /**< Is a connection established? */
+    bool            m_isReqOpen;            /**< Is a request open? */
+
+    /* Non-protected data */
     OnResponse      m_onRspCallback;        /**< Callback which to call for a complete response. */
     OnClosed        m_onClosedCallback;     /**< Callback which to call for a closed connection. */
     OnError         m_onErrorCallback;      /**< Callback which to call for a connection error. */
@@ -277,7 +365,6 @@ private:
     String          m_base64Authorization;  /**< Authorization BASE64 encoded */
     String          m_uri;                  /**< Request URI */
     String          m_headers;              /**< Additional request headers */
-    bool            m_isReqOpen;            /**< Is a request open? */
     String          m_method;               /**< Request method, e.g. GET, PUT, etc. */
     String          m_userAgent;            /**< User agent */
     bool            m_isHttpVer10;          /**< Use HTTP/1.0 (true) instead of HTTP/1.1 (false) */
@@ -300,43 +387,109 @@ private:
     AsyncHttpClient& operator=(const AsyncHttpClient& client);
 
     /**
-     * This method is called by the TCP client if a connection is successful established.
-     *
-     * @param[in] client    TCP client
+     * Create the process task which is responsible to process all commands and events.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void onConnect(AsyncClient* client);
+    bool createProcessTask();
 
     /**
-     * This method is called by the TCP client if a connection is disconnected.
-     *
-     * @param[in] client    TCP client
+     * Destroy the process task gracefully.
      */
-    void onDisconnect(AsyncClient* client);
+    void destroyProcessTask();
 
     /**
-     * This method is called by the TCP client if a error occurred.
+     * Clear the command queue.
+     * Attention, all commands will be lost and not acknowledged.
+     */
+    void clearCmdQueue();
+
+    /**
+     * Clear the event queue.
+     * Attention, all events will be lost and not acknowledged.
+     */
+    void clearEvtQueue();
+
+    /**
+     * Processing task.
+     */
+    static void processTask(void* parameters);
+
+    /**
+     * Process the command queue.
+     */
+    void processCmdQueue();
+
+    /**
+     * Process the event queue.
+     */
+    void processEvtQueue();
+
+    /**
+     * This method is called if a connection is successful established.
+     */
+    void onConnect();
+
+    /**
+     * This method is called if a connection is disconnected.
+     */
+    void onDisconnect();
+
+    /**
+     * This method is called if a error occurred.
      *
-     * @param[in] client    TCP client
      * @param[in] error     Error id
      */
-    void onError(AsyncClient* client, int8_t error);
+    void onError(int8_t error);
 
     /**
-     * This method is called by the TCP client if data is received.
+     * This method is called if data is received.
      *
-     * @param[in] client    TCP client
      * @param[in] data      Data stream
      * @param[in] len       Data size in byte
      */
-    void onData(AsyncClient* client, const uint8_t* data, size_t len);
+    void onData(const uint8_t* data, size_t len);
 
     /**
-     * This method is called by the TCP client if ACK timeout happens.
+     * This method is called if ACK timeout happens.
      *
-     * @param[in] client    TCP client
      * @param[in] timeout   Timeout value in ms
      */
-    void onTimeout(AsyncClient* client, uint32_t timeout);
+    void onTimeout(uint32_t timeout);
+
+    /**
+     * Establish TCP connection.
+     *
+     * @return If the connection procedure is pending, it will return true otherwise false.
+     */
+    bool connect();
+
+    /**
+     * Disconnect TCP connection gracefully.
+     */
+    void disconnect();
+
+    /**
+     * Abort TCP connection (non-gracefully) and avoid any follow up callback.
+     */
+    void abort();
+
+    /**
+     * Send GET request to host.
+     *
+     * @return If request is successful sent, it will return true otherwise false.
+     */
+    bool getRequest();
+
+    /**
+     * Send POST request to host.
+     *
+     * @param[in] payload   Payload, which must be kept alive until response is available!
+     * @param[in] size      Payload size in byte
+     *
+     * @return If request is successful sent, it will return true otherwise false.
+     */
+    bool postRequest(const uint8_t* payload = nullptr, size_t size = 0U);
 
     /**
      * Send request to host.
