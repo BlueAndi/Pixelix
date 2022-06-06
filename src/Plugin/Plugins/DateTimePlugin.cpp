@@ -191,15 +191,15 @@ void DateTimePlugin::active(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    /* Force immediate date/time update on activation */
-    updateDateTime(true);
-
     /* Force drawing on display in the update() method for the very first time
      * after activation.
      */
     m_isUpdateAvailable = true;
     m_durationCounter = 0U;
     m_checkUpdateTimer.start(CHECK_UPDATE_PERIOD);
+
+    /* Force immediate date/time update on activation */
+    updateDateTime(true);
 }
 
 void DateTimePlugin::inactive()
@@ -237,9 +237,9 @@ void DateTimePlugin::update(YAGfx& gfx)
 
 void DateTimePlugin::updateDateTime(bool force)
 {
-    struct tm   timeinfo    = { 0 };
+    struct tm   timeInfo    = { 0 };
     
-    if (true == ClockDrv::getInstance().getTime(&timeinfo))
+    if (true == ClockDrv::getInstance().getTime(&timeInfo))
     {
         bool    showDate = false;
         bool    showTime = false;
@@ -341,10 +341,11 @@ void DateTimePlugin::updateDateTime(bool force)
             char timeBuffer [SIZE_OF_FORMATED_DATE_TIME_STRING];
             const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "\\calign%H:%M":"\\calign%I:%M %p";
 
-            setWeekdayIndicator(timeinfo);
+            setWeekdayIndicator(timeInfo);
 
-            strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeinfo);
+            strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeInfo);
             m_textWidget.setFormatStr(timeBuffer);
+
             m_isUpdateAvailable = true;
         }
         else if (true == showDate)
@@ -352,9 +353,9 @@ void DateTimePlugin::updateDateTime(bool force)
             char dateBuffer [SIZE_OF_FORMATED_DATE_TIME_STRING];
             const char* formattedDateString = ClockDrv::getInstance().getDateFormat() ? "\\calign%d.%m.":"\\calign%m/%d";
 
-            setWeekdayIndicator(timeinfo);
+            setWeekdayIndicator(timeInfo);
 
-            strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeinfo);
+            strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeInfo);
             m_textWidget.setFormatStr(dateBuffer);
 
             m_isUpdateAvailable = true;
@@ -367,10 +368,10 @@ void DateTimePlugin::updateDateTime(bool force)
     }
 }
 
-void DateTimePlugin::setWeekdayIndicator(tm timeinfo)
+void DateTimePlugin::setWeekdayIndicator(tm timeInfo)
 {
     /* tm_wday starts at sunday, first lamp indicates monday.*/
-    uint8_t activeLamp = (0U < timeinfo.tm_wday) ? (timeinfo.tm_wday - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);
+    uint8_t activeLamp = (0U < timeInfo.tm_wday) ? (timeInfo.tm_wday - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);
 
     /* Last active lamp has to be deactivated. */
     uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);

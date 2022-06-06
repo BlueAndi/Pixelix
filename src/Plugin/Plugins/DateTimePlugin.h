@@ -294,7 +294,7 @@ private:
     WidgetGroup             m_lampCanvas;               /**< Canvas used for the lamp widget. */
     LampWidget              m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
     Cfg                     m_cfg;                      /**< Configuration about what shall be shown. */
-    SimpleTimer             m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessarry. */
+    SimpleTimer             m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessary. */
     uint8_t                 m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
     bool                    m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
     const ISlotPlugin*      m_slotInterf;               /**< Slot interface */
@@ -309,12 +309,12 @@ private:
     void updateDateTime(bool force);
 
     /**
-     * Set weekday indicator dependend on the given timeinfo.
+     * Set weekday indicator depended on the given time info.
      *
      *
-     * @param[in] timeinfo the current timeinfo.
+     * @param[in] timeInfo the current time info.
      */
-    void setWeekdayIndicator(tm timeinfo);
+    void setWeekdayIndicator(tm timeInfo);
 
     /**
      * Calculates the optimal layout for several elements, which shall be aligned.
