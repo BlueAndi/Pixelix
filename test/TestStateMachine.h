@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test the abstract state machine.
+ * Test suite for the abstract state machine.
+ * 
+ * @return Number of failed tests.
  */
-extern void testStateMachine();
+extern int testSuiteStateMachine();
 
 #endif  /* __TEST_STATEMACHINE_H__ */
 

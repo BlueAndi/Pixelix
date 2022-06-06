@@ -54,6 +54,8 @@
  * Prototypes
  *****************************************************************************/
 
+static void testBitmapWidget();
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -74,10 +76,23 @@
  * External Functions
  *****************************************************************************/
 
+extern int testSuiteBitmapWidget()
+{
+    UNITY_BEGIN();
+
+    RUN_TEST(testBitmapWidget);
+
+    return UNITY_END();
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
+
 /**
  * Test bitmap widget.
  */
-extern void testBitmapWidget()
+static void testBitmapWidget()
 {
     const uint16_t BITMAP_WIDTH     = TestGfx::HEIGHT;  /* Use height as width here for a square */
     const uint16_t BITMAP_HEIGHT    = TestGfx::HEIGHT;
@@ -151,7 +166,3 @@ extern void testBitmapWidget()
 
     return;
 }
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/

@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test bitmap widget.
+ * Test suite for bitmap widget.
+ * 
+ * @return Number of failed tests.
  */
-extern void testBitmapWidget();
+extern int testSuiteBitmapWidget();
 
 #endif  /* __TEST_BITMAP_WIDGET_H__ */
 

@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test lamp widget.
+ * Test suite for lamp widget.
+ * 
+ * @return Number of failed tests.
  */
-extern void testLampWidget();
+extern int testSuiteLampWidget();
 
 #endif  /* __TEST_LAMP_WIDGET_H__ */
 

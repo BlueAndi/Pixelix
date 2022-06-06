@@ -57,12 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test Logging.
- *
- * Note: In order to let these tests pass the formating of the expected logMessage has to stay directly after the LogMessage (__LINE__-1),
- * otherwise the tests will fail.
+ * Test suite for logging.
+ * 
+ * @return Number of failed tests.
  */
-extern void testLogging();
+extern int testSuiteLogging();
 
 #endif  /* __TEST_LOGGING_H__ */
 

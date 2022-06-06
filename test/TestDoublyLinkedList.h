@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Doubly linked list tests.
+ * Test suite for doubly linked list.
+ * 
+ * @return Number of failed tests.
  */
-extern void testDoublyLinkedList();
+extern int testSuiteDoublyLinkedList();
 
 #endif  /* __TEST_DOUBLY_LINKED_LIST_H__ */
 

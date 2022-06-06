@@ -55,6 +55,7 @@
 
 template < typename T >
 static T getMin(const T value1, const T value2);
+static void testWidget();
 
 /******************************************************************************
  * Local Variables
@@ -78,10 +79,42 @@ const char* TestWidget::WIDGET_TYPE = "test";
  * External Functions
  *****************************************************************************/
 
+extern int testSuiteWidget()
+{
+    UNITY_BEGIN();
+
+    RUN_TEST(testWidget);
+
+    return UNITY_END();
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
+
+/**
+ * Get minimum of two values.
+ *
+ * @param[in] value1    Value 1
+ * @param[in] value2    Value 2
+ *
+ * @return Minimum of value 1 and value 2
+ */
+template < typename T >
+static T getMin(const T value1, const T value2)
+{
+    if (value1 < value2)
+    {
+        return value1;
+    }
+
+    return value2;
+}
+
 /**
  * Widget tests.
  */
-extern void testWidget()
+static void testWidget()
 {
     TestGfx     testGfx;
     TestWidget  testWidget;
@@ -157,27 +190,4 @@ extern void testWidget()
                                     COLOR));
 
     return;
-}
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
-
-/**
- * Get minimum of two values.
- *
- * @param[in] value1    Value 1
- * @param[in] value2    Value 2
- *
- * @return Minimum of value 1 and value 2
- */
-template < typename T >
-static T getMin(const T value1, const T value2)
-{
-    if (value1 < value2)
-    {
-        return value1;
-    }
-
-    return value2;
 }

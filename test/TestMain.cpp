@@ -79,28 +79,27 @@
  */
 int main(int argc, char **argv)
 {
+    int countFailedTestCases = 0;
+
     UTIL_NOT_USED(argc);
     UTIL_NOT_USED(argv);
 
-    UNITY_BEGIN();
+    countFailedTestCases += testSuiteDoublyLinkedList();
+    countFailedTestCases += testSuiteGfx();
+    countFailedTestCases += testSuiteGfxText();
+    countFailedTestCases += testSuiteWidgetGroup();
+    countFailedTestCases += testSuiteLampWidget();
+    countFailedTestCases += testSuiteBmpImgLoader();
+    countFailedTestCases += testSuiteBitmapWidget();
+    countFailedTestCases += testSuiteTextWidget();
+    countFailedTestCases += testSuiteColor();
+    countFailedTestCases += testSuiteStateMachine();
+    countFailedTestCases += testSuiteSimpleTimer();
+    countFailedTestCases += testSuiteProgressBar();
+    countFailedTestCases += testSuiteLogging();
+    countFailedTestCases += testSuiteUtil();
 
-    RUN_TEST(testDoublyLinkedList);
-    RUN_TEST(testGfx);
-    RUN_TEST(testGfxText);
-    RUN_TEST(testWidget);
-    RUN_TEST(testWidgetGroup);
-    RUN_TEST(testLampWidget);
-    RUN_TEST(testBmpImgLoader);
-    RUN_TEST(testBitmapWidget);
-    RUN_TEST(testTextWidget);
-    RUN_TEST(testColor);
-    RUN_TEST(testStateMachine);
-    RUN_TEST(testSimpleTimer);
-    RUN_TEST(testProgressBar);
-    RUN_TEST(testLogging);
-    RUN_TEST(testUtil);
-
-    return UNITY_END();
+    return countFailedTestCases;
 }
 
 /**

@@ -153,6 +153,8 @@ private:
  * Prototypes
  *****************************************************************************/
 
+static void testStateMachine();
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -173,10 +175,23 @@ private:
  * External Functions
  *****************************************************************************/
 
+extern int testSuiteStateMachine()
+{
+    UNITY_BEGIN();
+
+    RUN_TEST(testStateMachine);
+
+    return UNITY_END();
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
+
 /**
  * Test the abstract state machine.
  */
-extern void testStateMachine()
+static void testStateMachine()
 {
     TestState       stateA;
     TestState       stateB;
@@ -228,7 +243,3 @@ extern void testStateMachine()
 
     return;
 }
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/

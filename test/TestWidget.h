@@ -135,9 +135,11 @@ private:
  *****************************************************************************/
 
 /**
- * Widget tests.
+ * Test suite for the widget.
+ * 
+ * @return Number of failed tests.
  */
-extern void testWidget();
+extern int testSuiteWidget();
 
 #endif  /* __TEST_WIDGET_H__ */
 

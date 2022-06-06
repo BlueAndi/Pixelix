@@ -53,6 +53,8 @@
  * Prototypes
  *****************************************************************************/
 
+static void testDoublyLinkedList();
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -73,10 +75,23 @@
  * External Functions
  *****************************************************************************/
 
+extern int testSuiteDoublyLinkedList()
+{
+    UNITY_BEGIN();
+
+    RUN_TEST(testDoublyLinkedList);
+
+    return UNITY_END();
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
+
 /**
  * Doubly linked list tests.
  */
-extern void testDoublyLinkedList()
+static void testDoublyLinkedList()
 {
     DLinkedList<uint32_t>           list;
     DLinkedListIterator<uint32_t>   it(list);
@@ -231,7 +246,3 @@ extern void testDoublyLinkedList()
 
     return;
 }
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/

@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test progress bar.
+ * Test suite for progress bar.
+ * 
+ * @return Number of failed tests.
  */
-extern void testProgressBar();
+extern int testSuiteProgressBar();
 
 #endif  /* __TEST_PROGRESS_BAR_H__ */
 

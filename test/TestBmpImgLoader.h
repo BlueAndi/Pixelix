@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test bitmap image loader.
+ * Test suite for bitmap image loader.
+ * 
+ * @return Number of failed tests.
  */
-extern void testBmpImgLoader();
+extern int testSuiteBmpImgLoader();
 
 #endif  /* __TEST_BMP_IMG_LOADER_H__ */
 

@@ -55,6 +55,8 @@
  * Prototypes
  *****************************************************************************/
 
+static void testLogging();
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -75,13 +77,26 @@
  * External Functions
  *****************************************************************************/
 
+extern int testSuiteLogging()
+{
+    UNITY_BEGIN();
+
+    RUN_TEST(testLogging);
+
+    return UNITY_END();
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
+
 /**
  * Test Logging.
  *
- * Note: In order to let these tests pass the formating of the expected logMessage has to stay directly after the LogMessage (__LINE__-1),
+ * Note: In order to let these tests pass the formatting of the expected logMessage has to stay directly after the LogMessage (__LINE__-1),
  * otherwise the tests will fail.
  */
-extern void testLogging()
+static void testLogging()
 {
     TestLogger      myTestLogger;
     LogSinkPrinter  myLogSink("test", &myTestLogger);
@@ -109,7 +124,7 @@ extern void testLogging()
         ++LOG_MODULE;
     }
 
-    /* Check intial LogLevel. */
+    /* Check initial LogLevel. */
     TEST_ASSERT_TRUE(Logging::getInstance().registerSink(&myLogSink));
     TEST_ASSERT_TRUE(Logging::getInstance().selectSink("test"));
     TEST_ASSERT_EQUAL(Logging::getInstance().getLogLevel() , Logging::LOG_LEVEL_INFO);
@@ -167,7 +182,3 @@ extern void testLogging()
 
     return;
 }
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/

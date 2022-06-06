@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test simple timer.
+ * Test suite for simple timer.
+ * 
+ * @return Number of failed tests.
  */
-extern void testSimpleTimer();
+extern int testSuiteSimpleTimer();
 
 #endif  /* __TEST_SIMPLE_TIMER_H__ */
 

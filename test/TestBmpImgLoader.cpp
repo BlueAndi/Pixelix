@@ -56,6 +56,8 @@
  * Prototypes
  *****************************************************************************/
 
+static void testBmpImgLoader();
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -76,10 +78,23 @@
  * External Functions
  *****************************************************************************/
 
+extern int testSuiteBmpImgLoader()
+{
+    UNITY_BEGIN();
+
+    RUN_TEST(testBmpImgLoader);
+
+    return UNITY_END();
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
+
 /**
  * Test bitmap image loader.
  */
-extern void testBmpImgLoader()
+static void testBmpImgLoader()
 {
     BmpImgLoader        loader;
     YAGfxDynamicBitmap  bitmap;
@@ -121,7 +136,3 @@ extern void testBmpImgLoader()
 
     return;
 }
-
-/******************************************************************************
- * Local Functions
- *****************************************************************************/

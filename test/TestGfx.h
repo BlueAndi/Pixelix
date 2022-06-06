@@ -340,9 +340,11 @@ private:
  *****************************************************************************/
 
 /**
- * Test the graphic functions.
+ * Test suite for the graphic functions.
+ * 
+ * @return Number of failed tests.
  */
-extern void testGfx();
+extern int testSuiteGfx();
 
 #endif  /* __TEST_GFX_H__ */
 

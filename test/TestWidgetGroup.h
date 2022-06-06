@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Widget group tests.
+ * Test suite for the widget group.
+ * 
+ * @return Number of failed tests.
  */
-extern void testWidgetGroup();
+extern int testSuiteWidgetGroup();
 
 #endif  /* __TEST_WIDGET_GROUP_H__ */
 

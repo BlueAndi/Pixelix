@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test text widget.
+ * Test suite for the text widget.
+ * 
+ * @return Number of failed tests.
  */
-extern void testTextWidget();
+extern int testSuiteTextWidget();
 
 #endif  /* __TEST_TEXT_WIDGET_H__ */
 

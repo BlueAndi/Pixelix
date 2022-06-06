@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test utility functions.
+ * Test suite for the utility functions.
+ * 
+ * @return Number of failed tests.
  */
-extern void testUtil(void);
+extern int testSuiteUtil();
 
 #endif  /* __TEST_UTIL_H__ */
 

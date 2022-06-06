@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test color.
+ * Test suite for color.
+ * 
+ * @return Number of failed tests.
  */
-extern void testColor();
+extern int testSuiteColor();
 
 #endif  /* __TEST_COLOR_H__ */
 

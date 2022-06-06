@@ -57,9 +57,11 @@
  *****************************************************************************/
 
 /**
- * Test the text graphic functions.
+ * Test suite for the text graphic functions.
+ * 
+ * @return Number of failed tests.
  */
-extern void testGfxText();
+extern int testSuiteGfxText();
 
 #endif  /* __TEST_GFX_TEXT_H__ */
 
