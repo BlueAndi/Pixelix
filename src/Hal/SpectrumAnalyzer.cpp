@@ -395,7 +395,7 @@ void SpectrumAnalyzer::deInitI2S()
 
 void SpectrumAnalyzer::calculateFFT()
 {
-    static const constexpr double   HALF_SPECTRUM_ENERGY_CORRECTON_FACTOR   = 2.0f;
+    static const constexpr double   HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR  = 2.0f;
     static const constexpr uint8_t  WINDOW_TYPE                             = FFT_WIN_TYP_HAMMING;
     uint16_t idx = 0U;
 
@@ -417,7 +417,7 @@ void SpectrumAnalyzer::calculateFFT()
      */
     for(idx = 1U; idx < FREQ_BINS; ++idx)
     {
-        m_real[idx] *= HALF_SPECTRUM_ENERGY_CORRECTON_FACTOR;
+        m_real[idx] *= HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR;
         m_real[idx] /= SAMPLES * WindowCorrection<WINDOW_TYPE>::factor;
     }
 }
