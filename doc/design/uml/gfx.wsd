@@ -1,7 +1,5 @@
 @startuml
 
-title GFX
-
 package "Adafruit" {
 
     class "GFXglyph" as gfxGlyph

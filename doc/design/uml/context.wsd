@@ -1,0 +1,19 @@
+@startuml
+
+rectangle "System" {
+    component "PIXELIX" as system
+}
+
+actor "User" as user
+actor "Service" as service
+component "Remote Button" as remoteButton
+component "Device" as device
+component "WiFi Access Point" as wifiAP
+
+user - system: <<physical>>\nButton/Display
+system -- remoteButton: <<logical>>\nREST API
+system -- device: <<logical>>\nREST API\nWebsocket
+system - service: <<logical>>\nHTTP Webserver
+system -- wifiAP: <<physical>>\nWiFi
+
+@enduml

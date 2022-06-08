@@ -1,0 +1,36 @@
+@startuml
+
+start
+:Initialize hardware.;
+:Check user button state.;
+
+if (Is pressed?) then (yes)
+
+    :Check settings for wifi credentials.;
+
+    if (Is available?) then (yes)
+
+        repeat
+            :Show connection establishment on display.;
+            :Connect to WiFi access point.;
+        repeat while(Connection successful established?)
+
+    else (no)
+
+        :Show instructions on display.;
+        :Wait for restart.;
+        stop
+
+    endif
+
+else (no)
+
+    :Setting up access-point (AP).;
+    :Show SSID of AP on the display.;
+
+endif
+
+:Handle all kind of external requests.;
+stop
+
+@enduml

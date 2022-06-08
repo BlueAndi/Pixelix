@@ -1,7 +1,5 @@
 @startuml
 
-title ...
-
 participant "SoundReactivePlugin" as plugin
 participant "SpectrumAnalyzer" as specAnalyzer
 participant "I2S" as i2s

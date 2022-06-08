@@ -1,7 +1,5 @@
 @startuml
 
-title ESP-RGB-LED Matrix
-
 note as N1
     This diagram shows only the important classes
     and interfaces. In case of class attributes and
