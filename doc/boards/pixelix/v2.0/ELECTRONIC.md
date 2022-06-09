@@ -25,7 +25,7 @@ PCB board v2.0
 
 # System Diagram
 
-![system-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/design/system.plantuml)
+![system-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/system.wsd)
 
 # Differences to v1.5
 
