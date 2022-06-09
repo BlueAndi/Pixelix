@@ -101,7 +101,7 @@ jobs:
       run: platformio check --environment test
 
     - name: Run tests on native environment
-      run: platformio test --environment test
+      run: platformio test --environment test -vvv
 
   # Build documentation
   doc:
