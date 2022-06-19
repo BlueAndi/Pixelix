@@ -36,7 +36,7 @@
 
 #include <Logging.h>
 
-#include "CRC32.h"
+#include "esp32/rom/crc.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -121,24 +121,23 @@ void ResetMon::process()
 
 void ResetMon::handleResetCounter()
 {
-    CRC32 crc;
+    uint32_t calcCrc32 = crc32_le(0U, reinterpret_cast<uint8_t*>(&gResetCounter), sizeof(gResetCounter));
 
-    crc.setPolynome(CRC32_CASTAGNOLI);
-    crc.add(reinterpret_cast<uint8_t*>(&gResetCounter), sizeof(gResetCounter));
-
-    if (crc.getCRC() != gNonInitGuardCrc)
+    /* Is the current reset counter invalid? */
+    if (calcCrc32 != gNonInitGuardCrc)
     {
+        /* Its invalid, we assume it was a power-up cycle and don't consider
+         * the case being corrupted by anyone else.
+         */
         gResetCounter = 0U;
     }
     else
     {
+        /* The reset counter is valid and the current one can be counted. */
         ++gResetCounter;
     }
 
-    crc.restart();
-    crc.add(reinterpret_cast<uint8_t*>(&gResetCounter), sizeof(gResetCounter));
-
-    gNonInitGuardCrc = crc.getCRC();
+    gNonInitGuardCrc = crc32_le(0U, reinterpret_cast<uint8_t*>(&gResetCounter), sizeof(gResetCounter));
 }
 
 void ResetMon::getResetReasonToStr(String& str, RESET_REASON resetReason)
