@@ -42,6 +42,7 @@
 #include "InitState.h"
 #include "TaskMon.h"
 #include "MemMon.h"
+#include "ResetMon.h"
 
 /******************************************************************************
  * Macros
@@ -92,6 +93,9 @@ static const uint32_t   LOOP_TASK_PERIOD    = 40U;
  */
 void setup()
 {
+    /* Start the reset monitor as early as possible to avoid loosing information. */
+    ResetMon::getInstance().begin();
+
     /* Setup serial interface */
     Serial.begin(SERIAL_BAUDRATE);
 
@@ -128,6 +132,9 @@ void setup()
  */
 void loop()
 {
+    /* Reset monitor */
+    ResetMon::getInstance().process();
+
     /* Process system state machine */
     gSysStateMachine.process();
 
