@@ -507,19 +507,19 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
     if (false == jsonStatus.is<String>())
     {
-        LOG_WARNING("JSON status type missmatch or missing.");
+        LOG_WARNING("JSON status type mismatch or missing.");
     }
     else if (false == jsonTitle.is<String>())
     {
-        LOG_WARNING("JSON title type missmatch or missing.");
+        LOG_WARNING("JSON title type mismatch or missing.");
     }
     else if (false == jsonSeek.is<uint32_t>())
     {
-        LOG_WARNING("JSON seek type missmatch or missing.");
+        LOG_WARNING("JSON seek type mismatch or missing.");
     }
     else if (false == jsonService.is<String>())
     {
-        LOG_WARNING("JSON service type missmatch or missing.");
+        LOG_WARNING("JSON service type mismatch or missing.");
     }
     else
     {

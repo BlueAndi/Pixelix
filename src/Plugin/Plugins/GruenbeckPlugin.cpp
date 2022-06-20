@@ -432,7 +432,7 @@ void GruenbeckPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
     if (false == jsonRestCapacity.is<String>())
     {
-        LOG_WARNING("JSON rest capacity missmatch or missing.");
+        LOG_WARNING("JSON rest capacity mismatch or missing.");
     }
     else
     {

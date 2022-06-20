@@ -444,7 +444,7 @@ void GithubPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
     if (false == jsonStargazersCount.is<uint32_t>())
     {
-        LOG_WARNING("JSON stargazers_count type missmatch or missing.");
+        LOG_WARNING("JSON stargazers_count type mismatch or missing.");
     }
     else
     {

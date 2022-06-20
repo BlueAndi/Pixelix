@@ -359,7 +359,7 @@ void ShellyPlugSPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
     if (false == jsonPower.is<float>())
     {
-        LOG_WARNING("JSON power type missmatch or missing.");
+        LOG_WARNING("JSON power type mismatch or missing.");
     }
     else
     {

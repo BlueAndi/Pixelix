@@ -742,23 +742,23 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
     if (false == jsonTemperature.is<float>())
     {
-        LOG_WARNING("JSON temp type missmatch or missing.");
+        LOG_WARNING("JSON temp type mismatch or missing.");
     }
     else if (false == jsonUvi.is<float>())
     {
-        LOG_WARNING("JSON uvi type missmatch or missing.");
+        LOG_WARNING("JSON uvi type mismatch or missing.");
     }
     else if (false == jsonHumidity.is<int>())
     {
-        LOG_WARNING("JSON humidity type missmatch or missing.");
+        LOG_WARNING("JSON humidity type mismatch or missing.");
     }
     else if (false == jsonWindSpeed.is<float>())
     {
-        LOG_WARNING("JSON wind_speed type missmatch or missing.");
+        LOG_WARNING("JSON wind_speed type mismatch or missing.");
     }
     else if (false == jsonIcon.is<String>())
     {
-        LOG_WARNING("JSON weather icon id type missmatch or missing.");
+        LOG_WARNING("JSON weather icon id type mismatch or missing.");
     }
     else
     {

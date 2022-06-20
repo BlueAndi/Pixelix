@@ -402,11 +402,11 @@ void SunrisePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
     if ((false == jsonSunrise.is<String>()))
     {
-        LOG_WARNING("JSON sunrise type missmatch or missing.");
+        LOG_WARNING("JSON sunrise type mismatch or missing.");
     }
     else if ((false == jsonSunset.is<String>()))
     {
-        LOG_WARNING("JSON sunset type missmatch or missing.");
+        LOG_WARNING("JSON sunset type mismatch or missing.");
     }
     else
     {
