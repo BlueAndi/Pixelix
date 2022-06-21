@@ -141,7 +141,7 @@ void ConnectedState::entry(StateMachine& sm)
                 }
                 else
                 {
-                    LOG_INFO("Notification triggered");
+                    LOG_INFO("Notification triggered.");
                 }
             }
         }
@@ -157,7 +157,7 @@ void ConnectedState::initHttpClient()
 
         if (HttpStatus::STATUS_CODE_OK == statusCode)
         {
-            LOG_INFO("Online state reported");
+            LOG_INFO("Online state reported.");
         }
 
     });
