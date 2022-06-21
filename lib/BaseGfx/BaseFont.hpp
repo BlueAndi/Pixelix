@@ -138,6 +138,32 @@ public:
     }
 
     /**
+     * Get a glyph object from the font for the choosen character.
+     * 
+     * @param[in] singleChar    Character for what the glyph is requested.
+     * 
+     * @return If glyph is found, it will be returned otherwise nullptr.
+     */
+    const GFXglyph* getGlyph(char singleChar) const
+    {
+        const GFXglyph* glyph   = nullptr;
+        uint8_t uChar           = static_cast<uint8_t>(singleChar);
+
+        if ((nullptr != m_gfxFont) &&
+            (m_gfxFont->first <= uChar) &&
+            (m_gfxFont->last >= uChar) &&
+            ('\n' != singleChar) &&
+            ('\r' != singleChar))
+        {
+            uint8_t glyphIndex  = uChar - m_gfxFont->first;
+
+            glyph = &(m_gfxFont->glyph[glyphIndex]);
+        }
+
+        return glyph;
+    }
+
+    /**
      * Get bounding box of single character.
      *
      * @param[in]   singleChar  Single character
@@ -148,18 +174,11 @@ public:
      */
     bool getCharBoundingBox(char singleChar, uint16_t& width, uint16_t& height) const
     {
-        bool    status  = false;
-        uint8_t uChar   = static_cast<uint8_t>(singleChar);
+        bool            status  = false;
+        const GFXglyph* glyph   = getGlyph(singleChar);
 
-        if ((nullptr != m_gfxFont) &&
-            (m_gfxFont->first <= uChar) &&
-            (m_gfxFont->last >= uChar) &&
-            ('\n' != singleChar) &&
-            ('\r' != singleChar))
+        if (nullptr != glyph)
         {
-            uint8_t         glyphIndex  = uChar - m_gfxFont->first;
-            const GFXglyph* glyph       = &(m_gfxFont->glyph[glyphIndex]);
-
             width   = glyph->xAdvance;
             height  = m_gfxFont->yAdvance;
             status  = true;
@@ -199,52 +218,52 @@ public:
             cursorX = 0;
             cursorY += m_gfxFont->yAdvance;
         }
-        /* Is character available in the font? Note, carriage return is skipped. */
-        else if (('\r' != singleChar) &&
-                 (m_gfxFont->first <= uChar) &&
-                 (m_gfxFont->last >= uChar))
-        {
-            uint8_t         glyphIndex  = uChar - m_gfxFont->first;
-            const GFXglyph* glyph       = &(m_gfxFont->glyph[glyphIndex]);
-
-            /* Handle character only, if it is really drawn on the screen. */
-            if (0 <= (cursorX + glyph->xAdvance))
-            {
-                int16_t     x               = 0;
-                int16_t     y               = 0;
-                uint16_t    bitmapOffset    = glyph->bitmapOffset;
-                uint8_t     bitmapRowBits   = 0U;
-                uint8_t     bitCnt          = 0U;
-
-                for(y = 0U; y < glyph->height; ++y)
-                {
-                    for(x = 0U; x < glyph->width; ++x)
-                    {
-                        /* Every 8 bit, the bitmap offset must be increased. */
-                        if (0U == (bitCnt & 0x07))
-                        {
-                            bitmapRowBits = m_gfxFont->bitmap[bitmapOffset];
-                            ++bitmapOffset;
-                        }
-                        ++bitCnt;
-
-                        /* A 1b in the bitmap row bits must be drawn as single pixel. */
-                        if (0U != (bitmapRowBits & 0x80U))
-                        {
-                            gfx.drawPixel(cursorX + x + glyph->xOffset, cursorY + y + glyph->yOffset, color);
-                        }
-
-                        bitmapRowBits <<= 1U;
-                    }
-                }
-            }
-
-            cursorX += glyph->xAdvance;
-        }
-        /* Skip character */
         else
         {
-            ;
+            const GFXglyph* glyph = getGlyph(singleChar);
+
+            /* Is character available in the font? Note, carriage return is skipped. */
+            if (nullptr != glyph)
+            {
+                /* Handle character only, if it is really drawn on the screen. */
+                if (0 <= (cursorX + glyph->xAdvance))
+                {
+                    int16_t     x               = 0;
+                    int16_t     y               = 0;
+                    uint16_t    bitmapOffset    = glyph->bitmapOffset;
+                    uint8_t     bitmapRowBits   = 0U;
+                    uint8_t     bitCnt          = 0U;
+
+                    for(y = 0U; y < glyph->height; ++y)
+                    {
+                        for(x = 0U; x < glyph->width; ++x)
+                        {
+                            /* Every 8 bit, the bitmap offset must be increased. */
+                            if (0U == (bitCnt & 0x07))
+                            {
+                                bitmapRowBits = m_gfxFont->bitmap[bitmapOffset];
+                                ++bitmapOffset;
+                            }
+                            ++bitCnt;
+
+                            /* A 1b in the bitmap row bits must be drawn as single pixel. */
+                            if (0U != (bitmapRowBits & 0x80U))
+                            {
+                                gfx.drawPixel(cursorX + x + glyph->xOffset, cursorY + y + glyph->yOffset, color);
+                            }
+
+                            bitmapRowBits <<= 1U;
+                        }
+                    }
+                }
+
+                cursorX += glyph->xAdvance;
+            }
+            else
+            /* Skip character */
+            {
+                ;
+            }
         }
     }
 

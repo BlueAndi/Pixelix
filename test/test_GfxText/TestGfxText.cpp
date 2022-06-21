@@ -120,15 +120,17 @@ extern void tearDown(void)
  */
 static void testGfxText()
 {
-    YAGfxTest   testGfx;
-    YAGfxText   testGfxText;
-    const Color COLOR       = 0x1234;
-    uint16_t    width       = 0U;
-    uint16_t    height      = 0U;
-    int16_t     cursorPosX  = 0;
-    int16_t     cursorPosY  = 0;
+    YAGfxTest       testGfx;
+    YAGfxText       testGfxText;
+    const Color     COLOR               = 0x1234;
+    uint16_t        boundingBoxWidth    = 0U;
+    uint16_t        boundingBoxHeight   = 0U;
+    int16_t         cursorPosX          = 0;
+    int16_t         cursorPosY          = 0;
+    const GFXglyph* glyph               = nullptr;
+    uint8_t         index               = 0U;
 
-    /* Verify cursor positon */
+    /* Verify cursor position */
     testGfxText.getTextCursorPos(cursorPosX, cursorPosY);
     TEST_ASSERT_EQUAL_INT16(0, cursorPosX);
     TEST_ASSERT_EQUAL_INT16(0, cursorPosY);
@@ -151,7 +153,22 @@ static void testGfxText()
 
     /* Select font and draw again. The character shall be shown. */
     testGfxText.setFont(&TomThumb);
-    TEST_ASSERT_TRUE(testGfxText.getTextBoundingBox(testGfx.getWidth(), testGfx.getHeight(), "Test", width, height));
+    testGfxText.setTextWrap(false);
+    TEST_ASSERT_TRUE(testGfxText.getTextBoundingBox(testGfx.getWidth(), "Test", boundingBoxWidth, boundingBoxHeight));
+    TEST_ASSERT_LESS_OR_EQUAL_UINT16(TomThumb.yAdvance, boundingBoxHeight);
+
+    /* Check text wrap around. */
+    testGfx.fillScreen(ColorDef::BLACK);
+    glyph = testGfxText.getFont().getGlyph('A');
+    TEST_ASSERT_NOT_NULL(glyph);
+
+    testGfxText.setTextWrap(false);
+    TEST_ASSERT_TRUE(testGfxText.getTextBoundingBox(glyph->xAdvance, "AA", boundingBoxWidth, boundingBoxHeight));
+    TEST_ASSERT_EQUAL_UINT16(1U * TomThumb.yAdvance, boundingBoxHeight);
+
+    testGfxText.setTextWrap(true);
+    TEST_ASSERT_TRUE(testGfxText.getTextBoundingBox(glyph->xAdvance, "AA", boundingBoxWidth, boundingBoxHeight));
+    TEST_ASSERT_EQUAL_UINT16(2U * TomThumb.yAdvance, boundingBoxHeight);
 
     return;
 }

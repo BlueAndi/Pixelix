@@ -95,7 +95,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
     String          str             = removeFormatTags(m_formatStrNew);
 
     /* Get bounding box of the text, without any format tags. */
-    if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), gfx.getHeight(), str.c_str(), textWidth, textHeight))
+    if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), str.c_str(), textWidth, textHeight))
     {
         m_scrollInfoNew.textWidth   = textWidth;
         m_handleNewText             = true;
@@ -497,7 +497,7 @@ bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, 
             uint16_t    textWidth   = 0U;
             uint16_t    textHeight  = 0U;
 
-            if (true == gfxText->getTextBoundingBox(gfx->getWidth(), gfx->getHeight(), text.c_str(), textWidth, textHeight))
+            if (true == gfxText->getTextBoundingBox(gfx->getWidth(), text.c_str(), textWidth, textHeight))
             {
                 gfxText->setTextCursorPos(gfx->getWidth() - textWidth, gfxText->getTextCursorPosY());
             }
@@ -518,7 +518,7 @@ bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, 
             uint16_t    textWidth   = 0U;
             uint16_t    textHeight  = 0U;
 
-            if (true == gfxText->getTextBoundingBox(gfx->getWidth(), gfx->getHeight(), text.c_str(), textWidth, textHeight))
+            if (true == gfxText->getTextBoundingBox(gfx->getWidth(), text.c_str(), textWidth, textHeight))
             {
                 gfxText->setTextCursorPos(gfxText->getTextCursorPosX() + (gfx->getWidth() - gfxText->getTextCursorPosX() - textWidth) / 2, gfxText->getTextCursorPosY());
             }

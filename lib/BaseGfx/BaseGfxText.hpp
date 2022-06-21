@@ -151,6 +151,7 @@ public:
 
     /**
      * Move text cursor to position.
+     * It is allowed to set it outside the display border.
      *
      * @param[in] x x-coordinate
      * @param[in] y y-coordinate
@@ -193,6 +194,12 @@ public:
 
     /**
      * Set text wrap around behaviour.
+     * If enabled and a character will not fit into the current line, it will
+     * continue in the next line. Otherwise the text will be cut at the
+     * end of the current line.
+     * 
+     * If the text is larger than the whole display can show, there will be no
+     * automatic scrolling. The application shall consider this by itself.
      *
      * @param[in] isEnabled Enable (true) wrap around or disable (false) it
      */
@@ -223,16 +230,22 @@ public:
 
     /**
      * Get bounding box of text.
+     * 
+     * It considers text wrap around, based on the given max. line width.
+     * It doesn't consider the current text cursor position.
+     * 
+     * If the wrap around is enabled and the text is long, it may happen that
+     * the bounding box is larger than the display height. Its in the
+     * responsibility of the caller to consider this.
      *
-     * @param[out]  width       Width in pixel
-     * @param[out]  height      Height in pixel
-     * @param[in]   text        Text
-     * @param[out]  boxWidth    Bounding box width in pixel
-     * @param[out]  boxHeight   Bounding box height in pixel
+     * @param[in]   maxLineWidth    Max. line width in pixel, necessary to consider text wrap around.
+     * @param[in]   text            Text
+     * @param[out]  boxWidth        Bounding box width in pixel
+     * @param[out]  boxHeight       Bounding box height in pixel
      * 
      * @return If successful, it will return true otherwise false.
      */
-    bool getTextBoundingBox(uint16_t width, uint16_t height, const char* text, uint16_t& boxWidth, uint16_t& boxHeight) const
+    bool getTextBoundingBox(uint16_t maxLineWidth, const char* text, uint16_t& boxWidth, uint16_t& boxHeight) const
     {
         bool status = false;
 
@@ -272,7 +285,7 @@ public:
                      */
                     if (true == m_isTextWrapEnabled)
                     {
-                        if (width < (lineWidth + charWidth))
+                        if (maxLineWidth < (lineWidth + charWidth))
                         {
                             if (boxWidth < lineWidth)
                             {
