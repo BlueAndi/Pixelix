@@ -106,7 +106,12 @@ void ClockDrv::init()
         }
         else
         {
-            LOG_INFO("Time successfully synchronized: %d:%d", timeInfo.tm_hour, timeInfo.tm_min);
+            LOG_INFO("Local time: %d-%d-%d %d:%d", 
+                (timeInfo.tm_year + 1900),
+                (timeInfo.tm_mon + 1),
+                timeInfo.tm_mday,
+                timeInfo.tm_hour,
+                timeInfo.tm_min);
         }
 
         m_isClockDrvInitialized = true;
