@@ -83,6 +83,8 @@ public:
         m_cfg(CFG_DATE_TIME),
         m_checkUpdateTimer(),
         m_durationCounter(0u),
+        m_shownMinute(-1),
+        m_shownDayOfTheYear(-1),
         m_isUpdateAvailable(false),
         m_slotInterf(nullptr),
         m_mutex()
@@ -278,16 +280,18 @@ private:
      *      ------------------------
      *                          = 17
      */
-    static const size_t     SIZE_OF_FORMATED_DATE_TIME_STRING       = 17U;
+    static const size_t     SIZE_OF_FORMATTED_DATE_TIME_STRING      = 17U;
 
     /** Divider to convert ms in s */
     static const uint32_t   MS_TO_SEC_DIVIDER                       = 1000U;
 
     /**
-     * Toggle counter value to switch between date and time
-     * if DURATION_INFINITE was set for the plugin.
+     * If the slot duration is infinite (0s), the default duration of 30s shall be assumed as base
+     * for toggling between time and date on the display.
+     * 
+     * The default duration is in ms.
      */
-    static const uint8_t    MAX_COUNTER_VALUE_FOR_DURATION_INFINITE = 15U;
+    static const uint32_t   DURATION_DEFAULT                        = 30U * 1000U;
 
     TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
@@ -296,6 +300,8 @@ private:
     Cfg                     m_cfg;                      /**< Configuration about what shall be shown. */
     SimpleTimer             m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessary. */
     uint8_t                 m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
+    int                     m_shownMinute;              /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
+    int                     m_shownDayOfTheYear;        /**< Used to trigger a display update in case the date shall be shown. [0; 365] */
     bool                    m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
     const ISlotPlugin*      m_slotInterf;               /**< Slot interface */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */

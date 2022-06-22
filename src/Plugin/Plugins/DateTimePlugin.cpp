@@ -175,6 +175,7 @@ void DateTimePlugin::process(bool isConnected)
 
     UTIL_NOT_USED(isConnected);
 
+    /* The date/time information shall be retrieved every second while plugin is activated. */
     if ((true == m_checkUpdateTimer.isTimerRunning()) &&
         (true == m_checkUpdateTimer.isTimeout()))
     {
@@ -191,14 +192,11 @@ void DateTimePlugin::active(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    /* Force drawing on display in the update() method for the very first time
-     * after activation.
-     */
-    m_isUpdateAvailable = true;
+    /* The date/time information shall be retrieved every second while plugin is activated. */
     m_durationCounter = 0U;
     m_checkUpdateTimer.start(CHECK_UPDATE_PERIOD);
 
-    /* Force immediate date/time update on activation */
+    /* The date/time shall be updated on the display right after plugin activation. */
     updateDateTime(true);
 }
 
@@ -241,9 +239,9 @@ void DateTimePlugin::updateDateTime(bool force)
     
     if (true == ClockDrv::getInstance().getTime(&timeInfo))
     {
-        bool    showDate = false;
-        bool    showTime = false;
-        
+        bool    showDate    = false;
+        bool    showTime    = false;
+
         /* Decide what to show. */
         switch(m_cfg)
         {
@@ -256,78 +254,47 @@ void DateTimePlugin::updateDateTime(bool force)
                 /* If infinite duration was set, switch between time and date with a fix period. */
                 if (0U == duration)
                 {
-                    halfDurationTicks   = MAX_COUNTER_VALUE_FOR_DURATION_INFINITE;
-                    fullDurationTicks   = 2U * halfDurationTicks;
+                    duration = DURATION_DEFAULT;
+                }
+
+                halfDurationTicks   = (duration / (2U * MS_TO_SEC_DIVIDER));
+                fullDurationTicks   = 2U * halfDurationTicks;
+
+                /* The time shall be shown in the first half slot duration. */
+                if ((halfDurationTicks >= m_durationCounter) ||
+                    (fullDurationTicks < m_durationCounter))
+                {
+                    showTime = true;
                 }
                 else
                 {
-                    halfDurationTicks   = (duration / (2U * MS_TO_SEC_DIVIDER));
-                    fullDurationTicks   = 2U * halfDurationTicks;
+                    showDate = true;
                 }
 
-                if (false == force)
-                {
-                    /* Show time in the first period. */
-                    if (0U == m_durationCounter)
-                    {
-                        showTime = true;
-                    }
-                    /* Show date in the second period. */
-                    else if (halfDurationTicks == m_durationCounter)
-                    {
-                        showDate = true;
-                    }
-                    else
-                    {
-                        ;
-                    }
-                }
-                else
-                {
-                    if (halfDurationTicks > m_durationCounter)
-                    {
-                        showTime = true;
-                    }
-                    else
-                    {
-                        showDate = true;
-                    }
-                }
-
-                /* Reset duration after a complete plugin slot duration is finished. */
-                if (fullDurationTicks <= m_durationCounter)
+                /* Reset duration counter after a complete plugin slot duration is finished. */
+                if (fullDurationTicks < m_durationCounter)
                 {
                     m_durationCounter = 0U;
+                }
+
+                /* Force the update in case it changes from time to date or vice versa.
+                 * This must be done, because we can not rely on the comparison whether
+                 * the date/time changed and a update is necessary anyway.
+                 */
+                if ((0U == m_durationCounter) ||
+                    ((halfDurationTicks + 1U) == m_durationCounter))
+                {
+                    force = true;
                 }
             }
             break;
 
         case CFG_DATE_ONLY:
-            if (false == force)
-            {
-                if (0U == m_durationCounter)
-                {
-                    showDate = true;
-                }
-            }
-            else
-            {
-                showDate = true;
-            }
+            showDate = true;
             break;
         
         case CFG_TIME_ONLY:
-            if (false == force)
-            {
-                if (0U == m_durationCounter)
-                {
-                    showTime = true;
-                }
-            }
-            else
-            {
-                showTime = true;
-            }
+            showTime = true;
             break;
         
         default:
@@ -338,27 +305,47 @@ void DateTimePlugin::updateDateTime(bool force)
 
         if (true == showTime)
         {
-            char timeBuffer [SIZE_OF_FORMATED_DATE_TIME_STRING];
-            const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "\\calign%H:%M":"\\calign%I:%M %p";
+            /* Show the time only in case
+             * its forced to do it or
+             * the minute changed.
+             */
+            if ((true == force) ||
+                (m_shownMinute != timeInfo.tm_min))
+            {
+                char        timeBuffer[SIZE_OF_FORMATTED_DATE_TIME_STRING];
+                const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "\\calign%H:%M":"\\calign%I:%M %p";
 
-            setWeekdayIndicator(timeInfo);
+                setWeekdayIndicator(timeInfo);
 
-            strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeInfo);
-            m_textWidget.setFormatStr(timeBuffer);
+                strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeInfo);
+                m_textWidget.setFormatStr(timeBuffer);
 
-            m_isUpdateAvailable = true;
+                m_shownMinute = timeInfo.tm_min;
+
+                m_isUpdateAvailable = true;
+            }
         }
         else if (true == showDate)
         {
-            char dateBuffer [SIZE_OF_FORMATED_DATE_TIME_STRING];
-            const char* formattedDateString = ClockDrv::getInstance().getDateFormat() ? "\\calign%d.%m.":"\\calign%m/%d";
+            /* Show the date only in case
+             * its forced to do it or
+             * the day changed.
+             */
+            if ((true == force) ||
+                (m_shownDayOfTheYear != timeInfo.tm_yday))
+            {
+                char        dateBuffer[SIZE_OF_FORMATTED_DATE_TIME_STRING];
+                const char* formattedDateString = ClockDrv::getInstance().getDateFormat() ? "\\calign%d.%m.":"\\calign%m/%d";
 
-            setWeekdayIndicator(timeInfo);
+                setWeekdayIndicator(timeInfo);
 
-            strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeInfo);
-            m_textWidget.setFormatStr(dateBuffer);
+                strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeInfo);
+                m_textWidget.setFormatStr(dateBuffer);
 
-            m_isUpdateAvailable = true;
+                m_shownDayOfTheYear = timeInfo.tm_yday;
+
+                m_isUpdateAvailable = true;
+            }
         }
         else
         {
