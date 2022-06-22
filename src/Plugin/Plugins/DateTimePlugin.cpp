@@ -317,12 +317,13 @@ void DateTimePlugin::updateDateTime(bool force)
 
                 setWeekdayIndicator(timeInfo);
 
-                strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeInfo);
-                m_textWidget.setFormatStr(timeBuffer);
+                if (0U != strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeInfo))
+                {
+                    m_textWidget.setFormatStr(timeBuffer);
 
-                m_shownMinute = timeInfo.tm_min;
-
-                m_isUpdateAvailable = true;
+                    m_shownMinute       = timeInfo.tm_min;
+                    m_isUpdateAvailable = true;
+                }
             }
         }
         else if (true == showDate)
@@ -339,12 +340,13 @@ void DateTimePlugin::updateDateTime(bool force)
 
                 setWeekdayIndicator(timeInfo);
 
-                strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeInfo);
-                m_textWidget.setFormatStr(dateBuffer);
+                if (0U != strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeInfo))
+                {
+                    m_textWidget.setFormatStr(dateBuffer);
 
-                m_shownDayOfTheYear = timeInfo.tm_yday;
-
-                m_isUpdateAvailable = true;
+                    m_shownDayOfTheYear = timeInfo.tm_yday;
+                    m_isUpdateAvailable = true;
+                }
             }
         }
         else
