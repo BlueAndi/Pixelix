@@ -35,8 +35,7 @@
 #include "Board.h"
 
 #include <Util.h>
-#include <esp_int_wdt.h>
-#include <esp_task_wdt.h>
+#include <Esp.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -105,15 +104,9 @@ extern void Board::init()
 
 extern void Board::reset()
 {
-    esp_task_wdt_init(1, true);
-    esp_task_wdt_add(nullptr);
-    
-    for(;;)
-    {
-        /* Wait for reset. */
-        ;
-    }
+    ESP.restart();
 
+    /* Will never be reached. */
     return;
 }
 
