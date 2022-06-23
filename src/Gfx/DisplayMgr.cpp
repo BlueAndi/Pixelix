@@ -380,7 +380,7 @@ bool DisplayMgr::uninstallPlugin(IPluginMaintenance* plugin)
 
         if (false == status)
         {
-            LOG_INFO("Couldn't remove plugin %s (UID %u) from slot %u, because slot is locked.", plugin->getName(), plugin->getUID(), slotId);
+            LOG_ERROR("Couldn't remove plugin %s (UID %u) from slot %u, because slot is locked.", plugin->getName(), plugin->getUID(), slotId);
         }
         else
         {
