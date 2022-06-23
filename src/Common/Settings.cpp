@@ -229,7 +229,7 @@ static const char*      DEFAULT_SLOT_CONFIG             = "";
 static uint32_t         DEFAULT_SCROLL_PAUSE            = 80U;
 
 /** NotifyURL default value */
-static const char*     DEFAULT_NOTIFY_URL               = "-";
+static const char*     DEFAULT_NOTIFY_URL               = "";
 
 /* ---------- Minimum values ---------- */
 

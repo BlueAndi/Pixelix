@@ -130,8 +130,7 @@ void ConnectedState::entry(StateMachine& sm)
         LOG_INFO(infoStr);
 
         /* If a push URL is set, notify about the online status. */
-        if ((false == notifyURL.equals("-")) &&
-            (false == notifyURL.isEmpty()))
+        if (false == notifyURL.isEmpty())
         {
             if (true == m_client.begin(notifyURL))
             {
