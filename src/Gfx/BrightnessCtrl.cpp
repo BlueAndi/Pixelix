@@ -129,7 +129,7 @@ bool BrightnessCtrl::enable(bool state)
             m_autoBrightnessTimer.start(AUTO_ADJUST_PERIOD);
 
             /* Start debouncing the ambient light sensor */
-            if (AMBIENT_LIGHT_DIRECTION_BRIGTHER == m_direction)
+            if (AMBIENT_LIGHT_DIRECTION_BRIGHTER == m_direction)
             {
                 m_lightSensorDebounceTimer.start(BRIGHTENING_LIGHT_DEBOUNCE);
             }
@@ -175,9 +175,9 @@ void BrightnessCtrl::process()
         if ((m_brighteningThreshold < m_recentShortTermAverage.getValue()) &&
             (m_brighteningThreshold < m_recentLongTermAverage.getValue()))
         {
-            if (AMBIENT_LIGHT_DIRECTION_BRIGTHER != m_direction)
+            if (AMBIENT_LIGHT_DIRECTION_BRIGHTER != m_direction)
             {
-                m_direction = AMBIENT_LIGHT_DIRECTION_BRIGTHER;
+                m_direction = AMBIENT_LIGHT_DIRECTION_BRIGHTER;
                 m_lightSensorDebounceTimer.start(BRIGHTENING_LIGHT_DEBOUNCE);
 
                 LOG_INFO("Light: Its getting brigther.");
@@ -256,7 +256,7 @@ BrightnessCtrl::BrightnessCtrl() :
     m_darkeningThreshold(0.0F),
     m_ambientLight(0.0F),
     m_lightSensorDebounceTimer(),
-    m_direction(AMBIENT_LIGHT_DIRECTION_BRIGTHER),
+    m_direction(AMBIENT_LIGHT_DIRECTION_BRIGHTER),
     m_brightnessGoal(m_minBrightness)
 {
 }

@@ -229,7 +229,7 @@ public:
 
     /**
      * Stability requirement in ms for accepting a new brightness level.
-     * It controls how quickly a brightness change occure in response
+     * It controls how quickly a brightness change occurs in response
      * to an observed change in light level that exceeds the hysteresis
      * threshold.
      */
@@ -237,7 +237,7 @@ public:
 
     /**
      * Stability requirement in ms for accepting a new brightness level.
-     * It controls how quickly a brightness change occure in response
+     * It controls how quickly a brightness change occurs in response
      * to an observed change in light level that exceeds the hysteresis
      * threshold.
      */
@@ -262,9 +262,9 @@ public:
 private:
 
     /** Direction of ambient light changes. */
-    enum AbientLightDirection
+    enum AmbientLightDirection
     {
-        AMBIENT_LIGHT_DIRECTION_BRIGTHER = 0,   /**< Its getting brighter. */
+        AMBIENT_LIGHT_DIRECTION_BRIGHTER = 0,   /**< Its getting brighter. */
         AMBIENT_LIGHT_DIRECTION_DARKER          /**< Its getting darker. */
     };
 
@@ -317,7 +317,7 @@ private:
     /**
      * Direction of changing ambient light.
      */
-    AbientLightDirection        m_direction;
+    AmbientLightDirection       m_direction;
 
     /**
      * Brightness goal in digits [0; 255].
