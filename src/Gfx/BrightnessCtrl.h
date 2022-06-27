@@ -214,13 +214,13 @@ public:
 
     /**
      * IIR filter time constant in ms for calculating the short-term moving average
-     * of the light sapmles. Used for low latency measurement.
+     * of the light samples. Used for low latency measurement.
      */
     static const uint32_t   SHORT_TERM_AVG_LIGHT_TIME_CONST = 1000U;
 
     /**
      * IIR filter time constant in ms for calculating the long-term moving average
-     * of the light sapmles. Used for the trend analysis.
+     * of the light samples. Used for the trend analysis.
      */
     static const uint32_t   LONG_TERM_AVG_LIGHT_TIME_CONST  = 5000U;
 

@@ -180,7 +180,7 @@ void BrightnessCtrl::process()
                 m_direction = AMBIENT_LIGHT_DIRECTION_BRIGHTER;
                 m_lightSensorDebounceTimer.start(BRIGHTENING_LIGHT_DEBOUNCE);
 
-                LOG_INFO("Light: Its getting brigther.");
+                LOG_INFO("Light: Its getting brighter.");
             }
             else if ((true == m_lightSensorDebounceTimer.isTimerRunning()) &&
                      (true == m_lightSensorDebounceTimer.isTimeout()))

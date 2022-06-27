@@ -69,7 +69,7 @@ const uint16_t  SensorLdrGl5528::NO_LDR_THRESHOLD   = (3UL * (Board::adcResoluti
  * Public Methods
  *****************************************************************************/
 
-float LdrChannelIluminance::getValue()
+float LdrChannelIlluminance::getValue()
 {
     return m_driver->getIlluminance();
 }
@@ -124,7 +124,7 @@ float SensorLdrGl5528::getIlluminance()
          * x = log10( I )
          * y = log10( R_LDR )
          *
-         * Note, I is the illumiance and R_LDR is the ambient light depended resistance.
+         * Note, I is the illuminance and R_LDR is the ambient light depended resistance.
          *
          * y = m * x + b
          * log10( R_LDR ) = -(gamma gradient) * log10( I ) + b

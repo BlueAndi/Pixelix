@@ -61,14 +61,14 @@ class SensorLdrGl5528;
 /**
  * Illuminance channel of the LDR GL5528 sensor.
  */
-class LdrChannelIluminance : public SensorChannelFloat32
+class LdrChannelIlluminance : public SensorChannelFloat32
 {
 public:
 
     /**
      * Constructs the illuminance channel of the LDR GL5528 sensor.
      */
-    LdrChannelIluminance() :
+    LdrChannelIlluminance() :
         m_driver(nullptr)
     {
     }
@@ -76,7 +76,7 @@ public:
     /**
      * Destroys the illuminance channel of the LDR GL5528 sensor.
      */
-    ~LdrChannelIluminance()
+    ~LdrChannelIlluminance()
     {
     }
 
@@ -111,8 +111,8 @@ private:
 
     SensorLdrGl5528*    m_driver;   /**< LDR GL5528 sensor driver. */
 
-    LdrChannelIluminance(const LdrChannelIluminance& channel);
-    LdrChannelIluminance& operator=(const LdrChannelIluminance& channel);
+    LdrChannelIlluminance(const LdrChannelIlluminance& channel);
+    LdrChannelIlluminance& operator=(const LdrChannelIlluminance& channel);
 };
 
 /**
@@ -198,7 +198,7 @@ private:
     static const uint16_t   NO_LDR_THRESHOLD;
 
     bool                    m_isAvailable;          /**< Is a sensor available or not? */
-    LdrChannelIluminance    m_illuminanceChannel;   /**< Illuminance channel */
+    LdrChannelIlluminance   m_illuminanceChannel;   /**< Illuminance channel */
 
     SensorLdrGl5528(const SensorLdrGl5528& sensor);
     SensorLdrGl5528& operator=(const SensorLdrGl5528& sensor);
