@@ -252,12 +252,13 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint16_t                    tcHeight        = 0U;
     uint16_t                    lampWidth       = 0U;
     uint16_t                    lampDistance    = 0U;
     const uint16_t              minDistance     = 1U;   /* Min. distance between lamps. */
     const uint16_t              minBorder       = 1U;   /* Min. border left and right of all lamps. */
     const uint16_t              canvasWidth     = width - ICON_WIDTH;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
     (void)m_iconCanvas.addWidget(m_bitmapWidget);
@@ -271,8 +272,23 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
         (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
     }
 
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height - 2U);
+    /* The text canvas is left aligned to the icon canvas and aligned to the
+     * top. Consider that below the text canvas the lamps are shown.
+     */
+    tcHeight = height - 2U;
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, tcHeight);
     (void)m_textCanvas.addWidget(m_textWidget);
+
+    /* The text widget inside the text canvas is left aligned on x-axis and
+     * aligned to the center of y-axis.
+     */
+    if (tcHeight > m_textWidget.getFont().getHeight())
+    {
+        uint16_t diffY = height - m_textWidget.getFont().getHeight();
+        uint16_t offsY = diffY / 2U;
+
+        m_textWidget.move(0, offsY);
+    }
 
     m_lampCanvas.setPosAndSize(ICON_WIDTH, height - 1, canvasWidth, 1U);
 

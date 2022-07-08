@@ -80,9 +80,6 @@ public:
         m_channelIdx(0U),
         m_sensorChannel(nullptr)
     {
-        /* Move the text widget one line lower for better look. */
-        m_textWidget.move(0, 1);
-
         (void)m_mutex.create();
     }
 

@@ -58,6 +58,28 @@
  * Public Methods
  *****************************************************************************/
 
+void SysMsgPlugin::start(uint16_t width, uint16_t height)
+{
+    /* The text widget is left aligned on x-axis and aligned to the center
+     * of y-axis.
+     */
+    if (height > m_textWidget.getFont().getHeight())
+    {
+        uint16_t diffY = height - m_textWidget.getFont().getHeight();
+        uint16_t offsY = diffY / 2U;
+
+        m_textWidget.move(0, offsY);
+    }
+    
+    return;
+}
+
+void SysMsgPlugin::stop()
+{
+    /* Nothing to do. */
+    return;
+}
+
 void SysMsgPlugin::update(YAGfx& gfx)
 {
     bool        isScrollingEnabled  = false;

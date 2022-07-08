@@ -130,6 +130,17 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
+    /* The text widget is left aligned on x-axis and aligned to the center
+     * of y-axis.
+     */
+    if (height > m_textWidget.getFont().getHeight())
+    {
+        uint16_t diffY = height - m_textWidget.getFont().getHeight();
+        uint16_t offsY = diffY / 2U;
+
+        m_textWidget.move(0, offsY);
+    }
+
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
      */

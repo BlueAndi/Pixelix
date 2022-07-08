@@ -182,8 +182,22 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
         (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
     }
 
+    /* The text canvas is left aligned to the icon canvas and it spans over
+     * the whole display height.
+     */
     m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
     (void)m_textCanvas.addWidget(m_textWidget);
+
+    /* The text widget inside the text canvas is left aligned on x-axis and
+     * aligned to the center of y-axis.
+     */
+    if (height > m_textWidget.getFont().getHeight())
+    {
+        uint16_t diffY = height - m_textWidget.getFont().getHeight();
+        uint16_t offsY = diffY / 2U;
+
+        m_textWidget.move(0, offsY);
+    }
 
     return;
 }

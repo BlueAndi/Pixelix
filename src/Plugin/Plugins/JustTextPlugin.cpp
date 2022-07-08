@@ -111,6 +111,30 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+void JustTextPlugin::start(uint16_t width, uint16_t height)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    /* The text widget is left aligned on x-axis and aligned to the center
+     * of y-axis.
+     */
+    if (height > m_textWidget.getFont().getHeight())
+    {
+        uint16_t diffY = height - m_textWidget.getFont().getHeight();
+        uint16_t offsY = diffY / 2U;
+
+        m_textWidget.move(0, offsY);
+    }
+    
+    return;
+}
+
+void JustTextPlugin::stop()
+{
+    /* Nothing to do. */
+    return;
+}
+
 void JustTextPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);

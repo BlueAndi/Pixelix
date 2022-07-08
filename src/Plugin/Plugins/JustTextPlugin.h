@@ -76,9 +76,6 @@ public:
         m_textWidget(),
         m_mutex()
     {
-        /* Move the text widget one line lower for better look. */
-        m_textWidget.move(0, 1);
-
         (void)m_mutex.create();
     }
 
@@ -140,6 +137,23 @@ public:
      */
     bool setTopic(const String& topic, const JsonObject& value) final;
 
+    /**
+     * Start the plugin. This is called only once during plugin lifetime.
+     * It can be used as deferred initialization (after the constructor)
+     * and provides the canvas size.
+     * 
+     * Overwrite it if your plugin needs to know that it was installed.
+     * 
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
+     */
+    void start(uint16_t width, uint16_t height) final;
+    
+    /**
+     * Stop the plugin. This is called only once during plugin lifetime.
+     */
+    void stop() final;
+    
     /**
      * Update the display.
      * The scheduler will call this method periodically.

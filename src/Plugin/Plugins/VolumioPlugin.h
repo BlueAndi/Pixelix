@@ -101,9 +101,6 @@ public:
         m_state(STATE_UNKNOWN),
         m_taskProxy()
     {
-        /* Move the text widget one line lower for better look. */
-        m_textWidget.move(0, 1);
-
         (void)m_mutex.create();
     }
 

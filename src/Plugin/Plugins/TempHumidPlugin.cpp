@@ -79,18 +79,32 @@ void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void TempHumidPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
     uint8_t                     sensorIdx       = 0U;
     uint8_t                     channelIdx      = 0U;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
 
     m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
     (void)m_iconCanvas.addWidget(m_bitmapWidget);
 
     (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
 
+    /* The text canvas is left aligned to the icon canvas and it spans over
+     * the whole display height.
+     */
     m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
     (void)m_textCanvas.addWidget(m_textWidget);
+
+    /* The text widget inside the text canvas is left aligned on x-axis and
+     * aligned to the center of y-axis.
+     */
+    if (height > m_textWidget.getFont().getHeight())
+    {
+        uint16_t diffY = height - m_textWidget.getFont().getHeight();
+        uint16_t offsY = diffY / 2U;
+
+        m_textWidget.move(0, offsY);
+    }
 
     /* Use just the first found sensor for temperature. */
     if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))

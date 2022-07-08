@@ -112,14 +112,40 @@ void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void DateTimePlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint16_t                    offsY           = 0U;
+    uint16_t                    tcHeight        = 0U;
     uint16_t                    lampWidth       = 0U;
     uint16_t                    lampDistance    = 0U;
     const uint16_t              minDistance     = 1U;   /* Min. distance between lamps. */
     const uint16_t              minBorder       = 1U;   /* Min. border left and right of all lamps. */
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_textCanvas.setPosAndSize(0, 0, width, height - 2U);
+    /* The text canvas is left aligned to the icon canvas and aligned to the
+     * top. Consider that below the text canvas the day of the week is shown.
+     */
+    tcHeight = height - 1U;
+    m_textCanvas.setPosAndSize(0, 0, width, tcHeight);
     (void)m_textCanvas.addWidget(m_textWidget);
+
+    /* The text widget inside the text canvas is left aligned on x-axis and
+     * aligned to the center of y-axis.
+     */
+    if (tcHeight > m_textWidget.getFont().getHeight())
+    {
+        uint16_t diffY  = tcHeight - m_textWidget.getFont().getHeight();
+        uint16_t offsY  = diffY / 2U;
+
+        /* It looks better if the date/time is moved one line down.
+         * And we know here that only numbers and dots may be shown, instead
+         * of e.g. 'q' or 'p'.
+         */
+        if (0U == offsY)
+        {
+            offsY = 1U;
+        }
+
+        m_textWidget.move(0, offsY);
+    }
 
     m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
 

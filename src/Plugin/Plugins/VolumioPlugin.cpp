@@ -126,7 +126,8 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
 
 void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    uint16_t                    tcHeight        = 0U;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
 
@@ -148,8 +149,23 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
     m_playIconWidget.disable();
     m_pauseIconWidget.disable();
 
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    /* The text canvas is left aligned to the icon canvas and aligned to the
+     * top. Consider that below the text canvas the music position is shown.
+     */
+    tcHeight = height - 2U;
+    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, tcHeight);
     (void)m_textCanvas.addWidget(m_textWidget);
+
+    /* The text widget inside the text canvas is left aligned on x-axis and
+     * aligned to the center of y-axis.
+     */
+    if (tcHeight > m_textWidget.getFont().getHeight())
+    {
+        uint16_t diffY = height - m_textWidget.getFont().getHeight();
+        uint16_t offsY = diffY / 2U;
+
+        m_textWidget.move(0, offsY);
+    }
 
     /* Try to load configuration. If there is no configuration available, a default configuration
      * will be created.
@@ -309,7 +325,8 @@ void VolumioPlugin::update(YAGfx& gfx)
     m_textCanvas.update(gfx);
 
     /* Draw a nice line to represent the current music position. */
-    gfx.drawHLine(tcX, m_textCanvas.getHeight() - 1, posWidth, posColor);
+    gfx.drawHLine(tcX, gfx.getHeight() - 1, posWidth, posColor);
+    UTIL_NOT_USED(tcY);
 
     return;
 }
