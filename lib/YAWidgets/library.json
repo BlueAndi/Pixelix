@@ -5,5 +5,7 @@
         "name": "YAGfx"
     }, {
         "name": "ArduinoJson"
+    }, {
+        "name": "LinkedList"
     }]
 }
