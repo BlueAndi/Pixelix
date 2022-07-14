@@ -77,6 +77,7 @@ static void handleSettings(AsyncWebServerRequest* request);
 static void handleSetting(AsyncWebServerRequest* request);
 static bool storeSetting(KeyValue* parameter, const String& value, String& error);
 static void handleStatus(AsyncWebServerRequest* request);
+static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
 static String getContentType(const String& filename);
@@ -791,7 +792,7 @@ static void handleSetting(AsyncWebServerRequest* request)
  *
  * @param[in]   parameter   Key value pair
  * @param[in]   value       Value to write
- * @param[out]  error       If a error happended, it will contain the root cause.
+ * @param[out]  error       If a error happened, it will contain the root cause.
  *
  * @return If successful stored, it will return true otherwise false.
  */
@@ -1087,6 +1088,73 @@ static void handleStatus(AsyncWebServerRequest* request)
 }
 
 /**
+ * Get the files in the directory recursively and fill the JSON array flat.
+ * It will start to collect the files/directories after "preCount" were found.
+ * It will stop to collect after "count" files.
+ * 
+ * @param[in]       dir         The directory to start with.
+ * @param[out]      files       JSON array for collecting the files.
+ * @param[in,out]   preCount    This amount of files will be skipped.
+ * @param[in,out]   count       Amount of files which max. to collect.
+ */
+static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count)
+{
+    File fd = dir.openNextFile();
+
+    while((true == fd) && (0U < count))
+    {
+        /* Skip the first number of files. */
+        if (0U < preCount)
+        {
+            /* One file skipped */
+            --preCount;
+
+            /* Dive into every directory recursively. */
+            if (true == fd.isDirectory())
+            {
+                getFilesRecursive(fd, files, preCount, count);
+            }
+        }
+        else
+        {
+            JsonObject jsonFile = files.createNestedObject();
+
+            jsonFile["name"] = String(fd.path());
+            jsonFile["size"] = fd.size();
+
+            if (true == fd.isDirectory())
+            {
+                jsonFile["type"] = "dir";
+
+                /* Dive into every directory recursively. */
+                getFilesRecursive(fd, files, preCount, count);
+            }
+            else
+            {
+                jsonFile["type"] = "file";
+            }
+
+            /* One file collected. */
+            --count;
+        }
+
+        fd.close();
+
+        /* Still possible to collect more? */
+        if (0U < count)
+        {
+            fd = dir.openNextFile();
+        }
+    }
+    
+    /* Cleanup */
+    if (true == fd)
+    {
+        fd.close();
+    }
+}
+
+/**
  * List files of given directory (?dir=<path>).
  * 
  * GET \c "/api/v1/fs"
@@ -1141,41 +1209,7 @@ static void handleFilesystem(AsyncWebServerRequest* request)
             }
             else
             {
-                File fd = fdRoot.openNextFile();
-
-                while((true == fd) && (0U < count))
-                {
-                    /* Page handling */
-                    if (0U < preCount)
-                    {
-                        --preCount;
-                    }
-                    else
-                    {
-                        JsonObject jsonFile = jsonData.createNestedObject();
-
-                        jsonFile["name"] = String(fd.path());
-                        jsonFile["size"] = fd.size();
-
-                        if (true == fd.isDirectory())
-                        {
-                            jsonFile["type"] = "dir";
-                        }
-                        else
-                        {
-                            jsonFile["type"] = "file";
-                        }
-
-                        --count;
-                    }
-
-                    fd.close();
-
-                    if (0U < count)
-                    {
-                        fd = fdRoot.openNextFile();
-                    }
-                }
+                getFilesRecursive(fdRoot, jsonData, preCount, count);
             }
 
             fdRoot.close();
