@@ -87,6 +87,7 @@
             var timerId             = 0;        // Timer id
             var period              = 400;      // Display refresh period in ms
             var wsClient            = new pixelix.ws.Client();
+            var isPageUnload        = false;
             var plugins             = [];       // List of all available plugins
             var autoBrightnessCtrl  = false;    // Is automatic brightness control enabled or disabled?
             var brightness          = 0;        // Brightness [0; 255]
@@ -107,8 +108,12 @@
             /* If websocket connection is unexpectedly closed, clean up. */
             function wsOnClosed() {
                 disableUI();
+                
                 window.clearTimeout(timerId);
-                return;
+
+                if (false === isPageUnload) {
+                    alert("Websocket connection closed.");
+                }
             }
 
             function plot(x, y, color) {
