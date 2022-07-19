@@ -455,6 +455,11 @@ void InitState::welcome()
         }
 
         settings.close();
+
+        /* Save current slot configuration to avoid it is empty and the user
+         * starts to configure it by himself from scratch.
+         */
+        PluginMgr::getInstance().save();
     }
 
     return;
