@@ -74,6 +74,7 @@ public:
      */
     SensorPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textWidget(),
         m_mutex(),
         m_sensorIdx(0U),
@@ -89,6 +90,31 @@ public:
     ~SensorPlugin()
     {
         m_mutex.destroy();
+    }
+
+    /**
+     * Get font type.
+     * 
+     * @return The font type the plugin uses.
+     */
+    Fonts::FontType getFontType() const final
+    {
+        return m_fontType;
+    }
+
+    /**
+     * Set font type.
+     * The plugin may skip the font type in case it gets conflicts with the layout.
+     * 
+     * A font type change will only be considered if it is set before the start()
+     * method is called!
+     * 
+     * @param[in] fontType  The font type which the plugin shall use.
+     */
+    void setFontType(Fonts::FontType fontType) final
+    {
+        m_fontType = fontType;
+        return;
     }
 
     /**
@@ -145,6 +171,9 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
+     * 
+     * If your display layout depends on canvas or font size, calculate it
+     * here.
      * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 
@@ -210,6 +239,7 @@ private:
     /** Sensor value update period in ms. */
     static const uint32_t   UPDATE_PERIOD   = 2000U;
 
+    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
     uint8_t                 m_sensorIdx;        /**< Index of selected sensor. */

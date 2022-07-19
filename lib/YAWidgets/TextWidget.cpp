@@ -34,9 +34,8 @@
  *****************************************************************************/
 #include "TextWidget.h"
 
-#include <TomThumb.h>
+#include <Fonts.h>
 #include <Util.h>
-
 #include <Logging.h>
 
 /******************************************************************************
@@ -63,7 +62,7 @@
 const char*                 TextWidget::WIDGET_TYPE         = "text";
 
 /* Initialize default font */
-const GFXfont*              TextWidget::DEFAULT_FONT        = &TomThumb;
+const YAFont&               TextWidget::DEFAULT_FONT        = Fonts::getFontByType(Fonts::FONT_TYPE_DEFAULT);
 
 /* Initialize keyword list */
 TextWidget::KeywordHandler  TextWidget::m_keywordHandlers[] =

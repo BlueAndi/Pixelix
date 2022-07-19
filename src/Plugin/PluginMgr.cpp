@@ -224,7 +224,9 @@ void PluginMgr::load()
                             }
                             else
                             {
-                                JsonVariant jsonAlias = jsonSlot["alias"];
+                                JsonVariant     jsonAlias       = jsonSlot["alias"];
+                                JsonVariant     jsonFontType    = jsonSlot["fontType"];
+                                Fonts::FontType fontType        = Fonts::FONT_TYPE_DEFAULT;
 
                                 /* Plugin instance alias available? */
                                 if (false == jsonAlias.isNull())
@@ -232,6 +234,16 @@ void PluginMgr::load()
                                     String alias = jsonAlias.as<String>();
 
                                     plugin->setAlias(alias);
+                                }
+
+                                /* Plugin instance font type information available? */
+                                if (false == jsonFontType.isNull())
+                                {
+                                    String fontTypeStr = jsonFontType.as<String>();
+
+                                    fontType = Fonts::strToFontType(fontTypeStr.c_str());
+
+                                    plugin->setFontType(fontType);
                                 }
 
                                 if (false == install(plugin, slotId))
@@ -278,15 +290,17 @@ void PluginMgr::save()
 
         if (nullptr == plugin)
         {
-            jsonSlot["name"]    = "";
-            jsonSlot["uid"]     = 0;
-            jsonSlot["alias"]   = "";
+            jsonSlot["name"]        = "";
+            jsonSlot["uid"]         = 0;
+            jsonSlot["alias"]       = "";
+            jsonSlot["fontType"]    = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
         }
         else
         {
-            jsonSlot["name"]    = plugin->getName();
-            jsonSlot["uid"]     = plugin->getUID();
-            jsonSlot["alias"]   = plugin->getAlias();
+            jsonSlot["name"]        = plugin->getName();
+            jsonSlot["uid"]         = plugin->getUID();
+            jsonSlot["alias"]       = plugin->getAlias();
+            jsonSlot["fontType"]    = Fonts::fontTypeToStr(plugin->getFontType());
         }
     }
 

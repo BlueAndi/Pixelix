@@ -142,6 +142,9 @@ void GithubPlugin::start(uint16_t width, uint16_t height)
     m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
     (void)m_textCanvas.addWidget(m_textWidget);
 
+    /* Choose font. */
+    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
+
     /* The text widget inside the text canvas is left aligned on x-axis and
      * aligned to the center of y-axis.
      */

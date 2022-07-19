@@ -25,14 +25,19 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System message plugin
+ * @brief  Fonts
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "SysMsgPlugin.h"
+#include "Fonts.h"
+
+#include <Arduino.h>
+#include <muMatrix8ptRegular.h>
+#include <TomThumb.h>
+#include <string.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -54,104 +59,34 @@
  * Local Variables
  *****************************************************************************/
 
+/**
+ * 6pt font for YAGfx: TomThumb
+ */
+static YAFont   gFont6pt(&TomThumb);
+
+/**
+ * 8pt font for YAGfx: muHeavy8ptRegular
+ */
+static YAFont   gFont8pt(&muMatrix8ptRegular);
+
+/**
+ * Font type default as string.
+ */
+static const char*  FONT_TYPE_DEFAULT_AS_STR = "default";
+
+/**
+ * Font type normal as string.
+ */
+static const char*  FONT_TYPE_NORMAL_AS_STR = "normal";
+
+/**
+ * Font type large as string.
+ */
+static const char*  FONT_TYPE_LARGE_AS_STR = "large";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
-
-void SysMsgPlugin::start(uint16_t width, uint16_t height)
-{
-    UTIL_NOT_USED(width);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-
-    /* The text widget is left aligned on x-axis and aligned to the center
-     * of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
-    
-    return;
-}
-
-void SysMsgPlugin::stop()
-{
-    /* Nothing to do. */
-    return;
-}
-
-void SysMsgPlugin::update(YAGfx& gfx)
-{
-    bool        isScrollingEnabled  = false;
-    uint32_t    scrollingCnt        = 0U;
-    bool        status              = false;
-
-    gfx.fillScreen(ColorDef::BLACK);
-    m_textWidget.update(gfx);
-
-    status = m_textWidget.getScrollInfo(isScrollingEnabled, scrollingCnt);
-
-    /* In initialization phase? */
-    if (true == m_isInit)
-    {
-        m_timer.stop();
-
-        /* Is the scroll info ready? */
-        if (true == status)
-        {
-            /* Start timer if text doesn't scroll and shall not be shown infinite. */
-            if ((false == isScrollingEnabled) &&
-                (0U < m_duration))
-            {
-                m_timer.start(m_duration);
-            }
-
-            m_isInit = false;
-        }
-    }
-    /* Is timer running for non-scrolled text? */
-    else if (true == m_timer.isTimerRunning())
-    {
-        /* Disable plugin after duration. */
-        if (true == m_timer.isTimeout())
-        {
-            disable();
-        }
-    }
-    /* Shall scrolling text be shown a specific number of times? */
-    else if (0U < m_max)
-    {
-        /* Disable plugin after specific number of times, the text was shown. */
-        if (m_max <= scrollingCnt)
-        {
-            disable();
-        }
-    }
-    else
-    {
-        /* Show infinite */
-        ;
-    }
-
-    return;
-}
-
-void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
-{
-    m_textWidget.setFormatStr(msg);
-    m_duration  = duration;
-    m_max       = max;
-    m_isInit    = true;
-
-    enable();
-
-    return;
-}
 
 /******************************************************************************
  * Protected Methods
@@ -164,6 +99,65 @@ void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
 /******************************************************************************
  * External Functions
  *****************************************************************************/
+
+extern const char* Fonts::fontTypeToStr(FontType type)
+{
+    const char* fontTypeStr = FONT_TYPE_DEFAULT_AS_STR;
+
+    switch(type)
+    {
+    case FONT_TYPE_DEFAULT:
+        /* Nothing to do. */
+        break;
+
+    case FONT_TYPE_NORMAL:
+        fontTypeStr = FONT_TYPE_NORMAL_AS_STR;
+        break;
+
+    case FONT_TYPE_LARGE:
+        fontTypeStr = FONT_TYPE_LARGE_AS_STR;
+        break;
+
+    default:
+        /* Nothing to do. */
+        break;
+    }
+
+    return fontTypeStr;
+}
+
+extern Fonts::FontType Fonts::strToFontType(const char* str)
+{
+    FontType fontType = FONT_TYPE_DEFAULT;
+
+    if (0 == strcmp(FONT_TYPE_NORMAL_AS_STR, str))
+    {
+        fontType = FONT_TYPE_NORMAL;
+    }
+    else if (0 == strcmp(FONT_TYPE_LARGE_AS_STR, str))
+    {
+        fontType = FONT_TYPE_LARGE;
+    }
+    else
+    {
+        /* Nothing to do. */
+        ;
+    }
+
+    return fontType;
+}
+
+extern YAFont&  Fonts::getFontByType(FontType type)
+{
+    YAFont* font = &gFont6pt;   /* The normal font is the default font. */
+
+    if (FONT_TYPE_LARGE == type)
+    {
+        font = &gFont8pt;   /* Large font */
+    }
+
+    return *font;
+}
 
 /******************************************************************************
  * Local Functions

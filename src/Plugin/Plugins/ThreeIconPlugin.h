@@ -154,11 +154,17 @@ public:
     bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) final;
 
     /**
-     * Start the plugin.
+     * Start the plugin. This is called only once during plugin lifetime.
+     * It can be used as deferred initialization (after the constructor)
+     * and provides the canvas size.
+     * 
+     * If your display layout depends on canvas or font size, calculate it
+     * here.
+     * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 
-     * @param[in] width     Display width in pixel.
-     * @param[in] height    Display height in pixel.
+     * @param[in] width     Display width in pixel
+     * @param[in] height    Display height in pixel
      */
     void start(uint16_t width, uint16_t height) final;
     

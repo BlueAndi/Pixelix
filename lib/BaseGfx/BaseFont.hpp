@@ -100,6 +100,23 @@ public:
     }
 
     /**
+     * Assign a font.
+     * 
+     * @param[in] font  Font which to assign
+     * 
+     * @return The font itself.
+     */
+    BaseFont& operator=(const BaseFont& font)
+    {
+        if (&font != this)
+        {
+            m_gfxFont = font.m_gfxFont;
+        }
+
+        return *this;
+    }
+
+    /**
      * Get GFXfont.
      *
      * @return GFXfont

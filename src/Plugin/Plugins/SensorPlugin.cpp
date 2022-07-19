@@ -130,6 +130,11 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
+    UTIL_NOT_USED(width);
+
+    /* Choose font. */
+    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
+
     /* The text widget is left aligned on x-axis and aligned to the center
      * of y-axis.
      */

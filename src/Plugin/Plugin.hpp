@@ -114,6 +114,31 @@ public:
     }
 
     /**
+     * Get font type.
+     * 
+     * @return The font type the plugin uses.
+     */
+    Fonts::FontType getFontType() const override
+    {
+        return Fonts::FONT_TYPE_DEFAULT;
+    }
+
+    /**
+     * Set font type.
+     * The plugin may skip the font type in case it gets conflicts with the layout.
+     * 
+     * A font type change will only be considered if it is set before the start()
+     * method is called!
+     * 
+     * @param[in] fontType  The font type which the plugin shall use.
+     */
+    void setFontType(Fonts::FontType fontType) override
+    {
+        UTIL_NOT_USED(fontType);
+        return;
+    }
+
+    /**
      * Get plugin topics, which can be get/set via different communication
      * interfaces like REST, websocket, MQTT, etc.
      * 
@@ -228,6 +253,9 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
+     * 
+     * If your display layout depends on canvas or font size, calculate it
+     * here.
      * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 

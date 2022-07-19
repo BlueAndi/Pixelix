@@ -1,0 +1,19 @@
+{
+    "name": "Fonts",
+    "version": "0.1.0",
+    "description": "Fonts in Adafruit format structure adapted to YAFont.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "YAGfx"
+    }, {
+        "name": "muwerk/mufonts"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

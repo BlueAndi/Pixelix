@@ -73,6 +73,7 @@ public:
      */
     SysMsgPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textWidget(),
         m_timer(),
         m_duration(0U),
@@ -102,9 +103,37 @@ public:
     }
 
     /**
+     * Get font type.
+     * 
+     * @return The font type the plugin uses.
+     */
+    Fonts::FontType getFontType() const final
+    {
+        return m_fontType;
+    }
+
+    /**
+     * Set font type.
+     * The plugin may skip the font type in case it gets conflicts with the layout.
+     * 
+     * A font type change will only be considered if it is set before the start()
+     * method is called!
+     * 
+     * @param[in] fontType  The font type which the plugin shall use.
+     */
+    void setFontType(Fonts::FontType fontType) final
+    {
+        m_fontType = fontType;
+        return;
+    }
+
+    /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
+     * 
+     * If your display layout depends on canvas or font size, calculate it
+     * here.
      * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 
@@ -137,11 +166,12 @@ public:
 
 private:
 
-    TextWidget  m_textWidget;   /**< Text widget, used for showing the text. */
-    SimpleTimer m_timer;        /**< Timer used to observer minimum duration */
-    uint32_t    m_duration;     /**< Duration in ms, how long a non-scrolling text shall be shown. */
-    uint32_t    m_max;          /**< Maximum number how often a scrolling text shall be shown. */
-    bool        m_isInit;       /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
+    Fonts::FontType m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget      m_textWidget;   /**< Text widget, used for showing the text. */
+    SimpleTimer     m_timer;        /**< Timer used to observer minimum duration */
+    uint32_t        m_duration;     /**< Duration in ms, how long a non-scrolling text shall be shown. */
+    uint32_t        m_max;          /**< Maximum number how often a scrolling text shall be shown. */
+    bool            m_isInit;       /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
 
 };
 

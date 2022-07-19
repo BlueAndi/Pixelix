@@ -162,12 +162,12 @@ static void testTextWidget()
 
     /* Check for default font */
     TEST_ASSERT_NOT_NULL(textWidget.getFont().getGfxFont());
-    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, textWidget.getFont().getGfxFont());
+    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT.getGfxFont(), textWidget.getFont().getGfxFont());
 
     /* Font shall be used for drawing */
     textWidget.update(testGfx);
     TEST_ASSERT_NOT_NULL(textWidget.getFont().getGfxFont());
-    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT, textWidget.getFont().getGfxFont());
+    TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT.getGfxFont(), textWidget.getFont().getGfxFont());
 
     /* Set text with format tag and get text without format tag back. */
     textWidget.setFormatStr("\\#FF00FFHello World!");

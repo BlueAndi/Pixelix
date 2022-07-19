@@ -178,7 +178,7 @@ public:
      */
     void setFormatStr(const String& formatStr)
     {
-        /* Avoid upate if not necessary. */
+        /* Avoid update if not necessary. */
         if ((m_formatStr != formatStr) &&
             (m_formatStrNew != formatStr))
         {
@@ -310,7 +310,7 @@ public:
     static const char*      WIDGET_TYPE;
 
     /** Default font */
-    static const GFXfont*   DEFAULT_FONT;
+    static const YAFont&    DEFAULT_FONT;
 
     /** Default pause between character scrolling in ms */
     static const uint32_t   DEFAULT_SCROLL_PAUSE    = 80U;

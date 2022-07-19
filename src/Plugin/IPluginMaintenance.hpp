@@ -46,6 +46,7 @@
 #include <stdint.h>
 #include <YAGfx.h>
 #include <ArduinoJson.h>
+#include <Fonts.h>
 #include "ISlotPlugin.hpp"
 
 /******************************************************************************
@@ -103,6 +104,24 @@ public:
      * @return Plugin instance alias name
      */
     virtual String getAlias() const = 0;
+
+    /**
+     * Get font type.
+     * 
+     * @return The font type the plugin uses.
+     */
+    virtual Fonts::FontType getFontType() const = 0;
+
+    /**
+     * Set font type.
+     * The plugin may skip the font type in case it gets conflicts with the layout.
+     * 
+     * A font type change will only be considered if it is set before the start()
+     * method is called!
+     * 
+     * @param[in] fontType  The font type which the plugin shall use.
+     */
+    virtual void setFontType(Fonts::FontType fontType) = 0;
 
     /**
      * Get plugin topics, which can be get/set via different communication
@@ -183,6 +202,9 @@ public:
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
+     * 
+     * If your display layout depends on canvas or font size, calculate it
+     * here.
      * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 

@@ -96,17 +96,17 @@ public:
     }
 
     /**
-     * Constructs a base text with the given GFXfont.
+     * Constructs a base text with the given font.
      * 
-     * @param[in] gfxFont   GFXfont
+     * @param[in] font      Font
      * @param[in] color     Text color
      */
-    BaseGfxText(const GFXfont* gfxFont, const TColor& color = 0U) :
+    BaseGfxText(const BaseFont<TColor>& font, const TColor& color = 0U) :
         m_cursorX(0),
         m_cursorY(0),
         m_textColor(color),
         m_isTextWrapEnabled(false),
-        m_font(gfxFont)
+        m_font(font)
     {
     }
 
@@ -115,6 +115,27 @@ public:
      */
     ~BaseGfxText()
     {
+    }
+
+    /**
+     * Assigns a base text.
+     * 
+     * @param[in] text  Source base text which to assign.
+     * 
+     * @return The base gfx text object.
+     */
+    BaseGfxText& operator=(const BaseGfxText<TColor>& text)
+    {
+        if (&text != this)
+        {
+            m_cursorX           = text.m_cursorX;
+            m_cursorY           = text.m_cursorY;
+            m_textColor         = text.m_textColor;
+            m_isTextWrapEnabled = text.m_isTextWrapEnabled;
+            m_font              = text.m_font;
+        }
+
+        return *this;
     }
 
     /**

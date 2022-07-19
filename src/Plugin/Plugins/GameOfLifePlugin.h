@@ -127,6 +127,9 @@ public:
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
      * 
+     * If your display layout depends on canvas or font size, calculate it
+     * here.
+     * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 
      * @param[in] width     Display width in pixel

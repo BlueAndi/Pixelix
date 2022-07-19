@@ -79,6 +79,7 @@ public:
      */
     BTCQuotePlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
         m_bitmapWidget(),
@@ -125,9 +126,37 @@ public:
     }
 
     /**
+     * Get font type.
+     * 
+     * @return The font type the plugin uses.
+     */
+    Fonts::FontType getFontType() const final
+    {
+        return m_fontType;
+    }
+
+    /**
+     * Set font type.
+     * The plugin may skip the font type in case it gets conflicts with the layout.
+     * 
+     * A font type change will only be considered if it is set before the start()
+     * method is called!
+     * 
+     * @param[in] fontType  The font type which the plugin shall use.
+     */
+    void setFontType(Fonts::FontType fontType) final
+    {
+        m_fontType = fontType;
+        return;
+    }
+
+    /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
+     * 
+     * If your display layout depends on canvas or font size, calculate it
+     * here.
      * 
      * Overwrite it if your plugin needs to know that it was installed.
      * 
@@ -190,6 +219,7 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = (60U * 1000U);
 
+    Fonts::FontType     m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup         m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup         m_iconCanvas;               /**< Canvas used for the bitmap widget. */
     BitmapWidget        m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
