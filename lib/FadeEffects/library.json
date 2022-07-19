@@ -1,7 +1,17 @@
 {
     "name": "FadeEffects",
     "version": "0.1.0",
+    "description": "Display fade effects based on YAGfx.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
     "dependencies": [{
         "name": "YAGfx"
-    }]
+    }],
+    "frameworks": "*",
+    "platforms": "*"
 }

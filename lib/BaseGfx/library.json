@@ -1,5 +1,15 @@
 {
     "name": "BaseGfx",
     "version": "0.1.0",
-    "dependencies": []
+    "description": "Library with basic graphic functions, color format agnostic.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [],
+    "frameworks": "*",
+    "platforms": "*"
 }

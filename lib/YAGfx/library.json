@@ -1,7 +1,17 @@
 {
     "name": "YAGfx",
     "version": "0.1.0",
+    "description": "Yet another graphic library, based on BaseGfx and combined with RGB888 color format.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
     "dependencies": [{
         "name": "BaseGfx"
-    }]
+    }],
+    "frameworks": "*",
+    "platforms": "*"
 }
