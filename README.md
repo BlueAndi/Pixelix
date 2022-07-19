@@ -28,6 +28,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [How do I know that my sensor is recognized?](#how-do-i-know-that-my-sensor-is-recognized)
   - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
   - [How can I use alternative icons?](#how-can-i-use-alternative-icons)
+  - [Is it possible to use a font with 8px height?](#is-it-possible-to-use-a-font-with-8px-height)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -175,6 +176,29 @@ The LDR pin is configured as input (ADC) and it seems that the pin is floating, 
 ## How can I use alternative icons?
 
 Find details [here](./doc/ICONS.md).
+
+## Is it possible to use a font with 8px height?
+There are three font types defined:
+* default (6px height)
+* normal (6px height)
+* large (8px height)
+
+Note, the default font type is "normal".
+
+The font type can be selected per plugin instance in the settings web page.
+
+Example:
+```json
+{
+    "name": "JustTextPlugin",
+    "uid": 32690,
+    "alias": "",
+    "fontType": "large"
+}
+```
+
+Not all plugin may support this in case they get conflicts with their layout.
+If a plugin don't support it, it will use the default font type.
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
