@@ -166,13 +166,15 @@ String PluginMgr::getRestApiBaseUriByAlias(const String& alias)
     return baseUri;
 }
 
-void PluginMgr::load()
+bool PluginMgr::load()
 {
-    Settings& settings = Settings::getInstance();
+    bool        isSuccessful    = true;
+    Settings&   settings        = Settings::getInstance();
 
     if (false == settings.open(true))
     {
         LOG_WARNING("Couldn't open filesystem.");
+        isSuccessful = false;
     }
     else
     {
@@ -181,6 +183,7 @@ void PluginMgr::load()
         if (true == installation.isEmpty())
         {
             LOG_WARNING("Plugin installation is empty.");
+            isSuccessful = false;
         }
         else
         {
@@ -193,10 +196,12 @@ void PluginMgr::load()
             if (DeserializationError::Ok != error.code())
             {
                 LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+                isSuccessful = false;
             }
             else if (false == jsonDoc["slots"].is<JsonArray>())
             {
                 LOG_WARNING("Invalid JSON format.");
+                isSuccessful = false;
             }
             else
             {
@@ -272,16 +277,18 @@ void PluginMgr::load()
 
         settings.close();
     }
+
+    return isSuccessful;
 }
 
 void PluginMgr::save()
 {
     String              installation;
-    uint8_t             slotId      = 0;
-    Settings&           settings    = Settings::getInstance();
+    uint8_t             slotId          = 0;
+    Settings&           settings        = Settings::getInstance();
     const size_t        JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonArray           jsonSlots   = jsonDoc.createNestedArray("slots");
+    JsonArray           jsonSlots       = jsonDoc.createNestedArray("slots");
 
     for(slotId = 0; slotId < DisplayMgr::getInstance().getMaxSlots(); ++slotId)
     {

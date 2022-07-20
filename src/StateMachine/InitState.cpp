@@ -86,6 +86,20 @@
  * Local Variables
  *****************************************************************************/
 
+/**
+ * Plugin type of the welcome plugin. This is used to install it in the very
+ * first startup. In further startups it is used in addition to the plugin
+ * alias whether to show the welcome icon and message.
+ */
+static const char*  WELCOME_PLUGIN_TYPE     = "IconTextPlugin";
+
+/**
+ * The alias of the welcome plugin. This is used to determine in addition to
+ * the plugin type whether to show the welcome icon and message after a reboot
+ * again.
+ */
+static const char*  WELCOME_PLUGIN_ALIAS    = "#welcome";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -354,18 +368,42 @@ void InitState::exit(StateMachine& sm)
             /* Do some stuff only in wifi station mode. */
             if (false == m_isApModeRequested)
             {
-                /* In the next step the plugins are loaded and would be automatically be shown.
+                /* In the next step the plugins are loaded and would automatically be shown.
                  * To avoid this until the connection establishment takes place, show the following
                  * message infinite.
                  */
                 SysMsg::getInstance().show("...");
                 delay(500U); /* Just to avoid a short splash */
 
-                /* Load last plugin installation. */
-                PluginMgr::getInstance().load();
+                /* Loading plugin installation failed? */
+                if (false == PluginMgr::getInstance().load())
+                {
+                    /* Welcome the user on the very first time (plugin installation is empty).
+                     * Of course a error may happened during loading the plugin installation,
+                     * in this case show the welcome screen too.
+                     */
+                    welcome(nullptr);
 
-                /* Welcome the user on the very first time. */
-                welcome();
+                    /* Save the plugin installation, so the user can configure it by its own in the web page settings. */
+                    PluginMgr::getInstance().save();
+                }
+                else
+                {
+                    /* Loading of the plugin installation was successful.
+                     *
+                     * If the plugin in slot 1 is still the welcome plugin (determined by plugin type and alias),
+                     * show welcome message.
+                     */
+                    IPluginMaintenance* pluginInSlot1 = DisplayMgr::getInstance().getPluginInSlot(1U);
+
+                    if (0 == strcmp(WELCOME_PLUGIN_TYPE,  pluginInSlot1->getName()))
+                    {
+                        if (0U != pluginInSlot1->getAlias().equals(WELCOME_PLUGIN_ALIAS))
+                        {
+                            welcome(pluginInSlot1);
+                        }
+                    }
+                }
 
                 /* Start over-the-air update server. */
                 UpdateMgr::getInstance().begin();
@@ -428,38 +466,27 @@ void InitState::showStartupInfoOnDisplay()
     return;
 }
 
-void InitState::welcome()
+void InitState::welcome(IPluginMaintenance* plugin)
 {
-    Settings& settings = Settings::getInstance();
+    IconTextPlugin* welcomePlugin = nullptr;
 
-    /* On the very first start, the plugin installation is empty.
-     * In this case we welcome the user.
-     */
-    if (true == settings.open(true))
+    if (nullptr == plugin)
     {
-        String pluginInstallation = settings.getPluginInstallation().getValue();
+        /* Install default plugin. */
+        welcomePlugin = static_cast<IconTextPlugin*>(PluginMgr::getInstance().install(WELCOME_PLUGIN_TYPE));
 
-        if (true == pluginInstallation.isEmpty())
-        {
-            IconTextPlugin* plugin = nullptr;
+        PluginMgr::getInstance().setPluginAliasName(welcomePlugin, WELCOME_PLUGIN_ALIAS);
+        welcomePlugin->enable();
+    }
+    else
+    {
+        welcomePlugin = static_cast<IconTextPlugin*>(plugin);
+    }
 
-            /* Install default plugin. */
-            plugin = static_cast<IconTextPlugin*>(PluginMgr::getInstance().install("IconTextPlugin"));
-
-            if (nullptr != plugin)
-            {
-                (void)plugin->loadBitmap("/images/smiley.bmp");
-                plugin->setText("Hello World!");
-                plugin->enable();
-            }
-        }
-
-        settings.close();
-
-        /* Save current slot configuration to avoid it is empty and the user
-         * starts to configure it by himself from scratch.
-         */
-        PluginMgr::getInstance().save();
+    if (nullptr != welcomePlugin)
+    {
+        (void)welcomePlugin->loadBitmap("/images/smiley.bmp");
+        welcomePlugin->setText("Hello World!");
     }
 
     return;

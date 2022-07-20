@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <StateMachine.hpp>
+#include <IPluginMaintenance.hpp>
 
 /******************************************************************************
  * Macros
@@ -130,8 +131,11 @@ private:
 
     /**
      * Welcome the user on the very first start.
+     * 
+     * @param[in] plugin    The welcome plugin. If nullptr is given, the welcome
+     *                      plugin will be created and installed.
      */
-    void welcome();
+    void welcome(IPluginMaintenance* plugin);
 };
 
 /******************************************************************************

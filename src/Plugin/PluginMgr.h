@@ -158,9 +158,13 @@ public:
     /**
      * Load plugin installation from persistent memory.
      * It will automatically enable the installed plugins.
+     * 
      * If a slot already contains a plugin, this slot won't change.
+     * If loading fails, no plugin at all will be installed.
+     * 
+     * @return If successful, it will return true otherwise false.
      */
-    void load();
+    bool load();
 
     /**
      * Save plugin installation to persistent memory.
