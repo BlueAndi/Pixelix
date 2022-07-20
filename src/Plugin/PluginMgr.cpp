@@ -187,7 +187,7 @@ bool PluginMgr::load()
         }
         else
         {
-            const size_t            JSON_DOC_SIZE   = 1024U;
+            const size_t            JSON_DOC_SIZE   = 1280U;
             DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
             DeserializationError    error           = deserializeJson(jsonDoc, installation);
 
@@ -286,7 +286,7 @@ void PluginMgr::save()
     String              installation;
     uint8_t             slotId          = 0;
     Settings&           settings        = Settings::getInstance();
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    const size_t        JSON_DOC_SIZE   = 1280U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonArray           jsonSlots       = jsonDoc.createNestedArray("slots");
 

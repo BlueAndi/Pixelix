@@ -313,7 +313,7 @@ static const uint8_t    MAX_VALUE_BRIGHTNESS            = 100U;
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** Plugin installation max. length */
-static const size_t     MAX_VALUE_PLUGIN_INSTALLATION   = 1024U;
+static const size_t     MAX_VALUE_PLUGIN_INSTALLATION   = 1280U;
 
 /** POSIX timezone max. length */
 static const size_t     MAX_VALUE_TIMEZONE              = 128U;
