@@ -324,46 +324,54 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
 
         if (false == name.isEmpty())
         {
-            IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name, uid);
-            
+            IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
+
+            /* If there is already a plugin installed, it may be a system plugin.
+             * In this case skip it, otherwise continue.
+             */
             if (nullptr == plugin)
             {
-                LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
-            }
-            else
-            {
-                JsonVariant     jsonAlias       = jsonSlot["alias"];
-                JsonVariant     jsonFontType    = jsonSlot["fontType"];
-                Fonts::FontType fontType        = Fonts::FONT_TYPE_DEFAULT;
-
-                /* Plugin instance alias available? */
-                if (false == jsonAlias.isNull())
+                plugin = m_pluginFactory.createPlugin(name, uid);
+            
+                if (nullptr == plugin)
                 {
-                    String alias = jsonAlias.as<String>();
-
-                    plugin->setAlias(alias);
-                }
-
-                /* Plugin instance font type information available? */
-                if (false == jsonFontType.isNull())
-                {
-                    String fontTypeStr = jsonFontType.as<String>();
-
-                    fontType = Fonts::strToFontType(fontTypeStr.c_str());
-
-                    plugin->setFontType(fontType);
-                }
-
-                if (false == install(plugin, slotId))
-                {
-                    LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
-
-                    m_pluginFactory.destroyPlugin(plugin);
-                    plugin = nullptr;
+                    LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
                 }
                 else
                 {
-                    plugin->enable();
+                    JsonVariant     jsonAlias       = jsonSlot["alias"];
+                    JsonVariant     jsonFontType    = jsonSlot["fontType"];
+                    Fonts::FontType fontType        = Fonts::FONT_TYPE_DEFAULT;
+
+                    /* Plugin instance alias available? */
+                    if (false == jsonAlias.isNull())
+                    {
+                        String alias = jsonAlias.as<String>();
+
+                        plugin->setAlias(alias);
+                    }
+
+                    /* Plugin instance font type information available? */
+                    if (false == jsonFontType.isNull())
+                    {
+                        String fontTypeStr = jsonFontType.as<String>();
+
+                        fontType = Fonts::strToFontType(fontTypeStr.c_str());
+
+                        plugin->setFontType(fontType);
+                    }
+
+                    if (false == install(plugin, slotId))
+                    {
+                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+
+                        m_pluginFactory.destroyPlugin(plugin);
+                        plugin = nullptr;
+                    }
+                    else
+                    {
+                        plugin->enable();
+                    }
                 }
             }
         }

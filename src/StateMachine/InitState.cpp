@@ -396,11 +396,15 @@ void InitState::exit(StateMachine& sm)
                      */
                     IPluginMaintenance* pluginInSlot1 = DisplayMgr::getInstance().getPluginInSlot(1U);
 
-                    if (0 == strcmp(WELCOME_PLUGIN_TYPE,  pluginInSlot1->getName()))
+                    /* Is a plugin in slot1? */
+                    if (nullptr != pluginInSlot1)
                     {
-                        if (0U != pluginInSlot1->getAlias().equals(WELCOME_PLUGIN_ALIAS))
+                        if (0 == strcmp(WELCOME_PLUGIN_TYPE,  pluginInSlot1->getName()))
                         {
-                            welcome(pluginInSlot1);
+                            if (0U != pluginInSlot1->getAlias().equals(WELCOME_PLUGIN_ALIAS))
+                            {
+                                welcome(pluginInSlot1);
+                            }
                         }
                     }
                 }
