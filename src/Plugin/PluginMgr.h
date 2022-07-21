@@ -255,6 +255,14 @@ private:
     void createPluginConfigDirectory();
 
     /**
+     * Prepares a slot according to the given configuration.
+     * 
+     * @param[in]   slotId      The ID of the slot.
+     * @param[in]   jsonSlot    Slot configuration
+     */
+    void prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jsonSlot);
+
+    /**
      * Install plugin.
      * If no slot id is given, the plugin will be installed in the next available slot.
      *
