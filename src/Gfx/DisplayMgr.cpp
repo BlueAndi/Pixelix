@@ -126,8 +126,15 @@ bool DisplayMgr::begin()
         }
         else
         {
-            /* Load slot configuration */
-            load();
+            /* Loading slot configuration failed? */
+            if (false == load())
+            {
+                /* Slot configuration may be empty in the very first startup.
+                 * In this case save the current one, so the user is able to
+                 * see how looks like.
+                 */
+                save();
+            }
         }
     }
 
@@ -1333,17 +1340,20 @@ void DisplayMgr::updateTask(void* parameters)
     return;
 }
 
-void DisplayMgr::load()
+bool DisplayMgr::load()
 {
-    Settings& settings = Settings::getInstance();
+    bool        isSuccessful    = true;
+    Settings&   settings        = Settings::getInstance();
 
     if (false == m_slotList.isAvailable())
     {
         LOG_WARNING("No slot exists.");
+        isSuccessful = false;
     }
     else if (false == settings.open(true))
     {
         LOG_WARNING("Couldn't open filesystem.");
+        isSuccessful = false;
     }
     else
     {
@@ -1352,6 +1362,7 @@ void DisplayMgr::load()
         if (true == config.isEmpty())
         {
             LOG_WARNING("Display slot configuration is empty.");
+            isSuccessful = false;
         }
         else
         {
@@ -1371,10 +1382,12 @@ void DisplayMgr::load()
             if (DeserializationError::Ok != error.code())
             {
                 LOG_WARNING("JSON deserialization failed: %s", error.c_str());
+                isSuccessful = false;
             }
             else if (false == jsonDoc["slots"].is<JsonArray>())
             {
                 LOG_WARNING("Invalid JSON format.");
+                isSuccessful = false;
             }
             else
             {
@@ -1401,6 +1414,8 @@ void DisplayMgr::load()
 
         settings.close();
     }
+
+    return isSuccessful;
 }
 
 void DisplayMgr::save()

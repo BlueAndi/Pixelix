@@ -483,8 +483,10 @@ private:
 
     /**
      * Load display slot configuration from persistent memory.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void load();
+    bool load();
 
     /**
      * Save display slot configuration to persistent memory.
