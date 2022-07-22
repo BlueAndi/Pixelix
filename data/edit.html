@@ -245,7 +245,7 @@
 
                     items.sort(compareFunc);
 
-                    for(index = 0; index < items.length; ++index) {      
+                    for(index = 0; index < items.length; ++index) {
                         $itemMenu = generateItemMenu("file" + index, items[index]);
                         promise = Promise.resolve($("#" + id).append($itemMenu).promise());
                         promises.push(promise);

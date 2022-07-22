@@ -33,19 +33,39 @@
         <main role="main" class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">Update</h1>
-                <p>Upload <u>~FIRMWARE_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
-                <div class="input-group">
-                    <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="inputFile">
-                        <label class="custom-file-label" for="inputFile">Choose file</label>
+
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item" role="presentation"><a class="nav-link active" id="update-tab" data-toggle="tab" role="tab" href="#update"  aria-controls="update" aria-selected="true">Update</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="backup-tab" data-toggle="tab" role="tab" href="#backup" aria-controls="backup" aria-selected="false">Backup</a></li>
+                </ul>
+
+                <div class="tab-content" id="myTabContent">
+
+                    <div class="tab-pane fade active show" id="update" role="tabpanel" aria-labelledby="update-tab">
+                        <br />
+                        <p>Upload <u>~FIRMWARE_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="inputFile">
+                                <label class="custom-file-label" for="inputFile">Choose file</label>
+                            </div>
+                            <div class="input-group-append">
+                                <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
+                            </div>
+                        </div>
+                        <div class="progress">
+                            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>    
                     </div>
-                    <div class="input-group-append">
-                        <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
+
+                    <div class="tab-pane fade" id="backup" role="tabpanel" aria-labelledby="backup-tab">
+                        <br />
+                        <p>Backup the configuration.</p>
+                        <button class="btn btn-light" id="buttonBackup" type="button" onclick="backup();">Save As</button>
                     </div>
+
                 </div>
-                <div class="progress">
-                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-                </div>
+
             </div>
         </main>
   
@@ -65,9 +85,18 @@
         <script type="text/javascript" src="/js/menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+        <!-- Zip library-->
+        <script type="text/javascript" src="/js/jszip.min.js"></script>
+        <script type="text/javascript" src="/js/jszip-utils.min.js"></script>
+        <script type="text/javascript" src="/js/FileSaver.min.js"></script>
 
         <!-- Custom javascript -->
         <script>
+
+            var restClient  = new pixelix.rest.Client();
+            var zip         = new JSZip();
 
             /* Disable all UI elements. */
             function disableUI() {
@@ -127,6 +156,50 @@
                         enableUI();
                     });
                 }
+            }
+
+            function getConfigurationFiles() {
+                return restClient.listAllFiles("/configuration").then(function(items) {
+                    fileUrlList = [];
+
+                    for(index = 0; index < items.length; ++index) {
+                        fileUrlList.push({
+                            name: items[index].name,
+                            url: "/rest/api/v1/fs/file?path=" + encodeURIComponent(items[index].name)
+                        });
+                    }
+
+                    return Promise.resolve(fileUrlList);
+                });
+            }
+
+            function urlToPromise(url) {
+                return new Promise(function(resolve, reject) {
+
+                    JSZipUtils.getBinaryContent(url, function (err, data) {
+                        if(err) {
+                            reject(err);
+                        } else {
+                            resolve(data);
+                        }
+                    });
+                });
+            }
+
+            function downloadWithBlob(fileUrlList) {
+                fileUrlList.forEach(function(fileUrl, index){
+                    var filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf('/') + 1);
+                    zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary:true });
+                });
+                zip.generateAsync({ type:'blob' }).then(function(content) {
+                    saveAs(content, "backup.zip");
+                });
+            }
+
+            function backup() {
+                getConfigurationFiles().then(function(fileUrlList) {
+                    downloadWithBlob(fileUrlList);
+                });
             }
 
             /* Execute after page is ready. */
