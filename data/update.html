@@ -37,6 +37,7 @@
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="nav-item" role="presentation"><a class="nav-link active" id="update-tab" data-toggle="tab" role="tab" href="#update"  aria-controls="update" aria-selected="true">Update</a></li>
                     <li class="nav-item" role="presentation"><a class="nav-link" id="backup-tab" data-toggle="tab" role="tab" href="#backup" aria-controls="backup" aria-selected="false">Backup</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="restore-tab" data-toggle="tab" role="tab" href="#restore" aria-controls="restore" aria-selected="false">Restore</a></li>
                 </ul>
 
                 <div class="tab-content" id="myTabContent">
@@ -62,6 +63,20 @@
                         <br />
                         <p>Backup the configuration.</p>
                         <button class="btn btn-light" id="buttonBackup" type="button" onclick="backup();">Save As</button>
+                    </div>
+
+                    <div class="tab-pane fade" id="restore" role="tabpanel" aria-labelledby="restore-tab">
+                        <br />
+                        <p>Restore the configuration.</p>
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="backupFile">
+                                <label class="custom-file-label" for="backupFile">Choose backup file</label>
+                            </div>
+                            <div class="input-group-append">
+                                <button class="btn btn-light" type="button" onclick="restore();">Restore</button>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -202,11 +217,55 @@
                 });
             }
 
+            function restore() {
+                var elem = document.getElementById("backupFile");
+
+                if (0 === elem.files.length) {
+
+                    alert("No file selected.");
+
+                } else {
+                    var file        = elem.files[0];
+                    var fileSize    = file.size;
+                    var endsWith    = ".zip";
+                    var lastIndex   = file.name.lastIndexOf(endsWith);
+
+                    if ((lastIndex === -1) || (lastIndex + endsWith.length !== file.name.length)) {
+
+                        alert("Unknown file: " + file.name);
+
+                    } else {
+
+                        disableUI();
+
+                        zip.loadAsync(file).then(function(zipObj) {
+                            var files = Object.keys(zipObj.files);
+                            var promiseChain = Promise.resolve();
+
+                            files.forEach(function(filename) {
+                                zipObj.file(filename).async("text").then(function(data) {
+                                    promiseChain = promiseChain.then(restClient.writeFile("/configuration/" + filename, data));
+                                });
+                            });
+
+                            return promiseChain;
+                        }).then(function() {
+                            enableUI();
+                        });
+                    }
+                }
+            }
+
             /* Execute after page is ready. */
             $(document).ready(function() {
                 menu.create("menu", menu.data);
                 
                 $("#inputFile").on("change", function() {
+                    var fileName = $(this).val().split("\\").pop();
+                    $(this).next(".custom-file-label").addClass("selected").html(fileName);
+                });
+
+                $("#backupFile").on("change", function() {
                     var fileName = $(this).val().split("\\").pop();
                     $(this).next(".custom-file-label").addClass("selected").html(fileName);
                 });
