@@ -227,10 +227,8 @@
                 } else {
                     var file        = elem.files[0];
                     var fileSize    = file.size;
-                    var endsWith    = ".zip";
-                    var lastIndex   = file.name.lastIndexOf(endsWith);
 
-                    if ((lastIndex === -1) || (lastIndex + endsWith.length !== file.name.length)) {
+                    if (false === file.name.endsWith(".zip")) {
 
                         alert("Unknown file: " + file.name);
 
@@ -243,13 +241,30 @@
                             var promiseChain = Promise.resolve();
 
                             files.forEach(function(filename) {
-                                zipObj.file(filename).async("text").then(function(data) {
-                                    promiseChain = promiseChain.then(restClient.writeFile("/configuration/" + filename, data));
+                                var fileType = "text";
+                                var mimeType = "text/plain";
+
+                                if (true === filename.endsWith(".json")) {
+                                    fileType = "text";
+                                    mimeType = "text/plain";
+                                } else if (true === filename.endsWith(".bmp")) {
+
+                                    if (JSZip.support.blob) {
+                                        fileType = "blob";
+                                        mimeType = "application/octet-stream";
+                                    } else if (JSZip.support.uint8array) {
+                                        fileType = "uint8array";
+                                        mimeType = "application/octet-stream";
+                                    }
+                                }
+
+                                zipObj.file(filename).async(fileType).then(function(data) {
+                                    promiseChain = promiseChain.then(restClient.writeFile("/configuration/" + filename, data, mimeType));
                                 });
                             });
 
                             return promiseChain;
-                        }).then(function() {
+                        }).finally(function() {
                             enableUI();
                         });
                     }

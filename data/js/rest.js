@@ -61,17 +61,17 @@ pixelix.rest.Client.prototype.readFile = function(filename) {
     return promise;
 };
 
-pixelix.rest.Client.prototype.writeFile = function(filename, content) {
+pixelix.rest.Client.prototype.writeFile = function(filename, content, mimeType) {
     var promise     = null;
     var formData    = null;
 
     if ("string" !== typeof filename) {
         promise = Promise.reject();
-    } else if ("string" !== typeof content) {
+    } else if ("string" !== typeof mimeType) {
         promise = Promise.reject();
     } else {
         formData = new FormData();
-        formData.append("file", new Blob([content], { type: "text/plain" }), filename);
+        formData.append("file", new Blob([content], { type: mimeType }), filename);
 
         promise = utils.makeRequest({
             method: "POST",

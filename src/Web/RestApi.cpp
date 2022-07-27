@@ -1299,6 +1299,10 @@ static String getContentType(const String& filename)
     {
         contentType = "application/javascript";
     }
+    else if (filename.endsWith(".bmp"))
+    {
+        contentType = "image/bmp";
+    }
     else if (filename.endsWith(".png"))
     {
         contentType = "image/png";
@@ -1330,6 +1334,10 @@ static String getContentType(const String& filename)
     else if (filename.endsWith(".gz"))
     {
         contentType = "application/x-gzip";
+    }
+    else
+    {
+        ;
     }
 
     return contentType;

@@ -371,7 +371,7 @@
                     },
                     exec: function(editor) {
                         showDialog("Saving file", "<p>Please wait, its saving.</p>")
-                        .then(restClient.writeFile(loadedFile, editor.getValue()))
+                        .then(restClient.writeFile(loadedFile, editor.getValue(), "text/plain"))
                         .finally(function() {
                             hideDialog();
                         });
