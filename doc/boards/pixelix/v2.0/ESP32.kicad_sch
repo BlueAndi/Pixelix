@@ -755,7 +755,7 @@
     )
   )
 
-  (text "place only ONE Resistor!" (at 146.05 83.82 0)
+  (text "place only ONE Resistor!" (at 146.05 82.55 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 4b8f1294-adc9-4748-93a8-fa17cee78ffb)
   )
