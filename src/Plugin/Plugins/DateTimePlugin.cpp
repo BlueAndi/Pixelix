@@ -381,6 +381,14 @@ void DateTimePlugin::updateDateTime(bool force)
             ;
         }
     }
+    else
+    {
+        if(true == force)
+        {
+            m_textWidget.setFormatStr("\\calign?");
+            m_isUpdateAvailable = true;
+        }
+    }
 }
 
 void DateTimePlugin::setWeekdayIndicator(tm timeInfo)
