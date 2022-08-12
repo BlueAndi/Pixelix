@@ -6,7 +6,7 @@
 
   (title_block
     (title "Pixelix")
-    (date "2022-08-08")
+    (date "2022-08-12")
     (rev "2.0")
     (comment 1 "Schneider, Niklas")
   )
@@ -2931,12 +2931,6 @@
     )
     (path "/00000000-0000-0000-0000-00006267bf9e"
       (reference "R8") (unit 1) (value "100") (footprint "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder")
-    )
-    (path "/00000000-0000-0000-0000-000062912066/4d9b549d-3087-4e80-9c09-59b45418177a"
-      (reference "R9") (unit 1) (value "0") (footprint "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder")
-    )
-    (path "/00000000-0000-0000-0000-000062912066/52aa89b2-55f2-402b-8437-5074de173052"
-      (reference "R10") (unit 1) (value "0") (footprint "Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder")
     )
     (path "/00000000-0000-0000-0000-000062912066/00000000-0000-0000-0000-00006291899a"
       (reference "U1") (unit 1) (value "ESP32-DEVKITC-32D") (footprint "footprints:MODULE_ESP32-DEVKITC-32D")
