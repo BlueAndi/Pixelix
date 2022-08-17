@@ -387,7 +387,7 @@
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "3D-files/Pixelix.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""
