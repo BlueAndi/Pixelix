@@ -22,16 +22,24 @@
 | 1 | P-channel mosfet STD26P3LLH6 | TO252 | Q2 | [Reichelt](https://www.reichelt.de/mosfet-p-ch-30v-12a-0-03r-to252-std26p3llh6-p254904.html?), [Farnell](https://de.farnell.com/stmicroelectronics/std26p3llh6/mosfet-p-kanal-30v-12a-to-252/dp/2629747?st=STD26P3LLH6), [Mouser](https://www.mouser.de/ProductDetail/STMicroelectronics/STD26P3LLH6?qs=DqCdCwOw4%2F7LRzP66tTiGg%3D%3D) |
 | 5 | Conn_01x02 | Würth Elektronik 66200211022 | J1, J2, J4, J6, J8 | [Farnell](https://de.farnell.com/wurth-elektronik/66200211022/steckv-stiftleiste-2pos-1reihe/dp/2827850?ost=66200211022), [Mouser](https://www.mouser.de/c/?q=66200211022) |
 | 2 | Conn_01x03 | Würth Elektronik 66200311022 | J3, J7 | [Farnell](https://de.farnell.com/wurth-elektronik/66200311022/stiftleiste-abgew-3pos-1-reihe/dp/3818193?ost=66200311022), [Mouser](https://www.mouser.de/ProductDetail/Wurth-Elektronik/66200311022?qs=3RJ0PdSuLVkSi7ZZT4Z8xA%3D%3D) |
-| 1 | Conn_02x05_Odd_Even | Würth Elektronik 66200311022 | J5 | [Farnell](https://de.farnell.com/wurth-elektronik/61201021621/stiftleiste-2-54mm-gerade-10pol/dp/1642019?ost=61201021621), [Mouser](61201021621) |
+| 1 | Conn_02x05_Odd_Even | Würth Elektronik 66200311022 | J5 | [Farnell](https://de.farnell.com/wurth-elektronik/61201021621/stiftleiste-2-54mm-gerade-10pol/dp/1642019?ost=61201021621), [Mouser](https://www.mouser.de/ProductDetail/Wurth-Elektronik/61201021621?qs=W%252B2sBeLta1a0dwX5pxbfXw%3D%3D) |
+| --- | --- | --- | --- | --- |
+| 2 | 1x19 Pin-Header ESP32-DevKit | - | U1* | [Mouser](https://www.mouser.de/ProductDetail/200-TLW11906GS) |
+| 2 | 1x19 Pin-Socket ESP32-DevKit | - | U1* | [Mouser](https://www.mouser.de/ProductDetail/Samtec/SLW-119-01-S-S?qs=rU5fayqh%252BE1AlRrSVY2XtQ%3D%3D) |
+| 1 | 1x16 Pin-Header Feather HUZZAH32 | - | A1* | [Mouser](https://www.mouser.de/ProductDetail/Samtec/TLW-116-06-T-S?qs=FESYatJ8odIhwv0fc0FbqA%3D%3D) |
+| 1 | 1x12 Pin-Header Feather HUZZAH32 | - | A1* | [Mouser](https://www.mouser.de/ProductDetail/Samtec/MTLW-112-06-T-S-130?qs=rU5fayqh%252BE1Rqo3qH30OWg%3D%3D) |
+| 1 | 1x16 Pin-Socket Feather HUZZAH32 | - | A1* | [Mouser](https://www.mouser.de/ProductDetail/Samtec/SLW-116-01-T-D?qs=rU5fayqh%252BE2OQX3w8Tc2Ew%3D%3D) |
+| 1 | 1x12 Pin-Socket Feather HUZZAH32 | - | A1* | [Mouser](https://www.mouser.de/ProductDetail/Samtec/SLW-112-01-T-D?qs=rU5fayqh%252BE3PMnLVF5qyBQ%3D%3D) |
 | --- | --- | --- | --- | --- |
 | 1 | WS2812B 5050 8x32 RGB Flexible LED Panel Matrix | - | - | [Ebay](https://www.ebay.de/itm/WS2812B-5050-8x32-RGB-Flexible-LED-Panel-Matrix-Programmable-Display-Screen-DE/223166536588?ssPageName=STRK%3AMEBIDX%3AIT&_trksid=p2057872.m2749.l2649) |
 | 1 | Power supply 5 V / 5 A (4 A would be enough) | - | - | [Reichelt](https://www.reichelt.de/tischnetzteil-25-w-5-v-5-a-mw-gst40a05-p171043.html?&trstct=pol_1), [Mouser](https://www.mouser.de/ProductDetail/CUI-Inc/SDM36-5-U-P5?qs=sGAEpiMZZMvasLKgtn5bIdlT96xMCNovx7vHF9wwR4Ri0p1WQs8y5w%3D%3D) |
 | 1 | Power cable | - | - | [Reichelt](https://www.reichelt.de/netzkabel-schutzkontaktstecker-gew-1-8-m-schw-c13-nksk-200-sw-p13490.html?r=1), [Mouser](https://www.mouser.de/ProductDetail/Qualtek/364002-D01?qs=HFfMDpzxxd3ZLZg3BXSDag%3D%3D) |
 | 1 | Power supply plug | - | - | [Mouser](https://www.mouser.de/ProductDetail/CUI-Devices/PJ-065A?qs=WyjlAZoYn53baW2eG%252Bovnw%3D%3D) |
-| ??? | USER-Button/RESET-Button | --- | --- | [Amazon](https://www.amazon.de/VISSQH-Momentary-Momentanen-Druckschalter-Mini-Rund/dp/B08JLDZQPN/ref=sr_1_1_sspa) |
-| ??? | --- | --- | --- | --- |
+| 1 | USER-Button | - | - | [Amazon](https://www.amazon.de/VISSQH-Momentary-Momentanen-Druckschalter-Mini-Rund/dp/B08JLDZQPN/ref=sr_1_1_sspa) |
+| 1 | RESET-Button | - | - | [Amazon](https://www.amazon.de/VISSQH-Momentary-Momentanen-Druckschalter-Mini-Rund/dp/B08JLGGMTP/ref=sr_1_1_sspa) |
+| 4 | Einpressmuttern M2 | - | - | [Amazon](https://www.amazon.de/ruthex-Gewindeeinsatz-St%C3%BCck-Gewindebuchsen-Kunststoffteile/dp/B088QJG676/)
 
-
+Note, buy either the pin headers/sockets marked U1* OR A1* depending on the ESP32 you are using (DevKit or Feather HUZZAH32)
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
