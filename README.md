@@ -44,7 +44,7 @@ I want to have a remote display to show multiple kind of information, running 24
 
 # Overview
 
-The firmware contains a plugin concept (at compile time) to provide different functionalities. Each plugin can create its own layout and place the information as required. If you are only interesting in showing just text provided via REST API, choose the JustTextPlugin. It uses the whole display size and will scroll text automatically. Sometimes in front of the text a nice icon is required in which case choose the IconTextPlugin. These are only examples and you will find more in the [plugin list](./doc/PLUGINS.md).
+The firmware contains a plugin concept (at compile time) to provide different functionalities. Each plugin can create its own layout and place the information as required. If you are only interested in showing just text provided via REST API, choose the JustTextPlugin. It uses the whole display size and will scroll text automatically. Sometimes in front of the text a nice icon is required, in this case choose the IconTextPlugin. These are only examples and you will find more in the [plugin list](./doc/PLUGINS.md).
 
 A little bit more detail about the generic plugins and the first idea can be found in this [rough overview](./doc/Overview.pdf).
 
@@ -62,7 +62,7 @@ The following shows the absolute minimal wiring setup:
 
 ## Others
 
-In the meantime several other board are supported as well. You can see them in the platformio configuration (platformio.ini) or the [list of boards](./doc/boards/README.md).
+In the meantime several other boards are supported as well. You can see them in the platformio configuration (platformio.ini) or the [list of boards](./doc/boards/README.md).
 
 Additional supported variants, which were original not in focus:
 * [TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
