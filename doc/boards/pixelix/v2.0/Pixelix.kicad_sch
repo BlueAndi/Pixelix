@@ -6,7 +6,7 @@
 
   (title_block
     (title "Pixelix")
-    (date "2022-08-12")
+    (date "2022-09-05")
     (rev "2.0")
     (comment 1 "Schneider, Niklas")
   )
@@ -2252,7 +2252,7 @@
     (property "Value" "1000u / 16V" (id 1) (at 121.1072 168.783 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Footprint" "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm" (id 2) (at 119.0752 171.45 0)
+    (property "Footprint" "footprints:CP_Radial_D8.0mm_P3.50mm_horizontal" (id 2) (at 119.0752 171.45 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 118.11 167.64 0)
@@ -2852,7 +2852,7 @@
       (reference "C1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder")
     )
     (path "/00000000-0000-0000-0000-000062526401"
-      (reference "C2") (unit 1) (value "1000u / 16V") (footprint "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm")
+      (reference "C2") (unit 1) (value "1000u / 16V") (footprint "footprints:CP_Radial_D8.0mm_P3.50mm_horizontal")
     )
     (path "/00000000-0000-0000-0000-0000625128b9"
       (reference "C3") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder")
