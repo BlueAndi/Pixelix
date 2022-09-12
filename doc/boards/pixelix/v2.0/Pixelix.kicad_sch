@@ -6,7 +6,7 @@
 
   (title_block
     (title "Pixelix")
-    (date "2022-09-05")
+    (date "2022-09-12")
     (rev "2.0")
     (comment 1 "Schneider, Niklas")
   )
@@ -1673,21 +1673,6 @@
     (uuid ff01cfa2-e608-4fc0-82ca-4260595f7868)
   )
 
-  (image (at 261.62 173.99) (scale 1.81836)
-    (uuid 33f7c2cd-e595-40e7-b7c7-5896f262e9be)
-    (data
-      iVBORw0KGgoAAAANSUhEUgAAAUoAAABGCAYAAACqnN3KAAAABHNCSVQICAgIfAhkiAAAAAlwSFlz
-      AAAuGAAALhgBKqonIAAAAXpJREFUeJzt3cFqwzAQRVEp///P6io7lzfGE6Sm56zN2NDmgsGDxgAA
-      AAAAAAAAAAAAAAAAaDd3P0CnNcZK18wxZvd15edbhXnzxt+kMG9snbcK8+Zsv66sMG/cmddrFZ5v
-      3ni+9v/n5nkne+1+AIDTCSVAIJQAgVACBEIJEAglQCCUAIFQAgDwzFd8Nf92+uaBzZyrefs2X2zm
-      XM2zmXPFqzdAIJQAgVACBEIJEAglQCCUAIFQAgRCCQDAM1u/ml+FzY15Y3Nj11k4Ve2bOeUbN2/c
-      lO/rzJwnujdz6vfd9fvo7UEnr94AgVACBEIJEAglQCCUAIFQAgRCCRAIJQAAz3zFeRZvp5/h4cyc
-      q3nOzPmNM3PO4dUbIBBKgEAoAQKhBAiEEiAQSoBAKAECoQQA4JlbX823n3Gz6cyc6rxuNnOu5v2F
-      M3O6r6v5b5s5J/fFqzdAIJQAgVACBEIJEAglQCCUAIFQAgRCCQAAAAAAAAAAAAAAAAB8wA+7/5tW
-      3HfTzAAAAABJRU5ErkJggg==
-    )
-  )
-
   (text "User Button" (at 152.4 87.63 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 0940c1cb-e7e9-49b2-8e0b-c26e5b13265e)
@@ -2845,8 +2830,8 @@
     (path "/00000000-0000-0000-0000-000062912066/00000000-0000-0000-0000-0000629954b3"
       (reference "#PWR019") (unit 1) (value "GND") (footprint "")
     )
-    (path "/00000000-0000-0000-0000-000062912066/00000000-0000-0000-0000-0000629189da"
-      (reference "A1") (unit 1) (value "Adafruit_Feather_HUZZAH32_ESP32") (footprint "Module:Adafruit_Feather")
+    (path "/00000000-0000-0000-0000-000062912066/8ecb915c-b731-4a5c-8b99-42a81379ab6f"
+      (reference "A1") (unit 1) (value "Adafruit_Feather_V2_ESP32") (footprint "footprints:Adafruit_Feather_V2_ESP32")
     )
     (path "/00000000-0000-0000-0000-00006252756b"
       (reference "C1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder")
