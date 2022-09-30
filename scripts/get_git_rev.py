@@ -26,12 +26,19 @@ git related helper scripts, used during build process.
 
 """
 
+################################################################################
+# IMPORTS
+################################################################################
 import subprocess
 import json
 
-# pylint: disable=undefined-variable
-Import("env") # type: ignore
+################################################################################
+# Classes
+################################################################################
 
+################################################################################
+# Functions
+################################################################################
 
 def get_git_revision_hash():
     """Get the git revision hash number.
@@ -149,10 +156,18 @@ def get_version():
 
     return version
 
+################################################################################
+# Main
+################################################################################
+
 SOFTWARE_VERSION        = "-DSW_VERSION=" + get_version()
 SOFTWARE_REVISION       = "-DSW_REV=" + get_git_revision_hash()
 SOFTWARE_REVISION_SHORT = "-DSW_REV_SHORT=" + get_git_revision_short_hash()
 SOFTWARE_BRANCH         = "-DSW_BRANCH=" + get_current_git_branch()
+
+# Import the current working construction environment which is available for pre-/post-type scripts.
+# pylint: disable=undefined-variable
+Import("env") # type: ignore
 
 # pylint: disable=undefined-variable
 env.Append(BUILD_FLAGS=[ SOFTWARE_VERSION, SOFTWARE_REVISION, SOFTWARE_REVISION_SHORT, SOFTWARE_BRANCH ]) # type: ignore

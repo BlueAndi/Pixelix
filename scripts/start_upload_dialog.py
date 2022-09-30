@@ -28,124 +28,23 @@ ip-address and etc.
 
 """
 
+################################################################################
+# IMPORTS
+################################################################################
 import tkinter as tk
-import json
+import os
+from config import Config
 
-# pylint: disable=undefined-variable
-Import("env") # type: ignore
+################################################################################
+# Globals
+################################################################################
 
-class UploadModel():
-    """The upload model provides access to the configuration data.
-    """
-    def __init__(self, file_name):
-        self._filename              = file_name
-        self._data_json             = self._load(self._filename)
-        self._default_ip_address    = "192.168.x.x"
-        self._default_port          = 3232
-        self._default_password      = "maytheforcebewithyou"
+CONFIG_FILE_NAME = "config.json"
+UPLOAD_CONFIG_FILE_NAME = "upload.json"
 
-        if self._data_json is None:
-            self._setup_model()
-
-    def _load(self, file_name):
-        data_json = None
-
-        try:
-            with open(file_name) as json_file:
-                data_json = json.load(json_file)
-        except FileNotFoundError:
-            pass
-
-        return data_json
-
-    def _save(self, file_name):
-        try:
-            with open(file_name, "w") as json_file:
-                json.dump(self._data_json, json_file, indent=4)
-        except FileNotFoundError:
-            pass
-
-    def _setup_model(self):
-        self._data_json = dict()
-        self._data_json["ipAddress"] = self._default_ip_address
-        self._data_json["port"]      = self._default_port
-        self._data_json["password"]  = self._default_password
-
-    def load(self):
-        """Load configuration from filesystem.
-        """
-        self._load(self._filename)
-
-    def save(self):
-        """Store configuration in filesystem.
-        """
-        self._save(self._filename)
-
-    def get_ip_address(self):
-        """Get ip-address of remote device.
-
-        Returns:
-            str: IP-address
-        """
-        ip_address = self._default_ip_address
-
-        if self._data_json is not None:
-            if "ipAddress" in self._data_json:
-                ip_address = self._data_json["ipAddress"]
-
-        return ip_address
-
-    def set_ip_address(self, ip_address):
-        """Set ip-address of remote device.
-
-        Args:
-            ip_address (str): IP-Address
-        """
-        self._data_json["ipAddress"] = ip_address
-
-    def get_port(self):
-        """Get port for remote update.
-
-        Returns:
-            int: Port number
-        """
-        port = self._default_port
-
-        if self._data_json is not None:
-            if "port" in self._data_json:
-                port = self._data_json["port"]
-
-        return port
-
-    def set_port(self, port):
-        """Set port for remote update.
-
-        Args:
-            port (int): Port number
-        """
-        self._data_json["port"] = port
-
-    def get_password(self):
-        """Get password for remote access.
-
-        Returns:
-            str: Password
-        """
-        password = self._default_password
-
-        if self._data_json is not None:
-            if "password" in self._data_json:
-                password = self._data_json["password"]
-
-        return password
-
-    def set_password(self, password):
-        """Set password for remote access.
-
-        Args:
-            password (str): Password
-        """
-        self._data_json["password"] = password
+################################################################################
+# Classes
+################################################################################
 
 class App(tk.Tk):
     """The main application class, which represents the main window.
@@ -153,21 +52,60 @@ class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
-        self._upload_model  = UploadModel("upload.json")
+        self._upload_config = Config()
         self._ip_address    = tk.StringVar()
         self._port          = tk.IntVar()
         self._password      = tk.StringVar()
         self._is_aborted    = True
 
+        self._upload_config.load(UPLOAD_CONFIG_FILE_NAME)
+
+        # If no upload configuration is available or it doesn't contain the required
+        # information, the default values will be set.
+        ip_address = self._get_ip_address_from_model()
+        port = self._get_port_from_model()
+        password = self._get_password_from_model()
+
+        if ip_address is None:
+            ip_address = "192.168.x.x"
+
+        if port is None:
+            port = 3232
+
+        if password is None:
+            password = "maytheforcebewithyou"
+
+        self._ip_address.set(ip_address)
+        self._port.set(port)
+        self._password.set(password)
+
+    def _get_ip_address_from_model(self):
+        return self._upload_config.get_value_by_key("ipAddress")
+
+    def _set_password_to_model(self, password):
+        self._upload_config.set_value_by_key("password", password)
+
+    def _get_port_from_model(self):
+        return self._upload_config.get_value_by_key("port")
+
+    def _set_port_to_model(self, port):
+        self._upload_config.set_value_by_key("port", port)
+
+    def _get_password_from_model(self):
+        return self._upload_config.get_value_by_key("password")
+
+    def _set_ip_address_to_model(self, ip_address):
+        self._upload_config.set_value_by_key("ipAddress", ip_address)
+
     def _update_gui(self):
-        self._ip_address.set(self._upload_model.get_ip_address())
-        self._port.set(self._upload_model.get_port())
-        self._password.set(self._upload_model.get_password())
+        self._ip_address.set(self._get_ip_address_from_model())
+        self._port.set(self._get_port_from_model())
+        self._password.set(self._get_password_from_model())
 
     def _update_model(self):
-        self._upload_model.set_ip_address(self._ip_address.get())
-        self._upload_model.set_port(self._port.get())
-        self._upload_model.set_password(self._password.get())
+        self._set_ip_address_to_model(self._ip_address.get())
+        self._set_port_to_model(self._port.get())
+        self._set_password_to_model(self._password.get())
 
     def _setup_gui(self):
 
@@ -196,13 +134,14 @@ class App(tk.Tk):
 
         frame.pack(fill="x", expand=True, padx=20, pady=20)
 
-        self._update_gui()
         self.update()
         self.minsize(frame.winfo_width(), frame.winfo_height())
         self.protocol("WM_DELETE_WINDOW", lambda: self.quit() and self.close())
 
-    def run(self):
+    def run(self, env):
         """Run the  main application.
+
+            env (obj): Construction environment
         """
         self._setup_gui()
         self.mainloop()
@@ -210,18 +149,22 @@ class App(tk.Tk):
 
         if False is self._is_aborted:
             env.Replace( # type: ignore
-                UPLOAD_PORT=self._upload_model.get_ip_address(),
-                UPLOAD_FLAGS=["--port=" + str(self._upload_model.get_port()), "--auth=" + self._upload_model.get_password()]
+                UPLOAD_PORT=self._get_ip_address_from_model(),
+                UPLOAD_FLAGS=["--port=" + str(self._get_port_from_model()), "--auth=" + self._get_password_from_model()]
             )
         else:
             print("Aborted. Using upload parameters from platform.ini")
 
     def _on_upload(self):
         self._update_model()
-        self._upload_model.save()
+        self._upload_config.save()
 
         self._is_aborted = False
         self.quit()
+
+################################################################################
+# Functions
+################################################################################
 
 def before_upload(source, target, env): # pylint: disable=unused-argument
     """This function is called after build process and before the upload starts.
@@ -229,12 +172,35 @@ def before_upload(source, target, env): # pylint: disable=unused-argument
     Args:
         source (SCons.Node.FS.File): Source file as file object
         target (SCons.Node.Alias.Alias): Alias object
-        env (SCons.Script.SConscript.SConsEnvironment): Environment object
+        env (SCons.Script.SConscript.SConsEnvironment): Construction environment
     """
     app = App()
-    app.run()
+    app.run(env)
+    app.destroy()
 
-# pylint: disable=undefined-variable
-env.AddPreAction("upload", before_upload) # type: ignore
-# pylint: disable=undefined-variable
-env.AddPreAction("uploadfs", before_upload) # type: ignore
+################################################################################
+# Main
+################################################################################
+
+if False is os.path.isfile(CONFIG_FILE_NAME):
+    raise ValueError("Configuration  not found.")
+
+config = Config()
+
+if config.load(CONFIG_FILE_NAME) is False:
+    raise ValueError("Configuration is corrupt.")
+
+upload_type = config.get_value_by_key("uploadType")
+
+if upload_type is None:
+    raise ValueError("Upload type is missing in configuration.")
+
+if upload_type == "OTA":
+    # Import the current working construction environment which is available for pre-/post-type scripts.
+    # pylint: disable=undefined-variable
+    Import("env") # type: ignore
+
+    # pylint: disable=undefined-variable
+    env.AddPreAction("upload", before_upload) # type: ignore
+    # pylint: disable=undefined-variable
+    env.AddPreAction("uploadfs", before_upload) # type: ignore

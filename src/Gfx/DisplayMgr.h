@@ -352,7 +352,11 @@ private:
     /** Current selected slot. */
     uint8_t                     m_selectedSlotId;
 
-    /** Current selected plugin, which is active shown. */
+    /**
+     * Current selected plugin, which is active shown.
+     * 
+     * Used by update task (r).
+     */
     IPluginMaintenance*         m_selectedPlugin;
 
     /** Plugin which is requested to be activated immediately. */
@@ -380,14 +384,29 @@ private:
     /**
      * A plugin change (inactive -> active) will fade the display content of
      * the old plugin out and from the new plugin in.
+     * 
+     * Used by update task (rw).
      */
     FadeState           m_displayFadeState;
-    YAGfxBitmap*        m_selectedFrameBuffer;          /**< Points to the current framebuffer, used to update the display. */
+    
+    /**
+     * Points to the current framebuffer, used to update the display.
+     * Used by update task (r).
+     */
+    YAGfxBitmap*        m_selectedFrameBuffer;
+
     YAGfxDynamicBitmap  m_framebuffers[FB_ID_MAX];      /**< Two framebuffers, which will contain the old and the new plugin content. */
     FadeLinear          m_fadeLinearEffect;             /**< Linear fade effect. */
     FadeMoveX           m_fadeMoveXEffect;              /**< Moving along x-axis fade effect. */
     FadeMoveY           m_fadeMoveYEffect;              /**< Moving along y-axis fade effect. */
-    IFadeEffect*        m_fadeEffect;                   /**< The fade effect itself. */
+    
+    /**
+     * The fade effect itself.
+     * 
+     * Used by update task (r).
+     */
+    IFadeEffect*        m_fadeEffect;
+    
     FadeEffect          m_fadeEffectIndex;              /**< Fade effect index to determine the next fade effect. */
     bool                m_fadeEffectUpdate;             /**< Flag to indicate that the fadeEffect was updated. */
     bool                m_isNetworkConnected;           /**< Is a network connection established? */

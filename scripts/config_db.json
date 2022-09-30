@@ -1,0 +1,72 @@
+{
+    "configItems": [{
+        "name": "buildType",
+        "default": "release",
+        "label": "Select build type:",
+        "options": [{
+            "name": "release",
+            "envAppend": {
+                "BUILD_FLAGS": [
+                    "-DCONFIG_DISPLAY_MGR_ENABLE_STATISTICS=0",
+                    "-DLOG_DEBUG_ENABLE=0",
+                    "-DLOG_TRACE_ENABLE=0",
+                    "-DCONFIG_LOG_SEVERITY=Logging::LOG_LEVEL_INFO"
+                ]
+            }
+        }, {
+            "name": "debug",
+            "envAppend": {
+                "BUILD_FLAGS": [
+                    "-DCONFIG_DISPLAY_MGR_ENABLE_STATISTICS=1",
+                    "-DLOG_DEBUG_ENABLE=1",
+                    "-DLOG_TRACE_ENABLE=0",
+                    "-DCONFIG_LOG_SEVERITY=Logging::LOG_LEVEL_DEBUG"
+                ]
+            }
+        }, {
+            "name": "trace",
+            "envAppend": {
+                "BUILD_FLAGS": [
+                    "-DCONFIG_DISPLAY_MGR_ENABLE_STATISTICS=1",
+                    "-DLOG_DEBUG_ENABLE=1",
+                    "-DLOG_TRACE_ENABLE=1",
+                    "-DCONFIG_LOG_SEVERITY=Logging::LOG_LEVEL_TRACE"
+                ]
+            }
+        }]
+    }, {
+        "name": "pixelixBoard",
+        "default": "Pixelix v2.0",
+        "label": "Select board:",
+        "options": [{
+            "name": "Pixelix v1.5",
+            "envAppend": {
+            }
+        }, {
+            "name": "Pixelix v2.0",
+            "envAppend": {
+                "BUILD_FLAGS": [
+                    "-DPIXELIX_BOARD_V2_0"
+                ]
+            }
+        }]
+    }, {
+        "name": "uploadType",
+        "default": "USB",
+        "label": "Select how to upload:",
+        "options": [{
+            "name": "USB",
+            "envReplace": {
+                "MONITOR_SPEED": "115200",
+                "MONITOR_FILTERS": "esp32_exception_decoder",
+                "UPLOAD_PROTOCOL": "esptool"
+            }
+        }, {
+            "name": "OTA",
+            "envReplace": {
+                "UPLOAD_PROTOCOL": "espota",
+                "UPLOAD_PORT": "192.168.x.x"
+            }
+        }]
+    }]
+}
