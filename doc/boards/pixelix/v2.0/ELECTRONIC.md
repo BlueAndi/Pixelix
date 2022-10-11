@@ -8,7 +8,9 @@
 - [Version](#version)
 - [System Diagram](#system-diagram)
 - [Differences to v1.5](#differences-to-v15)
-- [ESP32 DevKit V1](#esp32-devkit-v1)
+- [ESP32](#esp32)
+  - [DevKit V4](#DevKit-V4)
+  - [Adafruit Feather V2](#Adafruit-Feather-V2)
   - [Strapping Pins](#strapping-pins)
   - [Input Only Pins](#input-only-pins)
   - [Analog Pins](#analog-pins)
@@ -31,44 +33,90 @@ PCB board v2.0
 
 * The clock crystal in v1.5 was removed, because it wasn't used.
 * The I2S interface was added for digital microphones, like the INMP441.
+* ESP DevKit V4 will be used istead of V1
+* It is also possible to use the Adafruit Feather V2	istead of the DevKit
 
-# ESP32 DevKit V1
+# ESP32 
+## DevKit V4
 
-![ESP32 DevKitV1 Pinout](../datasheets/pinoutDOIT32devkitv1.png)
+![ESP32 DevKitV4 Pinout](../datasheets/esp32-devkitC-v4-pinout.png)
 
-| ESP32 DevKit V1 Pin | ESP32 DevKit V1 Pin Header | WROOM32 Pin | Notes | Usage |
+| ESP32 DevKit V4 Pin | ESP32 DevKit V4 Pin Header | WROOM32 Pin | Notes | Usage |
 | --- | --- | --- | --- | --- |
-| VIN | J1-1 | VIN | 5V power supply | Vcc (protected) |
-| GND | J1-2 | GND | Ground | Ground |
-| D13 | J1-3 | GPIO 13 | - | JTAG MTCK |
-| D12 | J1-4 | GPIO 12 | Strapping pin; Fails if high at power-up, therefore not used. | JTAG MTDI |
-| D14 | J1-5 | GPIO 14 | Output PWM at power-up! | JTAG MTMS |
-| D27 | J1-6 | GPIO 27 | - | Data Out to LED matrix |
-| D26 | J1-7 | GPIO 26 (A9) | I2S microphone serial clock. | I2S Serial clock (out) |
-| D25 | J1-8 | GPIO 25 (A8) | I2S microphone word select. | I2S Word select (out) |
-| D33 | J1-9 | GPIO 33 (A5) | I2S microphone serial data. | I2S Serial data (in) |
-| D32 | J1-10 | GPIO 32 (A4) | - | - |
-| D35 | J1-11 | GPIO 35 (A7) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
-| D34 | J1-12 | GPIO 34 (A6) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | LDR analog in |
-| VN | J1-13 | GPIO 39 (VN) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
-| VP | J1-14 | GPIO 36 (VP) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
-| EN | J1-15 | EN | 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND | USB RTS |
-| VDD3V3 | J2-1 | VDD3V3 | 3.3 V output | 3.3 V output |
-| GND | J2-2 | GND | Ground | Ground |
-| D15 | J2-3 | GPIO 15 | Strapping pin | JTAG MTDO |
-| D2 | J2-4 | GPIO 2 | Strapping pin; Onboard LED on ESP32 DevKit V1 | Onboard LED |
-| D4 | J2-5 | GPIO 4 | - | User Button |
-| RX2 | J2-6 | GPIO 16 (RX2) | - | - |
-| TX2 | J2-7 | GPIO 17 (TX)2 | - | - |
-| D5 | J2-8 | GPIO 5 | Strapping pin; 10k Pull-Up on ESP32 DevKit V1 | - |
-| D18 | J2-9 | GPIO 18 | - | - |
-| D19 | J2-10 | GPIO 19 | - | - |
-| D21 | J2-11 | GPIO 21 | - | I2C SDA (Arduino Standard) |
-| RX0 | J2-12 | GPIO 3 (RX0) | - | USB RX |
-| TX0 | J2-13 | GPIO 1 (TX0) | - | USB TX |
-| D22 | J2-14 | GPIO 22 | - | I2C SCL (Arduino Standard) |
-| D23 | J2-15 | GPIO 23 | - | - |
-| - | - | GPIO 0 | Strapping pin, 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND | USB DTR |
+| 3V3 | J1-1 | 3V3 | 3.3 V output | +3V3|
+| EN | J1-2 | EN | 10k Pull-Up; Button on ESP32 DevKit V4; Active High | RESET |
+| VP | J1-3 | GPIO 36 (VP) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
+| VN | J1-4 | GPIO 39 (VN) | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
+| 34 | J1-5 | GPIO 34 | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | LDR Analog In |
+| 35 | J1-6 | GPIO 35 | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
+| 32 | J1-7 | GPIO 32 | Input only! See ESP32 tech. reference manual, chapter 4.1 (no internal pull-up/down circuitry) | - |
+| 33 | J1-8 | GPIO 33 | I2S microphone serial data. | I2S_Data_IN |
+| 25 | J1-9 | GPIO 25 | I2S microphone word select. | I2S_WS |
+| 26 | J1-10 | GPIO 26 | I2S microphone serial clock. | I2S_CLK |
+| 27 | J1-11 | GPIO 27 | Data Out to LED matrix | LV-DATA-OUT |
+| 14 | J1-12 | GPIO 14 | Output PWM at power-up! | MTMS |
+| 12 | J1-13 | GPIO 12 | Strapping pin; Fails if high at power-up, therefore not used. | MTDI |
+| GND | J1-14 | GND | Ground | GND |
+| 13 | J1-15 | GPIO 13 | - | MTCK |
+| 2 | J1-16 | GPIO 9 (D2) | Pin shared with Flash Memory (Can´t be used as regular Pin) | - |
+| 3 | J1-17 | GPIO 10 (D3) | Pin shared with Flash Memory (Can´t be used as regular Pin) | - |
+| CMD | J1-18 | GPIO 11 (CMD) | - | - |
+| 5V | J1-19 | 5V0 | external power supply | VCC-PROTECTED |
+| GND | J2-1 | GND | Ground | GND |
+| 23 | J2-2 | GPIO 23 | - | - |
+| 22 | J2-3 | GPIO 22 | I2C SCL (Arduino Standard) | SCL |
+| TX0 | J2-4 | GPIO 1 (TX0) | USB TX | - |
+| RX0 | J2-5 | GPIO 3 (RX0) | USB RX | - |
+| 21 | J2-6 | GPIO 21 | I2C SDA (Arduino Standard) | SDA |
+| GND | J2-7 | GND | Ground | GND |
+| 19 | J2-8 | GPIO 19 | - | - |
+| 18 | J2-9 | GPIO 18 | - | - |
+| 5 | J2-10 | GPIO 5 | Strapping pin; 10k Pull-Up on ESP32 DevKit V4 | - |
+| 17 | J2-11 | GPIO 17 (TX2) | - | - |
+| 16 | J2-12 | GPIO 16 (RX2) | - | - |
+| 4 | J2-13 | GPIO 4 | User Button | USER-BUTTON |
+| 0 | J2-14 | GPIO 0 | Strapping pin, 10k Pull-Up; Button on ESP32 DevKit V4, closing to GND | - |
+| 2 | J2-15 | GPIO 2 | Strapping pin; Onboard LED on ESP32 DevKit V4; Onboard LED | - |
+| 15 | J2-16 | GPIO 15 | Strapping pin | MTDO |
+| D1 | J2-17 | GPIO 8 (D1) | - | - |
+| D0 | J2-18 | GPIO 7 (D0) | - | - |
+| CLK | J2-19 | GPIO 6 (SCK) | - | - |
+
+## Adafruit Feather V2
+![Adafruit Feather V2 Pinout](../datasheets/adafruit_products_Adafruit_ESP32_Feather_V2_Pinout.png)
+
+| ESP32 Adafruit Feather V2 Pin | Adafruit Feather V2 Pin Header | WROOM32 Pin | Notes | Usage |
+| --- | --- | --- | --- | --- |
+| RST | J1-1 | RESET | The reset pin is used for the reset button, but can also be used standalone. Tie it to ground to reset the board. Pull-Up; Button on Feather V2; Active High | RESET |
+| 3V | J1-2 | 3.3V | 3.3 V output | +3V3 |
+| NC | J1-3 | - | Not Connected | - | 
+| GND | J1-4 | GND | Ground | GND |
+| A0 | J1-5 | GPIO 26 (A0) | This is also DAC2. It uses ADC2 | - |
+| A1 | J1-6 | GPIO 25 (A1) | This is also DAC1. It uses ADC2 | - |
+| A2 | J1-7 | GPIO 34 (A2) | It is input/ADC only. It uses ADC1 | LDR-ANALOG-IN |
+| A3 | J1-8 | GPIO 39 (A3) | It is input/ADC only. It uses ADC1 | I2S_WS |
+| A4 | J1-9 | GPIO 36 (A4) | It is input/ADC only. It uses ADC1 | I2S_CLK |
+| A5 | J1-10 | GPIO 4 (A5) | It uses ADC2 | USER-BUTTON |
+| SCK | J1-11 | GPIO 5 | This is the SPI clock pin | - |
+| MO | J1-12 | GPIO 19 | This is the SPI Microcontroller Out / Serial In (MOSI) pin (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO18) | - |
+| MI | J1-13 | GPIO 21 | This is the SPI Microcontroller In / Serial Out (MISO) pin (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO19) | - |
+| RX | J1-14 | GPIO 7 | This is the UART RX (receive) pin | - |
+| TX | J1-15 | GPIO 8 | This is the UART TX (transmit) pin | - |
+| 37 | J1-16 | GPIO 37 | It is input/ADC only. It uses ADC1 | - |
+| GND | J2-1 | GND | Ground; **JST connector** | GND |
+| BAT | J2-2 | VBAT | This is the positive voltage to the **JST connector** for the optional lipoly battery | - |
+| BAT | J3-1 | VBAT | This is the positive voltage from the JST connector for the optional lipoly battery | - |
+| EN | J3-2 | EN | This is the 3.3V regulator's enable pin. It's pulled up, so connect to ground to disable the 3.3V regulator | - |
+| USB | J3-3 | VBUS | This is the positive voltage to/from the USB-C connector if connected | VCC-PROTECTED |
+| 13 | J3-4 | GPIO 13 | It uses ADC2 | MTCK |
+| 12 | J3-5 | GPIO 12 | It uses ADC2 | MTDI |
+| 27 | J3-6 | GPIO 27 | It uses ADC2 | LV-DATA-OUT |
+| 33 | J3-7 | GPIO 33 | It uses ADC1 | I2S_Data_IN |
+| 15 | J3-8 | GPIO 15 | It uses ADC2 | MTDO |
+| 32 | J3-9 | GPIO 32 | It uses ADC1 | - |
+| 14 | J3-10 | GPIO 14 | It uses ADC2 | MTMS |
+| SCL | J3-11 | GPIO 20 (SCL) | I2C clock | SCL (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO22) |
+| SDA | J3-12 | GPIO 22 (SDA) | I2C data | SDA (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO23)|
 
 ## Strapping Pins
 
