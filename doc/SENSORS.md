@@ -32,6 +32,7 @@ A "X" in the development board column means valid all development boards. Except
 | Development Board | Photoresistor pin 1 | Photoresistor pin 2 |
 | ----------------- | ------------------- | ------------------- |
 | X | Vcc | Pin 34 |
+| TTGO ESP32 T-Display | Vcc | Pin 32 |
 
 # Temperature and humidity sensors
 
@@ -45,6 +46,7 @@ A "X" in the development board column means valid all development boards. Except
 | ----------------- | ---------- | ---------- |
 | X | Vcc | Pin 5 | 
 | Adafruit ESP32 Feather V2 | Vcc | Pin 39 |
+| TTGO ESP32 T-Display | Vcc | Pin 27 |
 
 ## SHT3x (I2C)
 
