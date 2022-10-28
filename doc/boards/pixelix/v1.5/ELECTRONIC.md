@@ -54,14 +54,14 @@ PCB board v1.5
 | D4 | J2-5 | GPIO 4 | - | User Button |
 | RX2 | J2-6 | GPIO 16 (RX2) | - | - |
 | TX2 | J2-7 | GPIO 17 (TX)2 | - | - |
-| D5 | J2-8 | GPIO 5 | Strapping pin; 10k Pull-Up on ESP32 DevKit V1 | - |
+| D5 | J2-8 | GPIO 5 | Strapping pin; 10k Pull-Up on ESP32 DevKit V1 | (DHT In) |
 | D18 | J2-9 | GPIO 18 | - | - |
 | D19 | J2-10 | GPIO 19 | - | - |
 | D21 | J2-11 | GPIO 21 | - | I2C SDA (Arduino Standard) |
 | RX0 | J2-12 | GPIO 3 (RX0) | - | USB RX |
 | TX0 | J2-13 | GPIO 1 (TX0) | - | USB TX |
 | D22 | J2-14 | GPIO 22 | - | I2C SCL (Arduino Standard) |
-| D23 | J2-15 | GPIO 23 | - | - |
+| D23 | J2-15 | GPIO 23 | - | Test Pin |
 | - | - | GPIO 0 | Strapping pin, 10k Pull-Up; Button on ESP32 DevKit V1, closing to GND | USB DTR |
 
 ## Strapping Pins

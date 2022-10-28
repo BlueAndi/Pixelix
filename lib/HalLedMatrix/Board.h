@@ -65,28 +65,48 @@ namespace Board
 namespace Pin
 {
     /** Pin number of onboard LED */
-    static const uint8_t    onBoardLedPinNo         = 2U;
+    static const uint8_t    onBoardLedPinNo         = LED_BUILTIN;
 
     /** Pin number of user button */
     static const uint8_t    userButtonPinNo         = 4U;
 
+#ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
+    /** Pin number of dht sensor in */
+    static const uint8_t    dhtInPinNo              = 25U;
+#else
     /** Pin number of dht sensor in */
     static const uint8_t    dhtInPinNo              = 5U;
+#endif
 
     /** Pin number of I2C SDA */
     static const uint8_t    i2cSdaPinNo             = 21U;
 
-    /** Pin number of I2C SDL */
-    static const uint8_t    i2cSdlPinNo             = 22U;
+    /** Pin number of I2C SCL */
+    static const uint8_t    i2cSclPinNo             = 22U;
 
+#ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
+    /** Pin number of test pin */
+    static const uint8_t    testPinNo               = 32U;
+#else
     /** Pin number of test pin */
     static const uint8_t    testPinNo               = 23U;
+#endif
 
+#ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
+    /** Pin number of I2S word select (chooses between left and right channel) */
+    static const uint8_t    i2sWordSelect           = 39U;
+#else
     /** Pin number of I2S word select (chooses between left and right channel) */
     static const uint8_t    i2sWordSelect           = 25U;
+#endif
 
+#ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
+    /** Pin number of I2S serial clock (bit clock line BCLK) */
+    static const uint8_t    i2sSerialClock          = 36U;
+#else
     /** Pin number of I2S serial clock (bit clock line BCLK) */
     static const uint8_t    i2sSerialClock          = 26U;
+#endif
 
     /** Pin number of LED matrix data out */
     static const uint8_t    ledMatrixDataOutPinNo   = 27U;

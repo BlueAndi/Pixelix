@@ -71,7 +71,7 @@ namespace Pin
     static const uint8_t    i2cSdaPinNo             = 21U;
 
     /** Pin number of I2C SDL */
-    static const uint8_t    i2cSdlPinNo             = 22U;
+    static const uint8_t    i2cSclPinNo             = 22U;
 
     /** Pin number of I2S word select (chooses between left and right channel) */
     static const uint8_t    i2sWordSelect           = 25U;
