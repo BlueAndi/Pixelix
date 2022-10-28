@@ -8,13 +8,13 @@
 - [Version](#version)
 - [System Diagram](#system-diagram)
 - [Differences to v1.5](#differences-to-v15)
-- [ESP32](#esp32)
-  - [DevKit V4](#devkit-v4)
-  - [Adafruit Feather V2](#adafruit-feather-v2)
-  - [Strapping Pins](#strapping-pins)
-  - [Input Only Pins](#input-only-pins)
-  - [Analog Pins](#analog-pins)
-  - [JTAG](#jtag)
+- [Development Boards](#development-boards)
+  - [ESP32 DevKit C V4](#esp32-devkit-c-v4)
+  - [Adafruit ESP32 Feather V2](#adafruit-esp32-feather-v2)
+- [Strapping Pins](#strapping-pins)
+- [Input Only Pins](#input-only-pins)
+- [Analog Pins](#analog-pins)
+- [JTAG](#jtag)
 - [LED Matrix](#led-matrix)
 - [Ambient Light Sensor](#ambient-light-sensor)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
@@ -33,11 +33,11 @@ PCB board v2.0
 
 * The clock crystal in v1.5 was removed, because it wasn't used.
 * The I2S interface was added for digital microphones, like the INMP441.
-* ESP DevKit V4 will be used istead of V1
-* It is also possible to use the Adafruit Feather V2	istead of the DevKit
+* ESP32 Dev Kit C V4 will be used instead of ESP32 DEVKIT V1.
+* It is also possible to use the Adafruit ESP32 Feather V2 instead of the ESP32 Dev Kit C V4.
 
-# ESP32 
-## DevKit V4
+# Development Boards 
+## ESP32 DevKit C V4
 
 ![ESP32 DevKitV4 Pinout](../datasheets/esp32-devkitC-v4-pinout.png)
 
@@ -82,20 +82,20 @@ PCB board v2.0
 | D0 | J2-18 | GPIO 7 (D0) | - | - |
 | CLK | J2-19 | GPIO 6 (SCK) | - | - |
 
-## Adafruit Feather V2
-![Adafruit Feather V2 Pinout](../datasheets/adafruit_products_Adafruit_ESP32_Feather_V2_Pinout.png)
+## Adafruit ESP32 Feather V2
+![Adafruit ESP32 Feather V2 Pinout](../datasheets/adafruit_products_Adafruit_ESP32_Feather_V2_Pinout.png)
 
-| ESP32 Adafruit Feather V2 Pin | Adafruit Feather V2 Pin Header | WROOM32 Pin | Notes | Usage |
+| Adafruit ESP32 Feather V2 Pin | Adafruit Feather V2 Pin Header | WROOM32 Pin | Notes | Usage |
 | --- | --- | --- | --- | --- |
 | RST | J1-1 | RESET | The reset pin is used for the reset button, but can also be used standalone. Tie it to ground to reset the board. Pull-Up; Button on Feather V2; Active High | RESET |
 | 3V | J1-2 | 3.3V | 3.3 V output | +3V3 |
 | NC | J1-3 | - | Not Connected | - | 
 | GND | J1-4 | GND | Ground | GND |
-| A0 | J1-5 | GPIO 26 (A0) | This is also DAC2. It uses ADC2 | - |
-| A1 | J1-6 | GPIO 25 (A1) | This is also DAC1. It uses ADC2 | (DHT In) |
+| A0 | J1-5 | GPIO 26 (A0) | This is also DAC2. It uses ADC2 | I2S_CLK |
+| A1 | J1-6 | GPIO 25 (A1) | This is also DAC1. It uses ADC2 | I2S_WS |
 | A2 | J1-7 | GPIO 34 (A2) | It is input/ADC only. It uses ADC1 | LDR-ANALOG-IN |
-| A3 | J1-8 | GPIO 39 (A3) | It is input/ADC only. It uses ADC1 | I2S_WS |
-| A4 | J1-9 | GPIO 36 (A4) | It is input/ADC only. It uses ADC1 | I2S_CLK |
+| A3 | J1-8 | GPIO 39 (A3) | It is input/ADC only. It uses ADC1 | (DHT In) |
+| A4 | J1-9 | GPIO 36 (A4) | It is input/ADC only. It uses ADC1 | - |
 | A5 | J1-10 | GPIO 4 (A5) | It uses ADC2 | USER-BUTTON |
 | SCK | J1-11 | GPIO 5 | This is the SPI clock pin | - |
 | MO | J1-12 | GPIO 19 | This is the SPI Microcontroller Out / Serial In (MOSI) pin (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO18) | - |
@@ -118,9 +118,9 @@ PCB board v2.0
 | SCL | J3-11 | GPIO 20 (SCL) | I2C clock | I2C SCL (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO22) |
 | SDA | J3-12 | GPIO 22 (SDA) | I2C data | I2C SDA (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO23)|
 
-## Strapping Pins
+# Strapping Pins
 
-The following table shows the strapping bit status on the ESP32 DevKitV1 board. See also ESP32 series datasheet chapter 2.4
+The following table shows the strapping bit status on the ESP32 DevKit C V4 board. See also ESP32 series datasheet chapter 2.4
 
 | Pin | Default | Function 1 | Function 2 |
 | --- | --- | --- | --- |
@@ -152,14 +152,14 @@ Result: U0TXD Toggling
 | GPIO 5 | High | Low | High | Low | High |
 Result: Rising-edge Sampling
 
-## Input Only Pins
+# Input Only Pins
 GPIOs 34 to 39 are input only pins. These pins don’t have internal pull-ups or pull-down resistors. They can’t be used as outputs, so use these pins only as inputs.
 
-## Analog Pins
+# Analog Pins
 ADC2 is used by the Wi-Fi driver. Therefore the application can only use ADC2 when the Wi-Fi driver has not started.
 See [Analog to Digital Converter](https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/peripherals/adc.html).
 
-## JTAG
+# JTAG
 
 | Pin | Function |
 | --- | --- |

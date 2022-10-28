@@ -72,7 +72,7 @@ namespace Pin
 
 #ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
     /** Pin number of dht sensor in */
-    static const uint8_t    dhtInPinNo              = 25U;
+    static const uint8_t    dhtInPinNo              = 39U;
 #else
     /** Pin number of dht sensor in */
     static const uint8_t    dhtInPinNo              = 5U;
@@ -92,21 +92,11 @@ namespace Pin
     static const uint8_t    testPinNo               = 23U;
 #endif
 
-#ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
-    /** Pin number of I2S word select (chooses between left and right channel) */
-    static const uint8_t    i2sWordSelect           = 39U;
-#else
     /** Pin number of I2S word select (chooses between left and right channel) */
     static const uint8_t    i2sWordSelect           = 25U;
-#endif
 
-#ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
-    /** Pin number of I2S serial clock (bit clock line BCLK) */
-    static const uint8_t    i2sSerialClock          = 36U;
-#else
     /** Pin number of I2S serial clock (bit clock line BCLK) */
     static const uint8_t    i2sSerialClock          = 26U;
-#endif
 
     /** Pin number of LED matrix data out */
     static const uint8_t    ledMatrixDataOutPinNo   = 27U;
