@@ -73,10 +73,10 @@ Steps:
 2. Build the filesystem via _Project Tasks -> env:```<choose-your-board>```-**usb** -> Platform -> Build File System Image_.
 3. Now in the ```.pio/build/<choose-your-board>```-**usb** folder there are two important files:
    1. The software for the device: ```firmware.bin```
-   2. The prebuilt filesystem for the device: ```spiffs.bin```
+   2. The prebuilt filesystem for the device: ```littlefs.bin``` (or ```spiffs.bin``` for Pixelix &lt; 6.x.x)
 4. Open browser add enter ip address of the device.
 5. Jump to Update site.
-6. Select firmware binary (```firmware.bin```) or filesystem binary (```spiffs.bin```) and click on upload button.
+6. Select firmware binary (```firmware.bin```) or filesystem binary (```spiffs.bin```/```littlefs.bin```) and click on upload button.
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

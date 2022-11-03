@@ -43,7 +43,7 @@
 /**
  * Defines LittleFS as filesystem format (must be 1).
  */
-#define FILESYSTEM_USE_LITTLEFS (0)
+#define FILESYSTEM_USE_LITTLEFS (1)
 
 #if FILESYSTEM_USE_LITTLEFS
 #define FILESYSTEM              LittleFS
@@ -52,7 +52,7 @@
 /**
  * Defines SPIFFS as filesystem format (must be 1).
  */
-#define FILESYSTEM_USE_SPIFFS   (1)
+#define FILESYSTEM_USE_SPIFFS   (0)
 
 #if FILESYSTEM_USE_SPIFFS
 #define FILESYSTEM              SPIFFS

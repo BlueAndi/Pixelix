@@ -110,7 +110,7 @@ namespace tmpl
 static const char*      FIRMWARE_FILENAME               = "firmware.bin";
 
 /** Filesystem binary filename, used for update. */
-static const char*      FILESYSTEM_FILENAME             = "spiffs.bin";
+static const char*      FILESYSTEM_FILENAME             = "littlefs.bin";
 
 /** Path to the plugin webpages. */
 static const String     PLUGIN_PAGE_PATH                = "/plugins/";
