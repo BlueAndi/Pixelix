@@ -1106,7 +1106,7 @@ static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, ui
         /* Skip the first number of files. */
         if (0U < preCount)
         {
-            /* One file skipped */
+            /* One file/directory skipped. */
             --preCount;
 
             /* Dive into every directory recursively. */
@@ -1118,6 +1118,9 @@ static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, ui
         else
         {
             JsonObject jsonFile = files.createNestedObject();
+
+            /* One file/directory collected. */
+            --count;
 
             jsonFile["name"] = String(fd.path());
             jsonFile["size"] = fd.size();
@@ -1133,9 +1136,6 @@ static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, ui
             {
                 jsonFile["type"] = "file";
             }
-
-            /* One file collected. */
-            --count;
         }
 
         fd.close();
