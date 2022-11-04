@@ -82,7 +82,7 @@ void ConnectingState::entry(StateMachine& sm)
     if ((0 == m_wifiSSID.length()) ||
         (0 == m_wifiPassphrase.length()))
     {
-        String infoStr = "Keep button pressed and reboot. Set SSID/password via webserer.";
+        String infoStr = "Keep button pressed and reboot. Set SSID/password via webserver.";
 
         LOG_INFO(infoStr);
         SysMsg::getInstance().show(infoStr);
