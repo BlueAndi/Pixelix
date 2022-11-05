@@ -51,14 +51,14 @@
  * Only the left channel is supported.
  * Workaround, see https://github.com/espressif/arduino-esp32/issues/7177
  */
-#define I2S_MIC_CHANNEL            I2S_CHANNEL_FMT_ONLY_RIGHT 
+#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_RIGHT 
 
 #else
 
 /**
  * Only the left channel is supported.
  */
-#define I2S_MIC_CHANNEL            I2S_CHANNEL_FMT_ONLY_LEFT
+#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_LEFT
 
 #endif  
 
