@@ -94,10 +94,10 @@ PCB board v2.0
 | A0 | J1-5 | GPIO 26 (A0) | This is also DAC2. It uses ADC2 | I2S_CLK |
 | A1 | J1-6 | GPIO 25 (A1) | This is also DAC1. It uses ADC2 | I2S_WS |
 | A2 | J1-7 | GPIO 34 (A2) | It is input/ADC only. It uses ADC1 | LDR-ANALOG-IN |
-| A3 | J1-8 | GPIO 39 (A3) | It is input/ADC only. It uses ADC1 | (DHT In) |
+| A3 | J1-8 | GPIO 39 (A3) | It is input/ADC only. It uses ADC1 | - |
 | A4 | J1-9 | GPIO 36 (A4) | It is input/ADC only. It uses ADC1 | - |
 | A5 | J1-10 | GPIO 4 (A5) | It uses ADC2 | USER-BUTTON |
-| SCK | J1-11 | GPIO 5 | This is the SPI clock pin | - |
+| SCK | J1-11 | GPIO 5 | This is the SPI clock pin | (DHT In) |
 | MO | J1-12 | GPIO 19 | This is the SPI Microcontroller Out / Serial In (MOSI) pin (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO18) | - |
 | MI | J1-13 | GPIO 21 | This is the SPI Microcontroller In / Serial Out (MISO) pin (Adafruit Feather V2 Schematic-Symbol is wrong! -> IO19) | - |
 | RX | J1-14 | GPIO 7 | This is the UART RX (receive) pin | - |

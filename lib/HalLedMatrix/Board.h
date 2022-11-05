@@ -70,13 +70,8 @@ namespace Pin
     /** Pin number of user button */
     static const uint8_t    userButtonPinNo         = 4U;
 
-#ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
-    /** Pin number of dht sensor in */
-    static const uint8_t    dhtInPinNo              = 39U;
-#else
     /** Pin number of dht sensor in */
     static const uint8_t    dhtInPinNo              = 5U;
-#endif
 
     /** Pin number of I2C SDA */
     static const uint8_t    i2cSdaPinNo             = 21U;

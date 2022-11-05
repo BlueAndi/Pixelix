@@ -44,15 +44,14 @@ A "X" in the development board column means valid all development boards. Except
 
 | Development Board | DHTx pin 1 | DHTx pin 2 |
 | ----------------- | ---------- | ---------- |
-| X | Vcc | Pin 5 | 
-| Adafruit ESP32 Feather V2 | Vcc | Pin 39 |
+| X | Vcc | Pin 5 |
 | TTGO ESP32 T-Display | Vcc | Pin 27 |
 
 ## SHT3x (I2C)
 
 | Development Board | I2C SCL | I2C SDA |
 | ----------------- | ------- | ------- |
-| X | Pin 22 | Pin 21 | 
+| X | Pin 22 | Pin 21 |
 
 # Audio (digital micropohone with I2S)
 
