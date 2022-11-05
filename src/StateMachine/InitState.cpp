@@ -116,8 +116,15 @@ void InitState::entry(StateMachine& sm)
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
 
+    /* Set two-wire (I2C) pins, before calling begin(). */
+    if (false == Wire.setPins(Board::Pin::i2cSdaPinNo, Board::Pin::i2cSclPinNo))
+    {
+        LOG_FATAL("Couldn't set two-wire pins.");
+        errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
+        isError = true;
+    }
     /* Initialize two-wire (I2C) */
-    if (false == Wire.begin())
+    else if (false == Wire.begin())
     {
         LOG_FATAL("Couldn't initialize two-wire.");
         errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
