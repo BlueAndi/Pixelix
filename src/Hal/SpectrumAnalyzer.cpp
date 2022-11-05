@@ -45,6 +45,23 @@
  * Macros
  *****************************************************************************/
 
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 4)
+
+/**
+ * Only the left channel is supported.
+ * Workaround, see https://github.com/espressif/arduino-esp32/issues/7177
+ */
+#define I2S_MIC_CHANNEL            I2S_CHANNEL_FMT_ONLY_RIGHT 
+
+#else
+
+/**
+ * Only the left channel is supported.
+ */
+#define I2S_MIC_CHANNEL            I2S_CHANNEL_FMT_ONLY_LEFT
+
+#endif  
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
@@ -345,17 +362,20 @@ bool SpectrumAnalyzer::initI2S()
         .mode                   = static_cast<i2s_mode_t>(I2S_MODE_MASTER | I2S_MODE_RX),
         .sample_rate            = SAMPLE_RATE,
         .bits_per_sample        = I2S_BITS_PER_SAMPLE,
-        .channel_format         = I2S_CHANNEL_FMT_ONLY_LEFT,                                                                /* Is is assumed, that the I2S device supports the left audio channel only. */
-        .communication_format   = static_cast<i2s_comm_format_t>(I2S_COMM_FORMAT_STAND_I2S | I2S_COMM_FORMAT_STAND_MSB),    /* I2S_COMM_FORMAT_I2S is necessary for Philips Standard format */
+        .channel_format         = I2S_MIC_CHANNEL,              /* Is is assumed, that the I2S device supports the left audio channel only. */
+        .communication_format   = I2S_COMM_FORMAT_STAND_I2S,    /* I2S_COMM_FORMAT_I2S is necessary for Philips Standard format. */
         .intr_alloc_flags       = ESP_INTR_FLAG_LEVEL1,
         .dma_buf_count          = DMA_BLOCKS,
         .dma_buf_len            = DMA_BLOCK_SIZE,
         .use_apll               = false,    /* Higher accuracy with APLL is not necessary. */
         .tx_desc_auto_clear     = false,    /* In underflow condition, the tx descriptor shall not be cleared automatically. */
-        .fixed_mclk             = 0         /* No fixed MCLK output. */
+        .fixed_mclk             = 0,        /* No fixed MCLK output. */
+        .mclk_multiple          = I2S_MCLK_MULTIPLE_DEFAULT,
+        .bits_per_chan          = I2S_BITS_PER_CHAN_DEFAULT
     };
     i2s_pin_config_t    pinConfig   =
     {
+        .mck_io_num     = I2S_PIN_NO_CHANGE,
         .bck_io_num     = Board::Pin::i2sSerialClock,
         .ws_io_num      = Board::Pin::i2sWordSelect,
         .data_out_num   = I2S_PIN_NO_CHANGE,
