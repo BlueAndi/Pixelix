@@ -56,6 +56,7 @@ A "X" in the development board column means valid all development boards. Except
 # Audio (digital micropohone with I2S)
 
 ## INMP441
+Only the left channel is supported, therefore the L/R channel select signal shall be connected to GND.
 
 | Development Board | Left/Right Clock (LRCL) | Data Output (DOUT) | Bit Clock (BCLK) | Left/Right Channel Select (L/R) | Chip Enable (CHIPEN) |
 | ----------------- | ----------------------- | ------------------ | ---------------- | ------------------------------- | -------------------- |
