@@ -30,6 +30,7 @@
 * [Plugins](PLUGINS.md)
 * [Plugin Development](PLUGIN-DEV.md)
 * [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0)
+* [Home Assistant REST Wrapper](HOMEASSISTANT.md)
 * [Websocket API description](WEBSOCKET.md)
 * [Sprite sheet](SPRITESHEET.md)
 
