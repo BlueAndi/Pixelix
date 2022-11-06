@@ -9,7 +9,7 @@ This is work in progress...
 - [Installation](#installation)
   - [Setting up REST command](#setting-up-rest-command)
   - [Importing blueprint](#import-blueprint)
-  - [Generate an automation](#import-blueprint)
+  - [Generate an automation](#generate-an-automation)
 
 # Purpose
 If you want to display sensor data from your Homeassistant instance you can use this wrapper.
