@@ -4,11 +4,12 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# Homeassistant REST API Wrapper for Plugins
+# Homeassistant REST API Wrapper for Plugins <!-- omit in toc -->
 This is work in progress...
+- [Purpose](#purpose)
 - [Installation](#installation)
   - [Setting up REST command](#setting-up-rest-command)
-  - [Importing blueprint](#import-blueprint)
+  - [Import Blueprint](#import-blueprint)
   - [Generate an automation](#generate-an-automation)
 
 # Purpose
@@ -34,7 +35,7 @@ You can use this link to add the wrapper to your Homeassistant installation.
 [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FBlueAndi%2Fesp-rgb-led-matrix%2Fblob%2FDevelopment%2Fdoc%2Fhomeassistant%2Fpixelix-justtext.yaml)
 
 As an alternative you can copy the yaml to  `/config/blueprints/automation/homeassistant/`
-You can find the raw YAML file [here](https://github.com/BlueAndi/esp-rgb-led-matrix/blob/Development/doc/homeassistant/pixelix-justtext.yaml "here")
+You can find the raw YAML file [here](./homeassistant/pixelix-justtext.yaml "here")
 
 
 ## Generate an automation
