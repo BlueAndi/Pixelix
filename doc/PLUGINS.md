@@ -67,7 +67,14 @@ The CountdownPlugin shows the remaining days until a configured target date.\
 Target date and the description of the target day (plural/singular form) can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/CountdownPlugin).
 
 ## DateTimePlugin
-The DateTimePlugin shows the current time and date. First the time is shown for half of the slot duration and after it the date. At the bottom the day of the week is shown, starting from the left with Monday. It can be configured to show only the date or only the time as well.
+The plugin shows the current time and/or date.
+
+If date and time are configured, first the time will be shown for half of the slot duration and after it the date. It can be configured to show only the date or only the time as well.
+
+Below the day of the week is shown, starting from the left with Monday.
+
+In the settings the format of the date and time can be configured according to strftime().
+
 It can be set what shall be shown via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/DateTimePlugin).
 
 ## FirePlugin
