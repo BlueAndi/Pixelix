@@ -78,15 +78,15 @@ void ClockDrv::init()
 
             timezone            = Settings::getInstance().getTimezone().getDefault();
             ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getDefault();
-            m_is24HourFormat    = Settings::getInstance().getTimeFormatAdjustment().getDefault();
-            m_isDayMonthYear    = Settings::getInstance().getDateFormatAdjustment().getDefault();
+            m_timeFormat        = Settings::getInstance().getTimeFormat().getDefault();
+            m_dateFormat        = Settings::getInstance().getDateFormat().getDefault();
         }
         else
         {
             timezone            = Settings::getInstance().getTimezone().getValue();
             ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getValue();
-            m_is24HourFormat    = Settings::getInstance().getTimeFormatAdjustment().getValue();
-            m_isDayMonthYear    = Settings::getInstance().getDateFormatAdjustment().getValue();
+            m_timeFormat        = Settings::getInstance().getTimeFormat().getValue();
+            m_dateFormat        = Settings::getInstance().getDateFormat().getValue();
             Settings::getInstance().close();
         }
 
@@ -125,14 +125,49 @@ bool ClockDrv::getTime(tm *currentTime)
     return getLocalTime(currentTime, WAIT_TIME_MS);
 }
 
-bool ClockDrv::getTimeFormat()
+bool ClockDrv::getTimeAsString(String& time, const String& format, const tm *currentTime)
 {
-    return m_is24HourFormat;
+    bool        isSuccessful    = false;
+    tm          timeStruct;
+    const tm*   timeStructPtr   = nullptr;
+
+    if (nullptr == currentTime)
+    {
+        timeStructPtr = &timeStruct;
+
+        if (false == getTime(&timeStruct))
+        {
+            timeStructPtr = nullptr;
+        }
+    }
+    else
+    {
+        timeStructPtr = currentTime;
+    }
+
+    if (nullptr != timeStructPtr)
+    {
+        const uint32_t  MAX_TIME_BUFFER_SIZE    = format.length() + 20U;
+        char            buffer[MAX_TIME_BUFFER_SIZE];
+
+        if (0U != strftime(buffer, sizeof(buffer), format.c_str(), currentTime))
+        {
+            time = buffer;
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
 }
 
-bool ClockDrv::getDateFormat()
+const String& ClockDrv::getTimeFormat()
 {
-    return m_isDayMonthYear;
+    return m_timeFormat;
+}
+
+const String& ClockDrv::getDateFormat()
+{
+    return m_dateFormat;
 }
 
 /******************************************************************************

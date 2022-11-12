@@ -217,23 +217,23 @@ public:
     }
 
     /**
-     * Get state of time format adjustment.
+     * Get time format according to strftime().
      *
      * @return Key value pair
      */
-    KeyValueBool& getTimeFormatAdjustment()
+    KeyValueString& getTimeFormat()
     {
-        return m_timeFormatCtrl;
+        return m_timeFormat;
     }
 
     /**
-     * Get state of date format adjustment.
+     * Get date format according to strftime().
      *
      * @return Key value pair
      */
-    KeyValueBool& getDateFormatAdjustment()
+    KeyValueString& getDateFormat()
     {
-        return m_dateFormatCtrl;
+        return m_dateFormat;
     }
 
     /**
@@ -324,8 +324,8 @@ private:
     KeyValueJson    m_pluginInstallation;   /**< Plugin installation */
     KeyValueString  m_timezone;             /**< POSIX timezone string */
     KeyValueString  m_ntpServer;            /**< NTP server address */
-    KeyValueBool    m_timeFormatCtrl;       /**< Time format control */
-    KeyValueBool    m_dateFormatCtrl;       /**< Date format control */
+    KeyValueString  m_timeFormat;           /**< Time format according to strftime(). */
+    KeyValueString  m_dateFormat;           /**< Date format according to strftime(). */
     KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
     KeyValueJson    m_slotConfig;           /**< Display slot configuration */
     KeyValueUInt32  m_scrollPause;          /**< Text scroll pause */

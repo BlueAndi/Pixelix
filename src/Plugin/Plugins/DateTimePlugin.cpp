@@ -338,18 +338,25 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownMinute != timeInfo.tm_min))
             {
-                char        timeBuffer[SIZE_OF_FORMATTED_DATE_TIME_STRING];
-                const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "\\calign%H:%M":"\\calign%I:%M %p";
+                ClockDrv&   clockDrv    = ClockDrv::getInstance();
+                struct tm   timeInfo;
 
-                setWeekdayIndicator(timeInfo);
-
-                if (0U != strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, &timeInfo))
+                if (true == clockDrv.getTime(&timeInfo))
                 {
-                    m_textWidget.setFormatStr(timeBuffer);
+                    const String&   timeFormat      = clockDrv.getTimeFormat();
+                    String          extTimeFormat   = "\\calign" + timeFormat;
+                    String          timeAsStr;
+                    
+                    if (true == clockDrv.getTimeAsString(timeAsStr, extTimeFormat, &timeInfo))
+                    {
+                        m_textWidget.setFormatStr(timeAsStr);
 
-                    m_shownMinute       = timeInfo.tm_min;
-                    m_isUpdateAvailable = true;
+                        m_shownMinute       = timeInfo.tm_min;
+                        m_isUpdateAvailable = true;
+                    }
                 }
+                
+                setWeekdayIndicator(timeInfo);
             }
         }
         else if (true == showDate)
@@ -361,18 +368,25 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownDayOfTheYear != timeInfo.tm_yday))
             {
-                char        dateBuffer[SIZE_OF_FORMATTED_DATE_TIME_STRING];
-                const char* formattedDateString = ClockDrv::getInstance().getDateFormat() ? "\\calign%d.%m.":"\\calign%m/%d";
+                ClockDrv&   clockDrv    = ClockDrv::getInstance();
+                struct tm   timeInfo;
 
-                setWeekdayIndicator(timeInfo);
-
-                if (0U != strftime(dateBuffer, sizeof(dateBuffer), formattedDateString, &timeInfo))
+                if (true == clockDrv.getTime(&timeInfo))
                 {
-                    m_textWidget.setFormatStr(dateBuffer);
+                    const String&   dateFormat      = clockDrv.getDateFormat();
+                    String          extDateFormat   = "\\calign" + dateFormat;
+                    String          dateAsStr;
+                    
+                    if (true == clockDrv.getTimeAsString(dateAsStr, extDateFormat, &timeInfo))
+                    {
+                        m_textWidget.setFormatStr(dateAsStr);
 
-                    m_shownDayOfTheYear = timeInfo.tm_yday;
-                    m_isUpdateAvailable = true;
+                        m_shownDayOfTheYear = timeInfo.tm_yday;
+                        m_isUpdateAvailable = true;
+                    }
                 }
+                
+                setWeekdayIndicator(timeInfo);
             }
         }
         else

@@ -158,10 +158,10 @@ static const char*  NAME_TIMEZONE                   = "POSIX timezone string";
 static const char*  NAME_NTP_SERVER                 = "NTP server address";
 
 /** Time format name of key value pair */
-static const char*  NAME_TIME_FORMAT_CTRL           = "Time format: true = 24h, false = 12h (AM/PM)";
+static const char*  NAME_TIME_FORMAT                = "Time format according to strftime()";
 
 /** Date format name of key value pair */
-static const char*  NAME_DATE_FORMAT_CTRL           = "Date format: true = DD:MM, false = MM:DD";
+static const char*  NAME_DATE_FORMAT                = "Date format according to strftime()";
 
 /** Max. number of display slots name of key value pair */
 static const char*  NAME_MAX_SLOTS                  = "Max. slots";
@@ -213,11 +213,11 @@ static const char*      DEFAULT_TIMEZONE                = "WEST-1DWEST-2,M3.5.0/
 /** NTP server default value */
 static const char*      DEFAULT_NTP_SERVER              = "pool.ntp.org";
 
-/** Time format control default value */
-static bool             DEFAULT_TIME_FORMAT_CTRL        = true;
+/** Time format control default value. 12h clock time with am/pm designation. */
+static const char*      DEFAULT_TIME_FORMAT             = "%I:%M %p";
 
-/** Date format control default value */
-static bool             DEFAULT_DATE_FORMAT_CTRL        = true;
+/** Date format control default value. month/day format. */
+static const char*      DEFAULT_DATE_FORMAT             = "%m/%d";
 
 /** Max. number of display slots default value */
 static uint8_t          DEFAULT_MAX_SLOTS               = 8U;
@@ -268,9 +268,11 @@ static const size_t     MIN_VALUE_TIMEZONE              = 4U;
 /** NTP server address min. length */
 static const size_t     MIN_VALUE_NTP_SERVER            = 12U;
 
-/*                      MIN_VALUE_TIME_FORMAT_CTRL */
+/** Time format min. length.  */
+static const size_t     MIN_VALUE_TIME_FORMAT           = 2U;
 
-/*                      MIN_VALUE_TIME_FORMAT_CTRL */
+/** Date format min. length.  */
+static const size_t     MIN_VALUE_DATE_FORMAT           = 2U;
 
 /** Max. number of display slots minimum value */
 static uint8_t          MIN_MAX_SLOTS                   = 2U;
@@ -321,9 +323,11 @@ static const size_t     MAX_VALUE_TIMEZONE              = 128U;
 /** NTP server address max. length */
 static const size_t     MAX_VALUE_NTP_SERVER            = 30U;
 
-/*                      MAX_VALUE_TIME_FORMAT_CTRL */
+/** Time format max. length */
+static const size_t     MAX_VALUE_TIME_FORMAT           = 10U;
 
-/*                      MAX_VALUE_TIME_FORMAT_CTRL */
+/** Date format max. length */
+static const size_t     MAX_VALUE_DATE_FORMAT           = 10U;
 
 /** Max. number of display slots maximum value */
 static uint8_t          MAX_MAX_SLOTS                   = 11U;
@@ -413,8 +417,8 @@ Settings::Settings() :
     m_pluginInstallation    (m_preferences, KEY_PLUGIN_INSTALLATION,    NAME_PLUGIN_INSTALLATION,   DEFAULT_PLUGIN_INSTALLATION,    MIN_VALUE_PLUGIN_INSTALLATION,  MAX_VALUE_PLUGIN_INSTALLATION),
     m_timezone              (m_preferences, KEY_TIMEZONE,               NAME_TIMEZONE,              DEFAULT_TIMEZONE,               MIN_VALUE_TIMEZONE,             MAX_VALUE_TIMEZONE),
     m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER),
-    m_timeFormatCtrl        (m_preferences, KEY_TIME_FORMAT,            NAME_TIME_FORMAT_CTRL,      DEFAULT_TIME_FORMAT_CTRL),
-    m_dateFormatCtrl        (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT_CTRL,      DEFAULT_DATE_FORMAT_CTRL),
+    m_timeFormat            (m_preferences, KEY_TIME_FORMAT,            NAME_TIME_FORMAT,           DEFAULT_TIME_FORMAT,            MIN_VALUE_TIME_FORMAT,          MAX_VALUE_TIME_FORMAT),
+    m_dateFormat            (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT,           DEFAULT_DATE_FORMAT,            MIN_VALUE_DATE_FORMAT,          MAX_VALUE_DATE_FORMAT),
     m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS),
     m_slotConfig            (m_preferences, KEY_SLOT_CONFIG,            NAME_SLOT_CONFIG,           DEFAULT_SLOT_CONFIG,            MIN_VALUE_SLOT_CONFIG,          MAX_VALUE_SLOT_CONFIG),
     m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE),
@@ -446,9 +450,9 @@ Settings::Settings() :
     ++idx;
     m_keyValueList[idx] = &m_ntpServer;
     ++idx;
-    m_keyValueList[idx] = &m_timeFormatCtrl;
+    m_keyValueList[idx] = &m_timeFormat;
     ++idx;
-    m_keyValueList[idx] = &m_dateFormatCtrl;
+    m_keyValueList[idx] = &m_dateFormat;
     ++idx;
     m_keyValueList[idx] = &m_maxSlots;
     ++idx;

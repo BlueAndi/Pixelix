@@ -29,6 +29,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
   - [How can I use alternative icons?](#how-can-i-use-alternative-icons)
   - [Is it possible to use a font with 8px height?](#is-it-possible-to-use-a-font-with-8px-height)
+  - [How to configure the date/time format?](#how-to-configure-the-datetime-format)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -202,6 +203,16 @@ Example:
 
 Not all plugin may support this in case they get conflicts with their layout.
 If a plugin don't support it, it will use the default font type.
+
+## How to configure the date/time format?
+The date/time format can be configured in the settings of Pixelix.
+
+Examples:
+* ```%I:%M %p```: 02:30 PM
+* ```%H:%M```: 14:30
+* ```%m/%d```: 11/12
+* ```%d.%m.```: 11.12.
+* ```%d - %b```: 11 - Nov
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

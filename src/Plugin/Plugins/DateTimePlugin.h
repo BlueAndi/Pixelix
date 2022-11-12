@@ -262,28 +262,13 @@ private:
     static const char*      TOPIC_CFG;
 
     /** Max. number of lamps. */
-    static const uint8_t    MAX_LAMPS                               = 7U;
+    static const uint8_t    MAX_LAMPS               = 7U;
 
     /** Time to check date update period in ms */
-    static const uint32_t   CHECK_UPDATE_PERIOD                     = 1000U;
-
-    /**
-     * Size of formatted date string in the form of DD:MM / MM:DD / HH:MM
-     *
-     *      "\\calign"          = 8  (Alignment center )
-     *      "Day/Month/Hour"    = 2
-     *      "separator"         = 1
-     *      "Month/Day"/Minute  = 2
-     *      "separator"         = 1  (only valid for date)
-     *      "AM/PM"             = 2 (only at time strings)
-     *      "\0"                = 1
-     *      ------------------------
-     *                          = 17
-     */
-    static const size_t     SIZE_OF_FORMATTED_DATE_TIME_STRING      = 17U;
+    static const uint32_t   CHECK_UPDATE_PERIOD     = 1000U;
 
     /** Divider to convert ms in s */
-    static const uint32_t   MS_TO_SEC_DIVIDER                       = 1000U;
+    static const uint32_t   MS_TO_SEC_DIVIDER       = 1000U;
 
     /**
      * If the slot duration is infinite (0s), the default duration of 30s shall be assumed as base
@@ -291,7 +276,7 @@ private:
      * 
      * The default duration is in ms.
      */
-    static const uint32_t   DURATION_DEFAULT                        = 30U * 1000U;
+    static const uint32_t   DURATION_DEFAULT        = 30U * 1000U;
 
     TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */

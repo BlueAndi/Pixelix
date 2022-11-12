@@ -89,39 +89,52 @@ public:
     bool getTime(tm *currentTime);
 
     /**
-     * Get the time format.
-     *
-     * @return true if 24h format is set otherwise false.
+     * Get the current time as formatted string.
+     * The format is equal to strftime(), please have a look there.
+     * 
+     * Use getTimeFormat() or getDateFormat() for the user configured format.
+     * 
+     * @param[out]  time            The formatted time string.
+     * @param[in]   format          The format according to strftime().
+     * @param[in]   currentTime     The current time (optional).
+     * 
+     * @return If successful, it will return true otherwise false.
      */
-    bool getTimeFormat();
+    bool getTimeAsString(String& time, const String& format, const tm *currentTime = nullptr);
+    
+    /**
+     * Get the time format from configuration.
+     *
+     * @return Time format.
+     */
+    const String& getTimeFormat();
 
     /**
-     * Get the date format.
+     * Get the date format from configuration.
      *
-     * @return true if DayMonthYear format is set otherwise false.
+     * @return Date format.
      */
-    bool getDateFormat();
+    const String& getDateFormat();
 
 private:
 
     /** Flag indicating a initialized clock driver. */
-    bool m_isClockDrvInitialized;
+    bool    m_isClockDrvInitialized;
 
-    /** Flag holding the time format. */
-    bool m_is24HourFormat;
+    /** Time format */
+    String  m_timeFormat;
 
-    /** Flag holding the date format. */
-    bool m_isDayMonthYear;
+    /** Date format */
+    String  m_dateFormat;
 
     /**
      * Construct ClockDrv.
      */
     ClockDrv() :
         m_isClockDrvInitialized(false),
-        m_is24HourFormat(false),
-        m_isDayMonthYear(false)
+        m_timeFormat(),
+        m_dateFormat()
     {
-
     }
 
     /**
