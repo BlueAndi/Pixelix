@@ -324,6 +324,8 @@ public:
 
 protected:
 
+    bool        m_isEnabled;    /**< Plugin is enabled or disabled */
+
     /**
      * Constructs the plugin.
      * It is disabled by default.
@@ -332,10 +334,10 @@ protected:
      * @param[in] uid   Unique id
      */
     Plugin(const String& name, uint16_t uid) :
+        m_isEnabled(false),
         m_uid(uid),
         m_alias(),
-        m_name(name),
-        m_isEnabled(false)
+        m_name(name)
     {
     }
 
@@ -368,7 +370,6 @@ private:
     uint16_t    m_uid;          /**< Unique id */
     String      m_alias;        /**< Alias name */
     String      m_name;         /**< Plugin name */
-    bool        m_isEnabled;    /**< Plugin is enabled or disabled */
 
     Plugin();
     Plugin(const Plugin& plugin);

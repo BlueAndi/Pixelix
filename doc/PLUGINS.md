@@ -40,7 +40,7 @@ Each plugin is identified by its unique UID.
 The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0).
 
 ## IconTextPlugin
-The IconTextPlugin shows an icon on left side, text on right side.\
+The IconTextPlugin shows an icon on left side, text on right side. If no text is set, the plugin will be skipped in the slot.\
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/IconTextPlugin).
 
 ## IconTextLampPlugin
@@ -48,7 +48,7 @@ The IconTextLampPlugin shows an icon on left side, text on right side and lamps 
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/IconTextLampPlugin).
 
 ## JustTextPlugin
-The JustTextPlugin shows only text on the whole display.\
+The JustTextPlugin shows only text on the whole display. If no text is set, the plugin will be skipped in the slot.\
 The text to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/JustTextPlugin).
 
 ## ThreeIconPlugin

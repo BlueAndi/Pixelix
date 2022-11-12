@@ -75,6 +75,20 @@ const char* IconTextPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
  * Public Methods
  *****************************************************************************/
 
+bool IconTextPlugin::isEnabled() const
+{
+    bool isEnabled = false;
+
+    /* The plugin shall only be scheduled if its enabled and text is set. */
+    if ((true == m_isEnabled) &&
+        (false == m_textWidget.getStr().isEmpty()))
+    {
+        isEnabled = true;
+    }
+
+    return isEnabled;
+}
+
 void IconTextPlugin::getTopics(JsonArray& topics) const
 {
     (void)topics.add(TOPIC_TEXT);

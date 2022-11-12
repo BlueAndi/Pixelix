@@ -66,6 +66,20 @@ const char* JustTextPlugin::TOPIC_TEXT  = "/text";
  * Public Methods
  *****************************************************************************/
 
+bool JustTextPlugin::isEnabled() const
+{
+    bool isEnabled = false;
+
+    /* The plugin shall only be scheduled if its enabled and text is set. */
+    if ((true == m_isEnabled) &&
+        (false == m_textWidget.getStr().isEmpty()))
+    {
+        isEnabled = true;
+    }
+
+    return isEnabled;
+}
+
 void JustTextPlugin::getTopics(JsonArray& topics) const
 {
     (void)topics.add(TOPIC_TEXT);

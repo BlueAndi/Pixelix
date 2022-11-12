@@ -109,6 +109,13 @@ public:
     }
 
     /**
+     * Is plugin enabled or not?
+     *
+     * @return If plugin is enabled, it will return true otherwise false.
+     */
+    bool isEnabled() const final;
+
+    /**
      * Get font type.
      * 
      * @return The font type the plugin uses.
