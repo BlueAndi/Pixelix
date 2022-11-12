@@ -229,9 +229,8 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
         }
 
         this._pendingCmd = null;
+        this._sendCmdFromQueue();
     }
-
-    this._sendCmdFromQueue();
 
     return;
 };
