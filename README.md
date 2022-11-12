@@ -205,7 +205,7 @@ Not all plugin may support this in case they get conflicts with their layout.
 If a plugin don't support it, it will use the default font type.
 
 ## How to configure the date/time format?
-The date/time format can be configured in the settings of Pixelix.
+The date/time format can be configured in the settings of Pixelix. The format specifiers following [strftime()](https://cplusplus.com/reference/ctime/strftime/).
 
 Examples:
 * ```%I:%M %p```: 02:30 PM
