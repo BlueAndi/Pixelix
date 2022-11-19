@@ -132,7 +132,7 @@ public:
      */
     void setBrightness(uint8_t brightness) final
     {
-        /* To protect the the electronic parts, the brigntness will be scaled down
+        /* To protect the electronic parts, the brigntness will be scaled down
          * according to the max. supply current.
          */
         const uint8_t SAFE_BRIGHTNESS =
