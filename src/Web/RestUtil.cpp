@@ -127,7 +127,7 @@ void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& j
     }
     else
     {
-        LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
+        LOG_DEBUG("JSON document size: %u", jsonDoc.memoryUsage());
     }
 
     if (nullptr != request)
