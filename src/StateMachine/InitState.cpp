@@ -444,6 +444,7 @@ void InitState::exit(StateMachine& sm)
 void InitState::showStartupInfoOnSerial()
 {
     LOG_INFO("PIXELIX starts up ...");
+    LOG_INFO("Target: %s", Version::TARGET);
     LOG_INFO("SW version: %s", Version::SOFTWARE_VER);
     LOG_INFO("SW revision: %s", Version::SOFTWARE_REV);
     LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());

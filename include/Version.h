@@ -118,6 +118,9 @@ namespace Version
 
     /** Software branch, the software was built from. */
     static const char   SOFTWARE_BRANCH[]       = QUOTE(SW_BRANCH);
+
+    /** The target of this build. */
+    static const char   TARGET[]                = QUOTE(PIO_ENV);
 }
 
 #endif  /* __VERSION_H__ */
