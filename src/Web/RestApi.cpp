@@ -77,7 +77,7 @@ static void handleSettings(AsyncWebServerRequest* request);
 static void handleSetting(AsyncWebServerRequest* request);
 static bool storeSetting(KeyValue* parameter, const String& value, String& error);
 static void handleStatus(AsyncWebServerRequest* request);
-static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count);
+static void getFiles(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
 static String getContentType(const String& filename);
@@ -616,7 +616,7 @@ static void handleSettings(AsyncWebServerRequest* request)
  */
 static void handleSetting(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    const size_t        JSON_DOC_SIZE   = 2048U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
@@ -1088,7 +1088,7 @@ static void handleStatus(AsyncWebServerRequest* request)
 }
 
 /**
- * Get the files in the directory recursively and fill the JSON array flat.
+ * Get the files in the directory (optional: recursively) and fill the JSON array flat.
  * It will start to collect the files/directories after "preCount" were found.
  * It will stop to collect after "count" files.
  * 
@@ -1096,8 +1096,9 @@ static void handleStatus(AsyncWebServerRequest* request)
  * @param[out]      files       JSON array for collecting the files.
  * @param[in,out]   preCount    This amount of files will be skipped.
  * @param[in,out]   count       Amount of files which max. to collect.
+ * @param[in]       isRecursive If true, it will get all files recursive from root to all leafs.
  */
-static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count)
+static void getFiles(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive)
 {
     File fd = dir.openNextFile();
 
@@ -1110,9 +1111,10 @@ static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, ui
             --preCount;
 
             /* Dive into every directory recursively. */
-            if (true == fd.isDirectory())
+            if ((true == isRecursive) &&
+                (true == fd.isDirectory()))
             {
-                getFilesRecursive(fd, files, preCount, count);
+                getFiles(fd, files, preCount, count, isRecursive);
             }
         }
         else
@@ -1129,8 +1131,11 @@ static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, ui
             {
                 jsonFile["type"] = "dir";
 
-                /* Dive into every directory recursively. */
-                getFilesRecursive(fd, files, preCount, count);
+                if (true == isRecursive)
+                {
+                    /* Dive into every directory recursively. */
+                    getFiles(fd, files, preCount, count, isRecursive);
+                }
             }
             else
             {
@@ -1209,7 +1214,8 @@ static void handleFilesystem(AsyncWebServerRequest* request)
             }
             else
             {
-                getFilesRecursive(fdRoot, jsonData, preCount, count);
+                LOG_INFO("List %s (page = %u)", path.c_str(), page);
+                getFiles(fdRoot, jsonData, preCount, count, false);
             }
 
             fdRoot.close();

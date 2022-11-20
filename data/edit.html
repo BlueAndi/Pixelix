@@ -170,7 +170,7 @@
             }
 
             function listAllFiles(id) {
-                return restClient.listAllFiles("/").then(function(items) {
+                return restClient.listAllFilesRecursive("/").then(function(items) {
                     var index       = 0;
                     var compareFunc = function(a, b) {
                         if (a.name < b.name) {
@@ -254,7 +254,14 @@
                     return Promise.all(promises);
 
                 }).catch(function(rsp) {
-                    alert(rsp.error.msg);
+                    var alertMsg = "";
+
+                    if (typeof rsp === "string") {
+                        alertMsg = rsp;
+                    } else {
+                        alertMsg = rsp.error.msg;
+                    }
+                    alert(alertMsg);
                     return Promise.reject();
                 });
             }

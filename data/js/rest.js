@@ -30,6 +30,8 @@ pixelix.rest.Client.prototype.listAllFiles = function(path = "/") {
     var data    = [];
     var client  = this;
     var handler = function(rsp) {
+        var promise = null;
+
         if (0 < rsp.data.length) {
             data = data.concat(rsp.data);
             ++page;
@@ -41,6 +43,61 @@ pixelix.rest.Client.prototype.listAllFiles = function(path = "/") {
     };
 
     return this.listFiles(path, page).then(handler);
+};
+
+pixelix.rest.Client.prototype.listAllFilesRecursive = function(path = "/") {
+    var data    = [];
+    var client  = this;
+    var handler = function(rsp) {
+        var promise = null;
+        var idx = 0;
+        var promiseData = {
+            data: data,
+            directories: []
+        };
+
+        if (0 < rsp.length) {
+            promiseData.data = promiseData.data.concat(rsp);
+
+            for(idx = 0; idx < rsp.length; ++idx)
+            {
+                if (rsp[idx].type === "dir") {
+
+                    promiseData.directories.push(rsp[idx].name);
+                }
+            }
+
+            if (0 < promiseData.directories.length) {
+
+                promise = Promise.resolve(promiseData);
+
+                for(idx = 0; idx < promiseData.directories.length; idx++) {
+                    promise = promise.then(function(internal) {
+                        var dirName = internal.directories.shift();
+
+                        return client.listAllFilesRecursive(dirName).then(function(rsp) {
+                            internal.data = internal.data.concat(rsp);
+                            return internal;
+                        });
+                    });
+                }
+
+                promise = promise.then(function(internal) {
+                    return internal.data;
+                })
+
+            } else {
+                promise = Promise.resolve(promiseData.data);
+            }
+
+        } else {
+            promise = Promise.resolve(data);
+        }
+
+        return promise;
+    };
+
+    return this.listAllFiles(path).then(handler);
 };
 
 pixelix.rest.Client.prototype.readFile = function(filename) {
