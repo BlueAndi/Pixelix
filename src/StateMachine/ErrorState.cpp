@@ -77,7 +77,7 @@ void ErrorState::entry(StateMachine& sm)
      */
     if (ERROR_ID_NO_ERROR != m_errorId)
     {
-        LOG_INFO("Low level error %u.", m_errorId);
+        LOG_INFO("Low level error E%u.", m_errorId);
 
         /* Lets try to show the error cause on the display.
          * We can not assume that the display manager is still running.
