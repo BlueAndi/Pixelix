@@ -79,6 +79,9 @@ The following steps are necessary for the first time and to get PIXELIX initial 
 1. Setup the [toolchain](./doc/TOOLCHAIN-INSTALLATION.md).
 2. [Build the software](./doc/SW-BUILD.md) and check whether the toolchain works.
 3. [Upload/Update the software and firmware](./doc/SW-UPDATE.md) to the target.
+4. Verify that the LED panel topology is correct and you see the "Hello World" on the display.
+
+Note, that the LED panel topology and the display width/height can currently not be changed in the web interface. If its necessary, adapt first in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ according your LED matrix. In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase settings are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.".
