@@ -315,7 +315,7 @@ static const uint8_t    MAX_VALUE_BRIGHTNESS            = 100U;
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
 /** Plugin installation max. length */
-static const size_t     MAX_VALUE_PLUGIN_INSTALLATION   = 1280U;
+static const size_t     MAX_VALUE_PLUGIN_INSTALLATION   = 1536U;
 
 /** POSIX timezone max. length */
 static const size_t     MAX_VALUE_TIMEZONE              = 128U;
@@ -329,8 +329,17 @@ static const size_t     MAX_VALUE_TIME_FORMAT           = 10U;
 /** Date format max. length */
 static const size_t     MAX_VALUE_DATE_FORMAT           = 10U;
 
-/** Max. number of display slots maximum value */
-static uint8_t          MAX_MAX_SLOTS                   = 11U;
+/**
+ * Max. number of display slots maximum value.
+ * The number of slots can not be increased infinite. Please consider the following:
+ * - The plugin meta data need storage in the settings, see MAX_VALUE_PLUGIN_INSTALLATION.
+ *      The settings are stored in the NVS (non-volatile storage) partition in the flash.
+ *      The NVS is limited, but very useful. Because it will survive any update!
+ * - The available heap memory will be reduced. How many should be available at least can
+ *      not easy determined. E.g. the network stack needs heap to handle requests, the REST
+ *      API needs it to handle JSON documents, etc.
+ */
+static uint8_t          MAX_MAX_SLOTS                   = 10U;
 
 /** Display slot configuration max. length */
 static const size_t     MAX_VALUE_SLOT_CONFIG           = 512U;
