@@ -21,6 +21,7 @@
   - [Static View](#static-view)
   - [Dynamic View](#dynamic-view)
 - [Spectrum Analyzer](#spectrum-analyzer)
+- [Slot Handling](#slot-handling)
 
 # Purpose
 The SW architecture provides an overview regarding the relationships of different classes and components. It serves for understanding, maintaining, fixing and extending the software.
@@ -35,7 +36,7 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 
 # Deployment
 
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/deployment.wsd)
+![deployment-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/deployment.wsd)
 
 | Task name | Core | Description |
 | --------- | ---- | ----------- |
@@ -62,34 +63,38 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 # System Startup
 
 ## High Level
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/startup.wsd)
+![startup-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/startup.wsd)
 
 ## Low Level
 
 TODO
 
 # System States
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/system_state_machine.wsd)
+![system-states-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/system_state_machine.wsd)
 
 # Hardware Abstraction Layer (HAL)
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/hal.wsd)
+![hal-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/hal.wsd)
 
 # Graphic Base Functionality
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/gfx.wsd)
+![gfx-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/gfx.wsd)
 
 # Widgets
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/widgets.wsd)
+![widgets-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/widgets.wsd)
 
 # User Button Handling
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/button.wsd)
+![button-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/button.wsd)
 
 # Plugin Handling
 
 ## Static View
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/plugin-service.wsd)
+![plugin-service-static-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/plugin-service.wsd)
 
 ## Dynamic View
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/plugin-service-dynamic.wsd)
+![plugin-service-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/plugin-service-dynamic.wsd)
 
 # Spectrum Analyzer
-![context-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/spectrum-analyzer.wsd)
+![specturm-analyzer-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/spectrum-analyzer.wsd)
+
+# Slot Handling
+
+![slot-handling-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/slot_handling.wsd)
