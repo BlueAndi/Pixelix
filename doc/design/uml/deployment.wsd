@@ -10,7 +10,6 @@ node "ESP32" {
         component "Tmr Svc\n(prio 1)" as tmrSvcTask
         component "mdns\n(prio 1)" as mdnsTask
         component "tiT\n(prio 18)" as tiTTask
-        component "async_tcp\n(prio 3)" as asyncTcpTask
         component "eventTask\n(prio 20)" as eventTask
         component "esp_timer\n(prio 22)" as espTimerTask
         component "wifi\n(prio 23)" as wifiTask
@@ -24,6 +23,7 @@ node "ESP32" {
         component "buttonTask\n(prio 1)" as buttonTask
         component "processTask\n(prio 1)" as processTask
         component "network_event\n(prio 19)" as networkEventTask
+        component "async_tcp\n(prio 3)" as asyncTcpTask
 
         component "arduino_events\n(prio 24)" as arduinoEvents
 
