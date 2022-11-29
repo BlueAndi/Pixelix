@@ -65,50 +65,50 @@ namespace Board
 namespace Pin
 {
     /** Pin number of onboard LED */
-    static const uint8_t    onBoardLedPinNo         = 2U;
+    constexpr uint8_t   onBoardLedPinNo         = 2U;
 
     /** Pin number of I2C SDA */
-    static const uint8_t    i2cSdaPinNo             = 21U;
+    constexpr uint8_t   i2cSdaPinNo             = 21U;
 
     /** Pin number of I2C SDL */
-    static const uint8_t    i2cSclPinNo             = 22U;
+    constexpr uint8_t   i2cSclPinNo             = 22U;
 
     /** Pin number of I2S word select (chooses between left and right channel) */
-    static const uint8_t    i2sWordSelect           = 25U;
+    constexpr uint8_t   i2sWordSelect           = 25U;
 
     /** Pin number of I2S serial clock (bit clock line BCLK) */
-    static const uint8_t    i2sSerialClock          = 26U;
+    constexpr uint8_t   i2sSerialClock          = 26U;
 
     /** Pin number of dht sensor in */
-    static const uint8_t    dhtInPinNo              = 27U;
+    constexpr uint8_t   dhtInPinNo              = 27U;
 
     /** Pin number of LDR in */
-    static const uint8_t    ldrInPinNo              = 32U;
+    constexpr uint8_t   ldrInPinNo              = 32U;
 
     /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
-    static const uint8_t    i2sSerialDataIn         = 33U;
+    constexpr uint8_t   i2sSerialDataIn         = 33U;
 
     /** Pin number of user button */
-    static const uint8_t    userButtonPinNo         = 35U;
+    constexpr uint8_t   userButtonPinNo         = 35U;
 };
 
-/** Digital output pin: Onboard LED */
-static const DOutPin<Pin::onBoardLedPinNo>              onBoardLedOut;
+/* Digital output pin: Onboard LED */
+extern const DOutPin<Pin::onBoardLedPinNo>              onBoardLedOut;
 
-/** Digital input pin: User button (input with pull-up) */
-static const DInPin<Pin::userButtonPinNo, INPUT_PULLUP> userButtonIn;
+/* Digital input pin: User button (input with pull-up) */
+extern const DInPin<Pin::userButtonPinNo, INPUT_PULLUP> userButtonIn;
 
-/** Analog input pin: LDR in */
-static const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
+/* Analog input pin: LDR in */
+extern const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 
-/** Digital input pin: DHT Sensor (input with pull-up) */
-static const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
+/* Digital input pin: DHT Sensor (input with pull-up) */
+extern const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
 
 /** ADC resolution in digits */
-static const uint16_t   adcResolution   = 4096U;
+constexpr uint16_t  adcResolution   = 4096U;
 
 /** ADC reference voltage in mV */
-static const uint16_t   adcRefVoltage   = 3300U;
+constexpr uint16_t  adcRefVoltage   = 3300U;
 
 /******************************************************************************
  * Functions

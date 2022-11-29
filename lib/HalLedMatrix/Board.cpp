@@ -56,6 +56,28 @@ using namespace Board;
  *****************************************************************************/
 
 /******************************************************************************
+ * Global Variables
+ *****************************************************************************/
+
+/** Digital output pin: Onboard LED */
+const DOutPin<Pin::onBoardLedPinNo>                 Board::onBoardLedOut;
+
+/** Digital input pin: User button (input with pull-up) */
+const DInPin<Pin::userButtonPinNo, INPUT_PULLUP>    Board::userButtonIn;
+
+/** Digital output pin: Test pin (only for debug purposes) */
+const DOutPin<Pin::testPinNo>                       Board::testPinOut;
+
+/** Digital output pin: LED matrix data out */
+const DOutPin<Pin::ledMatrixDataOutPinNo>           Board::ledMatrixDataOut;
+
+/** Analog input pin: LDR in */
+const AnalogPin<Pin::ldrInPinNo>                    Board::ldrIn;
+
+/** Digital input pin: DHT Sensor (input with pull-up) */
+const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>         Board::dhtIn;
+
+/******************************************************************************
  * Local Variables
  *****************************************************************************/
 
