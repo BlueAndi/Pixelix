@@ -27,7 +27,7 @@
 /**
  * @brief  I/O abstraction
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup hal
  *
  * @{
@@ -55,15 +55,20 @@
 
 /**
  * Standard i/o pin.
- * 
+ *
  */
 class IoPin
 {
 public:
 
     /**
+     *  Unconnected/unavailable PIN
+     */
+    const static uint8_t NC = 0xFF;
+
+    /**
      * Constructs an i/o pin instance.
-     * 
+     *
      * @param[in] pinNo     Arduino pin number
      * @param[in] pinMode   Arduino pin mode
      */
@@ -85,13 +90,16 @@ public:
      */
     void init() const
     {
-        pinMode(m_pinNo, m_pinMode);
+        if (NC != m_pinNo)
+        {
+            pinMode(m_pinNo, m_pinMode);
+        }
         return;
     }
 
     /**
      * Get pin number.
-     * 
+     *
      * @return Arduino pin number
      */
     uint8_t getPinNo() const
@@ -101,7 +109,7 @@ public:
 
     /**
      * Get pin mode.
-     * 
+     *
      * @return Arduino pin mode
      */
     uint8_t getPinMode() const
@@ -144,22 +152,25 @@ public:
 
     /**
      * Read from digital output pin.
-     * 
+     *
      * @return Ditial output pin value.
      */
     int read() const
     {
-        return digitalRead(pinNo);
+        return (NC != m_pinNo) ? digitalRead(pinNo) : -1;
     }
 
     /**
      * Write to digital output pin.
-     * 
+     *
      * @param[in] value Digital output pin value (LOW, HIGH).
      */
     void write(uint8_t value) const
     {
-        digitalWrite(pinNo, value);
+        if (NC != m_pinNo)
+        {
+            digitalWrite(pinNo, value);
+        }
         return;
     }
 
@@ -225,7 +236,7 @@ public:
 
     /**
      * Read from digital input pin.
-     * 
+     *
      * @return Ditial input pin value.
      */
     int read() const
@@ -265,12 +276,12 @@ public:
 
     /**
      * Read from digital input pin.
-     * 
+     *
      * @return Ditial input pin value.
      */
     int read() const
     {
-        return digitalRead(pinNo);
+        return (NC != pinNo) ? digitalRead(pinNo) : -1;
     }
 
 private:
@@ -305,7 +316,7 @@ public:
 
     /**
      * Read from digital input pin.
-     * 
+     *
      * @return Ditial input pin value.
      */
     int read() const
@@ -345,7 +356,7 @@ public:
 
     /**
      * Read from analog input pin.
-     * 
+     *
      * @return Value in ADC digits.
      */
     uint16_t read() const

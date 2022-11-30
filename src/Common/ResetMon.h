@@ -47,8 +47,11 @@
 #include <SysMsgPlugin.h>
 #include <WString.h>
 
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#include "esp32s3/rom/rtc.h"
+#else
 #include "esp32/rom/rtc.h"
-
+#endif
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -124,7 +127,7 @@ private:
 
     /**
      * Get the reset reason as string.
-     * 
+     *
      * @param[out]  str         Reset reason as string
      * @param[in]   resetReason Reset reason id
      */

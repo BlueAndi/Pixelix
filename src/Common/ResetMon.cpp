@@ -1,4 +1,5 @@
 /* MIT License
+/* MIT License
  *
  * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
  *
@@ -36,7 +37,11 @@
 
 #include <Logging.h>
 
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#include "esp32s3/rom/crc.h"
+#else
 #include "esp32/rom/crc.h"
+#endif
 
 /******************************************************************************
  * Compiler Switches
@@ -144,14 +149,97 @@ void ResetMon::getResetReasonToStr(String& str, RESET_REASON resetReason)
 {
     switch(resetReason)
     {
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
     case NO_MEAN:
         str = "NO_MEAN";
         break;
-    
+
+    case POWERON_RESET:
+        str =  "Vbat power on reset";
+        break;
+
+    case RTC_SW_SYS_RESET:
+        str = "Software reset digital core";
+        break;
+
+    case DEEPSLEEP_RESET:
+        str = "Deep Sleep reset digital core";
+        break;
+
+    case TG0WDT_SYS_RESET:
+        str = "Timer Group0 Watch dog reset digital core";
+        break;
+
+    case TG1WDT_SYS_RESET:
+        str = "Timer Group1 Watch dog reset digital core";
+        break;
+
+    case RTCWDT_SYS_RESET:
+        str = "RTC Watch dog Reset digital core";
+        break;
+
+    case INTRUSION_RESET:
+        str = "Instrusion tested to reset CPU";
+        break;
+
+    case TG0WDT_CPU_RESET:
+        str = "Time Group0 reset CPU";
+        break;
+
+    case RTC_SW_CPU_RESET:
+        str = "Software reset CPU";
+        break;
+
+    case RTCWDT_CPU_RESET:
+        str = "RTC Watch dog Reset CPU";
+        break;
+
+    case RTCWDT_BROWN_OUT_RESET:
+        str = "Reset when the vdd voltage is not stable";
+        break;
+
+    case RTCWDT_RTC_RESET:
+        str = "RTC Watch dog reset digital core and rtc module";
+        break;
+
+    case TG1WDT_CPU_RESET:
+        str = "Time Group1 reset CPU";
+        break;
+
+    case SUPER_WDT_RESET:
+        str = "super watchdog reset digital core and rtc module";
+        break;
+
+    case GLITCH_RTC_RESET:
+        str = "glitch reset digital core and rtc module";
+        break;
+
+    case EFUSE_RESET:
+        str = "efuse reset digital core";
+        break;
+
+    case USB_UART_CHIP_RESET:
+        str = "usb uart reset digital core";
+        break;
+
+    case USB_JTAG_CHIP_RESET:
+        str = "usb jtag reset digital core";
+        break;
+
+    case POWER_GLITCH_RESET:
+        str = "power glitch reset digital core and rtc module";
+        break;
+
+#else
+
+    case NO_MEAN:
+        str = "NO_MEAN";
+        break;
+
     case POWERON_RESET:
         str = "Vbat power on reset";
         break;
-    
+
     case SW_RESET:
         str = "Software reset digital core";
         break;
@@ -207,6 +295,7 @@ void ResetMon::getResetReasonToStr(String& str, RESET_REASON resetReason)
     case RTCWDT_RTC_RESET:
         str = "RTC Watch dog reset digital core and rtc module";
         break;
+#endif
 
     default:
         str = "Unknown reset reason!";

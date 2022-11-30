@@ -64,6 +64,36 @@ namespace Board
 /** Pin number of all used pins. */
 namespace Pin
 {
+#if defined(BOARD_LILYGO_T_DISPLAY_S3)
+    /** Pin number of onboard LED */
+    constexpr uint8_t    onBoardLedPinNo         = IoPin::NC;  // Not available
+
+    /** Pin number of I2C SDA */
+    constexpr uint8_t    i2cSdaPinNo             = 2U;
+
+    /** Pin number of I2C SDL */
+    constexpr uint8_t    i2cSclPinNo             = 3U;
+
+    /** Pin number of I2S word select (chooses between left and right channel) */
+    constexpr uint8_t    i2sWordSelect           = 12U;
+
+    /** Pin number of I2S serial clock (bit clock line BCLK) */
+    constexpr uint8_t    i2sSerialClock          = 11U;
+
+    /** Pin number of dht sensor in */
+    constexpr uint8_t    dhtInPinNo              = 21U;
+
+    /** Pin number of LDR in */
+    constexpr uint8_t    ldrInPinNo              = 10U;
+
+    /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
+    constexpr uint8_t    i2sSerialDataIn         = 18U;
+
+    /** Pin number of user button */
+    constexpr uint8_t    userButtonPinNo         = 14U;
+
+#else //defined(BOARD_LILYGO_T_DISPLAY_S3)
+
     /** Pin number of onboard LED */
     constexpr uint8_t   onBoardLedPinNo         = 2U;
 
@@ -90,6 +120,7 @@ namespace Pin
 
     /** Pin number of user button */
     constexpr uint8_t   userButtonPinNo         = 35U;
+#endif //!defined(BOARD_LILYGO_T_DISPLAY_S3)
 };
 
 /* Digital output pin: Onboard LED */
