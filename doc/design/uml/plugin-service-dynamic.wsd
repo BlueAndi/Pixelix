@@ -8,6 +8,8 @@ participant "DisplayMgr" as displayMgr
 participant "Plugin" as plugin
 participant "Webserver" as webServer
 
+autoactivate on
+
 note over app,webServer
     Install plugin
 end note
@@ -19,6 +21,7 @@ pluginMgr -> displayMgr: Install plugin in display slot.
 
 alt Empty slot available
     displayMgr -> displayMgr: Add plugin to available slot.
+    displayMgr <-- displayMgr
     displayMgr -> plugin: Set slot interface.
     plugin --> displayMgr
     displayMgr -> plugin: Start plugin and provide display width and height.
@@ -73,10 +76,13 @@ end note
 alt Plugin selected to show?
 
     displayMgr -> displayMgr: Set selected slot, retrieved from selected plugin.
+    displayMgr <-- displayMgr
 
     alt Selected plugin disabled in the meantime?
         displayMgr -> displayMgr: Stop plugin duration timer.
+        displayMgr <-- displayMgr
         displayMgr -> displayMgr: Clear selected plugin.
+        displayMgr <-- displayMgr
     end alt
 
 end alt
@@ -84,14 +90,17 @@ end alt
 alt No plugin selected?
 
     displayMgr -> displayMgr: Find next slot with installed and enabled plugin.
+    displayMgr <-- displayMgr
 
     alt Installed and enabled plugin found?
         displayMgr -> displayMgr: Select plugin.
+        displayMgr <-- displayMgr
         displayMgr -> plugin: Get how long slot shall be active.
         plugin --> displayMgr: duration
 
         alt Is duration not infinite?
             displayMgr -> displayMgr: Start plugin duration timer.
+            displayMgr <-- displayMgr
         end alt
     end alt
 
@@ -109,6 +118,7 @@ loop For all installed plugins
 end loop
 
 displayMgr -> displayMgr: Clear display
+displayMgr <-- displayMgr
 
 alt Is a plugin selected?
     displayMgr -> plugin: Call selected plugin to update framebuffer.
@@ -116,11 +126,14 @@ alt Is a plugin selected?
 end alt
 
 displayMgr -> displayMgr: Update display with framebuffer.
+displayMgr <-- displayMgr
 
 alt Is plugin duration timer active?
     alt Is plugin duration timer timeout?
         displayMgr -> displayMgr: Stop plugin run duration timer.
+        displayMgr <-- displayMgr
         displayMgr -> displayMgr: Clear selected plugin.
+        displayMgr <-- displayMgr
     end alt
 end alt
 
