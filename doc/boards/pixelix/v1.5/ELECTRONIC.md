@@ -24,7 +24,7 @@ PCB board v1.5
 
 # System Diagram
 
-![system-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/design/uml/system.wsd)
+![system-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/system.wsd)
 
 # ESP32 DevKit V1
 
