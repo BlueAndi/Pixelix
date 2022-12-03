@@ -1,0 +1,31 @@
+@startuml
+
+skinparam component {
+    BackgroundColor<<Arduino>> Lightgreen
+    BackgroundColor<<Future>> White
+}
+
+package "Application" as app {
+
+    component "StateMachine" as stateMachine
+    component "DisplayMgr" as displayMgr
+    component "UpdateMgr" as updateMgr
+
+    package Plugin
+
+    package "State" as state {
+        component "APState"
+        component "ConnectedState"
+        component "ConnectingState"
+        component "ErrorState"
+        component "IdleState"
+        component "InitState"
+        component "RestartState"
+    }
+
+    stateMachine ...> state
+
+    displayMgr ..> Plugin
+}
+
+@enduml

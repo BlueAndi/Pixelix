@@ -1,0 +1,46 @@
+@startuml
+
+skinparam component {
+    BackgroundColor<<Arduino>> Lightgreen
+    BackgroundColor<<Future>> White
+}
+
+package "Application" as appLayer {
+}
+
+package "Service" as serviceLayer {
+}
+
+package "HAL" as halLayer {
+}
+
+rectangle "General" {
+    package "Utilities" as utilLayer {
+    }
+
+    package "OS" as osLayer {
+    }
+}
+
+appLayer ..> serviceLayer
+appLayer ...> halLayer
+
+serviceLayer ..> halLayer
+
+note top of appLayer
+    Main business logic
+end note
+
+note left of serviceLayer
+    Services provide functionality which can
+    be used for different purposes by the
+    application. They are controlled and
+    used by the application.
+end note
+
+note left of halLayer
+    The hardware abstraction layer provides access to
+    MCU or development board specific peripherals.
+end note
+
+@enduml

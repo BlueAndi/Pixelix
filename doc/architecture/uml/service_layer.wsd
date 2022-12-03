@@ -1,0 +1,68 @@
+@startuml
+
+skinparam component {
+    BackgroundColor<<Arduino>> Lightgreen
+    BackgroundColor<<Future>> White
+}
+
+package "Service" as service {
+    component "RestApi" as restApi
+    component "RestUtil" as restUtil
+    component "MqttService" as mqttService <<Future>>
+    component "WebSocket" as webSocket
+    component "Settings" as settings
+    component "MyWebServer" as myWebServer
+    component "Pages" as pages
+    component "AsyncHttpClient" as asnyHttpClient
+    component "CaptivePortalHandler" as captivePortalHandler
+
+    package FadeEffects    
+    package YAWidgets
+    package YAGfx
+    package BaseGfx
+
+    FadeEffects ..> YAGfx
+    YAWidgets ..> YAGfx
+    YAGfx ..> BaseGfx
+
+    package "3rd party" as service3rdParty {
+        component "PubSubClient" as pubSubClient <<Future>>
+        component "FS" as fs <<Arduino>>
+        component "Preferences" as preferences <<Arduino>>
+        component "NTP" as ntp <<Arduino>>
+
+        component "EspAsyncWebServer" as webServer
+        component "AsyncTcpSock" as tcp
+        component "mDNS" as dns <<Arduino>>
+        component "ArduinoOTA" <<Arduino>> as ota
+        component "LwIP" <<Arduino>> as lwip
+
+        webServer ..> tcp
+        pubSubClient ..> tcp
+        tcp ..> lwip
+        dns ..> lwip
+        ota ..> lwip
+        ntp ..> lwip
+    }
+
+    package "WsCommand" as wsCommand {
+    }
+
+    myWebServer ...> webServer
+    pages ...> webServer
+    asnyHttpClient ....> tcp
+    captivePortalHandler ...> webServer
+
+    restApi ...> webServer
+    mqttService ...> pubSubClient
+    webSocket ...> webServer
+    settings ...> preferences
+
+    restApi ..> restUtil
+
+    webSocket ..> wsCommand
+
+    wsCommand ..> webServer
+}
+
+@enduml

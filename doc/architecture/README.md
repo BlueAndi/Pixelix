@@ -9,19 +9,23 @@
 - [Scope](#scope)
 - [Context](#context)
 - [Deployment](#deployment)
+- [Layers](#layers)
+  - [Application](#application)
+  - [Services](#services)
+  - [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal)
 - [System Startup](#system-startup)
   - [High Level](#high-level)
-  - [Low Level](#low-level)
 - [System States](#system-states)
-- [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal)
-- [Graphic Base Functionality](#graphic-base-functionality)
-- [Widgets](#widgets)
-- [User Button Handling](#user-button-handling)
-- [Plugin Handling](#plugin-handling)
-  - [Static View](#static-view)
-  - [Dynamic View](#dynamic-view)
-- [Spectrum Analyzer](#spectrum-analyzer)
-- [Slot Handling](#slot-handling)
+- [Details](#details)
+  - [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal-1)
+  - [Graphic Base Functionality](#graphic-base-functionality)
+  - [Widgets](#widgets)
+  - [User Button Handling](#user-button-handling)
+  - [Plugin Handling](#plugin-handling)
+    - [Static View](#static-view)
+    - [Dynamic View](#dynamic-view)
+  - [Spectrum Analyzer](#spectrum-analyzer)
+  - [Slot Handling](#slot-handling)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -63,42 +67,52 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 | updateTask | no-affinity | The DisplayMgr updates the physical display there. |
 | wifi | PRO_CPU | WiFi handling. |
 
+# Layers
+![general-layers](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/general_layers.wsd)
+
+## Application
+![app-layer](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/app_layer.wsd)
+
+## Services
+![hal-layer](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/service_layer.wsd)
+
+## Hardware Abstraction Layer (HAL)
+![hal-layer](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/hal_layer.wsd)
+
 # System Startup
 
 ## High Level
 ![startup-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/startup.wsd)
 
-## Low Level
-
-TODO
-
 # System States
 ![system-states-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/system_state_machine.wsd)
 
-# Hardware Abstraction Layer (HAL)
+# Details
+
+## Hardware Abstraction Layer (HAL)
 ![hal-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/hal.wsd)
 
-# Graphic Base Functionality
+## Graphic Base Functionality
 ![gfx-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/gfx.wsd)
 
-# Widgets
+## Widgets
 ![widgets-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/widgets.wsd)
 
-# User Button Handling
+## User Button Handling
 ![button-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/button.wsd)
 
-# Plugin Handling
+## Plugin Handling
 
-## Static View
+### Static View
 ![plugin-service-static-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/plugin-service.wsd)
 
-## Dynamic View
+### Dynamic View
 ![plugin-service-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/plugin-service-dynamic.wsd)
 
-# Spectrum Analyzer
+## Spectrum Analyzer
 ![specturm-analyzer-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/spectrum-analyzer.wsd)
 
-# Slot Handling
+## Slot Handling
 ![slot-handling-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/slot_handling.wsd)
 
 # Issues, Ideas And Bugs
