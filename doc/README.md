@@ -34,6 +34,7 @@
 * [Home Assistant REST Wrapper](HOMEASSISTANT.md)
 * [Websocket API description](WEBSOCKET.md)
 * [Sprite sheet](SPRITESHEET.md)
+* [Alternative icons](ICONS.md)
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
