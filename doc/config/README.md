@@ -1,16 +1,34 @@
 # PIXELIX <!-- omit in toc -->
-![PIXELIX](./images/LogoBlack.png)
+![PIXELIX](../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# Configuration Management <!-- omit in toc -->
+# SW Configuration Management  <!-- omit in toc -->
 
+- [Purpose](#purpose)
+- [Scope](#scope)
+- [PlatformIO](#platformio)
+  - [Logical Configuration Hierarchy And Dependencies](#logical-configuration-hierarchy-and-dependencies)
 - [Version Numbers](#version-numbers)
-- [Strategy](#strategy)
-- [How to release?](#how-to-release)
+- [Development Strategy](#development-strategy)
+- [Work Instructions](#work-instructions)
+  - [How to release?](#how-to-release)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
+
+# Purpose
+The SW configuration management document provides a general overview about what is configured and how it is done.
+
+# Scope
+The SW configuration management document is valid for the [PIXELIX](https://github.com/BlueAndi/esp-rgb-led-matrix) project.
+
+# PlatformIO
+The SW build environment is based on [PlatformIO](https://platformio.org/). The ```platformio.ini``` is the central configuration file in the root folder and contains all related build environments (targets).
+
+## Logical Configuration Hierarchy And Dependencies
+
+![pio-env-dependencies](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/config/uml/pio-env-dependencies.wsd)
 
 # Version Numbers
 The concept behind the version number follows the [semantic versioning](https://semver.org/).
@@ -19,12 +37,14 @@ The concept behind the version number follows the [semantic versioning](https://
 2. MINOR version if functionality added in a backwards compatible manner, and
 2. PATCH version for backwards compatible bug fixes.
 
-# Strategy
+# Development Strategy
 * The master branch shall contain always the latest released version.
 * The feature development shall take place in separate branches.
 * Bugfix releases shall be prepared in separate branches.
 
-# How to release?
+# Work Instructions
+
+## How to release?
 
 1. Integrate all related feature/bugfix branches to the **dev** branch.
 2. Update the [REST API on Swagger](https://app.swaggerhub.com/apis/BlueAndi/Pixelix) and publish it.

@@ -23,10 +23,10 @@
 
 # Software
 
-* [Toolchain installation](TOOLCHAIN-INSTALLATION.md)
-* [Software build](SW-BUILD.md)
-* [Software update](SW-UPDATE.md)
-* [Software configuration management](SW-RELEASE.md)
+* [Software configuration management](./config/README.md)
+    * [Toolchain installation](./config/TOOLCHAIN-INSTALLATION.md)
+    * [Software build](./config/SW-BUILD.md)
+    * [Software update](./config/SW-UPDATE.md)
 * [Plugins](PLUGINS.md)
 * [Plugin Development](PLUGIN-DEV.md)
 * [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0)
