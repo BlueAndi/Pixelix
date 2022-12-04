@@ -205,20 +205,22 @@ public:
 
 private:
 
+    /* The below TFT_* definitions are set in platform.ini build_flags */
+
     /** Display matrix width in pixels (not T-Display width) */
-    static const uint16_t   MATRIX_WIDTH        = 32U;
+    static const uint16_t   MATRIX_WIDTH        = TFT_MATRIX_WIDTH;
 
     /** Display matrix height in pixels (not T-Display height) */
-    static const uint16_t   MATRIX_HEIGHT       = 8U;
+    static const uint16_t   MATRIX_HEIGHT       = TFT_MATRIX_HEIGHT;
 
     /** Width of a single matrix pixel in T-Display pixels */
-    static const int32_t    PIXEL_WIDTH         = 6;
+    static const int32_t    PIXEL_WIDTH         = TFT_PIXEL_WIDTH;
 
     /** Height of a single matrix pixel in T-Display pixels */
-    static const int32_t    PIXEL_HEIGHT        = 6;
+    static const int32_t    PIXEL_HEIGHT        = TFT_PIXEL_HEIGHT;
 
     /** Pixel distance in T-Display pixels */
-    static const int32_t    PiXEL_DISTANCE      = 1;
+    static const int32_t    PiXEL_DISTANCE      = TFT_PIXEL_DISTANCE;
 
     /** T-Display x-axis border size in T-Display pixels */
     static const int32_t    BORDER_X            = (TFT_HEIGHT - (MATRIX_WIDTH * (PIXEL_WIDTH + PiXEL_DISTANCE))) / 2;
@@ -226,8 +228,8 @@ private:
     /** T-Display y-axis border size in T-Display pixels */
     static const int32_t    BORDER_Y            = (TFT_WIDTH - (MATRIX_HEIGHT * (PIXEL_HEIGHT + PiXEL_DISTANCE))) / 2;
 
-    /** Default brightness is 50%. */
-    static const uint8_t    DEFAULT_BRIGHTNESS  = (UINT8_MAX / 2U);
+    /** TFT default brightness */
+    static const uint8_t    DEFAULT_BRIGHTNESS  = TFT_DEFAULT_BRIGHTNESS;
 
     TFT_eSPI                                        m_tft;          /**< T-Display driver */
     YAGfxStaticBitmap<MATRIX_WIDTH, MATRIX_HEIGHT>  m_ledMatrix;    /**< Simulated LED matrix framebuffer */
