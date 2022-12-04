@@ -47,7 +47,7 @@
 #include <SysMsgPlugin.h>
 #include <WString.h>
 
-#include "esp32/rom/rtc.h"
+#include "rom/rtc.h"
 
 /******************************************************************************
  * Macros
@@ -124,7 +124,7 @@ private:
 
     /**
      * Get the reset reason as string.
-     * 
+     *
      * @param[out]  str         Reset reason as string
      * @param[in]   resetReason Reset reason id
      */

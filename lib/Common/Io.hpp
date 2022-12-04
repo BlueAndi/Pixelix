@@ -27,7 +27,7 @@
 /**
  * @brief  I/O abstraction
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup hal
  *
  * @{
@@ -55,15 +55,20 @@
 
 /**
  * Standard i/o pin.
- * 
+ *
  */
 class IoPin
 {
 public:
 
     /**
+     *  Unconnected/unavailable PIN
+     */
+    const static uint8_t NC = 0xFF;
+
+    /**
      * Constructs an i/o pin instance.
-     * 
+     *
      * @param[in] pinNo     Arduino pin number
      * @param[in] pinMode   Arduino pin mode
      */
@@ -85,13 +90,16 @@ public:
      */
     void init() const
     {
-        pinMode(m_pinNo, m_pinMode);
+        if (NC != m_pinNo)
+        {
+            pinMode(m_pinNo, m_pinMode);
+        }
         return;
     }
 
     /**
      * Get pin number.
-     * 
+     *
      * @return Arduino pin number
      */
     uint8_t getPinNo() const
@@ -101,7 +109,7 @@ public:
 
     /**
      * Get pin mode.
-     * 
+     *
      * @return Arduino pin mode
      */
     uint8_t getPinMode() const
@@ -143,23 +151,26 @@ public:
     }
 
     /**
-     * Read from digital output pin.
-     * 
-     * @return Ditial output pin value.
+     * Read from digital output pin
+     *
+     * @return Digital output pin value or LOW for unconnected pins.
      */
     int read() const
     {
-        return digitalRead(pinNo);
+        return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
 
     /**
-     * Write to digital output pin.
-     * 
+     * Write to digital output pin, do nothing for unconnected pins.
+     *
      * @param[in] value Digital output pin value (LOW, HIGH).
      */
     void write(uint8_t value) const
     {
-        digitalWrite(pinNo, value);
+        if (NC != pinNo)
+        {
+            digitalWrite(pinNo, value);
+        }
         return;
     }
 
@@ -225,12 +236,12 @@ public:
 
     /**
      * Read from digital input pin.
-     * 
-     * @return Ditial input pin value.
+     *
+     * @return Digital input pin value or LOW for unconnected ones.
      */
     int read() const
     {
-        return digitalRead(pinNo);
+        return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
 
 private:
@@ -264,13 +275,13 @@ public:
     }
 
     /**
-     * Read from digital input pin.
-     * 
-     * @return Ditial input pin value.
+     * Read from digital input pin,
+     *
+     * @return Digital input pin value or LOW for unconnected pins.
      */
     int read() const
     {
-        return digitalRead(pinNo);
+        return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
 
 private:
@@ -304,13 +315,13 @@ public:
     }
 
     /**
-     * Read from digital input pin.
-     * 
-     * @return Ditial input pin value.
+     * Read from digital input pin
+     *
+     * @return Digital input pin value or LOW for unconnected pins.
      */
     int read() const
     {
-        return digitalRead(pinNo);
+        return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
 
 private:
@@ -345,12 +356,12 @@ public:
 
     /**
      * Read from analog input pin.
-     * 
-     * @return Value in ADC digits.
+     *
+     * @return Value in ADC digits or LOW for unconnected pins.
      */
     uint16_t read() const
     {
-        return analogRead(pinNo);
+        return (NC == pinNo) ? analogRead(pinNo) : LOW;
     }
 
 private:

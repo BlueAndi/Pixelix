@@ -96,6 +96,32 @@
                     </table>
                 </div>
                 <canvas id="canvasChartHeap" width="240" height="240"></canvas>
+                <h3 class="mt-1">PSRAM</h3>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th scope="col">Description</th>
+                                <th scope="col">Result</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-light">
+                            <tr>
+                                <td>PSRAM size</td>
+                                <td>~PSRAM_SIZE~ byte</td>
+                            </tr>
+                            <tr>
+                                <td>Available PSRAM Size</td>
+                                <td id="availablePsramSize">~PSRAM_SIZE_AVAILABLE~ byte</td>
+                            </tr>
+                            <tr>
+                                <td>Used PSRAM Size</td>
+                                <td id="usedPsramSize"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <canvas id="canvasChartPsram" width="240" height="240"></canvas>
                 <h2 class="mt-1">MCU</h2>
                 <div class="table-responsive">
                     <table class="table table-striped">
@@ -195,7 +221,7 @@
                 <canvas id="canvasChartFs" width="240" height="240"></canvas>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -217,6 +243,8 @@
         <script>
             var availableHeapSize   = parseInt("~HEAP_SIZE_AVAILABLE~");
             var heapSize            = parseInt("~HEAP_SIZE~");
+            var availablePsramSize  = parseInt("~PSRAM_SIZE_AVAILABLE~");
+            var psramSize           = parseInt("~PSRAM_SIZE~");
             var filesystemSize      = parseInt("~FS_SIZE~");
             var usedFilesystemSize  = parseInt("~FS_SIZE_USED~");
 
@@ -236,8 +264,11 @@
                 usedFilesystemSize = 1
             }
 
+            var availableFsSize             = filesystemSize - usedFilesystemSize;
             var availableHeapSizeInPercent  = Math.round(availableHeapSize * 100 / heapSize);
-            var availableFsSizeInPercent    = Math.round((filesystemSize - usedFilesystemSize) * 100 / filesystemSize);
+            var availablePsramSizeInPercent = Math.round(availablePsramSize * 100 /psramSize);
+            var availableFsSizeInPercent    = Math.round(availableFsSize * 100 / filesystemSize);
+            document.getElementById("availableFsSize").innerHTML = availableFsSize + " byte";
 
             window.chartColors = {
                 red: "rgb(255, 99, 132)",
@@ -265,9 +296,27 @@
                     values: [100 - availableHeapSizeInPercent, availableHeapSizeInPercent],
                     colors: [window.chartColors.red, window.chartColors.green]
                 });
+
+                /* Draw the chart, showing the current situation on the heap. */
+                generatePieGraph("canvasChartPsram", {
+                    animation: true,
+                    animationSpeed: 20,
+                    fillTextData: true,
+                    fillTextColor: "#fff",
+                    fillTextPosition: "inner",
+                    doughnutHoleColor: "#000",
+                    doughnutHoleSize: 20,
+                    offset: 1,
+                    values: [100 - availablePsramSizeInPercent, availablePsramSizeInPercent],
+                    colors: [window.chartColors.red, window.chartColors.green]
+                });
                 $("#availableHeapSize").css("background-color", window.chartColors.green);
                 $("#usedHeapSize").text("" + (heapSize - availableHeapSize) + " byte");
                 $("#usedHeapSize").css("background-color", window.chartColors.red);
+                $("#availablePsramSize").css("background-color", window.chartColors.green);
+                $("#usedPsramSize").text("" + (psramSize - availablepsramSize) + " byte");
+                $("#usedPsramSize").css("background-color", window.chartColors.red);
+
 
                 /* Draw the chart, showing the current situation on the filesystem. */
                 generatePieGraph("canvasChartFs", {

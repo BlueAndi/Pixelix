@@ -16,6 +16,7 @@ To find out which part shall be connected to which pin of your development board
   - [ESP32 NodeMCU](#esp32-nodemcu)
   - [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
   - [TTGO ESP32 T-Display](#ttgo-esp32-t-display)
+  - [TTGO ESP32 T-Display S3](#ttgo-esp32-t-display-S3)
 
 # Pixelix Board v1.5
 This board was original developed with a ESP32 DevKit V1 development board as piggy bag.
@@ -53,6 +54,12 @@ The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed f
 The TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
 
 * Manufacturer: [Lilygo](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
+* [Pinning](../../lib/HalTtgoTDisplay/Board.h)
+
+## TTGO ESP32 T-Display S3
+The TTGO ESP32 T-Display S3 development board is handled separately, because the onboard display is used instead of a external LED matrix.
+
+* Manufacturer: [Lilygo](https://www.lilygo.cc/products/t-display-s3)
 * [Pinning](../../lib/HalTtgoTDisplay/Board.h)
 
 # Issues, Ideas And Bugs <!-- omit in toc -->

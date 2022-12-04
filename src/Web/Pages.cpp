@@ -142,6 +142,8 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "FS_SIZE_USED",         []() -> String { return String(FILESYSTEM.usedBytes()); },
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
     "HEAP_SIZE_AVAILABLE",  []() -> String { return String(ESP.getFreeHeap()); },
+    "PSRAM_SIZE",           []() -> String { return String(ESP.getPsramSize()); },
+    "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); },
     "HOSTNAME",             tmpl::getHostname,
     "IPV4",                 tmpl::getIPAddress,
     "LWIP_VERSION",         []() -> String { return LWIP_VERSION_STRING; },
@@ -658,7 +660,7 @@ namespace tmpl
 {
     /**
      * Get ESP chip id.
-     * 
+     *
      * @return ESP chip id
      */
     static String getEspChipId()
@@ -678,7 +680,7 @@ namespace tmpl
 
     /**
      * Get ESP type.
-     * 
+     *
      * @return ESP type
      */
     static String getEspType()
@@ -697,7 +699,7 @@ namespace tmpl
 
     /**
      * Get flash chip mode.
-     * 
+     *
      * @return Flash chip mode.
      */
     static String getFlashChipMode()
@@ -737,13 +739,13 @@ namespace tmpl
             result = "UNKNOWN";
             break;
         }
-        
+
         return result;
     }
 
     /**
      * Get hostname, depended on current WiFi mode.
-     * 
+     *
      * @return Hostname
      */
     static String getHostname()
@@ -770,7 +772,7 @@ namespace tmpl
 
     /**
      * Get IP address, depended on WiFi mode.
-     * 
+     *
      * @return IPv4
      */
     static String getIPAddress()
@@ -791,7 +793,7 @@ namespace tmpl
 
     /**
      * Get wifi RSSI.
-     * 
+     *
      * @return WiFi station SSID
      */
     static String getRSSI()
@@ -815,7 +817,7 @@ namespace tmpl
 
     /**
      * Get wifi station SSID.
-     * 
+     *
      * @return WiFi station SSID
      */
     static String getSSID()
