@@ -228,8 +228,8 @@ private:
     /** T-Display y-axis border size in T-Display pixels */
     static const int32_t    BORDER_Y            = (TFT_WIDTH - (MATRIX_HEIGHT * (PIXEL_HEIGHT + PiXEL_DISTANCE))) / 2;
 
-    /** TFT brightness */
-    static const uint8_t    DEFAULT_BRIGHTNESS  = TFT_BRIGHTNESS;
+    /** TFT default brightness */
+    static const uint8_t    DEFAULT_BRIGHTNESS  = TFT_DEFAULT_BRIGHTNESS;
 
     TFT_eSPI                                        m_tft;          /**< T-Display driver */
     YAGfxStaticBitmap<MATRIX_WIDTH, MATRIX_HEIGHT>  m_ledMatrix;    /**< Simulated LED matrix framebuffer */

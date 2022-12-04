@@ -37,11 +37,7 @@
 
 #include <Logging.h>
 
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-#include "esp32s3/rom/crc.h"
-#else
-#include "esp32/rom/crc.h"
-#endif
+#include "rom/crc.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -155,7 +151,7 @@ void ResetMon::getResetReasonToStr(String& str, RESET_REASON resetReason)
         break;
 
     case POWERON_RESET:
-        str =  "Vbat power on reset";
+        str = "Vbat power on reset";
         break;
 
     case RTC_SW_SYS_RESET:

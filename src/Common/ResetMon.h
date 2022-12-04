@@ -47,11 +47,8 @@
 #include <SysMsgPlugin.h>
 #include <WString.h>
 
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-#include "esp32s3/rom/rtc.h"
-#else
-#include "esp32/rom/rtc.h"
-#endif
+#include "rom/rtc.h"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/

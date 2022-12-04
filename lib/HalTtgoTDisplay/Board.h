@@ -69,10 +69,10 @@ namespace Pin
     constexpr uint8_t    onBoardLedPinNo         = IoPin::NC;  // Not available
 
     /** Pin number of I2C SDA */
-    constexpr uint8_t    i2cSdaPinNo             = 2U;
+    constexpr uint8_t    i2cSdaPinNo             = 18U;
 
     /** Pin number of I2C SDL */
-    constexpr uint8_t    i2cSclPinNo             = 3U;
+    constexpr uint8_t    i2cSclPinNo             = 17U;
 
     /** Pin number of I2S word select (chooses between left and right channel) */
     constexpr uint8_t    i2sWordSelect           = 12U;

@@ -151,23 +151,23 @@ public:
     }
 
     /**
-     * Read from digital output pin.
+     * Read from digital output pin
      *
-     * @return Ditial output pin value.
+     * @return Digital output pin value or LOW for unconnected pins.
      */
     int read() const
     {
-        return (NC != m_pinNo) ? digitalRead(pinNo) : -1;
+        return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
 
     /**
-     * Write to digital output pin.
+     * Write to digital output pin, do nothing for unconnected pins.
      *
      * @param[in] value Digital output pin value (LOW, HIGH).
      */
     void write(uint8_t value) const
     {
-        if (NC != m_pinNo)
+        if (NC != pinNo)
         {
             digitalWrite(pinNo, value);
         }
@@ -237,11 +237,11 @@ public:
     /**
      * Read from digital input pin.
      *
-     * @return Ditial input pin value.
+     * @return Digital input pin value or LOW for unconnected ones.
      */
     int read() const
     {
-        return digitalRead(pinNo);
+        return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
 
 private:
@@ -275,13 +275,13 @@ public:
     }
 
     /**
-     * Read from digital input pin.
+     * Read from digital input pin,
      *
-     * @return Ditial input pin value.
+     * @return Digital input pin value or LOW for unconnected pins.
      */
     int read() const
     {
-        return (NC != pinNo) ? digitalRead(pinNo) : -1;
+        return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
 
 private:
@@ -315,13 +315,13 @@ public:
     }
 
     /**
-     * Read from digital input pin.
+     * Read from digital input pin
      *
-     * @return Ditial input pin value.
+     * @return Digital input pin value or LOW for unconnected pins.
      */
     int read() const
     {
-        return digitalRead(pinNo);
+        return (NC != pinNo) ? digitalRead(pinNo) : LOW;
     }
 
 private:
@@ -357,11 +357,11 @@ public:
     /**
      * Read from analog input pin.
      *
-     * @return Value in ADC digits.
+     * @return Value in ADC digits or LOW for unconnected pins.
      */
     uint16_t read() const
     {
-        return analogRead(pinNo);
+        return (NC == pinNo) ? analogRead(pinNo) : LOW;
     }
 
 private:
