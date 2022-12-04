@@ -109,9 +109,6 @@ namespace tmpl
 /** Firmware binary filename, used for update. */
 static const char*      FIRMWARE_FILENAME               = "firmware.bin";
 
-/** Filesystem binary filename, used for update. */
-static const char*      FILESYSTEM_FILENAME             = "littlefs.bin";
-
 /** Path to the plugin webpages. */
 static const String     PLUGIN_PAGE_PATH                = "/plugins/";
 
@@ -515,8 +512,7 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     /* Begin of upload? */
     if (0 == index)
     {
-        AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
-        uint32_t        fileSize        = UPDATE_SIZE_UNKNOWN;
+        uint32_t fileSize = UPDATE_SIZE_UNKNOWN;
 
         /* If there is a pending upload, abort it. */
         if (true == Update.isRunning())
@@ -528,11 +524,27 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         /* Upload firmware or filesystem? */
         int cmd = (filename == FILESYSTEM_FILENAME) ? U_SPIFFS : U_FLASH;
 
-        /* File size available? */
-        if (nullptr != headerXFileSize)
+        if (U_FLASH == cmd)
         {
-            /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
-            (void)Util::strToUInt32(headerXFileSize->value(), fileSize);
+            AsyncWebHeader* headerXFileSizeFirmware = request->getHeader("X-File-Size-Firmware");
+
+            /* Firmware file size available? */
+            if (nullptr != headerXFileSizeFirmware)
+            {
+                /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
+                (void)Util::strToUInt32(headerXFileSizeFirmware->value(), fileSize);
+            }
+        }
+        else if (U_SPIFFS == cmd)
+        {
+            AsyncWebHeader* headerXFileSizeFilesystem = request->getHeader("X-File-Size-Filesystem");
+
+            /* Firmware file size available? */
+            if (nullptr != headerXFileSizeFilesystem)
+            {
+                /* If conversion fails, it will contain UPDATE_SIZE_UNKNOWN. */
+                (void)Util::strToUInt32(headerXFileSizeFilesystem->value(), fileSize);
+            }
         }
 
         if (UPDATE_SIZE_UNKNOWN == fileSize)

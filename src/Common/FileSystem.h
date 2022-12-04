@@ -47,6 +47,7 @@
 
 #if FILESYSTEM_USE_LITTLEFS
 #define FILESYSTEM              LittleFS
+#define FILESYSTEM_FILENAME     "littlefs.bin"
 #endif  /* FILESYSTEM_USE_LITTLEFS */
 
 /**
@@ -56,6 +57,7 @@
 
 #if FILESYSTEM_USE_SPIFFS
 #define FILESYSTEM              SPIFFS
+#define FILESYSTEM_FILENAME     "spiffs.bin"
 #endif  /* FILESYSTEM_USE_SPIFFS */
 
 /******************************************************************************

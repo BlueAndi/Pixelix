@@ -45,9 +45,10 @@
                     <div class="tab-pane fade active show" id="update" role="tabpanel" aria-labelledby="update-tab">
                         <br />
                         <p>Upload <u>~FIRMWARE_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
+                        <p>Use multi-select to upload both at once.</p>
                         <div class="input-group">
                             <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="inputFile">
+                                <input type="file" class="custom-file-input" id="inputFile" multiple="multiple" accept=".bin">
                                 <label class="custom-file-label" for="inputFile">Choose file</label>
                             </div>
                             <div class="input-group-append">
@@ -135,33 +136,53 @@
             }
 
             function upload() {
-                var file        = document.getElementById("inputFile").files[0];
-                var fileSize    = file.size;
+                var file        = null;
+                var fileCnt     = document.getElementById("inputFile").files.length;
+                var fileSize    = 0;
+                var index       = 0;
+                var files       = [];
+                var fileParameters  = {};
+                var fileHeaders     = {};
+                
+                if (2 < fileCnt) {
+                    fileCnt = 2;
+                }
+
+                for(index = 0; index < fileCnt; ++index) {
+                    file = document.getElementById("inputFile").files[index];
+
+                    if (("~FIRMWARE_FILENAME~" === file.name) ||
+                        ("~FILESYSTEM_FILENAME~" === file.name)) {
+                    
+                        files.push(file);
+                    }
+                }
 
                 $("#progressBar").css("width", "0%").attr("aria-valuenow", 0);
 
-                if ("undefined" === typeof file) {
+                if (0 === files.length) {
 
                     alert("No file selected.");
-
-                } else if (("~FIRMWARE_FILENAME~" !== file.name) &&
-                        ("~FILESYSTEM_FILENAME~" !== file.name)) {
-
-                    alert("Unknown file: " + file.name);
 
                 } else {
 
                     disableUI();
 
+                    for(index = 0; index < files.length; ++index) {
+                        fileParameters[files[index].name] = files[index];
+
+                        if ("~FIRMWARE_FILENAME~" === files[index].name) {
+                            fileHeaders["X-File-Size-Firmware"] = files[index].size;
+                        } else if ("~FILESYSTEM_FILENAME~" === files[index].name) {
+                            fileHeaders["X-File-Size-Filesystem"] = files[index].size;
+                        }
+                    }
+
                     utils.makeRequest({
                         method: "POST",
                         url: "/upload.html",
-                        parameter: {
-                            file: file
-                        },
-                        headers: {
-                            "X-File-Size": fileSize
-                        },
+                        parameter: fileParameters,
+                        headers: fileHeaders,
                         onProgress: updateProgress
                     }).then(function(rsp) {
                         alert("Upload successful.");
