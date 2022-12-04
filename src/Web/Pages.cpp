@@ -485,16 +485,19 @@ static void uploadPage(AsyncWebServerRequest* request)
     }
     else
     {
-        /* Trigger restart after the client has disconnected. */
-        request->onDisconnect(
-            []()
-            {
-                UpdateMgr::getInstance().reqRestart();
-            }
-        );
-
         request->send(HttpStatus::STATUS_CODE_OK, "text/plain", "Ok");
     }
+
+    /* Trigger restart after the client has disconnected.
+     * Do this in every case to ensure that if there was any error, the
+     * device will be restarted as well.
+     */
+    request->onDisconnect(
+        []()
+        {
+            UpdateMgr::getInstance().reqRestart();
+        }
+    );
 
     return;
 }
