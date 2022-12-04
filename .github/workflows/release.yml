@@ -27,7 +27,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["esp32doit-devkit-v1-usb", "esp32-nodemcu-usb", "az-delivery-devkit-v4-usb", "ttgo-t-display-usb", "adafruit_feather_esp32_v2-usb"]
+        environment: ["esp32doit-devkit-v1-usb", "esp32-nodemcu-usb", "az-delivery-devkit-v4-usb", "ttgo-t-display-usb", "ttgo-t-display-S3-usb", "adafruit_feather_esp32_v2-usb"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
