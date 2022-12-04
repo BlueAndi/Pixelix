@@ -87,10 +87,15 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max, bool block
 {
     if (nullptr != m_plugin)
     {
+        uint8_t slotId = DisplayMgr::getInstance().getSlotIdByPluginUID(m_plugin->getUID());
+
+        /* Important: Call first show() to enable plugin. Otherwise the slot activation request will fail. */
         m_plugin->show(msg, duration, max);
 
-        /* Schedule plugin immediately */
-        DisplayMgr::getInstance().activatePlugin(m_plugin);
+        if (false == DisplayMgr::getInstance().activateSlot(slotId))
+        {
+            LOG_WARNING("System message suppressed.");
+        }
 
         if (true == blocking)
         {

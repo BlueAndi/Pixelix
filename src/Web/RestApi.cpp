@@ -69,6 +69,7 @@
 static void handleButton(AsyncWebServerRequest* request);
 static void handleFadeEffect(AsyncWebServerRequest* request);
 static void handleSlots(AsyncWebServerRequest* request);
+static void handleSlot(AsyncWebServerRequest* request);
 static void handlePluginInstall(AsyncWebServerRequest* request);
 static void handlePluginUninstall(AsyncWebServerRequest* request);
 static void handlePlugins(AsyncWebServerRequest* request);
@@ -111,6 +112,7 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/button", handleButton);
     (void)srv.on("/rest/api/v1/display/fadeEffect", handleFadeEffect);
     (void)srv.on("/rest/api/v1/display/slots", handleSlots);
+    (void)srv.on("/rest/api/v1/display/slot/*", handleSlot);
     (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
     (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
     (void)srv.on("/rest/api/v1/plugins", handlePlugins);
@@ -264,6 +266,7 @@ static void handleSlots(AsyncWebServerRequest* request)
         JsonArray   slotArray   = dataObj.createNestedArray("slots");
         uint8_t     slotId      = 0U;
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
+        uint8_t     stickySlot  = displayMgr.getStickySlot();
 
         /* Add max. number of slots */
         dataObj["maxSlots"] = displayMgr.getMaxSlots();
@@ -282,11 +285,140 @@ static void handleSlots(AsyncWebServerRequest* request)
             slot["name"]        = name;
             slot["uid"]         = uid;
             slot["alias"]       = alias;
+
+            if (stickySlot != slotId)
+            {
+                slot["isSticky"] = false;
+            }
+            else
+            {
+                slot["isSticky"] = true;
+            }
+
             slot["isLocked"]    = isLocked;
             slot["duration"]    = duration;
         }
 
         httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    }
+
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+
+    return;
+}
+
+/**
+ * Activate a specific slot or set a slot sticky or clear the sticky flag.
+ * POST \c "/api/v1/display/slot/<id>"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleSlot(AsyncWebServerRequest* request)
+{
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 1024U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST != request->method())
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        const char* uriWithSlotId = "/rest/api/v1/display/slot/";
+
+        if (0U == request->url().startsWith(uriWithSlotId))
+        {
+            RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
+            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+        }
+        else
+        {
+            uint8_t slotId          = SlotList::SLOT_ID_INVALID;
+            size_t  baseUriLen      = strlen(uriWithSlotId);
+            bool    slotIdStatus    = Util::strToUInt8(request->url().substring(baseUriLen), slotId);
+
+            if (false == slotIdStatus)
+            {
+                RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
+                httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+            }
+            /* Only activate a slot? */
+            else if (false == request->hasArg("sticky"))
+            {
+                if (false == DisplayMgr::getInstance().activateSlot(slotId))
+                {
+                    RestUtil::prepareRspError(jsonDoc, "Request rejected.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                }
+                else
+                {
+                    JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+
+                    UTIL_NOT_USED(dataObj);
+                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+                }
+            }
+            /* Consider sticky flag. */
+            else
+            {
+                const String&   stickyFlagStr   = request->arg("sticky");
+                bool            stickyFlag      = false;
+
+                if (stickyFlagStr == "true")
+                {
+                    stickyFlag = true;
+                }
+                else if (stickyFlagStr == "false")
+                {
+                    stickyFlag = false;
+                }
+                else
+                {
+                    RestUtil::prepareRspError(jsonDoc, "Invalid sticky flag.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                }
+
+                if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
+                {
+                    if (false == stickyFlag)
+                    {
+                        if (slotId != DisplayMgr::getInstance().getStickySlot())
+                        {
+                            RestUtil::prepareRspError(jsonDoc, "Slot is not sticky.");
+                            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                        }
+                        else
+                        {
+                            JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+
+                            DisplayMgr::getInstance().clearSticky();
+
+                            UTIL_NOT_USED(dataObj);
+                            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+                        }
+                    }
+                    else if (false == DisplayMgr::getInstance().setSlotSticky(slotId))
+                    {
+                        RestUtil::prepareRspError(jsonDoc, "Request rejected.");
+                        httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                    }
+                    else
+                    {
+                        JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+
+                        UTIL_NOT_USED(dataObj);
+                        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+                    }
+                }
+            }
+        }
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);

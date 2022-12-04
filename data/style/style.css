@@ -58,6 +58,12 @@ div.divSlot {
 div.locked {
     background-image: repeating-linear-gradient(45deg, #ccc 0%, #ccc 2%, red 2%, red 4%, #ccc 4%);
 }
+div.sticky {
+    background-image: repeating-linear-gradient(45deg, #ccc 0%, yellow 2%, #ccc 2%, #ccc 4%, yellow 4%);
+}
+div.lockedAndSticky {
+    background-image: repeating-linear-gradient(45deg, #ccc 0%, yellow 2%, red 2%, red 4%, yellow 4%);
+}
 p.dragableSlot {
     border: 2px solid red;
     padding: 4px 4px 4px 4px;

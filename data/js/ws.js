@@ -144,10 +144,11 @@ pixelix.ws.Client.prototype.disconnect = function(options) {
 };
 
 pixelix.ws.Client.prototype._onMessage = function(msg) {
-    var data    = msg.split(";");
-    var status  = data.shift();
-    var rsp     = {};
-    var index   = 0;
+    var data        = msg.split(";");
+    var status      = data.shift();
+    var rsp         = {};
+    var index       = 0;
+    var elements    = 0;
 
     if ("EVT" === status) {
         rsp.timestamp = parseInt(data[0]);
@@ -207,13 +208,15 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             } else if ("SLOTS" === this._pendingCmd.name) {
                 rsp.maxSlots = parseInt(data.shift());
                 rsp.slots = [];
-                for(index = 0; index < (data.length / 5); ++index) {
+                elements = 6;
+                for(index = 0; index < (data.length / elements); ++index) {
                     rsp.slots.push({
-                        name: data[5 * index + 0].substring(1, data[5 * index + 0].length - 1),
-                        uid: parseInt(data[5 * index + 1]),
-                        alias: data[5 * index + 2].substring(1, data[5 * index + 2].length - 1),
-                        isLocked: (0 == parseInt(data[5 * index + 3])) ? false : true,
-                        duration: parseInt(data[5 * index + 4])
+                        name: data[elements * index + 0].substring(1, data[elements * index + 0].length - 1),
+                        uid: parseInt(data[elements * index + 1]),
+                        alias: data[elements * index + 2].substring(1, data[elements * index + 2].length - 1),
+                        isLocked: (0 == parseInt(data[elements * index + 3])) ? false : true,
+                        isSticky: (0 == parseInt(data[elements * index + 4])) ? false : true,
+                        duration: parseInt(data[elements * index + 5])
                     });
                 }
                 this._pendingCmd.resolve(rsp);

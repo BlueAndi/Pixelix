@@ -68,7 +68,8 @@ public:
      */
     SlotList() :
         m_maxSlots(0U),
-        m_slots(nullptr)
+        m_slots(nullptr),
+        m_stickySlot(SLOT_ID_INVALID)
     {
     }
 
@@ -88,7 +89,8 @@ public:
      */
     SlotList(const SlotList& list) :
         m_maxSlots(0U),
-        m_slots(nullptr)
+        m_slots(nullptr),
+        m_stickySlot(SLOT_ID_INVALID)
     {
         *this = list;
     }
@@ -255,13 +257,40 @@ public:
      */
     uint8_t getSlotIdByPluginUID(uint16_t pluginUid);
 
+    /**
+     * Get slot which is marked sticky.
+     * 
+     * @return Id of sticky slot. If no slot is sticky, it will return SLOT_ID_INVALID.
+     */
+    uint8_t getStickySlot() const;
+
+    /**
+     * Set slot sticky. Only one slot can be sticky!
+     * If a different slot is already sticky, the sticky flag will be moved.
+     * 
+     * If slot is empty or the plugin is disabled, it will fail.
+     * 
+     * Use SLOT_ID_INVALID to clear the sticky flag. Recommended: clearSticky()
+     * 
+     * @param[in]   slotId  The id of the slot which to set sticky.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setSlotSticky(uint8_t slotId);
+
+    /**
+     * Removes the sticky flag.
+     */
+    void clearSticky();
+
     /** Invalid slot id. */
     static const uint8_t    SLOT_ID_INVALID = UINT8_MAX;
 
 private:
 
-    uint8_t m_maxSlots; /**< The maximum number of slots. */
-    Slot*   m_slots;    /**< The slots itself. */
+    uint8_t m_maxSlots;     /**< The maximum number of slots. */
+    Slot*   m_slots;        /**< The slots itself. */
+    uint8_t m_stickySlot;   /**< Only one slot can be sticky. If no slot is sticky, it contains a invalid id. */
 
 };
 

@@ -450,35 +450,89 @@ IPluginMaintenance* DisplayMgr::getPluginInSlot(uint8_t slotId)
     return plugin;
 }
 
-void DisplayMgr::activatePlugin(IPluginMaintenance* plugin)
+uint8_t DisplayMgr::getStickySlot() const
 {
-    if (nullptr != plugin)
-    {
-        MutexGuard<MutexRecursive>  guard(m_mutexInterf);
-        uint8_t                     slotId = m_slotList.getSlotIdByPluginUID(plugin->getUID());
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    uint8_t                     slotId = m_slotList.getStickySlot();
 
-        /* Plugin must be in a slot, otherwise it makes no sense. */
-        if (true == m_slotList.isSlotIdValid(slotId))
+    return slotId;
+}
+
+bool DisplayMgr::setSlotSticky(uint8_t slotId)
+{
+    bool                        isSuccessful = false;
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+
+    /* Activation will take place in process(). */
+    isSuccessful = m_slotList.setSlotSticky(slotId);
+
+    if (true == isSuccessful)
+    {
+        if (SlotList::SLOT_ID_INVALID == slotId)
         {
-            m_requestedPlugin = plugin;
+            LOG_INFO("Sticky flag cleared.");
+        }
+        else
+        {
+            LOG_INFO("Set slot %u sticky.", slotId);
         }
     }
 
-    return;
+    return isSuccessful;
+}
+
+void DisplayMgr::clearSticky()
+{
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+
+    m_slotList.clearSticky();
+
+    LOG_INFO("Sticky flag cleared.");
+}
+
+bool DisplayMgr::activateSlot(uint8_t slotId)
+{
+    bool                        isSuccessful = false;
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+
+    if (SlotList::SLOT_ID_INVALID != slotId)
+    {
+        /* Slot already active? */
+        if (slotId == m_selectedSlotId)
+        {
+            m_requestedPlugin   = nullptr;
+            isSuccessful        = true;
+        }
+        /* No slot is sticky? */
+        else if (SlotList::SLOT_ID_INVALID == m_slotList.getStickySlot())
+        {
+            m_requestedPlugin   = m_slotList.getPlugin(m_slotList.getStickySlot());
+            isSuccessful        = true;
+        }
+        /* Same slot is sticky? */
+        else if (slotId == m_slotList.getStickySlot())
+        {
+            m_requestedPlugin   = m_slotList.getPlugin(m_slotList.getStickySlot());
+            isSuccessful        = true;
+        }
+        else
+        {
+            /* Activation not possible. */
+            ;
+        }
+    }
+
+    return isSuccessful;
 }
 
 void DisplayMgr::activateNextSlot()
 {
-    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    uint8_t                     nextSlotId  = nextSlot(m_selectedSlotId);
 
-    /* Avoid changing to next slot, if the there is a pending slot change. */
-    if (FADE_IDLE == m_displayFadeState)
+    if (nextSlotId != m_selectedSlotId)
     {
-        /* If slot timer is running, force a slot change by setting the duration to 0. */
-        if (true == m_slotTimer.isTimerRunning())
-        {
-            m_slotTimer.start(0U);
-        }
+        (void)activateSlot(nextSlotId);
     }
 
     return;
@@ -828,12 +882,42 @@ void DisplayMgr::fadeInOut(YAGfx& dst)
 
 void DisplayMgr::process()
 {
-    IDisplay&                   display = Display::getInstance();
-    uint8_t                     index   = 0U;
+    IDisplay&                   display     = Display::getInstance();
+    uint8_t                     index       = 0U;
+    uint8_t                     stickySlot  = SlotList::SLOT_ID_INVALID;
     MutexGuard<MutexRecursive>  guard(m_mutexInterf);
 
     /* Handle display brightness */
     BrightnessCtrl::getInstance().process();
+
+    /* Check whether a different slot got sticky and it shall be activated. */
+    stickySlot = m_slotList.getStickySlot();
+    if (SlotList::SLOT_ID_INVALID != stickySlot)
+    {
+        /* If slot is set sticky which is active, the slot timer will be stopped to prevent scheduling of other slots. */
+        if (m_selectedSlotId == stickySlot)
+        {
+            m_slotTimer.stop();
+        }
+        else
+        {
+            m_requestedPlugin = m_slotList.getPlugin(stickySlot);
+        }
+    }
+    /* No slot is set sticky. Maybe it was removed? */
+    else
+    {
+        uint32_t duration = m_slotList.getDuration(m_selectedSlotId);
+
+        /* If sticky flag is removed, the slot timer was original stopped and will be started again.
+         * Makes only sense if the slot duration is not 0.
+         */
+        if ((0U != duration) &&
+            (false == m_slotTimer.isTimerRunning()))
+        {
+            m_slotTimer.start(duration);
+        }
+    }
 
     /* Plugin requested to choose? */
     if (nullptr != m_requestedPlugin)
@@ -964,8 +1048,9 @@ void DisplayMgr::process()
 
             m_selectedPlugin = m_slotList.getPlugin(m_selectedSlotId);
 
-            /* If plugin shall not be infinite active, start the slot timer. */
-            if (0U != duration)
+            /* If plugin shall not be infinite active and is not in a sticky slot, start the slot timer. */
+            if ((0U != duration) &&
+                (m_selectedSlotId != m_slotList.getStickySlot()))
             {
                 m_slotTimer.start(duration);
             }

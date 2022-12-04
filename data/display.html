@@ -39,6 +39,11 @@
                 <div id="divSlots">
                 </div>
                 <p style="clear: both;"><br /></p>
+                <ul>
+                    <li>Red shaded: Slot is locked and plugin can not be removed.</li>
+                    <li>Yellow shaded: Slot is sticky. Slot scheduling is stopped.</li>
+                    <li>Red/Yellow shaded: Slot is sticky and locked.</li>
+                </ul>
                 <p>
                     <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
                 </p>
@@ -341,12 +346,23 @@
                     for(index = 0; index < rsp.slots.length; ++index) {
                         $divSlot = $("<div>");
 
-                        if (false == rsp.slots[index].isLocked) {
-                            $divSlot.attr("class", "divSlot");
+                        if (false === rsp.slots[index].isLocked) {
+
+                            if (false === rsp.slots[index].isSticky) {
+                                $divSlot.attr("class", "divSlot");
+                            } else {
+                                $divSlot.attr("class", "divSlot sticky");
+                            }
+                            
                             $divSlot.attr("ondragover", "allowDrop(event)");
                             $divSlot.attr("ondrop", "drop(event)");
                         } else {
-                            $divSlot.attr("class", "divSlot locked");
+
+                            if (false === rsp.slots[index].isSticky) {
+                                $divSlot.attr("class", "divSlot locked");
+                            } else {
+                                $divSlot.attr("class", "divSlot lockedAndsticky");
+                            }
                         }
 
                         $divSlot.attr("id", index);
