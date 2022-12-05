@@ -15,8 +15,8 @@ To find out which part shall be connected to which pin of your development board
   - [DOIT ESP32 DEVKIT V4](#doit-esp32-devkit-v4)
   - [ESP32 NodeMCU](#esp32-nodemcu)
   - [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
-  - [TTGO ESP32 T-Display](#ttgo-esp32-t-display)
-  - [TTGO ESP32 T-Display S3](#ttgo-esp32-t-display-S3)
+  - [LILYGO® TTGO ESP32 T-Display](#lilygo-ttgo-esp32-t-display)
+  - [LILYGO® ESP32 T-Display S3](#lilygo-esp32-t-display-s3)
 
 # Pixelix Board v1.5
 This board was original developed with a ESP32 DevKit V1 development board as piggy bag.
@@ -50,17 +50,17 @@ The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed f
 * Manufacturer: [AZ-Delivery](https://www.az-delivery.de/products/esp-32-dev-kit-c-v4)
 * [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
 
-## TTGO ESP32 T-Display
-The TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
+## LILYGO&reg; TTGO ESP32 T-Display
+The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
 
 * Manufacturer: [Lilygo](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
-* [Pinning](../../lib/HalTtgoTDisplay/Board.h)
+* [Pinning](../../lib/HalTftDisplay/Board.h)
 
-## TTGO ESP32 T-Display S3
-The TTGO ESP32 T-Display S3 development board is handled separately, because the onboard display is used instead of a external LED matrix.
+## LILYGO&reg; ESP32 T-Display S3
+The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, because the onboard display is used instead of a external LED matrix.
 
 * Manufacturer: [Lilygo](https://www.lilygo.cc/products/t-display-s3)
-* [Pinning](../../lib/HalTtgoTDisplay/Board.h)
+* [Pinning](../../lib/HalTftDisplay/Board.h)
 
 # Issues, Ideas And Bugs <!-- omit in toc -->
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

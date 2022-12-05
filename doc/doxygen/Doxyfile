@@ -879,9 +879,11 @@ INPUT                  = . \
                          ../../lib/BaseGfx \
                          ../../lib/Common \
                          ../../lib/FadeEffects \
+                         ../../lib/Fonts \
                          ../../lib/HalLedMatrix \
-                         ../../lib/HalTtgoTDisplay \
+                         ../../lib/HalTftDisplay \
                          ../../lib/LinkedList \
+                         ../../lib/Os \
                          ../../lib/Sensors \
                          ../../lib/StateMachine \
                          ../../lib/Utilities \

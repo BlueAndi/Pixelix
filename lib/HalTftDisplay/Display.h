@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  TTGO T-Display
+ * @brief  Graphic TFT display
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup gfx
@@ -60,7 +60,7 @@
  *****************************************************************************/
 
 /**
- * This display represents TTGO T-Display.
+ * This display represents a graphic TFT display.
  */
 class Display : public IDisplay
 {

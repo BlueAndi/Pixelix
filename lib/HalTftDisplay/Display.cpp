@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  TTGO T-Display
+ * @brief  Graphic TFT display
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
