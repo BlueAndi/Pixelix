@@ -112,7 +112,6 @@ void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void DateTimePlugin::start(uint16_t width, uint16_t height)
 {
-    uint16_t                    offsY           = 0U;
     uint16_t                    tcHeight        = 0U;
     uint16_t                    lampWidth       = 0U;
     uint16_t                    lampDistance    = 0U;
@@ -261,9 +260,10 @@ void DateTimePlugin::update(YAGfx& gfx)
 
 void DateTimePlugin::updateDateTime(bool force)
 {
+    ClockDrv&   clockDrv    = ClockDrv::getInstance();
     struct tm   timeInfo    = { 0 };
     
-    if (true == ClockDrv::getInstance().getTime(&timeInfo))
+    if (true == clockDrv.getTime(&timeInfo))
     {
         bool    showDate    = false;
         bool    showTime    = false;
@@ -338,22 +338,16 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownMinute != timeInfo.tm_min))
             {
-                ClockDrv&   clockDrv    = ClockDrv::getInstance();
-                struct tm   timeInfo;
-
-                if (true == clockDrv.getTime(&timeInfo))
+                const String&   timeFormat      = clockDrv.getTimeFormat();
+                String          extTimeFormat   = "\\calign" + timeFormat;
+                String          timeAsStr;
+                
+                if (true == clockDrv.getTimeAsString(timeAsStr, extTimeFormat, &timeInfo))
                 {
-                    const String&   timeFormat      = clockDrv.getTimeFormat();
-                    String          extTimeFormat   = "\\calign" + timeFormat;
-                    String          timeAsStr;
-                    
-                    if (true == clockDrv.getTimeAsString(timeAsStr, extTimeFormat, &timeInfo))
-                    {
-                        m_textWidget.setFormatStr(timeAsStr);
+                    m_textWidget.setFormatStr(timeAsStr);
 
-                        m_shownMinute       = timeInfo.tm_min;
-                        m_isUpdateAvailable = true;
-                    }
+                    m_shownMinute       = timeInfo.tm_min;
+                    m_isUpdateAvailable = true;
                 }
                 
                 setWeekdayIndicator(timeInfo);
@@ -368,22 +362,16 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownDayOfTheYear != timeInfo.tm_yday))
             {
-                ClockDrv&   clockDrv    = ClockDrv::getInstance();
-                struct tm   timeInfo;
-
-                if (true == clockDrv.getTime(&timeInfo))
+                const String&   dateFormat      = clockDrv.getDateFormat();
+                String          extDateFormat   = "\\calign" + dateFormat;
+                String          dateAsStr;
+                
+                if (true == clockDrv.getTimeAsString(dateAsStr, extDateFormat, &timeInfo))
                 {
-                    const String&   dateFormat      = clockDrv.getDateFormat();
-                    String          extDateFormat   = "\\calign" + dateFormat;
-                    String          dateAsStr;
-                    
-                    if (true == clockDrv.getTimeAsString(dateAsStr, extDateFormat, &timeInfo))
-                    {
-                        m_textWidget.setFormatStr(dateAsStr);
+                    m_textWidget.setFormatStr(dateAsStr);
 
-                        m_shownDayOfTheYear = timeInfo.tm_yday;
-                        m_isUpdateAvailable = true;
-                    }
+                    m_shownDayOfTheYear = timeInfo.tm_yday;
+                    m_isUpdateAvailable = true;
                 }
                 
                 setWeekdayIndicator(timeInfo);
