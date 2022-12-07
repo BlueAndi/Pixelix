@@ -88,7 +88,6 @@ struct Statistics
 bool DisplayMgr::begin()
 {
     bool        status              = false;
-    uint8_t     idx                 = 0U;
     bool        isError             = false;
     uint8_t     maxSlots            = 0U;
     uint8_t     brightnessPercent   = 0U;
@@ -140,6 +139,8 @@ bool DisplayMgr::begin()
 
     if (false == isError)
     {
+        uint8_t idx = 0U;
+
         /* Allocate framebuffer memory. */
         for(idx = 0U; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
         {
@@ -506,13 +507,7 @@ bool DisplayMgr::activateSlot(uint8_t slotId)
         /* No slot is sticky? */
         else if (SlotList::SLOT_ID_INVALID == m_slotList.getStickySlot())
         {
-            m_requestedPlugin   = m_slotList.getPlugin(m_slotList.getStickySlot());
-            isSuccessful        = true;
-        }
-        /* Same slot is sticky? */
-        else if (slotId == m_slotList.getStickySlot())
-        {
-            m_requestedPlugin   = m_slotList.getPlugin(m_slotList.getStickySlot());
+            m_requestedPlugin   = m_slotList.getPlugin(slotId);
             isSuccessful        = true;
         }
         else
@@ -528,7 +523,7 @@ bool DisplayMgr::activateSlot(uint8_t slotId)
 void DisplayMgr::activateNextSlot()
 {
     MutexGuard<MutexRecursive>  guard(m_mutexInterf);
-    uint8_t                     nextSlotId  = nextSlot(m_selectedSlotId);
+    uint8_t                     nextSlotId = nextSlot(m_selectedSlotId);
 
     if (nextSlotId != m_selectedSlotId)
     {
@@ -885,7 +880,7 @@ void DisplayMgr::process()
     IDisplay&                   display     = Display::getInstance();
     uint8_t                     index       = 0U;
     uint8_t                     stickySlot  = SlotList::SLOT_ID_INVALID;
-    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    MutexGuard<MutexRecursive>  guardInterf(m_mutexInterf);
 
     /* Handle display brightness */
     BrightnessCtrl::getInstance().process();
