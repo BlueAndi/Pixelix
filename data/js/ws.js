@@ -76,7 +76,7 @@ pixelix.ws.Client = function(options) {
         if (null !== this._onEvent) {
             this._onEvent(evt);
         }
-    }
+    };
 };
 
 pixelix.ws.Client.prototype.connect = function(options) {

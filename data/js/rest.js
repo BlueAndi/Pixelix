@@ -84,7 +84,7 @@ pixelix.rest.Client.prototype.listAllFilesRecursive = function(path = "/") {
 
                 promise = promise.then(function(internal) {
                     return internal.data;
-                })
+                });
 
             } else {
                 promise = Promise.resolve(promiseData.data);

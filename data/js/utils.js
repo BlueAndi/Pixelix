@@ -39,7 +39,7 @@ utils.makeRequest = function(options) {
             }
             else if ("object" === typeof options.parameter) {
                 if ("get" === options.method.toLowerCase()) {
-                    urlEncodedPar += "?"
+                    urlEncodedPar += "?";
 
                     for(var key in options.parameter) {
                         if (true === isFirst) {
@@ -49,7 +49,7 @@ utils.makeRequest = function(options) {
                         }
                         urlEncodedPar += encodeURIComponent(key);
                         urlEncodedPar += "=";
-                        urlEncodedPar += encodeURIComponent(options.parameter[key])
+                        urlEncodedPar += encodeURIComponent(options.parameter[key]);
                     }
                 } else {
                     formData = new FormData();
