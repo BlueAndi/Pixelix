@@ -455,9 +455,9 @@ void GithubPlugin::initHttpClient()
     );
 }
 
-void GithubPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+void GithubPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
-    JsonVariant jsonStargazersCount = jsonDoc["stargazers_count"];
+    JsonVariantConst jsonStargazersCount = jsonDoc["stargazers_count"];
 
     if (false == jsonStargazersCount.is<uint32_t>())
     {

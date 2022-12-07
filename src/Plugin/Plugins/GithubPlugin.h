@@ -356,7 +356,7 @@ private:
      * 
      * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    void handleWebResponse(const DynamicJsonDocument& jsonDoc);
     
     /**
      * Saves current configuration to JSON file.

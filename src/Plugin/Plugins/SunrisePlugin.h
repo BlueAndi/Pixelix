@@ -346,7 +346,7 @@ private:
      * 
      * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    void handleWebResponse(const DynamicJsonDocument& jsonDoc);
 
     /**
      * Add the daylight saving (if available) and GMT offset values to the given

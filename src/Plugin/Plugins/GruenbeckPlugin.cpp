@@ -446,9 +446,9 @@ void GruenbeckPlugin::initHttpClient()
     );
 }
 
-void GruenbeckPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
-    JsonVariant jsonRestCapacity = jsonDoc["restCapacity"];
+    JsonVariantConst jsonRestCapacity = jsonDoc["restCapacity"];
 
     if (false == jsonRestCapacity.is<String>())
     {

@@ -411,11 +411,11 @@ void SunrisePlugin::initHttpClient()
     );
 }
 
-void SunrisePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
-    JsonVariant jsonResults = jsonDoc["results"];
-    JsonVariant jsonSunrise = jsonResults["sunrise"];
-    JsonVariant jsonSunset  = jsonResults["sunset"];
+    JsonVariantConst jsonResults = jsonDoc["results"];
+    JsonVariantConst jsonSunrise = jsonResults["sunrise"];
+    JsonVariantConst jsonSunset  = jsonResults["sunset"];
 
     if ((false == jsonSunrise.is<String>()))
     {

@@ -197,14 +197,14 @@ void SoundReactivePlugin::stop()
 
 void SoundReactivePlugin::process(bool isConnected)
 {
-    uint8_t                     bandIdx         = 0U;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     UTIL_NOT_USED(isConnected);
 
     if (true == SpectrumAnalyzer::getInstance().areFreqBinsReady())
     {
-        const size_t freqBinLen = SpectrumAnalyzer::getInstance().getFreqBinsLen();
+        uint8_t         bandIdx     = 0U;
+        const size_t    freqBinLen  = SpectrumAnalyzer::getInstance().getFreqBinsLen();
 
         /* Decay peak periodically */
         if (true == m_decayPeakTimer.isTimeout())
