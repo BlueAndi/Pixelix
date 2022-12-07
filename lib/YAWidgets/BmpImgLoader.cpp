@@ -171,8 +171,7 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
             {
                 uint32_t    pos             = 0;
                 uint32_t    rowSize         = 0;
-                int16_t    x                = 0;
-                int16_t    y                = 0;
+                int16_t     y               = 0;
                 bool        isTopToBottom   = false;
                 uint16_t    bytePerPixel    = dibHeader.bpp / 8;
 
@@ -180,7 +179,7 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
                  * The size of each row is rounded up to a multiple of 4 bytes
                  * (a 32-bit DWORD) by padding.
                  */
-                rowSize     =  (dibHeader.bpp * bitmap.getWidth() + 31) / 32 * 4;
+                rowSize =  (dibHeader.bpp * bitmap.getWidth() + 31) / 32 * 4;
 
                 /* ImageHeight is expressed as a negative number for top-down images. */
                 if (0 > dibHeader.imageHeight)
@@ -190,7 +189,7 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
 
                 while((bitmap.getHeight() > y) && (RET_OK == ret))
                 {
-                    x = 0;
+                    int16_t x = 0;
 
                     while((bitmap.getWidth() > x) && (RET_OK == ret))
                     {
