@@ -78,7 +78,7 @@ static void handleSettings(AsyncWebServerRequest* request);
 static void handleSetting(AsyncWebServerRequest* request);
 static bool storeSetting(KeyValue* parameter, const String& value, String& error);
 static void handleStatus(AsyncWebServerRequest* request);
-static void getFiles(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
+static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
 static String getContentType(const String& filename);
@@ -657,7 +657,6 @@ static void handleSensors(AsyncWebServerRequest* request)
             if (nullptr != sensor)
             {
                 uint8_t     numChannels     = sensor->getNumChannels();
-                uint8_t     channelIdx      = 0U;
                 JsonObject  sensorObj       = sensorsArray.createNestedObject();
 
                 sensorObj["index"]          = sensorIdx;
@@ -666,7 +665,8 @@ static void handleSensors(AsyncWebServerRequest* request)
 
                 /* Block is only used, to have the channels in the correct JSON order. */
                 {
-                    JsonArray   channelsArray = sensorObj.createNestedArray("channels");
+                    uint8_t     channelIdx      = 0U;
+                    JsonArray   channelsArray   = sensorObj.createNestedArray("channels");
 
                     for(channelIdx = 0U; channelIdx < numChannels; ++channelIdx)
                     {
@@ -1230,7 +1230,7 @@ static void handleStatus(AsyncWebServerRequest* request)
  * @param[in,out]   count       Amount of files which max. to collect.
  * @param[in]       isRecursive If true, it will get all files recursive from root to all leafs.
  */
-static void getFiles(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive)
+static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive)
 {
     File fd = dir.openNextFile();
 
