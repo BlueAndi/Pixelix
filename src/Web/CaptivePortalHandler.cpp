@@ -151,6 +151,10 @@ String CaptivePortalHandler::captivePortalPageProcessor(const String& var)
             Settings::getInstance().close();
         }
     }
+    else if (var == "MAC_ADDR")
+    {
+        result = WiFi.macAddress();
+    }
     else
     {
         ;
