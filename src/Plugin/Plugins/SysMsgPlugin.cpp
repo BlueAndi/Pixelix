@@ -85,6 +85,20 @@ void SysMsgPlugin::stop()
     return;
 }
 
+void SysMsgPlugin::active(YAGfx& gfx)
+{
+    /* Nothing to do. */
+    return;
+}
+
+void SysMsgPlugin::inactive()
+{
+    /* User selected next slot. Skip showing current information further. */
+    disable();
+
+    return;
+}
+
 void SysMsgPlugin::update(YAGfx& gfx)
 {
     bool        isScrollingEnabled  = false;

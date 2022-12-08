@@ -146,7 +146,21 @@ public:
      * Stop the plugin. This is called only once during plugin lifetime.
      */
     void stop() final;
-    
+
+    /**
+     * This method will be called in case the plugin is set active, which means
+     * it will be shown on the display in the next step.
+     *
+     * @param[in] gfx   Display graphics interface
+     */
+    void active(YAGfx& gfx) final;
+
+    /**
+     * This method will be called in case the plugin is set inactive, which means
+     * it won't be shown on the display anymore.
+     */
+    void inactive() final;
+
     /**
      * Update the display.
      * The scheduler will call this method periodically.
