@@ -58,6 +58,20 @@
  * Public Methods
  *****************************************************************************/
 
+void MatrixPlugin::active(YAGfx& gfx)
+{
+    /* Clear display */
+    gfx.fillScreen(ColorDef::BLACK);
+
+    return;
+}
+
+void MatrixPlugin::inactive()
+{
+    /* Nothing to do. */
+    return;
+}
+
 void MatrixPlugin::update(YAGfx& gfx)
 {
     if ((false == m_timer.isTimerRunning()) ||
