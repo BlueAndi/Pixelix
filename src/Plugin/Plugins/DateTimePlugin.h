@@ -83,7 +83,7 @@ public:
         m_cfg(CFG_DATE_TIME),
         m_checkUpdateTimer(),
         m_durationCounter(0u),
-        m_shownMinute(-1),
+        m_shownSecond(-1),
         m_shownDayOfTheYear(-1),
         m_isUpdateAvailable(false),
         m_slotInterf(nullptr),
@@ -285,7 +285,8 @@ private:
     Cfg                     m_cfg;                      /**< Configuration about what shall be shown. */
     SimpleTimer             m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessary. */
     uint8_t                 m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
-    int                     m_shownMinute;              /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
+    int                     m_shownSecond;              /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
+
     int                     m_shownDayOfTheYear;        /**< Used to trigger a display update in case the date shall be shown. [0; 365] */
     bool                    m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
     const ISlotPlugin*      m_slotInterf;               /**< Slot interface */

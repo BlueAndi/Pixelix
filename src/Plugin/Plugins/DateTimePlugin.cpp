@@ -333,10 +333,10 @@ void DateTimePlugin::updateDateTime(bool force)
         {
             /* Show the time only in case
              * its forced to do it or
-             * the minute changed.
+             * the time changed.
              */
             if ((true == force) ||
-                (m_shownMinute != timeInfo.tm_min))
+                (m_shownSecond != timeInfo.tm_sec))
             {
                 const String&   timeFormat      = clockDrv.getTimeFormat();
                 String          extTimeFormat   = "\\calign" + timeFormat;
@@ -346,7 +346,7 @@ void DateTimePlugin::updateDateTime(bool force)
                 {
                     m_textWidget.setFormatStr(timeAsStr);
 
-                    m_shownMinute       = timeInfo.tm_min;
+                    m_shownSecond       = timeInfo.tm_sec;
                     m_isUpdateAvailable = true;
                 }
                 
