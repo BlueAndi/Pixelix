@@ -92,7 +92,10 @@ Use the browser to connect to the captive portal and configure the wifi station 
 After configuration restart and voila, Pixelix will be available in your wifi network.
 
 # User Interface
-* The user button activates always the next slot.
+* The user button provides several features:
+    * On short pulse: Activates the next slot.
+    * Two short pulses: Activates next fade effect.
+    * Long pressed: Increases the display brightness until maximum and then decreases until minimum. After that it will again increases it and so on.
 * If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
 * If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
 * The web interface provides the possibility to install plugins, control their duration in the slots and etc.

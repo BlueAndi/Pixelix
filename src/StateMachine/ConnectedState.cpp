@@ -83,6 +83,8 @@ void ConnectedState::entry(StateMachine& sm)
 
     LOG_INFO("Connected.");
 
+    ButtonDrv::getInstance().registerObserver(m_buttonHandler);
+
     /* Get hostname and notifyURL. */
     if (false == Settings::getInstance().open(true))
     {
@@ -168,7 +170,8 @@ void ConnectedState::initHttpClient()
 
 void ConnectedState::process(StateMachine& sm)
 {
-    ButtonDrv::State    buttonState = ButtonDrv::getInstance().getState();
+    /* Process button state changes */
+    m_buttonHandler.process();
 
     /* Handle update, there may be one in the background. */
     UpdateMgr::getInstance().process();
@@ -188,12 +191,6 @@ void ConnectedState::process(StateMachine& sm)
         sm.setState(ConnectingState::getInstance());
     }
 
-    /* If the user button is triggered, the next display slot will be activated. */
-    if (ButtonDrv::STATE_TRIGGERED == buttonState)
-    {
-        DisplayMgr::getInstance().activateNextSlot();
-    }
-
     return;
 }
 
@@ -206,6 +203,9 @@ void ConnectedState::exit(StateMachine& sm)
 
     /* Notify about lost network connection. */
     DisplayMgr::getInstance().setNetworkStatus(false);
+
+    /* Remove button handler as button state observer. */
+    ButtonDrv::getInstance().unregisterObserver();
 
     return;
 }

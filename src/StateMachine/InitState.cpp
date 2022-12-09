@@ -292,16 +292,16 @@ void InitState::entry(StateMachine& sm)
 
 void InitState::process(StateMachine& sm)
 {
-    ButtonDrv::State    buttonState = ButtonDrv::getInstance().getState();
+    ButtonState buttonState = ButtonDrv::getInstance().getState();
 
     /* Connect to a remote wifi network? */
-    if (ButtonDrv::STATE_RELEASED == buttonState)
+    if (BUTTON_STATE_RELEASED == buttonState)
     {
         sm.setState(ConnectingState::getInstance());
         m_isApModeRequested = false;
     }
     /* Does the user request for setting up an wifi access point? */
-    else if (ButtonDrv::STATE_PRESSED == buttonState)
+    else if (BUTTON_STATE_PRESSED == buttonState)
     {
         sm.setState(APState::getInstance());
         m_isApModeRequested = true;

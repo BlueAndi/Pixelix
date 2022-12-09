@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include "AsyncHttpClient.h"
+#include "ButtonHandler.h"
 
 #include <stdint.h>
 #include <StateMachine.hpp>
@@ -99,13 +100,15 @@ public:
 
 private:
 
-    AsyncHttpClient m_client;   /**< Asynchronous HTTP client. */
+    AsyncHttpClient m_client;           /**< Asynchronous HTTP client. */
+    ButtonHandler   m_buttonHandler;    /**< Button handler */
 
     /**
      * Constructs the state.
      */
     ConnectedState():
-        m_client()
+        m_client(),
+        m_buttonHandler()
     {
         initHttpClient();
     }

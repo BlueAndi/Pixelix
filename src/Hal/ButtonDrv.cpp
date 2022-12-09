@@ -104,9 +104,9 @@ ButtonDrv::Ret ButtonDrv::init()
     return ret;
 }
 
-ButtonDrv::State ButtonDrv::getState()
+ButtonState ButtonDrv::getState()
 {
-    State state = STATE_UNKNOWN;
+    ButtonState state = BUTTON_STATE_UNKNOWN;
 
     if (pdTRUE != xSemaphoreTake(m_semaphore, portMAX_DELAY))
     {
@@ -116,11 +116,6 @@ ButtonDrv::State ButtonDrv::getState()
     {
         state = m_state;
 
-        if (STATE_TRIGGERED == m_state)
-        {
-            m_state = STATE_RELEASED;
-        }
-
         if (pdTRUE != xSemaphoreGive(m_semaphore))
         {
             LOG_FATAL("Can't give semaphore back.");
@@ -128,6 +123,28 @@ ButtonDrv::State ButtonDrv::getState()
     }
 
     return state;
+}
+
+void ButtonDrv::registerObserver(IButtonObserver& observer)
+{
+    if (pdTRUE == xSemaphoreTake(m_semaphore, portMAX_DELAY))
+    {
+        m_observer = &observer;
+
+        m_observer->notify(m_state);
+
+        (void)xSemaphoreGive(m_semaphore);
+    }
+}
+
+void ButtonDrv::unregisterObserver()
+{
+    if (pdTRUE == xSemaphoreTake(m_semaphore, portMAX_DELAY))
+    {
+        m_observer = nullptr;
+        
+        (void)xSemaphoreGive(m_semaphore);
+    }
 }
 
 /******************************************************************************
@@ -171,37 +188,45 @@ void ButtonDrv::buttonTask(void *parameters)
                 uint8_t buttonValue = Board::userButtonIn.read();
 
                 /* If the button state is unknown, just check and set. */
-                if (STATE_UNKNOWN == buttonDrv->m_state)
+                if (BUTTON_STATE_UNKNOWN == buttonDrv->m_state)
                 {
                     if (HIGH == buttonValue)
                     {
-                        buttonDrv->m_state = STATE_RELEASED;
+                        buttonDrv->m_state = BUTTON_STATE_RELEASED;
                     }
                     else
                     {
-                        buttonDrv->m_state = STATE_PRESSED;
+                        buttonDrv->m_state = BUTTON_STATE_PRESSED;
+                    }
+
+                    /* Notify observer */
+                    if (nullptr != buttonDrv->m_observer)
+                    {
+                        buttonDrv->m_observer->notify(buttonDrv->m_state);
                     }
                 }
-                /* Overwrite a triggered state is bad, because the application
-                 * would miss it.
-                 */
-                else if (STATE_TRIGGERED != buttonDrv->m_state)
+                /* Button pressed now? */
+                else if ((BUTTON_STATE_RELEASED == buttonDrv->m_state) &&
+                         (LOW == buttonValue))
                 {
-                    /* Button pressed now? */
-                    if ((STATE_RELEASED == buttonDrv->m_state) &&
-                        (LOW == buttonValue))
+                    buttonDrv->m_state = BUTTON_STATE_PRESSED;
+
+                    /* Notify observer */
+                    if (nullptr != buttonDrv->m_observer)
                     {
-                        buttonDrv->m_state = STATE_PRESSED;
+                        buttonDrv->m_observer->notify(buttonDrv->m_state);
                     }
-                    /* Button released now? */
-                    else if ((STATE_PRESSED == buttonDrv->m_state) &&
-                             (HIGH == buttonValue))
+                }
+                /* Button released now? */
+                else if ((BUTTON_STATE_PRESSED == buttonDrv->m_state) &&
+                         (HIGH == buttonValue))
+                {
+                    buttonDrv->m_state = BUTTON_STATE_RELEASED;
+
+                    /* Notify observer */
+                    if (nullptr != buttonDrv->m_observer)
                     {
-                        buttonDrv->m_state = STATE_TRIGGERED;
-                    }
-                    else
-                    {
-                        ;
+                        buttonDrv->m_observer->notify(buttonDrv->m_state);
                     }
                 }
                 else
