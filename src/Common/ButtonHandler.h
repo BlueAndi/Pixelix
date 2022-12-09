@@ -25,30 +25,28 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  Button handler
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup sys_states
- * 
+ * @addtogroup app
+ *
  * @{
  */
 
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
-
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
+#ifndef __BUTTON_HANDLER_H__
+#define __BUTTON_HANDLER_H__
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "AsyncHttpClient.h"
-#include "ButtonHandler.h"
+#include "ButtonDrv.h"
 
-#include <stdint.h>
-#include <StateMachine.hpp>
-#include <WString.h>
+#include <Queue.hpp>
+#include <SimpleTimer.hpp>
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
@@ -59,81 +57,85 @@
  *****************************************************************************/
 
 /**
- * System state: Connected
+ * The button handler executes functions depended on the button state changes.
+ * 
+ * One short button pulse : Activate next slot
+ * Two short button pulses: Activate next fade effect
+ * Keep pressed           : Display brightness increases/decreases
  */
-class ConnectedState : public AbstractState
+class ButtonHandler : public IButtonObserver
 {
 public:
 
     /**
-     * Get state instance.
-     * 
-     * @return State instance
+     * Construct the button handler.
      */
-    static ConnectedState& getInstance()
+    ButtonHandler() :
+        IButtonObserver(),
+        m_stateQueue(),
+        m_lastButtonInfo({BUTTON_STATE_UNKNOWN, 0UL}),
+        m_triggerCnt(0U),
+        m_timer(),
+        m_incBrightness(true)
     {
-        static ConnectedState instance; /* singleton idiom to force initialization in the first usage. */
-
-        return instance;
+        (void)m_stateQueue.create(STATE_QUEUE_LENGTH);
     }
 
     /**
-     * The entry is called once, a state is entered.
+     * Destroy the button handler.
      * 
-     * @param[in] sm    Responsible state machine
      */
-    void entry(StateMachine& sm) final;
+    ~ButtonHandler()
+    {
+        m_stateQueue.destroy();
+    }
 
     /**
-     * The process routine is called cyclic, as long as the state is active.
-     * 
-     * @param[in] sm    Responsible state machine
+     * The button handler shall be processed periodically.
      */
-    void process(StateMachine& sm) final;
-
-    /**
-     * The exit is called once, a state will be left.
-     * 
-     * @param[in] sm    Responsible state machine
-     */
-    void exit(StateMachine& sm) final;
+    void process();
 
 private:
 
-    AsyncHttpClient m_client;           /**< Asynchronous HTTP client. */
-    ButtonHandler   m_buttonHandler;    /**< Button handler */
+    /** Length of the button info queue. */
+    static const size_t     STATE_QUEUE_LENGTH      = 10U;
+
+    /** Short pulse threshold in ms. */
+    static const uint32_t   SHORT_PULSE_THRESHOLD   = 400U;
 
     /**
-     * Constructs the state.
+     * The button information combines the new button state with a
+     * absolute timestamp about its reception.
      */
-    ConnectedState():
-        m_client(),
-        m_buttonHandler()
+    struct ButtonInfo
     {
-        initHttpClient();
-    }
+        ButtonState state;      /**< Button state */
+        uint32_t    timestamp;  /**< Timestamp about button state reception in ms */
+    };
+
+    Queue<ButtonInfo>   m_stateQueue;       /**< Button info queue */
+    ButtonInfo          m_lastButtonInfo;   /**< Last handled button info */
+    uint8_t             m_triggerCnt;       /**< Number of counted button triggers (pressed -> released) */
+    SimpleTimer         m_timer;            /**< Timer used to detect different pulse variants. */
+    bool                m_incBrightness;    /**< If true the brightness will increase otherwise decrease. */
 
     /**
-     * Destroys the state.
+     * The observed button will notify about changes.
+     * 
+     * @param[in] state New button state
      */
-    ~ConnectedState()
-    {
-    }
+    void notify(ButtonState state) override;
 
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
-
-    /**
-     * Register callback function on response reception.
-     */
-    void initHttpClient(void);
-    
 };
+
+/******************************************************************************
+ * Variables
+ *****************************************************************************/
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+#endif  /* __BUTTON_HANDLER_H__ */
 
 /** @} */

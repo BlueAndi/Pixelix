@@ -219,7 +219,7 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
         JsonVariant             dataObj             = RestUtil::prepareRspSuccess(jsonDoc);
         DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
         uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
-        DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1);
+        DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
 
         httpStatusCode = HttpStatus::STATUS_CODE_OK;
 

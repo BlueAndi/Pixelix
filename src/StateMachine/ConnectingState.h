@@ -108,13 +108,16 @@ public:
 private:
 
     /** Remote wifi SSID */
-    String      m_wifiSSID;
+    String          m_wifiSSID;
 
     /** Remote wifi passphrase */
-    String      m_wifiPassphrase;
+    String          m_wifiPassphrase;
 
     /** Timer, used for retry mechanism. */
-    SimpleTimer m_retryTimer;
+    SimpleTimer     m_retryTimer;
+
+    /** Button handler */
+    ButtonHandler   m_buttonHandler;
 
     /**
      * Constructs the state.
@@ -122,7 +125,8 @@ private:
     ConnectingState() :
         m_wifiSSID(),
         m_wifiPassphrase(),
-        m_retryTimer()
+        m_retryTimer(),
+        m_buttonHandler()
     {
     }
 
