@@ -488,6 +488,20 @@ void DisplayMgr::clearSticky()
 
     m_slotList.clearSticky();
 
+    if (SlotList::SLOT_ID_INVALID != m_selectedSlotId)
+    {
+        uint32_t duration = m_slotList.getDuration(m_selectedSlotId);
+
+        /* If sticky flag is removed, the slot timer was original stopped and will be started again.
+         * Makes only sense if the slot duration is not 0.
+         */
+        if ((0U != duration) &&
+            (false == m_slotTimer.isTimerRunning()))
+        {
+            m_slotTimer.start(duration);
+        }
+    }
+
     LOG_INFO("Sticky flag cleared.");
 }
 
@@ -897,20 +911,6 @@ void DisplayMgr::process()
         else
         {
             m_requestedPlugin = m_slotList.getPlugin(stickySlot);
-        }
-    }
-    /* No slot is set sticky. Maybe it was removed? */
-    else
-    {
-        uint32_t duration = m_slotList.getDuration(m_selectedSlotId);
-
-        /* If sticky flag is removed, the slot timer was original stopped and will be started again.
-         * Makes only sense if the slot duration is not 0.
-         */
-        if ((0U != duration) &&
-            (false == m_slotTimer.isTimerRunning()))
-        {
-            m_slotTimer.start(duration);
         }
     }
 
