@@ -47,6 +47,7 @@
 #include <StateMachine.hpp>
 #include <WString.h>
 #include <SimpleTimer.hpp>
+#include "ButtonHandler.h"
 
 /******************************************************************************
  * Macros
