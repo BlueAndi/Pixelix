@@ -449,6 +449,25 @@ public:
         return;
     }
 
+    /**
+     * Is string empty?
+     * 
+     * @return If empty, it will return true otherwise false.
+     */
+    bool isEmpty() const
+    {
+        bool isEmptyFlag = true;
+
+        if ((nullptr != m_buffer) &&
+            (0U < m_size) &&
+            ('\0' != m_buffer[0]))
+        {
+            isEmptyFlag = false;
+        }
+
+        return isEmptyFlag;
+    }
+
 private:
 
     size_t  m_size;     /**< String buffer size */
