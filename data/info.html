@@ -256,6 +256,14 @@
                 heapSize = 1
             }
 
+            if (isNaN(availablePsramSize)) {
+                availablePsramSize = 0
+            }
+
+            if (isNaN(psramSize)) {
+                psramSize = 1
+            }
+
             if (isNaN(filesystemSize)) {
                 filesystemSize = 1
             }
@@ -314,9 +322,8 @@
                 $("#usedHeapSize").text("" + (heapSize - availableHeapSize) + " byte");
                 $("#usedHeapSize").css("background-color", window.chartColors.red);
                 $("#availablePsramSize").css("background-color", window.chartColors.green);
-                $("#usedPsramSize").text("" + (psramSize - availablepsramSize) + " byte");
+                $("#usedPsramSize").text("" + (psramSize - availablePsramSize) + " byte");
                 $("#usedPsramSize").css("background-color", window.chartColors.red);
-
 
                 /* Draw the chart, showing the current situation on the filesystem. */
                 generatePieGraph("canvasChartFs", {
