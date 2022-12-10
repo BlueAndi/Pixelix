@@ -34,6 +34,9 @@
  *****************************************************************************/
 #include "ButtonHandler.h"
 #include "DisplayMgr.h"
+#include "SysMsg.h"
+
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -109,6 +112,7 @@ void ButtonHandler::process()
         {
             const uint32_t ACTIVATE_NEXT_SLOT   = 1U;
             const uint32_t NEXT_FADE_EFFECT     = 2U;
+            const uint32_t SHOW_IP_ADDR         = 5U;
 
             switch(m_triggerCnt)
             {
@@ -123,6 +127,17 @@ void ButtonHandler::process()
                     DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
 
                     DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
+                }
+                break;
+
+            case SHOW_IP_ADDR:
+                {
+                    const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
+                    const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+                    String          infoStr                 = "IP: ";
+
+                    infoStr += WiFi.localIP().toString();
+                    SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
                 }
                 break;
 

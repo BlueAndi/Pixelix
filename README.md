@@ -95,6 +95,7 @@ After configuration restart and voila, Pixelix will be available in your wifi ne
 * The user button provides several features:
     * On short pulse: Activates the next slot.
     * Two short pulses: Activates next fade effect.
+    * Five short pulses: IP address is shown.
     * Long pressed: Increases the display brightness until maximum and then decreases until minimum. After that it will again increases it and so on.
 * If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
 * If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
