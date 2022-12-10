@@ -1043,9 +1043,13 @@ void DisplayMgr::process()
 
             m_selectedPlugin = m_slotList.getPlugin(m_selectedSlotId);
 
-            /* If plugin shall not be infinite active and is not in a sticky slot, start the slot timer. */
-            if ((0U != duration) &&
-                (m_selectedSlotId != m_slotList.getStickySlot()))
+            /* If plugin shall be infinite active or is in a sticky slot, the slot timer will be stopped otherwise started. */
+            if ((0U == duration) ||
+                (m_selectedSlotId == m_slotList.getStickySlot()))
+            {
+                m_slotTimer.stop();
+            }
+            else
             {
                 m_slotTimer.start(duration);
             }
