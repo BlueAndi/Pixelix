@@ -84,6 +84,7 @@ public:
         Widget(WIDGET_TYPE),
         m_formatStr(),
         m_formatStrNew(),
+        m_formatStrTmp(),
         m_scrollInfo(),
         m_scrollInfoNew(),
         m_isNewTextAvailable(false),
@@ -106,6 +107,7 @@ public:
         Widget(WIDGET_TYPE),
         m_formatStr(str),
         m_formatStrNew(str),
+        m_formatStrTmp(),
         m_scrollInfo(),
         m_scrollInfoNew(),
         m_isNewTextAvailable(false),
@@ -126,6 +128,7 @@ public:
         Widget(WIDGET_TYPE),
         m_formatStr(widget.m_formatStr),
         m_formatStrNew(widget.m_formatStrNew),
+        m_formatStrTmp(widget.m_formatStrTmp),
         m_scrollInfo(widget.m_scrollInfo),
         m_scrollInfoNew(widget.m_scrollInfoNew),
         m_isNewTextAvailable(widget.m_isNewTextAvailable),
@@ -157,6 +160,7 @@ public:
             
             m_formatStr             = widget.m_formatStr;
             m_formatStrNew          = widget.m_formatStrNew;
+            m_formatStrTmp          = widget.m_formatStrTmp;
             m_scrollInfo            = widget.m_scrollInfo;
             m_scrollInfoNew         = widget.m_scrollInfoNew;
             m_isNewTextAvailable    = widget.m_isNewTextAvailable;
@@ -174,6 +178,9 @@ public:
      * Set the text string. It can contain format tags like:
      * - "#RRGGBB" Color information in RGB888 format
      * 
+     * Note: New text is always scrolled in and not immediate shown.
+     *       If you want to show it immediately, you will need to clear() it first.
+     * 
      * @param[in] formatStr String, which may contain format tags
      */
     void setFormatStr(const String& formatStr)
@@ -189,10 +196,37 @@ public:
             {
                 m_formatStrNew          = formatStr;
                 m_isNewTextAvailable    = true;
+
+                m_formatStrTmp.clear();
+            }
+            else
+            {
+                m_formatStrTmp = formatStr;
             }
         }
 
+        m_scrollingCnt = 0U;
+
         return;
+    }
+
+    /**
+     * Clear immediately and don't show anything further.
+     */
+    void clear()
+    {
+        m_formatStr.clear();
+        m_formatStrNew.clear();
+        m_formatStrTmp.clear();
+
+        m_isNewTextAvailable = false;
+        m_handleNewText = false;
+
+        m_scrollInfo.isEnabled  = false;
+        m_scrollInfo.offset     = 0;
+        m_scrollInfo.offsetDest = 0;
+        m_scrollInfo.stopAtDest = false;
+        m_scrollInfo.textWidth  = 0U;
     }
 
     /**
@@ -352,6 +386,7 @@ private:
 
     String          m_formatStr;            /**< Current shown string, which contains format tags. */
     String          m_formatStrNew;         /**< New text string, which contains format tags. */
+    String          m_formatStrTmp;         /**< Temporary formatted string. Used only as storage until a new text is completely taken over. */
     ScrollInfo      m_scrollInfo;           /**< Scroll information */
     ScrollInfo      m_scrollInfoNew;        /**< Scroll information for the new text. */
     bool            m_isNewTextAvailable;   /**< Is new updated text available? */

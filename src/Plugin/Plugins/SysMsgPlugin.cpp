@@ -96,6 +96,11 @@ void SysMsgPlugin::inactive()
     /* User selected next slot. Skip showing current information further. */
     disable();
 
+    /* Clear information to avoid that old information is later shown again,
+     * caused by scrolling feature of the underlying text widget.
+     */
+    m_textWidget.clear();
+
     return;
 }
 

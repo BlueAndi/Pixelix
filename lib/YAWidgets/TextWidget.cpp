@@ -112,25 +112,25 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         }
 
         /* Handle the following scenarios:
-            * +==============+==============+
-            * | Current text | New text     |
-            * +==============+==============+
-            * | Static       | Static       | --> Show new text immediately, no scrolling.
-            * +--------------+--------------+
-            * | Static       | Scrolling    | --> Scroll current text out and new one in.
-            * +--------------+--------------+
-            * | Scrolling    | Static       | --> Scroll current text out, new one in and stop scrolling at the end.
-            * +--------------+--------------+
-            * | Scrolling    | Scrolling    | --> Continue scrolling and just scroll new one in.
-            * +--------------+--------------+
-            */
+         * +==============+==============+
+         * | Current text | New text     |
+         * +==============+==============+
+         * | Static       | Static       | --> Show new text immediately, no scrolling.
+         * +--------------+--------------+
+         * | Static       | Scrolling    | --> Scroll current text out and new one in.
+         * +--------------+--------------+
+         * | Scrolling    | Static       | --> Scroll current text out, new one in and stop scrolling at the end.
+         * +--------------+--------------+
+         * | Scrolling    | Scrolling    | --> Continue scrolling and just scroll new one in.
+         * +--------------+--------------+
+         */
 
         /* Is current text static shown? */
         if (false == m_scrollInfo.isEnabled)
         {
             /* Can new text be static shown?
-                * If yes, it will jump immediately in.
-                */
+             * If yes, it will jump immediately in.
+             */
             if (false == m_scrollInfoNew.isEnabled)
             {
                 /* New text is kept static. */
@@ -173,8 +173,8 @@ void TextWidget::prepareNewText(YAGfx& gfx)
             if (false == m_scrollInfoNew.isEnabled)
             {
                 /* New text will be scrolling in and then static shown.
-                    * If the current text is near the end, the new text will start outside the display.
-                    */
+                 * If the current text is near the end, the new text will start outside the display.
+                 */
                 m_scrollInfoNew.isEnabled   = true;
                 m_scrollInfoNew.stopAtDest  = true;
                 m_scrollInfoNew.offsetDest  = 0;
@@ -188,8 +188,8 @@ void TextWidget::prepareNewText(YAGfx& gfx)
             }
             else
             /* New text will be scrolling, starting right after current scrolling text.
-                * If the current text is near the end, the new text will start outside the display.
-                */
+             * If the current text is near the end, the new text will start outside the display.
+             */
             {
                 m_scrollInfoNew.stopAtDest  = false;
                 m_scrollInfoNew.offsetDest  = 0;
@@ -267,6 +267,15 @@ void TextWidget::paint(YAGfx& gfx)
                 m_handleNewText = false;
                 m_formatStr     = m_formatStrNew;
                 m_scrollingCnt  = 0U;
+
+                /* Any additional new format string available? */
+                if (false == m_formatStrTmp.isEmpty())
+                {
+                    m_formatStrNew          = m_formatStrTmp;
+                    m_isNewTextAvailable    = true;
+
+                    m_formatStrTmp.clear();
+                }
 
                 /* If the new text can be shown static, it must be stopped scrolling  now. */
                 if (true == m_scrollInfoNew.stopAtDest)
