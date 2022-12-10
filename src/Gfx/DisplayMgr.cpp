@@ -510,7 +510,7 @@ bool DisplayMgr::activateSlot(uint8_t slotId)
     bool                        isSuccessful = false;
     MutexGuard<MutexRecursive>  guard(m_mutexInterf);
 
-    if (SlotList::SLOT_ID_INVALID != slotId)
+    if (true == m_slotList.isSlotIdValid(slotId))
     {
         /* Slot already active? */
         if (slotId == m_selectedSlotId)
