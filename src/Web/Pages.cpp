@@ -688,15 +688,8 @@ namespace tmpl
      */
     static String getEspType()
     {
-        String result;
+        String result = CONFIG_IDF_TARGET;
 
-#if defined(ESP32)
-        result = "ESP32";
-#elif defined(ESP32S2)
-        result = "ESP32S2";
-#else
-        result ="UNKNOWN";
-#endif
         return result;
     }
 
