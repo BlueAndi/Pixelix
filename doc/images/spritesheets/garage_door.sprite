@@ -7,7 +7,7 @@
             "width": 8,
             "height": 8
         },
-        "fps": 10,
+        "fps": 5,
         "repeat": false
     }
 }
