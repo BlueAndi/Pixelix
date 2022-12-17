@@ -2,7 +2,7 @@ blueprint:
   name: Pixelix LED Matrix Wrapper for JustText Plugin
   description: Pixelix LED Matrix Wrapper for JustText Plugin
   domain: automation
-  source_url: https://github.com/BlueAndi/esp-rgb-led-matrix/blob/Development/doc/homeassistant/pixelix-justtext.yaml
+  source_url: https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/homeassistant/pixelix-justtext.yaml
   input:
     uid:
       name: The uid of the Plugin

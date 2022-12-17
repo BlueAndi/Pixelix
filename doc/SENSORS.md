@@ -32,7 +32,8 @@ A "X" in the development board column means valid all development boards. Except
 | Development Board | Photoresistor pin 1 | Photoresistor pin 2 |
 | ----------------- | ------------------- | ------------------- |
 | X | Vcc | Pin 34 |
-| TTGO ESP32 T-Display | Vcc | Pin 32 |
+| Lilygo&reg; TTGO ESP32 T-Display | Vcc | Pin 32 |
+| Lilygo&reg; ESP32 T-Display S3 | Vcc | Pin 10 |
 
 # Temperature and humidity sensors
 
@@ -45,13 +46,15 @@ A "X" in the development board column means valid all development boards. Except
 | Development Board | DHTx pin 1 | DHTx pin 2 |
 | ----------------- | ---------- | ---------- |
 | X | Vcc | Pin 5 |
-| TTGO ESP32 T-Display | Vcc | Pin 27 |
+| Lilygo&reg; TTGO ESP32 T-Display | Vcc | Pin 27 |
+| Lilygo&reg; ESP32 T-Display S3 | Vcc | Pin 21 |
 
 ## SHT3x (I2C)
 
 | Development Board | I2C SCL | I2C SDA |
 | ----------------- | ------- | ------- |
 | X | Pin 22 | Pin 21 |
+| Lilygo&reg; ESP32 T-Display S3 | Pin 17 | Pin 18 |
 
 # Audio (digital micropohone with I2S)
 
@@ -61,6 +64,7 @@ Only the left channel is supported, therefore the L/R channel select signal shal
 | Development Board | Left/Right Clock (LRCL) | Data Output (DOUT) | Bit Clock (BCLK) | Left/Right Channel Select (L/R) | Chip Enable (CHIPEN) |
 | ----------------- | ----------------------- | ------------------ | ---------------- | ------------------------------- | -------------------- |
 | X | Pin 25 | Pin 33 | Pin 26 | GND | Vcc |
+| Lilygo&reg; ESP32 T-Display S3 | Pin 12 | Pin 18 | Pin 11 | GND | Vcc |
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

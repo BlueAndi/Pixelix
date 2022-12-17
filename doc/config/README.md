@@ -28,7 +28,7 @@ The SW build environment is based on [PlatformIO](https://platformio.org/). The 
 
 ## Logical Configuration Hierarchy And Dependencies
 
-![pio-env-dependencies](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/config/uml/pio-env-dependencies.wsd)
+![pio-env-dependencies](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/config/uml/pio-env-dependencies.wsd)
 
 # Version Numbers
 The concept behind the version number follows the [semantic versioning](https://semver.org/).
