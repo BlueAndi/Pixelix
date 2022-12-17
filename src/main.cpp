@@ -83,6 +83,19 @@ static const uint32_t   SERIAL_BAUDRATE     = 115200U;
 /** Task period in ms of the loop() task. */
 static const uint32_t   LOOP_TASK_PERIOD    = 40U;
 
+#if ARDUINO_USB_MODE
+#if ARDUINO_USB_CDC_ON_BOOT /* Serial used for USB CDC */
+
+/**
+ * Minimize the USB tx timeout (ms) to avoid too long blocking behaviour during
+ * writing e.g. log messages to it. If the value is too high, it will influence
+ * the display refresh bad.
+ */
+static const uint32_t   HWCDC_TX_TIMEOUT    = 4U;
+
+#endif  /* ARDUINO_USB_CDC_ON_BOOT */
+#endif  /* ARDUINO_USB_MODE */
+
 /******************************************************************************
  * External functions
  *****************************************************************************/
@@ -97,6 +110,12 @@ void setup()
 
     /* Setup serial interface */
     Serial.begin(SERIAL_BAUDRATE);
+    
+    #if ARDUINO_USB_MODE
+    #if ARDUINO_USB_CDC_ON_BOOT
+    Serial.setTxTimeoutMs(HWCDC_TX_TIMEOUT);
+    #endif  /* ARDUINO_USB_CDC_ON_BOOT */
+    #endif  /* ARDUINO_USB_MODE */
 
     /* Set severity for esp logging system. */
     esp_log_level_set("*", CONFIG_ESP_LOG_SEVERITY);
