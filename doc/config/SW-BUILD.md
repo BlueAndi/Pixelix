@@ -1,5 +1,5 @@
 # PIXELIX <!-- omit in toc -->
-![PIXELIX](./images/LogoBlack.png)
+![PIXELIX](../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
@@ -31,15 +31,15 @@ Now its time to build the software for the appropriate target.
 1. Load workspace in VSCode.
 2. Change to PlatformIO toolbar (click on the head of the ant in the left column).
 
-![VSCodePIOIcon](./images/VSCodePIOIcon.png)
+![VSCodePIOIcon](../images/VSCodePIOIcon.png)
 
 3. Lets now build the software independent of your specific board, just to see whether it works by _Project Tasks -> Default -> Build All_ or via hotkey ctrl-alt-b
 
-![VSCodePIODefault](./images/VSCodePIODefault.png)
+![VSCodePIODefault](../images/VSCodePIODefault.png)
 
 4. If no error happened, you are ready.
 
-![VSCodePIODefaultBuild](./images/VSCodePIODefaultBuild.png)
+![VSCodePIODefaultBuild](../images/VSCodePIODefaultBuild.png)
 
 Note, the default project is esp32 DevKit v1 board, programming via USB.
 
