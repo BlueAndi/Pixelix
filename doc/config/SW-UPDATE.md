@@ -1,5 +1,5 @@
 # PIXELIX <!-- omit in toc -->
-![PIXELIX](./images/LogoBlack.png)
+![PIXELIX](../images/LogoBlack.png)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
@@ -60,8 +60,8 @@ Steps:
 
 Example:
 
-![VSCodeUpdateOta](./images/VSCodeUpdateOta.png)
-![UploadUtility](./images/UploadUtility.png)
+![VSCodeUpdateOta](../images/VSCodeUpdateOta.png)
+![UploadUtility](../images/UploadUtility.png)
 
 # Update via browser
 Preconditions:
