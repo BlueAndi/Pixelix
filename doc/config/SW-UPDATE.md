@@ -36,7 +36,7 @@ Steps:
 
 Example:
 
-![VSCodeUpdate](./images/VSCodeUpdate.png)
+![VSCodeUpdate](../images/VSCodeUpdate.png)
 
 # Update via OTA (over-the-air)
 Preconditions:
