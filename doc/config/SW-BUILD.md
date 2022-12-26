@@ -21,7 +21,7 @@ $ git clone https://github.com/BlueAndi/esp-rgb-led-matrix
 
 Example:
 
-![GitCloneOnConsole](./images/GitCloneOnConsole.png)
+![GitCloneOnConsole](../images/GitCloneOnConsole.png)
 
 :warning: If you download the project from github, because you skipped the git installation, the build may fail because it can happen that other necessary libraries can not be automatically cloned by PlatformIO.
 
