@@ -44,6 +44,8 @@
 #include <driver/i2s.h>
 #include <Mutex.hpp>
 
+#include "AudioDrv.h"
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -60,34 +62,39 @@
  * A spectrum analyzer, which transforms time discrete samples to
  * frequency spectrum bands.
  */
-class SpectrumAnalyzer
+class SpectrumAnalyzer : public IAudioObserver
 {
 public:
 
     /**
-     * Get spectrum analyzer instance.
-     * 
-     * @return Spectrum analyzer instance
+     * Constructs the spectrum analyzer instance.
      */
-    static SpectrumAnalyzer& getInstance()
+    SpectrumAnalyzer() :
+        m_mutex(),
+        m_real{0.0f},
+        m_imag{0.0f},
+        m_fft(m_real, m_imag, AudioDrv::SAMPLES, AudioDrv::SAMPLE_RATE),
+        m_freqBins{0.0f},
+        m_freqBinsAreReady(false)
     {
-        static SpectrumAnalyzer instance;   /* idiom */
-
-        return instance;
     }
 
     /**
-     * Start the spectrum analyzer.
-     * If it is already started, nothing happens.
-     * 
-     * @return If successful started, it will return true otherwise false.
+     * Destroys the spectrum analyzer instance.
      */
-    bool start();
+    ~SpectrumAnalyzer()
+    {
+        /* Never called. */
+    }
 
     /**
-     * Stop the spectrum analyzer.
+     * The audio driver will call this method to notify about a complete available
+     * number of samples.
+     * 
+     * @param[in]   data    Audio sample data buffer
+     * @param[in]   size    Number of audio samples
      */
-    void stop();
+    void notify(int32_t* data, size_t size) final;
 
     /**
      * Get the number of frequency bins.
@@ -107,29 +114,7 @@ public:
      * 
      * @return If successful, it will return true otherwise false.
      */
-    bool getFreqBins(double* freqBins, size_t len)
-    {
-        bool                isSuccessful    = false;
-        MutexGuard<Mutex>   guard(m_mutex);
-
-        if ((nullptr != freqBins) &&
-            (0U < len) &&
-            ((FREQ_BINS >= len)))
-        {
-            size_t idx = 0U;
-
-            for(idx = 0U; idx < len; ++idx)
-            {
-                freqBins[idx] = m_freqBins[idx];
-            }
-
-            m_freqBinsAreReady = false;
-
-            isSuccessful = true;
-        }
-
-        return isSuccessful;
-    }
+    bool getFreqBins(double* freqBins, size_t len);
 
     /**
      * Are the frequency bins updated and ready?
@@ -145,146 +130,21 @@ public:
 
 private:
 
-    /** Task stack size in bytes */
-    static const uint32_t               TASK_STACK_SIZE         = 8096U;
-
-    /** MCU core where the task shall run */
-    static const BaseType_t             TASK_RUN_CORE           = PRO_CPU_NUM;
-
-    /** Task priority. */
-    static const UBaseType_t            TASK_PRIORITY           = 1U;
-
-    /**
-     * The sample rate in Hz. According to the Nyquist theorem, it shall be
-     * twice as the max. audio frequency, which to support.
-     */
-    static const uint32_t               SAMPLE_RATE             = 14080U;
-
-    /**
-     * The number of samples over the spectrum. This shall be always a power of 2!
-     */
-    static const uint32_t               SAMPLES                 = 512U;
-
     /**
      * The number of frequency bins over the spectrum. Note, this is always
      * half of the samples, because they are symmetrical around DC.
      */
-    static const uint32_t               FREQ_BINS               = SAMPLES / 2U;
+    static const uint32_t   FREQ_BINS   = AudioDrv::SAMPLES / 2U;
 
-    /**
-     * The I2S port, which to use for the audio input.
-     */
-    static const i2s_port_t             I2S_PORT                = I2S_NUM_0;
-
-    /**
-     * I2S event queue size in number of events.
-     */
-    static const size_t                 I2S_EVENT_QUEUE_SIZE    = 4U;
-
-    /**
-     * I2S bits per sample.
-     * If you change this, consider to change the sample datatypes at the
-     * place where i2s_read() is used.
-     * 
-     * The INMP441 microphone provides 24-bit sample with MSB first by
-     * 32 clock cycles. This means we have to configure here a 32 bit
-     * sample and shift it down after its received.
-     */
-    static const i2s_bits_per_sample_t  I2S_BITS_PER_SAMPLE     = I2S_BITS_PER_SAMPLE_32BIT;
-
-    /**
-     * The INMP441 microphone provides 24-bit sample with MSB first by
-     * 32 clock cycles. This means we have to configure here a 32 bit
-     * sample and shift it down after its received.
-     */
-    static const uint32_t               I2S_SAMPLE_SHIFT        = 8U;
-
-    /**
-     * I2S DMA block size in bytes.
-     */
-    static const int32_t                DMA_BLOCK_SIZE          = 256;
-
-    /**
-     * I2S DMA number of blocks.
-     */
-    static const int32_t                DMA_BLOCKS              = 4;
-
-    /**
-     * Calculated number of samples per DMA block.
-     */
-    static const uint32_t               SAMPLES_PER_DMA_BLOCK   = DMA_BLOCK_SIZE / (I2S_BITS_PER_SAMPLE / 8);
-
-    /**
-     * Calculated the up rounded wait time in ms, till one DMA block is complete.
-     */
-    static const uint32_t               DMA_BLOCK_TIMEOUT       = ((SAMPLES_PER_DMA_BLOCK * 1000U) + (SAMPLE_RATE / 2U)) / SAMPLE_RATE;
-
-    mutable Mutex       m_mutex;                /**< Mutex used for concurrent access protection. */
-    TaskHandle_t        m_taskHandle;           /**< Task handle */
-    bool                m_taskExit;             /**< Flag to signal the task to exit. */
-    SemaphoreHandle_t   m_xSemaphore;           /**< Binary semaphore used to signal the task exit. */
-    double              m_real[SAMPLES];        /**< The real values. */
-    double              m_imag[SAMPLES];        /**< The imaginary values. */
-    arduinoFFT          m_fft;                  /**< The FFT algorithm. */
-    QueueHandle_t       m_i2sEventQueueHandle;  /**< The I2S event queue handle, used for rx done notification. Note, the queue is created by I2S driver. */
-    uint16_t            m_sampleWriteIndex;     /**< The current sample write index to the input buffer. */
-    double              m_freqBins[FREQ_BINS];  /**< The frequency bins as result of the FFT, with linear magnitude. */
-    bool                m_freqBinsAreReady;     /**< Are the frequency bins ready for the application? */
-    bool                m_isMicAvailable;       /**< Is a microphone as input device available? */
-
-    /**
-     * Constructs the spectrum analyzer instance.
-     */
-    SpectrumAnalyzer() :
-        m_mutex(),
-        m_taskHandle(nullptr),
-        m_taskExit(false),
-        m_xSemaphore(nullptr),
-        m_real{0.0f},
-        m_imag{0.0f},
-        m_fft(m_real, m_imag, SAMPLES, SAMPLE_RATE),
-        m_i2sEventQueueHandle(nullptr),
-        m_sampleWriteIndex(0U),
-        m_freqBins{0.0f},
-        m_freqBinsAreReady(false),
-        m_isMicAvailable(false)
-    {
-    }
-
-    /**
-     * Destroys the spectrum analyzer instance.
-     */
-    ~SpectrumAnalyzer()
-    {
-        /* Never called. */
-    }
+    mutable Mutex       m_mutex;                    /**< Mutex used for concurrent access protection. */
+    double              m_real[AudioDrv::SAMPLES];  /**< The real values. */
+    double              m_imag[AudioDrv::SAMPLES];  /**< The imaginary values. */
+    arduinoFFT          m_fft;                      /**< The FFT algorithm. */
+    double              m_freqBins[FREQ_BINS];      /**< The frequency bins as result of the FFT, with linear magnitude. */
+    bool                m_freqBinsAreReady;         /**< Are the frequency bins ready for the application? */
 
     SpectrumAnalyzer(const SpectrumAnalyzer& drv);
     SpectrumAnalyzer& operator=(const SpectrumAnalyzer& drv);
-
-    /**
-     * Processing task.
-     *
-     * @param[in]   parameters  Task pParameters
-     */
-    static void processTask(void* parameters);
-
-    /**
-     * Process the main part in the processing task.
-     */
-    void process();
-
-    /**
-     * Setup the I2S driver.
-     * 
-     * @return If successful, it will return true otherwise false.
-     */
-    bool initI2S();
-
-    /**
-     * De-initialize the I2S driver.
-     */
-    void deInitI2S();
 
     /**
      * Transform from discrete time to frequency spectrum.

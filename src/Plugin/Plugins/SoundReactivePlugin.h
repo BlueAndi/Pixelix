@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include "Plugin.hpp"
+#include "SpectrumAnalyzer.h"
 
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
@@ -82,7 +83,8 @@ public:
         m_maxHeight(0U),
         m_freqBins(nullptr),
         m_corrFactors(),
-        m_peak(INMP441_MAX_SPL)
+        m_peak(INMP441_MAX_SPL),
+        m_spectrumAnalyzer()
     {
         uint8_t bandIdx = 0U;
 
@@ -328,6 +330,7 @@ private:
     double*                 m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
     float                   m_corrFactors[MAX_FREQ_BANDS];  /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
     float                   m_peak;                         /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
+    SpectrumAnalyzer        m_spectrumAnalyzer;             /**< Spectrum analyzer which transforms the audio data from time to frequency domain. */
 
     /**
      * Saves current configuration to JSON file.
@@ -338,6 +341,24 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
+
+    /**
+     * Decay graphical signal peak periodically.
+     */
+    void decayPeak();
+
+    /**
+     * Handle frequency bins.
+     * 
+     * @param[out]  freqBins    Frequency bin buffer
+     * @param[in]   freqBinLen  Length of frequency bin buffer in elements.
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
+    void handleFreqBins(double* freqBins, size_t freqBinLen);
+
+    void convertToOctaveFreqBands(float* octaveFreqBands, size_t octaveFreqBandsLen, double* freqBins, size_t freqBinLen);
+    float calculateAmplitudeAverage(float* octaveFreqBands, size_t octaveFreqBandsLen);
 };
 
 /******************************************************************************
