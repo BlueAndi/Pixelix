@@ -112,7 +112,6 @@ public:
 
     /**
      * Start the audio driver.
-     * If it is already started, nothing happens.
      * 
      * @return If successful started, it will return true otherwise false.
      */
@@ -247,7 +246,7 @@ private:
     /**
      * Maximum number of observers which can be registered.
      */
-    static const uint32_t               MAX_OBSERVERS           = 2U;
+    static const uint32_t               MAX_OBSERVERS           = 3U;
 
     mutable Mutex       m_mutex;                    /**< Mutex used for concurrent access protection. */
     TaskHandle_t        m_taskHandle;               /**< Task handle */

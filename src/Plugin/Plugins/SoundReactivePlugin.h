@@ -45,7 +45,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include "Plugin.hpp"
-#include "SpectrumAnalyzer.h"
 
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
@@ -83,8 +82,7 @@ public:
         m_maxHeight(0U),
         m_freqBins(nullptr),
         m_corrFactors(),
-        m_peak(INMP441_MAX_SPL),
-        m_spectrumAnalyzer()
+        m_peak(INMP441_MAX_SPL)
     {
         uint8_t bandIdx = 0U;
 
@@ -330,7 +328,6 @@ private:
     double*                 m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
     float                   m_corrFactors[MAX_FREQ_BANDS];  /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
     float                   m_peak;                         /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
-    SpectrumAnalyzer        m_spectrumAnalyzer;             /**< Spectrum analyzer which transforms the audio data from time to frequency domain. */
 
     /**
      * Saves current configuration to JSON file.

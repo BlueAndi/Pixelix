@@ -28,7 +28,7 @@
  * @brief  Spectrum analyzer
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup hal
+ * @addtogroup audio_service
  *
  * @{
  */
@@ -41,7 +41,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <arduinoFFT.h>
-#include <driver/i2s.h>
 #include <Mutex.hpp>
 
 #include "AudioDrv.h"

@@ -16,6 +16,15 @@ package "Service" as service {
     component "AsyncHttpClient" as asnyHttpClient
     component "CaptivePortalHandler" as captivePortalHandler
 
+    package "Audio" as audio {
+        component "SpectrumAnalyzer" as spectrumAnalyzer
+        component "AudioToneDetector" as audioToneDetector
+        component "AudioService" as audioService
+
+        audioService ..> spectrumAnalyzer
+        audioService ..> audioToneDetector
+    }
+
     package FadeEffects    
     package YAWidgets
     package YAGfx
@@ -36,6 +45,7 @@ package "Service" as service {
         component "mDNS" as dns <<Arduino>>
         component "ArduinoOTA" <<Arduino>> as ota
         component "LwIP" <<Arduino>> as lwip
+        component "ArduinoFFT" as fft
 
         webServer ..> tcp
         pubSubClient ..> tcp
@@ -52,6 +62,8 @@ package "Service" as service {
     pages ...> webServer
     asnyHttpClient ....> tcp
     captivePortalHandler ...> webServer
+
+    spectrumAnalyzer ....> fft
 
     restApi ...> webServer
     mqttService ...> pubSubClient

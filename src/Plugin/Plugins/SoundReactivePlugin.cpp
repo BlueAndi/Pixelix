@@ -33,7 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "SoundReactivePlugin.h"
-#include "AudioDrv.h"
+#include "AudioService.h"
 
 #include <Logging.h>
 #include <FileSystem.h>
@@ -140,20 +140,19 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObject& value)
 
 void SoundReactivePlugin::start(uint16_t width, uint16_t height)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     UTIL_NOT_USED(width);
 
-    m_freqBins = new(std::nothrow) double[m_spectrumAnalyzer.getFreqBinsLen()];
+    if (nullptr != spectrumAnalyzer)
+    {
+        m_freqBins = new(std::nothrow) double[spectrumAnalyzer->getFreqBinsLen()];
 
-    if (nullptr == m_freqBins)
-    {
-        LOG_ERROR("Couldn't get memory for frequency bins.");
-    }
-    else
-    {
-        AudioDrv::getInstance().start();
-        AudioDrv::getInstance().registerObserver(m_spectrumAnalyzer);
+        if (nullptr == m_freqBins)
+        {
+            LOG_ERROR("Couldn't get memory for frequency bins.");
+        }
     }
 
     m_decayPeakTimer.start(DECAY_PEAK_PERIOD);
@@ -180,9 +179,6 @@ void SoundReactivePlugin::stop()
 
     m_decayPeakTimer.stop();
 
-    AudioDrv::getInstance().unregisterObserver(m_spectrumAnalyzer);
-    AudioDrv::getInstance().stop();
-
     if (nullptr != m_freqBins)
     {
         delete[] m_freqBins;
@@ -199,23 +195,27 @@ void SoundReactivePlugin::stop()
 
 void SoundReactivePlugin::process(bool isConnected)
 {
+    SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     UTIL_NOT_USED(isConnected);
 
     decayPeak();
 
-    if (true == m_spectrumAnalyzer.areFreqBinsReady())
+    if (nullptr != spectrumAnalyzer)
     {
-        uint8_t         bandIdx     = 0U;
-        const size_t    freqBinLen  = m_spectrumAnalyzer.getFreqBinsLen();
-
-        if (nullptr != m_freqBins)
+        if (true == spectrumAnalyzer->areFreqBinsReady())
         {
-            /* Copy frequency bins from spectrum analyzer. */
-            if (true == m_spectrumAnalyzer.getFreqBins(m_freqBins, freqBinLen))
+            uint8_t         bandIdx     = 0U;
+            const size_t    freqBinLen  = spectrumAnalyzer->getFreqBinsLen();
+
+            if (nullptr != m_freqBins)
             {
-                handleFreqBins(m_freqBins, freqBinLen);
+                /* Copy frequency bins from spectrum analyzer. */
+                if (true == spectrumAnalyzer->getFreqBins(m_freqBins, freqBinLen))
+                {
+                    handleFreqBins(m_freqBins, freqBinLen);
+                }
             }
         }
     }

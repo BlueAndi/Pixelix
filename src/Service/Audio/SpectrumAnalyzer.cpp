@@ -123,47 +123,50 @@ struct WindowCorrection<FFT_WIN_TYP_FLT_TOP>
 
 void SpectrumAnalyzer::notify(int32_t* data, size_t size)
 {
-    size_t index = 0U;
+    if (nullptr != data)
+    {
+        size_t index = 0U;
 
 #if (SPECTRUM_ANALYZER_SIM_SIN_EN != 0)
 
-    /* Simulate the sampling of a sinusoidal 1000 Hz signal
-        * with an amplitude of 94 db SPL, sampled at 40000 Hz.
-        */
-    {
-        double signalFrequency  = 1000.0f;
-        double cycles           = (((AudioDrv::SAMPLES - 1U) * signalFrequency) / AudioDrv::SAMPLE_RATE);   /* Number of signal cycles that the sampling will read. */
-        double amplitude        = 420426.0f; /* 94 db SPL */
-
-        for (uint16_t sampleIdx = 0U; sampleIdx < AudioDrv::SAMPLES; ++sampleIdx)
+        /* Simulate the sampling of a sinusoidal 1000 Hz signal
+         * with an amplitude of 94 db SPL, sampled at 40000 Hz.
+         */
         {
-            /* Build data with positive and negative values. */
-            m_real[sampleIdx] = (amplitude * (sin((sampleIdx * (twoPi * cycles)) / AudioDrv::SAMPLES))) / 2.0f;
-            
-            /* Imaginary part must be zeroed in case of looping to avoid wrong calculations and overflows. */
-            m_imag[sampleIdx] = 0.0f;
-        }
+            double signalFrequency  = 1000.0f;
+            double cycles           = (((AudioDrv::SAMPLES - 1U) * signalFrequency) / AudioDrv::SAMPLE_RATE);   /* Number of signal cycles that the sampling will read. */
+            double amplitude        = 420426.0f; /* 94 db SPL */
 
-        m_isMicAvailable = true;
-    }
+            for (uint16_t sampleIdx = 0U; sampleIdx < AudioDrv::SAMPLES; ++sampleIdx)
+            {
+                /* Build data with positive and negative values. */
+                m_real[sampleIdx] = (amplitude * (sin((sampleIdx * (twoPi * cycles)) / AudioDrv::SAMPLES))) / 2.0f;
+                
+                /* Imaginary part must be zeroed in case of looping to avoid wrong calculations and overflows. */
+                m_imag[sampleIdx] = 0.0f;
+            }
+
+            m_isMicAvailable = true;
+        }
 
 #else /* (SPECTRUM_ANALYZER_SIM_SIN_EN != 0) */
 
-    while(index < size)
-    {
-        m_real[index] = static_cast<double>(data[index]);
-        m_imag[index] = 0.0f;
+        while(index < size)
+        {
+            m_real[index] = static_cast<double>(data[index]);
+            m_imag[index] = 0.0f;
 
-        ++index;
-    }
+            ++index;
+        }
 
 #endif  /* (SPECTRUM_ANALYZER_SIM_SIN_EN == 0) */
 
-    /* Transform the time discrete values to the frequency spectrum. */
-    calculateFFT();
+        /* Transform the time discrete values to the frequency spectrum. */
+        calculateFFT();
 
-    /* Store the frequency bins and provide it to the application. */
-    copyFreqBins();
+        /* Store the frequency bins and provide it to the application. */
+        copyFreqBins();
+    }
 }
 
 bool SpectrumAnalyzer::getFreqBins(double* freqBins, size_t len)

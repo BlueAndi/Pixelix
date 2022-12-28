@@ -53,6 +53,7 @@
 #include "FileSystem.h"
 #include "JsonFile.h"
 #include "Version.h"
+#include "AudioService.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -157,6 +158,9 @@ void InitState::entry(StateMachine& sm)
     {
         /* Initialize sensors */
         SensorDataProvider::getInstance().begin();
+
+        /* Start audio service */
+        AudioService::getInstance().start();
 
         /* Prepare everything for the plugins. */
         PluginMgr::getInstance().begin();
