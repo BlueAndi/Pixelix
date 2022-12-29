@@ -187,16 +187,6 @@ public:
     }
 
     /**
-     * Get plugin installation.
-     *
-     * @return Key value pair
-     */
-    KeyValueJson& getPluginInstallation()
-    {
-        return m_pluginInstallation;
-    }
-
-    /**
      * Get POSIX timezone string.
      *
      * @return POSIC timezone string
@@ -244,16 +234,6 @@ public:
     KeyValueUInt8& getMaxSlots()
     {
         return m_maxSlots;
-    }
-
-    /**
-     * Get display slot configuration.
-     *
-     * @return Key value pair
-     */
-    KeyValueJson& getDisplaySlotConfig()
-    {
-        return m_slotConfig;
     }
 
     /**
@@ -305,7 +285,7 @@ public:
     KeyValue* getSettingByKey(const char* key);
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 18U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 16U;
 
 private:
 
@@ -321,13 +301,11 @@ private:
     KeyValueString  m_hostname;             /**< Hostname */
     KeyValueUInt8   m_brightness;           /**< The brightness level in % set at startup. */
     KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
-    KeyValueJson    m_pluginInstallation;   /**< Plugin installation */
     KeyValueString  m_timezone;             /**< POSIX timezone string */
     KeyValueString  m_ntpServer;            /**< NTP server address */
     KeyValueString  m_timeFormat;           /**< Time format according to strftime(). */
     KeyValueString  m_dateFormat;           /**< Date format according to strftime(). */
     KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
-    KeyValueJson    m_slotConfig;           /**< Display slot configuration */
     KeyValueUInt32  m_scrollPause;          /**< Text scroll pause */
     KeyValueString  m_notifyURL;            /**< URL to be triggered when PIXELIX has connected to a remote network. */
 

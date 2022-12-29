@@ -41,6 +41,7 @@
 #include "Plugin.hpp"
 #include "HttpStatus.h"
 #include "RestUtil.h"
+#include "JsonFile.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
@@ -64,6 +65,9 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/* Initialize the full filename of the configuration file. */
+const char* PluginMgr::CONFIG_FILE_NAME = "slotConfig.json";
 
 /******************************************************************************
  * Public Methods
@@ -168,61 +172,38 @@ String PluginMgr::getRestApiBaseUriByAlias(const String& alias)
 
 bool PluginMgr::load()
 {
-    bool        isSuccessful    = true;
-    Settings&   settings        = Settings::getInstance();
+    bool                isSuccessful            = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 4096U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              fullConfigFileName      = Plugin::CONFIG_PATH;
 
-    if (false == settings.open(true))
+    fullConfigFileName += "/";
+    fullConfigFileName += CONFIG_FILE_NAME;
+
+    if (false == jsonFile.load(fullConfigFileName, jsonDoc))
     {
-        LOG_WARNING("Couldn't open filesystem.");
+        LOG_WARNING("Failed to load file %s.", fullConfigFileName.c_str());
         isSuccessful = false;
     }
     else
     {
-        String installation = settings.getPluginInstallation().getValue();
+        JsonArray       jsonSlots   = jsonDoc["slotConfiguration"].as<JsonArray>();
+        uint8_t         slotId      = 0;
+        const uint8_t   MAX_SLOTS   = DisplayMgr::getInstance().getMaxSlots();
 
-        if (true == installation.isEmpty())
+        checkJsonDocOverflow(jsonDoc, __LINE__);
+
+        for(JsonObject jsonSlot: jsonSlots)
         {
-            LOG_WARNING("Plugin installation is empty.");
-            isSuccessful = false;
-        }
-        else
-        {
-            const size_t            JSON_DOC_SIZE   = 1280U;
-            DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-            DeserializationError    error           = deserializeJson(jsonDoc, installation);
-
-            checkJsonDocOverflow(jsonDoc, __LINE__);
-
-            if (DeserializationError::Ok != error.code())
+            prepareSlotByConfiguration(slotId, jsonSlot);
+            
+            ++slotId;
+            if (MAX_SLOTS <= slotId)
             {
-                LOG_WARNING("JSON deserialization failed: %s", error.c_str());
-                isSuccessful = false;
-            }
-            else if (false == jsonDoc["slots"].is<JsonArray>())
-            {
-                LOG_WARNING("Invalid JSON format.");
-                isSuccessful = false;
-            }
-            else
-            {
-                JsonArray       jsonSlots   = jsonDoc["slots"].as<JsonArray>();
-                uint8_t         slotId      = 0;
-                const uint8_t   MAX_SLOTS   = DisplayMgr::getInstance().getMaxSlots();
-
-                for(JsonObject jsonSlot: jsonSlots)
-                {
-                    prepareSlotByConfiguration(slotId, jsonSlot);
-                    
-                    ++slotId;
-                    if (MAX_SLOTS <= slotId)
-                    {
-                        break;
-                    }
-                }
+                break;
             }
         }
-
-        settings.close();
     }
 
     return isSuccessful;
@@ -231,11 +212,15 @@ bool PluginMgr::load()
 void PluginMgr::save()
 {
     String              installation;
-    uint8_t             slotId          = 0;
-    Settings&           settings        = Settings::getInstance();
-    const size_t        JSON_DOC_SIZE   = 1280U;
+    uint8_t             slotId              = 0;
+    const size_t        JSON_DOC_SIZE       = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonArray           jsonSlots       = jsonDoc.createNestedArray("slots");
+    JsonArray           jsonSlots           = jsonDoc.createNestedArray("slotConfiguration");
+    JsonFile            jsonFile(FILESYSTEM);
+    String              fullConfigFileName  = Plugin::CONFIG_PATH;
+
+    fullConfigFileName += "/";
+    fullConfigFileName += CONFIG_FILE_NAME;
 
     for(slotId = 0; slotId < DisplayMgr::getInstance().getMaxSlots(); ++slotId)
     {
@@ -248,6 +233,7 @@ void PluginMgr::save()
             jsonSlot["uid"]         = 0;
             jsonSlot["alias"]       = "";
             jsonSlot["fontType"]    = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
+            jsonSlot["duration"]    = DisplayMgr::getInstance().getSlotDuration(slotId);
         }
         else
         {
@@ -255,21 +241,15 @@ void PluginMgr::save()
             jsonSlot["uid"]         = plugin->getUID();
             jsonSlot["alias"]       = plugin->getAlias();
             jsonSlot["fontType"]    = Fonts::fontTypeToStr(plugin->getFontType());
+            jsonSlot["duration"]    = DisplayMgr::getInstance().getSlotDuration(slotId);
         }
     }
 
     checkJsonDocOverflow(jsonDoc, __LINE__);
 
-    if (false == settings.open(false))
+    if (false == jsonFile.save(fullConfigFileName, jsonDoc))
     {
-        LOG_WARNING("Couldn't open filesystem.");
-    }
-    else
-    {
-        (void)serializeJson(jsonDoc, installation);
-
-        settings.getPluginInstallation().setValue(installation);
-        settings.close();
+        LOG_ERROR("Couldn't save slot configuration.");
     }
 }
 
@@ -313,14 +293,47 @@ void PluginMgr::createPluginConfigDirectory()
 
 void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jsonSlot)
 {
-    JsonVariant jsonName    = jsonSlot["name"];
-    JsonVariant jsonUid     = jsonSlot["uid"];
+    bool                isKeyValuePairMissing   = false;
+    JsonVariantConst    jsonName                = jsonSlot["name"];
+    JsonVariantConst    jsonUid                 = jsonSlot["uid"];
+    JsonVariantConst    jsonAlias               = jsonSlot["alias"];
+    JsonVariantConst    jsonFontType            = jsonSlot["fontType"];
+    JsonVariantConst    jsonDuration            = jsonSlot["duration"];
 
-    if ((true == jsonName.is<String>()) &&
-        (true == jsonUid.is<uint16_t>()))
+    if (false == jsonName.is<String>())
     {
-        String      name    = jsonName.as<String>();
-        uint16_t    uid     = jsonUid.as<uint16_t>();
+        LOG_WARNING("Slot %u: Name is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == jsonUid.is<uint16_t>())
+    {
+        LOG_WARNING("Slot %u: UID is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == jsonAlias.is<String>())
+    {
+        LOG_WARNING("Slot %u: Alias is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == jsonFontType.is<String>())
+    {
+        LOG_WARNING("Slot %u: Font type is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == jsonDuration.is<uint32_t>())
+    {
+        LOG_WARNING("Slot %u: Slot duration is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == isKeyValuePairMissing)
+    {
+        String      name        = jsonName.as<String>();
+        uint32_t    duration    = jsonDuration.as<uint32_t>();
 
         if (false == name.isEmpty())
         {
@@ -331,6 +344,8 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
              */
             if (nullptr == plugin)
             {
+                uint16_t uid = jsonUid.as<uint16_t>();
+
                 plugin = m_pluginFactory.createPlugin(name, uid);
             
                 if (nullptr == plugin)
@@ -339,27 +354,12 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
                 }
                 else
                 {
-                    JsonVariant     jsonAlias       = jsonSlot["alias"];
-                    JsonVariant     jsonFontType    = jsonSlot["fontType"];
-                    Fonts::FontType fontType        = Fonts::FONT_TYPE_DEFAULT;
+                    String          alias       = jsonAlias.as<String>();
+                    String          fontTypeStr = jsonFontType.as<String>();
+                    Fonts::FontType fontType    = Fonts::strToFontType(fontTypeStr.c_str());
 
-                    /* Plugin instance alias available? */
-                    if (false == jsonAlias.isNull())
-                    {
-                        String alias = jsonAlias.as<String>();
-
-                        plugin->setAlias(alias);
-                    }
-
-                    /* Plugin instance font type information available? */
-                    if (false == jsonFontType.isNull())
-                    {
-                        String fontTypeStr = jsonFontType.as<String>();
-
-                        fontType = Fonts::strToFontType(fontTypeStr.c_str());
-
-                        plugin->setFontType(fontType);
-                    }
+                    plugin->setAlias(alias);
+                    plugin->setFontType(fontType);
 
                     if (false == install(plugin, slotId))
                     {
@@ -375,6 +375,8 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
                 }
             }
         }
+
+        DisplayMgr::getInstance().setSlotDuration(slotId, duration);
     }
 }
 

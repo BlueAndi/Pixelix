@@ -171,6 +171,11 @@ public:
      */
     void save();
 
+    /**
+     * Filename of slot configuration.
+     */
+    static const char*  CONFIG_FILE_NAME;
+
 private:
 
     /**

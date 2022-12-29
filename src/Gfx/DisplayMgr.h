@@ -508,18 +508,6 @@ private:
      * @param[in]   parameters  Task pParameters
      */
     static void updateTask(void* parameters);
-
-    /**
-     * Load display slot configuration from persistent memory.
-     * 
-     * @return If successful it will return true otherwise false.
-     */
-    bool load();
-
-    /**
-     * Save display slot configuration to persistent memory.
-     */
-    void save();
 };
 
 /******************************************************************************

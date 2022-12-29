@@ -123,18 +123,6 @@ bool DisplayMgr::begin()
 
             isError = true;
         }
-        else
-        {
-            /* Loading slot configuration failed? */
-            if (false == load())
-            {
-                /* Slot configuration may be empty in the very first startup.
-                 * In this case save the current one, so the user is able to
-                 * see how looks like.
-                 */
-                save();
-            }
-        }
     }
 
     if (false == isError)
@@ -661,12 +649,6 @@ bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration, bool store)
         if (slot->getDuration() != duration)
         {
             slot->setDuration(duration);
-
-            /* Save slot configuration */
-            if (true == store)
-            {
-                save();
-            }
         }
 
         status = true;
@@ -1422,125 +1404,6 @@ void DisplayMgr::updateTask(void* parameters)
     vTaskDelete(nullptr);
 
     return;
-}
-
-bool DisplayMgr::load()
-{
-    bool        isSuccessful    = true;
-    Settings&   settings        = Settings::getInstance();
-
-    if (false == m_slotList.isAvailable())
-    {
-        LOG_WARNING("No slot exists.");
-        isSuccessful = false;
-    }
-    else if (false == settings.open(true))
-    {
-        LOG_WARNING("Couldn't open filesystem.");
-        isSuccessful = false;
-    }
-    else
-    {
-        String config = settings.getDisplaySlotConfig().getValue();
-
-        if (true == config.isEmpty())
-        {
-            LOG_WARNING("Display slot configuration is empty.");
-            isSuccessful = false;
-        }
-        else
-        {
-            const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-            DeserializationError    error           = deserializeJson(jsonDoc, config);
-
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
-
-            if (DeserializationError::Ok != error.code())
-            {
-                LOG_WARNING("JSON deserialization failed: %s", error.c_str());
-                isSuccessful = false;
-            }
-            else if (false == jsonDoc["slots"].is<JsonArray>())
-            {
-                LOG_WARNING("Invalid JSON format.");
-                isSuccessful = false;
-            }
-            else
-            {
-                JsonArray   jsonSlots   = jsonDoc["slots"].as<JsonArray>();
-                uint8_t     slotId      = 0;
-
-                for(JsonObject jsonSlot: jsonSlots)
-                {
-                    if (true == jsonSlot["duration"].is<uint32_t>())
-                    {
-                        uint32_t duration = jsonSlot["duration"].as<uint32_t>();
-
-                        m_slotList.setDuration(slotId, duration);
-
-                        ++slotId;
-                        if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        settings.close();
-    }
-
-    return isSuccessful;
-}
-
-void DisplayMgr::save()
-{
-    if (true == m_slotList.isAvailable())
-    {
-        String              config;
-        uint8_t             slotId      = 0;
-        Settings&           settings    = Settings::getInstance();
-        const size_t        JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonArray           jsonSlots   = jsonDoc.createNestedArray("slots");
-
-        for(slotId = 0; slotId < m_slotList.getMaxSlots(); ++slotId)
-        {
-            JsonObject jsonSlot = jsonSlots.createNestedObject();
-
-            jsonSlot["duration"] = m_slotList.getDuration(slotId);
-        }
-
-        if (true == jsonDoc.overflowed())
-        {
-            LOG_ERROR("JSON document has less memory available.");
-        }
-        else
-        {
-            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-        }
-
-        if (false == settings.open(false))
-        {
-            LOG_WARNING("Couldn't open filesystem.");
-        }
-        else
-        {
-            (void)serializeJson(jsonDoc, config);
-
-            settings.getDisplaySlotConfig().setValue(config);
-            settings.close();
-        }
-    }
 }
 
 /******************************************************************************

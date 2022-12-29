@@ -92,9 +92,6 @@ static const char*  KEY_BRIGHTNESS                  = "brightness";
 /** Automatic brightness control key */
 static const char*  KEY_AUTO_BRIGHTNESS_CTRL        = "a_brightn_ctrl";
 
-/** Plugin installation key */
-static const char*  KEY_PLUGIN_INSTALLATION         = "plugin_install";
-
 /** POSIX timezone string key */
 static const char*  KEY_TIMEZONE                    = "timezone";
 
@@ -109,9 +106,6 @@ static const char*  KEY_DATE_FORMAT                 = "date_format";
 
 /** Max. number of display slots key */
 static const char*  KEY_MAX_SLOTS                   = "max_slots";
-
-/** Display slot configuration key */
-static const char*  KEY_SLOT_CONFIG                 = "slot_cfg";
 
 /** Scroll pause key */
 static const char*  KEY_SCROLL_PAUSE                = "scroll_pause";
@@ -148,9 +142,6 @@ static const char*  NAME_BRIGHTNESS                 = "Brightness set at startup
 /** Automatic brightness control name of key value pair */
 static const char*  NAME_AUTO_BRIGHTNESS_CTRL       = "Autom. brightness control";
 
-/** Plugin installation name of key value pair */
-static const char*  NAME_PLUGIN_INSTALLATION        = "Plugin installation";
-
 /** POSIX timezone string name of key value pair. */
 static const char*  NAME_TIMEZONE                   = "POSIX timezone string";
 
@@ -165,9 +156,6 @@ static const char*  NAME_DATE_FORMAT                = "Date format according to 
 
 /** Max. number of display slots name of key value pair */
 static const char*  NAME_MAX_SLOTS                  = "Max. slots";
-
-/** Display slot configuration name */
-static const char*  NAME_SLOT_CONFIG                = "Display slot configuration";
 
 /** Scroll pause name */
 static const char*  NAME_SCROLL_PAUSE               = "Text scroll pause [ms]";
@@ -204,9 +192,6 @@ static const uint8_t    DEFAULT_BRIGHTNESS              = 10U; /* If powered via
 /** Automatic brightness control default value */
 static bool             DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
 
-/** Plugin installation default value */
-static const char*      DEFAULT_PLUGIN_INSTALLATION     = "";
-
 /** POSIX timezone string default value */
 static const char*      DEFAULT_TIMEZONE                = "WEST-1DWEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
 
@@ -221,9 +206,6 @@ static const char*      DEFAULT_DATE_FORMAT             = "%m/%d";
 
 /** Max. number of display slots default value */
 static uint8_t          DEFAULT_MAX_SLOTS               = 8U;
-
-/** Display slot configuration default value */
-static const char*      DEFAULT_SLOT_CONFIG             = "";
 
 /** Scroll pause default value in ms */
 static uint32_t         DEFAULT_SCROLL_PAUSE            = 80U;
@@ -259,9 +241,6 @@ static const uint8_t    MIN_VALUE_BRIGHTNESS            = 0U;
 
 /*                      MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
 
-/** Plugin installation min. length */
-static const size_t     MIN_VALUE_PLUGIN_INSTALLATION   = 0U;
-
 /** POSIX timezone min. length */
 static const size_t     MIN_VALUE_TIMEZONE              = 4U;
 
@@ -276,9 +255,6 @@ static const size_t     MIN_VALUE_DATE_FORMAT           = 2U;
 
 /** Max. number of display slots minimum value */
 static uint8_t          MIN_MAX_SLOTS                   = 2U;
-
-/** Display slot configuration min. length */
-static const size_t     MIN_VALUE_SLOT_CONFIG           = 0U;
 
 /** Scroll pause minimum value in ms */
 static uint32_t         MIN_VALUE_SCROLL_PAUSE          = 20U;
@@ -314,9 +290,6 @@ static const uint8_t    MAX_VALUE_BRIGHTNESS            = 100U;
 
 /*                      MAX_VALUE_AUTO_BRIGHTNESS_CTRL */
 
-/** Plugin installation max. length */
-static const size_t     MAX_VALUE_PLUGIN_INSTALLATION   = 1536U;
-
 /** POSIX timezone max. length */
 static const size_t     MAX_VALUE_TIMEZONE              = 128U;
 
@@ -332,17 +305,11 @@ static const size_t     MAX_VALUE_DATE_FORMAT           = 10U;
 /**
  * Max. number of display slots maximum value.
  * The number of slots can not be increased infinite. Please consider the following:
- * - The plugin meta data need storage in the settings, see MAX_VALUE_PLUGIN_INSTALLATION.
- *      The settings are stored in the NVS (non-volatile storage) partition in the flash.
- *      The NVS is limited, but very useful. Because it will survive any update!
  * - The available heap memory will be reduced. How many should be available at least can
  *      not easy determined. E.g. the network stack needs heap to handle requests, the REST
  *      API needs it to handle JSON documents, etc.
  */
-static uint8_t          MAX_MAX_SLOTS                   = 10U;
-
-/** Display slot configuration max. length */
-static const size_t     MAX_VALUE_SLOT_CONFIG           = 512U;
+static uint8_t          MAX_MAX_SLOTS                   = 16U;
 
 /** Scroll pause maximum value in ms */
 static uint32_t         MAX_VALUE_SCROLL_PAUSE          = 500U;
@@ -423,13 +390,11 @@ Settings::Settings() :
     m_hostname              (m_preferences, KEY_HOSTNAME,               NAME_HOSTNAME,              DEFAULT_HOSTNAME,               MIN_VALUE_HOSTNAME,             MAX_VALUE_HOSTNAME),
     m_brightness            (m_preferences, KEY_BRIGHTNESS,             NAME_BRIGHTNESS,            DEFAULT_BRIGHTNESS,             MIN_VALUE_BRIGHTNESS,           MAX_VALUE_BRIGHTNESS),
     m_autoBrightnessCtrl    (m_preferences, KEY_AUTO_BRIGHTNESS_CTRL,   NAME_AUTO_BRIGHTNESS_CTRL,  DEFAULT_AUTO_BRIGHTNESS_CTRL),
-    m_pluginInstallation    (m_preferences, KEY_PLUGIN_INSTALLATION,    NAME_PLUGIN_INSTALLATION,   DEFAULT_PLUGIN_INSTALLATION,    MIN_VALUE_PLUGIN_INSTALLATION,  MAX_VALUE_PLUGIN_INSTALLATION),
     m_timezone              (m_preferences, KEY_TIMEZONE,               NAME_TIMEZONE,              DEFAULT_TIMEZONE,               MIN_VALUE_TIMEZONE,             MAX_VALUE_TIMEZONE),
     m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER),
     m_timeFormat            (m_preferences, KEY_TIME_FORMAT,            NAME_TIME_FORMAT,           DEFAULT_TIME_FORMAT,            MIN_VALUE_TIME_FORMAT,          MAX_VALUE_TIME_FORMAT),
     m_dateFormat            (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT,           DEFAULT_DATE_FORMAT,            MIN_VALUE_DATE_FORMAT,          MAX_VALUE_DATE_FORMAT),
     m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS),
-    m_slotConfig            (m_preferences, KEY_SLOT_CONFIG,            NAME_SLOT_CONFIG,           DEFAULT_SLOT_CONFIG,            MIN_VALUE_SLOT_CONFIG,          MAX_VALUE_SLOT_CONFIG),
     m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE),
     m_notifyURL             (m_preferences, KEY_NOTIFY_URL,             NAME_NOTIFY_URL,            DEFAULT_NOTIFY_URL,             MIN_VALUE_NOTIFY_URL,           MAX_VALUE_NOTIFY_URL)
 {
@@ -453,8 +418,6 @@ Settings::Settings() :
     ++idx;
     m_keyValueList[idx] = &m_autoBrightnessCtrl;
     ++idx;
-    m_keyValueList[idx] = &m_pluginInstallation;
-    ++idx;
     m_keyValueList[idx] = &m_timezone;
     ++idx;
     m_keyValueList[idx] = &m_ntpServer;
@@ -464,8 +427,6 @@ Settings::Settings() :
     m_keyValueList[idx] = &m_dateFormat;
     ++idx;
     m_keyValueList[idx] = &m_maxSlots;
-    ++idx;
-    m_keyValueList[idx] = &m_slotConfig;
     ++idx;
     m_keyValueList[idx] = &m_scrollPause;
     ++idx;

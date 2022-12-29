@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "WsCmdSlotDuration.h"
 #include "DisplayMgr.h"
+#include "PluginMgr.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -81,7 +82,11 @@ void WsCmdSlotDuration::execute(AsyncWebSocket* server, AsyncWebSocketClient* cl
 
         if (2U == m_parCnt)
         {
-            (void)DisplayMgr::getInstance().setSlotDuration(m_slotId, m_slotDuration);
+            if (true == DisplayMgr::getInstance().setSlotDuration(m_slotId, m_slotDuration))
+            {
+                /* Ensure that the duration will be available after power-up. */
+                PluginMgr::getInstance().save();
+            }
         }
 
         msg = DisplayMgr::getInstance().getSlotDuration(m_slotId);
