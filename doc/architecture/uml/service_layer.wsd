@@ -10,7 +10,11 @@ package "Service" as service {
     component "RestUtil" as restUtil
     component "MqttService" as mqttService <<Future>>
     component "WebSocket" as webSocket
-    component "Settings" as settings
+
+    package "Settings" {
+        component "Settings" as settings
+    }
+
     component "MyWebServer" as myWebServer
     component "Pages" as pages
     component "AsyncHttpClient" as asnyHttpClient
