@@ -113,7 +113,7 @@ public:
      * 
      * @return If successful, it will return true otherwise false.
      */
-    bool getFreqBins(double* freqBins, size_t len);
+    bool getFreqBins(float* freqBins, size_t len);
 
     /**
      * Are the frequency bins updated and ready?
@@ -136,10 +136,10 @@ private:
     static const uint32_t   FREQ_BINS   = AudioDrv::SAMPLES / 2U;
 
     mutable Mutex       m_mutex;                    /**< Mutex used for concurrent access protection. */
-    double              m_real[AudioDrv::SAMPLES];  /**< The real values. */
-    double              m_imag[AudioDrv::SAMPLES];  /**< The imaginary values. */
-    arduinoFFT          m_fft;                      /**< The FFT algorithm. */
-    double              m_freqBins[FREQ_BINS];      /**< The frequency bins as result of the FFT, with linear magnitude. */
+    float               m_real[AudioDrv::SAMPLES];  /**< The real values. */
+    float               m_imag[AudioDrv::SAMPLES];  /**< The imaginary values. */
+    ArduinoFFT<float>   m_fft;                      /**< The FFT algorithm. */
+    float               m_freqBins[FREQ_BINS];      /**< The frequency bins as result of the FFT, with linear magnitude. */
     bool                m_freqBinsAreReady;         /**< Are the frequency bins ready for the application? */
 
     SpectrumAnalyzer(const SpectrumAnalyzer& drv);

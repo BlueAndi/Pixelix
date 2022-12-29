@@ -58,7 +58,7 @@
  * 
  * @tparam windowType The window type, see arduinoFFT.
  */
-template < uint8_t windowType >
+template < FFTWindow windowType >
 struct WindowCorrection
 {
     /* No implementation to force a compile errr. */
@@ -68,45 +68,45 @@ struct WindowCorrection
  * The FFT rectangle window correction factor. 
  */
 template <>
-struct WindowCorrection<FFT_WIN_TYP_RECTANGLE>
+struct WindowCorrection<FFTWindow::Rectangle>
 {
-    static constexpr const double factor = 1.0f;
+    static constexpr const float factor = 1.0f;
 };
 
 /**
  * The FFT hamming window correction factor. 
  */
 template <>
-struct WindowCorrection<FFT_WIN_TYP_HAMMING>
+struct WindowCorrection<FFTWindow::Hamming>
 {
-    static constexpr const double factor = 0.54f;
+    static constexpr const float factor = 0.54f;
 };
 
 /**
  * The FFT hann window correction factor. 
  */
 template <>
-struct WindowCorrection<FFT_WIN_TYP_HANN>
+struct WindowCorrection<FFTWindow::Hann>
 {
-    static constexpr const double factor = 0.50f;
+    static constexpr const float factor = 0.50f;
 };
 
 /**
  * The FFT blackman-harris window correction factor. 
  */
 template <>
-struct WindowCorrection<FFT_WIN_TYP_BLACKMAN_HARRIS>
+struct WindowCorrection<FFTWindow::Blackman_Harris>
 {
-    static constexpr const double factor = 0.42f;
+    static constexpr const float factor = 0.42f;
 };
 
 /**
  * The FFT flat top window correction factor. 
  */
 template <>
-struct WindowCorrection<FFT_WIN_TYP_FLT_TOP>
+struct WindowCorrection<FFTWindow::Flat_top>
 {
-    static constexpr const double factor = 0.22f;
+    static constexpr const float factor = 0.22f;
 };
 
 /******************************************************************************
@@ -133,9 +133,9 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
          * with an amplitude of 94 db SPL, sampled at 40000 Hz.
          */
         {
-            double signalFrequency  = 1000.0f;
-            double cycles           = (((AudioDrv::SAMPLES - 1U) * signalFrequency) / AudioDrv::SAMPLE_RATE);   /* Number of signal cycles that the sampling will read. */
-            double amplitude        = 420426.0f; /* 94 db SPL */
+            float signalFrequency   = 1000.0f;
+            float cycles            = (((AudioDrv::SAMPLES - 1U) * signalFrequency) / AudioDrv::SAMPLE_RATE);   /* Number of signal cycles that the sampling will read. */
+            float amplitude         = 420426.0f; /* 94 db SPL */
 
             for (uint16_t sampleIdx = 0U; sampleIdx < AudioDrv::SAMPLES; ++sampleIdx)
             {
@@ -153,7 +153,7 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
 
         while(index < size)
         {
-            m_real[index] = static_cast<double>(data[index]);
+            m_real[index] = static_cast<float>(data[index]);
             m_imag[index] = 0.0f;
 
             ++index;
@@ -169,7 +169,7 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
     }
 }
 
-bool SpectrumAnalyzer::getFreqBins(double* freqBins, size_t len)
+bool SpectrumAnalyzer::getFreqBins(float* freqBins, size_t len)
 {
     bool                isSuccessful    = false;
     MutexGuard<Mutex>   guard(m_mutex);
@@ -203,14 +203,14 @@ bool SpectrumAnalyzer::getFreqBins(double* freqBins, size_t len)
 
 void SpectrumAnalyzer::calculateFFT()
 {
-    static const constexpr double   HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR  = 2.0f;
-    static const constexpr uint8_t  WINDOW_TYPE                             = FFT_WIN_TYP_HAMMING;
-    uint16_t idx = 0U;
+    static const constexpr  float       HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR  = 2.0f;
+    static const constexpr  FFTWindow   WINDOW_TYPE                             = FFTWindow::Hamming;
+    uint16_t                            idx                                     = 0U;
 
     /* Note, current arduinoFFT version has a wrong Hann window calculation! */
-    m_fft.Windowing(WINDOW_TYPE, FFT_FORWARD);
-    m_fft.Compute(FFT_FORWARD);
-    m_fft.ComplexToMagnitude();
+    m_fft.windowing(WINDOW_TYPE, FFTDirection::Forward);
+    m_fft.compute(FFTDirection::Forward);
+    m_fft.complexToMagnitude();
 
     /* In a two-sided spectrum, half the energy is displayed at the positive
      * frequency, and half the energy is displayed at the negative frequency.

@@ -147,7 +147,7 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
 
     if (nullptr != spectrumAnalyzer)
     {
-        m_freqBins = new(std::nothrow) double[spectrumAnalyzer->getFreqBinsLen()];
+        m_freqBins = new(std::nothrow) float[spectrumAnalyzer->getFreqBinsLen()];
 
         if (nullptr == m_freqBins)
         {
@@ -353,7 +353,7 @@ void SoundReactivePlugin::decayPeak()
     }
 }
 
-void SoundReactivePlugin::handleFreqBins(double* freqBins, size_t freqBinLen)
+void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
 {
     float           octaveFreqBands[MAX_FREQ_BANDS];
     uint16_t        freqBinIdx                      = 0U;
@@ -462,7 +462,7 @@ void SoundReactivePlugin::handleFreqBins(double* freqBins, size_t freqBinLen)
     }
 }
 
-void SoundReactivePlugin::convertToOctaveFreqBands(float* octaveFreqBands, size_t octaveFreqBandsLen, double* freqBins, size_t freqBinLen)
+void SoundReactivePlugin::convertToOctaveFreqBands(float* octaveFreqBands, size_t octaveFreqBandsLen, float* freqBins, size_t freqBinLen)
 {
     uint16_t    freqBinIdx  = 0U;
     int32_t     divisor     = 0;

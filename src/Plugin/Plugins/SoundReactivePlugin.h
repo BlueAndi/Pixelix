@@ -325,7 +325,7 @@ private:
     NumOfBands              m_numOfFreqBands;               /**< Current configured number of frequency bands, which to show. 8/16 are supported. */
     SimpleTimer             m_decayPeakTimer;               /**< Periodically decays the peak of a bar. */
     uint16_t                m_maxHeight;                    /**< Max. height of a bar in pixel. */
-    double*                 m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
+    float*                  m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
     float                   m_corrFactors[MAX_FREQ_BANDS];  /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
     float                   m_peak;                         /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
 
@@ -352,9 +352,9 @@ private:
      * 
      * @return If successful, it will return true otherwise false.
      */
-    void handleFreqBins(double* freqBins, size_t freqBinLen);
+    void handleFreqBins(float* freqBins, size_t freqBinLen);
 
-    void convertToOctaveFreqBands(float* octaveFreqBands, size_t octaveFreqBandsLen, double* freqBins, size_t freqBinLen);
+    void convertToOctaveFreqBands(float* octaveFreqBands, size_t octaveFreqBandsLen, float* freqBins, size_t freqBinLen);
     float calculateAmplitudeAverage(float* octaveFreqBands, size_t octaveFreqBandsLen);
 };
 
