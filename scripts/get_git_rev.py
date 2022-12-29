@@ -131,7 +131,7 @@ def get_version():
     branch_name = get_current_git_branch()
 
     try:
-        with open(version_filename) as json_file:
+        with open(version_filename, encoding="utf-8") as json_file:
             data = json.load(json_file)
             version = data["version"]
 

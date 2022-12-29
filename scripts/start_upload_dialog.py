@@ -51,7 +51,7 @@ class UploadModel():
         data_json = None
 
         try:
-            with open(file_name) as json_file:
+            with open(file_name, encoding="utf-8") as json_file:
                 data_json = json.load(json_file)
         except FileNotFoundError:
             pass
@@ -60,7 +60,7 @@ class UploadModel():
 
     def _save(self, file_name):
         try:
-            with open(file_name, "w") as json_file:
+            with open(file_name, "w", encoding="utf-8") as json_file:
                 json.dump(self._data_json, json_file, indent=4)
         except FileNotFoundError:
             pass
