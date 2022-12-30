@@ -68,6 +68,7 @@
 #include "ThreeIconPlugin.h"
 #include "VolumioPlugin.h"
 #include "WifiStatusPlugin.h"
+#include "WormPlugin.h"
 
 /******************************************************************************
  * Macros
@@ -118,6 +119,7 @@ static void registerAll()
     pluginMgr.registerPlugin("ThreeIconPlugin", ThreeIconPlugin::create);
     pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
     pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
+    pluginMgr.registerPlugin("WormPlugin", WormPlugin::create);
 
 }
 

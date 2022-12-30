@@ -78,6 +78,9 @@ menu.data = [{
     }, {
         "title": "WifiStatus Plugin",
         "hyperRef": "/plugins/WifiStatusPlugin.html"
+    }, {
+        "title": "Worm Plugin",
+        "hyperRef": "/plugins/WormPlugin.html"
     }]
 }, {
     "title": "Settings",
