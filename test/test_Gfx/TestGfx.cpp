@@ -186,6 +186,21 @@ static void testGfx()
     testGfx.fillScreen(0U);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT, 0U));
 
+    /* Test drawing a circle */
+    testGfx.drawCircle(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2, 0U, COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2) == COLOR);
+
+    testGfx.fillScreen(0U);
+    testGfx.drawCircle(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2, 1U, COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2 + 1) == COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2 - 1) == COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2 + 1, YAGfxTest::HEIGHT / 2) == COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2 - 1, YAGfxTest::HEIGHT / 2) == COLOR);
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT, 0U));
+
     /* Fill rectangle */
     testGfx.fillRect(0, 0, YAGfxTest::WIDTH / 2U, YAGfxTest::HEIGHT / 2U, COLOR);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2, COLOR));

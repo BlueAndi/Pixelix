@@ -243,6 +243,54 @@ public:
     }
 
     /**
+     * Draw a circle with a specific color.
+     * https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+     * 
+     * @param[in] mx        x-coordinate of middle point
+     * @param[in] my        y-coordinate of middle point
+     * @param[in] radius    Radius in pixel
+     * @param[in] color     Color
+     */
+    void drawCircle(int16_t mx, int16_t my, uint16_t radius, const TColor& color)
+    {
+        int16_t f       = 1 - radius;
+        int16_t ddF_x   = 0;
+        int16_t ddF_y   = -2 * radius;
+        int16_t x       = 0;
+        int16_t y       = radius;
+
+        drawPixel(mx, my + radius, color);
+        drawPixel(mx, my - radius, color);
+        drawPixel(mx + radius, my, color);
+        drawPixel(mx - radius, my, color);
+
+        while(x < y)
+        {
+            if (0 <=f)
+            {
+                --y;
+                ddF_y += 2;
+                f += ddF_y;
+            }
+            ++x;
+            ddF_x += 2;
+            f += ddF_x + 1;
+
+            drawPixel(mx + x, my + y, color);
+            drawPixel(mx - x, my + y, color);
+
+            drawPixel(mx + x, my - y, color);
+            drawPixel(mx - x, my - y, color);
+
+            drawPixel(mx + y, my + x, color);
+            drawPixel(mx - y, my + x, color);
+
+            drawPixel(mx + y, my - x, color);
+            drawPixel(mx - y, my - x, color);
+        }
+    }
+
+    /**
      * Fill a rectangle with a specific color.
      *
      * @param[in] x         x-coordinate of upper left point
@@ -273,6 +321,45 @@ public:
     void fillScreen(const TColor& color)
     {
         fillRect(0, 0, getWidth(), getHeight(), color);
+    }
+
+    /**
+     * Fill a circle with a specific color.
+     * https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+     * 
+     * @param[in] mx        x-coordinate of middle point
+     * @param[in] my        y-coordinate of middle point
+     * @param[in] radius    Radius in pixel
+     * @param[in] color     Color
+     */
+    void fillCircle(int16_t mx, int16_t my, uint16_t radius, const TColor& color)
+    {
+        int16_t f       = 1 - radius;
+        int16_t ddF_x   = 0;
+        int16_t ddF_y   = -2 * radius;
+        int16_t x       = 0;
+        int16_t y       = radius;
+
+        drawHLine(mx - radius, my, 2 * radius, color);
+
+        while(x < y)
+        {
+            if (0 <=f)
+            {
+                --y;
+                ddF_y += 2;
+                f += ddF_y;
+            }
+            ++x;
+            ddF_x += 2;
+            f += ddF_x + 1;
+
+            drawHLine(mx - x, my + y, 2 * x, color);
+            drawHLine(mx - x, my - y, 2 * x, color);
+            
+            drawHLine(mx - y, my + x, 2 * y, color);
+            drawHLine(mx - y, my - x, 2 * y, color);
+        }
     }
 
     /**
