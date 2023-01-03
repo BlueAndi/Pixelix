@@ -122,8 +122,8 @@ void TaskMon::process()
 
 #if configTASKLIST_INCLUDE_COREID
                 LOG_DEBUG("Task \"%s\": c %d, p %2u, %s, %3u%%, stack high water mark: %u",
-                    taskStatus[index].xCoreID,
                     fillUpSpaces(taskStatus[index].pcTaskName, taskNameMaxLen).c_str(),
+                    taskStatus[index].xCoreID,
                     taskStatus[index].uxCurrentPriority,
                     fillUpSpaces(taskState2Str(taskStatus[index].eCurrentState).c_str(), taskStateMaxLen).c_str(),
                     statsAsPercentage,
