@@ -287,17 +287,7 @@ void ThreeIconPlugin::stop()
 
 void ThreeIconPlugin::update(YAGfx& gfx)
 {
-    uint8_t                     iconId = 0U;
     MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
-    { 
-        if(false != m_isSpriteSheetAvailable[iconId])
-        {
-            m_bitmapWidget[iconId].setSpriteSheetForward(m_isForward[iconId]);
-            m_bitmapWidget[iconId].setSpriteSheetRepeatInfinite(m_isRepeat[iconId]);
-        }
-    }   
 
     gfx.fillScreen(ColorDef::BLACK);
     m_threeIconCanvas.update(gfx);
@@ -363,7 +353,7 @@ bool ThreeIconPlugin::getIsForward(uint8_t iconId) const
 
     if (MAX_ICONS > iconId)
     {
-        state = m_isForward[iconId];
+        state = m_bitmapWidget[iconId].isSpriteSheetForward();
     }
     else
     {
@@ -379,14 +369,13 @@ void ThreeIconPlugin::setIsForward(uint8_t iconId, bool state)
 
     if (MAX_ICONS > iconId)
     {
-        m_isForward[iconId] = state;
+        m_bitmapWidget[iconId].setSpriteSheetForward(state);
     }
     else
     {
         LOG_ERROR("Set isForward failed, invalid iconId.");
     }
 }
-
 
 bool ThreeIconPlugin::getIsRepeat(uint8_t iconId) const
 {
@@ -395,7 +384,7 @@ bool ThreeIconPlugin::getIsRepeat(uint8_t iconId) const
 
     if (MAX_ICONS > iconId)
     {
-        state = m_isRepeat[iconId];
+        state = m_bitmapWidget[iconId].isSpriteSheetRepeatInfinite();
     }
     else
     {
@@ -411,13 +400,14 @@ void ThreeIconPlugin::setIsRepeat(uint8_t iconId, bool state)
 
     if (MAX_ICONS > iconId)
     {
-        m_isRepeat[iconId] = state;
+        m_bitmapWidget[iconId].setSpriteSheetRepeatInfinite(state);
     }
     else
     {
         LOG_ERROR("Set isRepeat failed, invalid iconId.");
     }
 }
+
 /******************************************************************************
  * External Functions
  *****************************************************************************/

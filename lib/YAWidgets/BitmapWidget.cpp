@@ -159,9 +159,19 @@ bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, co
     return isSuccessful;
 }
 
+bool BitmapWidget::isSpriteSheetForward() const
+{
+    return m_spriteSheet.isForward();
+}
+
 void BitmapWidget::setSpriteSheetForward(bool forward)
 {
     m_spriteSheet.setForward(forward);
+}
+
+bool BitmapWidget::isSpriteSheetRepeatInfinite() const
+{
+    return m_spriteSheet.isRepeatedInfinite();
 }
 
 void BitmapWidget::setSpriteSheetRepeatInfinite(bool repeat)

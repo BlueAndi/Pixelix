@@ -149,11 +149,11 @@ bool SpriteSheet::load(FS& fs, const String& spriteSheetFileName, const String& 
 
         if (DeserializationError::Ok == error.code())
         {
-            JsonVariant jsonFrameWidth  = jsonDoc["texture"]["frame"]["width"];
-            JsonVariant jsonFrameHeight = jsonDoc["texture"]["frame"]["height"];
-            JsonVariant jsonFrameCnt    = jsonDoc["texture"]["frames"];
-            JsonVariant jsonFps         = jsonDoc["texture"]["fps"];
-            JsonVariant jsonRepeat      = jsonDoc["texture"]["repeat"];
+            JsonVariantConst jsonFrameWidth  = jsonDoc["texture"]["frame"]["width"];
+            JsonVariantConst jsonFrameHeight = jsonDoc["texture"]["frame"]["height"];
+            JsonVariantConst jsonFrameCnt    = jsonDoc["texture"]["frames"];
+            JsonVariantConst jsonFps         = jsonDoc["texture"]["fps"];
+            JsonVariantConst jsonRepeat      = jsonDoc["texture"]["repeat"];
 
             if ((false == jsonFrameWidth.isNull()) &&
                 (false == jsonFrameHeight.isNull()) &&

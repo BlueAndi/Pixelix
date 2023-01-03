@@ -76,8 +76,6 @@ public:
         m_threeIconCanvas(),
         m_bitmapWidget(),
         m_isSpriteSheetAvailable{false},
-        m_isForward{false},
-        m_isRepeat{false},
         m_isUploadError(false),
         m_mutex()
     {
@@ -232,8 +230,6 @@ private:
     WidgetGroup             m_threeIconCanvas;                      /**< Canvas used for the bitmap widget. */
     BitmapWidget            m_bitmapWidget[MAX_ICONS];              /**< Bitmap widget, used to show the icon. */
     bool                    m_isSpriteSheetAvailable[MAX_ICONS];    /**< Flag to indicate whether a spritesheet is used or just a bitmap. */
-    bool                    m_isForward[MAX_ICONS];                 /**< Flag to hold the FORWARD animation control state of an icon. */
-    bool                    m_isRepeat[MAX_ICONS];                  /**< Flag to hold the REPEAT animation control state of an icon. */
     bool                    m_isUploadError;                        /**< Flag to signal a upload error. */
     mutable MutexRecursive  m_mutex;                                /**< Mutex to protect against concurrent access. */
 
