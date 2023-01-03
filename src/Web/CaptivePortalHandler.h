@@ -72,6 +72,7 @@ public:
      * @param[in] resetReqHandler   Reset request handler
      */
     CaptivePortalHandler(ResetReqHandler resetReqHandler) :
+        AsyncWebHandler(),
         m_resetReqHandler(resetReqHandler)
     {
     }
