@@ -91,6 +91,8 @@ Use the browser to connect to the captive portal and configure the wifi station 
 
 After configuration restart and voila, Pixelix will be available in your wifi network.
 
+For changing whats displayed, go to its webinterface. Login with user "luke" and password "skywalker". In the "Display" page you can change it according to your needs.
+
 # User Interface
 * The user button provides several features:
     * On short pulse: Activates the next slot.
