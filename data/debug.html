@@ -47,12 +47,12 @@
                                 <button class="btn btn-light" type="button" onclick="clearLog();" disabled>Clear</button>
                             </div>
                             <div class="btn-group mr-2" role="group" aria-label="Log Levels">
-                                <button type="button" class="btn btn-outline-info active" id="buttonInfo" aria-pressed="true">INFO</button>
-                                <button type="button" class="btn btn-outline-warning active" id="buttonWarning" aria-pressed="true">WARNING</button>
-                                <button type="button" class="btn btn-outline-danger active" id="buttonError" aria-pressed="true">ERROR</button>
-                                <button type="button" class="btn btn-outline-danger active" id="buttonFatal" aria-pressed="true">FATAL</button>
-                                <button type="button" class="btn btn-light active" id="buttonDebug" aria-pressed="true">DEBUG</button>
-                                <button type="button" class="btn btn-light active" id="buttonTrace" aria-pressed="true">TRACE</button>
+                                <button type="button" class="btn btn-outline-log-level-info active" id="buttonInfo" aria-pressed="true">INFO</button>
+                                <button type="button" class="btn btn-outline-log-level-warning active" id="buttonWarning" aria-pressed="true">WARNING</button>
+                                <button type="button" class="btn btn-outline-log-level-error active" id="buttonError" aria-pressed="true">ERROR</button>
+                                <button type="button" class="btn btn-outline-log-level-fatal active" id="buttonFatal" aria-pressed="true">FATAL</button>
+                                <button type="button" class="btn btn-outline-log-level-debug active" id="buttonDebug" aria-pressed="true">DEBUG</button>
+                                <button type="button" class="btn btn-outline-log-level-trace active" id="buttonTrace" aria-pressed="true">TRACE</button>
                             </div>
                         </div>
                         <p>Note, only the last 40 messages are shown.</p>
@@ -137,13 +137,51 @@
                 }
             }
 
+            function logLevel2Color(logLevel) {
+                var color = "";
+
+                switch(logLevel)
+                {
+                case 0:
+                    color = "#FF0000";
+                    break;
+
+                case 1:
+                    color = "#FF8000";
+                    break;
+
+                case 2:
+                    color = "#FFFF00";
+                    break;
+
+                case 3:
+                    color = "#0EFF00"
+                    break;
+
+                case 4:
+                    color = "#00FFEB";
+                    break;
+
+                case 5:
+                    color = "#0004FF";
+                    break;
+                
+                default:
+                    color = "#0EFF00";
+                    break;
+                }
+
+                return color;
+            };
+
             /* Handle every websocket event. */
             function wsOnEvent(evt) {
                 var logLevel        = pixelix.ws.getLogLevelStr(evt.level);
                 var index           = filter.indexOf(logLevel);
                 var $row            = $("<tr>");
                 var $colTimestamp   = $("<td>").text(evt.timestamp);
-                var $colLogLevel    = $("<td>").text(pixelix.ws.getLogLevelStr(evt.level));
+                var $logLevelText   = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level))
+                var $colLogLevel    = $("<td>").append($logLevelText);
                 var $colFilename    = $("<td>").text(evt.filename);
                 var $colLine        = $("<td>").text(evt.line);
                 var $colText        = $("<td>").text(evt.text);
@@ -209,7 +247,7 @@
                 });
             }
 
-            /* Toggle logging */
+            /* Toggle measurement */
             function toggleMeasurement() {
                 disableUI();
 
