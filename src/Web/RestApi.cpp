@@ -247,7 +247,7 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
 static void handleSlots(AsyncWebServerRequest* request)
 {
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    const size_t        JSON_DOC_SIZE   = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
