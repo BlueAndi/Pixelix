@@ -79,7 +79,8 @@ public:
         m_minDuration(0U),
         m_threshold(0.0f),
         m_isDetected(false),
-        m_timer()
+        m_timer(),
+        m_lastMagntiude(0.0f)
     {
     }
 
@@ -174,6 +175,16 @@ public:
     }
 
     /**
+     * Get the last magnitude which was greater than the threshold.
+     * 
+     * @return Last magnitude
+     */
+    float getLastMagnitude() const
+    {
+        return m_lastMagntiude;
+    }
+
+    /**
      * The audio driver will call this method to notify about a complete available
      * number of samples.
      * 
@@ -189,16 +200,17 @@ public:
 
 private:
 
-    mutable Mutex   m_mutex;        /**< Mutex used for concurrent access protection. */
-    float           m_targetFreq;   /**< Target frequency in Hz */
-    float           m_omega;        /**< Precomputed angle velocity */
-    float           m_cosValue;     /**< Precomputed cosinus value */
-    float           m_sinValue;     /**< Precomputed sinus value */
-    float           m_coeff;        /**< Precomputed coefficient */
-    float           m_threshold;    /**< Threshold for target frequency detection. */
-    uint32_t        m_minDuration;  /**< The min. duration the target frequency must be active in ms.*/
-    bool            m_isDetected;   /**< Is target frequency detected? */
-    SimpleTimer     m_timer;        /**< Timer used for target frequency detection. */
+    mutable Mutex   m_mutex;            /**< Mutex used for concurrent access protection. */
+    float           m_targetFreq;       /**< Target frequency in Hz */
+    float           m_omega;            /**< Precomputed angle velocity */
+    float           m_cosValue;         /**< Precomputed cosinus value */
+    float           m_sinValue;         /**< Precomputed sinus value */
+    float           m_coeff;            /**< Precomputed coefficient */
+    float           m_threshold;        /**< Threshold for target frequency detection. */
+    uint32_t        m_minDuration;      /**< The min. duration the target frequency must be active in ms.*/
+    bool            m_isDetected;       /**< Is target frequency detected? */
+    SimpleTimer     m_timer;            /**< Timer used for target frequency detection. */
+    float           m_lastMagntiude;    /**< Last magnitude which was greater than the threshold. */
 
     AudioToneDetector(const AudioToneDetector& drv);
     AudioToneDetector& operator=(const AudioToneDetector& drv);

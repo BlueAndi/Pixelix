@@ -116,6 +116,8 @@ void AudioToneDetector::notify(int32_t* data, size_t size)
             {
                 ;
             }
+
+            m_lastMagntiude = magnitude;
         }
         else
         {
