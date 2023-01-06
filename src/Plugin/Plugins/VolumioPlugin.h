@@ -282,19 +282,19 @@ private:
      * The period is shorter than the UPDATE_PERIOD_SHORT, because if the music
      * changes, the display shall be updated more or less immediately.
      */
-    static const uint32_t   UPDATE_PERIOD       = (2U * 1000U);
+    static const uint32_t   UPDATE_PERIOD       = SIMPLE_TIMER_SECONDS(2U);
 
     /**
      * Short period in ms for requesting data from server.
      * This is used in case the request to the server failed.
      */
-    static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
+    static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_SECONDS(10U);
 
     /**
      * Period in ms after which the plugin gets automatically disabled if no new
      * data is available.
      */
-    static const uint32_t   OFFLINE_PERIOD      = (60U * 1000U);
+    static const uint32_t   OFFLINE_PERIOD      = SIMPLE_TIMER_SECONDS(60U);
 
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */

@@ -380,7 +380,7 @@ private:
      * This mechanism ensure that manual changes in the file are considered.
      * This is the reload period in ms.
      */
-    static const uint32_t   CFG_RELOAD_PERIOD   = 30000U;
+    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
 
     Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */

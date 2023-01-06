@@ -179,10 +179,10 @@ private:
     static const uint32_t   DISPLAY_PERIOD          = 250U;
 
     /** Restart period in ms after grid is stable. */
-    static const uint32_t   RESTART_PERIOD          = 1000U;
+    static const uint32_t   RESTART_PERIOD          = SIMPLE_TIMER_SECONDS(1U);
 
     /** Force restart period in ms. */
-    static const uint32_t   FORCE_RESTART_PERIOD    = 10000U;
+    static const uint32_t   FORCE_RESTART_PERIOD    = SIMPLE_TIMER_SECONDS(10U);
 
     uint8_t     m_activeGrid;           /**< Current active grid */
     uint32_t    m_gridSize;             /**< Size of one grid in number of elements */

@@ -50,6 +50,18 @@
  * Macros
  *****************************************************************************/
 
+/** Convert [s] to [ms] for easier timer handling. */
+#define SIMPLE_TIMER_SECONDS(__timeInS)     ((__timeInS) * 1000U)
+
+/** Convert [m] to [ms] for easier timer handling. */
+#define SIMPLE_TIMER_MINUTES(__timeInMin)   SIMPLE_TIMER_SECONDS((__timeInMin) * 60U)
+
+/** Convert [h] to [ms] for easier timer handling. */
+#define SIMPLE_TIMER_HOURS(__timeInHours)   SIMPLE_TIMER_MINUTES((__timeInHours) * 60U)
+
+/** Convert [d] to [ms] for easier timer handling. */
+#define SIMPLE_TIMER_DAYS(__timeInDays)     SIMPLE_TIMER_HOURS((__timeInDays) * 24U)
+
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/

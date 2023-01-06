@@ -237,7 +237,7 @@ private:
     static const char*      TOPIC_CHANNEL;
 
     /** Sensor value update period in ms. */
-    static const uint32_t   UPDATE_PERIOD   = 2000U;
+    static const uint32_t   UPDATE_PERIOD   = SIMPLE_TIMER_SECONDS(2U);
 
     Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */

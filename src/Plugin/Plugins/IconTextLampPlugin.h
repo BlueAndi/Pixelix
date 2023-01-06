@@ -235,22 +235,22 @@ private:
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*  TOPIC_TEXT;
+    static const char*      TOPIC_TEXT;
 
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*  TOPIC_LAMPS;
+    static const char*      TOPIC_LAMPS;
 
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*  TOPIC_LAMP;
+    static const char*      TOPIC_LAMP;
 
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*  TOPIC_ICON;
+    static const char*      TOPIC_ICON;
 
     /**
      * Icon width in pixels.

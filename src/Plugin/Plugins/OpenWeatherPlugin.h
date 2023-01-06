@@ -396,16 +396,16 @@ private:
      * 
      * Note, the OpenWeather recommendation is no more than once in 10 minutes.
      */
-    static const uint32_t   UPDATE_PERIOD           = (10U * 60U * 1000U);
+    static const uint32_t   UPDATE_PERIOD           = SIMPLE_TIMER_MINUTES(10U);
 
     /**
      * Short period in ms for requesting data from server.
      * This is used in case the request to the server failed.
      */
-    static const uint32_t   UPDATE_PERIOD_SHORT     = (10U * 1000U);
+    static const uint32_t   UPDATE_PERIOD_SHORT     = SIMPLE_TIMER_SECONDS(10U);
 
     /** Time for duration tick period in ms */
-    static const uint32_t   DURATION_TICK_PERIOD    = 1000U;
+    static const uint32_t   DURATION_TICK_PERIOD    = SIMPLE_TIMER_SECONDS(1U);
 
     Fonts::FontType             m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup                 m_textCanvas;               /**< Canvas used for the text widget. */

@@ -267,13 +267,13 @@ private:
      * Period in ms for requesting power consumption from the Shelly PlugS.
      * This is used in case the last request to the server was successful.
      */
-    static const uint32_t   UPDATE_PERIOD       = (15U * 1000U);
+    static const uint32_t   UPDATE_PERIOD       = SIMPLE_TIMER_SECONDS(15U);
 
     /**
      * Short period in ms for requesting power consumption from the Shelly PlugS.
      * This is used in case the request to the server failed.
      */
-    static const uint32_t   UPDATE_PERIOD_SHORT = (10U * 1000U);
+    static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_SECONDS(10U);
 
     Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_textCanvas;       /**< Canvas used for the text widget. */

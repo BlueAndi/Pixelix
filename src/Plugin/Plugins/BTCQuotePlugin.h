@@ -211,13 +211,13 @@ private:
      * Period in ms for requesting quotes from Server (15 Minutes) (1 for testing!)
      * This is used in case the last request to the server was successful.
      */
-    static const uint32_t   UPDATE_PERIOD       = (15U * 60U * 1000U);
+    static const uint32_t   UPDATE_PERIOD       = SIMPLE_TIMER_MINUTES(15U);
 
     /**
      * Short period in ms for requesting quote from server.
      * This is used in case the request to the server failed.
      */
-    static const uint32_t   UPDATE_PERIOD_SHORT = (60U * 1000U);
+    static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_MINUTES(1U);
 
     Fonts::FontType     m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup         m_textCanvas;               /**< Canvas used for the text widget. */

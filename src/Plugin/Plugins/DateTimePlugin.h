@@ -265,7 +265,7 @@ private:
     static const uint8_t    MAX_LAMPS               = 7U;
 
     /** Time to check date update period in ms */
-    static const uint32_t   CHECK_UPDATE_PERIOD     = 1000U;
+    static const uint32_t   CHECK_UPDATE_PERIOD     = SIMPLE_TIMER_SECONDS(1U);
 
     /** Divider to convert ms in s */
     static const uint32_t   MS_TO_SEC_DIVIDER       = 1000U;
@@ -276,7 +276,7 @@ private:
      * 
      * The default duration is in ms.
      */
-    static const uint32_t   DURATION_DEFAULT        = 30U * 1000U;
+    static const uint32_t   DURATION_DEFAULT        = SIMPLE_TIMER_SECONDS(30U);
 
     TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */

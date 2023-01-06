@@ -240,7 +240,7 @@ private:
     /**
      * Read sensor only every N milliseconds (currently 90 seconds)
      */
-    static const uint32_t       SENSOR_UPDATE_PERIOD = (90U * 1000U);
+    static const uint32_t       SENSOR_UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(90U);
 
     Fonts::FontType             m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup                 m_textCanvas;               /**< Canvas used for the text widget. */

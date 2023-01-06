@@ -248,22 +248,22 @@ private:
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*  TOPIC_TEXT;
+    static const char*      TOPIC_TEXT;
 
     /**
      * Plugin topic, used for parameter exchange.
      */
-    static const char*  TOPIC_ICON;
+    static const char*      TOPIC_ICON;
 
     /**
      * Icon width in pixels.
      */
-    static const uint16_t ICON_WIDTH    = 8U;
+    static const uint16_t   ICON_WIDTH    = 8U;
 
     /**
      * Icon height in pixels.
      */
-    static const uint16_t ICON_HEIGHT   = 8U;
+    static const uint16_t   ICON_HEIGHT   = 8U;
 
     /**
      * Filename extension of bitmap image file.
