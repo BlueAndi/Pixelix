@@ -126,11 +126,11 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.startsWith(String(TOPIC_ICON) + "/"))
     {
-        uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
-        String      iconIdStr           = topic.substring(indexBeginIconId);
-        uint8_t     iconId              = MAX_ICONS;
-        bool        status              = Util::strToUInt8(iconIdStr, iconId);
-        JsonVariant jsonIconPath        = value["fullPath"];
+        uint32_t            indexBeginIconId    = topic.lastIndexOf("/") + 1U;
+        String              iconIdStr           = topic.substring(indexBeginIconId);
+        uint8_t             iconId              = MAX_ICONS;
+        bool                status              = Util::strToUInt8(iconIdStr, iconId);
+        JsonVariantConst    jsonIconPath        = value["fullPath"];
 
         if ((true == status) &&
             (MAX_ICONS > iconId) &&
@@ -151,8 +151,8 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
             (MAX_ICONS > iconId) &&
             (false != m_isSpriteSheetAvailable[iconId]))
         {
-            JsonVariant jsonIsForward   = value["forward"];
-            JsonVariant jsonIsRepeat    = value["repeat"];
+            JsonVariantConst    jsonIsForward   = value["forward"];
+            JsonVariantConst    jsonIsRepeat    = value["repeat"];
 
             if (false == jsonIsForward.isNull())
             {

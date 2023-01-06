@@ -123,11 +123,11 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        JsonVariant jsonApiKey  = value["apiKey"];
-        JsonVariant jsonLat     = value["lat"];
-        JsonVariant jsonLon     = value["lon"];
-        JsonVariant jsonOther   = value["other"];
-        JsonVariant jsonUnits   = value["units"];
+        JsonVariantConst    jsonApiKey  = value["apiKey"];
+        JsonVariantConst    jsonLat     = value["lat"];
+        JsonVariantConst    jsonLon     = value["lon"];
+        JsonVariantConst    jsonOther   = value["other"];
+        JsonVariantConst    jsonUnits   = value["units"];
 
         if (false == jsonApiKey.isNull())
         {
@@ -750,12 +750,12 @@ void OpenWeatherPlugin::initHttpClient()
 
 void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    JsonVariant jsonCurrent     = jsonDoc["current"];
-    JsonVariant jsonTemperature = jsonCurrent["temp"];
-    JsonVariant jsonUvi         = jsonCurrent["uvi"];
-    JsonVariant jsonHumidity    = jsonCurrent["humidity"];
-    JsonVariant jsonWindSpeed   = jsonCurrent["wind_speed"];
-    JsonVariant jsonIcon        = jsonCurrent["weather"][0]["icon"];
+    JsonVariantConst    jsonCurrent     = jsonDoc["current"];
+    JsonVariantConst    jsonTemperature = jsonCurrent["temp"];
+    JsonVariantConst    jsonUvi         = jsonCurrent["uvi"];
+    JsonVariantConst    jsonHumidity    = jsonCurrent["humidity"];
+    JsonVariantConst    jsonWindSpeed   = jsonCurrent["wind_speed"];
+    JsonVariantConst    jsonIcon        = jsonCurrent["weather"][0]["icon"];
 
     if (false == jsonTemperature.is<float>())
     {
@@ -877,11 +877,11 @@ bool OpenWeatherPlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonApiKey  = jsonDoc["apiKey"];
-        JsonVariant jsonLat     = jsonDoc["lat"];
-        JsonVariant jsonLon     = jsonDoc["lon"];
-        JsonVariant jsonOther   = jsonDoc["other"];
-        JsonVariant jsonUnits   = jsonDoc["units"];
+        JsonVariantConst    jsonApiKey  = jsonDoc["apiKey"];
+        JsonVariantConst    jsonLat     = jsonDoc["lat"];
+        JsonVariantConst    jsonLon     = jsonDoc["lon"];
+        JsonVariantConst    jsonOther   = jsonDoc["other"];
+        JsonVariantConst    jsonUnits   = jsonDoc["units"];
 
         if (false == jsonApiKey.is<String>())
         {

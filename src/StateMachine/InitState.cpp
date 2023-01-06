@@ -246,8 +246,8 @@ void InitState::entry(StateMachine& sm)
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
         if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
         {
-            JsonVariant jsonVersion             = jsonDoc["version"];
-            bool        isFileSystemCompatible  = true;
+            JsonVariantConst    jsonVersion             = jsonDoc["version"];
+            bool                isFileSystemCompatible  = true;
 
             if (true == jsonVersion.isNull())
             {

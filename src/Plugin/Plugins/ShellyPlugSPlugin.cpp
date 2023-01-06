@@ -101,8 +101,8 @@ bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String      ipAddress;
-        JsonVariant jsonSet     = value["set"];
+        String              ipAddress;
+        JsonVariantConst    jsonSet     = value["set"];
 
         if (false == jsonSet.isNull())
         {
@@ -372,7 +372,7 @@ void ShellyPlugSPlugin::initHttpClient()
 
 void ShellyPlugSPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    JsonVariant jsonPower = jsonDoc["power"];
+    JsonVariantConst jsonPower = jsonDoc["power"];
 
     if (false == jsonPower.is<float>())
     {
@@ -442,7 +442,7 @@ bool ShellyPlugSPlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonIP  = jsonDoc["shellyPlugSIP"];
+        JsonVariantConst jsonIP = jsonDoc["shellyPlugSIP"];
 
         if (false == jsonIP.is<String>())
         {

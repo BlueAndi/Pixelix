@@ -157,8 +157,8 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
-        String      text;
-        JsonVariant jsonShow    = value["show"];
+        String              text;
+        JsonVariantConst    jsonShow    = value["show"];
 
         if (false == jsonShow.isNull())
         {
@@ -173,11 +173,11 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
     }
     else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
     {
-        uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
-        String      lampIdStr           = topic.substring(indexBeginLampId);
-        uint8_t     lampId              = MAX_LAMPS;
-        bool        status              = Util::strToUInt8(lampIdStr, lampId);
-        JsonVariant jsonSet             = value["set"];
+        uint32_t            indexBeginLampId    = topic.lastIndexOf("/") + 1U;
+        String              lampIdStr           = topic.substring(indexBeginLampId);
+        uint8_t             lampId              = MAX_LAMPS;
+        bool                status              = Util::strToUInt8(lampIdStr, lampId);
+        JsonVariantConst    jsonSet             = value["set"];
 
         if ((true == status) &&
             (MAX_LAMPS > lampId) &&
@@ -203,7 +203,7 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
     }
     else if (0U != topic.equals(TOPIC_ICON))
     {
-        JsonVariant jsonFullPath = value["fullPath"];
+        JsonVariantConst jsonFullPath = value["fullPath"];
 
         if (false == jsonFullPath.isNull())
         {

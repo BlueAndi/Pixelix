@@ -340,11 +340,11 @@ bool CountdownPlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonDay             = jsonDoc["day"];
-        JsonVariant jsonMonth           = jsonDoc["month"];
-        JsonVariant jsonYear            = jsonDoc["year"];
-        JsonVariant jsonDescPlural      = jsonDoc["descriptionPlural"];
-        JsonVariant jsonDescSingular    = jsonDoc["descriptionSingular"];
+        JsonVariantConst    jsonDay             = jsonDoc["day"];
+        JsonVariantConst    jsonMonth           = jsonDoc["month"];
+        JsonVariantConst    jsonYear            = jsonDoc["year"];
+        JsonVariantConst    jsonDescPlural      = jsonDoc["descriptionPlural"];
+        JsonVariantConst    jsonDescSingular    = jsonDoc["descriptionSingular"];
 
         if (false == jsonDay.is<uint8_t>())
         {

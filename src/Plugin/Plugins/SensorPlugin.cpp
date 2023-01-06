@@ -104,8 +104,8 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_CHANNEL))
     {
-        JsonVariant jsonSensorIndex     = value["sensorIndex"];
-        JsonVariant jsonChannelIndex    = value["channelIndex"];
+        JsonVariantConst    jsonSensorIndex     = value["sensorIndex"];
+        JsonVariantConst    jsonChannelIndex    = value["channelIndex"];
 
         if ((false == jsonSensorIndex.isNull()) &&
             (false == jsonChannelIndex.isNull()))
@@ -358,8 +358,8 @@ bool SensorPlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonSensorIndex     = jsonDoc["sensorIndex"];
-        JsonVariant jsonChannelIndex    = jsonDoc["channelIndex"];
+        JsonVariantConst    jsonSensorIndex     = jsonDoc["sensorIndex"];
+        JsonVariantConst    jsonChannelIndex    = jsonDoc["channelIndex"];
 
         if (false == jsonSensorIndex.is<uint8_t>())
         {

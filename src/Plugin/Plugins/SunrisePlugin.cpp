@@ -105,10 +105,10 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String      longitude;
-        String      latitude;
-        JsonVariant jsonLongitude   = value["longitude"];
-        JsonVariant jsonLatitude    = value["latitude"];
+        String              longitude;
+        String              latitude;
+        JsonVariantConst    jsonLongitude   = value["longitude"];
+        JsonVariantConst    jsonLatitude    = value["latitude"];
 
         getLocation(longitude, latitude);
 
@@ -500,8 +500,8 @@ bool SunrisePlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonLon = jsonDoc["longitude"];
-        JsonVariant jsonLat = jsonDoc["latitude"];
+        JsonVariantConst    jsonLon = jsonDoc["longitude"];
+        JsonVariantConst    jsonLat = jsonDoc["latitude"];
 
         if (false == jsonLon.is<String>())
         {

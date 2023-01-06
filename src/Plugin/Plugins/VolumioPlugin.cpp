@@ -106,8 +106,8 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String      host;
-        JsonVariant jsonHost = value["host"];
+        String              host;
+        JsonVariantConst    jsonHost = value["host"];
 
         if (false == jsonHost.isNull())
         {
@@ -517,10 +517,10 @@ void VolumioPlugin::initHttpClient()
 
 void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    JsonVariant jsonStatus  = jsonDoc["status"];
-    JsonVariant jsonTitle   = jsonDoc["title"];
-    JsonVariant jsonSeek    = jsonDoc["seek"];
-    JsonVariant jsonService = jsonDoc["service"];
+    JsonVariantConst    jsonStatus  = jsonDoc["status"];
+    JsonVariantConst    jsonTitle   = jsonDoc["title"];
+    JsonVariantConst    jsonSeek    = jsonDoc["seek"];
+    JsonVariantConst    jsonService = jsonDoc["service"];
 
     if (false == jsonStatus.is<String>())
     {
@@ -540,16 +540,16 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
     }
     else
     {
-        JsonVariant     jsonArtist      = jsonDoc["artist"];
-        JsonVariant     jsonDuration    = jsonDoc["duration"];
-        String          status          = jsonStatus.as<String>();
-        String          artist;
-        String          title           = jsonTitle.as<String>();
-        uint32_t        seekValue       = jsonSeek.as<uint32_t>();
-        String          service         = jsonService.as<String>();
-        String          infoOnDisplay;
-        uint32_t        pos             = 0U;
-        VolumioState    state           = STATE_UNKNOWN;
+        JsonVariantConst    jsonArtist      = jsonDoc["artist"];
+        JsonVariantConst    jsonDuration    = jsonDoc["duration"];
+        String              status          = jsonStatus.as<String>();
+        String              artist;
+        String              title           = jsonTitle.as<String>();
+        uint32_t            seekValue       = jsonSeek.as<uint32_t>();
+        String              service         = jsonService.as<String>();
+        String              infoOnDisplay;
+        uint32_t            pos             = 0U;
+        VolumioState        state           = STATE_UNKNOWN;
 
         /* Artist may exist */
         if (true == jsonArtist.is<String>())
@@ -695,7 +695,7 @@ bool VolumioPlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonHost = jsonDoc["host"];
+        JsonVariantConst jsonHost = jsonDoc["host"];
 
         if (false == jsonHost.is<String>())
         {

@@ -98,8 +98,8 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String      ipAddress;
-        JsonVariant jsonSet     = value["set"];
+        String              ipAddress;
+        JsonVariantConst    jsonSet     = value["set"];
 
         if (false == jsonSet.isNull())
         {
@@ -499,7 +499,7 @@ bool GruenbeckPlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonIP = jsonDoc["gruenbeckIP"];
+        JsonVariantConst jsonIP = jsonDoc["gruenbeckIP"];
 
         if (false == jsonIP.is<String>())
         {

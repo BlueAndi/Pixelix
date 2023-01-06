@@ -112,7 +112,7 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_CHANNEL))
     {
-        JsonVariant jsonFreqBandLen = value["freqBandLen"];
+        JsonVariantConst jsonFreqBandLen = value["freqBandLen"];
 
         if (false == jsonFreqBandLen.isNull())
         {
@@ -316,7 +316,7 @@ bool SoundReactivePlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonFreqBandLen = jsonDoc["freqBandLen"];
+        JsonVariantConst jsonFreqBandLen = jsonDoc["freqBandLen"];
 
         if (false == jsonFreqBandLen.is<uint8_t>())
         {

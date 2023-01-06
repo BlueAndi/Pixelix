@@ -91,7 +91,7 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_CFG))
     {
-        JsonVariant jsonCfg = value["cfg"];
+        JsonVariantConst jsonCfg = value["cfg"];
 
         if (false == jsonCfg.isNull())
         {
@@ -499,7 +499,7 @@ bool DateTimePlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonCfg = jsonDoc["cfg"];
+        JsonVariantConst jsonCfg = jsonDoc["cfg"];
 
         if (false == jsonCfg.is<uint8_t>())
         {

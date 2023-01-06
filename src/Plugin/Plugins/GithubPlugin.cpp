@@ -99,10 +99,10 @@ bool GithubPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC))
     {
-        String      user;
-        String      repository;
-        JsonVariant jsonUser        = value["user"];
-        JsonVariant jsonRepository  = value["repository"];
+        String              user;
+        String              repository;
+        JsonVariantConst    jsonUser        = value["user"];
+        JsonVariantConst    jsonRepository  = value["repository"];
 
         if (false == jsonUser.isNull())
         {
@@ -513,8 +513,8 @@ bool GithubPlugin::loadConfiguration()
     }
     else
     {
-        JsonVariant jsonUser        = jsonDoc["user"];
-        JsonVariant jsonRepository  = jsonDoc["repository"];
+        JsonVariantConst    jsonUser        = jsonDoc["user"];
+        JsonVariantConst    jsonRepository  = jsonDoc["repository"];
 
         if (false == jsonUser.is<String>())
         {

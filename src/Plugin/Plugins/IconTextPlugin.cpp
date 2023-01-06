@@ -117,8 +117,8 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObject& value)
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
-        String      text;
-        JsonVariant jsonShow    = value["show"];
+        String              text;
+        JsonVariantConst    jsonShow    = value["show"];
 
         if (false == jsonShow.isNull())
         {
@@ -133,7 +133,7 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObject& value)
     }
     else if (0U != topic.equals(TOPIC_ICON))
     {
-        JsonVariant jsonFullPath = value["fullPath"];
+        JsonVariantConst jsonFullPath = value["fullPath"];
 
         if (false == jsonFullPath.isNull())
         {

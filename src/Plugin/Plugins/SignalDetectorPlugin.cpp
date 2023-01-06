@@ -183,8 +183,8 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObject& value
     }
     else if (0U != topic.equals(TOPIC_TEXT))
     {
-        String      text;
-        JsonVariant jsonShow    = value["show"];
+        String              text;
+        JsonVariantConst    jsonShow    = value["show"];
 
         if (false == jsonShow.isNull())
         {
@@ -199,8 +199,8 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObject& value
     }
     else if (0U != topic.equals(TOPIC_PUSH_URL))
     {
-        String      url;
-        JsonVariant jsonSet = value["set"];
+        String              url;
+        JsonVariantConst    jsonSet = value["set"];
 
         if (false == jsonSet.isNull())
         {

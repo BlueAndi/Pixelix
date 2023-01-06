@@ -470,7 +470,7 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
 
                 metaData->plugin = plugin;
 
-                for (JsonVariant topic : topics)
+                for (JsonVariantConst topic : topics)
                 {
                     registerTopic(baseUriByUid, metaData, topic.as<String>());
 
