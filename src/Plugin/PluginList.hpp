@@ -60,6 +60,7 @@
 #include "RainbowPlugin.h"
 #include "SensorPlugin.h"
 #include "ShellyPlugSPlugin.h"
+#include "SignalDetectorPlugin.h"
 #include "SoundReactivePlugin.h"
 #include "SunrisePlugin.h"
 #include "SysMsgPlugin.h"
@@ -111,6 +112,7 @@ static void registerAll()
     pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
     pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);
     pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
+    pluginMgr.registerPlugin("SignalDetectorPlugin", SignalDetectorPlugin::create);
     pluginMgr.registerPlugin("SoundReactivePlugin", SoundReactivePlugin::create);
     pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
     pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);

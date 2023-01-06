@@ -55,6 +55,9 @@ menu.data = [{
         "title": "ShellyPlugS Plugin",
         "hyperRef": "/plugins/ShellyPlugSPlugin.html"
     }, {
+        "title": "SignalDetector Plugin",
+        "hyperRef": "/plugins/SignalDetectorPlu.html"
+    }, {
         "title": "Sound Reactive Plugin",
         "hyperRef": "/plugins/SoundReactivePlug.html"
     }, {

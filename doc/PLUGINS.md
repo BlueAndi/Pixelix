@@ -25,6 +25,7 @@ Each plugin is identified by its unique UID.
   - [RainbowPlugin](#rainbowplugin)
   - [SensorPlugin](#sensorplugin)
   - [ShellyPlugSPlugin](#shellyplugsplugin)
+  - [SignalDetectorPlugin](#signaldetectorplugin)
   - [SoundReactivePlugin](#soundreactiveplugin)
   - [SunrisePlugin](#sunriseplugin)
   - [SysMsgPlugin](#sysmsgplugin)
@@ -108,6 +109,12 @@ The plugin shows sensor values of the selected sensor channel.
 ## ShellyPlugSPlugin
 The ShellyPlugSPlugin shows the current AC power being drawn via a Shelly PlugS, in watts.\
 The IP address of the Shelly PlugS webserver can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/ShellyPlugSPlugin).
+
+## SignalDetectorPlugin
+The plugin is able to detect a signal, which can be combined with up to 2 frequencies.\
+Each frequency must be detected for a specific configureable time.\
+As long as nothing is detected, the plugin will disable itself.\
+If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection.
 
 ## SoundReactivePlugin
 The plugin shows octave frequency bands, depended on the environment sound.
