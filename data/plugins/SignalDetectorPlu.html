@@ -38,7 +38,7 @@
                 <p>Each frequency must be detected for a specific configureable time.</p>
                 <p>As long as nothing is detected, the plugin will disable itself.</p>
                 <p>If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection.</p>
-                <p>Additional a push notification can be configured.</p>
+                <p>Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get signal configuration</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg/&lt;FREQ-ID&gt;</code></pre>

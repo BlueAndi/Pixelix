@@ -510,15 +510,51 @@ bool SignalDetectorPlugin::startHttpRequest()
 
     if (false == m_pushUrl.isEmpty())
     {
-        if (true == m_client.begin(m_pushUrl))
+        String      url         = m_pushUrl;
+        const char* GET_CMD     = "get ";
+        const char* POST_CMD    = "post ";
+        bool        isGet       = true;
+
+        /* URL prefix might indicate the kind of request. */
+        url.toLowerCase();
+        if (0U != url.startsWith(GET_CMD))
         {
-            if (false == m_client.GET())
+            url = url.substring(strlen(GET_CMD));
+            isGet = true;
+        }
+        else if (0U != url.startsWith(POST_CMD))
+        {
+            url = url.substring(strlen(POST_CMD));
+            isGet = false;
+        }
+        else
+        {
+            ;
+        }
+
+        if (true == m_client.begin(url))
+        {
+            if (false == isGet)
             {
-                LOG_WARNING("GET %s failed.", m_pushUrl.c_str());
+                if (false == m_client.POST())
+                {
+                    LOG_WARNING("POST %s failed.", url.c_str());
+                }
+                else
+                {
+                    status = true;
+                }
             }
             else
             {
-                status = true;
+                if (false == m_client.GET())
+                {
+                    LOG_WARNING("GET %s failed.", url.c_str());
+                }
+                else
+                {
+                    status = true;
+                }
             }
         }
     }

@@ -114,7 +114,8 @@ The IP address of the Shelly PlugS webserver can be set via the [REST API](https
 The plugin is able to detect a signal, which can be combined with up to 2 frequencies.\
 Each frequency must be detected for a specific configureable time.\
 As long as nothing is detected, the plugin will disable itself.\
-If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection.
+If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection. \
+Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."
 
 ## SoundReactivePlugin
 The plugin shows octave frequency bands, depended on the environment sound.

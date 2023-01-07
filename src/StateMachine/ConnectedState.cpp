@@ -135,11 +135,33 @@ void ConnectedState::entry(StateMachine& sm)
         /* If a push URL is set, notify about the online status. */
         if (false == notifyURL.isEmpty())
         {
-            if (true == m_client.begin(notifyURL))
+            String      url         = notifyURL;
+            const char* GET_CMD     = "get ";
+            const char* POST_CMD    = "post ";
+            bool        isGet       = true;
+
+            /* URL prefix might indicate the kind of request. */
+            url.toLowerCase();
+            if (0U != url.startsWith(GET_CMD))
+            {
+                url = url.substring(strlen(GET_CMD));
+                isGet = true;
+            }
+            else if (0U != url.startsWith(POST_CMD))
+            {
+                url = url.substring(strlen(POST_CMD));
+                isGet = false;
+            }
+            else
+            {
+                ;
+            }
+
+            if (true == m_client.begin(url))
             {
                 if (false == m_client.GET())
                 {
-                    LOG_WARNING("GET %s failed.", notifyURL.c_str());
+                    LOG_WARNING("GET %s failed.", url.c_str());
                 }
                 else
                 {
