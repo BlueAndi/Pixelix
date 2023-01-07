@@ -211,6 +211,17 @@ void InitState::entry(StateMachine& sm)
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         bool                isQuiet         = false;
 
+        /* Clean up settings first! Important step after a firmware update to
+         * keep the settings up-to-date and prevent the persistency will
+         * silently growing up with unused stuff.
+         */
+        if (true == settings.open(false))
+        {
+            LOG_INFO("Clean up settings.");
+            settings.cleanUp();
+            settings.close();
+        }
+
         /* Load some general configuration parameters from persistent memory. */
         if (true == settings.open(true))
         {

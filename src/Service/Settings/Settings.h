@@ -97,6 +97,17 @@ public:
     void close();
 
     /**
+     * Remove obsolete keys in the persistency. It can be used to prevent a
+     * growing up persistency with obsolete key/value pairs.
+     * 
+     * The clean-up itself is only performed if the stored version number is
+     * different from the settings version number.
+     * 
+     * Note, the settings must be opened in write mode!
+     */
+    void cleanUp();
+
+    /**
      * Get remote wifi network SSID.
      *
      * @return Key value pair
@@ -277,8 +288,7 @@ public:
     }
 
     /**
-     * Clear all key value pairs, which means set them to
-     * factory defaults.
+     * Clear all key value pairs, which means set them to factory defaults.
      *
      * @return If successful cleared, it will return true otherwise false.
      */
@@ -296,13 +306,23 @@ public:
     KeyValue* getSettingByKey(const char* key);
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 17U;
+    static const uint8_t    KEY_VALUE_PAIR_NUM = 17U;
+
+    /**
+     * Settings version
+     * The version number shall be increased by 1 after:
+     * - a new setting was added or
+     * - a existing setting changed
+     * - a existing setting was removed
+     */
+    static const uint32_t   VERSION = 1U;
 
 private:
 
     Preferences     m_preferences;                      /**< Persistent storage */
-    KeyValue*       m_keyValueList[KEY_VALUE_PAIR_NUM]; /**< List of all key value pairs */
+    KeyValue*       m_keyValueList[KEY_VALUE_PAIR_NUM]; /**< List of all key value pairs, except m_version. */
 
+    KeyValueUInt32  m_version;              /**< Settings version (just an consequtive incremented number) */
     KeyValueString  m_wifiSSID;             /**< Remote wifi network SSID */
     KeyValueString  m_wifiPassphrase;       /**< Remote wifi network passphrase */
     KeyValueString  m_apSSID;               /**< Access point SSID */

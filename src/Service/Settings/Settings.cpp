@@ -33,6 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "Settings.h"
+#include "nvs.h"
+
+#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -64,6 +67,9 @@ static const char*  PREF_NAMESPACE                  = "settings";
  * Maximum string length is 15 bytes, excluding a zero terminator.
  * https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/storage/nvs_flash.html
  */
+
+/** Settings version key */
+static const char*  KEY_VERSION                     = "version";
 
 /** Wifi network key */
 static const char*  KEY_WIFI_SSID                   = "sta_ssid";
@@ -118,6 +124,9 @@ static const char*  KEY_QUIET_MODE                  = "quiet_mode";
 
 /* ---------- Key value pair names ---------- */
 
+/** Settings version name */
+static const char*  NAME_VERSION                    = "Settings version";
+
 /** Wifi network name of key value pair */
 static const char*  NAME_WIFI_SSID                  = "Wifi SSID";
 
@@ -170,6 +179,9 @@ static const char*  NAME_NOTIFY_URL                 = "URL to be triggered when 
 static const char*  NAME_QUIET_MODE                 = "Quiet mode (skip unnecessary system messages)";
 
 /* ---------- Default values ---------- */
+
+/** Settings version default value */
+static uint32_t         DEFAULT_VERSION                 = 0U; /* 0 is important to detect whether the version is not stored yet. */
 
 /** Wifi network default value */
 static const char*      DEFAULT_WIFI_SSID               = "";
@@ -224,6 +236,9 @@ static bool             DEFAULT_QUIET_MODE              = false;
 
 /* ---------- Minimum values ---------- */
 
+/** Settings version min. value */
+static const uint32_t   MIN_VALUE_VERSION               = 0;
+
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
 static const size_t     MIN_VALUE_WIFI_SSID             = 0;
 
@@ -274,6 +289,9 @@ static const size_t     MIN_VALUE_NOTIFY_URL            = 0U;
 /*                      MIN_VALUE_QUIET_MODE */
 
 /* ---------- Maximum values ---------- */
+
+/** Settings version max. value */
+static const uint32_t   MAX_VALUE_VERSION               = UINT32_MAX;
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
 static const size_t     MAX_VALUE_WIFI_SSID             = 32U;
@@ -365,6 +383,46 @@ void Settings::close()
     return;
 }
 
+void Settings::cleanUp()
+{
+    uint32_t storedVersion = m_version.getValue();
+
+    /* Clean up is only necessary, if settings version is different. */
+    if (VERSION != storedVersion)
+    {
+        nvs_iterator_t it = nvs_entry_find(NVS_DEFAULT_PART_NAME, PREF_NAMESPACE, NVS_TYPE_ANY);
+
+        while (nullptr != it)
+        {
+            nvs_entry_info_t info;
+
+            nvs_entry_info(it, &info);
+            it = nvs_entry_next(it);
+
+            /* Obsolete setting?
+             * m_version key must be handled separate, because its not part of the settings list.
+             */
+            if ((0 != strcmp(m_version.getKey(), info.key)) &&
+                (nullptr == getSettingByKey(info.key)))
+            {
+                LOG_WARNING("Obsolete key %s removed from settings.", info.key);
+
+                if (false == m_preferences.remove(info.key))
+                {
+                    LOG_ERROR("Failed to remove key %s removed from settings.", info.key);
+                }
+            }
+            else
+            {
+                LOG_INFO("Settings key %s is valid.", info.key);
+            }
+        };
+
+        /* Update version */
+        m_version.setValue(VERSION);
+    }
+}
+
 KeyValue* Settings::getSettingByKey(const char* key)
 {
     uint8_t     idx             = 0U;
@@ -394,6 +452,7 @@ KeyValue* Settings::getSettingByKey(const char* key)
 Settings::Settings() :
     m_preferences(),
     m_keyValueList(),
+    m_version               (m_preferences, KEY_VERSION,                NAME_VERSION,               DEFAULT_VERSION,                MIN_VALUE_VERSION,              MAX_VALUE_VERSION),
     m_wifiSSID              (m_preferences, KEY_WIFI_SSID,              NAME_WIFI_SSID,             DEFAULT_WIFI_SSID,              MIN_VALUE_WIFI_SSID,            MAX_VALUE_WIFI_SSID),
     m_wifiPassphrase        (m_preferences, KEY_WIFI_PASSPHRASE,        NAME_WIFI_PASSPHRASE,       DEFAULT_WIFI_PASSPHRASE,        MIN_VALUE_WIFI_PASSPHRASE,      MAX_VALUE_WIFI_PASSPHRASE,      true),
     m_apSSID                (m_preferences, KEY_WIFI_AP_SSID,           NAME_WIFI_AP_SSID,          DEFAULT_WIFI_AP_SSID,           MIN_VALUE_WIFI_AP_SSID,         MAX_VALUE_WIFI_AP_SSID),
@@ -413,6 +472,8 @@ Settings::Settings() :
     m_quietMode             (m_preferences, KEY_QUIET_MODE,             NAME_QUIET_MODE,            DEFAULT_QUIET_MODE)
 {
     uint8_t idx = 0;
+
+    /* Skip m_version, because it shall not be modified by the user. */
 
     m_keyValueList[idx] = &m_wifiSSID;
     ++idx;
