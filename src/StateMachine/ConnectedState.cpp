@@ -76,10 +76,12 @@
 
 void ConnectedState::entry(StateMachine& sm)
 {
-    String infoStr = "Hostname: ";
-    String hostname;
-    String infoStringIp = "IP: ";
-    String notifyURL = "-";
+    Settings&   settings        = Settings::getInstance();
+    String      infoStr         = "Hostname: ";
+    String      hostname;
+    String      infoStringIp    = "IP: ";
+    String      notifyURL       = "-";
+    bool        isQuiet         = false;
 
     LOG_INFO("Connected.");
 
@@ -87,19 +89,21 @@ void ConnectedState::entry(StateMachine& sm)
     ButtonDrv::getInstance().registerObserver(m_buttonHandler);
 
     /* Get hostname and notifyURL. */
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::getInstance().getHostname().getDefault();
-        notifyURL = Settings::getInstance().getNotifyURL().getDefault();
 
+        hostname    = settings.getHostname().getDefault();
+        notifyURL   = settings.getNotifyURL().getDefault();
+        isQuiet     = settings.getQuietMode().getDefault();
     }
     else
     {
-        hostname = Settings::getInstance().getHostname().getValue();
-        notifyURL = Settings::getInstance().getNotifyURL().getValue();
+        hostname    = settings.getHostname().getValue();
+        notifyURL   = settings.getNotifyURL().getValue();
+        isQuiet     = settings.getQuietMode().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
     }
 
     /* Set hostname. Note, wifi must be connected somehow. */
@@ -128,9 +132,13 @@ void ConnectedState::entry(StateMachine& sm)
         infoStr += WiFi.getHostname(); /* Don't believe its the same as set before. */
         infoStr += " IP: ";
         infoStr += WiFi.localIP().toString();
-        SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
         LOG_INFO(infoStr);
+
+        if (false == isQuiet)
+        {
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
+        }
 
         /* If a push URL is set, notify about the online status. */
         if (false == notifyURL.isEmpty())

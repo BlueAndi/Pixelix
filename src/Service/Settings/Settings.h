@@ -247,14 +247,25 @@ public:
     }
 
    /**
-     * Get notifyURL.
-     *
-     * @return The URL to be triggered
-     */
+    * Get notifyURL.
+    *
+    * @return The URL to be triggered
+    */
     KeyValueString& getNotifyURL()
     {
         return m_notifyURL;
     }
+
+   /**
+    * Get quite mode state.
+    *
+    * @return Is quiet mode enabled or not?
+    */
+    KeyValueBool& getQuietMode()
+    {
+        return m_quietMode;
+    }
+
     /**
      * Get a list of all key value pairs.
      *
@@ -285,7 +296,7 @@ public:
     KeyValue* getSettingByKey(const char* key);
 
     /** Number of key value pairs. */
-    static const uint8_t KEY_VALUE_PAIR_NUM = 16U;
+    static const uint8_t KEY_VALUE_PAIR_NUM = 17U;
 
 private:
 
@@ -308,6 +319,7 @@ private:
     KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
     KeyValueUInt32  m_scrollPause;          /**< Text scroll pause */
     KeyValueString  m_notifyURL;            /**< URL to be triggered when PIXELIX has connected to a remote network. */
+    KeyValueBool    m_quietMode;            /**< Quiet mode (skip unnecessary system messages) */
 
     /**
      * Constructs the settings instance.

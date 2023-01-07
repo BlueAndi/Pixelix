@@ -69,16 +69,23 @@
 
 void ConnectingState::entry(StateMachine& sm)
 {
+    Settings& settings = Settings::getInstance();
+
     /* Observer button state changes and derrive actions. */
     ButtonDrv::getInstance().registerObserver(m_buttonHandler);
 
     /* Are remote wifi network informations available? */
-    if (true == Settings::getInstance().open(true))
+    if (true == settings.open(true))
     {
-        m_wifiSSID          = Settings::getInstance().getWifiSSID().getValue();
-        m_wifiPassphrase    = Settings::getInstance().getWifiPassphrase().getValue();
+        m_wifiSSID          = settings.getWifiSSID().getValue();
+        m_wifiPassphrase    = settings.getWifiPassphrase().getValue();
+        m_isQuiet           = settings.getQuietMode().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
+    }
+    else
+    {
+        m_isQuiet = settings.getQuietMode().getDefault();
     }
 
     /* No remote wifi network informations available? */
@@ -130,7 +137,11 @@ void ConnectingState::process(StateMachine& sm)
         infoStr += ".";
 
         LOG_INFO(infoStr);
-        SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+
+        if (false == m_isQuiet)
+        {
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+        }
 
         /* Remote wifi network informations are available, try to establish a connection. */
         status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());

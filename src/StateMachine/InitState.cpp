@@ -205,19 +205,20 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        Settings*           settings = &Settings::getInstance();
+        Settings&           settings = Settings::getInstance();
         JsonFile            jsonFile(FILESYSTEM);
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        bool                isQuiet         = false;
 
         /* Load some general configuration parameters from persistent memory. */
-        if (true == settings->open(true))
+        if (true == settings.open(true))
         {
             /* Enable or disable the automatic display brightness adjustment,
              * depended on settings. Enable it may fail in case there is no
              * LDR sensor available.
              */
-            bool isEnabled = settings->getAutoBrightnessAdjustment().getValue();
+            bool isEnabled = settings.getAutoBrightnessAdjustment().getValue();
 
             if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
             {
@@ -225,13 +226,19 @@ void InitState::entry(StateMachine& sm)
             }
 
             /* Set text scroll pause for all text widgets. */
-            uint32_t scrollPause = settings->getScrollPause().getValue();
+            uint32_t scrollPause = settings.getScrollPause().getValue();
             if (false == TextWidget::setScrollPause(scrollPause))
             {
                 LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
             }
 
-            settings->close();
+            isQuiet = settings.getQuietMode().getValue();
+
+            settings.close();
+        }
+        else
+        {
+            isQuiet = settings.getQuietMode().getDefault();
         }
 
         /* Don't store the wifi configuration in the NVS.
@@ -241,7 +248,7 @@ void InitState::entry(StateMachine& sm)
         WiFi.persistent(false);
 
         /* Show some informations on the display. */
-        showStartupInfoOnDisplay();
+        showStartupInfoOnDisplay(isQuiet);
 
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
         if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
@@ -278,8 +285,11 @@ void InitState::entry(StateMachine& sm)
 
                 LOG_WARNING(errMsg);
 
-                SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
-                SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+                if (false == isQuiet)
+                {
+                    SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+                    SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+                }
             }
         }
     }
@@ -459,9 +469,9 @@ void InitState::showStartupInfoOnSerial()
     return;
 }
 
-void InitState::showStartupInfoOnDisplay()
+void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
 {
-    const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+    const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
     const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
     const uint32_t  DURATION_PAUSE          = 500U; /* ms */
     const uint32_t  SCROLLING_NO_REPEAT     = 0U;
@@ -470,14 +480,17 @@ void InitState::showStartupInfoOnDisplay()
     /* Show colored PIXELIX */
     sysMsg.show("\\calign\\#FF0000P\\#FFFF00I\\#00FF00X\\#00FFFFE\\#0000FFL\\#FF00FFI\\#FF0000X", DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
-    /* Clear and wait */
-    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+    if (false == isQuietEnabled)
+    {
+        /* Clear and wait */
+        sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
 
-    /* Show sw version (short) */
-    sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+        /* Show sw version (short) */
+        sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
-    /* Clear and wait */
-    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+        /* Clear and wait */
+        sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+    }
 
     return;
 }

@@ -127,7 +127,7 @@ private:
     /**
      * Show startup information on the display.
      */
-    void showStartupInfoOnDisplay(void);
+    void showStartupInfoOnDisplay(bool isQuietEnabled);
 
     /**
      * Welcome the user on the very first start.

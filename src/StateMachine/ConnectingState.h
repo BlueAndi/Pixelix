@@ -120,6 +120,9 @@ private:
     /** Button handler */
     ButtonHandler   m_buttonHandler;
 
+    /** Is quiet mode active? Quiet mode no unnecessary system messages on the display. */
+    bool            m_isQuiet;
+
     /**
      * Constructs the state.
      */
@@ -127,7 +130,8 @@ private:
         m_wifiSSID(),
         m_wifiPassphrase(),
         m_retryTimer(),
-        m_buttonHandler()
+        m_buttonHandler(),
+        m_isQuiet(false)
     {
     }
 
