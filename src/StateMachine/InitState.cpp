@@ -345,19 +345,25 @@ void InitState::exit(StateMachine& sm)
     /* Continue initialization steps only, if there was no low level error before. */
     if (ErrorState::ERROR_ID_NO_ERROR == ErrorState::getInstance().getErrorId())
     {
-        wifi_mode_t wifiMode = WIFI_MODE_NULL;
+        Settings&   settings    = Settings::getInstance();
+        wifi_mode_t wifiMode    = WIFI_MODE_NULL;
         String      hostname;
+        bool        isQuiet     = false;
 
         /* Get hostname. */
-        if (false == Settings::getInstance().open(true))
+        if (false == settings.open(true))
         {
             LOG_WARNING("Use default hostname.");
-            hostname = Settings::getInstance().getHostname().getDefault();
+            
+            hostname    = settings.getHostname().getDefault();
+            isQuiet     = settings.getQuietMode().getDefault();
         }
         else
         {
-            hostname = Settings::getInstance().getHostname().getValue();
-            Settings::getInstance().close();
+            hostname    = settings.getHostname().getValue();
+            isQuiet     = settings.getQuietMode().getValue();
+
+            settings.close();
         }
 
         /* Start wifi and initialize the LwIP stack here. */
@@ -400,12 +406,15 @@ void InitState::exit(StateMachine& sm)
             /* Do some stuff only in wifi station mode. */
             if (false == m_isApModeRequested)
             {
-                /* In the next step the plugins are loaded and would automatically be shown.
-                 * To avoid this until the connection establishment takes place, show the following
-                 * message infinite.
-                 */
-                SysMsg::getInstance().show("...");
-                delay(500U); /* Just to avoid a short splash */
+                if (false == isQuiet)
+                {
+                    /* In the next step the plugins are loaded and would automatically be shown.
+                    * To avoid this until the connection establishment takes place, show the following
+                    * message infinite.
+                    */
+                    SysMsg::getInstance().show("...");
+                    delay(500U); /* Just to avoid a short splash */
+                }
 
                 /* Loading plugin installation failed? */
                 if (false == PluginMgr::getInstance().load())
