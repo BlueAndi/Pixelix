@@ -31,6 +31,21 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
+                        </div>
+                        <div class="modal-body text-dark" id="dialogBody">
+                        </div>
+                        <div class="modal-footer text-dark" id="dialogFooter">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main view -->
             <div class="container">
                 <h1 class="mt-5">Display</h1>
                 <p>Slot: <span id="slotId">-</span></p>
@@ -81,6 +96,7 @@
         <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/dialog.js"></script>
         <!-- Pixelix drag'n drop -->
         <script type="text/javascript" src="/js/dragDropTouch.js"></script>
 
@@ -117,7 +133,7 @@
                 window.clearTimeout(timerId);
 
                 if (false === isPageUnload) {
-                    alert("Websocket connection closed.");
+                    dialog.showError("<p>Websocket connection closed.</p>");
                 }
             }
 
@@ -178,7 +194,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Install " + pluginName + " failed.");
+                    return dialog.showError("<p>Install " + pluginName + " failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -195,7 +211,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Uninstall slot " + slotId + " failed.");
+                    return dialog.showError("<p>Uninstall slot " + slotId + " failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -211,7 +227,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Failed.");
+                    return dialog.showError("<p>Failed.</p>");
                 }).finally(function() {
                 });
             }
@@ -241,7 +257,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Failed.");
+                    return dialog.showError("<p>Failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -256,7 +272,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Moving failed.");
+                    return dialog.showError("<p>Moving failed.</p>");
                 }).finally(function() {
                     return updateSlotInfo();
                 });
@@ -305,7 +321,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Set duration failed.");
+                    return dialog.showError("<p>Set duration failed.</p>");
                 }).finally(function() {
                     return updateSlotInfo();
                 });
@@ -322,7 +338,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Set alias failed.");
+                    return dialog.showError("<p>Set alias failed.</p>");
                 }).finally(function() {
                     return updateSlotInfo();
                 });
@@ -457,8 +473,8 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Changing brightness failed.");
                     updateBrightness();
+                    return dialog.showError("<p>Changing brightness failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -487,7 +503,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Changing automatic brightness control failed.");
+                    return dialog.showError("<p>Changing automatic brightness control failed.</p>");
                 });
             }
 

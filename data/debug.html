@@ -32,6 +32,21 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
+                        </div>
+                        <div class="modal-body text-dark" id="dialogBody">
+                        </div>
+                        <div class="modal-footer text-dark" id="dialogFooter">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main view -->
             <div class="container">
                 <h1 class="mt-5">Debug</h1>
                 <ul class="nav nav-tabs" role="tablist">
@@ -106,6 +121,8 @@
         <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/dialog.js"></script>
 
         <!-- Custom javascript -->
         <script>
@@ -135,7 +152,7 @@
                 disableUI();
 
                 if (false === isPageUnload) {
-                    alert("Websocket connection closed.");
+                    dialog.showError("<p>Websocket connection closed.</p>");
                 }
             }
 
@@ -243,9 +260,9 @@
                 disableUI();
 
                 wsClient.reset().then(function(rsp) {
-                    alert("Ok.");
+                    return dialog.showInfo("<p>Ok.</p>");
                 }).catch(function(err) {
-                    alert("Error.");
+                    return dialog.showError("<p>Error: " + err + "</p>");
                 });
             }
 
@@ -264,12 +281,12 @@
                         $("#buttonMeasurement").text("Stop");
                     }
 
-                    alert("Ok.");
+                    return dialog.showInfo("<p>Ok.</p>");
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Error.");
+                    return dialog.showError("<p>Error.</p>");
                 }).finally(function() {
                     enableUI();
                 });

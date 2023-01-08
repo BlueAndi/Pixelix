@@ -31,19 +31,21 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
             <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
                 <div class="modal-dialog">
                     <div class="modal-content">
-                        <div class="modal-header text-dark">
-                            <h5 class="modal-title" id="modalTitle"></h5>
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
                         </div>
-                        <div class="modal-body text-dark" id="modalMessage">
+                        <div class="modal-body text-dark" id="dialogBody">
                         </div>
-                        <div class="modal-footer text-dark">
+                        <div class="modal-footer text-dark" id="dialogFooter">
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- Main view -->
             <div class="container">
                 <div class="row">
                     <div class="col-12">
@@ -82,6 +84,7 @@
         <script type="text/javascript" src="/js/menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
+        <script type="text/javascript" src="/js/dialog.js"></script>
         <!-- Pixelix REST API -->
         <script type="text/javascript" src="/js/rest.js"></script>
         <!-- The high performance code editor Ace. -->
@@ -141,33 +144,6 @@
                 lang: "xml",
                 type: "text"
             }];
-
-            function showDialog(title, message) {
-                return new Promise(function(resolve, reject) {
-
-                    $("#modalTitle").text(title);
-                    $("#modalMessage").html(message);
-
-                    $("#modalDialog").on("shown.bs.modal", function() { 
-                        $("#modalDialog").off("shown.bs.modal");
-                        resolve();
-                    });
-
-                    $("#modalDialog").modal("show");
-                });
-            }
-
-            function hideDialog() {
-                return new Promise(function(resolve, reject) {
-
-                    $("#modalDialog").on("hidden.bs.modal", function() { 
-                        $("#modalDialog").off("hidden.bs.modal");
-                        resolve();
-                    });
-
-                    $("#modalDialog").modal("hide");
-                });
-            }
 
             function listAllFiles(id) {
                 return restClient.listAllFilesRecursive("/").then(function(items) {
@@ -261,8 +237,10 @@
                     } else {
                         alertMsg = rsp.error.msg;
                     }
-                    alert(alertMsg);
-                    return Promise.reject();
+
+                    return dialog.showError("<p>" + alertMsg + "</p>").then(function() {
+                        return Promise.reject();
+                    });
                 });
             }
 
@@ -275,7 +253,7 @@
                 $("#editor").collapse("show");
                 $("#preview").collapse("hide");
                 
-                return showDialog("Loading file", "<p>Please wait, its loading.</p>")
+                return dialog.show("Loading file", "<p>Please wait, its loading.</p>")
                 .then(function() {
                     return restClient.readFile(filename);
                 })
@@ -285,12 +263,11 @@
                      */
                     editor.setValue(rsp, -1);
 
-                    return hideDialog();
+                    return dialog.hide();
                 }).catch(function(rsp) {
                     var errorMsg = rsp.error.msg;
 
-                    return hideDialog().finally(function() {
-                        alert(errorMsg);
+                    return dialog.showError("<p>" + errorMsg + "</p>").then(function() {
                         return Promise.reject();
                     });
                 });
@@ -322,9 +299,10 @@
                     }
                     $("#" + id).parent().remove();
 
-                    alert("File " + filename + " removed.");
+                    return dialog.showInfo("<p>File " + filename + " removed.</p>")
+
                 }).catch(function(rsp) {
-                    alert(rsp.error.msg);
+                    return dialog.showError("<p>" + rsp.error.msg + "</p>");
                 });
             }
 
@@ -377,10 +355,10 @@
                         mac: "Command-S"
                     },
                     exec: function(editor) {
-                        showDialog("Saving file", "<p>Please wait, its saving.</p>")
+                        dialog.show("Saving file", "<p>Please wait, its saving.</p>")
                         .then(restClient.writeFile(loadedFile, editor.getValue(), "text/plain"))
                         .finally(function() {
-                            hideDialog();
+                            dialog.hide();
                         });
                     },
                     readOnly: false
@@ -402,12 +380,12 @@
                     readOnly: false
                 });
 
-                showDialog("Loading ...", "<p>Please wait, file informations are loading.</p>")
+                dialog.show("Loading ...", "<p>Please wait, file informations are loading.</p>")
                 .then(function() {
                     return listAllFiles("files");
                 })
                 .finally(function() {
-                    hideDialog();
+                    dialog.hide();
                 });
             });
         </script>

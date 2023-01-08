@@ -31,6 +31,21 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
+                        </div>
+                        <div class="modal-body text-dark" id="dialogBody">
+                        </div>
+                        <div class="modal-footer text-dark" id="dialogFooter">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main view -->
             <div class="container">
                 <h1 class="mt-5">Settings</h1>
                 <p>Note, some settings may only be applied after a system restart.</p>
@@ -54,6 +69,7 @@
         <script type="text/javascript" src="/js/menu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
+        <script type="text/javascript" src="/js/dialog.js"></script>
         <!-- Pixelix REST API -->
         <script type="text/javascript" src="/js/rest.js"></script>
 
@@ -74,9 +90,9 @@
                 }
 
                 restClient.setSetting(data[index].key, value).then(function(rsp) {
-                    alert("Info: Successful stored.");
+                    return dialog.showInfo("<p>Successful stored.</p>");
                 }).catch(function(rsp) {
-                    alert("Error: " + rsp.error.msg);
+                    return dialog.showError("<p>Error: " + rsp.error.msg + "</p>");
                 });
             }
 
