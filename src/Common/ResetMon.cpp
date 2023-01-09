@@ -1,5 +1,4 @@
 /* MIT License
-/* MIT License
  *
  * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
