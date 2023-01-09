@@ -54,6 +54,9 @@
                     </div>
                 </div>
                 <div class="row">
+                    <h4 id="fileName" class="text-secondary"></h4>
+                </div>
+                <div class="row">
                     <p>Use STRG + s to save a modified file.</p>
                 </div>
                 <div class="row">
@@ -263,6 +266,7 @@
                 setEditorMode(filename);
                 $("#editor").collapse("show");
                 $("#preview").collapse("hide");
+                $("#fileName").text(loadedFile);
                 
                 return dialog.show("Loading file", "<p>Please wait, its loading.</p>")
                 .then(function() {
