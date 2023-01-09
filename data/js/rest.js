@@ -48,56 +48,60 @@ pixelix.rest.Client.prototype.listAllFiles = function(path = "/") {
 pixelix.rest.Client.prototype.listAllFilesRecursive = function(path = "/") {
     var data    = [];
     var client  = this;
-    var handler = function(rsp) {
+    var handler = function(directory) {
         var promise = null;
         var idx = 0;
-        var promiseData = {
-            data: data,
-            directories: []
-        };
+        var listOfDirectoryIndizes = [];
 
-        if (0 < rsp.length) {
-            promiseData.data = promiseData.data.concat(rsp);
+        if (0 < directory.listing.length) {
 
-            for(idx = 0; idx < rsp.length; ++idx)
+            for(idx = 0; idx < directory.listing.length; ++idx)
             {
-                if (rsp[idx].type === "dir") {
-
-                    promiseData.directories.push(rsp[idx].name);
+                if (directory.listing[idx].type === "dir") {
+                    listOfDirectoryIndizes.push(idx);
                 }
             }
 
-            if (0 < promiseData.directories.length) {
+            if (0 < listOfDirectoryIndizes.length) {
 
-                promise = Promise.resolve(promiseData);
+                promise = Promise.resolve();
 
-                for(idx = 0; idx < promiseData.directories.length; idx++) {
-                    promise = promise.then(function(internal) {
-                        var dirName = internal.directories.shift();
+                for(idx = 0; idx < listOfDirectoryIndizes.length; idx++) {
+                    promise = promise.then(function() {
+                        var directoryIdx = listOfDirectoryIndizes.shift();
 
-                        return client.listAllFilesRecursive(dirName).then(function(rsp) {
-                            internal.data = internal.data.concat(rsp);
-                            return internal;
-                        });
+                        return client.listAllFiles(directory.listing[directoryIdx].name).then(function(rsp) {
+                            var item = directory.listing[directoryIdx];
+                            item.listing = rsp;
+
+                            return Promise.resolve(item);
+                        }).then(handler);
                     });
                 }
 
-                promise = promise.then(function(internal) {
-                    return internal.data;
+                promise = promise.then(function() {
+                    return Promise.resolve(directory);
                 });
 
             } else {
-                promise = Promise.resolve(promiseData.data);
+                promise = Promise.resolve(directory);
             }
 
         } else {
-            promise = Promise.resolve(data);
+            promise = Promise.resolve(directory);
         }
 
         return promise;
     };
 
-    return this.listAllFiles(path).then(handler);
+    return this.listAllFiles(path).then(function(rsp) {
+        return Promise.resolve({
+            name: path,
+            size: 0,
+            type: "dir",
+            listing: rsp
+        });
+    }).then(handler);
 };
 
 pixelix.rest.Client.prototype.readFile = function(filename) {

@@ -8,6 +8,7 @@
         <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
         <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
         <link rel="stylesheet" type="text/css" href="/style/style.css" />
+        <link rel="stylesheet" type="text/css" href="/style/tree.css" />
 
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
@@ -15,7 +16,7 @@
     <body class="d-flex flex-column h-100">
         <header>
             <!-- Fixed navbar -->
-            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <nav class="navbar navbar-expand-md navbar-dark navbar-fixed-top bg-dark">
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
@@ -46,7 +47,7 @@
                 </div>
             </div>
             <!-- Main view -->
-            <div class="container">
+            <div class="container-fluid">
                 <div class="row">
                     <div class="col-12">
                         <h1 class="mt-1">File Editor</h1>
@@ -58,7 +59,7 @@
                 <div class="row">
                     <div class="col-3">
                         <h2 class="mt-1">Files</h2>
-                        <ul class="nav nav-pills flex-column" id="files"></ul>
+                        <ul class="nav nav-pills flex-column" id="fileTree"></ul>
                     </div>
                     <div class="col-9">
                         <div class="collapse show" id="editor"></div>
@@ -88,7 +89,7 @@
         <!-- Pixelix REST API -->
         <script type="text/javascript" src="/js/rest.js"></script>
         <!-- The high performance code editor Ace. -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.min.js" referrerpolicy="origin"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0/ace.min.js" referrerpolicy="origin"></script>
 
         <!-- Custom javascript -->
         <script>
@@ -145,89 +146,99 @@
                 type: "text"
             }];
 
+            function createFileInTree(fileInfo, seqNo) {
+                var fileTypeInfo    = getFileTypeInfo(fileInfo.name);
+                var itemId          = "file" + seqNo;
+                var $itemFile       = $("<li>");
+                var $actions        = $("<div>")
+                                    .attr("class", "dropdown-menu");
+                var $actionSize     = $("<a>")
+                                    .attr("class", "dropdown-item disabled")
+                                    .attr("href", "#")
+                                    .attr("tabindex", "-1")
+                                    .attr("aria-disabled", "true")
+                                    .text((fileInfo.size / 1024).toFixed(2) + " kByte");
+                var $actionDownload = $("<a>")
+                                    .attr("class", "dropdown-item")
+                                    .attr("href", fileInfo.name)
+                                    .attr("download", true)
+                                    .text("Download");
+                var $actionEdit     = $("<a>")
+                                    .attr("class", "dropdown-item")
+                                    .attr("href", "#")
+                                    .attr("onclick", "editFile(\"" + itemId + "\")")
+                                    .text("Edit");
+                var $actionPreview  = $("<a>")
+                                    .attr("class", "dropdown-item")
+                                    .attr("href", "#")
+                                    .attr("onclick", "previewFile(\"" + itemId + "\")")
+                                    .text("Preview");
+                var $actionRemove   = $("<a>")
+                                    .attr("class", "dropdown-item")
+                                    .attr("href", "#")
+                                    .attr("onclick", "removeFile(\"" + itemId + "\")")
+                                    .text("Remove");
+                var $itemButton     = $("<a>")
+                                    .attr("href", "#")
+                                    .attr("role", "button")
+                                    .attr("class", "nav-link dropdown-toggle")
+                                    .attr("id", itemId)
+                                    .attr("data-toggle", "dropdown")
+                                    .attr("aria-haspopup", "true")
+                                    .attr("aria-expanded", "false")
+                                    .text(fileInfo.name);
+
+                $($actions).append($actionSize);
+                $($actions).append($actionDownload);
+
+                if (null !== fileTypeInfo) {
+                    if ("text" === fileTypeInfo.type) {
+                        $($actions).append($actionEdit);
+                    } else if ("image" === fileTypeInfo.type) {
+                        $($actions).append($actionPreview);
+                    }
+                }
+
+                $($actions).append($actionRemove);
+                $($itemFile).append($itemButton).append($actions);
+
+                return $itemFile;
+            }
+
+            function createDirectoryInTree(directoryInfo, meta = null) {
+                var idx         = 0;
+                var $dirName    = $("<li>").text(directoryInfo.name);
+                var $itemDir    = $("<ul>");
+
+                $($dirName).append($itemDir);
+
+                if (null === meta) {
+                    meta = {
+                        seqNo: 0
+                    };
+                }
+
+                for(idx = 0; idx < directoryInfo.listing.length; ++idx) {
+
+                    if (directoryInfo.listing[idx].type === "dir") {
+                        $($itemDir).append(createDirectoryInTree(directoryInfo.listing[idx], meta))
+                    } else {
+                        $($itemDir).append(createFileInTree(directoryInfo.listing[idx], meta.seqNo))
+                        ++meta.seqNo
+                    }
+                }
+
+                return $dirName;
+            }
+
             function listAllFiles(id) {
                 return restClient.listAllFilesRecursive("/").then(function(items) {
-                    var index       = 0;
-                    var compareFunc = function(a, b) {
-                        if (a.name < b.name) {
-                            return -1;
-                        }
-                        if (a.name > b.name) {
-                            return 1;
-                        }
-                        return 0;
-                    };
-                    var generateItemMenu = function(itemId, item) {
-                        var $itemMenu       = $("<li>")
-                                            .attr("class", "nav-item dropdown")
-                        var $itemButton     = $("<a>")
-                                            .attr("href", "#")
-                                            .attr("role", "button")
-                                            .attr("class", "nav-link dropdown-toggle")
-                                            .attr("id", itemId)
-                                            .attr("data-toggle", "dropdown")
-                                            .attr("aria-haspopup", "true")
-                                            .attr("aria-expanded", "false")
-                                            .text(item.name);
-                        var $actions        = $("<div>")
-                                            .attr("class", "dropdown-menu");
-                        var $actionSize     = $("<a>")
-                                            .attr("class", "dropdown-item disabled")
-                                            .attr("href", "#")
-                                            .attr("tabindex", "-1")
-                                            .attr("aria-disabled", "true")
-                                            .text((item.size / 1024).toFixed(2) + " kByte");
-                        var $actionDownload = $("<a>")
-                                            .attr("class", "dropdown-item")
-                                            .attr("href", item.name)
-                                            .attr("download", true)
-                                            .text("Download");
-                        var $actionEdit     = $("<a>")
-                                            .attr("class", "dropdown-item")
-                                            .attr("href", "#")
-                                            .attr("onclick", "editFile(\"" + itemId + "\")")
-                                            .text("Edit");
-                        var $actionPreview  = $("<a>")
-                                            .attr("class", "dropdown-item")
-                                            .attr("href", "#")
-                                            .attr("onclick", "previewFile(\"" + itemId + "\")")
-                                            .text("Preview");
-                        var $actionRemove   = $("<a>")
-                                            .attr("class", "dropdown-item")
-                                            .attr("href", "#")
-                                            .attr("onclick", "removeFile(\"" + itemId + "\")")
-                                            .text("Remove");
-                        var fileTypeInfo    = getFileTypeInfo(item.name);
-                        
-                        $($actions).append($actionSize);
-                        $($actions).append($actionDownload);
+                    var $menu = $("#" + id);
+                    var $root = createDirectoryInTree(items).children().appendTo($menu);
 
-                        if (null !== fileTypeInfo) {
-                            if ("text" === fileTypeInfo.type) {
-                                $($actions).append($actionEdit);
-                            } else if ("image" === fileTypeInfo.type) {
-                                $($actions).append($actionPreview);
-                            }
-                        }
+                    $("#" + id).treed();
 
-                        $($actions).append($actionRemove);
-
-                        $($itemMenu).append($itemButton).append($actions);
-
-                        return $itemMenu;
-                    };
-                    var promise     = null;
-                    var promises    = [];
-
-                    items.sort(compareFunc);
-
-                    for(index = 0; index < items.length; ++index) {
-                        $itemMenu = generateItemMenu("file" + index, items[index]);
-                        promise = Promise.resolve($("#" + id).append($itemMenu).promise());
-                        promises.push(promise);
-                    }
-
-                    return Promise.all(promises);
+                    return Promise.resolve();
 
                 }).catch(function(rsp) {
                     var alertMsg = "";
@@ -338,6 +349,51 @@
             $(document).ready(function() {
                 menu.create("menu", menu.data);
 
+                $.fn.extend({
+                    treed: function (o) {
+                    
+                        //initialize each of the top levels
+                        var tree = $(this);
+                        tree.addClass("tree");
+                        tree.find('li').has("ul").each(function () {
+                            var branch = $(this); //li with children ul
+                            branch.prepend("<i><svg class=\"rotate270 bg-white\" xmlns=\"http://www.w3.org/2000/svg\" width=\"13\" height=\"10\" viewBox=\"0 0 13 10\"><polygon points=\"2 1, 12 1, 7 9\"></polygon></svg></i>");
+                            branch.addClass('branch');
+                            branch.on('click', function (e) {
+                                if (this == e.target) {
+                                    var icon = $(this).children("i:first").children("svg:first");
+                                    icon.toggleClass("rotate270");
+                                    $(this).children().not("i").children().toggle();
+                                }
+                            });
+                            branch.children().not("i").children().toggle();
+                        });
+                        
+                        //fire event from the dynamically added icon
+                        tree.find('.branch .indicator').each(function(){
+                            $(this).on('click', function () {
+                                $(this).closest('li').click();
+                            });
+                        });
+
+                        //fire event to open branch if the li contains an anchor instead of text
+                        tree.find('.branch>a').each(function () {
+                            $(this).on('click', function (e) {
+                                $(this).closest('li').click();
+                                e.preventDefault();
+                            });
+                        });
+
+                        //fire event to open branch if the li contains a button instead of text
+                        tree.find('.branch>button').each(function () {
+                            $(this).on('click', function (e) {
+                                $(this).closest('li').click();
+                                e.preventDefault();
+                            });
+                        });
+                    }
+                });
+
                 ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12");
                 editor = ace.edit("editor");
                 editor.setTheme("ace/theme/textmate");
@@ -382,7 +438,7 @@
 
                 dialog.show("Loading ...", "<p>Please wait, file informations are loading.</p>")
                 .then(function() {
-                    return listAllFiles("files");
+                    return listAllFiles("fileTree");
                 })
                 .finally(function() {
                     dialog.hide();
