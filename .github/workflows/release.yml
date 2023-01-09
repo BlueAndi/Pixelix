@@ -76,6 +76,8 @@ jobs:
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/bootloader.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/partitions.bin
         retention-days: 5
 
   # Deploy release artifacts
