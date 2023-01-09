@@ -394,7 +394,7 @@
                     }
                 });
 
-                ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12");
+                ace.config.set("basePath", "https://cdnjs.cloudflare.com/ajax/libs/ace/1.14.0");
                 editor = ace.edit("editor");
                 editor.setTheme("ace/theme/textmate");
                 editor.session.setUseSoftTabs(true);
@@ -402,8 +402,7 @@
                 editor.setShowPrintMargin(false);
                 editor.setHighlightActiveLine(true);
                 editor.setAutoScrollEditorIntoView(true);
-                editor.setOption("minLines", 2);
-                editor.setOption("maxLines", 100);
+                editor.setOptions({maxLines: Infinity});
                 editor.commands.addCommand({
                     name: "saveCommand",
                     bindKey: {
