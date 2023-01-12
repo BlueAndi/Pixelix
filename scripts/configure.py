@@ -75,7 +75,12 @@ def _copy_plugin_web_to_data(plugin_name):
 
     Args:
         plugin_name (str): Plugin name
+
+    Returns:
+        bool: If something is copied, it will return True otherwise False.
     """
+    is_copied = False
+
     plugin_web_data_path = _WEB_DATA_PATH + "/" + plugin_name
 
     if os.path.isdir(plugin_web_data_path) is False:
@@ -97,10 +102,14 @@ def _copy_plugin_web_to_data(plugin_name):
         # Destination file doesn't exist?
         if os.path.exists(dst_file_full_path) is False:
             shutil.copy2(src_file_full_path, dst_file_full_path)
+            is_copied = True
 
         # Destination file exists and source file is newer?
         elif (os.stat(src_file_full_path).st_mtime - os.stat(dst_file_full_path).st_mtime) > 1:
             shutil.copy2(src_file_full_path, dst_file_full_path)
+            is_copied = True
+
+    return is_copied
 
 def _generate_web_menu(menu_full_path, plugin_list):
     """Generate the menu.json file.
@@ -155,7 +164,12 @@ def _clean_up_files_and_folders(src_path, dst_path):
     Args:
         src_path (str): Source path
         dst_path (str): Destination path
+
+    Return:
+        bool: If cleaned something, it will return True otherwise False.
     """
+    is_cleaned_up = False
+
     if os.path.isdir(src_path) is False:
         pass
     elif os.path.isdir(dst_path) is False:
@@ -176,13 +190,22 @@ def _clean_up_files_and_folders(src_path, dst_path):
                 else:
                     os.remove(dst_full_path)
 
+                is_cleaned_up = True
+
+    return is_cleaned_up
+
 def _clean_up_folders(plugin_list, dst_path):
     """Remove folders in destination path, which are not present in the source path.
 
     Args:
         plugin_list (list): List with all plugin names
         dst_path (str): Destination path
+
+    Return:
+        bool: If cleaned something, it will return True otherwise False.
     """
+    is_cleaned_up = False
+
     if os.path.isdir(dst_path) is False:
         pass
     else:
@@ -198,6 +221,9 @@ def _clean_up_folders(plugin_list, dst_path):
                 dst_full_path = dst_path + "/" + folder
                 print(f"\t\"{dst_full_path}\" removed.")
                 os.rmdir(dst_full_path)
+                is_cleaned_up = True
+
+    return is_cleaned_up
 
 def configure(config_full_path):
     """Configures the plugins according to configuration.
@@ -205,7 +231,7 @@ def configure(config_full_path):
     Args:
         config_full_path (str): Full path to configuration file
     """
-    print(f"Configure plugins according to {config_full_path}")
+    print(f"Configure plugins: {config_full_path}")
 
     # Load configuration
     config = configparser.ConfigParser(empty_lines_in_values=False)
@@ -225,8 +251,12 @@ def configure(config_full_path):
         if result:
             lib_deps[idx] = result.group(1)
 
+    # Avoid generation if possible, because it will cause a compilation step.
+    is_generation_required = False
+
     # Remove all obsolete plugins in the web data.
-    _clean_up_folders(lib_deps, _WEB_DATA_PATH)
+    if _clean_up_folders(lib_deps, _WEB_DATA_PATH) is True:
+        is_generation_required = True
 
     # Prepare plugin by plugin
     for plugin_name in lib_deps:
@@ -243,10 +273,17 @@ def configure(config_full_path):
         else:
             plugin_web_data_path = _WEB_DATA_PATH + "/" + plugin_name
 
-            _clean_up_files_and_folders(plugin_lib_web_path, plugin_web_data_path)
-            _copy_plugin_web_to_data(plugin_name)
-            _generate_web_menu(_MENU_FULL_PATH, lib_deps)
-            _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, lib_deps)
+            if _clean_up_files_and_folders(plugin_lib_web_path, plugin_web_data_path) is True:
+                is_generation_required = True
+
+            if _copy_plugin_web_to_data(plugin_name) is True:
+                is_generation_required = True
+
+            if is_generation_required is True:
+                print("\tGenerating web menu.")
+                _generate_web_menu(_MENU_FULL_PATH, lib_deps)
+                print("\tGenerating plugin list.")
+                _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, lib_deps)
 
 ################################################################################
 # Main
