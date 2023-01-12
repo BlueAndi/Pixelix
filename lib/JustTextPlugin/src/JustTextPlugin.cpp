@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "JustTextPlugin.h"
-#include "RestApi.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>

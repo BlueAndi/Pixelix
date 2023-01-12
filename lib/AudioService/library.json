@@ -1,7 +1,7 @@
 {
-    "name": "FirePlugin",
+    "name": "AudioService",
     "version": "0.1.0",
-    "description": "....",
+    "description": "...",
     "authors": [{
         "name": "Andreas Merkle",
         "email": "web@blue-andi.de",
@@ -9,9 +9,7 @@
         "maintainer": true
     }],
     "license": "MIT",
-    "dependencies": [{
-        "name": "Plugin"
-    }],
+    "dependencies": [],
     "frameworks": "*",
     "platforms": "*"
 }

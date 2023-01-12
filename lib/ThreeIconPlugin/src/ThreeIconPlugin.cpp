@@ -34,7 +34,6 @@
  * Includes
  *****************************************************************************/
 #include "ThreeIconPlugin.h"
-#include "RestApi.h"
 #include "FileSystem.h"
 
 #include <Logging.h>

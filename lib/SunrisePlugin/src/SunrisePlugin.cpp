@@ -34,9 +34,7 @@
  *****************************************************************************/
 #include "AsyncHttpClient.h"
 #include "ClockDrv.h"
-#include "Settings.h"
 #include "SunrisePlugin.h"
-#include "RestApi.h"
 #include "time.h"
 #include "FileSystem.h"
 

@@ -9,7 +9,19 @@
         "maintainer": true
     }],
     "license": "MIT",
-    "dependencies": [],
+    "dependencies": [{
+        "name": "AsyncHttpClient"
+    }, {
+        "name": "LittleFS"
+    }, {
+        "name": "Os"
+    }, {
+        "name": "Plugin"
+    }, {
+        "name": "YAWidgets"
+    }, {
+        "name": "Utilities"
+    }],
     "frameworks": "*",
     "platforms": "*"
 }

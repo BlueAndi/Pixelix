@@ -34,7 +34,6 @@
  *****************************************************************************/
 #include "ClockDrv.h"
 #include "CountdownPlugin.h"
-#include "RestApi.h"
 #include "Util.h"
 #include "FileSystem.h"
 

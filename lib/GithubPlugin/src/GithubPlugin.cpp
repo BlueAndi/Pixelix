@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "GithubPlugin.h"
-#include "RestApi.h"
 #include "FileSystem.h"
 
 #include <Logging.h>

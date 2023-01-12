@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "SensorPlugin.h"
-#include "RestApi.h"
 #include "FileSystem.h"
 
 #include <Logging.h>

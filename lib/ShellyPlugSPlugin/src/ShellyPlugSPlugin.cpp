@@ -32,11 +32,9 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include "ShellyPlugSPlugin.h"
 #include "AsyncHttpClient.h"
 #include "ClockDrv.h"
-#include "Settings.h"
-#include "ShellyPlugSPlugin.h"
-#include "RestApi.h"
 #include "time.h"
 #include "FileSystem.h"
 

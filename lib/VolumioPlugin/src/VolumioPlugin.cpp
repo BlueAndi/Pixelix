@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "VolumioPlugin.h"
-#include "RestApi.h"
 #include "FileSystem.h"
 
 #include <Logging.h>

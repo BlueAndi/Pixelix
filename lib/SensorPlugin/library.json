@@ -9,7 +9,11 @@
         "maintainer": true
     }],
     "license": "MIT",
-    "dependencies": [],
+    "dependencies": [{
+        "name": "LittleFS"
+    }, {
+        "name": "Plugin"
+    }],
     "frameworks": "*",
     "platforms": "*"
 }

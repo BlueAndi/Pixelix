@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "GruenbeckPlugin.h"
-#include "RestApi.h"
 #include "AsyncHttpClient.h"
 #include "FileSystem.h"
 

@@ -1,7 +1,7 @@
 {
-    "name": "FirePlugin",
+    "name": "AsyncHttpClient",
     "version": "0.1.0",
-    "description": "....",
+    "description": "...",
     "authors": [{
         "name": "Andreas Merkle",
         "email": "web@blue-andi.de",
@@ -10,7 +10,7 @@
     }],
     "license": "MIT",
     "dependencies": [{
-        "name": "Plugin"
+        "name": "LinkedList"
     }],
     "frameworks": "*",
     "platforms": "*"
