@@ -245,22 +245,22 @@ def configure(config_full_path):
     config_section_name = _find_config_section(config)
     lib_deps = config[config_section_name]["lib_deps"].strip().splitlines()
 
-    # Remove version information
-    for idx, plugin_name in enumerate(lib_deps):
-        result = re.match("([a-zA-Z0-9_\\-]*)[ ]*@.*", plugin_name)
+    # Consider only plugins and remove their version information
+    plugin_list = []
+    for lib_name in lib_deps:
+        result = re.match("([a-zA-Z0-9_\\-]*Plugin)[ ]*@.*", lib_name)
         if result:
-            lib_deps[idx] = result.group(1)
+            plugin_list.append(result.group(1))
 
     # Avoid generation if possible, because it will cause a compilation step.
     is_generation_required = False
 
     # Remove all obsolete plugins in the web data.
-    if _clean_up_folders(lib_deps, _WEB_DATA_PATH) is True:
+    if _clean_up_folders(plugin_list, _WEB_DATA_PATH) is True:
         is_generation_required = True
 
     # Prepare plugin by plugin
-    for plugin_name in lib_deps:
-
+    for plugin_name in plugin_list:
         plugin_lib_path = _LIB_PATH + "/" + plugin_name
         plugin_lib_web_path = plugin_lib_path + "/web"
 
@@ -281,9 +281,9 @@ def configure(config_full_path):
 
             if is_generation_required is True:
                 print("\tGenerating web menu.")
-                _generate_web_menu(_MENU_FULL_PATH, lib_deps)
+                _generate_web_menu(_MENU_FULL_PATH, plugin_list)
                 print("\tGenerating plugin list.")
-                _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, lib_deps)
+                _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, plugin_list)
 
 ################################################################################
 # Main
