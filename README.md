@@ -39,9 +39,9 @@ I want to have a remote display to show multiple kind of information, running 24
 
 | Some impressions |   |
 | - | - |
-| ![TimePlugin](./data/images/TimePlugin.jpg) | ![DatePlugin](./data/images/DatePlugin.jpg) |
-| ![IconTextLampPlugin](./data/images/IconTextLampPlugin.jpg) | ![IconTextPlugin](./data/images/IconTextPlugin.jpg) |
-| ![WifiStatusPlugin](./data/images/WifiStatusPlugin.jpg) | ... |
+| ![TimePlugin](./lib/WifiStatusPlugin/web/DateTimePlugin1.jpg) | ![DatePlugin](./lib/WifiStatusPlugin/web/DateTimePlugin2.jpg) |
+| ![IconTextLampPlugin](./lib/WifiStatusPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/WifiStatusPlugin/web/IconTextPlugin.jpg) |
+| ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg) | ... |
 
 # Overview
 

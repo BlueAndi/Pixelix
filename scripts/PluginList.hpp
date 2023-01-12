@@ -45,32 +45,7 @@
  *****************************************************************************/
 #include "PluginMgr.h"
 
-#include "BTCQuotePlugin.h"
-#include "CountdownPlugin.h"
-#include "DateTimePlugin.h"
-#include "FirePlugin.h"
-#include "GameOfLifePlugin.h"
-#include "GithubPlugin.h"
-#include "GruenbeckPlugin.h"
-#include "IconTextLampPlugin.h"
-#include "IconTextPlugin.h"
-#include "JustTextPlugin.h"
-#include "MatrixPlugin.h"
-#include "OpenWeatherPlugin.h"
-#include "RainbowPlugin.h"
-#include "SensorPlugin.h"
-#include "ShellyPlugSPlugin.h"
-#include "SignalDetectorPlugin.h"
-#include "SoundReactivePlugin.h"
-#include "SunrisePlugin.h"
-#include "SysMsgPlugin.h"
-#include "TempHumidPlugin.h"
-#include "TestPlugin.h"
-#include "ThreeIconPlugin.h"
-#include "VolumioPlugin.h"
-#include "WifiStatusPlugin.h"
-#include "WormPlugin.h"
-
+$INCLUDES
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -95,34 +70,7 @@ static void registerAll()
 {
     PluginMgr&  pluginMgr = PluginMgr::getInstance();
 
-    /* Register in alphabetic order. */
-
-    pluginMgr.registerPlugin("BTCQuotePlugin", BTCQuotePlugin::create);
-    pluginMgr.registerPlugin("CountdownPlugin", CountdownPlugin::create);
-    pluginMgr.registerPlugin("DateTimePlugin", DateTimePlugin::create);
-    pluginMgr.registerPlugin("FirePlugin", FirePlugin::create);
-    pluginMgr.registerPlugin("GameOfLifePlugin", GameOfLifePlugin::create);
-    pluginMgr.registerPlugin("GithubPlugin", GithubPlugin::create);
-    pluginMgr.registerPlugin("GruenbeckPlugin", GruenbeckPlugin::create);
-    pluginMgr.registerPlugin("IconTextLampPlugin", IconTextLampPlugin::create);
-    pluginMgr.registerPlugin("IconTextPlugin", IconTextPlugin::create);
-    pluginMgr.registerPlugin("JustTextPlugin", JustTextPlugin::create);
-    pluginMgr.registerPlugin("MatrixPlugin", MatrixPlugin::create);
-    pluginMgr.registerPlugin("OpenWeatherPlugin", OpenWeatherPlugin::create);
-    pluginMgr.registerPlugin("RainbowPlugin", RainbowPlugin::create);
-    pluginMgr.registerPlugin("SensorPlugin", SensorPlugin::create);
-    pluginMgr.registerPlugin("ShellyPlugSPlugin", ShellyPlugSPlugin::create);
-    pluginMgr.registerPlugin("SignalDetectorPlugin", SignalDetectorPlugin::create);
-    pluginMgr.registerPlugin("SoundReactivePlugin", SoundReactivePlugin::create);
-    pluginMgr.registerPlugin("SunrisePlugin", SunrisePlugin::create);
-    pluginMgr.registerPlugin("SysMsgPlugin", SysMsgPlugin::create);
-    pluginMgr.registerPlugin("TempHumidPlugin", TempHumidPlugin::create);
-    pluginMgr.registerPlugin("TestPlugin", TestPlugin::create);
-    pluginMgr.registerPlugin("ThreeIconPlugin", ThreeIconPlugin::create);
-    pluginMgr.registerPlugin("VolumioPlugin", VolumioPlugin::create);
-    pluginMgr.registerPlugin("WifiStatusPlugin", WifiStatusPlugin::create);
-    pluginMgr.registerPlugin("WormPlugin", WormPlugin::create);
-
+$REGISTER
 }
 
 };

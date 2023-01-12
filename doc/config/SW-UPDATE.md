@@ -6,17 +6,99 @@
 # Update The Software <!-- omit in toc -->
 
 - [Purpose](#purpose)
+- [Recommendations](#recommendations)
+  - [Non-Developer](#non-developer)
+  - [Developer](#developer)
+- [Update possibilities](#update-possibilities)
+  - [Use Espressif Flash Download Tool (Windows only)](#use-espressif-flash-download-tool-windows-only)
+  - [Use esptool](#use-esptool)
+    - [Debian Linux](#debian-linux)
+    - [Windows](#windows)
+    - [Common after python and esptool are installed](#common-after-python-and-esptool-are-installed)
+  - [Use VSCode and Platformio](#use-vscode-and-platformio)
 - [Update via USB](#update-via-usb)
 - [Update via OTA (over-the-air)](#update-via-ota-over-the-air)
-- [Update via browser](#update-via-browser)
+- [Use the browser](#use-the-browser)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
 
 # Purpose
-The software can be uploaded/updated in three different ways.
-Note, replace the ```<choose-your-board>``` below in the description with your board.
+The software can be uploaded/updated to the development board in 4 different ways. Not all of them can be used in any case. Take a look to the recommendations which variant might be the best for you.
 
+# Recommendations
+The recommeded way how to program the software to the board depends on the skill level, as well as the available toolchain. Hopefully it helps you to choose the right one.
+
+## Non-Developer
+
+| Use Case | Recommended To Use |
+| -------- | ------------------ |
+| Brand new development board, with only the preinstalled software on it. | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
+| A development board already used by you. | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
+| Pixelix is already running on the development board. Its webinterface is accessible. | Browser |
+
+## Developer
+
+| Use Case | Recommended To Use |
+| -------- | ------------------ |
+| Development board, not running Pixelix and you don't like to install VSCode and PlatformIO. | **Windows:** Espressif Flash Download Tool<br>**Linux:** esptool |
+| Development board, not running Pixelix and you like to go the developers way. | VSCode and PlatformIO |
+| You like to develop a plugin or change code for a pull request. | VSCode and PlatformIO |
+| Pixelix is already running on the development board. | Browser |
+
+# Update possibilities
+
+## Use Espressif Flash Download Tool (Windows only)
+1. Download binaries (```esp-rgb-led-matrix-v6.0.0.zip```) from the [latest release](https://github.com/BlueAndi/esp-rgb-led-matrix/releases).
+2. Unzip to a local folder.
+3. Download the [Espressif Flash Download Tool](https://www.espressif.com/en/support/download/other-tools).
+4. Unzip to a local folder.
+5. Connect your development board with the PC.
+6. Start the Espressif Flash Download Tool with the executable ```flash_download_tool_<version>.exe```.
+7. Choose _ChipType_, depended on the development board you have.
+8. Choose _WorkMode_ "Develop".
+9. Choose _LoadMode_ "UART".
+10. Click on OK.
+11. Select binaries in the following order:
+    1.  ```bootloader.bin``` @ 0x1000
+    2.  ```partitions.bin``` @ 0x8000
+    3.  ```firmware.bin``` @ 0x10000
+    4.  ```littlefs.bin``` @
+        * Choose according to the flash size of the development board:
+            * 4 MB flash: 0x2b0000
+            * 8 MB flash: 0x670000
+            * 16 MB flash: 0xc90000
+12. Choose _SPI SPPED_: 40 MHz
+13. Choose _SPI MODE_:
+    * esp32: DIO
+    * esp32-s3: QIO
+14. Choose _COM_, e.g. COM4 which depends how the virtual COM port was mounted for the plugged in development board.
+15. Start flashing by clicking on _START_ in the DownloadPanel 1.
+16. The state will change from _IDLE_ to _SYNC_.
+17. Keep _BOOT_ button on the development board pressed, until the state changes to _DOWNLOAD_.
+18. Now wait until state changes to _FINISH_.
+19. Its complete, close the tool.
+
+## Use esptool
+
+### Debian Linux
+1. Update system packages: ```sudo apt-get update```
+3. Install python toolchain: ```sudo apt-get install python3-pip```
+4. Verify successful installation: ```pip3 --version```
+5. Install esptool: ```sudo pip3 install esptool```
+
+### Windows
+1. Download and install latest [Python](https://www.python.org/) version.
+2. During the installation ensure that Python will be set on the path.
+3. Install esptool: ```pip install esptool```
+
+### Common after python and esptool are installed
+1. Verify successful esptool installation: ```esptool --version```
+2. Erase flash: ```esptool -c <chip-type> -p <port> erase_flash```<br>Note: Replace &lt;chip-type&gt; with the chip type of your development board, e.g. esp32. Replace &lt;port&gt; with the serial port the development board is connected too, e.g. ```COM4``` on Windows or ```/dev/ttyUSB0``` on Linux.
+3. After the "Connecting" message appears, keep _BOOT_ button on the development board pressed until procedure starts.
+4. Write binaries to flash via ```esptool -p <port> write_flash --flash_mode <spi-mode> --flash_size <flash-size> 0x0 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin 0x2b0000 littlefs.bin```<br>Replace &lt;port&gt; with the serial port the development board is connected too, e.g. ```COM4``` on Windows or ```/dev/ttyUSB0``` on Linux. Use _DIO_ for &lt;spi-mode&gt; in case of esp32, except esp32-s3 use _QIO_. xxxxxxxxx TODO xxxxxxxxxxxxxx
+
+## Use VSCode and Platformio
 If your board is not available out of the box, have a look for the [supported boards by platformio](https://docs.platformio.org/en/latest/platforms/espressif32.html#boards). Copy a board configuration block in the ```platformio.ini``` and overwrite the board configuration (```board = ...```) by using the right board id from [supported boards by platformio](https://docs.platformio.org/en/latest/platforms/espressif32.html#boards).
 
 The update consists of two parts:
@@ -63,10 +145,9 @@ Example:
 ![VSCodeUpdateOta](../images/VSCodeUpdateOta.png)
 ![UploadUtility](../images/UploadUtility.png)
 
-# Update via browser
+# Use the browser
 Preconditions:
 * PIXELIX runs already on the target.
-* No major version update.
 
 Steps:
 1. Build the software via _Project Tasks -> General -> Build All_

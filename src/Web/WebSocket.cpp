@@ -103,8 +103,12 @@ static WsCmdMove            gWsCmdMove;
 /** Websocket slot duration command */
 static WsCmdSlotDuration    gWsCmdSlotDuration;
 
+#if CONFIG_FEATURE_IPERF == 1
+
 /** Websocket iperf command */
 static WsCmdIperf           gWsCmdIperf;
+
+#endif /* CONFIG_FEATURE_IPERF == 1 */
 
 /** Websocket control virtual button command */
 static WsCmdButton          gWsCmdButton;
@@ -128,7 +132,9 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdLog,
     &gWsCmdMove,
     &gWsCmdSlotDuration,
+#if CONFIG_FEATURE_IPERF == 1
     &gWsCmdIperf,
+#endif /* CONFIG_FEATURE_IPERF == 1 */
     &gWsCmdButton,
     &gWsCmdEffect,
     &gWsCmdAlias
