@@ -60,16 +60,16 @@
  *****************************************************************************/
 
 /* Initialize image path for standard icon. */
-const char* VolumioPlugin::IMAGE_PATH_STD_ICON      = "/images/volumio.bmp";
+const char* VolumioPlugin::IMAGE_PATH_STD_ICON      = "/plugins/VolumioPlugin/volumio.bmp";
 
 /* Initialize image path for "stop" icon. */
-const char* VolumioPlugin::IMAGE_PATH_STOP_ICON     = "/images/volumioStop.bmp";
+const char* VolumioPlugin::IMAGE_PATH_STOP_ICON     = "/plugins/VolumioPlugin/volumioStop.bmp";
 
 /* Initialize image path for "play" icon. */
-const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/images/volumioPlay.bmp";
+const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/plugins/VolumioPlugin/volumioPlay.bmp";
 
 /* Initialize image path for "pause" icon. */
-const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/images/volumioPause.bmp";
+const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/plugins/VolumioPlugin/volumioPause.bmp";
 
 /* Initialize plugin topic. */
 const char* VolumioPlugin::TOPIC                    = "/host";

@@ -61,7 +61,7 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* GruenbeckPlugin::IMAGE_PATH = "/images/gruenbeck.bmp";
+const char* GruenbeckPlugin::IMAGE_PATH = "/plugin/GruenbeckPlugin/gruenbeck.bmp";
 
 /* Initialize plugin topic. */
 const char* GruenbeckPlugin::TOPIC      = "/ipAddress";

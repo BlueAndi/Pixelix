@@ -61,7 +61,7 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* BTCQuotePlugin::BTC_USD_IMAGE_PATH     = "/images/BTC_USD.bmp";
+const char* BTCQuotePlugin::BTC_USD_IMAGE_PATH     = "/plugins/BTCQuotePlugin/BTC_USD.bmp";
 
 /******************************************************************************
  * Public Methods

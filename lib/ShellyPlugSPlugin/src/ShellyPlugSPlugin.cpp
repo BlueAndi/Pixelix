@@ -63,7 +63,7 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* ShellyPlugSPlugin::IMAGE_PATH   = "/images/plug.bmp";
+const char* ShellyPlugSPlugin::IMAGE_PATH   = "/plugins/ShellyPlugSPlugin/plug.bmp";
 
 /* Initialize plugin topic. */
 const char* ShellyPlugSPlugin::TOPIC        = "/ipAddress";

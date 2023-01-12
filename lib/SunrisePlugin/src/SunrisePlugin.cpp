@@ -63,7 +63,7 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* SunrisePlugin::IMAGE_PATH   = "/images/sunrise.bmp";
+const char* SunrisePlugin::IMAGE_PATH   = "/plugins/SunrisePlugin/sunrise.bmp";
 
 /* Initialize plugin topic. */
 const char* SunrisePlugin::TOPIC        = "/location";

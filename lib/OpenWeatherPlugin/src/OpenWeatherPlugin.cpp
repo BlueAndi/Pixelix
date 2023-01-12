@@ -69,19 +69,19 @@
  *****************************************************************************/
 
 /* Initialize image path for standard icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_STD_ICON      = "/images/openWeather.bmp";
+const char* OpenWeatherPlugin::IMAGE_PATH_STD_ICON      = "/plugins/OpenWeatherPlugin/openWeather.bmp";
 
 /* Initialize image path for uvi icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_UVI_ICON      = "/images/uvi.bmp";
+const char* OpenWeatherPlugin::IMAGE_PATH_UVI_ICON      = "/plugins/OpenWeatherPlugin/uvi.bmp";
 
 /* Initialize image path for humidity icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_HUMIDITY_ICON = "/images/hum.bmp";
+const char* OpenWeatherPlugin::IMAGE_PATH_HUMIDITY_ICON = "/plugins/OpenWeatherPlugin/hum.bmp";
 
 /* Initialize image path for uvi icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_WIND_ICON     = "/images/wind.bmp";
+const char* OpenWeatherPlugin::IMAGE_PATH_WIND_ICON     = "/plugins/OpenWeatherPlugin/wind.bmp";
 
 /* Initialize image path for the weather condition icons. */
-const char* OpenWeatherPlugin::IMAGE_PATH               = "/images/";
+const char* OpenWeatherPlugin::IMAGE_PATH               = "/plugins/OpenWeatherPlugin/";
 
 /* Initialize OpenWeather base URI */
 const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "https://api.openweathermap.org";

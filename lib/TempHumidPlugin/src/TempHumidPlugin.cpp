@@ -62,10 +62,10 @@
  *****************************************************************************/
 
 /* Initialize image path for temperature (scale) icon. */
-const char* TempHumidPlugin::IMAGE_PATH_TEMP_ICON      = "/images/temp.bmp";
+const char* TempHumidPlugin::IMAGE_PATH_TEMP_ICON      = "/plugins/TempHumidPlugin/temp.bmp";
 
 /* Initialize image path for humidity (drop) icon. */
-const char* TempHumidPlugin::IMAGE_PATH_HUMID_ICON     = "/images/drop.bmp";
+const char* TempHumidPlugin::IMAGE_PATH_HUMID_ICON     = "/plugins/TempHumidPlugin/drop.bmp";
 
 /******************************************************************************
  * Public Methods
