@@ -30,7 +30,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["esp32doit-devkit-v1-usb", "esp32-nodemcu-usb", "az-delivery-devkit-v4-usb", "lilygo-ttgo-t-display-usb", "lilygo-t-display-s3-usb", "adafruit_feather_esp32_v2-usb"]
+        environment: ["esp32doit-devkit-v1", "esp32-nodemcu", "az-delivery-devkit-v4", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "adafruit_feather_esp32_v2"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
@@ -112,8 +112,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade platformio
 
-    - name: Perform static checks on target esp32doit-devkit-v1-usb
-      run: platformio check --environment esp32doit-devkit-v1-usb
+    - name: Perform static checks on target esp32doit-devkit-v1
+      run: platformio check --environment esp32doit-devkit-v1
 
     - name: Perform static checks on native environment
       run: platformio check --environment test

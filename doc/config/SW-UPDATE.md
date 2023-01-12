@@ -17,7 +17,6 @@
     - [Common after python and esptool are installed](#common-after-python-and-esptool-are-installed)
   - [Use VSCode and Platformio](#use-vscode-and-platformio)
 - [Update via USB](#update-via-usb)
-- [Update via OTA (over-the-air)](#update-via-ota-over-the-air)
 - [Use the browser](#use-the-browser)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
@@ -110,40 +109,15 @@ Steps:
 1. Load workspace in VSCode.
 2. Change to PlatformIO toolbar (click on the head of the ant in the left column).
 3. Software:
-   1. _Project Tasks -> env:```<choose-your-board>```-**usb** -> General -> Build_
-   2. _Project Tasks -> env:```<choose-your-board>```-**usb** -> General -> Upload_
+   1. _Project Tasks -> env:```<choose-your-board>``` -> General -> Build_
+   2. _Project Tasks -> env:```<choose-your-board>``` -> General -> Upload_
 4. Filesystem:
-   1. _Project Tasks -> env:```<choose-your-board>```-**usb** -> Platform -> Build Filesystem Image_
-   2. _Project Tasks -> env:```<choose-your-board>```-**usb** -> Platform -> Upload Filesystem Image_
+   1. _Project Tasks -> env:```<choose-your-board>``` -> Platform -> Build Filesystem Image_
+   2. _Project Tasks -> env:```<choose-your-board>``` -> Platform -> Upload Filesystem Image_
 
 Example:
 
 ![VSCodeUpdate](../images/VSCodeUpdate.png)
-
-# Update via OTA (over-the-air)
-Preconditions:
-* PIXELIX runs already on the target.
-* No major version update.
-
-Steps:
-1. Load workspace in VSCode.
-2. If necessary, change the following parameters in the ```platform.ini``` configuration file:
-   1. Set _upload_port_ to the device ip-address.
-   2. Set _upload_flags_ to ```--port=3232``` and set the password via ```--auth=XXX```.
-3. Change to PlatformIO toolbar (click on the head of the ant in the left column).
-4. Software:
-   1. _Project Tasks -> env:```<choose-your-board>```-**ota** -> General -> Build_
-   2. _Project Tasks -> env:```<choose-your-board>```-**ota** -> General -> Upload_
-   3. Upload Utility appears in the task bar, use it to perform the OTA.
-5. Filesystem:
-   1. _Project Tasks -> env:```<choose-your-board>```-**ota** -> Platform -> Build Filesystem Image_
-   2. _Project Tasks -> env:```<choose-your-board>```-**ota** -> Platform -> Upload Filesystem Image_
-   3. Upload Utility appears in the task bar, use it to perform the OTA.
-
-Example:
-
-![VSCodeUpdateOta](../images/VSCodeUpdateOta.png)
-![UploadUtility](../images/UploadUtility.png)
 
 # Use the browser
 Preconditions:
@@ -151,8 +125,8 @@ Preconditions:
 
 Steps:
 1. Build the software via _Project Tasks -> General -> Build All_
-2. Build the filesystem via _Project Tasks -> env:```<choose-your-board>```-**usb** -> Platform -> Build File System Image_.
-3. Now in the ```.pio/build/<choose-your-board>```-**usb** folder there are two important files:
+2. Build the filesystem via _Project Tasks -> env:```<choose-your-board>``` -> Platform -> Build File System Image_.
+3. Now in the ```.pio/build/<choose-your-board>``` folder there are two important files:
    1. The software for the device: ```firmware.bin```
    2. The prebuilt filesystem for the device: ```littlefs.bin``` (or ```spiffs.bin``` for Pixelix &lt; 6.x.x)
 4. Open browser add enter ip address of the device.
