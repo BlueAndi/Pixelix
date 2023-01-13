@@ -83,7 +83,7 @@ def _copy_plugin_web_to_data(plugin_name):
 
     plugin_web_data_path = _WEB_DATA_PATH + "/" + plugin_name
 
-    if os.path.isdir(plugin_web_data_path) is False:
+    if os.path.exists(plugin_web_data_path) is False:
         os.mkdir(plugin_web_data_path)
 
     plugin_lib_web_path = _LIB_PATH + "/" + plugin_name + "/" + "web"
