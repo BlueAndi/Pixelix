@@ -33,6 +33,7 @@ Each plugin is identified by its unique UID.
   - [TestPlugin](#testplugin)
   - [VolumioPlugin](#volumioplugin)
   - [WifiStatusPlugin](#wifistatusplugin)
+  - [WormPlugin](#wormplugin)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -143,6 +144,9 @@ The host address of the Volumio webserver can be set via the [REST API](https://
 
 ## WifiStatusPlugin
 The WifiStatusPlugin shows the current wireless signal strength.
+
+## WormPlugin
+The plugin shows animated worms on the display. If they find some meal, they will grow up. If they eat too much, they will explode.
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
