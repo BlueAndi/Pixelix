@@ -258,9 +258,14 @@ def configure(config_full_path):
     # Avoid generation if possible, because it will cause a compilation step.
     is_generation_required = False
 
-    # Remove all obsolete plugins in the web data.
-    if _clean_up_folders(plugin_list, _WEB_DATA_PATH) is True:
+    if os.path.isdir(_WEB_DATA_PATH) is False:
+        os.mkdir(_WEB_DATA_PATH)
         is_generation_required = True
+
+    else:
+        # Remove all obsolete plugins in the web data if there are any.
+        if _clean_up_folders(plugin_list, _WEB_DATA_PATH) is True:
+            is_generation_required = True
 
     # Prepare plugin by plugin
     for plugin_name in plugin_list:
