@@ -37,7 +37,7 @@ import re
 ################################################################################
 _LIB_PATH = "./lib"
 _WEB_DATA_PATH = "./data/plugins"
-_MENU_FULL_PATH = "./data/js/menu.json"
+_MENU_FULL_PATH = "./data/js/pluginsSubMenu.js"
 _PLUGIN_LIST_FULL_PATH = "./src/Generated/PluginList.hpp"
 _PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.hpp"
 
@@ -90,7 +90,7 @@ def _copy_plugin_web_to_data(plugin_name):
 
     src_files = []
     for src_file in os.listdir(plugin_lib_web_path):
-        if os.path.isdir(plugin_lib_web_path + "/" + src_file) is True:
+        if os.path.isdir(plugin_lib_web_path + "/" + src_file) is False:
             src_files.append(src_file)
 
     # Copy source files only if they are newer than the destination files.
@@ -118,19 +118,22 @@ def _generate_web_menu(menu_full_path, plugin_list):
         menu_full_path (str): Full path to menu.json where it shall be created.
         plugin_list (list): List of all plugin names
     """
-    menu = {}
-    menu["menu_items"] = []
-
-    for plugin_name in plugin_list:
-        entry = {
-            "title": plugin_name,
-            "hyperRef": "plugins/" + plugin_name + ".html"
-        }
-
-        menu["menu_items"].append(entry)
-
     with open(menu_full_path, 'w', encoding="utf-8") as file_desc:
-        json.dump(menu, file_desc, indent=4)
+        file_desc.write("var pluginSubMenu = [\n")
+
+        for idx, plugin_name in enumerate(plugin_list):
+
+            file_desc.write("    {\n")
+            file_desc.write(f"        title: \"{plugin_name}\",\n")
+            file_desc.write(f"        hyperRef: \"/plugins/{plugin_name}/{plugin_name}.html\"\n")
+            file_desc.write("    }")
+
+            if idx == (len(plugin_list) - 1):
+                file_desc.write("\n")
+            else:
+                file_desc.write(",\n")
+
+        file_desc.write("]\n")
 
 def _generate_cpp_plugin_list(plugin_list_full_path, plugin_list):
     """Generate the PluginList.hpp source file.
@@ -279,11 +282,14 @@ def configure(config_full_path):
             if _copy_plugin_web_to_data(plugin_name) is True:
                 is_generation_required = True
 
-            if is_generation_required is True:
-                print("\tGenerating web menu.")
-                _generate_web_menu(_MENU_FULL_PATH, plugin_list)
-                print("\tGenerating plugin list.")
-                _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, plugin_list)
+    if (is_generation_required is True) or \
+        (os.path.exists(_MENU_FULL_PATH) is False) or \
+        (os.path.exists(_PLUGIN_LIST_FULL_PATH) is False):
+
+        print("\tGenerating web menu.")
+        _generate_web_menu(_MENU_FULL_PATH, plugin_list)
+        print("\tGenerating plugin list.")
+        _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, plugin_list)
 
 ################################################################################
 # Main

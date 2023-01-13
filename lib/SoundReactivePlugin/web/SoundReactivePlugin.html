@@ -33,7 +33,7 @@
         <main role="main" class="flex-shrink-0">
             <div class="container">
                 <h1 class="mt-5">SoundReactivePlugin</h1>
-                <p><img src="SoundReactivePlugi.jpg" alt="Screenshot" /></p>
+                <p><img src="SoundReactivePlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows octave frequency bands, depended on the environment sound.</p>
                 <p>Required: A digital microphone (INMP441) is required, connected to the I2S port.</p>
                 <h2 class="mt-1">REST API</h2>
@@ -85,6 +85,7 @@
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <!-- Pixelix REST API -->
@@ -178,6 +179,7 @@
             }
 
             $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
 
                 utils.injectOrigin("injectOrigin", "{{ORIGIN}}");

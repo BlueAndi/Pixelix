@@ -121,6 +121,7 @@
         <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/dialog.js"></script>
 
@@ -294,6 +295,7 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
 
                 $("#buttonInfo").click(function(e) {

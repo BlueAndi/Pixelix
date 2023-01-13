@@ -76,8 +76,6 @@ struct TmplKeyWordFunc
  * Prototypes
  *****************************************************************************/
 
-static String fitToSpiffs(const String& path, const String& filenNameWithoutExt, const String& fileNameExtension);
-
 static String tmplPageProcessor(const String& var);
 
 static void aboutPage(AsyncWebServerRequest* request);
@@ -111,9 +109,6 @@ static const char*      FIRMWARE_FILENAME               = "firmware.bin";
 
 /** Path to the plugin webpages. */
 static const String     PLUGIN_PAGE_PATH                = "/plugins/";
-
-/** Plugin webpage file extension. */
-static const String     PLUGIN_PAGE_FILE_EXTENSION      = ".html";
 
 /** SPIFFS limits the max. filename length, which includes the path as well. */
 static const uint32_t   SPIFFS_FILENAME_LENGTH_LIMIT    = 32U;
@@ -239,18 +234,25 @@ void Pages::init(AsyncWebServer& srv)
     pluginName = PluginMgr::getInstance().findFirst();
     while(nullptr != pluginName)
     {
-        String uri = fitToSpiffs(PLUGIN_PAGE_PATH, String(pluginName), PLUGIN_PAGE_FILE_EXTENSION);
-
+        String uri = PLUGIN_PAGE_PATH + pluginName;
+        
         (void)srv.on(   uri.c_str(),
                         HTTP_GET,
-                        [uri](AsyncWebServerRequest* request)
+                        [](AsyncWebServerRequest* request)
                         {
                             if (nullptr == request)
                             {
                                 return;
                             }
 
-                            request->send(FILESYSTEM, uri, "text/html", false, tmplPageProcessor);
+                            if (0U != request->url().endsWith(".html"))
+                            {
+                                request->send(FILESYSTEM, request->url(), "text/html", false, tmplPageProcessor);
+                            }
+                            else
+                            {
+                                request->send(FILESYSTEM, request->url());
+                            }
 
                         }).setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());;
 
@@ -282,23 +284,6 @@ void Pages::error(AsyncWebServerRequest* request)
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
-
-/**
- * SPIFFS full filename (path + filename + extension) is limited to 32 characters.
- * This function reduces only the filename length and returns the full path.
- *
- * @param[in] path                  Path, e.g. "/mypath/".
- * @param[in] fileNameWithoutExt    Filename without extension, e.g. "myFile".
- * @param[in] fileNameExtension     Filename extension, e.g. ".html"
- *
- * @return Full path
- */
-static String fitToSpiffs(const String& path, const String& filenNameWithoutExt, const String& fileNameExtension)
-{
-    String fileNameReduced = filenNameWithoutExt.substring(0, SPIFFS_FILENAME_LENGTH_LIMIT - path.length() - fileNameExtension.length() - 1U);
-
-    return path + fileNameReduced + fileNameExtension;
-}
 
 /**
  * Processor for page template, containing the common part, which is available

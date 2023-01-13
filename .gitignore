@@ -8,7 +8,7 @@ __pycache__
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/settings.json
-data/js/menu.json
+data/js/pluginsSubMenu.js
 data/plugins/
 doc/html/
 firmware.map

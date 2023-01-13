@@ -32,22 +32,32 @@
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
             <div class="container">
-                <h1 class="mt-5">IconTextLampPlugin</h1>
-                <p><img src="IconTextLampPlugin.jpg" alt="Screenshot" /></p>
-                <p>The plugin shows an icon on left side, text on right side and lamps at the bottom.</p>
-                <p>Each part can be set separately via the REST API.</p>
-                <p>Show bitmap in the specified slot. Supported are bitmap files (.bmp) with:</p>
-                <ul>
-                    <li>24 or 32 bits per pixel.</li>
-                    <li>1 plane.</li>
-                    <li>No compression.</li>
-                </ul>
-                <p>Note, if you are using _gimp_ to create bitmap files, please configure like:</p>
-                <ul>
-                    <li>Compatibility options: Don't write color informations.</li>
-                    <li>Extended options: Select 24 bit per pixel.</li>
-                </ul>
+                <h1 class="mt-5">SignalDetectorPlugin</h1>
+                <p><img src="SignalDetectorPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin is able to detect a signal, which can be combined with up to 2 frequencies.</p>
+                <p>Each frequency must be detected for a specific configureable time.</p>
+                <p>As long as nothing is detected, the plugin will disable itself.</p>
+                <p>If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection.</p>
+                <p>Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."</p>
                 <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get signal configuration</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg/&lt;FREQ-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg/&lt;FREQ-ID&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                </ul>
+                <h3 class="mt-1">Configure signal</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg/&lt;FREQ-ID&gt;?frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg/&lt;FREQ-ID&gt;?frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>FREQ-ID: The id of the frequency (starting with 0).</li>
+                    <li>FREQUENCY: The frequency in Hz.</li>
+                    <li>MIN-DURATION: The min. duration in ms the frequency must be detected.</li>
+                    <li>THRESHOLD: The frequency must be over this threshold to be able to detect it. Usually good values are above 2000.</li>
+                </ul>
                 <h3 class="mt-1">Get text</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text</code></pre>
@@ -61,45 +71,61 @@
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>TEXT: The text to show on the display.</li>
+                    <li>TEXT: The text to show on the display if signal is detected.</li>
                 </ul>
-                <h3 class="mt-1">Set icon</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap</code></pre>
+                <h3 class="mt-1">Get push URL</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/pushUrl</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/pushUrl</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
-                <h3 class="mt-1">Get all lamp states</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamps</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/lamps</code></pre>
+                <h3 class="mt-1">Set push URL</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/pushUrl?set=&lt;PUSH-URL&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/pushUrl?set=&lt;PUSH-URL&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                </ul>
-                <h3 class="mt-1">Set lamp state</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/lamp/&lt;LAMP-ID&gt;?set=&lt;LAMP-STATE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/lamp/&lt;LAMP-ID&gt;?set=&lt;LAMP-STATE&gt;</code></pre>
-                <ul>
-                    <li>PLUGIN-UID: The plugin unique id.</li>
-                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>LAMP-ID: The id of the lamp (starting with 0 from left).</li>
-                    <li>LAMP-STATE: <code>on</code> or <code>off</code></li>
+                    <li>PUSH-URL: The URL which will be triggered if signal is detected.</li>
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
-                <h3 class="mt-1">Icon</h3>
-                <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
-                    <label for="pluginUidIcon">Plugin UID:</label><br />
-                    <select id="pluginUidIcon" name="pluginUid" size="1">
+                <h3 class="mt-1">Signal frequency 0</h3>
+                <form id="myFormFreq_0" enctype="multipart/form-data" action="javascript:setFreq(pluginUidFreq0.options[pluginUidFreq0.selectedIndex].value, freq_0.value, minDuration_0.value, threshold_0.value, 0)">
+                    <label for="pluginUidFreq0">Plugin UID:</label><br />
+                    <select id="pluginUidFreq0" name="pluginUid" size="1" onChange="getFreq(pluginUidFreq0.options[pluginUidFreq0.selectedIndex].value, 0)">
                     </select>
                     <br />
-                    <label for="icon">Icon:</label><br />
-                    <input id="icon" type="file" /><br />
+                    <label for="freq_0">Frequency [Hz]:</label><br />
+                    <input id="freq_0" type="number" min="0" max="20000"/>
+                    <br />
+                    <label for="minDuration_0">Min. duration [ms]:</label><br />
+                    <input id="minDuration_0" type="number" min="0" max="10000"/>
+                    <br />
+                    <label for="threshold_0">Threshold:</label><br />
+                    <input id="threshold_0" type="number" min="0" max="40000"/>
+                    <br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Signal frequency 1</h3>
+                <form id="myFormFreq_1" enctype="multipart/form-data" action="javascript:setFreq(pluginUidFreq1.options[pluginUidFreq1.selectedIndex].value, freq_1.value, minDuration_1.value, threshold_1.value, 1)">
+                    <label for="pluginUidFreq1">Plugin UID:</label><br />
+                    <select id="pluginUidFreq1" name="pluginUid" size="1" onChange="getFreq(pluginUidFreq1.options[pluginUidFreq1.selectedIndex].value, 1)">
+                    </select>
+                    <br />
+                    <label for="freq_1">Frequency [Hz]:</label><br />
+                    <input id="freq_1" type="number" min="0" max="20000"/>
+                    <br />
+                    <label for="minDuration_1">Min. duration [ms]:</label><br />
+                    <input id="minDuration_1" type="number" min="0" max="10000"/>
+                    <br />
+                    <label for="threshold_1">Threshold:</label><br />
+                    <input id="threshold_1" type="number" min="0" max="40000"/>
+                    <br />
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h3 class="mt-1">Text</h3>
                 <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
-                    <label for="pluginUidText">Plugin UID:</label><br />
+                    <label for="pluginUid">Plugin UID:</label><br />
                     <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
                     </select>
                     <br />
@@ -107,28 +133,16 @@
                     <input type="text" id="justText" name="justText" value="" size="20" /><br />
                     <input name="submit" type="submit" value="Update"/>
                 </form>
-                <h3 class="mt-1">Lamp</h3>
-                <form id="myFormLamp" action="javascript:setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampId.options[lampId.selectedIndex].value, lampState.options[lampState.selectedIndex].value)">
-                    <label for="pluginUidLamp">Plugin UID:</label><br />
-                    <select id="pluginUidLamp" name="pluginUid" size="1">
+                <h3 class="mt-1">Push URL</h3>
+                <form id="myFormPushUrl" action="javascript:setPushUrl(pluginUidPushUrl.options[pluginUidPushUrl.selectedIndex].value, pushUrl.value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUidPushUrl" name="pluginUid" size="1" onChange="getPushUrl(pluginUidPushUrl.options[pluginUidPushUrl.selectedIndex].value, 'pushUrl')">
                     </select>
                     <br />
-                    <label for="lampId">Lamp:</label><br />
-                    <select id="lampId" size="1" onChange="getLamp(pluginUidText.options[pluginUidText.selectedIndex].value, lampId.options[lampId.selectedIndex].value, 'lampState')">
-                        <option value="0" selected>0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
-                    <br />
-                    <label for="lampState">State:</label><br />
-                    <select id="lampState" size="1">
-                        <option value="off" selected>off</option>
-                        <option value="on">on</option>
-                    </select>
-                    <br />
+                    <label for="pushUrl">URL:</label><br />
+                    <input type="text" id="pushUrl" name="pushUrl" value="" size="20" /><br />
                     <input name="submit" type="submit" value="Update"/>
-                </form>          
+                </form>
             </div>
         </main>
   
@@ -146,6 +160,7 @@
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <!-- Pixelix REST API -->
@@ -153,19 +168,21 @@
 
         <script>
 
-            var pluginName  = "IconTextLampPlugin";
+            var pluginName  = "SignalDetectorPlugin";
             var restClient  = new pixelix.rest.Client();
 
             function enableUI() {
-                utils.enableForm("myFormIcon", true);
+                utils.enableForm("myFormFreq_0", true);
+                utils.enableForm("myFormFreq_1", true);
                 utils.enableForm("myFormText", true);
-                utils.enableForm("myFormLamp", true);
+                utils.enableForm("myFormPushUrl", true);
             }
 
             function disableUI() {
-                utils.enableForm("myFormIcon", false);
+                utils.enableForm("myFormFreq_0", false);
+                utils.enableForm("myFormFreq_1", false);
                 utils.enableForm("myFormText", false);
-                utils.enableForm("myFormLamp", false);
+                utils.enableForm("myFormPushUrl", false);
             }
 
             function getPluginInstances() {
@@ -211,18 +228,39 @@
                 });
             };
 
-            function setIcon(pluginUid, file) {
+            function getFreq(pluginUid, index) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg/" + index,
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var freqElement = document.getElementById("freq_" + index);
+                    var minDurationElement = document.getElementById("minDuration_" + index);
+                    var thresholdElement = document.getElementById("threshold_" + index);
+
+                    freqElement.value = rsp.data.frequency;
+                    minDurationElement.value = rsp.data.minDuration;
+                    thresholdElement.value = rsp.data.threshold;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setFreq(pluginUid, freq, minDuration, threshold, index) {
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg/" + index,
                     isJsonResponse: true,
                     parameter: {
-                        file: file
-                    },
-                    headers: {
-                        "X-File-Size": file.size
+                        frequency: freq,
+                        minDuration: minDuration,
+                        threshold: threshold
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -270,20 +308,16 @@
                 });
             }
 
-            function getLamp(pluginUid, lampId, lampStateId) {
+            function getPushUrl(pluginUid, pushUrlId) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/lamps",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/pushUrl",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var selectLampState = document.getElementById(lampStateId);
+                    var pushUrlInput = document.getElementById(pushUrlId);
 
-                    if ("off" == rsp.data.lamps[lampId].state) {
-                        selectLampState.selectedIndex = 0;
-                    } else {
-                        selectLampState.selectedIndex = 1;
-                    }
+                    pushUrl.value = rsp.data.pushUrl;
 
                 }).catch(function(rsp) {
                     alert("Internal error.");
@@ -292,15 +326,15 @@
                 });
             }
 
-            function setLamp(pluginUid, lampId, lampState) {
+            function setPushUrl(pluginUid, pushUrl) {
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/lamp/" + lampId,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/pushUrl",
                     isJsonResponse: true,
                     parameter: {
-                        set: lampState
+                        set: pushUrl
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -312,6 +346,7 @@
             }
 
             $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
                 
                 utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
@@ -321,22 +356,20 @@
     
                 /* Load all plugin instances. */
                 getPluginInstances().then(function(cnt) {
+                    var selectFreq0     = document.getElementById("pluginUidFreq0");
+                    var selectFreq1     = document.getElementById("pluginUidFreq1");
                     var selectText      = document.getElementById("pluginUidText");
-                    var selectLamp      = document.getElementById("pluginUidLamp");
-                    var selectLampId    = document.getElementById("lampId");
-
+                    var selectPushUrl   = document.getElementById("pluginUidPushUrl");
+    
                     if (0 < cnt) {
-
-                        return getText(
-                            selectText.options[selectText.selectedIndex].value,
-                            "justText"
-                        ).then(function() {
-                            return getLamp(
-                                selectLamp.options[selectLamp.selectedIndex].value,
-                                selectLampId.options[selectLampId.selectedIndex].value,
-                                "lampState"
-                            );
-                        });
+    
+                        return getFreq(selectFreq0.options[selectFreq0.selectedIndex].value, 0).then(function() {
+                            return getFreq(selectFreq1.options[selectFreq1.selectedIndex].value, 1);
+                        }).then(function() {
+                            return getText(selectText.options[selectText.selectedIndex].value, 'justText');
+                        }).then(function() {
+                            return getPushUrl(selectPushUrl.options[selectPushUrl.selectedIndex].value, 'pushUrl');
+                        })
                     }
                 });
             });

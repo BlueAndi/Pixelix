@@ -96,6 +96,8 @@
         <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/dialog.js"></script>
         <!-- Pixelix drag'n drop -->
         <script type="text/javascript" src="/js/dragDropTouch.js"></script>
@@ -512,6 +514,7 @@
                 var displayCanvas = document.getElementById("canvas");
                 ctx = displayCanvas.getContext("2d");
 
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
 
                 /* Connect to pixelix */

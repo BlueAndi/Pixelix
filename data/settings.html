@@ -67,6 +67,7 @@
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
         <script type="text/javascript" src="/js/dialog.js"></script>
@@ -99,6 +100,7 @@
             $(document).ready(function() {
                 var index = 0;
 
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
 
                 restClient.getSettingKeys().then(function(result) {
