@@ -143,7 +143,7 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
     SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    UTIL_NOT_USED(width);
+    PLUGIN_NOT_USED(width);
 
     if (nullptr != spectrumAnalyzer)
     {
@@ -198,7 +198,7 @@ void SoundReactivePlugin::process(bool isConnected)
     SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    UTIL_NOT_USED(isConnected);
+    PLUGIN_NOT_USED(isConnected);
 
     decayPeak();
 

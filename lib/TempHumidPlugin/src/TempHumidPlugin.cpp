@@ -137,7 +137,7 @@ void TempHumidPlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    UTIL_NOT_USED(isConnected);
+    PLUGIN_NOT_USED(isConnected);
 
     /* Read only if update period not reached or sensor has never been read. */
     if ((false == m_sensorUpdateTimer.isTimerRunning()) ||

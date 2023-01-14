@@ -128,7 +128,7 @@ void JustTextPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    UTIL_NOT_USED(width);
+    PLUGIN_NOT_USED(width);
 
     /* Choose font. */
     m_textWidget.setFont(Fonts::getFontByType(m_fontType));

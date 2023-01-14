@@ -45,12 +45,14 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <YAGfx.h>
-#include <Util.h>
 #include "IPluginMaintenance.hpp"
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
+/** Use it to mark not used function parameters. */
+#define PLUGIN_NOT_USED(__var)  (void)(__var)
 
 /******************************************************************************
  * Types and Classes
@@ -78,7 +80,7 @@ public:
      */
     void setSlot(const ISlotPlugin* slotInterf) override
     {
-        UTIL_NOT_USED(slotInterf);
+        PLUGIN_NOT_USED(slotInterf);
         return;
     }
 
@@ -134,7 +136,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) override
     {
-        UTIL_NOT_USED(fontType);
+        PLUGIN_NOT_USED(fontType);
         return;
     }
 
@@ -153,7 +155,7 @@ public:
      */
     void getTopics(JsonArray& topics) const override
     {
-        UTIL_NOT_USED(topics);
+        PLUGIN_NOT_USED(topics);
         return;
     }
 
@@ -168,8 +170,8 @@ public:
      */
     bool getTopic(const String& topic, JsonObject& value) const override
     {
-        UTIL_NOT_USED(topic);
-        UTIL_NOT_USED(value);
+        PLUGIN_NOT_USED(topic);
+        PLUGIN_NOT_USED(value);
 
         return false;
     }
@@ -185,8 +187,8 @@ public:
      */
     bool setTopic(const String& topic, const JsonObject& value) override
     {
-        UTIL_NOT_USED(topic);
-        UTIL_NOT_USED(value);
+        PLUGIN_NOT_USED(topic);
+        PLUGIN_NOT_USED(value);
 
         return false;
     }
@@ -202,9 +204,9 @@ public:
      */
     bool isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename) override
     {
-        UTIL_NOT_USED(topic);
-        UTIL_NOT_USED(srcFilename);
-        UTIL_NOT_USED(dstFilename);
+        PLUGIN_NOT_USED(topic);
+        PLUGIN_NOT_USED(srcFilename);
+        PLUGIN_NOT_USED(dstFilename);
         return false;
     }
 
@@ -264,8 +266,8 @@ public:
      */
     void start(uint16_t width, uint16_t height) override
     {
-        UTIL_NOT_USED(width);
-        UTIL_NOT_USED(height);
+        PLUGIN_NOT_USED(width);
+        PLUGIN_NOT_USED(height);
         return;
     }
 
@@ -290,7 +292,7 @@ public:
      */
     void process(bool isConnected) override
     {
-        UTIL_NOT_USED(isConnected);
+        PLUGIN_NOT_USED(isConnected);
         return;
     }
 
@@ -303,7 +305,7 @@ public:
      */
     void active(YAGfx& gfx) override
     {
-        UTIL_NOT_USED(gfx);
+        PLUGIN_NOT_USED(gfx);
         return;
     }
 

@@ -39,6 +39,7 @@
 #include <Logging.h>
 #include <FileSystem.h>
 #include <JsonFile.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -231,7 +232,7 @@ void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    UTIL_NOT_USED(width);
+    PLUGIN_NOT_USED(width);
 
     /* Choose font. */
     m_textWidget.setFont(Fonts::getFontByType(m_fontType));
@@ -306,7 +307,7 @@ void SignalDetectorPlugin::process(bool isConnected)
      */
     bool                        isDetected = isSignalDetected();
 
-    UTIL_NOT_USED(isConnected);
+    PLUGIN_NOT_USED(isConnected);
 
     if (true == isDetected)
     {

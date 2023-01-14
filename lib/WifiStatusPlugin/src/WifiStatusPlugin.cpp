@@ -62,7 +62,7 @@
 
 void WifiStatusPlugin::start(uint16_t width, uint16_t height)
 {
-    UTIL_NOT_USED(height);
+    PLUGIN_NOT_USED(height);
 
     m_iconCanvas.setPosAndSize(0, 0, WIFI_ICON_WIDTH, WIFI_ICON_HEIGHT);
     (void)m_iconCanvas.addWidget(m_alertWidget);

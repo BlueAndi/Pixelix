@@ -129,7 +129,7 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    UTIL_NOT_USED(width);
+    PLUGIN_NOT_USED(width);
 
     /* Choose font. */
     m_textWidget.setFont(Fonts::getFontByType(m_fontType));
@@ -181,7 +181,7 @@ void SensorPlugin::active(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    UTIL_NOT_USED(gfx);
+    PLUGIN_NOT_USED(gfx);
 
     /* Load configuration, because it may be changed by web request
      * or direct editing.

@@ -60,7 +60,7 @@
 
 void SysMsgPlugin::start(uint16_t width, uint16_t height)
 {
-    UTIL_NOT_USED(width);
+    PLUGIN_NOT_USED(width);
 
     /* Choose font. */
     m_textWidget.setFont(Fonts::getFontByType(m_fontType));

@@ -325,7 +325,7 @@ void VolumioPlugin::update(YAGfx& gfx)
 
     /* Draw a nice line to represent the current music position. */
     gfx.drawHLine(tcX, gfx.getHeight() - 1, posWidth, posColor);
-    UTIL_NOT_USED(tcY);
+    PLUGIN_NOT_USED(tcY);
 
     return;
 }

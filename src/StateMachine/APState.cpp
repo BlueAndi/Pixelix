@@ -44,6 +44,7 @@
 
 #include <WiFi.h>
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches

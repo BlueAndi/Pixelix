@@ -198,7 +198,7 @@ void DateTimePlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    UTIL_NOT_USED(isConnected);
+    PLUGIN_NOT_USED(isConnected);
 
     /* The date/time information shall be retrieved every second while plugin is activated. */
     if ((true == m_checkUpdateTimer.isTimerRunning()) &&
