@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "WebSocket.h"
-#include "Settings.h"
 
 #include "WsCmdAlias.h"
 #include "WsCmdBrightness.h"
@@ -52,6 +51,7 @@
 
 #include <Logging.h>
 #include <Util.h>
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches

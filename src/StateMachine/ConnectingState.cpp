@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "ConnectingState.h"
-#include "Settings.h"
 #include "SysMsg.h"
 
 #include "IdleState.h"
@@ -43,6 +42,7 @@
 #include <WiFi.h>
 #include <Logging.h>
 #include <Util.h>
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches

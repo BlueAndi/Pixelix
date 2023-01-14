@@ -35,7 +35,6 @@
 #include "Pages.h"
 #include "HttpStatus.h"
 #include "WebConfig.h"
-#include "Settings.h"
 #include "Version.h"
 #include "UpdateMgr.h"
 #include "DisplayMgr.h"
@@ -50,6 +49,7 @@
 #include <Util.h>
 #include <ArduinoJson.h>
 #include <lwip/init.h>
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches

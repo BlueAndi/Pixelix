@@ -36,7 +36,6 @@
 #include "DisplayMgr.h"
 #include "MyWebServer.h"
 #include "RestApi.h"
-#include "Settings.h"
 #include "FileSystem.h"
 #include "Plugin.hpp"
 #include "HttpStatus.h"
@@ -46,6 +45,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches

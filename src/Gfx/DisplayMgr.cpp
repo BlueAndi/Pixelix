@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "DisplayMgr.h"
-#include "Settings.h"
 #include "BrightnessCtrl.h"
 #include "PluginMgr.h"
 
@@ -41,6 +40,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
+#include <Settings.h>
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 #include <StatisticValue.hpp>

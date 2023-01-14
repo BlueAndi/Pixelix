@@ -36,7 +36,6 @@
 #include "SysMsg.h"
 #include "UpdateMgr.h"
 #include "MyWebServer.h"
-#include "Settings.h"
 #include "ClockDrv.h"
 #include "ButtonDrv.h"
 #include "DisplayMgr.h"
@@ -50,6 +49,7 @@
 #include <WiFi.h>
 #include <Logging.h>
 #include <Util.h>
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches

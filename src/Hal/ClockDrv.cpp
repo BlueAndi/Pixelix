@@ -33,11 +33,11 @@
  * Includes
  *****************************************************************************/
 #include "ClockDrv.h"
-#include "Settings.h"
 #include "time.h"
 
 #include <sys/time.h>
 #include <Logging.h>
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches

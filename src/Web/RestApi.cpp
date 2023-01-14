@@ -34,7 +34,6 @@
  *****************************************************************************/
 #include "RestApi.h"
 #include "HttpStatus.h"
-#include "Settings.h"
 #include "DisplayMgr.h"
 #include "Version.h"
 #include "PluginMgr.h"
@@ -49,6 +48,7 @@
 #include <Esp.h>
 #include <Logging.h>
 #include <SensorDataProvider.h>
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches

@@ -33,9 +33,10 @@
  * Includes
  *****************************************************************************/
 #include "CaptivePortalHandler.h"
-#include "Settings.h"
 #include "HttpStatus.h"
 #include "FileSystem.h"
+
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches

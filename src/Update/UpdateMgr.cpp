@@ -37,10 +37,10 @@
 #include <Logging.h>
 #include <Esp.h>
 #include <Display.h>
+#include <Settings.h>
 
 #include "FileSystem.h"
 #include "MyWebServer.h"
-#include "Settings.h"
 #include "DisplayMgr.h"
 #include "SysMsg.h"
 #include "PluginMgr.h"

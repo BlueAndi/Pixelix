@@ -47,13 +47,13 @@
 #include "Version.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
-#include "Settings.h"
 #include "PluginMgr.h"
 #include "WebConfig.h"
 #include "FileSystem.h"
 #include "JsonFile.h"
 #include "Version.h"
 #include "ServiceList.hpp"
+#include "PluginList.hpp"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -62,8 +62,8 @@
 #include <Logging.h>
 #include <Util.h>
 #include <ESPmDNS.h>
+#include <Settings.h>
 
-#include <PluginList.hpp>
 
 #include <lwip/init.h>
 

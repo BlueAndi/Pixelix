@@ -36,7 +36,6 @@
 #include <Arduino.h>
 #include "SysMsg.h"
 #include "MyWebServer.h"
-#include "Settings.h"
 #include "CaptivePortal.h"
 
 #include "ErrorState.h"
@@ -45,6 +44,7 @@
 #include <WiFi.h>
 #include <Logging.h>
 #include <Util.h>
+#include <Settings.h>
 
 /******************************************************************************
  * Compiler Switches
