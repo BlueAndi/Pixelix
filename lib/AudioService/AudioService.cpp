@@ -61,13 +61,15 @@
  * Public Methods
  *****************************************************************************/
 
-void AudioService::start()
+bool AudioService::start()
 {
-    AudioDrv& audioDrv = AudioDrv::getInstance();
+    bool        isSuccessful    = true;
+    AudioDrv&   audioDrv        = AudioDrv::getInstance();
 
     if (false == audioDrv.start())
     {
         LOG_ERROR("Couldn't start the audio driver.");
+        isSuccessful = false;
     }
     else
     {
@@ -76,18 +78,29 @@ void AudioService::start()
         if (false == audioDrv.registerObserver(m_spectrumAnalyzer))
         {
             LOG_ERROR("Couldn't register spectrum analyzer.");
+            isSuccessful = false;
+        }
+        else
+        {
+            while(MAX_TONE_DETECTORS > idx)
+            {
+                if (false == audioDrv.registerObserver(m_audioToneDetector[idx]))
+                {
+                    LOG_ERROR("Couldn't register audio tone detector (%u).", idx);
+                    isSuccessful = false;
+                }
+
+                ++idx;
+            }
         }
 
-        while(MAX_TONE_DETECTORS > idx)
+        if (false == isSuccessful)
         {
-            if (false == audioDrv.registerObserver(m_audioToneDetector[idx]))
-            {
-                LOG_ERROR("Couldn't register audio tone detector (%u).", idx);
-            }
-
-            ++idx;
+            stop();
         }
     }
+
+    return isSuccessful;
 }
 
 void AudioService::stop()

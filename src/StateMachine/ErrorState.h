@@ -109,7 +109,8 @@ public:
         ERROR_ID_BAD_FS,            /**< Bad filesystem */
         ERROR_ID_DISP_MGR,          /**< Display manager error */
         ERROR_ID_SYS_MSG,           /**< System message handler error */
-        ERROR_ID_UPDATE_MGR         /**< Update manager error */
+        ERROR_ID_UPDATE_MGR,        /**< Update manager error */
+        ERROR_ID_SERVICE            /**< Service error */
     };
 
     /**

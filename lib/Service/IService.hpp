@@ -25,29 +25,25 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Audio service
+ * @brief  Service interface
  * @author Andreas Merkle <web@blue-andi.de>
- * 
- * @addtogroup audio_service
+ *
+ * @addtogroup service
  *
  * @{
  */
 
-#ifndef __AUDIO_SERVICE_H__
-#define __AUDIO_SERVICE_H__
+#ifndef __SERVICE_HPP__
+#define __SERVICE_HPP__
+
+/******************************************************************************
+ * Compile Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <IService.hpp>
-#include "AudioDrv.h"
-#include "SpectrumAnalyzer.h"
-#include "AudioToneDetector.h"
-
-/******************************************************************************
- * Compiler Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Macros
@@ -58,101 +54,46 @@
  *****************************************************************************/
 
 /**
- * The audio service provides different audio related functionality.
+ * The interface which every service shall provide.
  */
-class AudioService : public IService
+class IService
 {
 public:
 
     /**
-     * Get the audio service instance.
+     * Destroys the interface.
+     */
+    virtual ~IService()
+    {
+    }
+
+    /**
+     * Start the service.
      * 
-     * @return Audio service instance
+     * @return If successful started, it will return true otherwise false.
      */
-    static AudioService& getInstance()
-    {
-        static AudioService instance; /* idiom */
-
-        return instance;
-    }
+    virtual bool start() = 0;
 
     /**
-     * Start the audio service.
+     * Stop the service.
      */
-    bool start();
+    virtual void stop() = 0;
+
+protected:
 
     /**
-     * Stop the audio service.
+     * Constructs the interface.
      */
-    void stop();
-
-    /**
-     * Get the spectrum analyzer.
-     * 
-     * @return Spectrum analyzer instance otherwise nullptr
-     */
-    SpectrumAnalyzer* getSpectrumAnalyzer()
-    {
-        return &m_spectrumAnalyzer;
-    }
-
-    /**
-     * Get the audio tone detector.
-     * 
-     * @param[in] id    Tone detector id
-     * 
-     * @return Tone detector instance otherwise nullptr
-     */
-    AudioToneDetector* getAudioToneDetector(uint8_t id)
-    {
-        AudioToneDetector* instance = nullptr;
-
-        if (MAX_TONE_DETECTORS > id)
-        {
-            instance = &m_audioToneDetector[id];
-        }
-
-        return instance;
-    }
-
-    /**
-     * The max. number of tone detectors, which the service
-     * can provide.
-     */
-    static const uint8_t    MAX_TONE_DETECTORS  = 2U;
-
-private:
-
-    SpectrumAnalyzer    m_spectrumAnalyzer;
-    AudioToneDetector   m_audioToneDetector[MAX_TONE_DETECTORS];
-
-    AudioService(const AudioService& drv);
-    AudioService& operator=(const AudioService& drv);
-
-    /**
-     * Constructs the audio service instance.
-     */
-    AudioService()
+    IService()
     {
     }
 
-    /**
-     * Destroys the audio service instance.
-     */
-    ~AudioService()
-    {
-        /* Never called. */
-    }
 };
-
-/******************************************************************************
- * Variables
- *****************************************************************************/
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __AUDIO_SERVICE_H__ */
+#endif  /* __SERVICE_HPP__ */
 
 /** @} */

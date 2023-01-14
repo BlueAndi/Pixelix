@@ -28,7 +28,6 @@
 import configparser
 import os
 import shutil
-import json
 from string import Template
 import re
 
@@ -36,10 +35,16 @@ import re
 # Variables
 ################################################################################
 _LIB_PATH = "./lib"
+
 _WEB_DATA_PATH = "./data/plugins"
+
 _MENU_FULL_PATH = "./data/js/pluginsSubMenu.js"
+
 _PLUGIN_LIST_FULL_PATH = "./src/Generated/PluginList.hpp"
 _PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.hpp"
+
+_SERVICE_LIST_FULL_PATH = "./src/Generated/ServiceList.hpp"
+_SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/ServiceList.hpp"
 
 ################################################################################
 # Classes
@@ -223,38 +228,51 @@ def _clean_up_folders(plugin_list, dst_path):
             if folder not in plugin_list:
                 dst_full_path = dst_path + "/" + folder
                 print(f"\t\"{dst_full_path}\" removed.")
-                os.rmdir(dst_full_path)
+                shutil.rmtree(dst_full_path)
                 is_cleaned_up = True
 
     return is_cleaned_up
 
-def configure(config_full_path):
-    """Configures the plugins according to configuration.
+def _get_plugin_list(lib_deps):
+    """Get list of plugins from library dependencies.
 
     Args:
-        config_full_path (str): Full path to configuration file
+        lib_deps (list): Library dependencies
+
+    Returns:
+        list: List of plugins
     """
-    print(f"Configure plugins: {config_full_path}")
-
-    # Load configuration
-    config = configparser.ConfigParser(empty_lines_in_values=False)
-
-    try:
-        config.read(config_full_path)
-    except configparser.Error:
-        print(f"Configuration file {config_full_path} is invalid.")
-
-    # All plugins are listed in the section "config:<type>" under the key "lib_deps".
-    config_section_name = _find_config_section(config)
-    lib_deps = config[config_section_name]["lib_deps"].strip().splitlines()
-
-    # Consider only plugins and remove their version information
     plugin_list = []
     for lib_name in lib_deps:
         result = re.match("([a-zA-Z0-9_\\-]*Plugin)[ ]*@.*", lib_name)
         if result:
             plugin_list.append(result.group(1))
 
+    return plugin_list
+
+def _get_service_list(lib_deps):
+    """Get list of services from library dependencies.
+
+    Args:
+        lib_deps (list): Library dependencies
+
+    Returns:
+        list: List of services
+    """
+    service_list = []
+    for lib_name in lib_deps:
+        result = re.match("([a-zA-Z0-9_\\-]*Service)[ ]*@.*", lib_name)
+        if result:
+            service_list.append(result.group(1))
+
+    return service_list
+
+def _generate_plugins(plugin_list):
+    """Generate all plugin related artifacts.
+
+    Args:
+        plugin_list (list): List of plugin names
+    """
     # Avoid generation if possible, because it will cause a compilation step.
     is_generation_required = False
 
@@ -267,16 +285,18 @@ def configure(config_full_path):
         if _clean_up_folders(plugin_list, _WEB_DATA_PATH) is True:
             is_generation_required = True
 
-    # Prepare plugin by plugin
+    skip_list = []
     for plugin_name in plugin_list:
         plugin_lib_path = _LIB_PATH + "/" + plugin_name
         plugin_lib_web_path = plugin_lib_path + "/web"
 
         if os.path.isdir(plugin_lib_path) is False:
             print(f"\tSkipping {plugin_name}, because {plugin_lib_path} doesn't exist.")
+            skip_list.append(plugin_name)
 
         elif os.path.isdir(plugin_lib_web_path) is False:
             print(f"\tSkipping {plugin_name}, because {plugin_lib_web_path} doesn't exist.")
+            skip_list.append(plugin_name)
 
         else:
             plugin_web_data_path = _WEB_DATA_PATH + "/" + plugin_name
@@ -287,6 +307,10 @@ def configure(config_full_path):
             if _copy_plugin_web_to_data(plugin_name) is True:
                 is_generation_required = True
 
+    # Remove skipped plugins from list
+    for plugin_name in skip_list:
+        plugin_list.remove(plugin_name)
+
     if (is_generation_required is True) or \
         (os.path.exists(_MENU_FULL_PATH) is False) or \
         (os.path.exists(_PLUGIN_LIST_FULL_PATH) is False):
@@ -295,6 +319,88 @@ def configure(config_full_path):
         _generate_web_menu(_MENU_FULL_PATH, plugin_list)
         print("\tGenerating plugin list.")
         _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, plugin_list)
+
+def _generate_cpp_service_list(service_list_full_path, service_list):
+    """Generate the ServiceList.hpp source file.
+
+    Args:
+        service_list_full_path (str): Full path to ServiceList.hpp where it shall be created.
+        service_list (list): List of all service names
+    """
+    includes = ""
+    start_calls = ""
+    stop_calls = ""
+
+    for service_name in service_list:
+        includes += f"#include <{service_name}.h>\n"
+
+        start_calls += f"    if (false == {service_name}::getInstance().start())\n"
+        start_calls +=  "    {\n"
+        start_calls +=  "        isSuccessful = false;\n"
+        start_calls +=  "    }\n"
+
+        stop_calls += f"    {service_name}::getInstance().stop();\n"
+
+    data = {
+        "INCLUDES": includes,
+        "START_SERVICES": start_calls,
+        "STOP_SERVICES": stop_calls
+    }
+
+    with open(_SERVICE_LIST_TEMPLATE_FULL_PATH, "r", encoding="utf-8") as file_desc:
+        src = Template(file_desc.read())
+        result = src.substitute(data)
+
+    with open(service_list_full_path, "w", encoding="utf-8") as file_desc:
+        file_desc.write(result)
+
+def _generate_services(service_list):
+    """Generate all service related artifacts.
+
+    Args:
+        service_list (list): List of service names
+    """
+
+    skip_list = []
+    for service_name in service_list:
+        service_lib_path = _LIB_PATH + "/" + service_name
+
+        if os.path.isdir(service_lib_path) is False:
+            print(f"\tSkipping {service_name}, because {service_lib_path} doesn't exist.")
+            skip_list.append(service_name)
+
+    # Remove skipped services from list
+    for service_name in skip_list:
+        service_list.remove(service_name)
+
+    print("\tGenerating service list.")
+    _generate_cpp_service_list(_SERVICE_LIST_FULL_PATH, service_list)
+
+def configure(config_full_path):
+    """Configures the plugins according to configuration.
+
+    Args:
+        config_full_path (str): Full path to configuration file
+    """
+    print(f"Configure plugins and services: {config_full_path}")
+
+    # Load configuration
+    config = configparser.ConfigParser(empty_lines_in_values=True)
+
+    try:
+        config.read(config_full_path)
+    except configparser.Error:
+        print(f"Configuration file {config_full_path} is invalid.")
+
+    # All plugins and services are listed in the section "config:<type>" under the key "lib_deps".
+    config_section_name = _find_config_section(config)
+    lib_deps = config[config_section_name]["lib_deps"].strip().splitlines()
+
+    plugin_list = _get_plugin_list(lib_deps)
+    service_list = _get_service_list(lib_deps)
+
+    _generate_plugins(plugin_list)
+    _generate_services(service_list)
 
 ################################################################################
 # Main

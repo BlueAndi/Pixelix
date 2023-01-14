@@ -53,7 +53,7 @@
 #include "FileSystem.h"
 #include "JsonFile.h"
 #include "Version.h"
-#include "AudioService.h"
+#include "ServiceList.hpp"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -154,13 +154,17 @@ void InitState::entry(StateMachine& sm)
         errorId = ErrorState::ERROR_ID_BAD_FS;
         isError = true;
     }
+    /* Start all services */
+    else if (false == ServiceList::startAll())
+    {
+        LOG_FATAL("Starting services failed.");
+        errorId = ErrorState::ERROR_ID_SERVICE;
+        isError = true;
+    }
     else
     {
         /* Initialize sensors */
         SensorDataProvider::getInstance().begin();
-
-        /* Start audio service */
-        AudioService::getInstance().start();
 
         /* Prepare everything for the plugins. */
         PluginMgr::getInstance().begin();
