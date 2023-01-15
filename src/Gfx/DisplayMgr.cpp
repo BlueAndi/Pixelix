@@ -40,7 +40,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 #include <StatisticValue.hpp>
@@ -87,12 +87,12 @@ struct Statistics
 
 bool DisplayMgr::begin()
 {
-    bool        status              = false;
-    bool        isError             = false;
-    uint8_t     maxSlots            = 0U;
-    uint8_t     brightnessPercent   = 0U;
-    uint16_t    brightness          = 0U;
-    Settings&   settings            = Settings::getInstance();
+    bool                status              = false;
+    bool                isError             = false;
+    uint8_t             maxSlots            = 0U;
+    uint8_t             brightnessPercent   = 0U;
+    uint16_t            brightness          = 0U;
+    SettingsService&    settings            = SettingsService::getInstance();
 
     if (false == settings.open(true))
     {

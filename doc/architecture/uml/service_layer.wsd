@@ -5,14 +5,14 @@ skinparam component {
     BackgroundColor<<Future>> White
 }
 
-package "Service" as service {
+package "Service" as servicePckg {
     component "RestApi" as restApi
     component "RestUtil" as restUtil
     component "MqttService" as mqttService <<Future>>
     component "WebSocket" as webSocket
 
-    package "Settings" {
-        component "Settings" as settings
+    package "SettingsService" {
+        component "SettingsService" as settingsService
     }
 
     component "MyWebServer" as myWebServer
@@ -20,7 +20,7 @@ package "Service" as service {
     component "AsyncHttpClient" as asnyHttpClient
     component "CaptivePortalHandler" as captivePortalHandler
 
-    package "Audio" as audio {
+    package "AudioService" as audioServicePckg {
         component "SpectrumAnalyzer" as spectrumAnalyzer
         component "AudioToneDetector" as audioToneDetector
         component "AudioService" as audioService
@@ -38,7 +38,7 @@ package "Service" as service {
     YAWidgets ..> YAGfx
     YAGfx ..> BaseGfx
 
-    package "3rd party" as service3rdParty {
+    package "3rd party" as service3rdPartyPckg {
         component "PubSubClient" as pubSubClient <<Future>>
         component "FS" as fs <<Arduino>>
         component "Preferences" as preferences <<Arduino>>
@@ -72,7 +72,7 @@ package "Service" as service {
     restApi ...> webServer
     mqttService ...> pubSubClient
     webSocket ...> webServer
-    settings ...> preferences
+    settingsService ...> preferences
 
     restApi ..> restUtil
 

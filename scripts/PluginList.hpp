@@ -46,6 +46,7 @@
 #include "PluginMgr.h"
 
 $INCLUDES
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -71,6 +72,7 @@ static void registerAll()
     PluginMgr&  pluginMgr = PluginMgr::getInstance();
 
 $REGISTER
+
 }
 
 };

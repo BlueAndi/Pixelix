@@ -39,6 +39,7 @@
 #include "ClockDrv.h"
 #include "ButtonDrv.h"
 #include "DisplayMgr.h"
+#include "Service.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -49,7 +50,7 @@
 #include <WiFi.h>
 #include <Logging.h>
 #include <Util.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -77,12 +78,12 @@
 
 void ConnectedState::entry(StateMachine& sm)
 {
-    Settings&   settings        = Settings::getInstance();
-    String      infoStr         = "Hostname: ";
-    String      hostname;
-    String      infoStringIp    = "IP: ";
-    String      notifyURL       = "-";
-    bool        isQuiet         = false;
+    SettingsService&    settings        = SettingsService::getInstance();
+    String              infoStr         = "Hostname: ";
+    String              hostname;
+    String              infoStringIp    = "IP: ";
+    String              notifyURL       = "-";
+    bool                isQuiet         = false;
 
     LOG_INFO("Connected.");
 
@@ -222,6 +223,8 @@ void ConnectedState::process(StateMachine& sm)
 
         sm.setState(ConnectingState::getInstance());
     }
+
+    Service::processAll();
 
     return;
 }

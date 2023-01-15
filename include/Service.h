@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Key value pair with bool type
+ * @brief  Service
  * @author Andreas Merkle <web@blue-andi.de>
- *
- * @addtogroup settings
+ * 
+ * @addtogroup service
  *
  * @{
  */
 
-#ifndef __KEY_VALUE_BOOL_H__
-#define __KEY_VALUE_BOOL_H__
+#ifndef __SERVICE_H__
+#define __SERVICE_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "KeyValue.h"
+#include <stdint.h>
+
+namespace Service
+{
 
 /******************************************************************************
  * Macros
@@ -53,108 +56,29 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * Key value pair with bool value type.
- */
-class KeyValueBool : public KeyValue
-{
-public:
-
-    /**
-     * Constructs a key value pair.
-     */
-    KeyValueBool(Preferences& pref, const char* key, const char* name, bool defValue) :
-        KeyValue(),
-        m_pref(pref),
-        m_key(key),
-        m_name(name),
-        m_defValue(defValue)
-    {
-    }
-
-    /**
-     * Destroys a key value pair.
-     */
-    virtual ~KeyValueBool()
-    {
-    }
-
-    /**
-     * Get value type.
-     *
-     * @return Value type
-     */
-    Type getValueType() const final
-    {
-        return TYPE_BOOL;
-    }
-
-    /**
-     * Get user friendly name of key value pair.
-     *
-     * @return User friendly name
-     */
-    const char* getName() const final
-    {
-        return m_name;
-    }
-
-    /**
-     * Get key.
-     *
-     * @return Key
-     */
-    const char* getKey() const final
-    {
-        return m_key;
-    }
-
-    /**
-     * Get value.
-     *
-     * @return Value
-     */
-    bool getValue() const
-    {
-        return m_pref.getBool(m_key, getDefault());
-    }
-
-    /**
-     * Set value.
-     *
-     * @param[in] value Value
-     */
-    void setValue(bool value)
-    {
-        m_pref.putBool(m_key, value);
-    }
-
-    /**
-     * Get default value.
-     *
-     * @return Default value
-     */
-    bool getDefault() const
-    {
-        return m_defValue;
-    }
-
-private:
-
-    Preferences&    m_pref;     /**< Preferences */
-    const char*     m_key;      /**< Key */
-    const char*     m_name;     /**< Name */
-    bool            m_defValue; /**< Default value */
-
-    /* An instance shall not be copied. */
-    KeyValueBool(const KeyValueBool& kv);
-    KeyValueBool& operator=(const KeyValueBool& kv);
-};
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_BOOL_H__ */
+/**
+ * Start all services.
+ * 
+ * @return If successful started, it will return true otherwise false.
+ */
+extern bool startAll();
+
+/**
+ * Stop all services.
+ */
+extern void stopAll();
+
+/**
+ * Process all services.
+ */
+extern void processAll();
+
+}
+
+#endif  /* __SERVICE_H__ */
 
 /** @} */

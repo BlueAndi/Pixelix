@@ -52,7 +52,7 @@
 #include "FileSystem.h"
 #include "JsonFile.h"
 #include "Version.h"
-#include "ServiceList.hpp"
+#include "Service.h"
 #include "PluginList.hpp"
 
 #include "APState.h"
@@ -62,7 +62,7 @@
 #include <Logging.h>
 #include <Util.h>
 #include <ESPmDNS.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 
 #include <lwip/init.h>
@@ -155,7 +155,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Start all services */
-    else if (false == ServiceList::startAll())
+    else if (false == Service::startAll())
     {
         LOG_FATAL("Starting services failed.");
         errorId = ErrorState::ERROR_ID_SERVICE;
@@ -209,7 +209,7 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        Settings&           settings = Settings::getInstance();
+        SettingsService&    settings = SettingsService::getInstance();
         JsonFile            jsonFile(FILESYSTEM);
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
@@ -341,6 +341,8 @@ void InitState::process(StateMachine& sm)
         ;
     }
 
+    Service::processAll();
+
     return;
 }
 
@@ -349,10 +351,10 @@ void InitState::exit(StateMachine& sm)
     /* Continue initialization steps only, if there was no low level error before. */
     if (ErrorState::ERROR_ID_NO_ERROR == ErrorState::getInstance().getErrorId())
     {
-        Settings&   settings    = Settings::getInstance();
-        wifi_mode_t wifiMode    = WIFI_MODE_NULL;
-        String      hostname;
-        bool        isQuiet     = false;
+        SettingsService&    settings    = SettingsService::getInstance();
+        wifi_mode_t         wifiMode    = WIFI_MODE_NULL;
+        String              hostname;
+        bool                isQuiet     = false;
 
         /* Get hostname. */
         if (false == settings.open(true))

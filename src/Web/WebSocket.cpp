@@ -51,7 +51,7 @@
 
 #include <Logging.h>
 #include <Util.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -146,20 +146,21 @@ static WsCmd*       gWsCommands[] =
 
 void WebSocketSrv::init(AsyncWebServer& srv)
 {
-    String      webLoginUser;
-    String      webLoginPassword;
+    String              webLoginUser;
+    String              webLoginPassword;
+    SettingsService&    settings        = SettingsService::getInstance();
 
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getDefault();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getDefault();
+        webLoginUser        = settings.getWebLoginUser().getDefault();
+        webLoginPassword    = settings.getWebLoginPassword().getDefault();
     }
     else
     {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getValue();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getValue();
+        webLoginUser        = settings.getWebLoginUser().getValue();
+        webLoginPassword    = settings.getWebLoginPassword().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
     }
 
     /* Register websocket event handler */

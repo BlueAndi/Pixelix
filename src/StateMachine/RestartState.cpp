@@ -37,6 +37,7 @@
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "FileSystem.h"
+#include "Service.h"
 
 #include <Board.h>
 #include <Display.h>
@@ -75,6 +76,8 @@ void RestartState::entry(StateMachine& sm)
     LOG_INFO("Going in restart state.");
 
     m_timer.start(WAIT_TILL_STOP_SVC);
+
+    Service::stopAll();
 
     return;
 }

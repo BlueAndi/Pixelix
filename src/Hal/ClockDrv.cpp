@@ -37,7 +37,7 @@
 
 #include <sys/time.h>
 #include <Logging.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -67,27 +67,28 @@ void ClockDrv::init()
 {
     if (false == m_isClockDrvInitialized)
     {
-        String      timezone;
-        String      ntpServerAddress;
-        struct tm   timeInfo            = { 0 };
+        String              timezone;
+        String              ntpServerAddress;
+        struct tm           timeInfo            = { 0 };
+        SettingsService&    settings            = SettingsService::getInstance();
 
         /* Get the GMT offset, daylight saving enabled/disabled and NTP server address from persistent memory. */
-        if (false == Settings::getInstance().open(true))
+        if (false == settings.open(true))
         {
             LOG_WARNING("Use default values for NTP request.");
 
-            timezone            = Settings::getInstance().getTimezone().getDefault();
-            ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getDefault();
-            m_timeFormat        = Settings::getInstance().getTimeFormat().getDefault();
-            m_dateFormat        = Settings::getInstance().getDateFormat().getDefault();
+            timezone            = settings.getTimezone().getDefault();
+            ntpServerAddress    = settings.getNTPServerAddress().getDefault();
+            m_timeFormat        = settings.getTimeFormat().getDefault();
+            m_dateFormat        = settings.getDateFormat().getDefault();
         }
         else
         {
-            timezone            = Settings::getInstance().getTimezone().getValue();
-            ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getValue();
-            m_timeFormat        = Settings::getInstance().getTimeFormat().getValue();
-            m_dateFormat        = Settings::getInstance().getDateFormat().getValue();
-            Settings::getInstance().close();
+            timezone            = settings.getTimezone().getValue();
+            ntpServerAddress    = settings.getNTPServerAddress().getValue();
+            m_timeFormat        = settings.getTimeFormat().getValue();
+            m_dateFormat        = settings.getDateFormat().getValue();
+            settings.close();
         }
 
         /* Configure NTP:

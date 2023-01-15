@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Key value pair with JSON type
+ * @brief  Key value pair with bool type
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup settings
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __KEY_VALUE_JSON_H__
-#define __KEY_VALUE_JSON_H__
+#ifndef __KEY_VALUE_BOOL_H__
+#define __KEY_VALUE_BOOL_H__
 
 /******************************************************************************
  * Compile Switches
@@ -44,7 +44,6 @@
  * Includes
  *****************************************************************************/
 #include "KeyValue.h"
-#include <ArduinoJson.h>
 
 /******************************************************************************
  * Macros
@@ -55,30 +54,38 @@
  *****************************************************************************/
 
 /**
- * Key value pair with JSON value.
+ * Key value pair with bool value type.
  */
-class KeyValueJson : public KeyValue
+class KeyValueBool : public KeyValue
 {
 public:
 
     /**
      * Constructs a key value pair.
      */
-    KeyValueJson(Preferences& pref, const char* key, const char* name, const char* defValue, size_t min, size_t max) :
+    KeyValueBool(const char* key, const char* name, bool defValue) :
         KeyValue(),
-        m_pref(pref),
         m_key(key),
         m_name(name),
-        m_defValue(defValue),
-        m_min(min),
-        m_max(max)
+        m_defValue(defValue)
+    {
+    }
+
+    /**
+     * Constructs a key value pair.
+     */
+    KeyValueBool(Preferences& pref, const char* key, const char* name, bool defValue) :
+        KeyValue(pref),
+        m_key(key),
+        m_name(name),
+        m_defValue(defValue)
     {
     }
 
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueJson()
+    virtual ~KeyValueBool()
     {
     }
 
@@ -89,7 +96,7 @@ public:
      */
     Type getValueType() const final
     {
-        return TYPE_JSON;
+        return TYPE_BOOL;
     }
 
     /**
@@ -113,33 +120,13 @@ public:
     }
 
     /**
-     * Get minimum string length.
-     *
-     * @return Minimum string length
-     */
-    size_t getMinLength() const
-    {
-        return m_min;
-    }
-
-    /**
-     * Get maximum string length.
-     *
-     * @return Maximum string length
-     */
-    size_t getMaxLength() const
-    {
-        return m_max;
-    }
-
-    /**
      * Get value.
      *
      * @return Value
      */
-    String getValue() const
+    bool getValue() const
     {
-        return m_pref.getString(m_key, getDefault());
+        return m_preferences->getBool(m_key, getDefault());
     }
 
     /**
@@ -147,9 +134,9 @@ public:
      *
      * @param[in] value Value
      */
-    void setValue(const String& value)
+    void setValue(bool value)
     {
-        m_pref.putString(m_key, value);
+        m_preferences->putBool(m_key, value);
     }
 
     /**
@@ -157,29 +144,26 @@ public:
      *
      * @return Default value
      */
-    String getDefault() const
+    bool getDefault() const
     {
-        return String(m_defValue);
+        return m_defValue;
     }
 
 private:
 
-    Preferences&    m_pref;     /**< Preferences */
     const char*     m_key;      /**< Key */
     const char*     m_name;     /**< Name */
-    const char*     m_defValue; /**< Default value */
-    size_t          m_min;      /**< Min. length */
-    size_t          m_max;      /**< Max. length */
+    bool            m_defValue; /**< Default value */
 
     /* An instance shall not be copied. */
-    KeyValueJson(const KeyValueJson& kv);
-    KeyValueJson& operator=(const KeyValueJson& kv);
+    KeyValueBool(const KeyValueBool& kv);
+    KeyValueBool& operator=(const KeyValueBool& kv);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_JSON_H__ */
+#endif  /* __KEY_VALUE_BOOL_H__ */
 
 /** @} */

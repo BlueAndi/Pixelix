@@ -25,25 +25,25 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Audio service
+ * @brief  MQTT service
  * @author Andreas Merkle <web@blue-andi.de>
  * 
- * @addtogroup audio_service
+ * @addtogroup service
  *
  * @{
  */
 
-#ifndef __AUDIO_SERVICE_H__
-#define __AUDIO_SERVICE_H__
+#ifndef __MQTT_SERVICE_H__
+#define __MQTT_SERVICE_H__
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
 #include <stdint.h>
 #include <IService.hpp>
-#include "AudioDrv.h"
-#include "SpectrumAnalyzer.h"
-#include "AudioToneDetector.h"
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <KeyValueString.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -58,9 +58,9 @@
  *****************************************************************************/
 
 /**
- * The audio service provides different audio related functionality.
+ * The MQTT service provides access via MQTT.
  */
-class AudioService : public IService
+class MqttService : public IService
 {
 public:
 
@@ -69,20 +69,20 @@ public:
      * 
      * @return Audio service instance
      */
-    static AudioService& getInstance()
+    static MqttService& getInstance()
     {
-        static AudioService instance; /* idiom */
+        static MqttService instance; /* idiom */
 
         return instance;
     }
 
     /**
-     * Start the audio service.
+     * Start the service.
      */
     bool start() final;
 
     /**
-     * Stop the audio service.
+     * Stop the service.
      */
     void stop() final;
 
@@ -91,66 +91,77 @@ public:
      */
     void process() final;
 
-    /**
-     * Get the spectrum analyzer.
-     * 
-     * @return Spectrum analyzer instance otherwise nullptr
-     */
-    SpectrumAnalyzer* getSpectrumAnalyzer()
-    {
-        return &m_spectrumAnalyzer;
-    }
-
-    /**
-     * Get the audio tone detector.
-     * 
-     * @param[in] id    Tone detector id
-     * 
-     * @return Tone detector instance otherwise nullptr
-     */
-    AudioToneDetector* getAudioToneDetector(uint8_t id)
-    {
-        AudioToneDetector* instance = nullptr;
-
-        if (MAX_TONE_DETECTORS > id)
-        {
-            instance = &m_audioToneDetector[id];
-        }
-
-        return instance;
-    }
-
-    /**
-     * The max. number of tone detectors, which the service
-     * can provide.
-     */
-    static const uint8_t    MAX_TONE_DETECTORS  = 2U;
-
 private:
 
-    SpectrumAnalyzer    m_spectrumAnalyzer;
-    AudioToneDetector   m_audioToneDetector[MAX_TONE_DETECTORS];
+    /**
+     * MQTT service states.
+     */
+    enum State
+    {
+        STATE_DISCONNECTED = 0, /**< No connection to a MQTT broker */
+        STATE_CONNECTED,        /**< Connected with a MQTT broker */
+        STATE_IDLE              /**< Service is idle */
+    };
 
-    AudioService(const AudioService& drv);
-    AudioService& operator=(const AudioService& drv);
+    /** MQTT port */
+    static const uint16_t   MQTT_PORT                   = 1883U;
+
+    /** MQTT broker URL key */
+    static const char*      KEY_MQTT_BROKER_URL;
+
+    /** MQTT broker URL name */
+    static const char*      NAME_MQTT_BROKER_URL;
+
+    /** MQTT broker URL default value */
+    static const char*      DEFAULT_MQTT_BROKER_URL;
+
+    /** MQTT broker URL min. length */
+    static const size_t     MIN_VALUE_MQTT_BROKER_URL   = 0U;
+
+    /** MQTT broker URL max. length */
+    static const size_t     MAX_VALUE_MQTT_BROKER_URL   = 64U;
+
+    KeyValueString  m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
+    String          m_mqttBrokerUrl;        /**< URL of the MQTT broker */
+    String          m_hostname;             /**< MQTT hostname */
+    WiFiClient      m_wifiClient;           /**< WiFi client */
+    PubSubClient    m_mqttClient;           /**< MQTT client */
+    State           m_state;                /**< Connection state */
 
     /**
-     * Constructs the audio service instance.
+     * Constructs the service instance.
      */
-    AudioService() :
+    MqttService() :
         IService(),
-        m_spectrumAnalyzer(),
-        m_audioToneDetector()
+        m_mqttBrokerUrlSetting(KEY_MQTT_BROKER_URL, NAME_MQTT_BROKER_URL, DEFAULT_MQTT_BROKER_URL, MIN_VALUE_MQTT_BROKER_URL, MAX_VALUE_MQTT_BROKER_URL),
+        m_mqttBrokerUrl(),
+        m_hostname(),
+        m_wifiClient(),
+        m_mqttClient(m_wifiClient),
+        m_state(STATE_DISCONNECTED)
     {
     }
 
     /**
-     * Destroys the audio service instance.
+     * Destroys the service instance.
      */
-    ~AudioService()
+    ~MqttService()
     {
         /* Never called. */
     }
+
+    /* An instance shall not be copied. */
+    MqttService(const MqttService& service);
+    MqttService& operator=(const MqttService& service);
+
+    /**
+     * MQTT receive callback.
+     * 
+     * @param[in] topic     The topic name.
+     * @param[in] payload   The payload of the topic.
+     * @param[in] length    Payload length in byte.
+     */
+    void rxCallback(char* topic, uint8_t* payload, uint32_t length);
 };
 
 /******************************************************************************
@@ -161,6 +172,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __AUDIO_SERVICE_H__ */
+#endif  /* __MQTT_SERVICE_H__ */
 
 /** @} */

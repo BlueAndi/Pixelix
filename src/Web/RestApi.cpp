@@ -48,7 +48,7 @@
 #include <Esp.h>
 #include <Logging.h>
 #include <SensorDataProvider.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -718,10 +718,11 @@ static void handleSettings(AsyncWebServerRequest* request)
     {
         JsonVariant dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
         JsonArray   settingsArray   = dataObj.createNestedArray("settings");
-        uint8_t     settingIdx      = 0U;
-        KeyValue**  settings        = Settings::getInstance().getList();
+        size_t      settingIdx      = 0U;
+        size_t      settingsCount   = 0U;
+        KeyValue**  settings        = SettingsService::getInstance().getList(settingsCount);
 
-        for(settingIdx = 0; settingIdx < Settings::KEY_VALUE_PAIR_NUM; ++settingIdx)
+        for(settingIdx = 0; settingIdx < settingsCount; ++settingIdx)
         {
             KeyValue*   setting = settings[settingIdx];
 
@@ -751,6 +752,7 @@ static void handleSetting(AsyncWebServerRequest* request)
     const size_t        JSON_DOC_SIZE   = 2048U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    SettingsService&    settings        = SettingsService::getInstance();
 
     if (nullptr == request)
     {
@@ -764,7 +766,7 @@ static void handleSetting(AsyncWebServerRequest* request)
             RestUtil::prepareRspError(jsonDoc, "Key is missing.");
             httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
-        else if (false == Settings::getInstance().open(true))
+        else if (false == settings.open(true))
         {
             RestUtil::prepareRspError(jsonDoc, "Internal error.");
             httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
@@ -773,7 +775,7 @@ static void handleSetting(AsyncWebServerRequest* request)
         {
             JsonVariant     dataObj = RestUtil::prepareRspSuccess(jsonDoc);
             const String&   key     = request->arg("key");
-            KeyValue*       setting = Settings::getInstance().getSettingByKey(key.c_str());
+            KeyValue*       setting = settings.getSettingByKey(key.c_str());
 
             dataObj["key"]  = setting->getKey();
             dataObj["name"] = setting->getName();
@@ -855,7 +857,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 break;
             }
 
-            Settings::getInstance().close();
+            settings.close();
 
             httpStatusCode = HttpStatus::STATUS_CODE_OK;
         }
@@ -875,14 +877,14 @@ static void handleSetting(AsyncWebServerRequest* request)
         else
         {
             const String&   key     = request->arg("key");
-            KeyValue*       setting = Settings::getInstance().getSettingByKey(key.c_str());
+            KeyValue*       setting = settings.getSettingByKey(key.c_str());
 
             if (nullptr == setting)
             {
                 RestUtil::prepareRspError(jsonDoc, "Key not found.");
                 httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
             }
-            else if (false == Settings::getInstance().open(false))
+            else if (false == settings.open(false))
             {
                 RestUtil::prepareRspError(jsonDoc, "Internal error.");
                 httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
@@ -904,7 +906,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                     httpStatusCode = HttpStatus::STATUS_CODE_OK;
                 }
 
-                Settings::getInstance().close();
+                settings.close();
             }
         }
     }
@@ -939,6 +941,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
     }
     else
     {
+        SettingsService&    settings    = SettingsService::getInstance();
+
         switch(parameter->getValueType())
         {
         case KeyValue::TYPE_STRING:
@@ -946,7 +950,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
                 KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
 
                 /* If it is the hostname, verify it explicit. */
-                if (0 == strcmp(Settings::getInstance().getHostname().getKey(), kvStr->getKey()))
+                if (0 == strcmp(settings.getHostname().getKey(), kvStr->getKey()))
                 {
                     if (false == isValidHostname(value))
                     {
@@ -1174,13 +1178,14 @@ static void handleStatus(AsyncWebServerRequest* request)
     }
     else
     {
-        String      ssid;
-        int8_t      rssi            = -100; // dbm
-        JsonVariant dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonObject  hwObj           = dataObj.createNestedObject("hardware");
-        JsonObject  swObj           = dataObj.createNestedObject("software");
-        JsonObject  internalRamObj  = swObj.createNestedObject("internalRam");
-        JsonObject  wifiObj         = dataObj.createNestedObject("wifi");
+        String              ssid;
+        int8_t              rssi            = -100; // dbm
+        JsonVariant         dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonObject          hwObj           = dataObj.createNestedObject("hardware");
+        JsonObject          swObj           = dataObj.createNestedObject("software");
+        JsonObject          internalRamObj  = swObj.createNestedObject("internalRam");
+        JsonObject          wifiObj         = dataObj.createNestedObject("wifi");
+        SettingsService&    settings        = SettingsService::getInstance();
 
         /* Only in station mode it makes sense to retrieve the RSSI.
          * Otherwise keep it -100 dbm.
@@ -1190,10 +1195,10 @@ static void handleStatus(AsyncWebServerRequest* request)
             rssi = WiFi.RSSI();
         }
 
-        if (true == Settings::getInstance().open(true))
+        if (true == settings.open(true))
         {
-            ssid = Settings::getInstance().getWifiSSID().getValue();
-            Settings::getInstance().close();
+            ssid = settings.getWifiSSID().getValue();
+            settings.close();
         }
 
         /* Prepare response */
@@ -1629,9 +1634,10 @@ static void handleFileDelete(AsyncWebServerRequest* request)
  */
 static bool isValidHostname(const String& hostname)
 {
-    bool            isValid             = true;
-    const size_t    MIN_HOSTNAME_LENGTH = Settings::getInstance().getHostname().getMinLength();
-    const size_t    MAX_HOSTNAME_LENGTH = Settings::getInstance().getHostname().getMaxLength();
+    bool                isValid         = true;
+    SettingsService&    settings        = SettingsService::getInstance();
+    const size_t    MIN_HOSTNAME_LENGTH = settings.getHostname().getMinLength();
+    const size_t    MAX_HOSTNAME_LENGTH = settings.getHostname().getMaxLength();
 
     if ((MIN_HOSTNAME_LENGTH > hostname.length()) ||
         (MAX_HOSTNAME_LENGTH < hostname.length()))

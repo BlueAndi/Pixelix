@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Key value pair of uint8_t type
+ * @brief  Key value pair with string type
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup settings
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __KEY_VALUE_UINT8_H__
-#define __KEY_VALUE_UINT8_H__
+#ifndef __KEY_VALUE_STRING_H__
+#define __KEY_VALUE_STRING_H__
 
 /******************************************************************************
  * Compile Switches
@@ -54,24 +54,44 @@
  *****************************************************************************/
 
 /**
- * Key value pair with uint8_t value type.
+ * Key value pair with string value.
  */
-class KeyValueUInt8 : public KeyValueNumber<uint8_t>
+class KeyValueString : public KeyValue
 {
 public:
 
     /**
      * Constructs a key value pair.
      */
-    KeyValueUInt8(Preferences& pref, const char* key, const char* name, uint8_t defValue, size_t min, size_t max) :
-        KeyValueNumber(pref, key, name, defValue, min, max)
+    KeyValueString(const char* key, const char* name, const char* defValue, size_t min, size_t max, bool isSecret = false) :
+        KeyValue(),
+        m_key(key),
+        m_name(name),
+        m_defValue(defValue),
+        m_min(min),
+        m_max(max),
+        m_isSecret(isSecret)
+    {
+    }
+
+    /**
+     * Constructs a key value pair.
+     */
+    KeyValueString(Preferences& pref, const char* key, const char* name, const char* defValue, size_t min, size_t max, bool isSecret = false) :
+        KeyValue(pref),
+        m_key(key),
+        m_name(name),
+        m_defValue(defValue),
+        m_min(min),
+        m_max(max),
+        m_isSecret(isSecret)
     {
     }
 
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueUInt8()
+    virtual ~KeyValueString()
     {
     }
 
@@ -82,7 +102,47 @@ public:
      */
     Type getValueType() const final
     {
-        return TYPE_UINT8;
+        return TYPE_STRING;
+    }
+
+    /**
+     * Get user friendly name of key value pair.
+     *
+     * @return User friendly name
+     */
+    const char* getName() const final
+    {
+        return m_name;
+    }
+
+    /**
+     * Get key.
+     *
+     * @return Key
+     */
+    const char* getKey() const final
+    {
+        return m_key;
+    }
+
+    /**
+     * Get minimum string length.
+     *
+     * @return Minimum string length
+     */
+    size_t getMinLength() const
+    {
+        return m_min;
+    }
+
+    /**
+     * Get maximum string length.
+     *
+     * @return Maximum string length
+     */
+    size_t getMaxLength() const
+    {
+        return m_max;
     }
 
     /**
@@ -90,9 +150,9 @@ public:
      *
      * @return Value
      */
-    uint8_t getValue() const final
+    String getValue() const
     {
-        return m_pref.getUChar(m_key, m_defValue);
+        return m_preferences->getString(m_key, getDefault());
     }
 
     /**
@@ -100,22 +160,49 @@ public:
      *
      * @param[in] value Value
      */
-    void setValue(uint8_t value) final
+    void setValue(const String& value)
     {
-        m_pref.putUChar(m_key, value);
+        m_preferences->putString(m_key, value);
+    }
+
+    /**
+     * Get default value.
+     *
+     * @return Default value
+     */
+    String getDefault() const
+    {
+        return String(m_defValue);
+    }
+
+    /**
+     * Contains it a secret value?
+     * 
+     * @return If its a secret value, it will return true otherwise false.
+     */
+    bool isSecret() const
+    {
+        return m_isSecret;
     }
 
 private:
 
+    const char*     m_key;      /**< Key */
+    const char*     m_name;     /**< Name */
+    const char*     m_defValue; /**< Default value */
+    const size_t    m_min;      /**< Min. length */
+    const size_t    m_max;      /**< Max. length */
+    const bool      m_isSecret; /**< Is the value a secret value? */
+
     /* An instance shall not be copied. */
-    KeyValueUInt8(const KeyValueUInt8& kv);
-    KeyValueUInt8& operator=(const KeyValueUInt8& kv);
+    KeyValueString(const KeyValueString& kv);
+    KeyValueString& operator=(const KeyValueString& kv);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_UINT8_H__ */
+#endif  /* __KEY_VALUE_STRING_H__ */
 
 /** @} */

@@ -79,6 +79,11 @@ public:
      */
     virtual void stop() = 0;
 
+    /**
+     * Process the service.
+     */
+    virtual void process() = 0;
+
 protected:
 
     /**

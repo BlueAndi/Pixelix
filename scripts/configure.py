@@ -43,8 +43,8 @@ _MENU_FULL_PATH = "./data/js/pluginsSubMenu.js"
 _PLUGIN_LIST_FULL_PATH = "./src/Generated/PluginList.hpp"
 _PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.hpp"
 
-_SERVICE_LIST_FULL_PATH = "./src/Generated/ServiceList.hpp"
-_SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/ServiceList.hpp"
+_SERVICE_LIST_FULL_PATH = "./src/Generated/Service.cpp"
+_SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/Service.cpp"
 
 ################################################################################
 # Classes
@@ -150,9 +150,13 @@ def _generate_cpp_plugin_list(plugin_list_full_path, plugin_list):
     includes = ""
     register_calls = ""
 
-    for plugin_name in plugin_list:
-        includes += f"#include <{plugin_name}.h>\n"
-        register_calls += f"    pluginMgr.registerPlugin(\"{plugin_name}\", {plugin_name}::create);\n"
+    for idx, plugin_name in enumerate(plugin_list):
+        if 0 < idx:
+            includes += "\n"
+            register_calls += "\n"
+
+        includes += f"#include <{plugin_name}.h>"
+        register_calls += f"    pluginMgr.registerPlugin(\"{plugin_name}\", {plugin_name}::create);"
 
     data = {
         "INCLUDES": includes,
@@ -320,31 +324,42 @@ def _generate_plugins(plugin_list):
         print("\tGenerating plugin list.")
         _generate_cpp_plugin_list(_PLUGIN_LIST_FULL_PATH, plugin_list)
 
-def _generate_cpp_service_list(service_list_full_path, service_list):
-    """Generate the ServiceList.hpp source file.
+def _generate_cpp_service(service_list_full_path, service_list):
+    """Generate the Service.cpp source file.
 
     Args:
-        service_list_full_path (str): Full path to ServiceList.hpp where it shall be created.
+        service_list_full_path (str): Full path to Service.cpp where it shall be created.
         service_list (list): List of all service names
     """
     includes = ""
     start_calls = ""
     stop_calls = ""
+    process_calls = ""
 
-    for service_name in service_list:
-        includes += f"#include <{service_name}.h>\n"
+    for idx, service_name in enumerate(service_list):
+
+        if idx > 0:
+            includes += "\n"
+            start_calls += "\n"
+            stop_calls += "\n"
+            process_calls += "\n"
+
+        includes += f"#include <{service_name}.h>"
 
         start_calls += f"    if (false == {service_name}::getInstance().start())\n"
         start_calls +=  "    {\n"
         start_calls +=  "        isSuccessful = false;\n"
         start_calls +=  "    }\n"
 
-        stop_calls += f"    {service_name}::getInstance().stop();\n"
+        stop_calls += f"    {service_name}::getInstance().stop();"
+
+        process_calls += f"    {service_name}::getInstance().process();"
 
     data = {
         "INCLUDES": includes,
         "START_SERVICES": start_calls,
-        "STOP_SERVICES": stop_calls
+        "STOP_SERVICES": stop_calls,
+        "PROCESS_SERVICES": process_calls
     }
 
     with open(_SERVICE_LIST_TEMPLATE_FULL_PATH, "r", encoding="utf-8") as file_desc:
@@ -373,8 +388,8 @@ def _generate_services(service_list):
     for service_name in skip_list:
         service_list.remove(service_name)
 
-    print("\tGenerating service list.")
-    _generate_cpp_service_list(_SERVICE_LIST_FULL_PATH, service_list)
+    print("\tGenerating service.")
+    _generate_cpp_service(_SERVICE_LIST_FULL_PATH, service_list)
 
 def configure(config_full_path):
     """Configures the plugins according to configuration.

@@ -49,7 +49,7 @@
 #include <Util.h>
 #include <ArduinoJson.h>
 #include <lwip/init.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -171,21 +171,22 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
 
 void Pages::init(AsyncWebServer& srv)
 {
-    const char* pluginName = nullptr;
-    String      webLoginUser;
-    String      webLoginPassword;
+    const char*         pluginName          = nullptr;
+    String              webLoginUser;
+    String              webLoginPassword;
+    SettingsService&    settings            = SettingsService::getInstance();
 
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getDefault();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getDefault();
+        webLoginUser        = settings.getWebLoginUser().getDefault();
+        webLoginPassword    = settings.getWebLoginPassword().getDefault();
     }
     else
     {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getValue();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getValue();
+        webLoginUser        = settings.getWebLoginUser().getValue();
+        webLoginPassword    = settings.getWebLoginPassword().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
     }
 
     (void)srv.on("/about.html", HTTP_GET, aboutPage)
@@ -803,12 +804,13 @@ namespace tmpl
      */
     static String getSSID()
     {
-        String result;
+        String              result;
+        SettingsService&    settings    = SettingsService::getInstance();
 
-        if (true == Settings::getInstance().open(true))
+        if (true == settings.open(true))
         {
-            result = Settings::getInstance().getWifiSSID().getValue();
-            Settings::getInstance().close();
+            result = settings.getWifiSSID().getValue();
+            settings.close();
         }
 
         return result;

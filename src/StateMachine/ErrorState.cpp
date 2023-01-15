@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "ErrorState.h"
+#include "Service.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -114,6 +115,8 @@ void ErrorState::entry(StateMachine& sm)
     {
         LOG_INFO("No low level error, see display for more information.");
     }
+
+    Service::stopAll();
 
     return;
 }

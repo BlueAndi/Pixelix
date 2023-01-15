@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "ConnectingState.h"
 #include "SysMsg.h"
+#include "Service.h"
 
 #include "IdleState.h"
 #include "ConnectedState.h"
@@ -42,7 +43,7 @@
 #include <WiFi.h>
 #include <Logging.h>
 #include <Util.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -70,7 +71,7 @@
 
 void ConnectingState::entry(StateMachine& sm)
 {
-    Settings& settings = Settings::getInstance();
+    SettingsService& settings = SettingsService::getInstance();
 
     /* Observer button state changes and derrive actions. */
     ButtonDrv::getInstance().registerObserver(m_buttonHandler);
@@ -185,6 +186,8 @@ void ConnectingState::process(StateMachine& sm)
             ;
         }
     }
+
+    Service::processAll();
 
     return;
 }

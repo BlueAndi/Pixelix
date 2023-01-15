@@ -98,6 +98,10 @@ bool AudioService::start()
         {
             stop();
         }
+        else
+        {
+            LOG_INFO("Audio service started.");
+        }
     }
 
     return isSuccessful;
@@ -118,6 +122,11 @@ void AudioService::stop()
     }
 
     AudioDrv::getInstance().stop();
+}
+
+void AudioService::process()
+{
+    /* Nothing to do. */
 }
 
 /******************************************************************************

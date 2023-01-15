@@ -44,7 +44,7 @@
 #include <WiFi.h>
 #include <Logging.h>
 #include <Util.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -87,31 +87,32 @@ const uint16_t  APState::DNS_PORT                       = 53U;
 
 void APState::entry(StateMachine& sm)
 {
-    String hostname;
-    String wifiApSSID;
-    String wifiApPassphrase;
+    String              hostname;
+    String              wifiApSSID;
+    String              wifiApPassphrase;
+    SettingsService&    settings            = SettingsService::getInstance();
 
     LOG_INFO("Setup access point.");
 
     /* Get necessary settings. */
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::getInstance().getHostname().getDefault();
+        hostname = settings.getHostname().getDefault();
 
         LOG_WARNING("Use default wifi AP SSID.");
-        wifiApSSID = Settings::getInstance().getWifiApSSID().getDefault();
+        wifiApSSID = settings.getWifiApSSID().getDefault();
 
         LOG_WARNING("Use default wifi AP passphrase.");
-        wifiApPassphrase = Settings::getInstance().getWifiApPassphrase().getDefault();
+        wifiApPassphrase = settings.getWifiApPassphrase().getDefault();
     }
     else
     {
-        hostname            = Settings::getInstance().getHostname().getValue();
-        wifiApSSID          = Settings::getInstance().getWifiApSSID().getValue();
-        wifiApPassphrase    = Settings::getInstance().getWifiApPassphrase().getValue();
+        hostname            = settings.getHostname().getValue();
+        wifiApSSID          = settings.getWifiApSSID().getValue();
+        wifiApPassphrase    = settings.getWifiApPassphrase().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
     }
 
     /* Configure access point.

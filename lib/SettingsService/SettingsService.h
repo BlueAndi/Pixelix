@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Settings
+ * @brief  Settings service
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup settings
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SETTINGS_H__
-#define __SETTINGS_H__
+#ifndef __SETTINGS_SERVICE_H__
+#define __SETTINGS_SERVICE_H__
 
 /******************************************************************************
  * Compile Switches
@@ -44,6 +44,9 @@
  * Includes
  *****************************************************************************/
 #include <Preferences.h>
+#include <IService.hpp>
+#include <vector>
+
 #include "KeyValue.h"
 #include "KeyValueString.h"
 #include "KeyValueBool.h"
@@ -61,23 +64,40 @@
  *****************************************************************************/
 
 /**
- * Settings class for easy access to persistent stored key:value pairs.
+ * Persistent storage of key value pairs.
  */
-class Settings
+class SettingsService : public IService
 {
 public:
 
     /**
-     * Get the settings instance.
-     *
-     * @return Settings instance
+     * Get settings service.
+     * 
+     * @return Settings service
      */
-    static Settings& getInstance()
+    static SettingsService& getInstance()
     {
-        static Settings instance; /* singleton idiom to force initialization in the first usage. */
+        static SettingsService instance; /* idiom */
 
         return instance;
     }
+
+    /**
+     * Start the service.
+     * 
+     * @return If successful started, it will return true otherwise false.
+     */
+    bool start() final;
+
+    /**
+     * Stop the service.
+     */
+    void stop() final;
+
+    /**
+     * Process the service.
+     */
+    void process() final;
 
     /**
      * Open settings.
@@ -106,6 +126,54 @@ public:
      * Note, the settings must be opened in write mode!
      */
     void cleanUp();
+
+    /**
+     * Get key value pair by key.
+     * 
+     * @param key The key is used to search for the right key value pair.
+     * @return If key is found, it will return the key value pair otherwise nullptr.
+     */
+    KeyValue* getSettingByKey(const char* key);
+
+    /**
+     * Register a single setting.
+     * 
+     * @param[in] setting   Setting which to register
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
+    bool registerSetting(KeyValue* setting);
+
+    /**
+     * Unregister setting.
+     * 
+     * @param[in] setting   Setting which to unregister
+     */
+    void unregisterSetting(KeyValue* setting);
+
+    /**
+     * Get a list of all key value pairs.
+     *
+     * @param[out] count    Number of key value pairs in the list.
+     * 
+     * @return List of key value pairs.
+     */
+    KeyValue** getList(size_t& count)
+    {
+        count = m_keyValueList.size();
+
+        return m_keyValueList.data();
+    }
+
+    /**
+     * Clear all key value pairs, which means set them to factory defaults.
+     *
+     * @return If successful cleared, it will return true otherwise false.
+     */
+    bool clear()
+    {
+        return m_preferences.clear();
+    }
 
     /**
      * Get remote wifi network SSID.
@@ -278,37 +346,6 @@ public:
     }
 
     /**
-     * Get a list of all key value pairs.
-     *
-     * @return List of key value pairs.
-     */
-    KeyValue**  getList()
-    {
-        return m_keyValueList;
-    }
-
-    /**
-     * Clear all key value pairs, which means set them to factory defaults.
-     *
-     * @return If successful cleared, it will return true otherwise false.
-     */
-    bool clear()
-    {
-        return m_preferences.clear();
-    }
-
-    /**
-     * Get key value pair by key.
-     * 
-     * @param key The key is used to search for the right key value pair.
-     * @return If key is found, it will return the key value pair otherwise nullptr.
-     */
-    KeyValue* getSettingByKey(const char* key);
-
-    /** Number of key value pairs. */
-    static const uint8_t    KEY_VALUE_PAIR_NUM = 17U;
-
-    /**
      * Settings version
      * The version number shall be increased by 1 after:
      * - a new setting was added or
@@ -319,47 +356,47 @@ public:
 
 private:
 
-    Preferences     m_preferences;                      /**< Persistent storage */
-    KeyValue*       m_keyValueList[KEY_VALUE_PAIR_NUM]; /**< List of all key value pairs, except m_version. */
+    Preferences             m_preferences;          /**< Persistent storage */
+    std::vector<KeyValue*>  m_keyValueList;         /**< List of key/value pairs, stored in persistent storage. */
 
-    KeyValueUInt32  m_version;              /**< Settings version (just an consequtive incremented number) */
-    KeyValueString  m_wifiSSID;             /**< Remote wifi network SSID */
-    KeyValueString  m_wifiPassphrase;       /**< Remote wifi network passphrase */
-    KeyValueString  m_apSSID;               /**< Access point SSID */
-    KeyValueString  m_apPassphrase;         /**< Access point passphrase */
-    KeyValueString  m_webLoginUser;         /**< Website login user account */
-    KeyValueString  m_webLoginPassword;     /**< Website login user password */
-    KeyValueString  m_hostname;             /**< Hostname */
-    KeyValueUInt8   m_brightness;           /**< The brightness level in % set at startup. */
-    KeyValueBool    m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
-    KeyValueString  m_timezone;             /**< POSIX timezone string */
-    KeyValueString  m_ntpServer;            /**< NTP server address */
-    KeyValueString  m_timeFormat;           /**< Time format according to strftime(). */
-    KeyValueString  m_dateFormat;           /**< Date format according to strftime(). */
-    KeyValueUInt8   m_maxSlots;             /**< Max. number of display slots. */
-    KeyValueUInt32  m_scrollPause;          /**< Text scroll pause */
-    KeyValueString  m_notifyURL;            /**< URL to be triggered when PIXELIX has connected to a remote network. */
-    KeyValueBool    m_quietMode;            /**< Quiet mode (skip unnecessary system messages) */
-
-    /**
-     * Constructs the settings instance.
-     */
-    Settings();
+    KeyValueUInt32          m_version;              /**< Settings version (just an consequtive incremented number) */
+    KeyValueString          m_wifiSSID;             /**< Remote wifi network SSID */
+    KeyValueString          m_wifiPassphrase;       /**< Remote wifi network passphrase */
+    KeyValueString          m_apSSID;               /**< Access point SSID */
+    KeyValueString          m_apPassphrase;         /**< Access point passphrase */
+    KeyValueString          m_webLoginUser;         /**< Website login user account */
+    KeyValueString          m_webLoginPassword;     /**< Website login user password */
+    KeyValueString          m_hostname;             /**< Hostname */
+    KeyValueUInt8           m_brightness;           /**< The brightness level in % set at startup. */
+    KeyValueBool            m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
+    KeyValueString          m_timezone;             /**< POSIX timezone string */
+    KeyValueString          m_ntpServer;            /**< NTP server address */
+    KeyValueString          m_timeFormat;           /**< Time format according to strftime(). */
+    KeyValueString          m_dateFormat;           /**< Date format according to strftime(). */
+    KeyValueUInt8           m_maxSlots;             /**< Max. number of display slots. */
+    KeyValueUInt32          m_scrollPause;          /**< Text scroll pause */
+    KeyValueString          m_notifyURL;            /**< URL to be triggered when PIXELIX has connected to a remote network. */
+    KeyValueBool            m_quietMode;            /**< Quiet mode (skip unnecessary system messages) */
 
     /**
-     * Destroys the settings instance.
+     * Constructs the settings service instance.
      */
-    ~Settings();
+    SettingsService();
+
+    /**
+     * Destroys the settings service instance.
+     */
+    ~SettingsService();
 
     /* An instance shall not be copied. */
-    Settings(const Settings& settings);
-    Settings& operator=(const Settings& settings);
+    SettingsService(const SettingsService& service);
+    SettingsService& operator=(const SettingsService& service);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __SETTINGS_H__ */
+#endif  /* __SETTINGS_SERVICE_H__ */
 
 /** @} */

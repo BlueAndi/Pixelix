@@ -37,7 +37,7 @@
 #include <Logging.h>
 #include <Esp.h>
 #include <Display.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 #include "FileSystem.h"
 #include "MyWebServer.h"
@@ -77,7 +77,8 @@ const char* UpdateMgr::OTA_PASSWORD = "maytheforcebewithyou";
 
 bool UpdateMgr::init()
 {
-    String  hostname;
+    String              hostname;
+    SettingsService&    settings    = SettingsService::getInstance();
 
     /* Prepare over the air update. Note, the configuration must be done
      * before the update server is running.
@@ -98,15 +99,15 @@ bool UpdateMgr::init()
     ArduinoOTA.setMdnsEnabled(false);
 
     /* Get hostname */
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::getInstance().getHostname().getDefault();
+        hostname = settings.getHostname().getDefault();
     }
     else
     {
-        hostname = Settings::getInstance().getHostname().getValue();
-        Settings::getInstance().close();
+        hostname = settings.getHostname().getValue();
+        settings.close();
     }
 
     ArduinoOTA.setHostname(hostname.c_str());

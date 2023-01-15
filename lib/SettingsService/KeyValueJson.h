@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Key value pair with string type
+ * @brief  Key value pair with JSON type
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup settings
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __KEY_VALUE_STRING_H__
-#define __KEY_VALUE_STRING_H__
+#ifndef __KEY_VALUE_JSON_H__
+#define __KEY_VALUE_JSON_H__
 
 /******************************************************************************
  * Compile Switches
@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include "KeyValue.h"
+#include <ArduinoJson.h>
 
 /******************************************************************************
  * Macros
@@ -54,31 +55,42 @@
  *****************************************************************************/
 
 /**
- * Key value pair with string value.
+ * Key value pair with JSON value.
  */
-class KeyValueString : public KeyValue
+class KeyValueJson : public KeyValue
 {
 public:
 
     /**
      * Constructs a key value pair.
      */
-    KeyValueString(Preferences& pref, const char* key, const char* name, const char* defValue, size_t min, size_t max, bool isSecret = false) :
+    KeyValueJson(const char* key, const char* name, const char* defValue, size_t min, size_t max) :
         KeyValue(),
-        m_pref(pref),
         m_key(key),
         m_name(name),
         m_defValue(defValue),
         m_min(min),
-        m_max(max),
-        m_isSecret(isSecret)
+        m_max(max)
+    {
+    }
+
+    /**
+     * Constructs a key value pair.
+     */
+    KeyValueJson(Preferences& pref, const char* key, const char* name, const char* defValue, size_t min, size_t max) :
+        KeyValue(pref),
+        m_key(key),
+        m_name(name),
+        m_defValue(defValue),
+        m_min(min),
+        m_max(max)
     {
     }
 
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueString()
+    virtual ~KeyValueJson()
     {
     }
 
@@ -89,7 +101,7 @@ public:
      */
     Type getValueType() const final
     {
-        return TYPE_STRING;
+        return TYPE_JSON;
     }
 
     /**
@@ -139,7 +151,7 @@ public:
      */
     String getValue() const
     {
-        return m_pref.getString(m_key, getDefault());
+        return m_preferences->getString(m_key, getDefault());
     }
 
     /**
@@ -149,7 +161,7 @@ public:
      */
     void setValue(const String& value)
     {
-        m_pref.putString(m_key, value);
+        m_preferences->putString(m_key, value);
     }
 
     /**
@@ -162,35 +174,23 @@ public:
         return String(m_defValue);
     }
 
-    /**
-     * Contains it a secret value?
-     * 
-     * @return If its a secret value, it will return true otherwise false.
-     */
-    bool isSecret() const
-    {
-        return m_isSecret;
-    }
-
 private:
 
-    Preferences&    m_pref;     /**< Preferences */
     const char*     m_key;      /**< Key */
     const char*     m_name;     /**< Name */
     const char*     m_defValue; /**< Default value */
-    const size_t    m_min;      /**< Min. length */
-    const size_t    m_max;      /**< Max. length */
-    const bool      m_isSecret; /**< Is the value a secret value? */
+    size_t          m_min;      /**< Min. length */
+    size_t          m_max;      /**< Max. length */
 
     /* An instance shall not be copied. */
-    KeyValueString(const KeyValueString& kv);
-    KeyValueString& operator=(const KeyValueString& kv);
+    KeyValueJson(const KeyValueJson& kv);
+    KeyValueJson& operator=(const KeyValueJson& kv);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_STRING_H__ */
+#endif  /* __KEY_VALUE_JSON_H__ */
 
 /** @} */

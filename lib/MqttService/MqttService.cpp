@@ -25,17 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Captive portal request handler
+ * @brief  MQTT service
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "CaptivePortalHandler.h"
-#include "HttpStatus.h"
-#include "FileSystem.h"
+#include "MqttService.h"
 
+#include <Logging.h>
 #include <SettingsService.h>
 
 /******************************************************************************
@@ -58,69 +57,97 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize MQTT service variables */
+const char* MqttService::KEY_MQTT_BROKER_URL        = "mqtt_broker_url";
+const char* MqttService::NAME_MQTT_BROKER_URL       = "MQTT broker URL";
+const char* MqttService::DEFAULT_MQTT_BROKER_URL    = "";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
+bool MqttService::start()
 {
-    if (nullptr == request)
+    bool                isSuccessful    = true;
+    SettingsService&    settings        = SettingsService::getInstance();
+
+    if (false == settings.registerSetting(&m_mqttBrokerUrlSetting))
     {
-        return;
+        LOG_ERROR("Couldn't register MQTT broker URL setting.");
+        isSuccessful = false;
     }
-
-    if (HTTP_POST == request->method())
+    else if (false == settings.open(true))
     {
-        if ((true == request->hasArg("ssid")) &&
-            (true == request->hasArg("passphrase")))
-        {
-            SettingsService&    settings    = SettingsService::getInstance();
-
-            if (true == settings.open(false))
-            {
-                const String& ssid              = request->arg("ssid");
-                const String& passphrase        = request->arg("passphrase");
-                KeyValueString& kvSSID          = settings.getWifiSSID();
-                KeyValueString& kvPassphrase    = settings.getWifiPassphrase();
-
-                kvSSID.setValue(ssid);
-                kvPassphrase.setValue(passphrase);
-
-                settings.close();
-
-                request->send(HttpStatus::STATUS_CODE_OK, "plain/text", "Ok.");
-            }
-            else
-            {
-                request->send(HttpStatus::STATUS_CODE_OK, "plain/text", "Failed.");
-            }
-        }
-        else if ((true == request->hasArg("restart")) &&
-                (0 != request->arg("restart").equals("now")))
-        {
-            if (nullptr == m_resetReqHandler)
-            {
-                request->send(HttpStatus::STATUS_CODE_INTERNAL_SERVER_ERROR, "plain/text", "Internal error.");
-            }
-            else
-            {
-                /* Restart after client is disconnected. */
-                request->onDisconnect(m_resetReqHandler);
-                request->send(HttpStatus::STATUS_CODE_OK, "plain/text", "Restarting ...");
-            }
-        }
-        else
-        {
-            request->send(HttpStatus::STATUS_CODE_OK, "plain/text", "Request invalid.");
-        }
-    }
-    else if (HTTP_GET == request->method())
-    {
-        request->send(FILESYSTEM, "/cp/captivePortal.html", "text/html", false, captivePortalPageProcessor);
+        LOG_ERROR("Couldn't open settings.");
+        isSuccessful = false;
     }
     else
     {
-        request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "plain/text", "Error");
+        m_mqttBrokerUrl = m_mqttBrokerUrlSetting.getValue();
+        m_hostname      = settings.getHostname().getValue();
+
+        settings.close();
+
+        if (false == m_mqttBrokerUrl.isEmpty())
+        {
+            m_mqttClient.setServer(m_mqttBrokerUrl.c_str(), MQTT_PORT);
+            m_mqttClient.setCallback([this](char* topic, uint8_t* payload, uint32_t length) {
+                this->rxCallback(topic, payload, length);
+            });
+        }
+        else
+        {
+            m_state = STATE_IDLE;
+        }
+    }
+
+    if (false == isSuccessful)
+    {
+        stop();
+    }
+    else
+    {
+        LOG_INFO("MQTT service started.");
+    }
+
+    return isSuccessful;
+}
+
+void MqttService::stop()
+{
+    SettingsService& settings = SettingsService::getInstance();
+
+    settings.unregisterSetting(&m_mqttBrokerUrlSetting);
+    m_mqttClient.disconnect();
+}
+
+void MqttService::process()
+{
+    switch(m_state)
+    {
+    case STATE_DISCONNECTED:
+        if (true == WiFi.isConnected())
+        {
+            if (true == m_mqttClient.connect(m_hostname.c_str()))
+            {
+                m_state = STATE_CONNECTED;
+            }
+        }
+        break;
+
+    case STATE_CONNECTED:
+        if (false == m_mqttClient.connected())
+        {
+            m_state = STATE_DISCONNECTED;
+        }
+        break;
+
+    case STATE_IDLE:
+        /* Nothing to do. */
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -132,40 +159,9 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
  * Private Methods
  *****************************************************************************/
 
-String CaptivePortalHandler::captivePortalPageProcessor(const String& var)
+void MqttService::rxCallback(char* topic, uint8_t* payload, uint32_t length)
 {
-    String  result = var;
-
-    if (var == "SSID")
-    {
-        SettingsService&    settings    = SettingsService::getInstance();
-
-        if (true == settings.open(true))
-        {
-            result = settings.getWifiSSID().getValue();
-            settings.close();
-        }
-    }
-    else if (var == "PASSPHRASE")
-    {
-        SettingsService&    settings    = SettingsService::getInstance();
-
-        if (true == settings.open(true))
-        {
-            result = settings.getWifiPassphrase().getValue();
-            settings.close();
-        }
-    }
-    else if (var == "MAC_ADDR")
-    {
-        result = WiFi.macAddress();
-    }
-    else
-    {
-        ;
-    }
-
-    return result;
+    LOG_INFO("MQTT Rx: %s", topic);
 }
 
 /******************************************************************************

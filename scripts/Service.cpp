@@ -25,16 +25,13 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Key value pair of int32_t type
+ * @brief  Service
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup settings
+ * @addtogroup service
  *
  * @{
  */
-
-#ifndef __KEY_VALUE_INT32_H__
-#define __KEY_VALUE_INT32_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +40,9 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "KeyValue.h"
+#include "Service.h"
+
+$INCLUDES
 
 /******************************************************************************
  * Macros
@@ -53,69 +52,32 @@
  * Types and Classes
  *****************************************************************************/
 
-/**
- * Key value pair with int32_t value type.
- */
-class KeyValueInt32 : public KeyValueNumber<int32_t>
-{
-public:
-
-    /**
-     * Constructs a key value pair.
-     */
-    KeyValueInt32(Preferences& pref, const char* key, const char* name, int32_t defValue, size_t min, size_t max) :
-        KeyValueNumber(pref, key, name, defValue, min, max)
-    {
-    }
-
-    /**
-     * Destroys a key value pair.
-     */
-    virtual ~KeyValueInt32()
-    {
-    }
-
-    /**
-     * Get value type.
-     *
-     * @return Value type
-     */
-    Type getValueType() const final
-    {
-        return TYPE_INT32;
-    }
-
-    /**
-     * Get value.
-     *
-     * @return Value
-     */
-    int32_t getValue() const final
-    {
-        return m_pref.getInt(m_key, m_defValue);
-    }
-
-    /**
-     * Set value.
-     *
-     * @param[in] value Value
-     */
-    void setValue(int32_t value) final
-    {
-        m_pref.putInt(m_key, value);
-    }
-
-private:
-
-    /* An instance shall not be copied. */
-    KeyValueInt32(const KeyValueInt32& kv);
-    KeyValueInt32& operator=(const KeyValueInt32& kv);
-};
-
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_INT32_H__ */
+bool Service::startAll()
+{
+    bool isSuccessful = true;
+
+$START_SERVICES
+
+    if (false == isSuccessful)
+    {
+        stopAll();
+    }
+
+    return isSuccessful;
+}
+
+extern void Service::stopAll()
+{
+$STOP_SERVICES
+}
+
+extern void Service::processAll()
+{
+$PROCESS_SERVICES
+}
 
 /** @} */

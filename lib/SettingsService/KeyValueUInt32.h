@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Service list
+ * @brief  Key value pair of uint32_t type
  * @author Andreas Merkle <web@blue-andi.de>
  *
- * @addtogroup service
+ * @addtogroup settings
  *
  * @{
  */
 
-#ifndef __SERVICE_LIST_HPP__
-#define __SERVICE_LIST_HPP__
+#ifndef __KEY_VALUE_UINT32_H__
+#define __KEY_VALUE_UINT32_H__
 
 /******************************************************************************
  * Compile Switches
@@ -43,9 +43,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <IService.hpp>
+#include "KeyValue.h"
 
-$INCLUDES
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -54,43 +53,77 @@ $INCLUDES
  * Types and Classes
  *****************************************************************************/
 
+/**
+ * Key value pair with uint32_t value type.
+ */
+class KeyValueUInt32 : public KeyValueNumber<uint32_t>
+{
+public:
+
+    /**
+     * Constructs a key value pair.
+     */
+    KeyValueUInt32(const char* key, const char* name, uint32_t defValue, size_t min, size_t max) :
+        KeyValueNumber(key, name, defValue, min, max)
+    {
+    }
+
+    /**
+     * Constructs a key value pair.
+     */
+    KeyValueUInt32(Preferences& pref, const char* key, const char* name, uint32_t defValue, size_t min, size_t max) :
+        KeyValueNumber(pref, key, name, defValue, min, max)
+    {
+    }
+
+    /**
+     * Destroys a key value pair.
+     */
+    virtual ~KeyValueUInt32()
+    {
+    }
+
+    /**
+     * Get value type.
+     *
+     * @return Value type
+     */
+    Type getValueType() const final
+    {
+        return TYPE_UINT32;
+    }
+
+    /**
+     * Get value.
+     *
+     * @return Value
+     */
+    uint32_t getValue() const final
+    {
+        return m_preferences->getUInt(m_key, m_defValue);
+    }
+
+    /**
+     * Set value.
+     *
+     * @param[in] value Value
+     */
+    void setValue(uint32_t value) final
+    {
+        m_preferences->putUInt(m_key, value);
+    }
+
+private:
+
+    /* An instance shall not be copied. */
+    KeyValueUInt32(const KeyValueUInt32& kv);
+    KeyValueUInt32& operator=(const KeyValueUInt32& kv);
+};
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-/** List with all compiled-in services. */
-namespace ServiceList
-{
-
-/**
- * Stop all services.
- */
-static void stopAll()
-{
-$STOP_SERVICES
-}
-
-/**
- * Start all services.
- * 
- * @return If successful, it will return true otherwise false.
- */
-static bool startAll()
-{
-    bool isSuccessful = true;
-
-$START_SERVICES
-
-    if (false == isSuccessful)
-    {
-        stopAll();
-    }
-
-    return isSuccessful;
-}
-
-};
-
-#endif  /* __SERVICE_LIST_HPP__ */
+#endif  /* __KEY_VALUE_UINT32_H__ */
 
 /** @} */

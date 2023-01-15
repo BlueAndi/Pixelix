@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Key value pair of uint32_t type
+ * @brief  Key value pair of int32_t type
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup settings
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __KEY_VALUE_UINT32_H__
-#define __KEY_VALUE_UINT32_H__
+#ifndef __KEY_VALUE_INT32_H__
+#define __KEY_VALUE_INT32_H__
 
 /******************************************************************************
  * Compile Switches
@@ -54,16 +54,24 @@
  *****************************************************************************/
 
 /**
- * Key value pair with uint32_t value type.
+ * Key value pair with int32_t value type.
  */
-class KeyValueUInt32 : public KeyValueNumber<uint32_t>
+class KeyValueInt32 : public KeyValueNumber<int32_t>
 {
 public:
 
     /**
      * Constructs a key value pair.
      */
-    KeyValueUInt32(Preferences& pref, const char* key, const char* name, uint32_t defValue, size_t min, size_t max) :
+    KeyValueInt32(const char* key, const char* name, int32_t defValue, size_t min, size_t max) :
+        KeyValueNumber(key, name, defValue, min, max)
+    {
+    }
+
+    /**
+     * Constructs a key value pair.
+     */
+    KeyValueInt32(Preferences& pref, const char* key, const char* name, int32_t defValue, size_t min, size_t max) :
         KeyValueNumber(pref, key, name, defValue, min, max)
     {
     }
@@ -71,7 +79,7 @@ public:
     /**
      * Destroys a key value pair.
      */
-    virtual ~KeyValueUInt32()
+    virtual ~KeyValueInt32()
     {
     }
 
@@ -82,7 +90,7 @@ public:
      */
     Type getValueType() const final
     {
-        return TYPE_UINT32;
+        return TYPE_INT32;
     }
 
     /**
@@ -90,9 +98,9 @@ public:
      *
      * @return Value
      */
-    uint32_t getValue() const final
+    int32_t getValue() const final
     {
-        return m_pref.getUInt(m_key, m_defValue);
+        return m_preferences->getInt(m_key, m_defValue);
     }
 
     /**
@@ -100,22 +108,22 @@ public:
      *
      * @param[in] value Value
      */
-    void setValue(uint32_t value) final
+    void setValue(int32_t value) final
     {
-        m_pref.putUInt(m_key, value);
+        m_preferences->putInt(m_key, value);
     }
 
 private:
 
     /* An instance shall not be copied. */
-    KeyValueUInt32(const KeyValueUInt32& kv);
-    KeyValueUInt32& operator=(const KeyValueUInt32& kv);
+    KeyValueInt32(const KeyValueInt32& kv);
+    KeyValueInt32& operator=(const KeyValueInt32& kv);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_UINT32_H__ */
+#endif  /* __KEY_VALUE_INT32_H__ */
 
 /** @} */

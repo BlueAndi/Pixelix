@@ -25,17 +25,18 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Settings
+ * @brief  Settings service
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Settings.h"
+#include "SettingsService.h"
 #include "nvs.h"
 
 #include <Logging.h>
+#include <algorithm>
 
 /******************************************************************************
  * Compiler Switches
@@ -57,7 +58,7 @@
  * Local Variables
  *****************************************************************************/
 
-/** Settings namespace used for preferences */
+/** SettingsService namespace used for preferences */
 static const char*  PREF_NAMESPACE                  = "settings";
 
 /* ---------- Keys ---------- */
@@ -124,8 +125,8 @@ static const char*  KEY_QUIET_MODE                  = "quiet_mode";
 
 /* ---------- Key value pair names ---------- */
 
-/** Settings version name */
-static const char*  NAME_VERSION                    = "Settings version";
+/** SettingsService version name */
+static const char*  NAME_VERSION                    = "SettingsService version";
 
 /** Wifi network name of key value pair */
 static const char*  NAME_WIFI_SSID                  = "Wifi SSID";
@@ -180,8 +181,8 @@ static const char*  NAME_QUIET_MODE                 = "Quiet mode (skip unnecess
 
 /* ---------- Default values ---------- */
 
-/** Settings version default value */
-static uint32_t         DEFAULT_VERSION                 = 0U; /* 0 is important to detect whether the version is not stored yet. */
+/** SettingsService version default value */
+static const uint32_t   DEFAULT_VERSION                 = 0U; /* 0 is important to detect whether the version is not stored yet. */
 
 /** Wifi network default value */
 static const char*      DEFAULT_WIFI_SSID               = "";
@@ -208,7 +209,7 @@ static const char*      DEFAULT_HOSTNAME                = "pixelix";
 static const uint8_t    DEFAULT_BRIGHTNESS              = 10U; /* If powered via USB, keep this at 10% to avoid damage. */
 
 /** Automatic brightness control default value */
-static bool             DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
+static const bool       DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
 
 /** POSIX timezone string default value */
 static const char*      DEFAULT_TIMEZONE                = "WEST-1DWEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00";
@@ -223,20 +224,20 @@ static const char*      DEFAULT_TIME_FORMAT             = "%I:%M %p";
 static const char*      DEFAULT_DATE_FORMAT             = "%m/%d";
 
 /** Max. number of display slots default value */
-static uint8_t          DEFAULT_MAX_SLOTS               = 8U;
+static const uint8_t    DEFAULT_MAX_SLOTS               = 8U;
 
 /** Scroll pause default value in ms */
-static uint32_t         DEFAULT_SCROLL_PAUSE            = 80U;
+static const uint32_t   DEFAULT_SCROLL_PAUSE            = 80U;
 
 /** NotifyURL default value */
 static const char*      DEFAULT_NOTIFY_URL              = "";
 
 /** Quiet mode default value */
-static bool             DEFAULT_QUIET_MODE              = false;
+static const bool       DEFAULT_QUIET_MODE              = false;
 
 /* ---------- Minimum values ---------- */
 
-/** Settings version min. value */
+/** SettingsService version min. value */
 static const uint32_t   MIN_VALUE_VERSION               = 0;
 
 /** Wifi network SSID min. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -278,10 +279,10 @@ static const size_t     MIN_VALUE_TIME_FORMAT           = 2U;
 static const size_t     MIN_VALUE_DATE_FORMAT           = 2U;
 
 /** Max. number of display slots minimum value */
-static uint8_t          MIN_MAX_SLOTS                   = 2U;
+static const uint8_t    MIN_MAX_SLOTS                   = 2U;
 
 /** Scroll pause minimum value in ms */
-static uint32_t         MIN_VALUE_SCROLL_PAUSE          = 20U;
+static const uint32_t   MIN_VALUE_SCROLL_PAUSE          = 20U;
 
 /** NotifyURL min. length */
 static const size_t     MIN_VALUE_NOTIFY_URL            = 0U;
@@ -290,7 +291,7 @@ static const size_t     MIN_VALUE_NOTIFY_URL            = 0U;
 
 /* ---------- Maximum values ---------- */
 
-/** Settings version max. value */
+/** SettingsService version max. value */
 static const uint32_t   MAX_VALUE_VERSION               = UINT32_MAX;
 
 /** Wifi network SSID max. length. Section 7.3.2.1 of the 802.11-2007 specification. */
@@ -338,10 +339,10 @@ static const size_t     MAX_VALUE_DATE_FORMAT           = 10U;
  *      not easy determined. E.g. the network stack needs heap to handle requests, the REST
  *      API needs it to handle JSON documents, etc.
  */
-static uint8_t          MAX_MAX_SLOTS                   = 16U;
+static const uint8_t    MAX_MAX_SLOTS                   = 16U;
 
 /** Scroll pause maximum value in ms */
-static uint32_t         MAX_VALUE_SCROLL_PAUSE          = 500U;
+static const uint32_t   MAX_VALUE_SCROLL_PAUSE          = 500U;
 
 /** NotifyURL max. length */
 static const size_t     MAX_VALUE_NOTIFY_URL            = 64U;
@@ -352,7 +353,24 @@ static const size_t     MAX_VALUE_NOTIFY_URL            = 64U;
  * Public Methods
  *****************************************************************************/
 
-bool Settings::open(bool readOnly)
+bool SettingsService::start()
+{
+    LOG_INFO("Settings service started.");
+
+    return true;
+}
+
+void SettingsService::stop()
+{
+    /* Nothing to do. */
+}
+
+void SettingsService::process()
+{
+    /* Nothing to do. */
+}
+
+bool SettingsService::open(bool readOnly)
 {
     /* Open Preferences with namespace. Each application module, library, etc
      * has to use a namespace name to prevent key name collisions. We will open storage in
@@ -377,13 +395,13 @@ bool Settings::open(bool readOnly)
     return status;
 }
 
-void Settings::close()
+void SettingsService::close()
 {
     m_preferences.end();
     return;
 }
 
-void Settings::cleanUp()
+void SettingsService::cleanUp()
 {
     uint32_t storedVersion = m_version.getValue();
 
@@ -414,7 +432,7 @@ void Settings::cleanUp()
             }
             else
             {
-                LOG_INFO("Settings key %s is valid.", info.key);
+                LOG_INFO("SettingsService key %s is valid.", info.key);
             }
         };
 
@@ -423,22 +441,57 @@ void Settings::cleanUp()
     }
 }
 
-KeyValue* Settings::getSettingByKey(const char* key)
+KeyValue* SettingsService::getSettingByKey(const char* key)
 {
-    uint8_t     idx             = 0U;
-    KeyValue*   keyValuePair    = nullptr;
+    std::vector<KeyValue*>::const_iterator  it;
+    KeyValue*                               keyValuePair    = nullptr;
 
-    while((KEY_VALUE_PAIR_NUM > idx) && (0 != strcmp(m_keyValueList[idx]->getKey(), key)))
+    for(it = m_keyValueList.begin(); it != m_keyValueList.end(); ++it)
     {
-        ++idx;
-    }
-
-    if (KEY_VALUE_PAIR_NUM > idx)
-    {
-        keyValuePair = m_keyValueList[idx];
+        if (nullptr != *it)
+        {
+            if (0 == strcmp((*it)->getKey(), key))
+            {
+                keyValuePair = *it;
+                break;
+            }
+        }
     }
 
     return keyValuePair;
+}
+
+bool SettingsService::registerSetting(KeyValue* setting)
+{
+    bool isSuccessful = false;
+
+    if (nullptr != setting)
+    {
+        /* Register setting only once! */
+        if (std::find(m_keyValueList.begin(), m_keyValueList.end(), setting) == m_keyValueList.end())
+        {
+            setting->setPersistentStorage(m_preferences);
+            m_keyValueList.push_back(setting);
+
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
+
+void SettingsService::unregisterSetting(KeyValue* setting)
+{
+    std::vector<KeyValue*>::iterator it;
+
+    for(it = m_keyValueList.begin(); it != m_keyValueList.end(); ++it)
+    {
+        if (setting == *it)
+        {
+            it = m_keyValueList.erase(it);
+            break;
+        }
+    }
 }
 
 /******************************************************************************
@@ -449,7 +502,7 @@ KeyValue* Settings::getSettingByKey(const char* key)
  * Private Methods
  *****************************************************************************/
 
-Settings::Settings() :
+SettingsService::SettingsService() :
     m_preferences(),
     m_keyValueList(),
     m_version               (m_preferences, KEY_VERSION,                NAME_VERSION,               DEFAULT_VERSION,                MIN_VALUE_VERSION,              MAX_VALUE_VERSION),
@@ -471,46 +524,28 @@ Settings::Settings() :
     m_notifyURL             (m_preferences, KEY_NOTIFY_URL,             NAME_NOTIFY_URL,            DEFAULT_NOTIFY_URL,             MIN_VALUE_NOTIFY_URL,           MAX_VALUE_NOTIFY_URL),
     m_quietMode             (m_preferences, KEY_QUIET_MODE,             NAME_QUIET_MODE,            DEFAULT_QUIET_MODE)
 {
-    uint8_t idx = 0;
 
     /* Skip m_version, because it shall not be modified by the user. */
-
-    m_keyValueList[idx] = &m_wifiSSID;
-    ++idx;
-    m_keyValueList[idx] = &m_wifiPassphrase;
-    ++idx;
-    m_keyValueList[idx] = &m_apSSID;
-    ++idx;
-    m_keyValueList[idx] = &m_apPassphrase;
-    ++idx;
-    m_keyValueList[idx] = &m_webLoginUser;
-    ++idx;
-    m_keyValueList[idx] = &m_webLoginPassword;
-    ++idx;
-    m_keyValueList[idx] = &m_hostname;
-    ++idx;
-    m_keyValueList[idx] = &m_brightness;
-    ++idx;
-    m_keyValueList[idx] = &m_autoBrightnessCtrl;
-    ++idx;
-    m_keyValueList[idx] = &m_timezone;
-    ++idx;
-    m_keyValueList[idx] = &m_ntpServer;
-    ++idx;
-    m_keyValueList[idx] = &m_timeFormat;
-    ++idx;
-    m_keyValueList[idx] = &m_dateFormat;
-    ++idx;
-    m_keyValueList[idx] = &m_maxSlots;
-    ++idx;
-    m_keyValueList[idx] = &m_scrollPause;
-    ++idx;
-    m_keyValueList[idx] = &m_notifyURL;
-    ++idx;
-    m_keyValueList[idx] = &m_quietMode;
+    m_keyValueList.push_back(&m_wifiSSID);
+    m_keyValueList.push_back(&m_wifiPassphrase);
+    m_keyValueList.push_back(&m_apSSID);
+    m_keyValueList.push_back(&m_apPassphrase);
+    m_keyValueList.push_back(&m_webLoginUser);
+    m_keyValueList.push_back(&m_webLoginPassword);
+    m_keyValueList.push_back(&m_hostname);
+    m_keyValueList.push_back(&m_brightness);
+    m_keyValueList.push_back(&m_autoBrightnessCtrl);
+    m_keyValueList.push_back(&m_timezone);
+    m_keyValueList.push_back(&m_ntpServer);
+    m_keyValueList.push_back(&m_timeFormat);
+    m_keyValueList.push_back(&m_dateFormat);
+    m_keyValueList.push_back(&m_maxSlots);
+    m_keyValueList.push_back(&m_scrollPause);
+    m_keyValueList.push_back(&m_notifyURL);
+    m_keyValueList.push_back(&m_quietMode);
 }
 
-Settings::~Settings()
+SettingsService::~SettingsService()
 {
 }
 

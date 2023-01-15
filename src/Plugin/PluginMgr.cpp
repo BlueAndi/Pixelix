@@ -45,7 +45,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
-#include <Settings.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
