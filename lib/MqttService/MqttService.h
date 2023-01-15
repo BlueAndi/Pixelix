@@ -44,6 +44,8 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <KeyValueString.h>
+#include <functional>
+#include <vector>
 
 /******************************************************************************
  * Compiler Switches
@@ -63,6 +65,11 @@
 class MqttService : public IService
 {
 public:
+
+    /**
+     * Topic callback prototype.
+     */
+    typedef std::function<void(const String& topic, const uint8_t* payload, size_t size)>    TopicCallback;
 
     /**
      * Get the audio service instance.
@@ -111,6 +118,42 @@ public:
      */
     bool publish(const char* topic, const char* msg);
 
+    /**
+     * Subscribe for a topic. The callback will be called every time a message
+     * is received for the topic.
+     * 
+     * @param[in] topic     The topic which to subscribe for.
+     * @param[in] callback  The callback which to call for any received topic message.
+     * 
+     * @return If successful subscribed, it will return true otherwise false.
+     */
+    bool subscribe(const String& topic, TopicCallback callback);
+
+    /**
+     * Subscribe for a topic. The callback will be called every time a message
+     * is received for the topic.
+     * 
+     * @param[in] topic     The topic which to subscribe for.
+     * @param[in] callback  The callback which to call for any received topic message.
+     * 
+     * @return If successful subscribed, it will return true otherwise false.
+     */
+    bool subscribe(const char* topic, TopicCallback callback);
+
+    /**
+     * Unsubscribe topic.
+     * 
+     * @param[in] topic The topic which to unsubscribe.
+     */
+    void unsubscribe(const String& topic);
+
+    /**
+     * Unsubscribe topic.
+     * 
+     * @param[in] topic The topic which to unsubscribe.
+     */
+    void unsubscribe(const char* topic);
+
 private:
 
     /**
@@ -122,6 +165,20 @@ private:
         STATE_CONNECTED,        /**< Connected with a MQTT broker */
         STATE_IDLE              /**< Service is idle */
     };
+
+    /**
+     * Subscriber information
+     */
+    struct Subscriber
+    {
+        String          topic;      /**< The subscriber topic */
+        TopicCallback   callback;   /**< The subscriber callback */
+    };
+
+    /**
+     * This type defines a list of subscribers.
+     */
+    typedef std::vector<Subscriber*>    SubscriberList;
 
     /** MQTT port */
     static const uint16_t   MQTT_PORT                   = 1883U;
@@ -147,12 +204,13 @@ private:
      */
     static const char*      HELLO_WORLD;
 
-    KeyValueString  m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
-    String          m_mqttBrokerUrl;        /**< URL of the MQTT broker */
-    String          m_hostname;             /**< MQTT hostname */
-    WiFiClient      m_wifiClient;           /**< WiFi client */
-    PubSubClient    m_mqttClient;           /**< MQTT client */
-    State           m_state;                /**< Connection state */
+    KeyValueString          m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
+    String                  m_mqttBrokerUrl;        /**< URL of the MQTT broker */
+    String                  m_hostname;             /**< MQTT hostname */
+    WiFiClient              m_wifiClient;           /**< WiFi client */
+    PubSubClient            m_mqttClient;           /**< MQTT client */
+    State                   m_state;                /**< Connection state */
+    SubscriberList          m_subscriberList;       /**< List of subscribers */
 
     /**
      * Constructs the service instance.
@@ -164,7 +222,8 @@ private:
         m_hostname(),
         m_wifiClient(),
         m_mqttClient(m_wifiClient),
-        m_state(STATE_DISCONNECTED)
+        m_state(STATE_DISCONNECTED),
+        m_subscriberList()
     {
     }
 

@@ -147,6 +147,10 @@ void MqttService::process()
             LOG_INFO("Connection to MQTT broker disconnected.");
             m_state = STATE_DISCONNECTED;
         }
+        else
+        {
+            (void)m_mqttClient.loop();
+        }
         break;
 
     case STATE_IDLE:
@@ -168,6 +172,79 @@ bool MqttService::publish(const char* topic, const char* msg)
     return m_mqttClient.publish(topic, msg);
 }
 
+bool MqttService::subscribe(const String& topic, TopicCallback callback)
+{
+    return subscribe(topic.c_str(), callback);
+}
+
+bool MqttService::subscribe(const char* topic, TopicCallback callback)
+{
+    bool isSuccessful = false;
+
+    if (nullptr != topic)
+    {
+        SubscriberList::const_iterator it;
+
+        /* Register a topic only once! */
+        for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
+        {
+            if (nullptr != (*it))
+            {
+                if (0 == strcmp((*it)->topic.c_str(), topic))
+                {
+                    break;
+                }
+            }
+        }
+
+        if (it == m_subscriberList.end())
+        {
+            Subscriber* subscriber = new(std::nothrow) Subscriber;
+
+            if (nullptr != subscriber)
+            {
+                subscriber->topic       = topic;
+                subscriber->callback    = callback;
+
+                m_subscriberList.push_back(subscriber);
+
+                isSuccessful = true;
+            }
+        }
+    }
+
+    return isSuccessful;
+}
+
+void MqttService::unsubscribe(const String& topic)
+{
+    unsubscribe(topic.c_str());
+}
+
+void MqttService::unsubscribe(const char* topic)
+{
+    if (nullptr != topic)
+    {
+        SubscriberList::iterator it;
+
+        for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
+        {
+            if (nullptr != (*it))
+            {
+                if (0 == strcmp((*it)->topic.c_str(), topic))
+                {
+                    Subscriber* subscriber = *it;
+
+                    (void)m_subscriberList.erase(it);
+                    delete subscriber;
+
+                    break;
+                }
+            }
+        }
+    }
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -178,7 +255,23 @@ bool MqttService::publish(const char* topic, const char* msg)
 
 void MqttService::rxCallback(char* topic, uint8_t* payload, uint32_t length)
 {
+    SubscriberList::const_iterator it;
+
     LOG_DEBUG("MQTT Rx: %s", topic);
+
+    for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
+    {
+        if (nullptr != (*it))
+        {
+            if (0 == strcmp((*it)->topic.c_str(), topic))
+            {
+                Subscriber* subscriber = *it;
+
+                subscriber->callback(topic, payload, length);
+                break;
+            }
+        }
+    }
 }
 
 /******************************************************************************
