@@ -61,6 +61,7 @@
 const char* MqttService::KEY_MQTT_BROKER_URL        = "mqtt_broker_url";
 const char* MqttService::NAME_MQTT_BROKER_URL       = "MQTT broker URL";
 const char* MqttService::DEFAULT_MQTT_BROKER_URL    = "";
+const char* MqttService::HELLO_WORLD                = "Obi Wan Kenobi";
 
 /******************************************************************************
  * Public Methods
@@ -119,6 +120,7 @@ void MqttService::stop()
 
     settings.unregisterSetting(&m_mqttBrokerUrlSetting);
     m_mqttClient.disconnect();
+    m_state = STATE_IDLE;
 }
 
 void MqttService::process()
@@ -130,7 +132,11 @@ void MqttService::process()
         {
             if (true == m_mqttClient.connect(m_hostname.c_str()))
             {
+                LOG_INFO("Connection to MQTT broker established.");
+
                 m_state = STATE_CONNECTED;
+
+                (void)m_mqttClient.publish(m_hostname.c_str(), HELLO_WORLD);
             }
         }
         break;
@@ -138,6 +144,7 @@ void MqttService::process()
     case STATE_CONNECTED:
         if (false == m_mqttClient.connected())
         {
+            LOG_INFO("Connection to MQTT broker disconnected.");
             m_state = STATE_DISCONNECTED;
         }
         break;
@@ -151,6 +158,16 @@ void MqttService::process()
     }
 }
 
+bool MqttService::publish(const String& topic, const String& msg)
+{
+    return publish(topic.c_str(), msg.c_str());
+}
+
+bool MqttService::publish(const char* topic, const char* msg)
+{
+    return m_mqttClient.publish(topic, msg);
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -161,7 +178,7 @@ void MqttService::process()
 
 void MqttService::rxCallback(char* topic, uint8_t* payload, uint32_t length)
 {
-    LOG_INFO("MQTT Rx: %s", topic);
+    LOG_DEBUG("MQTT Rx: %s", topic);
 }
 
 /******************************************************************************

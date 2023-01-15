@@ -91,6 +91,26 @@ public:
      */
     void process() final;
 
+    /**
+     * Publish a message for a topic.
+     * 
+     * @param[in] topic Message topic
+     * @param[in] msg   Message itself
+     * 
+     * @return If successful published, it will return true otherwise false.
+     */
+    bool publish(const String& topic, const String& msg);
+
+    /**
+     * Publish a message for a topic.
+     * 
+     * @param[in] topic Message topic
+     * @param[in] msg   Message itself
+     * 
+     * @return If successful published, it will return true otherwise false.
+     */
+    bool publish(const char* topic, const char* msg);
+
 private:
 
     /**
@@ -120,6 +140,12 @@ private:
 
     /** MQTT broker URL max. length */
     static const size_t     MAX_VALUE_MQTT_BROKER_URL   = 64U;
+
+    /**
+     * MQTT message which is published after successful connection to a MQTT broker
+     * via /<hostname> topic.
+     */
+    static const char*      HELLO_WORLD;
 
     KeyValueString  m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
     String          m_mqttBrokerUrl;        /**< URL of the MQTT broker */
