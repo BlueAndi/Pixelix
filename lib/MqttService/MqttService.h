@@ -46,6 +46,7 @@
 #include <KeyValueString.h>
 #include <functional>
 #include <vector>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -204,6 +205,11 @@ private:
      */
     static const char*      HELLO_WORLD;
 
+    /**
+     * Reconnect period in ms.
+     */
+    static const uint32_t   RECONNECT_PERIOD            = SIMPLE_TIMER_SECONDS(10U);
+
     KeyValueString          m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
     String                  m_mqttBrokerUrl;        /**< URL of the MQTT broker */
     String                  m_hostname;             /**< MQTT hostname */
@@ -211,6 +217,7 @@ private:
     PubSubClient            m_mqttClient;           /**< MQTT client */
     State                   m_state;                /**< Connection state */
     SubscriberList          m_subscriberList;       /**< List of subscribers */
+    SimpleTimer             m_reconnectTimer;       /**< Timer used for periodically reconnecting. */
 
     /**
      * Constructs the service instance.
@@ -223,7 +230,8 @@ private:
         m_wifiClient(),
         m_mqttClient(m_wifiClient),
         m_state(STATE_DISCONNECTED),
-        m_subscriberList()
+        m_subscriberList(),
+        m_reconnectTimer()
     {
     }
 
