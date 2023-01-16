@@ -48,8 +48,8 @@
 #include "SlotList.h"
 #include "PluginFactory.h"
 
-#include <LinkedList.hpp>
 #include <ESPAsyncWebServer.h>
+#include <vector>
 
 /******************************************************************************
  * Macros
@@ -203,14 +203,17 @@ private:
     };
 
     /**
+     * List of web handler data.
+     */
+    typedef std::vector<WebHandlerData*>    WebHandlerDataList;
+
+    /**
      * Plugin object specific data, used for plugin management.
      */
     struct PluginObjData
     {
-        static const uint8_t MAX_WEB_HANDLERS = 16U; /**< Max. number of web handlers. */
-
-        IPluginMaintenance* plugin;                         /**< Plugin object, where this data record belongs to. */
-        WebHandlerData      webHandlers[MAX_WEB_HANDLERS];  /**< Web data of the plugin, necessary to remove it later again. */
+        IPluginMaintenance* plugin;         /**< Plugin object, where this data record belongs to. */
+        WebHandlerDataList  webHandlers;    /**< Web handler data of the plugin, necessary to remove it later again. */
 
         /**
          * Initializes the plugin object data.
@@ -222,8 +225,13 @@ private:
         }
     };
 
-    PluginFactory               m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
-    DLinkedList<PluginObjData*> m_pluginMeta;       /**< Plugin object management information. */
+    /**
+     * List of plugin object data.
+     */
+    typedef std::vector<PluginObjData*> PluginObjDataList;
+
+    PluginFactory           m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
+    PluginObjDataList       m_pluginMeta;       /**< Plugin object management information. */
 
     /**
      * Constructs the plugin manager.

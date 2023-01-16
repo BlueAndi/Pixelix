@@ -481,10 +481,7 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
                     }
                 }
 
-                if (false == m_pluginMeta.append(metaData))
-                {
-                    LOG_WARNING("Couldn't append plugin meta data.");
-                }
+                m_pluginMeta.push_back(metaData);
             }
         }
     }
@@ -494,25 +491,17 @@ void PluginMgr::registerTopic(const String& baseUri, PluginObjData* metaData, co
 {
     String          topicUri        = baseUri + topic;
     uint8_t         idx             = 0U;
-    WebHandlerData* webHandlerData  = nullptr;
-
-    /* Find empty web handler slot */
-    for(idx = 0U; idx < PluginObjData::MAX_WEB_HANDLERS; ++idx)
-    {
-        if (nullptr == metaData->webHandlers[idx].webHandler)
-        {
-            webHandlerData = &metaData->webHandlers[idx];
-            break;
-        }
-    }
+    WebHandlerData* webHandlerData  = new(std::nothrow) WebHandlerData;
 
     if (nullptr == webHandlerData)
     {
-        LOG_WARNING("[%s][%u] No web handler available anymore.", metaData->plugin->getName(), metaData->plugin->getUID());
+        LOG_ERROR("[%s][%u] Couldn't allocate web handler data.", metaData->plugin->getName(), metaData->plugin->getUID());
     }
     else
     {
         IPluginMaintenance* plugin = metaData->plugin;
+
+        LOG_INFO("[%s][%u] Register: %s", metaData->plugin->getName(), metaData->plugin->getUID(), topicUri.c_str());
 
         webHandlerData->webHandler  = &MyWebServer::getInstance().on(
                                         topicUri.c_str(),
@@ -527,7 +516,7 @@ void PluginMgr::registerTopic(const String& baseUri, PluginObjData* metaData, co
                                         });
         webHandlerData->uri         = topicUri;
 
-        LOG_INFO("[%s][%u] Register: %s", metaData->plugin->getName(), metaData->plugin->getUID(), topicUri.c_str());
+        metaData->webHandlers.push_back(webHandlerData);
     }
 }
 
@@ -698,53 +687,38 @@ void PluginMgr::unregisterTopics(IPluginMaintenance* plugin)
 {
     if (nullptr != plugin)
     {
-        DLinkedListIterator<PluginObjData*> it(m_pluginMeta);
+        PluginObjDataList::iterator pluginMetaIt;
 
         /* Walk through plugin meta and remove every topic.
          * At the end, destroy the meta information.
          */
-        if (true == it.first())
+        for(pluginMetaIt = m_pluginMeta.begin(); pluginMetaIt != m_pluginMeta.end(); ++pluginMetaIt)
         {
-            PluginObjData*  pluginMeta  = *it.current();
-            bool            isFound     = false;
+            PluginObjData* pluginMeta = *pluginMetaIt;
 
-            while((false == isFound) && (nullptr != pluginMeta))
+            if (plugin == pluginMeta->plugin)
             {
-                if (plugin == pluginMeta->plugin)
-                {
-                    isFound = true;
-                }
-                else if (false == it.next())
-                {
-                    pluginMeta = nullptr;
-                }
-                else
-                {
-                    pluginMeta = *it.current();
-                }
-            }
+                WebHandlerDataList::iterator webHandlerDataIt;
 
-            if ((true == isFound) &&
-                (nullptr != pluginMeta))
-            {
-                uint8_t idx = 0U;
-
-                for(idx = 0U; idx < PluginObjData::MAX_WEB_HANDLERS; ++idx)
+                for(webHandlerDataIt = pluginMeta->webHandlers.begin(); webHandlerDataIt != pluginMeta->webHandlers.end(); ++webHandlerDataIt)
                 {
-                    if (nullptr != pluginMeta->webHandlers[idx].webHandler)
+                    WebHandlerData* webHandlerData = *webHandlerDataIt;
+
+                    if (nullptr != webHandlerData->webHandler)
                     {
-                        LOG_INFO("[%s][%u] Unregister: %s", pluginMeta->plugin->getName(), pluginMeta->plugin->getUID(), pluginMeta->webHandlers[idx].uri.c_str());
+                        LOG_INFO("[%s][%u] Unregister: %s", pluginMeta->plugin->getName(), pluginMeta->plugin->getUID(), webHandlerData->uri.c_str());
 
-                        if (false == MyWebServer::getInstance().removeHandler(pluginMeta->webHandlers[idx].webHandler))
+                        if (false == MyWebServer::getInstance().removeHandler(webHandlerData->webHandler))
                         {
-                            LOG_WARNING("Couldn't remove handler %u.", idx);
+                            LOG_WARNING("Couldn't remove handler %s.", webHandlerData->uri.c_str());
                         }
 
-                        pluginMeta->webHandlers[idx].webHandler = nullptr;
+                        webHandlerDataIt = pluginMeta->webHandlers.erase(webHandlerDataIt);
+                        delete webHandlerData;
                     }
                 }
 
-                it.remove();
+                pluginMetaIt = m_pluginMeta.erase(pluginMetaIt);
                 delete pluginMeta;
             }
         }
