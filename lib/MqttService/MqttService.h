@@ -247,6 +247,11 @@ private:
      * @param[in] length    Payload length in byte.
      */
     void rxCallback(char* topic, uint8_t* payload, uint32_t length);
+
+    /**
+     * Resubscribe all topics.
+     */
+    void resubscribe();
 };
 
 /******************************************************************************

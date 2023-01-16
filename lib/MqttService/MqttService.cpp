@@ -137,6 +137,8 @@ void MqttService::process()
                 m_state = STATE_CONNECTED;
 
                 (void)m_mqttClient.publish(m_hostname.c_str(), HELLO_WORLD);
+                
+                resubscribe();
             }
         }
         break;
@@ -208,6 +210,11 @@ bool MqttService::subscribe(const char* topic, TopicCallback callback)
 
                 m_subscriberList.push_back(subscriber);
 
+                if (false == m_mqttClient.subscribe(topic))
+                {
+                    LOG_WARNING("MQTT topic subscription not possible: %s", topic);
+                }
+
                 isSuccessful = true;
             }
         }
@@ -234,6 +241,8 @@ void MqttService::unsubscribe(const char* topic)
                 if (0 == strcmp((*it)->topic.c_str(), topic))
                 {
                     Subscriber* subscriber = *it;
+
+                    m_mqttClient.unsubscribe(subscriber->topic.c_str());
 
                     (void)m_subscriberList.erase(it);
                     delete subscriber;
@@ -269,6 +278,24 @@ void MqttService::rxCallback(char* topic, uint8_t* payload, uint32_t length)
 
                 subscriber->callback(topic, payload, length);
                 break;
+            }
+        }
+    }
+}
+
+void MqttService::resubscribe()
+{
+    SubscriberList::const_iterator it;
+
+    for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
+    {
+        if (nullptr != (*it))
+        {
+            Subscriber* subscriber = *it;
+
+            if (false == m_mqttClient.subscribe(subscriber->topic.c_str()))
+            {
+                LOG_WARNING("MQTT topic subscription not possible: %s", subscriber->topic.c_str());
             }
         }
     }
