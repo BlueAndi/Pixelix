@@ -13,6 +13,10 @@
         "name": "Service"
     }, {
         "name": "SettingsService"
+    }, {
+        "owner": "knolleary",
+        "name": "PubSubClient",
+        "version": "~2.8"
     }],
     "frameworks": "*",
     "platforms": "*"
