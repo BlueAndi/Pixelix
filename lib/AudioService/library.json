@@ -11,6 +11,9 @@
     "license": "MIT",
     "dependencies": [{
         "name": "Service"
+    }, {
+        "name": "arduinoFFT",
+        "version": "https://github.com/kosme/arduinoFFT#develop @ ~1.9.2"
     }],
     "frameworks": "*",
     "platforms": "*"
