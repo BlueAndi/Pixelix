@@ -1,0 +1,23 @@
+{
+    "name": "MqttApiTopicHandler",
+    "version": "0.1.0",
+    "description": "...",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "ITopicHandler",
+        "version": "~0.1.0"
+    }, {
+        "name": "LittleFS"
+    }, {
+        "name": "MqttService",
+        "version": "~0.1.0"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

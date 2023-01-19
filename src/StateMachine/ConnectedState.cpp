@@ -39,7 +39,7 @@
 #include "ClockDrv.h"
 #include "ButtonDrv.h"
 #include "DisplayMgr.h"
-#include "Service.h"
+#include "Services.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -224,7 +224,7 @@ void ConnectedState::process(StateMachine& sm)
         sm.setState(ConnectingState::getInstance());
     }
 
-    Service::processAll();
+    Services::processAll();
 
     return;
 }

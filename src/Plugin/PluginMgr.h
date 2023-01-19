@@ -44,12 +44,11 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "IPluginMaintenance.hpp"
 #include "SlotList.h"
 #include "PluginFactory.h"
 
-#include <ESPAsyncWebServer.h>
-#include <vector>
+#include <ITopicHandler.h>
+#include <IPluginMaintenance.hpp>
 
 /******************************************************************************
  * Macros
@@ -138,24 +137,6 @@ public:
     bool setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
 
     /**
-     * Get plugin REST base URI to identify plugin by UID.
-     *
-     * @param[in] uid   Plugin UID
-     *
-     * @return Plugin REST API base URI
-     */
-    String getRestApiBaseUriByUid(uint16_t uid);
-
-    /**
-     * Get plugin REST base URI to identify plugin by alias name.
-     *
-     * @param[in] alias Plugin alias name
-     *
-     * @return Plugin REST API base URI
-     */
-    String getRestApiBaseUriByAlias(const String& alias);
-
-    /**
      * Load plugin installation from persistent memory.
      * It will automatically enable the installed plugins.
      * 
@@ -178,60 +159,7 @@ public:
 
 private:
 
-    /**
-     * Web handler data, which is necessary for the webserver handling.
-     */
-    struct WebHandlerData
-    {
-        AsyncCallbackWebHandler*    webHandler;     /**< Webhandler callback, necessary to remove it later again. */
-        String                      uri;            /**< URI where the handler is registered. */
-        bool                        isUploadError;  /**< If upload error happened, it will be true otherwise false. */
-        String                      fullPath;       /**< Full path of uploaded file. If empty, there is no file available. */
-        File                        fd;             /**< Upload file descriptor */
-
-        /**
-         * Initialize the web handler data.
-         */
-        WebHandlerData() :
-            webHandler(nullptr),
-            uri(),
-            isUploadError(false),
-            fullPath(),
-            fd()
-        {
-        }
-    };
-
-    /**
-     * List of web handler data.
-     */
-    typedef std::vector<WebHandlerData*>    WebHandlerDataList;
-
-    /**
-     * Plugin object specific data, used for plugin management.
-     */
-    struct PluginObjData
-    {
-        IPluginMaintenance* plugin;         /**< Plugin object, where this data record belongs to. */
-        WebHandlerDataList  webHandlers;    /**< Web handler data of the plugin, necessary to remove it later again. */
-
-        /**
-         * Initializes the plugin object data.
-         */
-        PluginObjData() :
-            plugin(nullptr),
-            webHandlers()
-        {
-        }
-    };
-
-    /**
-     * List of plugin object data.
-     */
-    typedef std::vector<PluginObjData*> PluginObjDataList;
-
-    PluginFactory           m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
-    PluginObjDataList       m_pluginMeta;       /**< Plugin object management information. */
+    PluginFactory   m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
 
     /**
      * Constructs the plugin manager.
@@ -306,50 +234,14 @@ private:
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
 
     /**
-     * Register all topics of the given plugin depended on the used communication
-     * networks.
+     * Register all topics of the given plugin.
      * 
-     * @param[in] plugin    The plugin, which shall be handled.
+     * @param[in] plugin    The plugin, which topics shall be registered.
      */
     void registerTopics(IPluginMaintenance* plugin);
 
     /**
-     * Register a single topic of the given plugin depended on the used communication
-     * networks.
-     * 
-     * @param[in] baseUri   The REST API base URI.
-     * @param[in] metaData  The plugin meta data, which shall be handled.
-     * @param[in] topic     The topic.
-     */
-    void registerTopic(const String& baseUri, PluginObjData* metaData, const String& topic);
-
-    /**
-     * The web request handler handles all incoming HTTP requests for every plugin topic.
-     * 
-     * @param[in] request           The web request information from the client.
-     * @param[in] plugin            The responsible plugin, which is related to the request.
-     * @param[in] topic             The topic, which is requested.
-     * @param[in] webHandlerData    Plugin web handler data, which is related to this request.
-     */
-    void webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
-
-    /**
-     * File upload handler.
-     *
-     * @param[in] request           HTTP request.
-     * @param[in] filename          Name of the uploaded file.
-     * @param[in] index             Current file offset.
-     * @param[in] data              Next data part of file, starting at offset.
-     * @param[in] len               Data part size in byte.
-     * @param[in] final             Is final packet or not.
-     * @param[in] plugin            The responsible plugin, which is related to the upload.
-     * @param[in] topic             The topic, which is requested.
-     * @param[in] webHandlerData    Plugin web handler data, which is related to this upload.
-     */
-    void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
-
-    /**
-     * Unregister all topics depended on the used communication networks.
+     * Unregister all topics of the given plugin.
      * 
      * @param[in] plugin    The plugin, which topics to unregister.
      */

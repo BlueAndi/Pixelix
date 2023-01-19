@@ -43,8 +43,11 @@ _MENU_FULL_PATH = "./data/js/pluginsSubMenu.js"
 _PLUGIN_LIST_FULL_PATH = "./src/Generated/PluginList.hpp"
 _PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.hpp"
 
-_SERVICE_LIST_FULL_PATH = "./src/Generated/Service.cpp"
-_SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/Service.cpp"
+_SERVICE_LIST_FULL_PATH = "./src/Generated/Services.cpp"
+_SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/Services.cpp"
+
+_TOPIC_HANDLER_LIST_FULL_PATH = "./src/Generated/TopicHandlers.cpp"
+_TOPIC_HANDLER_LIST_TEMPLATE_FULL_PATH = "./scripts/TopicHandlers.cpp"
 
 ################################################################################
 # Classes
@@ -237,6 +240,24 @@ def _clean_up_folders(plugin_list, dst_path):
 
     return is_cleaned_up
 
+def _get_lib_list(lib_deps, postfix):
+    """Get list of libraries from library dependencies, which name has the
+        given postfix.
+
+    Args:
+        lib_deps (list): Library dependencies
+
+    Returns:
+        list: List of libraries
+    """
+    lib_list = []
+    for lib_name in lib_deps:
+        result = re.match(f"([a-zA-Z0-9_\\-]*{postfix})[ ]*@.*", lib_name)
+        if result:
+            lib_list.append(result.group(1))
+
+    return lib_list
+
 def _get_plugin_list(lib_deps):
     """Get list of plugins from library dependencies.
 
@@ -246,13 +267,7 @@ def _get_plugin_list(lib_deps):
     Returns:
         list: List of plugins
     """
-    plugin_list = []
-    for lib_name in lib_deps:
-        result = re.match("([a-zA-Z0-9_\\-]*Plugin)[ ]*@.*", lib_name)
-        if result:
-            plugin_list.append(result.group(1))
-
-    return plugin_list
+    return _get_lib_list(lib_deps, "Plugin")
 
 def _get_service_list(lib_deps):
     """Get list of services from library dependencies.
@@ -263,13 +278,18 @@ def _get_service_list(lib_deps):
     Returns:
         list: List of services
     """
-    service_list = []
-    for lib_name in lib_deps:
-        result = re.match("([a-zA-Z0-9_\\-]*Service)[ ]*@.*", lib_name)
-        if result:
-            service_list.append(result.group(1))
+    return _get_lib_list(lib_deps, "Service")
 
-    return service_list
+def _get_topic_handler_list(lib_deps):
+    """Get list of topic handlers from library dependencies.
+
+    Args:
+        lib_deps (list): Library dependencies
+
+    Returns:
+        list: List of topic handlers
+    """
+    return _get_lib_list(lib_deps, "TopicHandler")
 
 def _generate_plugins(plugin_list):
     """Generate all plugin related artifacts.
@@ -328,7 +348,7 @@ def _generate_cpp_service(service_list_full_path, service_list):
     """Generate the Service.cpp source file.
 
     Args:
-        service_list_full_path (str): Full path to Service.cpp where it shall be created.
+        service_list_full_path (str): Full path to where the source code shall be created.
         service_list (list): List of all service names
     """
     includes = ""
@@ -375,7 +395,6 @@ def _generate_services(service_list):
     Args:
         service_list (list): List of service names
     """
-
     skip_list = []
     for service_name in service_list:
         service_lib_path = _LIB_PATH + "/" + service_name
@@ -388,8 +407,67 @@ def _generate_services(service_list):
     for service_name in skip_list:
         service_list.remove(service_name)
 
-    print("\tGenerating service.")
+    print("\tGenerating services.")
     _generate_cpp_service(_SERVICE_LIST_FULL_PATH, service_list)
+
+def _generate_cpp_topic_handler(topic_handler_list_full_path, topic_handler_list):
+    """Generate the Service.cpp source file.
+
+    Args:
+        topic_handler_list_full_path (str): Full path to where the source code shall be created.
+        topic_handler_list (list): List of all topic handlers names
+    """
+    includes = ""
+    instances = ""
+    list_of_instances = ""
+
+    for idx, topic_handler_name in enumerate(topic_handler_list):
+
+        if idx > 0:
+            includes += "\n"
+            instances += "\n\n"
+            list_of_instances += ",\n"
+
+        includes += f"#include <{topic_handler_name}.h>"
+
+        instances += f"/** Plugin topic handler {topic_handler_name} instance. */\n"
+        instances += f"static {topic_handler_name} g{topic_handler_name};"
+
+        list_of_instances += f"    &g{topic_handler_name}"
+
+    data = {
+        "INCLUDES": includes,
+        "INSTANCES": instances,
+        "LIST_OF_INSTANCES": list_of_instances,
+    }
+
+    with open(_TOPIC_HANDLER_LIST_TEMPLATE_FULL_PATH, "r", encoding="utf-8") as file_desc:
+        src = Template(file_desc.read())
+        result = src.substitute(data)
+
+    with open(topic_handler_list_full_path, "w", encoding="utf-8") as file_desc:
+        file_desc.write(result)
+
+def _generate_topic_handlers(topic_handler_list):
+    """Generate all topic handler related artifacts.
+
+    Args:
+        topic_handler_list (list): List of topic handler names
+    """
+    skip_list = []
+    for topic_handler_name in topic_handler_list:
+        topic_handler_lib_path = _LIB_PATH + "/" + topic_handler_name
+
+        if os.path.isdir(topic_handler_lib_path) is False:
+            print(f"\tSkipping {topic_handler_name}, because {topic_handler_lib_path} doesn't exist.")
+            skip_list.append(topic_handler_name)
+
+    # Remove skipped services from list
+    for topic_handler_name in skip_list:
+        topic_handler_list.remove(topic_handler_name)
+
+    print("\tGenerating topic handlers.")
+    _generate_cpp_topic_handler(_TOPIC_HANDLER_LIST_FULL_PATH, topic_handler_list)
 
 def configure(config_full_path):
     """Configures the plugins according to configuration.
@@ -413,9 +491,11 @@ def configure(config_full_path):
 
     plugin_list = _get_plugin_list(lib_deps)
     service_list = _get_service_list(lib_deps)
+    topic_handler_list = _get_topic_handler_list(lib_deps)
 
     _generate_plugins(plugin_list)
     _generate_services(service_list)
+    _generate_topic_handlers(topic_handler_list)
 
 ################################################################################
 # Main

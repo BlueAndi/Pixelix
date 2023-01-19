@@ -3,39 +3,28 @@
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 
-# Documentation  <!-- omit in toc -->
+# Plugin development <!-- omit in toc -->
 
-- [Requirements](#requirements)
-- [Hardware](#hardware)
-- [Software](#software)
+- [MQTT](#mqtt)
+- [MQTT Channels](#mqtt-channels)
+  - [Notifications: /\<hostname\>](#notifications-hostname)
+  - [Plugin base URI](#plugin-base-uri)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
 
-# Requirements
+# MQTT
+Pixelix is a MQTT client which can be connected to a MQTT broker. The MQTT broker URL is configued in the settings via webinterface.\
 
-* [Requirements](REQUIREMENTS.md)
+# MQTT Channels
 
-# Hardware
+## Notifications: /&lt;hostname&gt;
+After the connection to the MQTT broker is established, Pixelix will send "Obi Wan Kenobi" over the /&lt;hostname&gt; channel.
 
-* [Boards](./boards/README.md)
-* [Sensors](SENSORS.md)
-
-# Software
-
-* [Software architecture](./architecture/README.md)
-* [Software configuration management](./config/README.md)
-    * [Toolchain installation](./config/TOOLCHAIN-INSTALLATION.md)
-    * [Software build](./config/SW-BUILD.md)
-    * [Software update](./config/SW-UPDATE.md)
-* [Plugins](PLUGINS.md)
-* [Plugin Development](PLUGIN-DEV.md)
-* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.1)
-* [MQTT](MQTT.md)
-* [Home Assistant REST Wrapper](HOMEASSISTANT.md)
-* [Websocket API description](WEBSOCKET.md)
-* [Sprite sheet](SPRITESHEET.md)
-* [Alternative icons](ICONS.md)
+## Plugin base URI
+The base URI to access plugin related channels can be setup with the plugin UID or the plugin alias:
+* "/&lt;hostname&gt;/uid/&lt;plugin-uid&gt;/..."
+* "/&lt;hostname&gt;/alias/&lt;plugin-alias&gt;/..."
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

@@ -25,25 +25,17 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Restart
+ * @brief  Topic handlers
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "RestartState.h"
-#include "DisplayMgr.h"
-#include "MyWebServer.h"
-#include "UpdateMgr.h"
-#include "FileSystem.h"
-#include "Services.h"
-
-#include <Board.h>
-#include <Display.h>
-#include <Logging.h>
+#include "TopicHandlers.h"
 #include <Util.h>
-#include <ESPmDNS.h>
+
+$INCLUDES
 
 /******************************************************************************
  * Compiler Switches
@@ -65,68 +57,16 @@
  * Local Variables
  *****************************************************************************/
 
+$INSTANCES
+
+static ITopicHandler* gList[] =
+{
+$LIST_OF_INSTANCES
+};
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
-
-void RestartState::entry(StateMachine& sm)
-{
-    UTIL_NOT_USED(sm);
-
-    LOG_INFO("Going in restart state.");
-
-    m_timer.start(WAIT_TILL_STOP_SVC);
-
-    Services::stopAll();
-
-    return;
-}
-
-void RestartState::process(StateMachine& sm)
-{
-    UTIL_NOT_USED(sm);
-
-    UpdateMgr::getInstance().process();
-
-    if ((true == m_timer.isTimerRunning()) &&
-        (true == m_timer.isTimeout()))
-    {
-        /* Stop all servers */
-        MyWebServer::end();
-        UpdateMgr::getInstance().end();
-        MDNS.end();
-
-        /* Unmount filesystem */
-        FILESYSTEM.end();
-
-        /* Stop display manager */
-        DisplayMgr::getInstance().end();
-
-        /* Clear display */
-        Display::getInstance().clear();
-        Display::getInstance().show();
-
-        /* Wait till all physical pixels are cleared. */
-        while(false == Display::getInstance().isReady())
-        {
-            /* Just wait ... */
-            ;
-        }
-
-        /* Reset */
-        Board::reset();
-    }
-
-    return;
-}
-
-void RestartState::exit(StateMachine& sm)
-{
-    UTIL_NOT_USED(sm);
-
-    /* Nothing to do. */
-    return;
-}
 
 /******************************************************************************
  * Protected Methods
@@ -140,6 +80,15 @@ void RestartState::exit(StateMachine& sm)
  * External Functions
  *****************************************************************************/
 
+ITopicHandler** TopicHandlers::getList(uint8_t& count)
+{
+    count = UTIL_ARRAY_NUM(gList);
+
+    return gList;
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
+
+/** @} */

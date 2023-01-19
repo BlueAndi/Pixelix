@@ -52,7 +52,7 @@
 #include "FileSystem.h"
 #include "JsonFile.h"
 #include "Version.h"
-#include "Service.h"
+#include "Services.h"
 #include "PluginList.hpp"
 
 #include "APState.h"
@@ -155,7 +155,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Start all services */
-    else if (false == Service::startAll())
+    else if (false == Services::startAll())
     {
         LOG_FATAL("Starting services failed.");
         errorId = ErrorState::ERROR_ID_SERVICE;
@@ -341,7 +341,7 @@ void InitState::process(StateMachine& sm)
         ;
     }
 
-    Service::processAll();
+    Services::processAll();
 
     return;
 }

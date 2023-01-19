@@ -34,7 +34,7 @@
  *****************************************************************************/
 #include "ConnectingState.h"
 #include "SysMsg.h"
-#include "Service.h"
+#include "Services.h"
 
 #include "IdleState.h"
 #include "ConnectedState.h"
@@ -187,7 +187,7 @@ void ConnectingState::process(StateMachine& sm)
         }
     }
 
-    Service::processAll();
+    Services::processAll();
 
     return;
 }

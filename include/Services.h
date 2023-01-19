@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Service
+ * @brief  Services
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup service
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SERVICE_H__
-#define __SERVICE_H__
+#ifndef __SERVICES_H__
+#define __SERVICES_H__
 
 /******************************************************************************
  * Compile Switches
@@ -45,7 +45,10 @@
  *****************************************************************************/
 #include <stdint.h>
 
-namespace Service
+/**
+ * Functions to handle all services.
+ */
+namespace Services
 {
 
 /******************************************************************************
@@ -79,6 +82,6 @@ extern void processAll();
 
 }
 
-#endif  /* __SERVICE_H__ */
+#endif  /* __SERVICES_H__ */
 
 /** @} */
