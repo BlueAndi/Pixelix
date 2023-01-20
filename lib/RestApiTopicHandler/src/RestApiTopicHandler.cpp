@@ -114,20 +114,20 @@ void RestApiTopicHandler::unregisterTopics(IPluginMaintenance* plugin)
 {
     if (nullptr != plugin)
     {
-        PluginObjDataList::iterator pluginMetaIt;
+        PluginObjDataList::iterator pluginMetaIt = m_pluginMeta.begin();
 
         /* Walk through plugin meta and remove every topic.
          * At the end, destroy the meta information.
          */
-        for(pluginMetaIt = m_pluginMeta.begin(); pluginMetaIt != m_pluginMeta.end(); ++pluginMetaIt)
+        while(m_pluginMeta.end() != pluginMetaIt)
         {
             PluginObjData* pluginMeta = *pluginMetaIt;
 
             if (plugin == pluginMeta->plugin)
             {
-                WebHandlerDataList::iterator webHandlerDataIt;
+                WebHandlerDataList::iterator webHandlerDataIt = pluginMeta->webHandlers.begin();
 
-                for(webHandlerDataIt = pluginMeta->webHandlers.begin(); webHandlerDataIt != pluginMeta->webHandlers.end(); ++webHandlerDataIt)
+                while(pluginMeta->webHandlers.end() != webHandlerDataIt)
                 {
                     WebHandlerData* webHandlerData = *webHandlerDataIt;
 
@@ -143,10 +143,18 @@ void RestApiTopicHandler::unregisterTopics(IPluginMaintenance* plugin)
                         webHandlerDataIt = pluginMeta->webHandlers.erase(webHandlerDataIt);
                         delete webHandlerData;
                     }
+                    else
+                    {
+                        ++webHandlerDataIt;
+                    }
                 }
 
                 pluginMetaIt = m_pluginMeta.erase(pluginMetaIt);
                 delete pluginMeta;
+            }
+            else
+            {
+                ++pluginMetaIt;
             }
         }
     }
@@ -182,34 +190,37 @@ String RestApiTopicHandler::getBaseUriByAlias(const String& alias)
 
 void RestApiTopicHandler::registerTopic(const String& baseUri, PluginObjData* metaData, const String& topic)
 {
-    String          topicUri        = baseUri + topic;
-    uint8_t         idx             = 0U;
-    WebHandlerData* webHandlerData  = new(std::nothrow) WebHandlerData;
-
-    if (nullptr == webHandlerData)
+    if ((nullptr != metaData) &&
+        (nullptr != metaData->plugin))
     {
-        LOG_ERROR("[%s][%u] Couldn't allocate web handler data.", metaData->plugin->getName(), metaData->plugin->getUID());
-    }
-    else
-    {
-        IPluginMaintenance* plugin = metaData->plugin;
+        WebHandlerData* webHandlerData = new(std::nothrow) WebHandlerData;
 
-        LOG_INFO("[%s][%u] Register: %s", metaData->plugin->getName(), metaData->plugin->getUID(), topicUri.c_str());
+        if (nullptr == webHandlerData)
+        {
+            LOG_ERROR("[%s][%u] Couldn't allocate web handler data.", metaData->plugin->getName(), metaData->plugin->getUID());
+        }
+        else
+        {
+            String              topicUri    = baseUri + topic;
+            IPluginMaintenance* plugin      = metaData->plugin;
 
-        webHandlerData->webHandler  = &MyWebServer::getInstance().on(
-                                        topicUri.c_str(),
-                                        HTTP_ANY,
-                                        [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request)
-                                        {
-                                            this->webReqHandler(request, plugin, topic, webHandlerData);
-                                        },
-                                        [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
-                                        {
-                                            this->uploadHandler(request, filename, index, data, len, final, plugin, topic, webHandlerData);
-                                        });
-        webHandlerData->uri         = topicUri;
+            LOG_INFO("[%s][%u] Register: %s", metaData->plugin->getName(), metaData->plugin->getUID(), topicUri.c_str());
 
-        metaData->webHandlers.push_back(webHandlerData);
+            webHandlerData->webHandler  = &MyWebServer::getInstance().on(
+                                            topicUri.c_str(),
+                                            HTTP_ANY,
+                                            [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request)
+                                            {
+                                                this->webReqHandler(request, plugin, topic, webHandlerData);
+                                            },
+                                            [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+                                            {
+                                                this->uploadHandler(request, filename, index, data, len, final, plugin, topic, webHandlerData);
+                                            });
+            webHandlerData->uri         = topicUri;
+
+            metaData->webHandlers.push_back(webHandlerData);
+        }
     }
 }
 

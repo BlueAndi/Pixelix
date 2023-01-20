@@ -482,14 +482,18 @@ bool SettingsService::registerSetting(KeyValue* setting)
 
 void SettingsService::unregisterSetting(KeyValue* setting)
 {
-    std::vector<KeyValue*>::iterator it;
+    std::vector<KeyValue*>::iterator it = m_keyValueList.begin();
 
-    for(it = m_keyValueList.begin(); it != m_keyValueList.end(); ++it)
+    while(m_keyValueList.end() != it)
     {
         if (setting == *it)
         {
             it = m_keyValueList.erase(it);
             break;
+        }
+        else
+        {
+            ++it;
         }
     }
 }
