@@ -95,6 +95,11 @@ public:
 
 private:
 
+    /**
+     * Max. file size in byte.
+     */
+    static const size_t MAX_FILE_SIZE   = 1024U;
+
     String  m_hostname; /**< Hostname cache used for the base URI */
 
     MqttApiTopicHandler(const MqttApiTopicHandler& adapter);

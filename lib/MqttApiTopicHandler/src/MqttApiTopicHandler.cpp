@@ -38,10 +38,7 @@
 #include <Logging.h>
 #include <MqttService.h>
 #include <SettingsService.h>
-
-extern "C" {
-#include "libb64/cdecode.h"
-}
+#include <mbedtls/base64.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -267,34 +264,57 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
             else
             {
                 String  fileBase64  = jsonFileBase64.as<String>();
-                size_t  size        = base64_decode_expected_len(fileBase64.length());
-                char*   buffer      = new(std::nothrow) char(size);
+                size_t  size        = 0U;
+                int32_t decodeRet   = mbedtls_base64_decode(nullptr, 0U, &size, reinterpret_cast<const unsigned char*>(fileBase64.c_str()), fileBase64.length());
 
-                if (nullptr != buffer)
+                if (MBEDTLS_ERR_BASE64_INVALID_CHARACTER == decodeRet)
                 {
-                    int32_t decodedLength = base64_decode_chars(fileBase64.c_str(), fileBase64.length(), buffer);
-                    File    fd;
-
-                    /* Create a new file and overwrite a existing one. */
-                    fd = FILESYSTEM.open(dstFullPath, "w");
-
-                    if (false == fd)
-                    {
-                        LOG_ERROR("Couldn't create file: %s", dstFullPath.c_str());
-                    }
-                    else
-                    {
-                        (void)fd.write(reinterpret_cast<uint8_t*>(buffer), decodedLength);
-                        fd.close();
-                    }
-
-                    delete[] buffer;
-
-                    jsonDoc.remove("fileName");
-                    jsonDoc.remove("file");
-                    
-                    jsonDoc["fullPath"] = dstFullPath;
+                    LOG_WARNING("[%s][%u] File encoding contains invalid character.", plugin->getName(), plugin->getUID(), size);
                 }
+                else if ((0U != decodeRet) ||
+                         (MAX_FILE_SIZE < size) ||
+                         (0U == size))
+                {
+                    LOG_WARNING("[%s][%u] File size %u not supported.", plugin->getName(), plugin->getUID(), size);
+                }
+                else
+                {
+                    uint8_t* buffer = new(std::nothrow) uint8_t[size];
+
+                    if (nullptr != buffer)
+                    {
+                        File fd;
+
+                        decodeRet = mbedtls_base64_decode(buffer, size, &size, reinterpret_cast<const unsigned char*>(fileBase64.c_str()), fileBase64.length());
+
+                        if (0U != decodeRet)
+                        {
+                            LOG_WARNING("[%s][%u] File decode error: %d", plugin->getName(), plugin->getUID(), decodeRet);
+                        }
+                        else
+                        {
+                            /* Create a new file and overwrite a existing one. */
+                            fd = FILESYSTEM.open(dstFullPath, "w");
+
+                            if (false == fd)
+                            {
+                                LOG_ERROR("Couldn't create file: %s", dstFullPath.c_str());
+                            }
+                            else
+                            {
+                                (void)fd.write(buffer, size);
+                                fd.close();
+
+                                jsonDoc["fullPath"] = dstFullPath;
+                            }
+                        }
+
+                        delete[] buffer;
+                    }
+                }
+
+                jsonDoc.remove("fileName");
+                jsonDoc.remove("file");
             }
         }
 
