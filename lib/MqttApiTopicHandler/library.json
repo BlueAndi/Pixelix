@@ -17,6 +17,9 @@
     }, {
         "name": "MqttService",
         "version": "~0.1.0"
+    }, {
+        "name": "SettingsService",
+        "version": "~0.1.0"
     }],
     "frameworks": "*",
     "platforms": "*"

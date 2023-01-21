@@ -67,7 +67,8 @@ public:
      * Construct the MQTT topic handler adapter.
      */
     MqttApiTopicHandler() :
-        ITopicHandler()
+        ITopicHandler(),
+        m_hostname()
     {
     }
 
@@ -93,6 +94,8 @@ public:
     void unregisterTopics(IPluginMaintenance* plugin) final;
 
 private:
+
+    String  m_hostname; /**< Hostname cache used for the base URI */
 
     MqttApiTopicHandler(const MqttApiTopicHandler& adapter);
     MqttApiTopicHandler& operator=(const MqttApiTopicHandler& adapter);

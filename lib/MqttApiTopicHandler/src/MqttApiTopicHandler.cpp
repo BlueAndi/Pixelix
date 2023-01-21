@@ -37,6 +37,7 @@
 
 #include <Logging.h>
 #include <MqttService.h>
+#include <SettingsService.h>
 
 extern "C" {
 #include "libb64/cdecode.h"
@@ -152,7 +153,29 @@ void MqttApiTopicHandler::unregisterTopics(IPluginMaintenance* plugin)
 String MqttApiTopicHandler::getBaseUriByUid(uint16_t uid)
 {
     String  baseUri;
-    baseUri += "/display";
+
+    if (true == m_hostname.isEmpty())
+    {
+        SettingsService& settingsService = SettingsService::getInstance();
+
+        if (false == settingsService.open(true))
+        {
+            m_hostname = settingsService.getHostname().getDefault();
+        }
+        else
+        {
+            m_hostname = settingsService.getHostname().getValue();
+            settingsService.close();
+        }
+    }
+
+    if (false == m_hostname.isEmpty())
+    {
+        baseUri += m_hostname;
+        baseUri += "/";
+    }
+    
+    baseUri += "display";
     baseUri += "/uid/";
     baseUri += uid;
 
@@ -162,7 +185,29 @@ String MqttApiTopicHandler::getBaseUriByUid(uint16_t uid)
 String MqttApiTopicHandler::getBaseUriByAlias(const String& alias)
 {
     String  baseUri;
-    baseUri += "/display";
+
+    if (true == m_hostname.isEmpty())
+    {
+        SettingsService& settingsService = SettingsService::getInstance();
+
+        if (false == settingsService.open(true))
+        {
+            m_hostname = settingsService.getHostname().getDefault();
+        }
+        else
+        {
+            m_hostname = settingsService.getHostname().getValue();
+            settingsService.close();
+        }
+    }
+
+    if (false == m_hostname.isEmpty())
+    {
+        baseUri += m_hostname;
+        baseUri += "/";
+    }
+
+    baseUri += "display";
     baseUri += "/alias/";
     baseUri += alias;
 
