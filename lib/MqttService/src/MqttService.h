@@ -210,6 +210,12 @@ private:
      */
     static const uint32_t   RECONNECT_PERIOD            = SIMPLE_TIMER_SECONDS(10U);
 
+    /**
+     * Max. MQTT client buffer size in byte.
+     * Received MQTT messages greather than this will be skipped.
+     */
+    static const size_t     MAX_BUFFER_SIZE             = 1024U;
+
     KeyValueString          m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
     String                  m_mqttBrokerUrl;        /**< URL of the MQTT broker */
     String                  m_hostname;             /**< MQTT hostname */

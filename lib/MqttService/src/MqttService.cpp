@@ -91,10 +91,11 @@ bool MqttService::start()
 
         if (false == m_mqttBrokerUrl.isEmpty())
         {
-            m_mqttClient.setServer(m_mqttBrokerUrl.c_str(), MQTT_PORT);
-            m_mqttClient.setCallback([this](char* topic, uint8_t* payload, uint32_t length) {
+            (void)m_mqttClient.setServer(m_mqttBrokerUrl.c_str(), MQTT_PORT);
+            (void)m_mqttClient.setCallback([this](char* topic, uint8_t* payload, uint32_t length) {
                 this->rxCallback(topic, payload, length);
             });
+            (void)m_mqttClient.setBufferSize(MAX_BUFFER_SIZE);
 
             m_state = STATE_DISCONNECTED;
         }

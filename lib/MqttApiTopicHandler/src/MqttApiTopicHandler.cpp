@@ -271,8 +271,7 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
                 {
                     LOG_WARNING("[%s][%u] File encoding contains invalid character.", plugin->getName(), plugin->getUID(), size);
                 }
-                else if ((0U != decodeRet) ||
-                         (MAX_FILE_SIZE < size) ||
+                else if ((MAX_FILE_SIZE < size) ||
                          (0U == size))
                 {
                     LOG_WARNING("[%s][%u] File size %u not supported.", plugin->getName(), plugin->getUID(), size);

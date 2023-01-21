@@ -58,12 +58,6 @@ Example: IconTextPlugin
 }
 ```
 
-Note:\
-It may be possible that the max. MQTT payload size is restricted. E.g. mosquitto restricts it to about 200 byte. To overwrite it add the following to your mosquitto.conf:
-```
-message_size_limit 1024
-```
-
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
 
