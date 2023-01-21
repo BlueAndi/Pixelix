@@ -64,8 +64,9 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize the full filename of the configuration file. */
-const char* PluginMgr::CONFIG_FILE_NAME = "slotConfig.json";
+/* Initialize static members */
+const char* PluginMgr::CONFIG_FILE_NAME         = "slotConfig.json";
+const char* PluginMgr::MQTT_SPECIAL_CHARACTERS  = "+#*>$"; /* See MQTT specification */
 
 /******************************************************************************
  * Public Methods
@@ -132,7 +133,8 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
     bool isSuccessful = false;
 
     if ((nullptr != plugin) &&
-        (plugin->getAlias() != alias))
+        (plugin->getAlias() != alias) &&
+        (true == isPluginAliasValid(alias)))
     {
         /* First remove current registered topics. */
         unregisterTopics(plugin);
@@ -333,11 +335,12 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
                 }
                 else
                 {
-                    String          alias       = jsonAlias.as<String>();
-                    String          fontTypeStr = jsonFontType.as<String>();
-                    Fonts::FontType fontType    = Fonts::strToFontType(fontTypeStr.c_str());
+                    String          alias           = jsonAlias.as<String>();
+                    String          filteredAlias   = filterPluginAlias(alias);
+                    String          fontTypeStr     = jsonFontType.as<String>();
+                    Fonts::FontType fontType        = Fonts::strToFontType(fontTypeStr.c_str());
 
-                    plugin->setAlias(alias);
+                    plugin->setAlias(filteredAlias);
                     plugin->setFontType(fontType);
 
                     if (false == install(plugin, slotId))
@@ -463,6 +466,49 @@ void PluginMgr::unregisterTopics(IPluginMaintenance* plugin)
             ++idx;
         }
     }
+}
+
+bool PluginMgr::isPluginAliasValid(const String& alias)
+{
+    const size_t    MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
+    bool            isValid                     = true;
+    size_t          idx                         = 0U;
+    
+    while((MQTT_SPECIAL_CHARACTERS_LEN > idx) && (true == isValid))
+    {
+        if (0 <= alias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]))
+        {
+            isValid = false;
+        }
+        else
+        {
+            ++idx;
+        }
+    }
+
+    return isValid;
+}
+
+String PluginMgr::filterPluginAlias(const String& alias)
+{
+    const size_t    MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
+    size_t          idx                         = 0U;
+    String          filteredPluginAlias         = alias;
+
+    while(MQTT_SPECIAL_CHARACTERS_LEN > idx)
+    {
+        int pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
+
+        while(0 <= pos)
+        {
+            filteredPluginAlias.remove(pos, 1U);
+            pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
+        }
+
+        ++idx;
+    }
+
+    return filteredPluginAlias;
 }
 
 /******************************************************************************

@@ -99,7 +99,7 @@ static const char*  WELCOME_PLUGIN_TYPE     = "IconTextPlugin";
  * the plugin type whether to show the welcome icon and message after a reboot
  * again.
  */
-static const char*  WELCOME_PLUGIN_ALIAS    = "#welcome";
+static const char*  WELCOME_PLUGIN_ALIAS    = "_welcome";
 
 /******************************************************************************
  * Public Methods

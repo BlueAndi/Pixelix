@@ -128,7 +128,7 @@ public:
 
     /**
      * Set the alias name of a plugin.
-     * If the plugin has registered a REST API, the corresponding URIs will be updated.
+     * If the plugin has registered a topic handler, the corresponding URIs will be updated.
      * 
      * @param[in] plugin    Plugin which to assign the alias name
      * @param[in] alias     Plugin alias name
@@ -158,6 +158,9 @@ public:
     static const char*  CONFIG_FILE_NAME;
 
 private:
+
+    /** MQTT special characters, which shall not be part of a plugin alias. */
+    static const char*  MQTT_SPECIAL_CHARACTERS;
 
     PluginFactory   m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
 
@@ -246,6 +249,25 @@ private:
      * @param[in] plugin    The plugin, which topics to unregister.
      */
     void unregisterTopics(IPluginMaintenance* plugin);
+
+    /**
+     * Checks whether the alias is valid. It will check for not compliant
+     * special characters.
+     * 
+     * @param[in] alias Plugin alias
+     * 
+     * @return If plugin alias is valid, it will return true otherwise false.
+     */
+    bool isPluginAliasValid(const String& alias);
+
+    /**
+     * Filters not allowed characters out of the plugin alias.
+     * 
+     * @param[in] alias Plugin alias
+     * 
+     * @return Filtered plugin alias
+     */
+    String filterPluginAlias(const String& alias);
 };
 
 /******************************************************************************
