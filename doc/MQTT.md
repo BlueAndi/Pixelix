@@ -16,7 +16,17 @@
 - [Contribution](#contribution)
 
 # MQTT
-Pixelix is a MQTT client which can be connected to a MQTT broker. The MQTT broker URL is configued in the settings via webinterface.\
+Pixelix is a MQTT client which can be connected to a MQTT broker. The MQTT broker URL is configued in the settings via webinterface.
+
+Format: \[mqtt://\]\[&lt;USER&gt;:&lt;PASSWORD&gt;@\]&lt;URI&gt;
+
+Examples:
+* without authentication:
+    * mosquitto.at.home
+    * mqtt://mosquitto.at.home
+* with authentication:
+    * myuser:mypassword@mosquitto.at.home
+    * mqtt://myuser:mypassword@mosquitto.at.home
 
 # MQTT Channels
 

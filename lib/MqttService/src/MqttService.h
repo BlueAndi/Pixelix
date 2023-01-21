@@ -217,7 +217,9 @@ private:
     static const size_t     MAX_BUFFER_SIZE             = 1024U;
 
     KeyValueString          m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
-    String                  m_mqttBrokerUrl;        /**< URL of the MQTT broker */
+    String                  m_url;                  /**< URL of the MQTT broker */
+    String                  m_user;                 /**< MQTT authentication: user name */
+    String                  m_password;             /**< MQTT authentication: password */
     String                  m_hostname;             /**< MQTT hostname */
     WiFiClient              m_wifiClient;           /**< WiFi client */
     PubSubClient            m_mqttClient;           /**< MQTT client */
@@ -231,7 +233,9 @@ private:
     MqttService() :
         IService(),
         m_mqttBrokerUrlSetting(KEY_MQTT_BROKER_URL, NAME_MQTT_BROKER_URL, DEFAULT_MQTT_BROKER_URL, MIN_VALUE_MQTT_BROKER_URL, MAX_VALUE_MQTT_BROKER_URL),
-        m_mqttBrokerUrl(),
+        m_url(),
+        m_user(),
+        m_password(),
         m_hostname(),
         m_wifiClient(),
         m_mqttClient(m_wifiClient),
@@ -266,6 +270,13 @@ private:
      * Resubscribe all topics.
      */
     void resubscribe();
+
+    /**
+     * Parse MQTT broker URL and derive the raw URL, the user and password.
+     * 
+     * @param[in] mqttBrokerUrl The MQTT broker URL.
+     */
+    void parseMqttBrokerUrl(const String& mqttBrokerUrl);
 };
 
 /******************************************************************************

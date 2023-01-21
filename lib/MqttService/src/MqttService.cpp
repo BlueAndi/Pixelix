@@ -84,14 +84,18 @@ bool MqttService::start()
     }
     else
     {
-        m_mqttBrokerUrl = m_mqttBrokerUrlSetting.getValue();
-        m_hostname      = settings.getHostname().getValue();
+        String mqttBrokerUrl = m_mqttBrokerUrlSetting.getValue();
+
+        /* Determine URL, user and pasword. */
+        parseMqttBrokerUrl(mqttBrokerUrl);
+
+        m_hostname = settings.getHostname().getValue();
 
         settings.close();
 
-        if (false == m_mqttBrokerUrl.isEmpty())
+        if (false == m_url.isEmpty())
         {
-            (void)m_mqttClient.setServer(m_mqttBrokerUrl.c_str(), MQTT_PORT);
+            (void)m_mqttClient.setServer(m_url.c_str(), MQTT_PORT);
             (void)m_mqttClient.setCallback([this](char* topic, uint8_t* payload, uint32_t length) {
                 this->rxCallback(topic, payload, length);
             });
@@ -154,8 +158,25 @@ void MqttService::process()
 
             if (true == connectNow)
             {
+                bool isConnected = false;
+
+                /* Authentication necessary? */
+                if (false == m_user.isEmpty())
+                {
+                    LOG_INFO("Connect to %s as %s with %s.", m_url.c_str(), m_user.c_str(), m_hostname.c_str());
+
+                    isConnected = m_mqttClient.connect(m_hostname.c_str(), m_user.c_str(), m_password.c_str());
+                }
+                /* Connect anonymous */
+                else
+                {
+                    LOG_INFO("Connect anyonymous to %s with %s.", m_url.c_str(), m_hostname.c_str());
+
+                    isConnected = m_mqttClient.connect(m_hostname.c_str());
+                }
+
                 /* Connection to broker failed? */
-                if (false == m_mqttClient.connect(m_hostname.c_str()))
+                if (false == isConnected)
                 {
                     /* Try to reconnect later. */
                     m_reconnectTimer.restart();
@@ -353,6 +374,52 @@ void MqttService::resubscribe()
                 LOG_WARNING("MQTT topic subscription not possible: %s", subscriber->topic.c_str());
             }
         }
+    }
+}
+
+void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
+{
+    int32_t idx = mqttBrokerUrl.indexOf("://");
+
+    /* The MQTT broker URL format:
+     * [mqtt://][<USER>:<PASSWORD>@]<BROKER-URL>
+     */
+    m_url = mqttBrokerUrl;
+
+    /* Remove protocol, we don't care about. */
+    if (0 <= idx)
+    {
+        m_url.remove(0U, idx + 3);
+    }
+
+    /* User and passwort */
+    idx = m_url.indexOf("@");
+
+    m_user.clear();
+    m_password.clear();
+
+    if (0 <= idx)
+    {
+        int32_t dividerIdx = m_url.indexOf(":");
+
+        /* Only user name with empty password? */
+        if (0 > dividerIdx)
+        {
+            m_user = m_url.substring(0U, idx);
+        }
+        /* At least one character for a user name must exist. */
+        else if (0 < dividerIdx)
+        {
+            m_user = m_url.substring(0U, dividerIdx);
+
+            /* Password not empty? */
+            if (idx > (dividerIdx + 1))
+            {
+                m_password = m_url.substring(dividerIdx + 1, idx - dividerIdx - 1);
+            }
+        }
+
+        m_url.remove(0U, idx + 1);
     }
 }
 
