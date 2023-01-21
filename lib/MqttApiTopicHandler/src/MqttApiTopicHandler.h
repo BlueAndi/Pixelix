@@ -138,9 +138,10 @@ private:
      * Unregister a single topic of the given plugin.
      * 
      * @param[in] baseUri   The MQTT API base URI.
+     * @param[in] plugin    The related plugin.
      * @param[in] topic     The topic.
      */
-    void unregisterTopic(const String& baseUri, const String& topic);
+    void unregisterTopic(const String& baseUri, IPluginMaintenance* plugin, const String& topic);
 };
 
 /******************************************************************************

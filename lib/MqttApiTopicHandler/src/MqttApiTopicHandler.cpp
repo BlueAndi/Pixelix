@@ -130,11 +130,11 @@ void MqttApiTopicHandler::unregisterTopics(IPluginMaintenance* plugin)
 
             for (JsonVariantConst topic : topics)
             {
-                unregisterTopic(baseUriByUid, topic.as<String>());
+                unregisterTopic(baseUriByUid, plugin, topic.as<String>());
 
                 if (false == baseUriByAlias.isEmpty())
                 {
-                    unregisterTopic(baseUriByAlias, topic.as<String>());
+                    unregisterTopic(baseUriByAlias, plugin, topic.as<String>());
                 }
             }
         }
@@ -185,6 +185,10 @@ void MqttApiTopicHandler::registerTopic(const String& baseUri, IPluginMaintenanc
         if (false == mqttService.subscribe(topicUri, callback))
         {
             LOG_WARNING("Couldn't subscribe %s.", topicUri.c_str());
+        }
+        else
+        {
+            LOG_INFO("[%s][%u] Register: %s", plugin->getName(), plugin->getUID(), topicUri.c_str());
         }
     }
 }
@@ -256,10 +260,12 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
     }
 }
 
-void MqttApiTopicHandler::unregisterTopic(const String& baseUri, const String& topic)
+void MqttApiTopicHandler::unregisterTopic(const String& baseUri, IPluginMaintenance* plugin, const String& topic)
 {
     String          topicUri    = baseUri + topic;
     MqttService&    mqttService = MqttService::getInstance();
+
+    LOG_INFO("[%s][%u] Unregister: %s", plugin->getName(), plugin->getUID(), topicUri.c_str());
 
     mqttService.unsubscribe(topicUri);
 }
