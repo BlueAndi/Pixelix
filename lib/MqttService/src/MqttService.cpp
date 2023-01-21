@@ -245,14 +245,29 @@ bool MqttService::subscribe(const char* topic, TopicCallback callback)
                 subscriber->topic       = topic;
                 subscriber->callback    = callback;
 
-                m_subscriberList.push_back(subscriber);
-
-                if (false == m_mqttClient.subscribe(topic))
+                if (false == m_mqttClient.connected())
                 {
-                    LOG_WARNING("MQTT topic subscription not possible: %s", topic);
+                    m_subscriberList.push_back(subscriber);
+                    isSuccessful = true;
+                }
+                else
+                {
+                    if (false == m_mqttClient.subscribe(topic))
+                    {
+                        LOG_WARNING("MQTT topic subscription not possible: %s", topic);
+                    }
+                    else
+                    {
+                        m_subscriberList.push_back(subscriber);
+                        isSuccessful = true;
+                    }
                 }
 
-                isSuccessful = true;
+                if (false == isSuccessful)
+                {
+                    delete subscriber;
+                    subscriber = nullptr;
+                }
             }
         }
     }
