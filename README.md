@@ -128,6 +128,7 @@ For more information, see the [documentation](./doc/README.md).
 * [JSZip](https://github.com/Stuk/jszip) - A library for creating, reading and editing .zip files with JavaScript, with a lovely and simple API. - MIT License
 * [JSZipUtils](https://github.com/Stuk/jszip-utils) - A collection of cross-browser utilities to go along with JSZip. - MIT License
 * [FileSaver.js](https://github.com/eligrey/FileSaver.js) - FileSaver.js is the solution to saving files on the client-side. - MIT License
+* [Arduino client for MQTT](https://github.com/knolleary/pubsubclient) - This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT. - MIT License
 
 # FAQ
 
