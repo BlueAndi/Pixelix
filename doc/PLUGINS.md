@@ -16,6 +16,7 @@ Each plugin is identified by its unique UID.
   - [BTCQuotePlugin](#btcquoteplugin)
   - [CountdownPlugin](#countdownplugin)
   - [DateTimePlugin](#datetimeplugin)
+  - [DDPPlugin](#ddpplugin)
   - [FirePlugin](#fireplugin)
   - [GameOfLifePlugin](#gameoflifeplugin)
   - [GithubPlugin](#githubplugin)
@@ -78,6 +79,12 @@ Below the day of the week is shown, starting from the left with Monday.
 In the settings the format of the date and time can be configured according to strftime().
 
 It can be set what shall be shown via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/DateTimePlugin).
+
+## DDPPlugin
+The plugin setup a server supporting the Distributed Display Protocol (DDP), which is used e.g. by [xlights](https://www.xlights.org) or [LedFx](https://www.ledfx.app).
+
+Supported formats:
+* RGB with 24-bit per pixel
 
 ## FirePlugin
 The FirePlugin shows a animated fire on the display.
