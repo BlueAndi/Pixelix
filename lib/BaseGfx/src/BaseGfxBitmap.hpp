@@ -166,7 +166,7 @@ public:
      * 
      * @return Width in pixels
      */
-    uint16_t getWidth() const
+    uint16_t getWidth() const override
     {
         return width;
     }
@@ -176,7 +176,7 @@ public:
      * 
      * @return Height in pixels
      */
-    uint16_t getHeight() const
+    uint16_t getHeight() const override
     {
         return height;
     }
@@ -190,7 +190,7 @@ public:
      *
      * @return Color
      */
-    TColor& getColor(int16_t x, int16_t y)
+    TColor& getColor(int16_t x, int16_t y) override
     {
         static TColor   trash;
         TColor*         pixel   = &trash;
@@ -214,7 +214,7 @@ public:
      *
      * @return Color
      */
-    const TColor& getColor(int16_t x, int16_t y) const
+    const TColor& getColor(int16_t x, int16_t y) const override
     {
         static TColor   trash;
         const TColor*   pixel   = &trash;
@@ -237,7 +237,7 @@ public:
      * @param[in] y     y-coordinate
      * @param[in] color Color
      */
-    virtual void drawPixel(int16_t x, int16_t y, const TColor& color)
+    void drawPixel(int16_t x, int16_t y, const TColor& color) override
     {
         if ((0 <= x) &&
             (0 <= y) &&
@@ -429,7 +429,7 @@ public:
      * 
      * @return Width in pixels
      */
-    uint16_t getWidth() const
+    uint16_t getWidth() const override
     {
         return m_width;
     }
@@ -439,7 +439,7 @@ public:
      * 
      * @return Height in pixels
      */
-    uint16_t getHeight() const
+    uint16_t getHeight() const override
     {
         return m_height;
     }
@@ -453,7 +453,7 @@ public:
      *
      * @return Color
      */
-    TColor& getColor(int16_t x, int16_t y)
+    TColor& getColor(int16_t x, int16_t y) override
     {
         static TColor   trash;
         TColor*         pixel   = &trash;
@@ -478,7 +478,7 @@ public:
      *
      * @return Color
      */
-    const TColor& getColor(int16_t x, int16_t y) const
+    const TColor& getColor(int16_t x, int16_t y) const override
     {
         static TColor   trash;
         const TColor*   pixel   = &trash;
@@ -502,7 +502,7 @@ public:
      * @param[in] y     y-coordinate
      * @param[in] color Color
      */
-    void drawPixel(int16_t x, int16_t y, const TColor& color)
+    void drawPixel(int16_t x, int16_t y, const TColor& color) override
     {
         if ((nullptr != m_pixels) &&
             (0 <= x) &&
@@ -643,7 +643,7 @@ public:
      * 
      * @return Width in pixels
      */
-    uint16_t getWidth() const
+    uint16_t getWidth() const override
     {
         return m_gfx.getWidth();
     }
@@ -653,7 +653,7 @@ public:
      * 
      * @return Height in pixels
      */
-    uint16_t getHeight() const
+    uint16_t getHeight() const override
     {
         return m_gfx.getHeight();
     }
@@ -667,7 +667,7 @@ public:
      *
      * @return Color
      */
-    TColor& getColor(int16_t x, int16_t y)
+    TColor& getColor(int16_t x, int16_t y) override
     {
         return m_gfx.getColor(x, y);
     }
@@ -680,7 +680,7 @@ public:
      *
      * @return Color
      */
-    const TColor& getColor(int16_t x, int16_t y) const
+    const TColor& getColor(int16_t x, int16_t y) const override
     {
         return m_gfx.getColor(x, y);
     }
@@ -692,7 +692,7 @@ public:
      * @param[in] y     y-coordinate
      * @param[in] color Color
      */
-    virtual void drawPixel(int16_t x, int16_t y, const TColor& color)
+    void drawPixel(int16_t x, int16_t y, const TColor& color) override
     {
         m_gfx.drawPixel(x, y, color);
     }
