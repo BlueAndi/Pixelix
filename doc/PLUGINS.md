@@ -17,6 +17,7 @@ Each plugin is identified by its unique UID.
   - [CountdownPlugin](#countdownplugin)
   - [DateTimePlugin](#datetimeplugin)
   - [DDPPlugin](#ddpplugin)
+    - [xlights Configuration](#xlights-configuration)
   - [FirePlugin](#fireplugin)
   - [GameOfLifePlugin](#gameoflifeplugin)
   - [GithubPlugin](#githubplugin)
@@ -85,6 +86,29 @@ The plugin setup a server supporting the Distributed Display Protocol (DDP), whi
 
 Supported formats:
 * RGB with 24-bit per pixel
+
+### xlights Configuration
+* Add Ethernet controller
+    * Name: Pixelix
+    * IP Address: &lt;IP-ADDRESS&gt;
+    * Protocol: DDP
+* Add layout
+    * Create new matrix
+        * Name: Matrix8x32
+    * Matrix
+        * Strings: 8
+        * Nodes/String: 32
+        * Strands/String: 1
+        * Starting Location: Top Left
+        * Controller: Pixelix
+    * Controller Connection
+        * Port: 1
+        * Protocol: LED Panel Matrix
+    * String Properties
+        * String Type: RGB Nodes
+    * Appearance
+        * Pixel Size: 10
+        * Pixel Style: Square
 
 ## FirePlugin
 The FirePlugin shows a animated fire on the display.
