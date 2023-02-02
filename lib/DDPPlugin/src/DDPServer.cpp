@@ -610,6 +610,22 @@ void DDPServer::ddpNotify(Format format, uint32_t offset, uint8_t bitsPerPixel, 
     }
 }
 
+void DDPServer::dmxNotify(uint32_t universe, uint8_t startCode, uint8_t* payload, uint16_t payloadSize)
+{
+    DMXCallback callback = nullptr;
+
+    {
+        MutexGuard<Mutex> guard(m_mutex);
+
+        callback = m_dmxCallback;
+    }
+
+    if (nullptr != callback)
+    {
+        callback(universe, startCode, payload, payloadSize);
+    }
+}
+
 bool DDPServer::send(const DDPPacket& packet)
 {
     AsyncUDPMessage udpMessage;
