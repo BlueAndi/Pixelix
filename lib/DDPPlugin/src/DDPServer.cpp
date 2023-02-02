@@ -575,15 +575,18 @@ void DDPServer::handleData(const DDPHeader& header, uint8_t* payload, uint16_t p
     /* DMX legay mode data? */
     else if (DDP_ID_DMX_TRANSIT == header.detail.id)
     {
-        uint32_t dmxUniverseId = getValueInLE(header.detail.offset);
+        uint32_t    universe        = getOffset(header);
+        uint8_t     startCode       = payload[0U];
+        uint8_t*    dmxPayload      = &payload[1U];
+        uint16_t    dmxPayloadSize  = payloadSize - 1U;
 
-        /* TODO */
+        dmxNotify(universe, startCode, dmxPayload, dmxPayloadSize);
     }
     /* Handle data */
     else if ((DDP_ID_ALL_DEVICES == header.detail.id) ||
              (DDP_ID_DEFAULT == header.detail.id))
     {
-        notify(static_cast<DDPServer::Format>(getDataType(header)), getOffset(header), getBitsPerPixel(header), payload, payloadSize, isPushFlagSet(header));
+        ddpNotify(static_cast<DDPServer::Format>(getDataType(header)), getOffset(header), getBitsPerPixel(header), payload, payloadSize, isPushFlagSet(header));
     }
     else
     {
@@ -591,14 +594,14 @@ void DDPServer::handleData(const DDPHeader& header, uint8_t* payload, uint16_t p
     }
 }
 
-void DDPServer::notify(Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal)
+void DDPServer::ddpNotify(Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal)
 {
     DDPCallback callback = nullptr;
 
     {
         MutexGuard<Mutex> guard(m_mutex);
 
-        callback = m_callback;
+        callback = m_ddpCallback;
     }
 
     if (nullptr != callback)

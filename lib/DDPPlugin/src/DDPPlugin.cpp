@@ -80,7 +80,7 @@ void DDPPlugin::start(uint16_t width, uint16_t height)
     else
     {
         m_server.pause();
-        m_server.registerCallback(
+        m_server.registerDDPCallback(
             [this](DDPServer::Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal)
             {
                 this->onData(format, offset, bitsPerPixel, payload, payloadSize, isFinal);
@@ -95,7 +95,7 @@ void DDPPlugin::stop()
 {
     m_server.notifyDownState();
 
-    m_server.registerCallback(nullptr);
+    m_server.registerDDPCallback(nullptr);
     m_server.end();
     m_framebuffer.release();
 }

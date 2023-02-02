@@ -84,11 +84,20 @@ public:
     typedef std::function<void(Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal)> DDPCallback;
 
     /**
+     * DDP application callback prototype for DMX legacy mode.
+     * 
+     * It provides received data to the application with additional DMX related
+     * information.
+     */
+    typedef std::function<void(uint32_t universe, uint8_t startCode, uint8_t* payload, uint16_t payloadSize)> DMXCallback;
+
+    /**
      * Constructs a DDP server.
      */
     DDPServer() :
         m_udpServer(),
-        m_callback(nullptr),
+        m_ddpCallback(nullptr),
+        m_dmxCallback(nullptr),
         m_mutex(),
         m_seqNo(0U),
         m_isPause(false),
@@ -159,15 +168,29 @@ public:
     }
 
     /**
-     * Register a callback to receive data which to display.
+     * Register a callback to receive DDP data which to display.
      * 
      * @param[in] cb    The callback.
      */
-    void registerCallback(DDPCallback cb)
+    void registerDDPCallback(DDPCallback cb)
     {
         MutexGuard<Mutex> guard(m_mutex);
 
-        m_callback = cb;
+        m_ddpCallback = cb;
+    }
+
+    /**
+     * Register a callback to receive DMX data which to display.
+     * Only used in case the DMX legacy mode is supported by the
+     * application.
+     * 
+     * @param[in] cb    The callback.
+     */
+    void registerDMXCallback(DMXCallback cb)
+    {
+        MutexGuard<Mutex> guard(m_mutex);
+
+        m_dmxCallback = cb;
     }
 
 private:
@@ -222,7 +245,8 @@ private:
     static const uint8_t    SEQ_NO_MAX              = 15U;
 
     AsyncUDP    m_udpServer;            /**< UDP server */
-    DDPCallback m_callback;             /**< Callback for receiving data */
+    DDPCallback m_ddpCallback;          /**< Callback for receiving DDP data */
+    DMXCallback m_dmxCallback;          /**< Callback for received DMX data (DMX legacy mode) */
     Mutex       m_mutex;                /**< For concurrent access protection. */
     uint8_t     m_seqNo;                /**< Last sequence number used for packet tracking. */
     bool        m_isPause;              /**< Is reception paused? */
@@ -443,7 +467,7 @@ private:
     void handleData(const DDPHeader& header, uint8_t* payload, uint16_t payloadSize);
 
     /**
-     * Notifys a registered application and provides the received data.
+     * Notifys a registered application and provides the DDP received data.
      * The application needs to copy the data into its own context!
      * 
      * @param[in] format        Format of the payload data
@@ -453,7 +477,18 @@ private:
      * @param[in] payloadSize   Payload data size in byte
      * @param[in] isFinal       If final, its the last data and display shall show it. Otherwise more data will come.
      */
-    void notify(Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal);
+    void ddpNotify(Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal);
+
+    /**
+     * Notifys a registered application and provides the DMX received data.
+     * The application needs to copy the data into its own context!
+     * 
+     * @param[in] universe      The universe number.
+     * @param[in] startCode     The DMX start code.
+     * @param[in] payload       Payload data
+     * @param[in] payloadSize   Payload data size in byte
+     */
+    void dmxNotify(uint32_t universe, uint8_t startCode, uint8_t* payload, uint16_t payloadSize);
 
     /**
      * Send a DDP packet to the connected controller.
