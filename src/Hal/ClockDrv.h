@@ -88,52 +88,16 @@ public:
      */
     bool getTime(tm *currentTime);
 
-    /**
-     * Get the current time as formatted string.
-     * The format is equal to strftime(), please have a look there.
-     * 
-     * Use getTimeFormat() or getDateFormat() for the user configured format.
-     * 
-     * @param[out]  time            The formatted time string.
-     * @param[in]   format          The format according to strftime().
-     * @param[in]   currentTime     The current time (optional).
-     * 
-     * @return If successful, it will return true otherwise false.
-     */
-    bool getTimeAsString(String& time, const String& format, const tm *currentTime = nullptr);
-    
-    /**
-     * Get the time format from configuration.
-     *
-     * @return Time format.
-     */
-    const String& getTimeFormat();
-
-    /**
-     * Get the date format from configuration.
-     *
-     * @return Date format.
-     */
-    const String& getDateFormat();
-
 private:
 
     /** Flag indicating a initialized clock driver. */
     bool    m_isClockDrvInitialized;
 
-    /** Time format */
-    String  m_timeFormat;
-
-    /** Date format */
-    String  m_dateFormat;
-
     /**
      * Construct ClockDrv.
      */
     ClockDrv() :
-        m_isClockDrvInitialized(false),
-        m_timeFormat(),
-        m_dateFormat()
+        m_isClockDrvInitialized(false)
     {
     }
 

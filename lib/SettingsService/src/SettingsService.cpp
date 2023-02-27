@@ -105,12 +105,6 @@ static const char*  KEY_TIMEZONE                    = "timezone";
 /** NTP server key */
 static const char*  KEY_NTP_SERVER                  = "ntp_server";
 
-/** Time format key */
-static const char*  KEY_TIME_FORMAT                 = "time_format";
-
-/** Date format key */
-static const char*  KEY_DATE_FORMAT                 = "date_format";
-
 /** Max. number of display slots key */
 static const char*  KEY_MAX_SLOTS                   = "max_slots";
 
@@ -160,12 +154,6 @@ static const char*  NAME_TIMEZONE                   = "POSIX timezone string";
 
 /** NTP server name of key value pair */
 static const char*  NAME_NTP_SERVER                 = "NTP server address";
-
-/** Time format name of key value pair */
-static const char*  NAME_TIME_FORMAT                = "Time format according to strftime()";
-
-/** Date format name of key value pair */
-static const char*  NAME_DATE_FORMAT                = "Date format according to strftime()";
 
 /** Max. number of display slots name of key value pair */
 static const char*  NAME_MAX_SLOTS                  = "Max. slots";
@@ -217,12 +205,6 @@ static const char*      DEFAULT_TIMEZONE                = "WEST-1DWEST-2,M3.5.0/
 /** NTP server default value */
 static const char*      DEFAULT_NTP_SERVER              = "pool.ntp.org";
 
-/** Time format control default value. 12h clock time with am/pm designation. */
-static const char*      DEFAULT_TIME_FORMAT             = "%I:%M %p";
-
-/** Date format control default value. month/day format. */
-static const char*      DEFAULT_DATE_FORMAT             = "%m/%d";
-
 /** Max. number of display slots default value */
 static const uint8_t    DEFAULT_MAX_SLOTS               = 8U;
 
@@ -272,12 +254,6 @@ static const size_t     MIN_VALUE_TIMEZONE              = 4U;
 /** NTP server address min. length */
 static const size_t     MIN_VALUE_NTP_SERVER            = 12U;
 
-/** Time format min. length.  */
-static const size_t     MIN_VALUE_TIME_FORMAT           = 2U;
-
-/** Date format min. length.  */
-static const size_t     MIN_VALUE_DATE_FORMAT           = 2U;
-
 /** Max. number of display slots minimum value */
 static const uint8_t    MIN_MAX_SLOTS                   = 2U;
 
@@ -325,12 +301,6 @@ static const size_t     MAX_VALUE_TIMEZONE              = 128U;
 
 /** NTP server address max. length */
 static const size_t     MAX_VALUE_NTP_SERVER            = 30U;
-
-/** Time format max. length */
-static const size_t     MAX_VALUE_TIME_FORMAT           = 10U;
-
-/** Date format max. length */
-static const size_t     MAX_VALUE_DATE_FORMAT           = 10U;
 
 /**
  * Max. number of display slots maximum value.
@@ -521,8 +491,6 @@ SettingsService::SettingsService() :
     m_autoBrightnessCtrl    (m_preferences, KEY_AUTO_BRIGHTNESS_CTRL,   NAME_AUTO_BRIGHTNESS_CTRL,  DEFAULT_AUTO_BRIGHTNESS_CTRL),
     m_timezone              (m_preferences, KEY_TIMEZONE,               NAME_TIMEZONE,              DEFAULT_TIMEZONE,               MIN_VALUE_TIMEZONE,             MAX_VALUE_TIMEZONE),
     m_ntpServer             (m_preferences, KEY_NTP_SERVER,             NAME_NTP_SERVER,            DEFAULT_NTP_SERVER,             MIN_VALUE_NTP_SERVER,           MAX_VALUE_NTP_SERVER),
-    m_timeFormat            (m_preferences, KEY_TIME_FORMAT,            NAME_TIME_FORMAT,           DEFAULT_TIME_FORMAT,            MIN_VALUE_TIME_FORMAT,          MAX_VALUE_TIME_FORMAT),
-    m_dateFormat            (m_preferences, KEY_DATE_FORMAT,            NAME_DATE_FORMAT,           DEFAULT_DATE_FORMAT,            MIN_VALUE_DATE_FORMAT,          MAX_VALUE_DATE_FORMAT),
     m_maxSlots              (m_preferences, KEY_MAX_SLOTS,              NAME_MAX_SLOTS,             DEFAULT_MAX_SLOTS,              MIN_MAX_SLOTS,                  MAX_MAX_SLOTS),
     m_scrollPause           (m_preferences, KEY_SCROLL_PAUSE,           NAME_SCROLL_PAUSE,          DEFAULT_SCROLL_PAUSE,           MIN_VALUE_SCROLL_PAUSE,         MAX_VALUE_SCROLL_PAUSE),
     m_notifyURL             (m_preferences, KEY_NOTIFY_URL,             NAME_NOTIFY_URL,            DEFAULT_NOTIFY_URL,             MIN_VALUE_NOTIFY_URL,           MAX_VALUE_NOTIFY_URL),
@@ -541,8 +509,6 @@ SettingsService::SettingsService() :
     m_keyValueList.push_back(&m_autoBrightnessCtrl);
     m_keyValueList.push_back(&m_timezone);
     m_keyValueList.push_back(&m_ntpServer);
-    m_keyValueList.push_back(&m_timeFormat);
-    m_keyValueList.push_back(&m_dateFormat);
     m_keyValueList.push_back(&m_maxSlots);
     m_keyValueList.push_back(&m_scrollPause);
     m_keyValueList.push_back(&m_notifyURL);

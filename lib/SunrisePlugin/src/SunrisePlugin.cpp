@@ -63,10 +63,13 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* SunrisePlugin::IMAGE_PATH   = "/plugins/SunrisePlugin/sunrise.bmp";
+const char* SunrisePlugin::IMAGE_PATH           = "/plugins/SunrisePlugin/sunrise.bmp";
 
 /* Initialize plugin topic. */
-const char* SunrisePlugin::TOPIC        = "/location";
+const char* SunrisePlugin::TOPIC                = "/location";
+
+/* Initialize time format. */
+const char* SunrisePlugin::TIME_FORMAT_DEFAULT  = "%I:%M %p";
 
 /******************************************************************************
  * Public Methods
@@ -438,11 +441,10 @@ void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 
 String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) const
 {
-    tm          gmTimeInfo;
-    tm*         lcTimeInfo          = nullptr;
-    time_t      gmTime;
-    char        timeBuffer[17]      = { 0 };
-    const char* formattedTimeString = ClockDrv::getInstance().getTimeFormat() ? "%H:%M" : "%I:%M %p";
+    tm      gmTimeInfo;
+    tm*     lcTimeInfo          = nullptr;
+    time_t  gmTime;
+    char    timeBuffer[17]      = { 0 };
 
     /* Example: "2015-05-21T05:05:35+00:00" */
 
@@ -454,7 +456,7 @@ String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) con
     lcTimeInfo = localtime(&gmTime);
 
     /* Convert time information to user friendly string. */
-    (void)strftime(timeBuffer, sizeof(timeBuffer), formattedTimeString, lcTimeInfo);
+    (void)strftime(timeBuffer, sizeof(timeBuffer), m_timeFormat.c_str(), lcTimeInfo);
 
     return timeBuffer;
 }
@@ -469,6 +471,7 @@ bool SunrisePlugin::saveConfiguration() const
 
     jsonDoc["longitude"]    = m_longitude;
     jsonDoc["latitude"]     = m_latitude;
+    jsonDoc["timeFormat"]   = m_timeFormat;
     
     if (false == jsonFile.save(configurationFilename, jsonDoc))
     {
@@ -498,8 +501,9 @@ bool SunrisePlugin::loadConfiguration()
     }
     else
     {
-        JsonVariantConst    jsonLon = jsonDoc["longitude"];
-        JsonVariantConst    jsonLat = jsonDoc["latitude"];
+        JsonVariantConst    jsonLon         = jsonDoc["longitude"];
+        JsonVariantConst    jsonLat         = jsonDoc["latitude"];
+        JsonVariantConst    jsonTimeFormat  = jsonDoc["timeFormat"];
 
         if (false == jsonLon.is<String>())
         {
@@ -515,6 +519,16 @@ bool SunrisePlugin::loadConfiguration()
         {
             m_longitude = jsonLon.as<String>();
             m_latitude  = jsonLat.as<String>();
+        }
+
+        if (false == jsonTimeFormat.is<String>())
+        {
+            LOG_WARNING("JSON time format not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_timeFormat = jsonTimeFormat.as<String>();
         }
     }
 
