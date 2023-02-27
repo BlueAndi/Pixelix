@@ -286,26 +286,6 @@ public:
     }
 
     /**
-     * Get time format according to strftime().
-     *
-     * @return Key value pair
-     */
-    KeyValueString& getTimeFormat()
-    {
-        return m_timeFormat;
-    }
-
-    /**
-     * Get date format according to strftime().
-     *
-     * @return Key value pair
-     */
-    KeyValueString& getDateFormat()
-    {
-        return m_dateFormat;
-    }
-
-    /**
      * Get max. number of display slots.
      *
      * @return Key value pair
@@ -352,7 +332,7 @@ public:
      * - a existing setting changed
      * - a existing setting was removed
      */
-    static const uint32_t   VERSION = 1U;
+    static const uint32_t   VERSION = 2U;
 
 private:
 
@@ -371,8 +351,6 @@ private:
     KeyValueBool            m_autoBrightnessCtrl;   /**< Automatic brightness control switch */
     KeyValueString          m_timezone;             /**< POSIX timezone string */
     KeyValueString          m_ntpServer;            /**< NTP server address */
-    KeyValueString          m_timeFormat;           /**< Time format according to strftime(). */
-    KeyValueString          m_dateFormat;           /**< Date format according to strftime(). */
     KeyValueUInt8           m_maxSlots;             /**< Max. number of display slots. */
     KeyValueUInt32          m_scrollPause;          /**< Text scroll pause */
     KeyValueString          m_notifyURL;            /**< URL to be triggered when PIXELIX has connected to a remote network. */

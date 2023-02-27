@@ -79,15 +79,11 @@ void ClockDrv::init()
 
             timezone            = settings.getTimezone().getDefault();
             ntpServerAddress    = settings.getNTPServerAddress().getDefault();
-            m_timeFormat        = settings.getTimeFormat().getDefault();
-            m_dateFormat        = settings.getDateFormat().getDefault();
         }
         else
         {
             timezone            = settings.getTimezone().getValue();
             ntpServerAddress    = settings.getNTPServerAddress().getValue();
-            m_timeFormat        = settings.getTimeFormat().getValue();
-            m_dateFormat        = settings.getDateFormat().getValue();
             settings.close();
         }
 
@@ -124,51 +120,6 @@ bool ClockDrv::getTime(tm *currentTime)
     const uint32_t WAIT_TIME_MS = 0;
 
     return getLocalTime(currentTime, WAIT_TIME_MS);
-}
-
-bool ClockDrv::getTimeAsString(String& time, const String& format, const tm *currentTime)
-{
-    bool        isSuccessful    = false;
-    tm          timeStruct;
-    const tm*   timeStructPtr   = nullptr;
-
-    if (nullptr == currentTime)
-    {
-        timeStructPtr = &timeStruct;
-
-        if (false == getTime(&timeStruct))
-        {
-            timeStructPtr = nullptr;
-        }
-    }
-    else
-    {
-        timeStructPtr = currentTime;
-    }
-
-    if (nullptr != timeStructPtr)
-    {
-        const uint32_t  MAX_TIME_BUFFER_SIZE    = format.length() + 20U;
-        char            buffer[MAX_TIME_BUFFER_SIZE];
-
-        if (0U != strftime(buffer, sizeof(buffer), format.c_str(), currentTime))
-        {
-            time = buffer;
-            isSuccessful = true;
-        }
-    }
-
-    return isSuccessful;
-}
-
-const String& ClockDrv::getTimeFormat()
-{
-    return m_timeFormat;
-}
-
-const String& ClockDrv::getDateFormat()
-{
-    return m_dateFormat;
 }
 
 /******************************************************************************

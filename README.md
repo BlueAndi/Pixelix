@@ -216,7 +216,7 @@ Not all plugin may support this in case they get conflicts with their layout.
 If a plugin don't support it, it will use the default font type.
 
 ## How to configure the date/time format?
-The date/time format can be configured in the settings of Pixelix. The format specifiers following [strftime()](https://cplusplus.com/reference/ctime/strftime/).
+The date/time format used by plugins, e.g. the DateTimePlugin or the SunrisePlugin, can be configured in their configuration JSON file. Use the file editor in the web interface to modify it according to your needs. The file can be found in the ```/configuration``` folder and the filename is ```<PLUGIN-UID>.json```. The format specifiers following [strftime()](https://cplusplus.com/reference/ctime/strftime/).
 
 Examples:
 * ```%I:%M %p```: 02:30 PM
@@ -224,6 +224,8 @@ Examples:
 * ```%m/%d```: 11/12
 * ```%d.%m.```: 11.12.
 * ```%d - %b```: 11 - Nov
+
+You can colorize it by using the [text properties](#how-to-change-text-properties).
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

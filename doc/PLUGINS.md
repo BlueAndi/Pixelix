@@ -77,7 +77,7 @@ If date and time are configured, first the time will be shown for half of the sl
 
 Below the day of the week is shown, starting from the left with Monday.
 
-In the settings the format of the date and time can be configured according to strftime().
+Configure the date and time format in the plugin configuration JSON file. The format itself is according to strftime(). For colorization text properties can be added.
 
 It can be set what shall be shown via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/DateTimePlugin).
 
@@ -158,6 +158,8 @@ The number of shown frequency bands can be set via the [REST API](https://app.sw
 The SunrisePlugin shows the current sunrise / sunset times for a configured location.\
 The coordinates (latitude & longitude) of your location can be set via the [REST API]([REST.md#endpoint-base-uridisplayuidplugin-uidlocation](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/SunrisePlugin)).\
 Powered by sunrise-sunset.org
+
+Configure the time format in the plugin configuration JSON file. The format itself is according to strftime(). For colorization text properties can be added.
 
 ## SysMsgPlugin
 The SysMsgPlugin is a system plugin, which is used to splash important information's to the user. Note, it can not be uninstalled.

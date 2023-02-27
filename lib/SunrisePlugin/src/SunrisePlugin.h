@@ -90,6 +90,7 @@ public:
         m_textWidget("\\calign?"),
         m_longitude("2.295"), /* Example data */
         m_latitude("48.858"), /* Example data */
+        m_timeFormat(TIME_FORMAT_DEFAULT),
         m_relevantResponsePart(""),
         m_client(),
         m_mutex(),
@@ -284,6 +285,9 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_SECONDS(10U);
 
+    /** Default time format according to strftime(). */
+    static const char*      TIME_FORMAT_DEFAULT;
+
     Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -291,6 +295,7 @@ private:
     TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
     String                  m_longitude;                /**< Longitude of sunrise location */
     String                  m_latitude;                 /**< Latitude of sunrise location */
+    String                  m_timeFormat;               /**< Time format according to strftime(). */
     String                  m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
     SimpleTimer             m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */

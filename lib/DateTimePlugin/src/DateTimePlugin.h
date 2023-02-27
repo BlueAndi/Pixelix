@@ -86,6 +86,10 @@ public:
         m_shownSecond(-1),
         m_shownDayOfTheYear(-1),
         m_isUpdateAvailable(false),
+        m_timeFormat(TIME_FORMAT_DEFAULT),
+        m_dateFormat(DATE_FORMAT_DEFAULT),
+        m_dayOnColor(DAY_ON_COLOR),
+        m_dayOffColor(DAY_OFF_COLOR),
         m_slotInterf(nullptr),
         m_mutex()
 
@@ -270,6 +274,18 @@ private:
     /** Divider to convert ms in s */
     static const uint32_t   MS_TO_SEC_DIVIDER       = 1000U;
 
+    /** Default time format according to strftime(). */
+    static const char*      TIME_FORMAT_DEFAULT;
+
+    /** Default date format according to strftime(). */
+    static const char*      DATE_FORMAT_DEFAULT;
+
+    /** Color of the current day shown in the day of the week bar. */
+    static const Color      DAY_ON_COLOR;
+
+    /** Color of the other days (not the current one) shown in the day of the week bar. */
+    static const Color      DAY_OFF_COLOR;
+
     /**
      * If the slot duration is infinite (0s), the default duration of 30s shall be assumed as base
      * for toggling between time and date on the display.
@@ -286,9 +302,12 @@ private:
     SimpleTimer             m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessary. */
     uint8_t                 m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
     int                     m_shownSecond;              /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
-
     int                     m_shownDayOfTheYear;        /**< Used to trigger a display update in case the date shall be shown. [0; 365] */
     bool                    m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
+    String                  m_timeFormat;               /**< Time format according to strftime(). */
+    String                  m_dateFormat;               /**< Date format according to strftime(). */
+    Color                   m_dayOnColor;               /**< Color of current day in the day of the week bar. */
+    Color                   m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
     const ISlotPlugin*      m_slotInterf;               /**< Slot interface */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
 
@@ -331,6 +350,38 @@ private:
      * Load configuration from JSON file.
      */
     bool loadConfiguration();
+
+    /**
+     * Get the current time as formatted string.
+     * The format is equal to strftime(), please have a look there.
+     * 
+     * Use getTimeFormat() or getDateFormat() for the user configured format.
+     * 
+     * @param[out]  time            The formatted time string.
+     * @param[in]   format          The format according to strftime().
+     * @param[in]   currentTime     The current time (optional).
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
+    bool getTimeAsString(String& time, const String& format, const tm *currentTime = nullptr);
+
+    /**
+     * Convert color to HTML format.
+     * 
+     * @param[in] color Color
+     * 
+     * @return Color in HTML format
+     */
+    String colorToHtml(const Color& color) const;
+
+    /**
+     * Convert color from HTML format.
+     * 
+     * @param[in] htmlColor Color in HTML format
+     * 
+     * @return Color
+     */
+    Color colorFromHtml(const String& htmlColor) const;
 };
 
 /******************************************************************************

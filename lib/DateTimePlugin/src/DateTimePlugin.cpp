@@ -38,6 +38,7 @@
 #include <Logging.h>
 #include <FileSystem.h>
 #include <JsonFile.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,8 +60,12 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize plugin topic. */
-const char*     DateTimePlugin::TOPIC_CFG   = "/dateTime";
+/* Initialize static constants. */
+const char* DateTimePlugin::TOPIC_CFG           = "/dateTime";
+const char* DateTimePlugin::TIME_FORMAT_DEFAULT = "%I:%M %p";
+const char* DateTimePlugin::DATE_FORMAT_DEFAULT = "%m/%d";
+const Color DateTimePlugin::DAY_ON_COLOR        = ColorDef::LIGHTGRAY;
+const Color DateTimePlugin::DAY_OFF_COLOR       = ColorDef::ULTRADARKGRAY;
 
 /******************************************************************************
  * Public Methods
@@ -146,6 +151,17 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
         m_textWidget.move(0, offsY);
     }
 
+    /* Try to load configuration. If there is no configuration available, a default configuration
+     * will be created.
+     */
+    if (false == loadConfiguration())
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
+        }
+    }
+
     m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
 
     if (true == calcLayout(width, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
@@ -158,23 +174,12 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
         {
             int16_t x = (lampWidth + lampDistance) * index + border;
 
-            m_lampWidgets[index].setColorOn(ColorDef::LIGHTGRAY);
-            m_lampWidgets[index].setColorOff(ColorDef::ULTRADARKGRAY);
+            m_lampWidgets[index].setColorOn(m_dayOnColor);
+            m_lampWidgets[index].setColorOff(m_dayOffColor);
             m_lampWidgets[index].setWidth(lampWidth);
 
             (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
             m_lampWidgets[index].move(x, 0);
-        }
-    }
-
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
 
@@ -338,11 +343,10 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownSecond != timeInfo.tm_sec))
             {
-                const String&   timeFormat      = clockDrv.getTimeFormat();
-                String          extTimeFormat   = "\\calign" + timeFormat;
-                String          timeAsStr;
+                String  extTimeFormat   = "\\calign" + m_timeFormat;
+                String  timeAsStr;
                 
-                if (true == clockDrv.getTimeAsString(timeAsStr, extTimeFormat, &timeInfo))
+                if (true == getTimeAsString(timeAsStr, extTimeFormat, &timeInfo))
                 {
                     m_textWidget.setFormatStr(timeAsStr);
 
@@ -362,11 +366,10 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownDayOfTheYear != timeInfo.tm_yday))
             {
-                const String&   dateFormat      = clockDrv.getDateFormat();
-                String          extDateFormat   = "\\calign" + dateFormat;
-                String          dateAsStr;
+                String  extDateFormat   = "\\calign" + m_dateFormat;
+                String  dateAsStr;
                 
-                if (true == clockDrv.getTimeAsString(dateAsStr, extDateFormat, &timeInfo))
+                if (true == getTimeAsString(dateAsStr, extDateFormat, &timeInfo))
                 {
                     m_textWidget.setFormatStr(dateAsStr);
 
@@ -469,7 +472,11 @@ bool DateTimePlugin::saveConfiguration() const
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     String              configurationFilename   = getFullPathToConfiguration();
 
-    jsonDoc["cfg"] = m_cfg;
+    jsonDoc["cfg"]          = m_cfg;
+    jsonDoc["timeFormat"]   = m_timeFormat;
+    jsonDoc["dateFormat"]   = m_dateFormat;
+    jsonDoc["dayOnColor"]   = colorToHtml(m_dayOnColor);
+    jsonDoc["dayOffColor"]  = colorToHtml(m_dayOffColor);
     
     if (false == jsonFile.save(configurationFilename, jsonDoc))
     {
@@ -499,7 +506,11 @@ bool DateTimePlugin::loadConfiguration()
     }
     else
     {
-        JsonVariantConst jsonCfg = jsonDoc["cfg"];
+        JsonVariantConst jsonCfg            = jsonDoc["cfg"];
+        JsonVariantConst jsonTimeFormat     = jsonDoc["timeFormat"];
+        JsonVariantConst jsonDateFormat     = jsonDoc["dateFormat"];
+        JsonVariantConst jsonDayOnColor     = jsonDoc["dayOnColor"];
+        JsonVariantConst jsonDayOffColor    = jsonDoc["dayOffColor"];
 
         if (false == jsonCfg.is<uint8_t>())
         {
@@ -510,9 +521,105 @@ bool DateTimePlugin::loadConfiguration()
         {
             m_cfg = static_cast<Cfg>(jsonCfg.as<uint8_t>());
         }
+
+        if (false == jsonTimeFormat.is<String>())
+        {
+            LOG_WARNING("JSON time format not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_timeFormat = jsonTimeFormat.as<String>();
+        }
+
+        if (false == jsonDateFormat.is<String>())
+        {
+            LOG_WARNING("JSON date format not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_dateFormat = jsonDateFormat.as<String>();
+        }
+
+        if (false == jsonDayOnColor.is<String>())
+        {
+            LOG_WARNING("JSON day on color not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_dayOnColor = colorFromHtml(jsonDayOnColor.as<String>());
+        }
+
+        if (false == jsonDayOffColor.is<String>())
+        {
+            LOG_WARNING("JSON day off color not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_dayOffColor = colorFromHtml(jsonDayOffColor.as<String>());
+        }
     }
 
     return status;
+}
+
+bool DateTimePlugin::getTimeAsString(String& time, const String& format, const tm *currentTime)
+{
+    bool        isSuccessful    = false;
+    tm          timeStruct;
+    const tm*   timeStructPtr   = nullptr;
+
+    if (nullptr == currentTime)
+    {
+        timeStructPtr = &timeStruct;
+
+        if (false == ClockDrv::getInstance().getTime(&timeStruct))
+        {
+            timeStructPtr = nullptr;
+        }
+    }
+    else
+    {
+        timeStructPtr = currentTime;
+    }
+
+    if (nullptr != timeStructPtr)
+    {
+        const uint32_t  MAX_TIME_BUFFER_SIZE = 128U;
+        char            buffer[MAX_TIME_BUFFER_SIZE];
+
+        if (0U != strftime(buffer, sizeof(buffer), format.c_str(), currentTime))
+        {
+            time = buffer;
+            isSuccessful = true;
+        }
+    }
+
+    return isSuccessful;
+}
+
+String DateTimePlugin::colorToHtml(const Color& color) const
+{
+    char buffer[8]; /* '#' + 3x byte in hex + '\0' */
+
+    (void)snprintf(buffer, sizeof(buffer), "#%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue());
+
+    return String(buffer);
+}
+
+Color DateTimePlugin::colorFromHtml(const String& htmlColor) const
+{
+    Color color;
+
+    if ('#' == htmlColor[0])
+    {
+        color = Util::hexToUInt32(htmlColor.substring(1U));
+    }
+
+    return color;
 }
 
 /******************************************************************************
