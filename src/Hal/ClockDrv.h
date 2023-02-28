@@ -80,24 +80,50 @@ public:
     void init();
 
     /**
-     * Get the current time.
+     * Get the local time by considering device timezone.
      *
-     * @param[out] currentTime Pointer to the currentTime.
+     * @param[out] timeInfo Time information.
      *
      * @return If time is not synchronized, it will return false otherwise true.
      */
-    bool getTime(tm *currentTime);
+    bool getTime(tm* timeInfo);
+
+    /**
+     * Get the current time in UTC.
+     *
+     * @param[out] timeInfo Time information.
+     *
+     * @return If time is not synchronized, it will return false otherwise true.
+     */
+    bool getUtcTime(tm* timeInfo);
+
+    /**
+     * Get the local time by considering the timezone.
+     * 
+     * @param[in]   tz          Timzone string
+     * @param[out]  timeInfo    Local time information
+     * 
+     * @return If time is not synchronized, it will return false otherwise true.
+     */
+    bool getTzTime(const char* tz, tm* timeInfo);
 
 private:
 
+    /** Use UTC timezone by default. */
+    static const char* TZ_UTC;
+
     /** Flag indicating a initialized clock driver. */
     bool    m_isClockDrvInitialized;
+
+    /** Device timezone */
+    String  m_timeZone;
 
     /**
      * Construct ClockDrv.
      */
     ClockDrv() :
-        m_isClockDrvInitialized(false)
+        m_isClockDrvInitialized(false),
+        m_timeZone(TZ_UTC)
     {
     }
 
@@ -106,7 +132,6 @@ private:
      */
     ~ClockDrv()
     {
-
     }
 
     /* Prevent copying */

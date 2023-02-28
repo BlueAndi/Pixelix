@@ -59,6 +59,9 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize static constants. */
+const char* ClockDrv::TZ_UTC = "UTC+0";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -67,7 +70,6 @@ void ClockDrv::init()
 {
     if (false == m_isClockDrvInitialized)
     {
-        String              timezone;
         String              ntpServerAddress;
         struct tm           timeInfo            = { 0 };
         SettingsService&    settings            = SettingsService::getInstance();
@@ -77,12 +79,12 @@ void ClockDrv::init()
         {
             LOG_WARNING("Use default values for NTP request.");
 
-            timezone            = settings.getTimezone().getDefault();
+            m_timeZone          = settings.getTimezone().getDefault();
             ntpServerAddress    = settings.getNTPServerAddress().getDefault();
         }
         else
         {
-            timezone            = settings.getTimezone().getValue();
+            m_timeZone          = settings.getTimezone().getValue();
             ntpServerAddress    = settings.getNTPServerAddress().getValue();
             settings.close();
         }
@@ -94,7 +96,7 @@ void ClockDrv::init()
          * https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/system_time.html
          * https://github.com/espressif/esp-idf/issues/4386
          */
-        configTzTime(timezone.c_str(), ntpServerAddress.c_str());
+        configTzTime(TZ_UTC, ntpServerAddress.c_str());
 
         /* Wait for synchronization (default 5s) */
         if (false == getLocalTime(&timeInfo))
@@ -103,7 +105,7 @@ void ClockDrv::init()
         }
         else
         {
-            LOG_INFO("Local time: %d-%d-%d %d:%d", 
+            LOG_INFO("UTC: %d-%d-%d %d:%d", 
                 (timeInfo.tm_year + 1900),
                 (timeInfo.tm_mon + 1),
                 timeInfo.tm_mday,
@@ -115,11 +117,59 @@ void ClockDrv::init()
     }
 }
 
-bool ClockDrv::getTime(tm *currentTime)
+bool ClockDrv::getTime(tm* timeInfo)
 {
-    const uint32_t WAIT_TIME_MS = 0;
+    const uint32_t  WAIT_TIME_MS    = 0U;
+    bool            result          = false;
 
-    return getLocalTime(currentTime, WAIT_TIME_MS);
+    if (false == m_timeZone.isEmpty())
+    {
+        /* Configure timezone */
+        setenv("TZ", m_timeZone.c_str(), 1);
+        tzset();
+    }
+
+    result = getLocalTime(timeInfo, WAIT_TIME_MS);
+
+    if (false == m_timeZone.isEmpty())
+    {
+        /* Reset timezone to UTC */
+        setenv("TZ", TZ_UTC, 1);
+        tzset();
+    }
+
+    return result;
+}
+
+bool ClockDrv::getUtcTime(tm* timeInfo)
+{
+    const uint32_t WAIT_TIME_MS = 0U;
+
+    return getLocalTime(timeInfo, WAIT_TIME_MS);
+}
+
+bool ClockDrv::getTzTime(const char* tz, tm* timeInfo)
+{
+    const uint32_t  WAIT_TIME_MS    = 0U;
+    bool            result          = false;
+
+    if (nullptr != tz)
+    {
+        /* Configure timezone */
+        setenv("TZ", tz, 1);
+        tzset();
+    }
+
+    result = getLocalTime(timeInfo, WAIT_TIME_MS);
+
+    if (nullptr != tz)
+    {
+        /* Reset timezone to UTC */
+        setenv("TZ", TZ_UTC, 1);
+        tzset();
+    }
+
+    return result;
 }
 
 /******************************************************************************
