@@ -88,6 +88,7 @@ public:
         m_isUpdateAvailable(false),
         m_timeFormat(TIME_FORMAT_DEFAULT),
         m_dateFormat(DATE_FORMAT_DEFAULT),
+        m_timeZone(),
         m_dayOnColor(DAY_ON_COLOR),
         m_dayOffColor(DAY_OFF_COLOR),
         m_slotInterf(nullptr),
@@ -306,6 +307,7 @@ private:
     bool                    m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
     String                  m_timeFormat;               /**< Time format according to strftime(). */
     String                  m_dateFormat;               /**< Date format according to strftime(). */
+    String                  m_timeZone;                 /**< Timezone of the time to show. If empty, the local time is used. */
     Color                   m_dayOnColor;               /**< Color of current day in the day of the week bar. */
     Color                   m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
     const ISlotPlugin*      m_slotInterf;               /**< Slot interface */

@@ -79,6 +79,8 @@ Below the day of the week is shown, starting from the left with Monday.
 
 Configure the date and time format in the plugin configuration JSON file. The format itself is according to strftime(). For colorization text properties can be added.
 
+By default the local time (see timezone in the settings) is used. It can be overwritten by the plugin configuration.
+
 It can be set what shall be shown via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0#/DateTimePlugin).
 
 ## DDPPlugin

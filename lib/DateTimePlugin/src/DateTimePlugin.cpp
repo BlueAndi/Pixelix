@@ -265,10 +265,21 @@ void DateTimePlugin::update(YAGfx& gfx)
 
 void DateTimePlugin::updateDateTime(bool force)
 {
-    ClockDrv&   clockDrv    = ClockDrv::getInstance();
-    struct tm   timeInfo    = { 0 };
+    ClockDrv&   clockDrv            = ClockDrv::getInstance();
+    struct tm   timeInfo            = { 0 };
+    bool        isClockAvailable    = false;
+
+    /* If not other timzone is given, the local time shall be used. */
+    if (true == m_timeZone.isEmpty())
+    {
+        isClockAvailable = clockDrv.getTime(&timeInfo);
+    }
+    else
+    {
+        isClockAvailable = clockDrv.getTzTime(m_timeZone.c_str(), &timeInfo);
+    }
     
-    if (true == clockDrv.getTime(&timeInfo))
+    if (true == isClockAvailable)
     {
         bool    showDate    = false;
         bool    showTime    = false;
@@ -475,6 +486,7 @@ bool DateTimePlugin::saveConfiguration() const
     jsonDoc["cfg"]          = m_cfg;
     jsonDoc["timeFormat"]   = m_timeFormat;
     jsonDoc["dateFormat"]   = m_dateFormat;
+    jsonDoc["timeZone"]     = m_timeZone;
     jsonDoc["dayOnColor"]   = colorToHtml(m_dayOnColor);
     jsonDoc["dayOffColor"]  = colorToHtml(m_dayOffColor);
     
@@ -509,6 +521,7 @@ bool DateTimePlugin::loadConfiguration()
         JsonVariantConst jsonCfg            = jsonDoc["cfg"];
         JsonVariantConst jsonTimeFormat     = jsonDoc["timeFormat"];
         JsonVariantConst jsonDateFormat     = jsonDoc["dateFormat"];
+        JsonVariantConst jsonTimeZone       = jsonDoc["timeZone"];
         JsonVariantConst jsonDayOnColor     = jsonDoc["dayOnColor"];
         JsonVariantConst jsonDayOffColor    = jsonDoc["dayOffColor"];
 
@@ -540,6 +553,16 @@ bool DateTimePlugin::loadConfiguration()
         else
         {
             m_dateFormat = jsonDateFormat.as<String>();
+        }
+
+        if (false == jsonTimeZone.is<String>())
+        {
+            LOG_WARNING("JSON timezone not found or invalid type.");
+            status = false;
+        }
+        else
+        {
+            m_timeZone = jsonTimeZone.as<String>();
         }
 
         if (false == jsonDayOnColor.is<String>())
