@@ -37,6 +37,7 @@
 #include "FileSystem.h"
 
 #include <Logging.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -58,8 +59,8 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize plugin topic. */
-const char* ThreeIconPlugin::TOPIC_ICON                 = "/bitmap";
+/* Initialize bitmap control topic. */
+const char* ThreeIconPlugin::TOPIC_BITMAP               = "/bitmap";
 
 /* Initialize bitmap image filename extension. */
 const char* ThreeIconPlugin::FILE_EXT_BITMAP            = ".bmp";
@@ -69,7 +70,6 @@ const char* ThreeIconPlugin::FILE_EXT_SPRITE_SHEET      = ".sprite";
 
 /* Initialize animation control topic. */
 const char* ThreeIconPlugin::TOPIC_ANIMATION            = "/animation";
-
 
 /******************************************************************************
  * Public Methods
@@ -81,7 +81,7 @@ void ThreeIconPlugin::getTopics(JsonArray& topics) const
 
     for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
     {
-        (void)topics.add(String(TOPIC_ICON)         + "/" + iconId);
+        (void)topics.add(String(TOPIC_BITMAP)       + "/" + iconId);
         (void)topics.add(String(TOPIC_ANIMATION)    + "/" + iconId);
     }
 }
@@ -90,7 +90,7 @@ bool ThreeIconPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.startsWith(String(TOPIC_ICON) + "/"))
+    if (0U != topic.startsWith(String(TOPIC_BITMAP) + "/"))
     {
         isSuccessful = true;
     }
@@ -123,20 +123,35 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.startsWith(String(TOPIC_ICON) + "/"))
+    if (0U != topic.startsWith(String(TOPIC_BITMAP) + "/"))
     {
         uint32_t            indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String              iconIdStr           = topic.substring(indexBeginIconId);
         uint8_t             iconId              = MAX_ICONS;
         bool                status              = Util::strToUInt8(iconIdStr, iconId);
-        JsonVariantConst    jsonIconPath        = value["fullPath"];
 
         if ((true == status) &&
-            (MAX_ICONS > iconId) &&
-            (false == jsonIconPath.isNull()))
+            (MAX_ICONS > iconId))
         {
-            String iconPath = jsonIconPath.as<String>();
-            isSuccessful = loadBitmap(iconPath, iconId);  
+            JsonVariantConst jsonIconPath = value["fullPath"];
+
+            /* File upload? */
+            if (false == jsonIconPath.isNull())
+            {
+                String iconPath = jsonIconPath.as<String>();
+                isSuccessful = loadBitmap(iconPath, iconId);  
+            }
+            /* Control command */
+            else
+            {
+                JsonVariantConst jsonClear = value["clear"];
+
+                if (jsonClear.as<String>() == "true")
+                {
+                    clearBitmap(iconId);
+                    isSuccessful = true;
+                }
+            }
         }
     }
     else if (0U != topic.startsWith(String(TOPIC_ANIMATION) + "/"))
@@ -202,7 +217,7 @@ bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
 {
     bool isAccepted = false;
 
-    if (0U != topic.startsWith(String(TOPIC_ICON) + "/"))
+    if (0U != topic.startsWith(String(TOPIC_BITMAP) + "/"))
     {
         uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String      iconIdStr           = topic.substring(indexBeginIconId);
@@ -296,53 +311,45 @@ void ThreeIconPlugin::update(YAGfx& gfx)
 
 bool ThreeIconPlugin::loadBitmap(const String& filename, uint8_t iconId)
 {
-    bool                        status = false;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool status = false;
 
-    if (0U != filename.endsWith(FILE_EXT_BITMAP))
+    if (MAX_ICONS > iconId)
     {
-        status = m_bitmapWidget[iconId].load(FILESYSTEM, filename);
+        MutexGuard<MutexRecursive> guard(m_mutex);
 
-        /* Ensure that only the bitmap image file exists in the filesystem,
-         * otherwise after a restart, the obsolete sprite sheet will
-         * be loaded.
-         */
-        if (false != status)
+        if (0U != filename.endsWith(FILE_EXT_BITMAP))
         {
-            (void)FILESYSTEM.remove(getFileName(iconId, FILE_EXT_SPRITE_SHEET));
+            status = m_bitmapWidget[iconId].load(FILESYSTEM, filename);
 
-            m_isSpriteSheetAvailable[iconId] = false;
+            /* Ensure that only the bitmap image file exists in the filesystem,
+             * otherwise after a restart, the obsolete sprite sheet will
+             * be loaded.
+             */
+            if (false != status)
+            {
+                (void)FILESYSTEM.remove(getFileName(iconId, FILE_EXT_SPRITE_SHEET));
+
+                m_isSpriteSheetAvailable[iconId] = false;
+            }
+        }
+        else if (0U != filename.endsWith(FILE_EXT_SPRITE_SHEET))
+        {
+            String bmpFilename = filename;
+
+            bmpFilename.replace(FILE_EXT_SPRITE_SHEET, FILE_EXT_BITMAP);
+
+            status = m_bitmapWidget[iconId].loadSpriteSheet(FILESYSTEM, filename,  bmpFilename);
+            
+            m_isSpriteSheetAvailable[iconId] = status;
+        }
+        else
+        {
+            /* Not supported. */
+            ;
         }
     }
-    else if (0U != filename.endsWith(FILE_EXT_SPRITE_SHEET))
-    {
-        String bmpFilename = filename;
 
-        bmpFilename.replace(FILE_EXT_SPRITE_SHEET, FILE_EXT_BITMAP);
-
-        status = m_bitmapWidget[iconId].loadSpriteSheet(FILESYSTEM, filename,  bmpFilename);
-        
-        m_isSpriteSheetAvailable[iconId] = status;
-    }
-    else
-    {
-        /* Not supported. */
-        ;
-    }
     return status;
-}
-
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-String ThreeIconPlugin::getFileName(uint8_t iconId, const String& ext)
-{
-    return generateFullPath("_" + String(iconId) + ext);
 }
 
 bool ThreeIconPlugin::getIsForward(uint8_t iconId) const
@@ -353,10 +360,6 @@ bool ThreeIconPlugin::getIsForward(uint8_t iconId) const
     if (MAX_ICONS > iconId)
     {
         state = m_bitmapWidget[iconId].isSpriteSheetForward();
-    }
-    else
-    {
-        LOG_ERROR("Get isForward failed, invalid iconId.");
     }
     
     return state;
@@ -370,10 +373,6 @@ void ThreeIconPlugin::setIsForward(uint8_t iconId, bool state)
     {
         m_bitmapWidget[iconId].setSpriteSheetForward(state);
     }
-    else
-    {
-        LOG_ERROR("Set isForward failed, invalid iconId.");
-    }
 }
 
 bool ThreeIconPlugin::getIsRepeat(uint8_t iconId) const
@@ -384,10 +383,6 @@ bool ThreeIconPlugin::getIsRepeat(uint8_t iconId) const
     if (MAX_ICONS > iconId)
     {
         state = m_bitmapWidget[iconId].isSpriteSheetRepeatInfinite();
-    }
-    else
-    {
-        LOG_ERROR("Get isRepeat failed, invalid iconId.");
     }
     
     return state;
@@ -401,10 +396,37 @@ void ThreeIconPlugin::setIsRepeat(uint8_t iconId, bool state)
     {
         m_bitmapWidget[iconId].setSpriteSheetRepeatInfinite(state);
     }
-    else
+}
+
+void ThreeIconPlugin::clearBitmap(uint8_t iconId)
+{
+    if (MAX_ICONS > iconId)
     {
-        LOG_ERROR("Set isRepeat failed, invalid iconId.");
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+         m_bitmapWidget[iconId].clear(ColorDef::BLACK);
+
+         (void)FILESYSTEM.remove(getFileName(iconId, FILE_EXT_BITMAP));
+
+         if (true == m_isSpriteSheetAvailable[iconId])
+         {
+            (void)FILESYSTEM.remove(getFileName(iconId, FILE_EXT_SPRITE_SHEET));
+            m_isSpriteSheetAvailable[iconId] = false;
+         }
     }
+}
+
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+String ThreeIconPlugin::getFileName(uint8_t iconId, const String& ext)
+{
+    return generateFullPath("_" + String(iconId) + ext);
 }
 
 /******************************************************************************

@@ -180,7 +180,12 @@ public:
     void update(YAGfx& gfx) final;
 
     /**
-     * Load bitmap from filesystem.
+     * Load bitmap or spritesheet from filesystem and show it on the icon position by
+     * icon id.
+     * 
+     * If a animation is required, upload first the bitmap and then the spritesheet.
+     * Because a bitmap upload will remove any spritesheet. This behaviour is necessary
+     * to show only bitmaps too.
      *
      * @param[in] filename  Bitmap filename.
      * @param[in] iconId    The icon id.
@@ -189,15 +194,57 @@ public:
      */
     bool loadBitmap(const String& filename, uint8_t iconId);
 
+    /**
+     * Get the state of the FORWARD control flag of an icon.
+     *
+     * @param[in] iconId    The icon Id.
+     *
+     * @return The state of the isForward animation control flag.
+     */  
+    bool getIsForward(uint8_t iconId) const;
+
+    /**
+     * Set the state of the FORWARD control flag of an icon.
+     *
+     * @param[in] iconId    The icon Id.
+     * @param[in] state     The state to be set.
+     */  
+    void setIsForward(uint8_t iconId, bool state);
+
+    /**
+     * Get the state of the REPEAT control flag of an icon.
+     *
+     * @param[in] iconId    The icon Id.
+     * 
+     * @return The state of the isRepeat animation control flag.
+     */  
+    bool getIsRepeat(uint8_t iconId) const;
+
+    /**
+     * Set the state of the REPEAT control flag of an icon.
+     *
+     * @param[in] iconId    The icon Id.
+     * @param[in] state     The state to be set.
+     */  
+    void setIsRepeat(uint8_t iconId, bool state);
+
+    /**
+     * Clear icon bitmap by icon id.
+     * 
+     * @param iconId The icon id. 
+     */
+    void clearBitmap(uint8_t iconId);
+
 private:
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used for bitmap/spritesheet upload and control.
      */
-    static const char*      TOPIC_ICON;
+    static const char*      TOPIC_BITMAP;
 
    /**
-     * Plugin topic, used for animation control.
+     * Plugin topic, used for only for animation control in case a spritesheet
+     * with texture is loaded.
      */
     static const char*      TOPIC_ANIMATION;
 
@@ -242,42 +289,6 @@ private:
      * @return Image filename with path.
      */
     String getFileName(uint8_t iconId, const String& ext);
-
-   /**
-     * Get the state of the FORWARD control flag of an icon.
-     *
-     * @param[in] iconId    The icon Id.
-     *
-     * @return The state of the isForward animation control flag.
-     */  
-    bool getIsForward(uint8_t iconId) const;
-
-    /**
-     * Set the state of the FORWARD control flag of an icon.
-     *
-     * @param[in] iconId    The icon Id.
-     * @param[in] state     The state to be set.
-     */  
-    void setIsForward(uint8_t iconId, bool state);
-
-   /**
-     * Get the state of the REPEAT control flag of an icon.
-     *
-     * @param[in] iconId    The icon Id.
-     * 
-     * @return The state of the isRepeat animation control flag.
-     */  
-    bool getIsRepeat(uint8_t iconId) const;
-
-    /**
-     * Set the state of the REPEAT control flag of an icon.
-     *
-     * @param[in] iconId    The icon Id.
-     * @param[in] state     The state to be set.
-     */  
-    void setIsRepeat(uint8_t iconId, bool state);
-
-
 };
 
 /******************************************************************************
