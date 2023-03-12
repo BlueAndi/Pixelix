@@ -80,6 +80,19 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     return *this;
 }
 
+void BitmapWidget::clear(const Color& color)
+{
+    if (true == m_spriteSheet.isEmpty())
+    {
+        m_bitmap.fillScreen(color);
+    }
+    else
+    {
+        m_spriteSheet.release();
+        m_timer.stop();
+    }
+}
+
 bool BitmapWidget::load(FS& fs, const String& filename)
 {
     bool isSuccessful = false;

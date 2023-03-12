@@ -121,6 +121,7 @@ public:
          * only show one of them.
          */
         m_spriteSheet.release();
+        m_timer.stop();
     }
 
     /**
@@ -132,6 +133,13 @@ public:
     {
         return m_bitmap;
     }
+
+    /**
+     * Clear the bitmap.
+     * 
+     * @param[in] color Color used for clearing.
+     */
+    void clear(const Color& color);
 
     /**
      * Load bitmap image from filesystem.
