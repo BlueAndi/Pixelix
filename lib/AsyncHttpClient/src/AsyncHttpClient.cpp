@@ -232,13 +232,13 @@ bool AsyncHttpClient::begin(const String& url)
     }
     else
     {
-        int begin = 0;
+        int patternBegin = 0;
 
         clear();
 
         /* Get protocol http or https */
-        String protocol = url.substring(begin, index);
-        begin = index + 3; /* Overstep '://' too. */
+        String protocol = url.substring(patternBegin, index);
+        patternBegin = index + 3; /* Overstep '://' too. */
 
         /* Determine port from protocol */
         if (protocol == "http")
@@ -263,8 +263,8 @@ bool AsyncHttpClient::begin(const String& url)
             String auth;
 
             /* Get host (incl. authorization and port) */
-            index = url.indexOf('/', begin);
-            host = url.substring(begin, index);
+            index = url.indexOf('/', patternBegin);
+            host = url.substring(patternBegin, index);
 
             /* Get URI */
             if (0 > index)

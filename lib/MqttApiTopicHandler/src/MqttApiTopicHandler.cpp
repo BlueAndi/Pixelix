@@ -264,27 +264,27 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
             else
             {
                 String  fileBase64  = jsonFileBase64.as<String>();
-                size_t  size        = 0U;
-                int32_t decodeRet   = mbedtls_base64_decode(nullptr, 0U, &size, reinterpret_cast<const unsigned char*>(fileBase64.c_str()), fileBase64.length());
+                size_t  fileSize    = 0U;
+                int32_t decodeRet   = mbedtls_base64_decode(nullptr, 0U, &fileSize, reinterpret_cast<const unsigned char*>(fileBase64.c_str()), fileBase64.length());
 
                 if (MBEDTLS_ERR_BASE64_INVALID_CHARACTER == decodeRet)
                 {
-                    LOG_WARNING("[%s][%u] File encoding contains invalid character.", plugin->getName(), plugin->getUID(), size);
+                    LOG_WARNING("[%s][%u] File encoding contains invalid character.", plugin->getName(), plugin->getUID(), fileSize);
                 }
-                else if ((MAX_FILE_SIZE < size) ||
-                         (0U == size))
+                else if ((MAX_FILE_SIZE < fileSize) ||
+                         (0U == fileSize))
                 {
-                    LOG_WARNING("[%s][%u] File size %u not supported.", plugin->getName(), plugin->getUID(), size);
+                    LOG_WARNING("[%s][%u] File size %u not supported.", plugin->getName(), plugin->getUID(), fileSize);
                 }
                 else
                 {
-                    uint8_t* buffer = new(std::nothrow) uint8_t[size];
+                    uint8_t* buffer = new(std::nothrow) uint8_t[fileSize];
 
                     if (nullptr != buffer)
                     {
                         File fd;
 
-                        decodeRet = mbedtls_base64_decode(buffer, size, &size, reinterpret_cast<const unsigned char*>(fileBase64.c_str()), fileBase64.length());
+                        decodeRet = mbedtls_base64_decode(buffer, fileSize, &fileSize, reinterpret_cast<const unsigned char*>(fileBase64.c_str()), fileBase64.length());
 
                         if (0U != decodeRet)
                         {
@@ -301,7 +301,7 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
                             }
                             else
                             {
-                                (void)fd.write(buffer, size);
+                                (void)fd.write(buffer, fileSize);
                                 fd.close();
 
                                 jsonDoc["fullPath"] = dstFullPath;
