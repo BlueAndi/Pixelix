@@ -424,7 +424,6 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
         {
             uint8_t possibilityIndex    = static_cast<uint8_t>(random(count));
             uint8_t mealIndex           = 0U;
-            size_t  idx                 = 0U;
 
             if (true == isMealFound(possibleMovements[possibilityIndex], mealIndex))
             {
@@ -440,9 +439,8 @@ bool WormPlugin::moveWormRandom(uint8_t wormId, uint16_t width, uint16_t height)
 
             if (false == m_isExplosion)
             {
-                size_t wormPos = wormPosInArray(wormId);
+                size_t idx = m_wormLen[wormId] - 1U;
 
-                idx = m_wormLen[wormId] - 1U;
                 while(0 < idx)
                 {
                     m_worms[wormPos + idx] = m_worms[wormPos + idx - 1U];
