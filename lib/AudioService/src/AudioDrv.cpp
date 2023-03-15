@@ -234,8 +234,6 @@ void AudioDrv::process()
 
                 if (sizeof(sample) == bytesRead)
                 {
-                    uint32_t observerIndex = 0U;
-
                     /* Down shift to get the real value. */
                     sample >>= I2S_SAMPLE_SHIFT;
 
@@ -254,9 +252,10 @@ void AudioDrv::process()
                     /* All samples read? */
                     if (SAMPLES <= m_sampleWriteIndex)
                     {
+                        uint32_t observerIndex = 0U;
+
                         m_sampleWriteIndex = 0U;
 
-                        observerIndex = 0U;
                         while(observerIndex < MAX_OBSERVERS)
                         {
                             IAudioObserver* observer = m_observers[observerIndex];
