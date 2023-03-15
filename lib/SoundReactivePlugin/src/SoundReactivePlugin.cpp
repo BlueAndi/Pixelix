@@ -482,8 +482,7 @@ void SoundReactivePlugin::convertToOctaveFreqBands(float* octaveFreqBands, size_
          * high edge frequency of the band, the following frequency
          * bin's will be assigned to the next band.
          */
-        if ((octaveFreqBandsLen > bandIdx) &&
-            (LIST_16_BAND_HIGH_EDGE_FREQ_BIN[bandIdx] == freqBinIdx))
+        if (LIST_16_BAND_HIGH_EDGE_FREQ_BIN[bandIdx] == freqBinIdx)
         {
             /* Any frequency band added? */
             if (0 < divisor)
