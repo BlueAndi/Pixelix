@@ -93,7 +93,7 @@ menu._createSubMenu = function(ulId, menuItem) {
                     .attr("aria-expanded", "false")
                     .text(menuItem.title);
     var div         = $("<div>")
-                    .attr("class", "dropdown-menu")
+                    .attr("class", "dropdown-menu scrollable-menu")
                     .attr("aria-labelledby", menuItem.title + "-dropdown");
     var index       = 0;
 

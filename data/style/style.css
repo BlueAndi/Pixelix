@@ -38,6 +38,11 @@ code {
     user-select: none;
 }
 
+.scrollable-menu {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
 @media (min-width: 768px) {
     .bd-placeholder-img-lg {
         font-size: 3.5rem;
