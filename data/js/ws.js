@@ -228,7 +228,12 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
             }
         } else {
             console.error("Command " + this._pendingCmd.name + " failed.");
-            this._pendingCmd.reject();
+
+            if (0 < data.length) {
+                this._pendingCmd.reject(this._pendingCmd.name + ": " + data[0]);
+            } else {
+                this._pendingCmd.reject(this._pendingCmd.name + ": Unknown error.");
+            }
         }
 
         this._pendingCmd = null;

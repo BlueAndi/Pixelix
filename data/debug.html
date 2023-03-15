@@ -133,6 +133,7 @@
             var isLoggingEnabled        = false;
             var isMeasurementEnabled    = false;
             var filter                  = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
+            var isIperfAvailable        = false;
 
             function toggleLogLevel(logLevel) {
                 var index = filter.indexOf(logLevel);
@@ -231,6 +232,10 @@
             /* Enable all UI elements. */
             function enableUI() {
                 $("main :button").prop("disabled", false);
+
+                if (false == isIperfAvailable) {
+                    $("#buttonMeasurement").prop("disabled", true);
+                }
             }
 
             /* Toggle logging */
@@ -355,6 +360,9 @@
                         $("#buttonLog").text("Stop");
                     }
 
+                    /* Enable GUI elements, except measurement button. */
+                    enableUI();
+
                     /* Get current iperf status */
                     return wsClient.getIperf();
                 }).then(function(rsp) {
@@ -367,8 +375,10 @@
                         $("#buttonMeasurement").text("Stop");
                     }
 
-                    /* Enable UI at least. */
+                    /* Enable measurement button too. */
+                    isIperfAvailable = true;
                     enableUI();
+                    
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
