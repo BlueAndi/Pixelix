@@ -73,8 +73,6 @@ bool AudioService::start()
     }
     else
     {
-        uint8_t idx = 0U;
-
         if (false == audioDrv.registerObserver(m_spectrumAnalyzer))
         {
             LOG_ERROR("Couldn't register spectrum analyzer.");
@@ -82,6 +80,8 @@ bool AudioService::start()
         }
         else
         {
+            uint8_t idx = 0U;
+            
             while(MAX_TONE_DETECTORS > idx)
             {
                 if (false == audioDrv.registerObserver(m_audioToneDetector[idx]))
