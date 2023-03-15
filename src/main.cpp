@@ -117,6 +117,12 @@ void setup()
     #endif  /* ARDUINO_USB_CDC_ON_BOOT */
     #endif  /* ARDUINO_USB_MODE */
 
+    /* Ensure a distance between the boot mode message and the first log message.
+     * Otherwise the first log message appears in the same line than the last
+     * boot mode message.
+     */
+    Serial.println("\n");
+
     /* Set severity for esp logging system. */
     esp_log_level_set("*", CONFIG_ESP_LOG_SEVERITY);
 
