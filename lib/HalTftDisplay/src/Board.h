@@ -64,7 +64,7 @@ namespace Board
 /** Pin number of all used pins. */
 namespace Pin
 {
-#if defined(BOARD_LILYGO_T_DISPLAY_S3)
+#if defined(ARDUINO_LILYGO_T_DISPLAY_S3)
     /** Pin number of onboard LED */
     constexpr uint8_t    onBoardLedPinNo         = IoPin::NC;  // Not available
 
@@ -92,7 +92,7 @@ namespace Pin
     /** Pin number of user button */
     constexpr uint8_t    userButtonPinNo         = 14U;
 
-#else //defined(BOARD_LILYGO_T_DISPLAY_S3)
+#else //defined(ARDUINO_LILYGO_T_DISPLAY_S3)
 
     /** Pin number of onboard LED */
     constexpr uint8_t   onBoardLedPinNo         = 2U;
@@ -120,7 +120,7 @@ namespace Pin
 
     /** Pin number of user button */
     constexpr uint8_t   userButtonPinNo         = 35U;
-#endif //!defined(BOARD_LILYGO_T_DISPLAY_S3)
+#endif //!defined(ARDUINO_LILYGO_T_DISPLAY_S3)
 };
 
 /* Digital output pin: Onboard LED */
