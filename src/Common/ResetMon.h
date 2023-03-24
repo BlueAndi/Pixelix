@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __RESET_MON_H__
-#define __RESET_MON_H__
+#ifndef RESET_MON_H
+#define RESET_MON_H
 
 /******************************************************************************
  * Compile Switches
@@ -136,6 +136,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __RESET_MON_H__ */
+#endif  /* RESET_MON_H */
 
 /** @} */

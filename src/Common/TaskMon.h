@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TASK_MON_H__
-#define __TASK_MON_H__
+#ifndef TASK_MON_H
+#define TASK_MON_H
 
 /******************************************************************************
  * Compile Switches
@@ -126,6 +126,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __TASK_MON_H__ */
+#endif  /* TASK_MON_H */
 
 /** @} */

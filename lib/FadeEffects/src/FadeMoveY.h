@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __FADE_MOVE_Y_H__
-#define __FADE_MOVE_Y_H__
+#ifndef FADE_MOVE_Y_H
+#define FADE_MOVE_Y_H
 
 /******************************************************************************
  * Compile Switches
@@ -124,6 +124,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __FADE_MOVE_Y_H__ */
+#endif  /* FADE_MOVE_Y_H */
 
 /** @} */

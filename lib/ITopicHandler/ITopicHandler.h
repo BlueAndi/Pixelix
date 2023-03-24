@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ITOPICHANDLER_H__
-#define __ITOPICHANDLER_H__
+#ifndef ITOPICHANDLER_H
+#define ITOPICHANDLER_H
 
 /******************************************************************************
  * Compile Switches
@@ -98,6 +98,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ITOPICHANDLER_H__ */
+#endif  /* ITOPICHANDLER_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDALIAS_H__
-#define __WSCMDALIAS_H__
+#ifndef WSCMDALIAS_H
+#define WSCMDALIAS_H
 
 /******************************************************************************
  * Compile Switches
@@ -109,6 +109,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDALIAS_H__ */
+#endif  /* WSCMDALIAS_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BRIGHTNESS_CTRL_H__
-#define __BRIGHTNESS_CTRL_H__
+#ifndef BRIGHTNESS_CTRL_H
+#define BRIGHTNESS_CTRL_H
 
 /******************************************************************************
  * Compile Switches
@@ -378,6 +378,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BRIGHTNESS_CTRL_H__ */
+#endif  /* BRIGHTNESS_CTRL_H */
 
 /** @} */

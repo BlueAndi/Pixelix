@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSOR_SHT3X_H__
-#define __SENSOR_SHT3X_H__
+#ifndef SENSOR_SHT3X_H
+#define SENSOR_SHT3X_H
 
 /******************************************************************************
  * Compile Switches
@@ -259,6 +259,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SENSOR_SHT3X_H__ */
+#endif  /* SENSOR_SHT3X_H */
 
 /** @} */

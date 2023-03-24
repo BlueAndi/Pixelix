@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAGFX_TEST_HPP__
-#define __YAGFX_TEST_HPP__
+#ifndef YAGFX_TEST_HPP
+#define YAGFX_TEST_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -339,6 +339,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAGFX_TEST_HPP__ */
+#endif  /* YAGFX_TEST_HPP */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSTRING_H__
-#define __WSTRING_H__
+#ifndef WSTRING_H
+#define WSTRING_H
 
 /******************************************************************************
  * Compile Switches
@@ -479,6 +479,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSTRING_H__ */
+#endif  /* WSTRING_H */
 
 /** @} */

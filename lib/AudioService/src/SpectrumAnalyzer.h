@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SPECTRUM_ANALYZER_H__
-#define __SPECTRUM_ANALYZER_H__
+#ifndef SPECTRUM_ANALYZER_H
+#define SPECTRUM_ANALYZER_H
 
 /******************************************************************************
  * Includes
@@ -166,6 +166,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SPECTRUM_ANALYZER_H__ */
+#endif  /* SPECTRUM_ANALYZER_H */
 
 /** @} */

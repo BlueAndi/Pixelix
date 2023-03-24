@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __OPENWEATHERPLUGIN_H__
-#define __OPENWEATHERPLUGIN_H__
+#ifndef OPENWEATHERPLUGIN_H
+#define OPENWEATHERPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -517,6 +517,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __OPENWEATHERPLUGIN_H__ */
+#endif  /* OPENWEATHERPLUGIN_H */
 
 /** @} */

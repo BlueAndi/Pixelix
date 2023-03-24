@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __FILESYSTEM_H__
-#define __FILESYSTEM_H__
+#ifndef FILESYSTEM_H
+#define FILESYSTEM_H
 
 /******************************************************************************
  * Compile Switches
@@ -83,6 +83,6 @@
  * Functions
  *****************************************************************************/
 
-#endif  /* __FILESYSTEM_H__ */
+#endif  /* FILESYSTEM_H */
 
 /** @} */

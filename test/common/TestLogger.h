@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TEST_LOGGER_H__
-#define __TEST_LOGGER_H__
+#ifndef TEST_LOGGER_H
+#define TEST_LOGGER_H
 
 /******************************************************************************
  * Compile Switches
@@ -147,6 +147,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __TEST_LOGGER_H__ */
+#endif  /* TEST_LOGGER_H */
 
 /** @} */

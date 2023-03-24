@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __RESTARTSTATE_H__
-#define __RESTARTSTATE_H__
+#ifndef RESTARTSTATE_H
+#define RESTARTSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -127,6 +127,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __RESTARTSTATE_H__ */
+#endif  /* RESTARTSTATE_H */
 
 /** @} */

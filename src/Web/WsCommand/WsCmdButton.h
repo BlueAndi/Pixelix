@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDBUTTON_H__
-#define __WSCMDBUTTON_H__
+#ifndef WSCMDBUTTON_H
+#define WSCMDBUTTON_H
 
 /******************************************************************************
  * Compile Switches
@@ -103,6 +103,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDBUTTON_H__ */
+#endif  /* WSCMDBUTTON_H */
 
 /** @} */

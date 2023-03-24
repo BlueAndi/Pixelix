@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __PLUGINMGR_H__
-#define __PLUGINMGR_H__
+#ifndef PLUGINMGR_H
+#define PLUGINMGR_H
 
 /******************************************************************************
  * Compile Switches
@@ -274,6 +274,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __PLUGINMGR_H__ */
+#endif  /* PLUGINMGR_H */
 
 /** @} */

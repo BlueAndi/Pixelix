@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __DATETIMEPLUGIN_H__
-#define __DATETIMEPLUGIN_H__
+#ifndef DATETIMEPLUGIN_H
+#define DATETIMEPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -390,6 +390,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __DATETIMEPLUGIN_H__ */
+#endif  /* DATETIMEPLUGIN_H */
 
 /** @} */

@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef __SHELLYPLUGSPLUGIN_H__
-#define __SHELLYPLUGSPLUGIN_H__
+#ifndef SHELLYPLUGSPLUGIN_H
+#define SHELLYPLUGSPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -356,6 +356,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SHELLYPLUGSPLUGIN_H__ */
+#endif  /* SHELLYPLUGSPLUGIN_H */
 
 /** @} */

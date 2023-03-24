@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __DDPPLUGIN_H__
-#define __DDPPLUGIN_H__
+#ifndef DDPPLUGIN_H
+#define DDPPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -171,6 +171,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __DDPPLUGIN_H__ */
+#endif  /* DDPPLUGIN_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MQTT_API_TOPIC_HANDLER_H__
-#define __MQTT_API_TOPIC_HANDLER_H__
+#ifndef MQTT_API_TOPIC_HANDLER_H
+#define MQTT_API_TOPIC_HANDLER_H
 
 /******************************************************************************
  * Compile Switches
@@ -156,6 +156,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __MQTT_API_TOPIC_HANDLER_H__ */
+#endif  /* MQTT_API_TOPIC_HANDLER_H */
 
 /** @} */

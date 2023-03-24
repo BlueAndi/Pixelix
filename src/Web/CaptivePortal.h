@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CAPTIVE_PORTAL_H__
-#define __CAPTIVE_PORTAL_H__
+#ifndef CAPTIVE_PORTAL_H
+#define CAPTIVE_PORTAL_H
 
 /******************************************************************************
  * Compile Switches
@@ -78,6 +78,6 @@ bool isRestartRequested();
 
 }
 
-#endif  /* __CAPTIVE_PORTAL_H__ */
+#endif  /* CAPTIVE_PORTAL_H */
 
 /** @} */

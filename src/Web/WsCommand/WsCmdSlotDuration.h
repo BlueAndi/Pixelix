@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDSLOTDURATION_H__
-#define __WSCMDSLOTDURATION_H__
+#ifndef WSCMDSLOTDURATION_H
+#define WSCMDSLOTDURATION_H
 
 /******************************************************************************
  * Compile Switches
@@ -109,6 +109,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDSLOTDURATION_H__ */
+#endif  /* WSCMDSLOTDURATION_H */
 
 /** @} */

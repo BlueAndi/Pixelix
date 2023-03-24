@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef __GRUENBECKPLUGIN_H__
-#define __GRUENBECKPLUGIN_H__
+#ifndef GRUENBECKPLUGIN_H
+#define GRUENBECKPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -377,6 +377,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __GRUENBECKPLUGIN_H__ */
+#endif  /* GRUENBECKPLUGIN_H */
 
 /** @} */

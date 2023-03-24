@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __AMBIENT_LIGHT_SENSOR_H__
-#define __AMBIENT_LIGHT_SENSOR_H__
+#ifndef AMBIENT_LIGHT_SENSOR_H
+#define AMBIENT_LIGHT_SENSOR_H
 
 /******************************************************************************
  * Compile Switches
@@ -208,6 +208,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __AMBIENT_LIGHT_SENSOR_H__ */
+#endif  /* AMBIENT_LIGHT_SENSOR_H */
 
 /** @} */

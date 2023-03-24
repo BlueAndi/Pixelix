@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __LINKEDLIST_HPP__
-#define __LINKEDLIST_HPP__
+#ifndef LINKEDLIST_HPP
+#define LINKEDLIST_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -812,6 +812,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __LINKEDLIST_HPP__ */
+#endif  /* LINKEDLIST_HPP */
 
 /** @} */

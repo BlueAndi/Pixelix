@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BASE_GFX_HPP__
-#define __BASE_GFX_HPP__
+#ifndef BASE_GFX_HPP
+#define BASE_GFX_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -402,6 +402,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BASE_GFX_HPP__ */
+#endif  /* BASE_GFX_HPP */
 
 /** @} */

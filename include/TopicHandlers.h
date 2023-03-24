@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TOPIC_HANDLER_H__
-#define __TOPIC_HANDLER_H__
+#ifndef TOPIC_HANDLER_H
+#define TOPIC_HANDLER_H
 
 /******************************************************************************
  * Compile Switches
@@ -74,6 +74,6 @@ extern ITopicHandler** getList(uint8_t& count);
 
 }
 
-#endif  /* __TOPIC_HANDLER_H__ */
+#endif  /* TOPIC_HANDLER_H */
 
 /** @} */

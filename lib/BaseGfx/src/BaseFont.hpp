@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BASE_FONT_HPP__
-#define __BASE_FONT_HPP__
+#ifndef BASE_FONT_HPP
+#define BASE_FONT_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -294,6 +294,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BASE_FONT_HPP__ */
+#endif  /* BASE_FONT_HPP */
 
 /** @} */

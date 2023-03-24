@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SPRITE_SHEET_H__
-#define __SPRITE_SHEET_H__
+#ifndef SPRITE_SHEET_H
+#define SPRITE_SHEET_H
 
 /******************************************************************************
  * Compile Switches
@@ -338,6 +338,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SPRITE_SHEET_H__ */
+#endif  /* SPRITE_SHEET_H */
 
 /** @} */

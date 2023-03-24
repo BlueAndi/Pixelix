@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __UPDATEMGR_H__
-#define __UPDATEMGR_H__
+#ifndef UPDATEMGR_H
+#define UPDATEMGR_H
 
 /******************************************************************************
  * Compile Switches
@@ -217,6 +217,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __UPDATEMGR_H__ */
+#endif  /* UPDATEMGR_H */
 
 /** @} */

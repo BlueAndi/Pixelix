@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __KEY_VALUE_JSON_H__
-#define __KEY_VALUE_JSON_H__
+#ifndef KEY_VALUE_JSON_H
+#define KEY_VALUE_JSON_H
 
 /******************************************************************************
  * Compile Switches
@@ -191,6 +191,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __KEY_VALUE_JSON_H__ */
+#endif  /* KEY_VALUE_JSON_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TASK_PROXY_HPP__
-#define __TASK_PROXY_HPP__
+#ifndef TASK_PROXY_HPP
+#define TASK_PROXY_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -123,6 +123,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __TASK_PROXY_HPP__ */
+#endif  /* TASK_PROXY_HPP */
 
 /** @} */

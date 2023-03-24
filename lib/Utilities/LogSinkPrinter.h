@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __LOG_SINK_PRINTER_H__
-#define __LOG_SINK_PRINTER_H__
+#ifndef LOG_SINK_PRINTER_H
+#define LOG_SINK_PRINTER_H
 
 /******************************************************************************
  * Compile Switches
@@ -173,6 +173,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __LOG_SINK_PRINTER_H__ */
+#endif  /* LOG_SINK_PRINTER_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BITMAPWIDGET_H__
-#define __BITMAPWIDGET_H__
+#ifndef BITMAPWIDGET_H
+#define BITMAPWIDGET_H
 
 /******************************************************************************
  * Compile Switches
@@ -243,6 +243,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BITMAPWIDGET_H__ */
+#endif  /* BITMAPWIDGET_H */
 
 /** @} */

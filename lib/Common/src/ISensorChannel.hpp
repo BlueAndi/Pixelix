@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ISENSOR_CHANNEL_HPP__
-#define __ISENSOR_CHANNEL_HPP__
+#ifndef ISENSOR_CHANNEL_HPP
+#define ISENSOR_CHANNEL_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -203,6 +203,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ISENSOR_CHANNEL_HPP__ */
+#endif  /* ISENSOR_CHANNEL_HPP */
 
 /** @} */

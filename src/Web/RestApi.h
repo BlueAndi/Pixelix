@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __RESTAPI_H__
-#define __RESTAPI_H__
+#ifndef RESTAPI_H
+#define RESTAPI_H
 
 /******************************************************************************
  * Compile Switches
@@ -83,6 +83,6 @@ void error(AsyncWebServerRequest* request);
 
 }
 
-#endif  /* __RESTAPI_H__ */
+#endif  /* RESTAPI_H */
 
 /** @} */

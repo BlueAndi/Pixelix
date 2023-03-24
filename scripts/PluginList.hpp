@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __PLUGIN_LIST_HPP__
-#define __PLUGIN_LIST_HPP__
+#ifndef PLUGIN_LIST_HPP
+#define PLUGIN_LIST_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -77,6 +77,6 @@ $REGISTER
 
 };
 
-#endif  /* __PLUGIN_LIST_HPP__ */
+#endif  /* PLUGIN_LIST_HPP */
 
 /** @} */

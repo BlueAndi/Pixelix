@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSOR_PLUGIN_H__
-#define __SENSOR_PLUGIN_H__
+#ifndef SENSOR_PLUGIN_H
+#define SENSOR_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -277,6 +277,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SENSOR_PLUGIN_H__ */
+#endif  /* SENSOR_PLUGIN_H */
 
 /** @} */

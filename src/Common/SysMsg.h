@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SYSMSG_HPP__
-#define __SYSMSG_HPP__
+#ifndef SYSMSG_HPP
+#define SYSMSG_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -128,6 +128,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SYSMSG_HPP__ */
+#endif  /* SYSMSG_HPP */
 
 /** @} */

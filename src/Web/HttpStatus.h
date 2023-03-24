@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __HTTP_STATUS__
-#define __HTTP_STATUS__
+#ifndef HTTP_STATUS
+#define HTTP_STATUS
 
 /******************************************************************************
  * Compile Switches
@@ -129,6 +129,6 @@ enum StatusCode
 
 }
 
-#endif  /* __HTTP_STATUS__ */
+#endif  /* HTTP_STATUS */
 
 /** @} */

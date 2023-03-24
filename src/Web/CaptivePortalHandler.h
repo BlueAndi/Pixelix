@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CAPTIVE_PORTAL_HANDLER_H__
-#define __CAPTIVE_PORTAL_HANDLER_H__
+#ifndef CAPTIVE_PORTAL_HANDLER_H
+#define CAPTIVE_PORTAL_HANDLER_H
 
 /******************************************************************************
  * Compile Switches
@@ -136,6 +136,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CAPTIVE_PORTAL_HANDLER_H__ */
+#endif  /* CAPTIVE_PORTAL_HANDLER_H */
 
 /** @} */

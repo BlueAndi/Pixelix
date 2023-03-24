@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __INITSTATE_H__
-#define __INITSTATE_H__
+#ifndef INITSTATE_H
+#define INITSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -142,6 +142,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __INITSTATE_H__ */
+#endif  /* INITSTATE_H */
 
 /** @} */

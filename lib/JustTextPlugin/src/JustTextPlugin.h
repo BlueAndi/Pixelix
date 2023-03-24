@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __JUSTTEXTPLUGIN_H__
-#define __JUSTTEXTPLUGIN_H__
+#ifndef JUSTTEXTPLUGIN_H
+#define JUSTTEXTPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -228,6 +228,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __JUSTTEXTPLUGIN_H__ */
+#endif  /* JUSTTEXTPLUGIN_H */
 
 /** @} */

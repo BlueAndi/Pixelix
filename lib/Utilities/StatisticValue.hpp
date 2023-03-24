@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __STATISTIC_VALUE_HPP__
-#define __STATISTIC_VALUE_HPP__
+#ifndef STATISTIC_VALUE_HPP
+#define STATISTIC_VALUE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -225,6 +225,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __STATISTIC_VALUE_HPP__ */
+#endif  /* STATISTIC_VALUE_HPP */
 
 /** @} */

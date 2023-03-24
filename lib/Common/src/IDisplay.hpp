@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __DISPLAY_HPP__
-#define __DISPLAY_HPP__
+#ifndef DISPLAY_HPP
+#define DISPLAY_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -119,6 +119,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __DISPLAY_HPP__ */
+#endif  /* DISPLAY_HPP */
 
 /** @} */

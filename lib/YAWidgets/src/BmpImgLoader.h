@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BMP_IMG_LOADER_H__
-#define __BMP_IMG_LOADER_H__
+#ifndef BMP_IMG_LOADER_H
+#define BMP_IMG_LOADER_H
 
 /******************************************************************************
  * Compile Switches
@@ -134,6 +134,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BMP_IMG_LOADER_H__ */
+#endif  /* BMP_IMG_LOADER_H */
 
 /** @} */

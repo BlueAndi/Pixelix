@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __REST_UTIL_H__
-#define __REST_UTIL_H__
+#ifndef REST_UTIL_H
+#define REST_UTIL_H
 
 /******************************************************************************
  * Compile Switches
@@ -98,6 +98,6 @@ void sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& jsonDoc, ui
 
 }
 
-#endif  /* __REST_UTIL_H__ */
+#endif  /* REST_UTIL_H */
 
 /** @} */

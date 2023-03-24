@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAGFX_BITMAP_H__
-#define __YAGFX_BITMAP_H__
+#ifndef YAGFX_BITMAP_H
+#define YAGFX_BITMAP_H
 
 /******************************************************************************
  * Compile Switches
@@ -75,6 +75,6 @@ using YAGfxOverlayBitmap = BaseGfxOverlayBitmap<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAGFX_BITMAP_H__ */
+#endif  /* YAGFX_BITMAP_H */
 
 /** @} */

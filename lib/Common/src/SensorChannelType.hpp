@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSOR_CHANNEL_TYPE_HPP__
-#define __SENSOR_CHANNEL_TYPE_HPP__
+#ifndef SENSOR_CHANNEL_TYPE_HPP
+#define SENSOR_CHANNEL_TYPE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -185,6 +185,6 @@ typedef SensorChannelType<float, ISensorChannel::DATA_TYPE_FLOAT32> SensorChanne
  * Functions
  *****************************************************************************/
 
-#endif  /* __SENSOR_CHANNEL_TYPE_HPP__ */
+#endif  /* SENSOR_CHANNEL_TYPE_HPP */
 
 /** @} */

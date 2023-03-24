@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MEM_MON_H__
-#define __MEM_MON_H__
+#ifndef MEM_MON_H
+#define MEM_MON_H
 
 /******************************************************************************
  * Compile Switches
@@ -115,6 +115,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __MEM_MON_H__ */
+#endif  /* MEM_MON_H */
 
 /** @} */

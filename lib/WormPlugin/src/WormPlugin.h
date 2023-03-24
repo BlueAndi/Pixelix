@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WORM_PLUGIN_H__
-#define __WORM_PLUGIN_H__
+#ifndef WORM_PLUGIN_H
+#define WORM_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -336,6 +336,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WORM_PLUGIN_H__ */
+#endif  /* WORM_PLUGIN_H */
 
 /** @} */

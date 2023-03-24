@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ERRORSTATE_H__
-#define __ERRORSTATE_H__
+#ifndef ERRORSTATE_H
+#define ERRORSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -161,6 +161,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ERRORSTATE_H__ */
+#endif  /* ERRORSTATE_H */
 
 /** @} */

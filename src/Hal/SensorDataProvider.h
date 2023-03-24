@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSOR_DATA_PROVIDER_H__
-#define __SENSOR_DATA_PROVIDER_H__
+#ifndef SENSOR_DATA_PROVIDER_H
+#define SENSOR_DATA_PROVIDER_H
 
 /******************************************************************************
  * Compile Switches
@@ -151,6 +151,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SENSOR_DATA_PROVIDER_H__ */
+#endif  /* SENSOR_DATA_PROVIDER_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __JSON_FILE_H__
-#define __JSON_FILE_H__
+#ifndef JSON_FILE_H
+#define JSON_FILE_H
 
 /******************************************************************************
  * Compile Switches
@@ -129,6 +129,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __JSON_FILE_H__ */
+#endif  /* JSON_FILE_H */
 
 /** @} */

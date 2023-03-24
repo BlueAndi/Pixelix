@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __PLUGINFACTORY_H__
-#define __PLUGINFACTORY_H__
+#ifndef PLUGINFACTORY_H
+#define PLUGINFACTORY_H
 
 /******************************************************************************
  * Compile Switches
@@ -164,6 +164,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __PLUGINFACTORY_H__ */
+#endif  /* PLUGINFACTORY_H */
 
 /** @} */

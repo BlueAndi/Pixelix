@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ICONTEXTPLUGIN_H__
-#define __ICONTEXTPLUGIN_H__
+#ifndef ICONTEXTPLUGIN_H
+#define ICONTEXTPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -297,6 +297,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ICONTEXTPLUGIN_H__ */
+#endif  /* ICONTEXTPLUGIN_H */
 
 /** @} */

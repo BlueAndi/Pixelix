@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TEXTWIDGET_H__
-#define __TEXTWIDGET_H__
+#ifndef TEXTWIDGET_H
+#define TEXTWIDGET_H
 
 /******************************************************************************
  * Compile Switches
@@ -462,6 +462,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __TEXTWIDGET_H__ */
+#endif  /* TEXTWIDGET_H */
 
 /** @} */

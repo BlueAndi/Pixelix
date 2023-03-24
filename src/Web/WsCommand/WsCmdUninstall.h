@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDUNINSTALL_H__
-#define __WSCMDUNINSTALL_H__
+#ifndef WSCMDUNINSTALL_H
+#define WSCMDUNINSTALL_H
 
 /******************************************************************************
  * Compile Switches
@@ -106,6 +106,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDUNINSTALL_H__ */
+#endif  /* WSCMDUNINSTALL_H */
 
 /** @} */

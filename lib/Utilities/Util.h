@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __UTILITY_H__
-#define __UTILITY_H__
+#ifndef UTILITY_H
+#define UTILITY_H
 
 /******************************************************************************
  * Compile Switches
@@ -138,6 +138,6 @@ extern uint32_t hexToUInt32(const String& str);
 
 }
 
-#endif  /* __UTILITY_H__ */
+#endif  /* UTILITY_H */
 
 /** @} */

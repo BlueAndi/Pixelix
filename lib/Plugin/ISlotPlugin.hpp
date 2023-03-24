@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ISLOTPLUGIN_HPP__
-#define __ISLOTPLUGIN_HPP__
+#ifndef ISLOTPLUGIN_HPP
+#define ISLOTPLUGIN_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -88,6 +88,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ISLOTPLUGIN_HPP__ */
+#endif  /* ISLOTPLUGIN_HPP */
 
 /** @} */

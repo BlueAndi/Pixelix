@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __DDPSERVER_H__
-#define __DDPSERVER_H__
+#ifndef DDPSERVER_H
+#define DDPSERVER_H
 
 /******************************************************************************
  * Compile Switches
@@ -513,6 +513,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __DDPSERVER_H__ */
+#endif  /* DDPSERVER_H */
 
 /** @} */

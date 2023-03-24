@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDEFFECT_H__
-#define __WSCMDEFFECT_H__
+#ifndef WSCMDEFFECT_H
+#define WSCMDEFFECT_H
 
 /******************************************************************************
  * Compile Switches
@@ -107,6 +107,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDEFFECT_H__ */
+#endif  /* WSCMDEFFECT_H */
 
 /** @} */

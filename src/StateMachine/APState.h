@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __APSTATE_H__
-#define __APSTATE_H__
+#ifndef APSTATE_H
+#define APSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -142,6 +142,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __APSTATE_H__ */
+#endif  /* APSTATE_H */
 
 /** @} */

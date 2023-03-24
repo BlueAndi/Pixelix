@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SIMPLETIMER_HPP__
-#define __SIMPLETIMER_HPP__
+#ifndef SIMPLETIMER_HPP
+#define SIMPLETIMER_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -210,6 +210,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SIMPLETIMER_HPP__ */
+#endif  /* SIMPLETIMER_HPP */
 
 /** @} */

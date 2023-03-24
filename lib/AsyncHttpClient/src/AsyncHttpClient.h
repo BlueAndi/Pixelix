@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ASYNC_HTTP_CLIENT_H__
-#define __ASYNC_HTTP_CLIENT_H__
+#ifndef ASYNC_HTTP_CLIENT_H
+#define ASYNC_HTTP_CLIENT_H
 
 /******************************************************************************
  * Compile Switches
@@ -641,6 +641,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ASYNC_HTTP_CLIENT_H__ */
+#endif  /* ASYNC_HTTP_CLIENT_H */
 
 /** @} */

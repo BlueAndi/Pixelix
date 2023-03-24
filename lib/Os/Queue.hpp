@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __QUEUE_HPP__
-#define __QUEUE_HPP__
+#ifndef QUEUE_HPP
+#define QUEUE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -196,6 +196,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __QUEUE_HPP__ */
+#endif  /* QUEUE_HPP */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAGFX_MAP_H__
-#define __YAGFX_MAP_H__
+#ifndef YAGFX_MAP_H
+#define YAGFX_MAP_H
 
 /******************************************************************************
  * Compile Switches
@@ -61,6 +61,6 @@ using YAGfxMap = BaseGfxMap<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAGFX_MAP_H__ */
+#endif  /* YAGFX_MAP_H */
 
 /** @} */

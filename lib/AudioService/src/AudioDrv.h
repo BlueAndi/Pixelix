@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __AUDIO_DRV_H__
-#define __AUDIO_DRV_H__
+#ifndef AUDIO_DRV_H
+#define AUDIO_DRV_H
 
 /******************************************************************************
  * Includes
@@ -318,6 +318,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __AUDIO_DRV_H__ */
+#endif  /* AUDIO_DRV_H */
 
 /** @} */

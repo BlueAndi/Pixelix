@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDBRIGHTNESS_H__
-#define __WSCMDBRIGHTNESS_H__
+#ifndef WSCMDBRIGHTNESS_H
+#define WSCMDBRIGHTNESS_H
 
 /******************************************************************************
  * Compile Switches
@@ -109,6 +109,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDBRIGHTNESS_H__ */
+#endif  /* WSCMDBRIGHTNESS_H */
 
 /** @} */

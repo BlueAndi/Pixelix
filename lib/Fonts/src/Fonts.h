@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __FONTS_HPP__
-#define __FONTS_HPP__
+#ifndef FONTS_HPP
+#define FONTS_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -102,6 +102,6 @@ extern YAFont& getFontByType(FontType type);
 
 }
 
-#endif  /* __FONTS_HPP__ */
+#endif  /* FONTS_HPP */
 
 /** @} */

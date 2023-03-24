@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WEBSOCKET_H__
-#define __WEBSOCKET_H__
+#ifndef WEBSOCKET_H
+#define WEBSOCKET_H
 
 /******************************************************************************
  * Compile Switches
@@ -205,6 +205,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WEBSOCKET_H__ */
+#endif  /* WEBSOCKET_H */
 
 /** @} */

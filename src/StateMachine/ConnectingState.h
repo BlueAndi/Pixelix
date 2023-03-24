@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CONNECTINGSTATE_H__
-#define __CONNECTINGSTATE_H__
+#ifndef CONNECTINGSTATE_H
+#define CONNECTINGSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -151,6 +151,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTINGSTATE_H__ */
+#endif  /* CONNECTINGSTATE_H */
 
 /** @} */

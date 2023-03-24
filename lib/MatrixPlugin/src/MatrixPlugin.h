@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MATRIXPLUGIN_H__
-#define __MATRIXPLUGIN_H__
+#ifndef MATRIXPLUGIN_H
+#define MATRIXPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -128,6 +128,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __MATRIXPLUGIN_H__ */
+#endif  /* MATRIXPLUGIN_H */
 
 /** @} */

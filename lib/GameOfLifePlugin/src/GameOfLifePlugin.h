@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __GAMEOFLIFEPLUGIN_H__
-#define __GAMEOFLIFEPLUGIN_H__
+#ifndef GAMEOFLIFEPLUGIN_H
+#define GAMEOFLIFEPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -257,6 +257,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __GAMEOFLIFEPLUGIN_H__ */
+#endif  /* GAMEOFLIFEPLUGIN_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YATEXT_H__
-#define __YATEXT_H__
+#ifndef YATEXT_H
+#define YATEXT_H
 
 /******************************************************************************
  * Compile Switches
@@ -63,6 +63,6 @@ using YAGfxText = BaseGfxText<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* __YATEXT_H__ */
+#endif  /* YATEXT_H */
 
 /** @} */

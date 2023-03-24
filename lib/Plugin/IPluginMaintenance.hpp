@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __IPLUGIN_MAINTENANCE_HPP__
-#define __IPLUGIN_MAINTENANCE_HPP__
+#ifndef IPLUGIN_MAINTENANCE_HPP
+#define IPLUGIN_MAINTENANCE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -271,6 +271,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* __IPLUGIN_MAINTENANCE_HPP__ */
+#endif  /* IPLUGIN_MAINTENANCE_HPP */
 
 /** @} */

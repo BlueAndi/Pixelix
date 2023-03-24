@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ARDUINO_H__
-#define __ARDUINO_H__
+#ifndef ARDUINO_H
+#define ARDUINO_H
 
 /******************************************************************************
  * Compile Switches
@@ -85,6 +85,6 @@ extern unsigned long millis();
  */
 extern uint32_t esp_log_timestamp(void);
 
-#endif  /* __ARDUINO_H__ */
+#endif  /* ARDUINO_H */
 
 /** @} */

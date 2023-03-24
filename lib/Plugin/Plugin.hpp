@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __PLUGIN_HPP__
-#define __PLUGIN_HPP__
+#ifndef PLUGIN_HPP
+#define PLUGIN_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -383,6 +383,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __PLUGIN_HPP__ */
+#endif  /* PLUGIN_HPP */
 
 /** @} */

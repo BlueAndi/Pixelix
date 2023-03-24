@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BUTTON_HANDLER_H__
-#define __BUTTON_HANDLER_H__
+#ifndef BUTTON_HANDLER_H
+#define BUTTON_HANDLER_H
 
 /******************************************************************************
  * Includes
@@ -136,6 +136,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BUTTON_HANDLER_H__ */
+#endif  /* BUTTON_HANDLER_H */
 
 /** @} */

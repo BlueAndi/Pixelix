@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BASE_GFX_PEN_HPP__
-#define __BASE_GFX_PEN_HPP__
+#ifndef BASE_GFX_PEN_HPP
+#define BASE_GFX_PEN_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -170,6 +170,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BASE_GFX_PEN_HPP__ */
+#endif  /* BASE_GFX_PEN_HPP */
 
 /** @} */

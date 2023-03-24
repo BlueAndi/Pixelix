@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
+#ifndef CONNECTEDSTATE_H
+#define CONNECTEDSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -134,6 +134,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+#endif  /* CONNECTEDSTATE_H */
 
 /** @} */

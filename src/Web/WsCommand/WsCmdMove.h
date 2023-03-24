@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDMOVE_H__
-#define __WSCMDMOVE_H__
+#ifndef WSCMDMOVE_H
+#define WSCMDMOVE_H
 
 /******************************************************************************
  * Compile Switches
@@ -111,6 +111,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDMOVE_H__ */
+#endif  /* WSCMDMOVE_H */
 
 /** @} */

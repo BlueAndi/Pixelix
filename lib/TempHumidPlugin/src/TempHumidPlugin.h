@@ -32,8 +32,8 @@
  * @{
  */
 
-#ifndef __TEMPHUMIDPLUGIN_H__
-#define __TEMPHUMIDPLUGIN_H__
+#ifndef TEMPHUMIDPLUGIN_H
+#define TEMPHUMIDPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -263,6 +263,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __TEMPHUMIDPLUGIN_H__ */
+#endif  /* TEMPHUMIDPLUGIN_H */
 
 /** @} */

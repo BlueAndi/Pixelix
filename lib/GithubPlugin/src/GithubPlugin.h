@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __GITHUB_PLUGIN_H__
-#define __GITHUB_PLUGIN_H__
+#ifndef GITHUB_PLUGIN_H
+#define GITHUB_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -378,6 +378,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __GITHUB_PLUGIN_H__ */
+#endif  /* GITHUB_PLUGIN_H */
 
 /** @} */

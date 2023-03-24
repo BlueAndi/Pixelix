@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YACOLOR_H__
-#define __YACOLOR_H__
+#ifndef YACOLOR_H
+#define YACOLOR_H
 
 /******************************************************************************
  * Compile Switches
@@ -63,6 +63,6 @@ typedef Rgb888  Color;
  * Functions
  *****************************************************************************/
 
-#endif  /* __YACOLOR_H__ */
+#endif  /* YACOLOR_H */
 
 /** @} */

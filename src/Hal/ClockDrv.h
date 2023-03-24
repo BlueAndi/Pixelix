@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CLOCKDRV_H__
-#define __CLOCKDRV_H__
+#ifndef CLOCKDRV_H
+#define CLOCKDRV_H
 
 /******************************************************************************
  * Compile Switches
@@ -143,6 +143,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CLOCKDRV_H__ */
+#endif  /* CLOCKDRV_H */
 
 /** @} */

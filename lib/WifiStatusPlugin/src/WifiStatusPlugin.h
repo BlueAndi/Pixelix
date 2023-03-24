@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WIFI_STATUS_PLUGIN_H__
-#define __WIFI_STATUS_PLUGIN_H__
+#ifndef WIFI_STATUS_PLUGIN_H
+#define WIFI_STATUS_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -205,6 +205,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WIFI_STATUS_PLUGIN_H__ */
+#endif  /* WIFI_STATUS_PLUGIN_H */
 
 /** @} */

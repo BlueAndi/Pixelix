@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WIDGET_HPP__
-#define __WIDGET_HPP__
+#ifndef WIDGET_HPP
+#define WIDGET_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -287,6 +287,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WIDGET_HPP__ */
+#endif  /* WIDGET_HPP */
 
 /** @} */

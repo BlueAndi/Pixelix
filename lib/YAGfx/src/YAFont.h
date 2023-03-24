@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAFONT_H__
-#define __YAFONT_H__
+#ifndef YAFONT_H
+#define YAFONT_H
 
 /******************************************************************************
  * Compile Switches
@@ -63,6 +63,6 @@ using YAFont = BaseFont<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAFONT_H__ */
+#endif  /* YAFONT_H */
 
 /** @} */

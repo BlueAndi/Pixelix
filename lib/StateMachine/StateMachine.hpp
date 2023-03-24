@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __STATEMACHINE_HPP__
-#define __STATEMACHINE_HPP__
+#ifndef STATEMACHINE_HPP
+#define STATEMACHINE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -200,6 +200,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __STATEMACHINE_HPP__ */
+#endif  /* STATEMACHINE_HPP */
 
 /** @} */

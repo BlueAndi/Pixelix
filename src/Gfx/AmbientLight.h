@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __AMBIENT_LIGHT_H__
-#define __AMBIENT_LIGHT_H__
+#ifndef AMBIENT_LIGHT_H
+#define AMBIENT_LIGHT_H
 
 /******************************************************************************
  * Compile Switches
@@ -100,6 +100,6 @@ extern AmbientLightLevel getAmbientLightLevel(float illuminance);
  * Functions
  *****************************************************************************/
 
-#endif  /* __AMBIENT_LIGHT_H__ */
+#endif  /* AMBIENT_LIGHT_H */
 
 /** @} */

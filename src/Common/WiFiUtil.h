@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WIFI_UTIL_H__
-#define __WIFI_UTIL_H__
+#ifndef WIFI_UTIL_H
+#define WIFI_UTIL_H
 
 /******************************************************************************
  * Compile Switches
@@ -74,6 +74,6 @@ extern uint8_t getSignalQuality(int8_t rssi);
 
 }
 
-#endif  /* __WIFI_UTIL_H__ */
+#endif  /* WIFI_UTIL_H */
 
 /** @} */

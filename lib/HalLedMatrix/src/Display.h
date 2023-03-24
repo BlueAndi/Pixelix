@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __DISPLAY_H__
-#define __DISPLAY_H__
+#ifndef DISPLAY_H
+#define DISPLAY_H
 
 /******************************************************************************
  * Compile Switches
@@ -244,6 +244,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __DISPLAY_H__ */
+#endif  /* DISPLAY_H */
 
 /** @} */

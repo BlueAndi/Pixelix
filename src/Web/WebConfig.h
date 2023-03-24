@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WEBCONFIG_H__
-#define __WEBCONFIG_H__
+#ifndef WEBCONFIG_H
+#define WEBCONFIG_H
 
 /******************************************************************************
  * Compile Switches
@@ -84,6 +84,6 @@ static const uint32_t   ARDUINO_OTA_PORT        = 3232U;
 
 }
 
-#endif  /* __WEBCONFIG_H__ */
+#endif  /* WEBCONFIG_H */
 
 /** @} */

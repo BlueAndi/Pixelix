@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __VOLUMIOPLUGIN_H__
-#define __VOLUMIOPLUGIN_H__
+#ifndef VOLUMIOPLUGIN_H
+#define VOLUMIOPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -396,6 +396,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __VOLUMIOPLUGIN_H__ */
+#endif  /* VOLUMIOPLUGIN_H */
 
 /** @} */

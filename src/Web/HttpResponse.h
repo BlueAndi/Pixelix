@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __HTTP_RESPONSE_H__
-#define __HTTP_RESPONSE_H__
+#ifndef HTTP_RESPONSE_H
+#define HTTP_RESPONSE_H
 
 /******************************************************************************
  * Compile Switches
@@ -207,6 +207,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __HTTP_RESPONSE_H__ */
+#endif  /* HTTP_RESPONSE_H */
 
 /** @} */

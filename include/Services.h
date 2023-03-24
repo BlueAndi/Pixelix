@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SERVICES_H__
-#define __SERVICES_H__
+#ifndef SERVICES_H
+#define SERVICES_H
 
 /******************************************************************************
  * Compile Switches
@@ -82,6 +82,6 @@ extern void processAll();
 
 }
 
-#endif  /* __SERVICES_H__ */
+#endif  /* SERVICES_H */
 
 /** @} */

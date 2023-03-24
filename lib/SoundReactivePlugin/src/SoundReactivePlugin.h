@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SOUND_REACTIVE_PLUGIN_H__
-#define __SOUND_REACTIVE_PLUGIN_H__
+#ifndef SOUND_REACTIVE_PLUGIN_H
+#define SOUND_REACTIVE_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -362,6 +362,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SOUND_REACTIVE_PLUGIN_H__ */
+#endif  /* SOUND_REACTIVE_PLUGIN_H */
 
 /** @} */

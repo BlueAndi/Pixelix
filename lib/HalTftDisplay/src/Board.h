@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BOARD_H__
-#define __BOARD_H__
+#ifndef BOARD_H
+#define BOARD_H
 
 /******************************************************************************
  * Includes
@@ -157,6 +157,6 @@ extern void reset();
 
 };
 
-#endif  /* __BOARD_H__ */
+#endif  /* BOARD_H */
 
 /** @} */

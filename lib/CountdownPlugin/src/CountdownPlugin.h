@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef __COUNTDOWNPLUGIN__
-#define __COUNTDOWNPLUGIN__
+#ifndef COUNTDOWNPLUGIN_H
+#define COUNTDOWNPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -432,6 +432,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __COUNTDOWNPLUGIN__ */
+#endif  /* COUNTDOWNPLUGIN_H */
 
 /** @} */

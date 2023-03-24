@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDPLUGINS_H__
-#define __WSCMDPLUGINS_H__
+#ifndef WSCMDPLUGINS_H
+#define WSCMDPLUGINS_H
 
 /******************************************************************************
  * Compile Switches
@@ -103,6 +103,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDPLUGINS_H__ */
+#endif  /* WSCMDPLUGINS_H */
 
 /** @} */

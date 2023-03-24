@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __LOGGING_H__
-#define __LOGGING_H__
+#ifndef LOGGING_H
+#define LOGGING_H
 
 /******************************************************************************
  * Compile Switches
@@ -396,6 +396,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __LOGGING_H__ */
+#endif  /* LOGGING_H */
 
 /** @} */

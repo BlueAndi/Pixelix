@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAGFXPEN_H__
-#define __YAGFXPEN_H__
+#ifndef YAGFXPEN_H
+#define YAGFXPEN_H
 
 /******************************************************************************
  * Compile Switches
@@ -63,6 +63,6 @@ using YAGfxPen = BaseGfxPen<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAGFXPEN_H__ */
+#endif  /* YAGFXPEN_H */
 
 /** @} */

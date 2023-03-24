@@ -32,8 +32,8 @@
  * @{
  */
 
-#ifndef __BTCQUOTEPLUGIN_H__
-#define __BTCQUOTEPLUGIN_H__
+#ifndef BTCQUOTEPLUGIN_H
+#define BTCQUOTEPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -290,6 +290,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BTCQUOTEPLUGIN_H__ */
+#endif  /* BTCQUOTEPLUGIN_H */
 
 /** @} */

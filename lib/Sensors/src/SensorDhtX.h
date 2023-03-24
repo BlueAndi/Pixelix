@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSOR_DHTX_H__
-#define __SENSOR_DHTX_H__
+#ifndef SENSOR_DHTX_H
+#define SENSOR_DHTX_H
 
 /******************************************************************************
  * Compile Switches
@@ -272,6 +272,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SENSOR_DHTX_H__ */
+#endif  /* SENSOR_DHTX_H */
 
 /** @} */

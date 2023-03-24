@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __FADE_LINEAR_H__
-#define __FADE_LINEAR_H__
+#ifndef FADE_LINEAR_H
+#define FADE_LINEAR_H
 
 /******************************************************************************
  * Compile Switches
@@ -137,6 +137,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __FADE_LINEAR_H__ */
+#endif  /* FADE_LINEAR_H */
 
 /** @} */

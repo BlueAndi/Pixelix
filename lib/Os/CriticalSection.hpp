@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CRITICAL_SECTION_HPP__
-#define __CRITICAL_SECTION_HPP__
+#ifndef CRITICAL_SECTION_HPP
+#define CRITICAL_SECTION_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -143,6 +143,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CRITICAL_SECTION_HPP__ */
+#endif  /* CRITICAL_SECTION_HPP */
 
 /** @} */

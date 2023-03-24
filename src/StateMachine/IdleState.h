@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __IDLESTATE_H__
-#define __IDLESTATE_H__
+#ifndef IDLESTATE_H
+#define IDLESTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -122,6 +122,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __IDLESTATE_H__ */
+#endif  /* IDLESTATE_H */
 
 /** @} */

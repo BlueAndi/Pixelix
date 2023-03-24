@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDRESET_H__
-#define __WSCMDRESET_H__
+#ifndef WSCMDRESET_H
+#define WSCMDRESET_H
 
 /******************************************************************************
  * Compile Switches
@@ -103,6 +103,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDRESET_H__ */
+#endif  /* WSCMDRESET_H */
 
 /** @} */

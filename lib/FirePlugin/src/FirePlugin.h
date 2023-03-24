@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __FIREPLUGIN_H__
-#define __FIREPLUGIN_H__
+#ifndef FIREPLUGIN_H
+#define FIREPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -190,6 +190,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __FIREPLUGIN_H__ */
+#endif  /* FIREPLUGIN_H */
 
 /** @} */

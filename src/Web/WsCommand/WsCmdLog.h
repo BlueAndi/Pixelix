@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDLOG_H__
-#define __WSCMDLOG_H__
+#ifndef WSCMDLOG_H
+#define WSCMDLOG_H
 
 /******************************************************************************
  * Compile Switches
@@ -107,6 +107,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDLOG_H__ */
+#endif  /* WSCMDLOG_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ThreeIconPlugin_H__
-#define __ThreeIconPlugin_H__
+#ifndef ThreeIconPlugin_H
+#define ThreeIconPlugin_H
 
 /******************************************************************************
  * Compile Switches
@@ -295,6 +295,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ThreeIconPlugin_H__ */
+#endif  /* ThreeIconPlugin_H */
 
 /** @} */

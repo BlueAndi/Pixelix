@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __PAGES_H__
-#define __PAGES_H__
+#ifndef PAGES_H
+#define PAGES_H
 
 /******************************************************************************
  * Compile Switches
@@ -78,6 +78,6 @@ void error(AsyncWebServerRequest* request);
 
 }
 
-#endif  /* __PAGES_H__ */
+#endif  /* PAGES_H */
 
 /** @} */

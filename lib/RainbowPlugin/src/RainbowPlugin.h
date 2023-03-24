@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __RAINBOWPLUGIN_H__
-#define __RAINBOWPLUGIN_H__
+#ifndef RAINBOWPLUGIN_H
+#define RAINBOWPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -113,6 +113,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __RAINBOWPLUGIN_H__ */
+#endif  /* RAINBOWPLUGIN_H */
 
 /** @} */

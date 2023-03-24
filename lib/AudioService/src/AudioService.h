@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __AUDIO_SERVICE_H__
-#define __AUDIO_SERVICE_H__
+#ifndef AUDIO_SERVICE_H
+#define AUDIO_SERVICE_H
 
 /******************************************************************************
  * Includes
@@ -161,6 +161,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __AUDIO_SERVICE_H__ */
+#endif  /* AUDIO_SERVICE_H */
 
 /** @} */

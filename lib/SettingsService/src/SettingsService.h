@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SETTINGS_SERVICE_H__
-#define __SETTINGS_SERVICE_H__
+#ifndef SETTINGS_SERVICE_H
+#define SETTINGS_SERVICE_H
 
 /******************************************************************************
  * Compile Switches
@@ -375,6 +375,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SETTINGS_SERVICE_H__ */
+#endif  /* SETTINGS_SERVICE_H */
 
 /** @} */

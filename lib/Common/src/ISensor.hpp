@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ISENSOR_HPP__
-#define __ISENSOR_HPP__
+#ifndef ISENSOR_HPP
+#define ISENSOR_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -115,6 +115,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ISENSOR_HPP__ */
+#endif  /* ISENSOR_HPP */
 
 /** @} */

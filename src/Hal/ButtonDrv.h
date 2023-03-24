@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BUTTONDRV_H__
-#define __BUTTONDRV_H__
+#ifndef BUTTONDRV_H
+#define BUTTONDRV_H
 
 /******************************************************************************
  * Includes
@@ -208,6 +208,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BUTTONDRV_H__ */
+#endif  /* BUTTONDRV_H */
 
 /** @} */

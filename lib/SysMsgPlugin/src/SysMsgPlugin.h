@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SYSMSGPLUGIN_H__
-#define __SYSMSGPLUGIN_H__
+#ifndef SYSMSGPLUGIN_H
+#define SYSMSGPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -193,6 +193,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SYSMSGPLUGIN_H__ */
+#endif  /* SYSMSGPLUGIN_H */
 
 /** @} */

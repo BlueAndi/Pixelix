@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TEST_WIDGET_HPP__
-#define __TEST_WIDGET_HPP__
+#ifndef TEST_WIDGET_HPP
+#define TEST_WIDGET_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -134,6 +134,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __TEST_WIDGET_HPP__ */
+#endif  /* TEST_WIDGET_HPP */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __AUDIO_TONE_DETECTOR_H__
-#define __AUDIO_TONE_DETECTOR_H__
+#ifndef AUDIO_TONE_DETECTOR_H
+#define AUDIO_TONE_DETECTOR_H
 
 /******************************************************************************
  * Includes
@@ -249,6 +249,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __AUDIO_TONE_DETECTOR_H__ */
+#endif  /* AUDIO_TONE_DETECTOR_H */
 
 /** @} */

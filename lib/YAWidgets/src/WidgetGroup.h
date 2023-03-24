@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WIDGET_GROUP_H__
-#define __WIDGET_GROUP_H__
+#ifndef WIDGET_GROUP_H
+#define WIDGET_GROUP_H
 
 /******************************************************************************
  * Compile Switches
@@ -371,6 +371,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WIDGET_GROUP_H__ */
+#endif  /* WIDGET_GROUP_H */
 
 /** @} */

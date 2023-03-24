@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDSLOTS_H__
-#define __WSCMDSLOTS_H__
+#ifndef WSCMDSLOTS_H
+#define WSCMDSLOTS_H
 
 /******************************************************************************
  * Compile Switches
@@ -103,6 +103,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDSLOTS_H__ */
+#endif  /* WSCMDSLOTS_H */
 
 /** @} */

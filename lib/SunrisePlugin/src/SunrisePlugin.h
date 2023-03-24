@@ -34,8 +34,8 @@
  * @{
  */
 
-#ifndef __SUNRISEPLUGIN_H__
-#define __SUNRISEPLUGIN_H__
+#ifndef SUNRISEPLUGIN_H
+#define SUNRISEPLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -384,6 +384,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SUNRISEPLUGIN_H__ */
+#endif  /* SUNRISEPLUGIN_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __PROGRESSBAR_H__
-#define __PROGRESSBAR_H__
+#ifndef PROGRESSBAR_H
+#define PROGRESSBAR_H
 
 /******************************************************************************
  * Compile Switches
@@ -202,6 +202,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __PROGRESSBAR_H__ */
+#endif  /* PROGRESSBAR_H */
 
 /** @} */

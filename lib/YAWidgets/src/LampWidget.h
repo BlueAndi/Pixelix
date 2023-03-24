@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __LAMPWIDGET_H__
-#define __LAMPWIDGET_H__
+#ifndef LAMPWIDGET_H
+#define LAMPWIDGET_H
 
 /******************************************************************************
  * Compile Switches
@@ -261,6 +261,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __LAMPWIDGET_H__ */
+#endif  /* LAMPWIDGET_H */
 
 /** @} */

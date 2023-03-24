@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BASE_IFADEEFFECT_HPP__
-#define __BASE_IFADEEFFECT_HPP__
+#ifndef BASE_IFADEEFFECT_HPP
+#define BASE_IFADEEFFECT_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -114,6 +114,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BASE_IFADEEFFECT_HPP__ */
+#endif  /* BASE_IFADEEFFECT_HPP */
 
 /** @} */

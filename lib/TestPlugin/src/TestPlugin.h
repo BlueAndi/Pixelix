@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TEST_PLUGIN_H__
-#define __TEST_PLUGIN_H__
+#ifndef TEST_PLUGIN_H
+#define TEST_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -118,6 +118,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __TEST_PLUGIN_H__ */
+#endif  /* TEST_PLUGIN_H */
 
 /** @} */

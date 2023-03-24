@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MQTT_SERVICE_H__
-#define __MQTT_SERVICE_H__
+#ifndef MQTT_SERVICE_H
+#define MQTT_SERVICE_H
 
 /******************************************************************************
  * Includes
@@ -287,6 +287,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __MQTT_SERVICE_H__ */
+#endif  /* MQTT_SERVICE_H */
 
 /** @} */

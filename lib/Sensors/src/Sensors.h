@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSORS_H__
-#define __SENSORS_H__
+#ifndef SENSORS_H
+#define SENSORS_H
 
 /******************************************************************************
  * Compile Switches
@@ -73,6 +73,6 @@ extern SensorDataProviderImpl* getSensorDataProviderImpl();
 
 }
 
-#endif  /* __SENSORS_H__ */
+#endif  /* SENSORS_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAGFX_H__
-#define __YAGFX_H__
+#ifndef YAGFX_H
+#define YAGFX_H
 
 /******************************************************************************
  * Compile Switches
@@ -64,6 +64,6 @@ using YAGfx = BaseGfx<Color>;
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAGFX_H__ */
+#endif  /* YAGFX_H */
 
 /** @} */

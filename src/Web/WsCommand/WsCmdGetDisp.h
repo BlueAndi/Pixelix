@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDGETDISP_H__
-#define __WSCMDGETDISP_H__
+#ifndef WSCMDGETDISP_H
+#define WSCMDGETDISP_H
 
 /******************************************************************************
  * Compile Switches
@@ -103,6 +103,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WSCMDGETDISP_H__ */
+#endif  /* WSCMDGETDISP_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SIGNAL_DETECTOR_PLUGIN_H__
-#define __SIGNAL_DETECTOR_PLUGIN_H__
+#ifndef SIGNAL_DETECTOR_PLUGIN_H
+#define SIGNAL_DETECTOR_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -389,6 +389,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SIGNAL_DETECTOR_PLUGIN_H__ */
+#endif  /* SIGNAL_DETECTOR_PLUGIN_H */
 
 /** @} */

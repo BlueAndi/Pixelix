@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __COLORDEF_HPP__
-#define __COLORDEF_HPP__
+#ifndef COLORDEF_HPP
+#define COLORDEF_HPP
 
 /*******************************************************************************
     INCLUDES
@@ -573,6 +573,6 @@ namespace ColorDef
     }
 }
 
-#endif  /* __COLORDEF_HPP__ */
+#endif  /* COLORDEF_HPP */
 
 /** @} */

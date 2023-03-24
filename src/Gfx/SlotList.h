@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SLOT_LIST_H__
-#define __SLOT_LIST_H__
+#ifndef SLOT_LIST_H
+#define SLOT_LIST_H
 
 /******************************************************************************
  * Compile Switches
@@ -298,6 +298,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SLOT_LIST_H__ */
+#endif  /* SLOT_LIST_H */
 
 /** @} */

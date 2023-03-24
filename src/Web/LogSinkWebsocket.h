@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __LOG_SINK_WEBSOCKET_H__
-#define __LOG_SINK_WEBSOCKET_H__
+#ifndef LOG_SINK_WEBSOCKET_H
+#define LOG_SINK_WEBSOCKET_H
 
 /******************************************************************************
  * Compile Switches
@@ -150,6 +150,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __LOG_SINK_WEBSOCKET_H__ */
+#endif  /* LOG_SINK_WEBSOCKET_H */
 
 /** @} */

@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MYWEBSERVER_H__
-#define __MYWEBSERVER_H__
+#ifndef MYWEBSERVER_H
+#define MYWEBSERVER_H
 
 /******************************************************************************
  * Compile Switches
@@ -92,6 +92,6 @@ AsyncWebServer& getInstance(void);
 
 }
 
-#endif  /* __MYWEBSERVER_H__ */
+#endif  /* MYWEBSERVER_H */
 
 /** @} */

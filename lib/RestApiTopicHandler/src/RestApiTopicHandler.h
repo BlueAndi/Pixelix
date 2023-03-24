@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __REST_API_TOPIC_HANDLER_H__
-#define __REST_API_TOPIC_HANDLER_H__
+#ifndef REST_API_TOPIC_HANDLER_H
+#define REST_API_TOPIC_HANDLER_H
 
 /******************************************************************************
  * Compile Switches
@@ -211,6 +211,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __REST_API_TOPIC_HANDLER_H__ */
+#endif  /* REST_API_TOPIC_HANDLER_H */
 
 /** @} */

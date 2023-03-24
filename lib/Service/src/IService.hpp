@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SERVICE_HPP__
-#define __SERVICE_HPP__
+#ifndef SERVICE_HPP
+#define SERVICE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -99,6 +99,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SERVICE_HPP__ */
+#endif  /* SERVICE_HPP */
 
 /** @} */

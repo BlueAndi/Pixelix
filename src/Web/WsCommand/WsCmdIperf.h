@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WSCMDIPERF_H__
-#define __WSCMDIPERF_H__
+#ifndef WSCMDIPERF_H
+#define WSCMDIPERF_H
 
 #if CONFIG_FEATURE_IPERF == 1
 
@@ -134,6 +134,6 @@ private:
 
 #endif /* CONFIG_FEATURE_IPERF == 1 */
 
-#endif  /* __WSCMDIPERF_H__ */
+#endif  /* WSCMDIPERF_H */
 
 /** @} */

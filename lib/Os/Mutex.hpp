@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MUTEX_HPP__
-#define __MUTEX_HPP__
+#ifndef MUTEX_HPP
+#define MUTEX_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -338,6 +338,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __MUTEX_HPP__ */
+#endif  /* MUTEX_HPP */
 
 /** @} */

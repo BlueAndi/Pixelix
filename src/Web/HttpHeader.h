@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __HTTP_HEADER_H__
-#define __HTTP_HEADER_H__
+#ifndef HTTP_HEADER_H
+#define HTTP_HEADER_H
 
 /******************************************************************************
  * Compile Switches
@@ -173,6 +173,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __HTTP_HEADER_H__ */
+#endif  /* HTTP_HEADER_H */
 
 /** @} */

@@ -38,8 +38,8 @@ Provides the software version.
  * @{
  */
 
-#ifndef __VERSION_H__
-#define __VERSION_H__
+#ifndef VERSION_H
+#define VERSION_H
 
 /******************************************************************************
  * Compile Switches
@@ -123,6 +123,6 @@ namespace Version
     static const char   TARGET[]                = QUOTE(PIO_ENV);
 }
 
-#endif  /* __VERSION_H__ */
+#endif  /* VERSION_H */
 
 /** @} */
