@@ -17,6 +17,9 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Others](#others)
 - [Installation](#installation)
 - [Very First Startup](#very-first-startup)
+  - [Variant 1: Configure wifi station SSID and passphrase with the browser](#variant-1-configure-wifi-station-ssid-and-passphrase-with-the-browser)
+  - [Variant 2: Configure wifi station SSID and passphrase with the terminal](#variant-2-configure-wifi-station-ssid-and-passphrase-with-the-terminal)
+  - [Pixelix Is Ready](#pixelix-is-ready)
 - [User Interface](#user-interface)
 - [Documentation](#documentation)
 - [Used Libraries](#used-libraries)
@@ -85,13 +88,31 @@ The following steps are necessary for the first time and to get PIXELIX initial 
 Note, that the LED panel topology and the display width/height can currently not be changed in the web interface. If its necessary, adapt first in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ according your LED matrix. In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 # Very First Startup
-If the device starts the very first time, the wifi station SSID and passphrase settings are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.".
+If the device starts the very first time, the wifi station SSID and passphrase settings are empty. They can be configured in two possible ways:
+1. Using the browser and set them in the captive portal.
+2. Using a terminal connecting via usb.
 
-Use the browser to connect to the captive portal and configure the wifi station SSID and passphrase. Depended on the type of device you are using for connecting to Pixelix, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
+## Variant 1: Configure wifi station SSID and passphrase with the browser
+Restart the device and keep the button pressed until it shows the SSID of the wifi access point, spawned by Pixelix. Search for it with your mobile device and connect.
+* SSID: **pixelix**
+* Passphrase: **Luke, I am your father.**
 
-After configuration restart and voila, Pixelix will be available in your wifi network.
+Depended on the type of device you are using for connecting to Pixelix, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
 
-For changing whats displayed, go to its webinterface. Login with user "luke" and password "skywalker". In the "Display" page you can change it according to your needs.
+Use the following default credentials to get access to the Pixelix webinterface:
+* User: **luke**
+* Password: **skywalker**
+
+## Variant 2: Configure wifi station SSID and passphrase with the terminal
+Connect Pixelix with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
+* Write wifi passphrase: ```write wifi passphrase <your-passphrase>```
+* Write wifi SSID: ```write wifi ssid <your-ssid>```
+* Restart Pixelix: ```reset```
+
+## Pixelix Is Ready
+After configuration, restart again and voila, Pixelix will be available in your wifi network.
+
+For changing whats displayed, go to its webinterface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
 
 # User Interface
 * The user button provides several features:

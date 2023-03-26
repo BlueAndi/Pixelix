@@ -40,9 +40,11 @@
 #include <Board.h>
 
 #include "InitState.h"
+#include "RestartState.h"
 #include "TaskMon.h"
 #include "MemMon.h"
 #include "ResetMon.h"
+#include "MiniTerminal.h"
 
 /******************************************************************************
  * Macros
@@ -67,6 +69,9 @@
 /******************************************************************************
  * Variables
  *****************************************************************************/
+
+/** Serial terminal */
+static MiniTerminal     gTerminal(Serial);
 
 /** System state machine */
 static StateMachine     gSysStateMachine(InitState::getInstance());
@@ -164,6 +169,14 @@ void loop()
 
     /* Memory monitor */
     MemMon::getInstance().process();
+
+    /* Process terminal */
+    gTerminal.process();
+
+    if (true == gTerminal.isRestartRequested())
+    {
+        gSysStateMachine.setState(RestartState::getInstance());
+    }
 
     /* Schedule other tasks with same or lower priority. */
     delay(LOOP_TASK_PERIOD);
