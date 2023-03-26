@@ -94,7 +94,6 @@ public:
         {
             pinMode(m_pinNo, m_pinMode);
         }
-        return;
     }
 
     /**

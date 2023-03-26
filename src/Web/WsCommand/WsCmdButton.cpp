@@ -82,8 +82,6 @@ void WsCmdButton::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
 
     m_isError = false;
-
-    return;
 }
 
 void WsCmdButton::setPar(const char* par)
@@ -91,8 +89,6 @@ void WsCmdButton::setPar(const char* par)
     UTIL_NOT_USED(par);
 
     m_isError = true;
-
-    return;
 }
 
 /******************************************************************************

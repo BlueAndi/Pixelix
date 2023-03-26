@@ -175,8 +175,6 @@ void SunrisePlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-
-    return;
 }
 
 void SunrisePlugin::stop()
@@ -190,8 +188,6 @@ void SunrisePlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void SunrisePlugin::process(bool isConnected)
@@ -263,8 +259,6 @@ void SunrisePlugin::process(bool isConnected)
             break;
         }
     }
-
-    return;
 }
 
 void SunrisePlugin::update(YAGfx& gfx)
@@ -274,8 +268,6 @@ void SunrisePlugin::update(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-
-    return;
 }
 
 void SunrisePlugin::getLocation(String& longitude, String&latitude) const
@@ -284,8 +276,6 @@ void SunrisePlugin::getLocation(String& longitude, String&latitude) const
 
     longitude   = m_longitude;
     latitude    = m_latitude;
-
-    return;
 }
 
 void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
@@ -303,8 +293,6 @@ void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
          */
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 /******************************************************************************

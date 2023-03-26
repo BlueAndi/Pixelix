@@ -171,8 +171,6 @@ void WebSocketSrv::init(AsyncWebServer& srv)
 
     /* Register websocket on webserver */
     srv.addHandler(&m_webSocket);
-
-    return;
 }
 
 /******************************************************************************
@@ -221,8 +219,6 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     default:
         break;
     }
-
-    return;
 }
 
 void WebSocketSrv::onConnect(AsyncWebSocket* server, AsyncWebSocketClient* client, AsyncWebServerRequest* request)
@@ -230,13 +226,11 @@ void WebSocketSrv::onConnect(AsyncWebSocket* server, AsyncWebSocketClient* clien
     UTIL_NOT_USED(request);
 
     LOG_INFO("ws[%s][%u] Client connected.", server->url(), client->id());
-    return;
 }
 
 void WebSocketSrv::onDisconnect(AsyncWebSocket* server, AsyncWebSocketClient* client)
 {
     LOG_INFO("ws[%s][%u] Client disconnected.", server->url(), client->id());
-    return;
 }
 
 void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, uint8_t* data, size_t len)
@@ -250,8 +244,6 @@ void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, 
     {
         LOG_INFO("ws[%s][%u] Pong: %s", server->url(), client->id(), data);
     }
-
-    return;
 }
 
 void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client, uint16_t reasonCode, const char* reasonStr, size_t reasonStrLen)
@@ -265,8 +257,6 @@ void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client,
     {
         LOG_INFO("ws[%s][%u] Error %u: %s", server->url(), client->id(), reasonCode, reasonStr);
     }
-
-    return;
 }
 
 void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsFrameInfo* info, const uint8_t* data, size_t len)
@@ -306,8 +296,6 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
         LOG_ERROR("ws[%s][%u] Fragmented messages not supported.", server->url(), client->id());
         server->close(client->id(), 0U, "Not supported message type.");
     }
-
-    return;
 }
 
 void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen)
@@ -391,8 +379,6 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
             wsCmd->execute(server, client);
         }
     }
-
-    return;
 }
 
 /******************************************************************************

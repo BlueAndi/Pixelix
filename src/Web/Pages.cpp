@@ -259,8 +259,6 @@ void Pages::init(AsyncWebServer& srv)
 
         pluginName = PluginMgr::getInstance().findNext();
     }
-
-    return;
 }
 
 /**
@@ -278,8 +276,6 @@ void Pages::error(AsyncWebServerRequest* request)
     LOG_INFO("Invalid web request: %s", request->url().c_str());
 
     request->send(FILESYSTEM, "/error.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /******************************************************************************
@@ -330,8 +326,6 @@ static void aboutPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/about.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -347,8 +341,6 @@ static void debugPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/debug.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -364,8 +356,6 @@ static void displayPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/display.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -381,8 +371,6 @@ static void editPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/edit.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -398,8 +386,6 @@ static void indexPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/index.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -415,8 +401,6 @@ static void infoPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/info.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -432,8 +416,6 @@ static void settingsPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/settings.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -449,8 +431,6 @@ static void updatePage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/update.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -484,8 +464,6 @@ static void uploadPage(AsyncWebServerRequest* request)
             UpdateMgr::getInstance().reqRestart();
         }
     );
-
-    return;
 }
 
 /**
@@ -610,12 +588,14 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
                 /* Update was successful! */
                 else
                 {
+                    const uint8_t PROGRESS_FINISHED = 100U; /* % */
+
                     LOG_INFO("Upload of %s finished.", filename.c_str());
 
                     /* Filesystem is not mounted here, because we will restart in the next seconds. */
 
                     /* Ensure that the user see 100% update status on the display. */
-                    UpdateMgr::getInstance().updateProgress(100U);
+                    UpdateMgr::getInstance().updateProgress(PROGRESS_FINISHED);
                     UpdateMgr::getInstance().endProgress();
 
                     /* Restart is requested in upload page handler, see uploadPage(). */
@@ -638,8 +618,6 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             request->send(HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE, "text/plain", "Upload aborted.");
         }
     }
-
-    return;
 }
 
 /**
@@ -654,11 +632,12 @@ namespace tmpl
      */
     static String getEspChipId()
     {
-        String      result;
-        uint64_t    chipId      = ESP.getEfuseMac();
-        uint32_t    highPart    = (chipId >> 32U) & 0x0000ffffU;
-        uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
-        char        chipIdStr[13];
+        String          result;
+        uint64_t        chipId              = ESP.getEfuseMac();
+        uint32_t        highPart            = (chipId >> 32U) & 0x0000ffffU;
+        uint32_t        lowPart             = (chipId >>  0U) & 0xffffffffU;
+        const size_t    CHIP_ID_STR_SIZE    = 13U;
+        char            chipIdStr[CHIP_ID_STR_SIZE];
 
         (void)snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
 

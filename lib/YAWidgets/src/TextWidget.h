@@ -206,8 +206,6 @@ public:
         }
 
         m_scrollingCnt = 0U;
-
-        return;
     }
 
     /**
@@ -279,8 +277,6 @@ public:
     {
         m_gfxText.setFont(font);
         m_isNewTextAvailable = true;
-
-        return;
     }
 
     /**

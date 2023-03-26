@@ -85,8 +85,6 @@ void PluginFactory::registerPlugin(const String& name, IPluginMaintenance::Creat
     {
         LOG_ERROR("Couldn't add %s to registry.", name.c_str());
     }
-
-    return;
 }
 
 IPluginMaintenance* PluginFactory::createPlugin(const String& name)

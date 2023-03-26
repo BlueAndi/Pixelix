@@ -93,8 +93,6 @@ void WsCmdAlias::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
     m_isError = false;
     m_parCnt = 0U;
-
-    return;
 }
 
 void WsCmdAlias::setPar(const char* par)
@@ -119,8 +117,6 @@ void WsCmdAlias::setPar(const char* par)
     }
 
     ++m_parCnt;
-
-    return;
 }
 
 /******************************************************************************

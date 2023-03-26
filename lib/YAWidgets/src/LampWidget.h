@@ -140,8 +140,6 @@ public:
     void setOnState(bool state)
     {
         m_isOn = state;
-
-        return;
     }
 
     /**
@@ -162,8 +160,6 @@ public:
     void setColorOff(const Color& color)
     {
         m_colorOff = color;
-
-        return;
     }
 
     /**
@@ -184,8 +180,6 @@ public:
     void setColorOn(const Color& color)
     {
         m_colorOn = color;
-
-        return;
     }
 
     /**
@@ -206,8 +200,6 @@ public:
     void setWidth(uint16_t width)
     {
         m_width = width;
-
-        return;
     }
 
     /**
@@ -251,8 +243,6 @@ private:
         }
 
         gfx.fillRect(m_posX, m_posY, m_width, HEIGHT, color);
-
-        return;
     }
 
 };

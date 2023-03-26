@@ -100,8 +100,6 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
 
     m_isError = false;
-
-    return;
 }
 
 void WsCmdPlugins::setPar(const char* par)
@@ -109,8 +107,6 @@ void WsCmdPlugins::setPar(const char* par)
     UTIL_NOT_USED(par);
 
     m_isError = true;
-
-    return;
 }
 
 /******************************************************************************

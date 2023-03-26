@@ -77,8 +77,6 @@ void RainbowPlugin::update(YAGfx& gfx)
     }
 
     m_angle += ANGLE_DELTA;
-
-    return;
 }
 
 /******************************************************************************

@@ -67,13 +67,13 @@ void AudioToneDetector::notify(int32_t* data, size_t size)
         (nullptr != data))
     {
         size_t  index           = 0U;
-        float   q0              = 0.0f;
-        float   q1              = 0.0f;
-        float   q2              = 0.0f;
-        float   realValue       = 0.0f;
-        float   imagValue       = 0.0f;
-        float   magnitude       = 0.0f;
-        float   scalingFactor   = static_cast<float>(size) / 2.0f;
+        float   q0              = 0.0F;
+        float   q1              = 0.0F;
+        float   q2              = 0.0F;
+        float   realValue       = 0.0F;
+        float   imagValue       = 0.0F;
+        float   magnitude       = 0.0F;
+        float   scalingFactor   = static_cast<float>(size) / 2.0F;
 
         while(size > index)
         {
@@ -136,28 +136,28 @@ void AudioToneDetector::notify(int32_t* data, size_t size)
 
 void AudioToneDetector::preCompute()
 {
-    float       fIndex  = 0.5f + ((AudioDrv::SAMPLES * m_targetFreq) / AudioDrv::SAMPLE_RATE);
+    float       fIndex  = 0.5F + ((AudioDrv::SAMPLES * m_targetFreq) / AudioDrv::SAMPLE_RATE);
     uint32_t    index   = static_cast<uint32_t>(fIndex);
 
-    m_omega = (2.0f * M_PI) / AudioDrv::SAMPLES;
+    m_omega = (2.0F * M_PI) / AudioDrv::SAMPLES;
     m_omega *= index;
 
     m_cosValue = cos(m_omega);
     m_sinValue = sin(m_omega);
 
-    m_coeff = 2.0f * m_cosValue;
+    m_coeff = 2.0F * m_cosValue;
 }
 
 float AudioToneDetector::applyHanningWindow(float data, uint32_t sampleIndex, uint32_t samples)
 {
     float fSamples = static_cast<float>(samples);
 
-    return data * (0.54f - 0.46f * cos( 2.0f * M_PI * sampleIndex / fSamples));
+    return data * (0.54F - 0.46F * cos( 2.0F * M_PI * sampleIndex / fSamples));
 }
 
 float AudioToneDetector::applyHanningMagnitudeCorrection(float data)
 {
-    return data * 2.0f;
+    return data * 2.0F;
 }
 
 /******************************************************************************

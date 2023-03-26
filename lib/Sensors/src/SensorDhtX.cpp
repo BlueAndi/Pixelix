@@ -77,8 +77,6 @@ void SensorDhtX::begin()
     {
         m_isAvailable = true;
     }
-
-    return;
 }
 
 const char* SensorDhtX::getName() const

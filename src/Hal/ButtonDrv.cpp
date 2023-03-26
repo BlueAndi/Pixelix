@@ -241,8 +241,6 @@ void ButtonDrv::buttonTask(void *parameters)
             }
         }
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -274,6 +272,4 @@ static void IRAM_ATTR isrButton(void* arg)
     {
         portYIELD_FROM_ISR();
     }
-
-    return;
 }

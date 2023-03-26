@@ -75,20 +75,16 @@ void SysMsgPlugin::start(uint16_t width, uint16_t height)
 
         m_textWidget.move(0, offsY);
     }
-    
-    return;
 }
 
 void SysMsgPlugin::stop()
 {
     /* Nothing to do. */
-    return;
 }
 
 void SysMsgPlugin::active(YAGfx& gfx)
 {
     /* Nothing to do. */
-    return;
 }
 
 void SysMsgPlugin::inactive()
@@ -100,8 +96,6 @@ void SysMsgPlugin::inactive()
      * caused by scrolling feature of the underlying text widget.
      */
     m_textWidget.clear();
-
-    return;
 }
 
 void SysMsgPlugin::update(YAGfx& gfx)
@@ -156,8 +150,6 @@ void SysMsgPlugin::update(YAGfx& gfx)
         /* Show infinite */
         ;
     }
-
-    return;
 }
 
 void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
@@ -168,8 +160,6 @@ void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
     m_isInit    = true;
 
     enable();
-
-    return;
 }
 
 /******************************************************************************

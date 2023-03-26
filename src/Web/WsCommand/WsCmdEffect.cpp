@@ -90,7 +90,6 @@ void WsCmdEffect::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
     m_isError = false;
     m_parCnt = 0U;
-    return;
 }
 
 void WsCmdEffect::setPar(const char* par)
@@ -107,7 +106,6 @@ void WsCmdEffect::setPar(const char* par)
     {
         m_isError = true;
     }
-    return;
 }
 
 /******************************************************************************

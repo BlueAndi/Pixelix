@@ -530,8 +530,6 @@ void AsyncHttpClient::destroyProcessTask()
         vSemaphoreDelete(m_processTaskSemaphore);
         m_processTaskSemaphore = nullptr;
     }
-    
-    return;
 }
 
 void AsyncHttpClient::clearCmdQueue()
@@ -586,8 +584,6 @@ void AsyncHttpClient::processTask(void* parameters)
     }
 
     vTaskDelete(nullptr);
-
-    return;
 }
 
 void AsyncHttpClient::processCmdQueue()
@@ -1116,8 +1112,6 @@ void AsyncHttpClient::clear()
 
         m_isReqOpen = false;
     }
-
-    return;
 }
 
 bool AsyncHttpClient::isEOL(const String& str, size_t& len)

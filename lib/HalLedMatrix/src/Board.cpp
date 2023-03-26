@@ -120,8 +120,6 @@ extern void Board::init()
             ioPinList[index]->init();
         }
     }
-
-    return;
 }
 
 extern void Board::reset()
@@ -129,7 +127,6 @@ extern void Board::reset()
     ESP.restart();
 
     /* Will never be reached. */
-    return;
 }
 
 /******************************************************************************

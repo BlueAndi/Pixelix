@@ -102,7 +102,6 @@ public:
     {
         m_posX = x;
         m_posY = y;
-        return;
     }
 
     /**
@@ -115,7 +114,6 @@ public:
     {
         x = m_posX;
         y = m_posY;
-        return;
     }
 
     /**
@@ -130,8 +128,6 @@ public:
         {
             paint(gfx);
         }
-
-        return;
     }
 
     /**
@@ -163,7 +159,6 @@ public:
     void setName(const String& name)
     {
         m_name = name;
-        return;
     }
 
     /**
@@ -183,7 +178,6 @@ public:
     void enable()
     {
         m_isEnabled = true;
-        return;
     }
 
     /**
@@ -193,7 +187,6 @@ public:
     void disable()
     {
         m_isEnabled = false;
-        return;
     }
 
     /**

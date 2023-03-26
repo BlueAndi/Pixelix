@@ -180,8 +180,6 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
     initHttpClient();
 
     m_offlineTimer.start(OFFLINE_PERIOD);
-
-    return;
 }
 
 void VolumioPlugin::stop()
@@ -196,8 +194,6 @@ void VolumioPlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void VolumioPlugin::process(bool isConnected)
@@ -305,8 +301,6 @@ void VolumioPlugin::process(bool isConnected)
         LOG_INFO("VOLUMIO not present, going offline.");
         disable();
     }
-
-    return;
 }
 
 void VolumioPlugin::update(YAGfx& gfx)
@@ -326,8 +320,6 @@ void VolumioPlugin::update(YAGfx& gfx)
     /* Draw a nice line to represent the current music position. */
     gfx.drawHLine(tcX, gfx.getHeight() - 1, posWidth, posColor);
     PLUGIN_NOT_USED(tcY);
-
-    return;
 }
 
 String VolumioPlugin::getHost() const
@@ -349,8 +341,6 @@ void VolumioPlugin::setHost(const String& host)
         m_volumioHost = host;
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 /******************************************************************************

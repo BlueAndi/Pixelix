@@ -138,8 +138,6 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     m_cmd       = CMD_STATUS;
 
     setCfgDefault();
-
-    return;
 }
 
 void WsCmdIperf::setPar(const char* par)
@@ -223,8 +221,6 @@ void WsCmdIperf::setPar(const char* par)
     }
 
     ++m_parCnt;
-
-    return;
 }
 
 /******************************************************************************

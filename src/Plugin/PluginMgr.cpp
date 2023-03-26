@@ -80,7 +80,6 @@ void PluginMgr::begin()
 void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
 {
     m_pluginFactory.registerPlugin(name, createFunc);
-    return;
 }
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)

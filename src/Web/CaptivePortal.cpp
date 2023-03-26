@@ -108,8 +108,6 @@ void CaptivePortal::init(AsyncWebServer& srv)
     /* Add the captive portal request handler at last, because it will handle everything else. */
     (void)srv.addHandler(&gCaptivePortalReqHandler)
         .setFilter(ON_AP_FILTER);
-
-    return;
 }
 
 bool CaptivePortal::isRestartRequested()

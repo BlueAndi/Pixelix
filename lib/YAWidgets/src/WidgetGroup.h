@@ -340,8 +340,6 @@ private:
         }
 
         m_gfx = nullptr;
-
-        return;
     }
 
     /**
@@ -362,8 +360,6 @@ private:
         {    
             m_gfx->drawPixel(m_posX + x, m_posY + y, color);
         }
-
-        return;
     }
 };
 

@@ -102,8 +102,6 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
 
     m_isError = false;
     m_parCnt = 0U;
-
-    return;
 }
 
 void WsCmdBrightness::setPar(const char* par)
@@ -139,8 +137,6 @@ void WsCmdBrightness::setPar(const char* par)
     }
 
     ++m_parCnt;
-
-    return;
 }
 
 /******************************************************************************

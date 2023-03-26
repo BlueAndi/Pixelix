@@ -74,7 +74,6 @@ const char* TempHumidPlugin::IMAGE_PATH_HUMID_ICON     = "/plugins/TempHumidPlug
 void TempHumidPlugin::setSlot(const ISlotPlugin* slotInterf)
 {
     m_slotInterf = slotInterf;
-    return;
 }
 
 void TempHumidPlugin::start(uint16_t width, uint16_t height)
@@ -120,8 +119,6 @@ void TempHumidPlugin::start(uint16_t width, uint16_t height)
     {
         m_humiditySensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
     }
-
-    return;
 }
 
 void TempHumidPlugin::stop()
@@ -129,8 +126,6 @@ void TempHumidPlugin::stop()
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Nothing to do. */
-
-    return;
 }
 
 void TempHumidPlugin::process(bool isConnected) 
@@ -193,14 +188,11 @@ void TempHumidPlugin::active(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-
-    return;
 }
 
 void TempHumidPlugin::inactive()
 {
     /* Nothing to do. */
-    return;
 }
 
 void TempHumidPlugin::update(YAGfx& gfx)
@@ -250,7 +242,7 @@ void TempHumidPlugin::update(YAGfx& gfx)
                 String  text;
 
                 /* Generate temperature string with reduced precision and add unit °C. */
-                (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9f) ? "%.0f" : "%.1f" , m_temp);
+                (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9F) ? "%.0f" : "%.1f" , m_temp);
                 text  = "\\calign";
                 text += valueReducedPrecison;
                 text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
@@ -284,8 +276,6 @@ void TempHumidPlugin::update(YAGfx& gfx)
             break;
         }
     }
-
-    return;
 }
 
 /******************************************************************************

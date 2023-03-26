@@ -81,7 +81,6 @@ public:
     void setSlot(const ISlotPlugin* slotInterf) override
     {
         PLUGIN_NOT_USED(slotInterf);
-        return;
     }
 
     /**
@@ -102,7 +101,6 @@ public:
     void setAlias(const String& alias) final
     {
         m_alias = alias;
-        return;
     }
 
     /**
@@ -137,7 +135,6 @@ public:
     void setFontType(Fonts::FontType fontType) override
     {
         PLUGIN_NOT_USED(fontType);
-        return;
     }
 
     /**
@@ -156,7 +153,6 @@ public:
     void getTopics(JsonArray& topics) const override
     {
         PLUGIN_NOT_USED(topics);
-        return;
     }
 
     /**
@@ -237,7 +233,6 @@ public:
     void enable() override
     {
         m_isEnabled = true;
-        return;
     }
 
     /**
@@ -248,7 +243,6 @@ public:
     void disable() override
     {
         m_isEnabled = false;
-        return;
     }
 
     /**
@@ -268,7 +262,6 @@ public:
     {
         PLUGIN_NOT_USED(width);
         PLUGIN_NOT_USED(height);
-        return;
     }
 
     /**
@@ -279,7 +272,6 @@ public:
      */
     void stop() override
     {
-        return;
     }
 
     /**
@@ -293,7 +285,6 @@ public:
     void process(bool isConnected) override
     {
         PLUGIN_NOT_USED(isConnected);
-        return;
     }
 
     /**
@@ -306,7 +297,6 @@ public:
     void active(YAGfx& gfx) override
     {
         PLUGIN_NOT_USED(gfx);
-        return;
     }
 
     /**
@@ -316,7 +306,6 @@ public:
      */
     void inactive() override
     {
-        return;
     }
 
     /**

@@ -168,8 +168,6 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
             LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
-
-    return;
 }
 
 void SoundReactivePlugin::stop()
@@ -189,8 +187,6 @@ void SoundReactivePlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void SoundReactivePlugin::process(bool isConnected)
@@ -219,8 +215,6 @@ void SoundReactivePlugin::process(bool isConnected)
             }
         }
     }
-
-    return;
 }
 
 void SoundReactivePlugin::update(YAGfx& gfx)
@@ -266,8 +260,6 @@ void SoundReactivePlugin::update(YAGfx& gfx)
                         barWidth,
                         ColorDef::WHITE);
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -357,8 +349,8 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
 {
     float           octaveFreqBands[MAX_FREQ_BANDS];
     uint16_t        freqBinIdx                      = 0U;
-    float           peak                            = 0.0f;
-    float           avgDigital                      = 0.0f;
+    float           peak                            = 0.0F;
+    float           avgDigital                      = 0.0F;
     uint8_t         bandIdx                         = 0U;
 
     convertToOctaveFreqBands(octaveFreqBands, MAX_FREQ_BANDS, freqBins, freqBinLen);
@@ -372,8 +364,8 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
          */
         if (INMP441_NOISE_FLOOR_DIGITAL > static_cast<int32_t>(avgDigital))
         {
-            constexpr const float   WEIGHT_NEW_VALUE    = 0.1f;
-            constexpr const float   WEIGHT_OLD_VALUE    = 1.0f - WEIGHT_NEW_VALUE;
+            constexpr const float   WEIGHT_NEW_VALUE    = 0.1F;
+            constexpr const float   WEIGHT_OLD_VALUE    = 1.0F - WEIGHT_NEW_VALUE;
             constexpr const float   NOISE_FLOOR         = static_cast<float>(INMP441_NOISE_FLOOR_DIGITAL);
 
             /* Calculate with weighted average to avoid jumping. */
@@ -388,7 +380,7 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
          *
          * = sensitivity [dB SPL] + 20 * log10(frequency amplitude digital / sensitivity digital)
          */
-        octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0f * log10f(octaveFreqBands[bandIdx] / static_cast<float>(IMMP441_SENSITIVITY_DIGITAL));
+        octaveFreqBands[bandIdx] = INMP441_SENSITIVITY_SPL + 20.0F * log10f(octaveFreqBands[bandIdx] / static_cast<float>(IMMP441_SENSITIVITY_DIGITAL));
 
         /* The amplitude shall consider only the dynamic range
             * by removing the equivalent input noise level.
@@ -413,8 +405,8 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
      * otherwise the bar's will jump driven by silent tones.
      */
     {
-        constexpr const float   WEIGHT_NEW_VALUE    = 0.25f;
-        constexpr const float   WEIGHT_OLD_VALUE    = 1.0f - WEIGHT_NEW_VALUE;
+        constexpr const float   WEIGHT_NEW_VALUE    = 0.25F;
+        constexpr const float   WEIGHT_OLD_VALUE    = 1.0F - WEIGHT_NEW_VALUE;
 
         m_peak = WEIGHT_NEW_VALUE * peak + WEIGHT_OLD_VALUE * m_peak;
 
@@ -430,13 +422,13 @@ void SoundReactivePlugin::handleFreqBins(float* freqBins, size_t freqBinLen)
     freqBinIdx = 0U;
     for(bandIdx = 0U; bandIdx < MAX_FREQ_BANDS; ++bandIdx)
     {
-        float       avg         = 0.0f;
+        float       avg         = 0.0F;
         uint16_t    barHeight   = 0U;
         const float MAX_HEIGHT  = static_cast<float>(m_maxHeight);
 
         if (NUM_OF_BANDS_8 == m_numOfFreqBands)
         {
-            avg = (octaveFreqBands[freqBinIdx] + octaveFreqBands[freqBinIdx + 1U]) / 2.0f;
+            avg = (octaveFreqBands[freqBinIdx] + octaveFreqBands[freqBinIdx + 1U]) / 2.0F;
             freqBinIdx += 2U;
         }
         else
@@ -472,7 +464,7 @@ void SoundReactivePlugin::convertToOctaveFreqBands(float* octaveFreqBands, size_
      * create the octave frequency bands.
      */
     freqBinIdx  = 1U; /* Don't use the first frequency bin, because it contains the DC part. */
-    octaveFreqBands[bandIdx] = 0.0f;
+    octaveFreqBands[bandIdx] = 0.0F;
     while((freqBinLen > freqBinIdx) && (octaveFreqBandsLen > bandIdx))
     {
         octaveFreqBands[bandIdx] += static_cast<float>(freqBins[freqBinIdx]);
@@ -508,7 +500,7 @@ void SoundReactivePlugin::convertToOctaveFreqBands(float* octaveFreqBands, size_
 
 float SoundReactivePlugin::calculateAmplitudeAverage(float* octaveFreqBands, size_t octaveFreqBandsLen)
 {
-    float   avgDigital  = 0.0f;
+    float   avgDigital  = 0.0F;
     uint8_t bandIdx     = 0U;
 
     /* Calculate the amplitude average over the spectrum. */

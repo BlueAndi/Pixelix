@@ -96,8 +96,6 @@ void WsCmdSlotDuration::execute(AsyncWebSocket* server, AsyncWebSocketClient* cl
 
     m_isError = false;
     m_parCnt = 0U;
-
-    return;
 }
 
 void WsCmdSlotDuration::setPar(const char* par)
@@ -126,8 +124,6 @@ void WsCmdSlotDuration::setPar(const char* par)
     }
 
     ++m_parCnt;
-
-    return;
 }
 
 /******************************************************************************

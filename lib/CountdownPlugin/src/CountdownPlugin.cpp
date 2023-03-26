@@ -189,8 +189,6 @@ void CountdownPlugin::start(uint16_t width, uint16_t height)
     calculateDifferenceInDays();
 
     m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
-
-    return;
 }
 
 void CountdownPlugin::stop()
@@ -204,8 +202,6 @@ void CountdownPlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void CountdownPlugin::update(YAGfx& gfx)
@@ -224,8 +220,6 @@ void CountdownPlugin::update(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-
-    return;
 }
 
 CountdownPlugin::DateDMY CountdownPlugin::getTargetDate() const
@@ -255,8 +249,6 @@ void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
          */
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 CountdownPlugin::TargetDayDescription CountdownPlugin::getTargetDayDescription() const
@@ -285,8 +277,6 @@ void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& target
          */
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 /******************************************************************************

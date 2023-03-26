@@ -385,8 +385,6 @@ public:
 
         m_list.remove(m_curr);
         m_curr = m_list.m_head;
-
-        return;
     }
 
 private:
@@ -726,8 +724,6 @@ public:
         m_head  = nullptr;
         m_tail  = nullptr;
         m_count = 0U;
-
-        return;
     }
 
     /**
@@ -797,8 +793,6 @@ private:
                 --m_count;
             }
         }
-
-        return;
     }
 
     template < typename T0 >

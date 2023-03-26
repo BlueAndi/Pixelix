@@ -70,8 +70,6 @@ void FirePlugin::start(uint16_t width, uint16_t height)
             m_heatSize = 0U;
         }
     }
-
-    return;
 }
 
 void FirePlugin::stop()
@@ -81,22 +79,17 @@ void FirePlugin::stop()
         delete[] m_heat;
         m_heat = nullptr;
     }
-
-    return;
 }
 
 void FirePlugin::active(YAGfx& gfx)
 {
     /* Clear display */
     gfx.fillScreen(ColorDef::BLACK);
-
-    return;
 }
 
 void FirePlugin::inactive()
 {
     /* Nothing to do. */
-    return;
 }
 
 void FirePlugin::update(YAGfx& gfx)
@@ -173,8 +166,6 @@ void FirePlugin::update(YAGfx& gfx)
             gfx.drawPixel(x, y, heatColor(m_heat[x + y * gfx.getWidth()]));
         }
     }
-
-    return;
 }
 
 /******************************************************************************

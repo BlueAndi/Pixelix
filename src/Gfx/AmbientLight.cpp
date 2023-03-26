@@ -121,7 +121,7 @@ extern float AmbientLight::normalizeIlluminance(float illuminance)
         /* Map lux values to human perception, according to
          * https://docs.microsoft.com/en-us/windows/win32/sensorsapi/understanding-and-interpreting-lux-values
          */
-        lightNormalized = log10f(illuminance) / 5.0F;
+        lightNormalized = log10f(illuminance) / 5.0F; // NOLINT (readability-magic-numbers)
     }
 
     return lightNormalized;

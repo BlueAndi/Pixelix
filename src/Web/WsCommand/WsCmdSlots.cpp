@@ -124,8 +124,6 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
 
     m_isError = false;
-
-    return;
 }
 
 void WsCmdSlots::setPar(const char* par)
@@ -133,8 +131,6 @@ void WsCmdSlots::setPar(const char* par)
     UTIL_NOT_USED(par);
 
     m_isError = true;
-
-    return;
 }
 
 /******************************************************************************

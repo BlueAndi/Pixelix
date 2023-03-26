@@ -129,8 +129,6 @@ void UpdateMgr::begin()
         LOG_INFO(String("Sketch size: ") + ESP.getSketchSize() + " bytes");
         LOG_INFO(String("Free size: ") + ESP.getFreeSketchSpace() + " bytes");
     }
-
-    return;
 }
 
 void UpdateMgr::end()
@@ -140,8 +138,6 @@ void UpdateMgr::end()
         /* Stop over-the-air server */
         ArduinoOTA.end();
     }
-
-    return;
 }
 
 void UpdateMgr::process()
@@ -150,8 +146,6 @@ void UpdateMgr::process()
     {
         ArduinoOTA.handle();
     }
-
-    return;
 }
 
 void UpdateMgr::beginProgress()
@@ -168,8 +162,6 @@ void UpdateMgr::beginProgress()
         /* Show user update status */
         updateProgress(0U);
     }
-
-    return;
 }
 
 void UpdateMgr::updateProgress(uint8_t progress)
@@ -201,8 +193,6 @@ void UpdateMgr::updateProgress(uint8_t progress)
         /* Show update status on console. */
         LOG_INFO(String("[") + m_progress + "%]");
     }
-
-    return;
 }
 
 void UpdateMgr::endProgress()
@@ -215,8 +205,6 @@ void UpdateMgr::endProgress()
             LOG_WARNING("Couldn't initialize display manager again.");
         }
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -269,8 +257,6 @@ void UpdateMgr::onStart()
     LOG_INFO(infoStr);
 
     getInstance().beginProgress();
-
-    return;
 }
 
 void UpdateMgr::onEnd()
@@ -287,8 +273,6 @@ void UpdateMgr::onEnd()
      * manager again, because we request a restart of the system now.
      */
     getInstance().reqRestart();
-
-    return;
 }
 
 void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
@@ -296,8 +280,6 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
     const uint32_t  PROGRESS_PERCENT    = (progress * 100U) / total;
 
     getInstance().updateProgress(PROGRESS_PERCENT);
-
-    return;
 }
 
 void UpdateMgr::onError(ota_error_t error)
@@ -359,8 +341,6 @@ void UpdateMgr::onError(ota_error_t error)
     }
 
     getInstance().m_updateIsRunning = false;
-
-    return;
 }
 
 /******************************************************************************

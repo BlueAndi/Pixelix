@@ -202,8 +202,6 @@ void AudioDrv::processTask(void* parameters)
     }
 
     vTaskDelete(nullptr);
-
-    return;
 }
 
 void AudioDrv::process()

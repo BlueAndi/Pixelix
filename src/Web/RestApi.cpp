@@ -124,8 +124,6 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete);
     (void)srv.on("/rest/api/v1/fs", handleFilesystem);
-
-    return;
 }
 
 /**
@@ -147,8 +145,6 @@ void RestApi::error(AsyncWebServerRequest* request)
     RestUtil::prepareRspError(jsonDoc, "Invalid path requested.");
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /******************************************************************************
@@ -186,8 +182,6 @@ static void handleButton(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -234,8 +228,6 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -303,8 +295,6 @@ static void handleSlots(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -422,8 +412,6 @@ static void handleSlot(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -486,8 +474,6 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -574,8 +560,6 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -616,8 +600,6 @@ static void handlePlugins(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -688,8 +670,6 @@ static void handleSensors(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -736,8 +716,6 @@ static void handleSettings(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -917,8 +895,6 @@ static void handleSetting(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -1220,8 +1196,6 @@ static void handleStatus(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -1365,8 +1339,6 @@ static void handleFilesystem(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -1415,8 +1387,6 @@ static void handleFileGet(AsyncWebServerRequest* request)
             request->send(FILESYSTEM, path, getContentType(path));
         }
     }
-
-    return;
 }
 
 /**
@@ -1516,8 +1486,6 @@ static void handleFilePost(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -1574,8 +1542,6 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         /* Inform client about abort.*/
         request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "text/plain", "Upload aborted.");
     }
-
-    return;
 }
 
 /**
@@ -1620,8 +1586,6 @@ static void handleFileDelete(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**

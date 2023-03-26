@@ -167,7 +167,6 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
 void OpenWeatherPlugin::setSlot(const ISlotPlugin* slotInterf)
 {
     m_slotInterf = slotInterf;
-    return;
 }
 
 void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
@@ -211,8 +210,6 @@ void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-
-    return;
 }
 
 void OpenWeatherPlugin::stop()
@@ -226,8 +223,6 @@ void OpenWeatherPlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void OpenWeatherPlugin::process(bool isConnected)
@@ -333,8 +328,6 @@ void OpenWeatherPlugin::process(bool isConnected)
             break;
         }
     }
-
-    return;
 }
 
 void OpenWeatherPlugin::active(YAGfx& gfx)
@@ -355,8 +348,6 @@ void OpenWeatherPlugin::active(YAGfx& gfx)
     m_isUpdateAvailable = true;
     m_durationCounter = 0U;
     m_updateContentTimer.start(DURATION_TICK_PERIOD);
-
-    return;
 }
 
 void OpenWeatherPlugin::inactive()
@@ -364,8 +355,6 @@ void OpenWeatherPlugin::inactive()
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_updateContentTimer.stop();
-
-    return;
 }
 
 void OpenWeatherPlugin::update(YAGfx& gfx)
@@ -380,8 +369,6 @@ void OpenWeatherPlugin::update(YAGfx& gfx)
 
         m_isUpdateAvailable = false;
     }
-
-    return;
 }
 
 String OpenWeatherPlugin::getApiKey() const
@@ -404,8 +391,6 @@ void OpenWeatherPlugin::setApiKey(const String& apiKey)
 
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 String OpenWeatherPlugin::getLatitude() const
@@ -428,8 +413,6 @@ void OpenWeatherPlugin::setLatitude(const String& latitude)
 
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 String OpenWeatherPlugin::getLongitude() const
@@ -452,8 +435,6 @@ void OpenWeatherPlugin::setLongitude(const String& longitude)
 
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInformation() const
@@ -476,8 +457,6 @@ void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& 
 
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 String OpenWeatherPlugin::getUnits() const
@@ -500,8 +479,6 @@ void OpenWeatherPlugin::setUnits(const String& units)
 
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -516,19 +493,19 @@ String OpenWeatherPlugin::uvIndexToColor(float uvIndex)
 {
     String color;
 
-    if ((0.0f <= uvIndex) && (3.0f > uvIndex))
+    if ((0.0F <= uvIndex) && (3.0F > uvIndex))
     {
         color = "\\#c0ffa0"; 
     }
-    else if ((3.0f <= uvIndex) && (6.0f > uvIndex))
+    else if ((3.0F <= uvIndex) && (6.0F > uvIndex))
     {
         color = "\\#f8f140";
     }
-    else if ((6.0f <= uvIndex) && (8.0f > uvIndex))
+    else if ((6.0F <= uvIndex) && (8.0F > uvIndex))
     {
         color = "\\#f77820";
     }
-    else if ((8.0f <= uvIndex) && (11.0f > uvIndex))
+    else if ((8.0F <= uvIndex) && (11.0F > uvIndex))
     {
         color = "\\#d80020";
     }
@@ -792,7 +769,7 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         m_currentUvIndex += uvIndexToColor(uvIndex);
         m_currentUvIndex += uvIndex;
 
-        const char* reducePrecision = (temperature < -9.9f) ? "%.0f" : "%.1f";
+        const char* reducePrecision = (temperature < -9.9F) ? "%.0f" : "%.1f";
 
         /* Generate temperature string with reduced precision and add unit °C/°F. */
         (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);

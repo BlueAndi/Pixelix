@@ -117,8 +117,6 @@ void ErrorState::entry(StateMachine& sm)
     }
 
     Services::stopAll();
-
-    return;
 }
 
 void ErrorState::process(StateMachine& sm)
@@ -126,7 +124,6 @@ void ErrorState::process(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     /* Wait for manual reset. */
-    return;
 }
 
 void ErrorState::exit(StateMachine& sm)
@@ -134,7 +131,6 @@ void ErrorState::exit(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     /* Nothing to do. */
-    return;
 }
 
 /******************************************************************************

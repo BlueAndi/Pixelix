@@ -315,8 +315,6 @@ void InitState::entry(StateMachine& sm)
         ErrorState::getInstance().setErrorId(errorId);
         sm.setState(ErrorState::getInstance());
     }
-
-    return;
 }
 
 void InitState::process(StateMachine& sm)
@@ -342,8 +340,6 @@ void InitState::process(StateMachine& sm)
     }
 
     Services::processAll();
-
-    return;
 }
 
 void InitState::exit(StateMachine& sm)
@@ -414,12 +410,14 @@ void InitState::exit(StateMachine& sm)
             {
                 if (false == isQuiet)
                 {
+                    const uint32_t MIN_WAIT_TIME = 500U; /* Min. wait time in ms to avoid splash screen. */
+
                     /* In the next step the plugins are loaded and would automatically be shown.
-                    * To avoid this until the connection establishment takes place, show the following
-                    * message infinite.
-                    */
+                     * To avoid this until the connection establishment takes place, show the following
+                     * message infinite.
+                     */
                     SysMsg::getInstance().show("...");
-                    delay(500U); /* Just to avoid a short splash */
+                    delay(MIN_WAIT_TIME); /* Just to avoid a short splash */
                 }
 
                 /* Loading plugin installation failed? */
@@ -469,8 +467,6 @@ void InitState::exit(StateMachine& sm)
             MyWebServer::begin();
         }
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -491,8 +487,6 @@ void InitState::showStartupInfoOnSerial()
     LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
     LOG_INFO("Wifi MAC: %s", WiFi.macAddress().c_str());
     LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
-
-    return;
 }
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
@@ -517,8 +511,6 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
         /* Clear and wait */
         sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
     }
-
-    return;
 }
 
 void InitState::welcome(IPluginMaintenance* plugin)
@@ -543,8 +535,6 @@ void InitState::welcome(IPluginMaintenance* plugin)
         (void)welcomePlugin->loadBitmap("/images/smiley.bmp");
         welcomePlugin->setText("Hello World!");
     }
-
-    return;
 }
 
 /******************************************************************************

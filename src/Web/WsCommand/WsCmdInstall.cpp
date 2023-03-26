@@ -101,8 +101,6 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
     m_isError = false;
     m_pluginName.clear();
-
-    return;
 }
 
 void WsCmdInstall::setPar(const char* par)
@@ -120,8 +118,6 @@ void WsCmdInstall::setPar(const char* par)
     {
         m_isError = true;
     }
-
-    return;
 }
 
 /******************************************************************************

@@ -62,14 +62,11 @@ void MatrixPlugin::active(YAGfx& gfx)
 {
     /* Clear display */
     gfx.fillScreen(ColorDef::BLACK);
-
-    return;
 }
 
 void MatrixPlugin::inactive()
 {
     /* Nothing to do. */
-    return;
 }
 
 void MatrixPlugin::update(YAGfx& gfx)
@@ -151,8 +148,6 @@ void MatrixPlugin::update(YAGfx& gfx)
 
         m_timer.start(UPDATE_PERIOD);
     }
-
-    return;
 }
 
 /******************************************************************************

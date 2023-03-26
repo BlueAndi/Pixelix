@@ -112,7 +112,6 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObject& value)
 void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 {
     m_slotInterf = slotInterf;
-    return;
 }
 
 void DateTimePlugin::start(uint16_t width, uint16_t height)
@@ -182,8 +181,6 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
             m_lampWidgets[index].move(x, 0);
         }
     }
-
-    return;
 }
 
 void DateTimePlugin::stop()
@@ -195,8 +192,6 @@ void DateTimePlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void DateTimePlugin::process(bool isConnected)
@@ -214,8 +209,6 @@ void DateTimePlugin::process(bool isConnected)
 
         m_checkUpdateTimer.restart();
     }
-
-    return;
 }
 
 void DateTimePlugin::active(YAGfx& gfx)
@@ -235,8 +228,6 @@ void DateTimePlugin::inactive()
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_checkUpdateTimer.stop();
-
-    return;
 }
 
 void DateTimePlugin::update(YAGfx& gfx)
@@ -251,8 +242,6 @@ void DateTimePlugin::update(YAGfx& gfx)
 
         m_isUpdateAvailable = false;
     }
-
-    return;
 }
 
 /******************************************************************************

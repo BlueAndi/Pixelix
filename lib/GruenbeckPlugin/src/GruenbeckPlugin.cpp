@@ -159,8 +159,6 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-
-    return;
 }
 
 void GruenbeckPlugin::stop()
@@ -174,8 +172,6 @@ void GruenbeckPlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void GruenbeckPlugin::process(bool isConnected)
@@ -271,8 +267,6 @@ void GruenbeckPlugin::process(bool isConnected)
             break;
         }
     }
-
-    return;
 }
 
 void GruenbeckPlugin::active(YAGfx& gfx)
@@ -282,14 +276,11 @@ void GruenbeckPlugin::active(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-
-    return;
 }
 
 void GruenbeckPlugin::inactive()
 {
     /* Nothing to do */
-    return;
 }
 
 void GruenbeckPlugin::update(YAGfx& gfx)
@@ -308,8 +299,6 @@ void GruenbeckPlugin::update(YAGfx& gfx)
 
         m_httpResponseReceived = false;
     }
-
-    return;
 }
 
 String GruenbeckPlugin::getIPAddress() const
@@ -328,8 +317,6 @@ void GruenbeckPlugin::setIPAddress(const String& ipAddress)
 
     m_ipAddress = ipAddress;
     (void)saveConfiguration();
-
-    return;
 }
 
 /******************************************************************************

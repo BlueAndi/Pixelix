@@ -73,8 +73,6 @@ void SensorSht3X::begin()
         /* Only supported for SHT3x sensors */
         m_driver.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
     }
-
-    return;
 }
 
 const char* SensorSht3X::getName() const

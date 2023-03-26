@@ -274,8 +274,6 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
             (void)m_bitmapWidget[iconId].load(FILESYSTEM, getFileName(iconId, FILE_EXT_BITMAP));
         }
     }
-
-    return;
 }
 
 void ThreeIconPlugin::stop()
@@ -295,8 +293,6 @@ void ThreeIconPlugin::stop()
             LOG_INFO("File %s removed", getFileName(iconId, FILE_EXT_SPRITE_SHEET).c_str());
         }
     }
-
-    return;
 }
 
 void ThreeIconPlugin::update(YAGfx& gfx)
@@ -305,8 +301,6 @@ void ThreeIconPlugin::update(YAGfx& gfx)
 
     gfx.fillScreen(ColorDef::BLACK);
     m_threeIconCanvas.update(gfx);
-
-    return;
 }
 
 bool ThreeIconPlugin::loadBitmap(const String& filename, uint8_t iconId)

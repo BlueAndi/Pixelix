@@ -214,8 +214,6 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
 
         m_textWidget.move(0, offsY);
     }
-
-    return;
 }
 
 void IconTextPlugin::stop()
@@ -231,8 +229,6 @@ void IconTextPlugin::stop()
     {
         LOG_INFO("File %s removed", getFileName(FILE_EXT_SPRITE_SHEET).c_str());
     }
-
-    return;
 }
 
 void IconTextPlugin::update(YAGfx& gfx)
@@ -242,8 +238,6 @@ void IconTextPlugin::update(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-
-    return;
 }
 
 String IconTextPlugin::getText() const
@@ -261,8 +255,6 @@ void IconTextPlugin::setText(const String& formatText)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
-
-    return;
 }
 
 bool IconTextPlugin::loadBitmap(const String& filename)

@@ -309,8 +309,6 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
             m_lampWidgets[index].move(x, 0);
         }
     }
-
-    return;
 }
 
 void IconTextLampPlugin::stop()
@@ -336,8 +334,6 @@ void IconTextLampPlugin::update(YAGfx& gfx)
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
     m_lampCanvas.update(gfx);
-
-    return;
 }
 
 String IconTextLampPlugin::getText() const
@@ -355,8 +351,6 @@ void IconTextLampPlugin::setText(const String& formatText)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
-
-    return;
 }
 
 bool IconTextLampPlugin::loadBitmap(const String& filename)
@@ -416,8 +410,6 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 
         m_lampWidgets[lampId].setOnState(state);
     }
-
-    return;
 }
 
 /******************************************************************************

@@ -67,8 +67,6 @@ void IdleState::entry(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     LOG_INFO("Going in idle state.");
-
-    return;
 }
 
 void IdleState::process(StateMachine& sm)
@@ -76,7 +74,6 @@ void IdleState::process(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     /* Nothing to do. */
-    return;
 }
 
 void IdleState::exit(StateMachine& sm)
@@ -84,7 +81,6 @@ void IdleState::exit(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     /* Nothing to do. */
-    return;
 }
 
 /******************************************************************************

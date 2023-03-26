@@ -90,8 +90,6 @@ void Rgb888::turnColorWheel(uint8_t wheelPos)
         m_green = UINT8_MAX - wheelPos * COL_PARTS;
         m_blue  = 0U;
     }
-
-    return;
 }
 
 /******************************************************************************

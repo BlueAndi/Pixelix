@@ -314,8 +314,6 @@ void TextWidget::paint(YAGfx& gfx)
             m_scrollTimer.start(m_scrollPause);
         }
     }
-
-    return;
 }
 
 String TextWidget::removeFormatTags(const String& formatStr) const
@@ -448,8 +446,6 @@ void TextWidget::show(YAGfx& gfx, const String& formatStr, bool isScrolling)
 
     /* Text color might be changed, restore original. */
     m_gfxText.setTextColor(textColorBackup);
-
-    return;
 }
 
 bool TextWidget::handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const

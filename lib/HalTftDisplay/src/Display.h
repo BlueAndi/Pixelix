@@ -120,8 +120,6 @@ public:
                                 brightnessAdjustedColor.to565());
             }
         }
-
-        return;
     }
 
     /**
@@ -144,8 +142,6 @@ public:
     void setBrightness(uint8_t brightness) final
     {
         m_brightness = brightness;
-
-        return;
     }
 
     /**
@@ -155,8 +151,6 @@ public:
     {
         m_tft.fillScreen(TFT_BLACK);
         m_ledMatrix.fillScreen(ColorDef::BLACK);
-
-        return;
     }
 
     /**

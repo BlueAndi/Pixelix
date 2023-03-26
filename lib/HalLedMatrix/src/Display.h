@@ -150,8 +150,6 @@ public:
     {
         m_strip.ClearTo(ColorDef::BLACK);
         m_ledMatrix.fillScreen(ColorDef::BLACK);
-
-        return;
     }
 
     /**

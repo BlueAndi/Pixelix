@@ -303,8 +303,6 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, IPluginM
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
@@ -383,8 +381,6 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
             webHandlerData->fd.close();
         }
     }
-
-    return;
 }
 
 /******************************************************************************

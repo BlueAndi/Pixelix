@@ -105,8 +105,6 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
 
     m_isError   = false;
     m_slotId    = SlotList::SLOT_ID_INVALID;
-
-    return;
 }
 
 void WsCmdUninstall::setPar(const char* par)
@@ -126,8 +124,6 @@ void WsCmdUninstall::setPar(const char* par)
             m_isError = true;
         }
     }
-
-    return;
 }
 
 /******************************************************************************

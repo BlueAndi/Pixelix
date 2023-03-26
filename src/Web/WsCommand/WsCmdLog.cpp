@@ -109,8 +109,6 @@ void WsCmdLog::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
     m_cnt       = 0U;
     m_isError   = false;
-
-    return;
 }
 
 void WsCmdLog::setPar(const char* par)
@@ -136,8 +134,6 @@ void WsCmdLog::setPar(const char* par)
     {
         m_isError = true;
     }
-
-    return;
 }
 
 /******************************************************************************

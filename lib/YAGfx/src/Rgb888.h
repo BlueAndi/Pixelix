@@ -190,9 +190,9 @@ public:
      */
     void get(uint8_t& red, uint8_t& green, uint8_t& blue) const
     {
-        red		= applyIntensity(m_red);
-        green	= applyIntensity(m_green);
-        blue	= applyIntensity(m_blue);
+        red     = applyIntensity(m_red);
+        green   = applyIntensity(m_green);
+        blue    = applyIntensity(m_blue);
         return;
     }
 
@@ -206,11 +206,9 @@ public:
      */
     void set(uint8_t red, uint8_t green, uint8_t blue)
     {
-        m_red	= red;
-        m_green	= green;
-        m_blue	= blue;
-
-        return;
+        m_red   = red;
+        m_green = green;
+        m_blue  = blue;
     }
 
     /**
@@ -223,12 +221,10 @@ public:
      */
     void set(uint8_t red, uint8_t green, uint8_t blue, uint8_t intensity)
     {
-        m_red	    = red;
-        m_green	    = green;
-        m_blue	    = blue;
+        m_red       = red;
+        m_green     = green;
+        m_blue      = blue;
         m_intensity = intensity;
-
-        return;
     }
 
     /**
@@ -239,11 +235,9 @@ public:
      */
     void set(const uint32_t& value)
     {
-        m_red	= extractRed(value);
-        m_green	= extractGreen(value);
-        m_blue	= extractBlue(value);
-
-        return;
+        m_red   = extractRed(value);
+        m_green = extractGreen(value);
+        m_blue  = extractBlue(value);
     }
 
     /**
@@ -294,8 +288,6 @@ public:
     void setRed(uint8_t value)
     {
         m_red = value;
-
-        return;
     }
 
     /**
@@ -306,8 +298,6 @@ public:
     void setGreen(uint8_t value)
     {
         m_green = value;
-
-        return;
     }
 
     /**
@@ -318,8 +308,6 @@ public:
     void setBlue(uint8_t value)
     {
         m_blue = value;
-
-        return;
     }
 
     /**
@@ -330,8 +318,6 @@ public:
     void setIntensity(uint8_t intensity)
     {
         m_intensity = intensity;
-
-        return;
     }
 
     /**

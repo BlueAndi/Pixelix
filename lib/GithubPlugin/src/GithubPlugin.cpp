@@ -167,8 +167,6 @@ void GithubPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-
-    return;
 }
 
 void GithubPlugin::stop()
@@ -182,8 +180,6 @@ void GithubPlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void GithubPlugin::process(bool isConnected)
@@ -279,8 +275,6 @@ void GithubPlugin::process(bool isConnected)
             break;
         }
     }
-
-    return;
 }
 
 void GithubPlugin::update(YAGfx& gfx)
@@ -290,8 +284,6 @@ void GithubPlugin::update(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-
-    return;
 }
 
 String GithubPlugin::getUser() const
@@ -317,8 +309,6 @@ void GithubPlugin::setUser(const String& name)
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
     }
-
-    return;
 }
 
 String GithubPlugin::getRepository() const
@@ -344,8 +334,6 @@ void GithubPlugin::setRepository(const String& name)
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
     }
-
-    return;
 }
 
 /******************************************************************************

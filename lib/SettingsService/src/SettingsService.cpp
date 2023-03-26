@@ -368,7 +368,6 @@ bool SettingsService::open(bool readOnly)
 void SettingsService::close()
 {
     m_preferences.end();
-    return;
 }
 
 void SettingsService::cleanUp()

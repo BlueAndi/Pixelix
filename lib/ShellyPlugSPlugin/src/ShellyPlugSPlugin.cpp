@@ -158,8 +158,6 @@ void ShellyPlugSPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-
-    return;
 }
 
 void ShellyPlugSPlugin::stop()
@@ -173,8 +171,6 @@ void ShellyPlugSPlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void ShellyPlugSPlugin::process(bool isConnected)
@@ -246,8 +242,6 @@ void ShellyPlugSPlugin::process(bool isConnected)
             break;
         }
     }
-
-    return;
 }
 
 void ShellyPlugSPlugin::update(YAGfx& gfx)
@@ -257,8 +251,6 @@ void ShellyPlugSPlugin::update(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-    
-    return;
 }
 
 void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
@@ -271,8 +263,6 @@ void ShellyPlugSPlugin::setIPAddress(const String& ipAddress)
 
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 String ShellyPlugSPlugin::getIPAddress() const
@@ -383,9 +373,9 @@ void ShellyPlugSPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         const char* reducePrecision;
         char        powerReducedPrecison[6] = { 0 };
 
-        if (powerRaw < 99.99f)
+        if (powerRaw < 99.99F)
         {
-            reducePrecision = (powerRaw > 9.9f) ? "%.1f" : "%.2f";
+            reducePrecision = (powerRaw > 9.9F) ? "%.1f" : "%.2f";
         }
         else
         {

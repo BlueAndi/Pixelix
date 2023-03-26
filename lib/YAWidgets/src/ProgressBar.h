@@ -137,8 +137,6 @@ public:
         {
             m_progress = progress;
         }
-
-        return;
     }
 
     /**
@@ -163,8 +161,6 @@ public:
         {
             m_algorithm = algorithm;
         }
-
-        return;
     }
 
     /** Widget type string */

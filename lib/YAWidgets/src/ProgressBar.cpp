@@ -89,8 +89,6 @@ void ProgressBar::paint(YAGfx& gfx)
         /* Should never happen. */
         break;
     }
-
-    return;
 }
 
 void ProgressBar::showProgressPixel(YAGfx& gfx)
@@ -114,8 +112,6 @@ void ProgressBar::showProgressPixel(YAGfx& gfx)
             ++y;
         }
     }
-
-    return;
 }
 
 void ProgressBar::showProgressBar(YAGfx& gfx)
@@ -135,8 +131,6 @@ void ProgressBar::showProgressBar(YAGfx& gfx)
 
         gfx.fillRect(m_posX, m_posY, width, height, m_color);
     }
-
-    return;
 }
 
 /******************************************************************************

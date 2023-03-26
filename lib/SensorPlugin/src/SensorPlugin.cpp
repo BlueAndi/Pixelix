@@ -160,8 +160,6 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 
     /* Force update. */
     m_updateTimer.start(0U);
-
-    return;
 }
 
 void SensorPlugin::stop()
@@ -173,8 +171,6 @@ void SensorPlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void SensorPlugin::active(YAGfx& gfx)
@@ -190,14 +186,11 @@ void SensorPlugin::active(YAGfx& gfx)
     {
         m_sensorChannel = getChannel(m_sensorIdx, m_channelIdx);
     }
-
-    return;
 }
 
 void SensorPlugin::inactive()
 {
     /* Nothing to do. */
-    return;
 }
 
 void SensorPlugin::update(YAGfx& gfx)
@@ -212,8 +205,6 @@ void SensorPlugin::update(YAGfx& gfx)
 
     gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
-
-    return;
 }
 
 bool SensorPlugin::getSensorChannel(uint8_t& sensorIdx, uint8_t& channelIdx) const

@@ -76,15 +76,11 @@ void WifiStatusPlugin::start(uint16_t width, uint16_t height)
 
     m_textWidget.move(0, 1);
     m_textWidget.setFormatStr("\\calignWiFi");
-
-    return;
 }
 
 void WifiStatusPlugin::stop()
 {
     /* Nothing to do. */
-
-    return;
 }
 
 void WifiStatusPlugin::active(YAGfx& gfx)
@@ -93,15 +89,11 @@ void WifiStatusPlugin::active(YAGfx& gfx)
 
     /* Force update of the status information */
     m_timer.start(0U);
-
-    return;
 }
 
 void WifiStatusPlugin::inactive()
 {
     m_timer.stop();
-
-    return;
 }
 
 void WifiStatusPlugin::update(YAGfx& gfx)
@@ -150,8 +142,6 @@ void WifiStatusPlugin::update(YAGfx& gfx)
         /* Restart period */
         m_timer.start(PERIOD);
     }
-    
-    return;
 }
 
 /******************************************************************************

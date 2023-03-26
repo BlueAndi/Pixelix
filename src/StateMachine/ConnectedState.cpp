@@ -180,8 +180,6 @@ void ConnectedState::entry(StateMachine& sm)
             }
         }
     }
-
-    return;
 }
 
 void ConnectedState::initHttpClient()
@@ -225,8 +223,6 @@ void ConnectedState::process(StateMachine& sm)
     }
 
     Services::processAll();
-
-    return;
 }
 
 void ConnectedState::exit(StateMachine& sm)
@@ -241,8 +237,6 @@ void ConnectedState::exit(StateMachine& sm)
 
     /* Remove button handler as button state observer. */
     ButtonDrv::getInstance().unregisterObserver();
-
-    return;
 }
 
 /******************************************************************************

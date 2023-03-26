@@ -148,7 +148,6 @@ public:
     void setState(AbstractState& state)
     {
         m_nextState = &state;
-        return;
     }
 
     /**
@@ -183,8 +182,6 @@ public:
             /* Nothing to do */
             ;
         }
-
-        return;
     }
 
 private:

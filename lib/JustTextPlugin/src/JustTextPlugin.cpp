@@ -143,14 +143,11 @@ void JustTextPlugin::start(uint16_t width, uint16_t height)
 
         m_textWidget.move(0, offsY);
     }
-    
-    return;
 }
 
 void JustTextPlugin::stop()
 {
     /* Nothing to do. */
-    return;
 }
 
 void JustTextPlugin::update(YAGfx& gfx)
@@ -159,8 +156,6 @@ void JustTextPlugin::update(YAGfx& gfx)
 
     gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
-
-    return;
 }
 
 String JustTextPlugin::getText() const
@@ -178,8 +173,6 @@ void JustTextPlugin::setText(const String& formatText)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_textWidget.setFormatStr(formatText);
-
-    return;
 }
 
 /******************************************************************************

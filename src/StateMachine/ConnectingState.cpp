@@ -118,8 +118,6 @@ void ConnectingState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
-
-    return;
 }
 
 void ConnectingState::process(StateMachine& sm)
@@ -188,8 +186,6 @@ void ConnectingState::process(StateMachine& sm)
     }
 
     Services::processAll();
-
-    return;
 }
 
 void ConnectingState::exit(StateMachine& sm)
@@ -198,8 +194,6 @@ void ConnectingState::exit(StateMachine& sm)
 
     /* Remove button handler as button state observer. */
     ButtonDrv::getInstance().unregisterObserver();
-
-    return;
 }
 
 /******************************************************************************

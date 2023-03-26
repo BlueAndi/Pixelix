@@ -191,8 +191,6 @@ void APState::entry(StateMachine& sm)
         LOG_INFO(infoStr);
         SysMsg::getInstance().show(infoStr);
     }
-
-    return;
 }
 
 void APState::process(StateMachine& sm)
@@ -203,8 +201,6 @@ void APState::process(StateMachine& sm)
     {
         sm.setState(RestartState::getInstance());
     }
-
-    return;
 }
 
 void APState::exit(StateMachine& sm)
@@ -216,8 +212,6 @@ void APState::exit(StateMachine& sm)
 
     /* Stop DNS */
     m_dnsServer.stop();
-
-    return;
 }
 
 /******************************************************************************

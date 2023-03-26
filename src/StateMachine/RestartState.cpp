@@ -78,8 +78,6 @@ void RestartState::entry(StateMachine& sm)
     m_timer.start(WAIT_TILL_STOP_SVC);
 
     Services::stopAll();
-
-    return;
 }
 
 void RestartState::process(StateMachine& sm)
@@ -116,8 +114,6 @@ void RestartState::process(StateMachine& sm)
         /* Reset */
         Board::reset();
     }
-
-    return;
 }
 
 void RestartState::exit(StateMachine& sm)
@@ -125,7 +121,6 @@ void RestartState::exit(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     /* Nothing to do. */
-    return;
 }
 
 /******************************************************************************

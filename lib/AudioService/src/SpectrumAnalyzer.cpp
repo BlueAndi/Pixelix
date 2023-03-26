@@ -70,7 +70,7 @@ struct WindowCorrection
 template <>
 struct WindowCorrection<FFTWindow::Rectangle>
 {
-    static constexpr const float factor = 1.0f;
+    static constexpr const float factor = 1.0F;
 };
 
 /**
@@ -79,7 +79,7 @@ struct WindowCorrection<FFTWindow::Rectangle>
 template <>
 struct WindowCorrection<FFTWindow::Hamming>
 {
-    static constexpr const float factor = 0.54f;
+    static constexpr const float factor = 0.54F;
 };
 
 /**
@@ -88,7 +88,7 @@ struct WindowCorrection<FFTWindow::Hamming>
 template <>
 struct WindowCorrection<FFTWindow::Hann>
 {
-    static constexpr const float factor = 0.50f;
+    static constexpr const float factor = 0.50F;
 };
 
 /**
@@ -97,7 +97,7 @@ struct WindowCorrection<FFTWindow::Hann>
 template <>
 struct WindowCorrection<FFTWindow::Blackman_Harris>
 {
-    static constexpr const float factor = 0.42f;
+    static constexpr const float factor = 0.42F;
 };
 
 /**
@@ -106,7 +106,7 @@ struct WindowCorrection<FFTWindow::Blackman_Harris>
 template <>
 struct WindowCorrection<FFTWindow::Flat_top>
 {
-    static constexpr const float factor = 0.22f;
+    static constexpr const float factor = 0.22F;
 };
 
 /******************************************************************************
@@ -133,17 +133,17 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
          * with an amplitude of 94 db SPL, sampled at 40000 Hz.
          */
         {
-            float signalFrequency   = 1000.0f;
+            float signalFrequency   = 1000.0F;
             float cycles            = (((AudioDrv::SAMPLES - 1U) * signalFrequency) / AudioDrv::SAMPLE_RATE);   /* Number of signal cycles that the sampling will read. */
-            float amplitude         = 420426.0f; /* 94 db SPL */
+            float amplitude         = 420426.0F; /* 94 db SPL */
 
             for (uint16_t sampleIdx = 0U; sampleIdx < AudioDrv::SAMPLES; ++sampleIdx)
             {
                 /* Build data with positive and negative values. */
-                m_real[sampleIdx] = (amplitude * (sin((sampleIdx * (twoPi * cycles)) / AudioDrv::SAMPLES))) / 2.0f;
+                m_real[sampleIdx] = (amplitude * (sin((sampleIdx * (twoPi * cycles)) / AudioDrv::SAMPLES))) / 2.0F;
                 
                 /* Imaginary part must be zeroed in case of looping to avoid wrong calculations and overflows. */
-                m_imag[sampleIdx] = 0.0f;
+                m_imag[sampleIdx] = 0.0F;
             }
 
             m_isMicAvailable = true;
@@ -154,7 +154,7 @@ void SpectrumAnalyzer::notify(int32_t* data, size_t size)
         while(index < size)
         {
             m_real[index] = static_cast<float>(data[index]);
-            m_imag[index] = 0.0f;
+            m_imag[index] = 0.0F;
 
             ++index;
         }
@@ -203,7 +203,7 @@ bool SpectrumAnalyzer::getFreqBins(float* freqBins, size_t len)
 
 void SpectrumAnalyzer::calculateFFT()
 {
-    static const constexpr  float       HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR  = 2.0f;
+    static const constexpr  float       HALF_SPECTRUM_ENERGY_CORRECTION_FACTOR  = 2.0F;
     static const constexpr  FFTWindow   WINDOW_TYPE                             = FFTWindow::Hamming;
     uint16_t                            idx                                     = 0U;
 

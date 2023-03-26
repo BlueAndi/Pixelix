@@ -97,8 +97,6 @@ void BTCQuotePlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-
-    return;
 }
 
 void BTCQuotePlugin::stop()
@@ -106,8 +104,6 @@ void BTCQuotePlugin::stop()
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_requestTimer.stop();
-
-    return;
 }
 
 void BTCQuotePlugin::process(bool isConnected)
@@ -179,8 +175,6 @@ void BTCQuotePlugin::process(bool isConnected)
             break;
         }
     }
-
-    return;
 }
 
 void BTCQuotePlugin::update(YAGfx& gfx)
@@ -190,8 +184,6 @@ void BTCQuotePlugin::update(YAGfx& gfx)
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-
-    return;
 }
 
 /******************************************************************************

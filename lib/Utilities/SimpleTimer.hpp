@@ -133,8 +133,6 @@ public:
         m_isTimeout = false;
         m_duration  = duration;
         m_start     = millis();
-
-        return;
     }
 
     /**
@@ -144,8 +142,6 @@ public:
     {
         m_isRunning = false;
         m_isTimeout = false;
-
-        return;
     }
 
     /**
@@ -156,8 +152,6 @@ public:
         m_isRunning = true;
         m_isTimeout = false;
         m_start     = millis();
-
-        return;
     }
 
     /**

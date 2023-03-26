@@ -445,8 +445,6 @@ public:
         {
             m_buffer[0] = '\0';
         }
-
-        return;
     }
 
     /**

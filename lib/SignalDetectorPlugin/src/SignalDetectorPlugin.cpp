@@ -225,7 +225,6 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObject& value
 void SignalDetectorPlugin::setSlot(const ISlotPlugin* slotInterf)
 {
     m_slotInterf = slotInterf;
-    return;
 }
 
 void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
@@ -263,8 +262,6 @@ void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
     }
 
     initHttpClient();
-
-    return;
 }
 
 void SignalDetectorPlugin::stop()
@@ -276,8 +273,6 @@ void SignalDetectorPlugin::stop()
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
-
-    return;
 }
 
 void SignalDetectorPlugin::active(YAGfx& gfx)
@@ -341,8 +336,6 @@ void SignalDetectorPlugin::process(bool isConnected)
             m_isDetected = false;
         }
     }
-
-    return;
 }
 
 void SignalDetectorPlugin::update(YAGfx& gfx)
@@ -357,13 +350,11 @@ void SignalDetectorPlugin::update(YAGfx& gfx)
 
         m_isUpdateReq = false;
     }
-
-    return;
 }
 
 float SignalDetectorPlugin::getTargetFreq(uint8_t idx) const
 {
-    float                       freq            = 0.0f;
+    float                       freq            = 0.0F;
     AudioToneDetector*          audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
@@ -423,7 +414,7 @@ void SignalDetectorPlugin::setMinDuration(uint8_t idx, uint32_t duration)
 
 float SignalDetectorPlugin::getThreshold(uint8_t idx) const
 {
-    float                       threshold           = 0.0f;
+    float                       threshold           = 0.0F;
     AudioToneDetector*          audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
@@ -470,8 +461,6 @@ void SignalDetectorPlugin::setText(const String& formatText)
         m_textWidget.setFormatStr(formatText);
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 String SignalDetectorPlugin::getPushUrl() const
@@ -493,8 +482,6 @@ void SignalDetectorPlugin::setPushUrl(const String& url)
         m_pushUrl = url;
         (void)saveConfiguration();
     }
-
-    return;
 }
 
 /******************************************************************************

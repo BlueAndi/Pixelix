@@ -97,24 +97,18 @@ void MyWebServer::init(bool initCaptivePortal)
     {
         CaptivePortal::init(gWebServer);
     }
-
-    return;
 }
 
 void MyWebServer::begin()
 {
     /* Start webserver */
     gWebServer.begin();
-
-    return;
 }
 
 void MyWebServer::end()
 {
     /* Stop webserver */
     gWebServer.end();
-
-    return;
 }
 
 AsyncWebServer& MyWebServer::getInstance()
@@ -148,5 +142,4 @@ static void error(AsyncWebServerRequest* request)
         Pages::error(request);
     }
 
-    return;
 }

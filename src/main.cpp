@@ -146,8 +146,6 @@ void setup()
         gSysStateMachine.process();
     }
     while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
-
-    return;
 }
 
 /**
@@ -169,8 +167,6 @@ void loop()
 
     /* Schedule other tasks with same or lower priority. */
     delay(LOOP_TASK_PERIOD);
-
-    return;
 }
 
 /******************************************************************************

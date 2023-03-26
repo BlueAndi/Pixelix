@@ -237,8 +237,6 @@ void DisplayMgr::end()
     m_slotList.destroy();
 
     LOG_INFO("DisplayMgr is down.");
-
-    return;
 }
 
 bool DisplayMgr::setAutoBrightnessAdjustment(bool enable)
@@ -266,8 +264,6 @@ void DisplayMgr::setBrightness(uint8_t level)
     MutexGuard<MutexRecursive>  guard(m_mutexInterf);
 
     BrightnessCtrl::getInstance().setBrightness(level);
-
-    return;
 }
 
 uint8_t DisplayMgr::getBrightness(void)
@@ -531,8 +527,6 @@ void DisplayMgr::activateNextSlot()
     {
         (void)activateSlot(nextSlotId);
     }
-
-    return;
 }
 
 void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
@@ -549,8 +543,6 @@ void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
     }
 
     m_fadeEffectUpdate = true;
-
-    return;
 }
 
 DisplayMgr::FadeEffect DisplayMgr::getFadeEffect()
@@ -609,8 +601,6 @@ void DisplayMgr::lockSlot(uint8_t slotId)
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
 
     m_slotList.lock(slotId);
-
-    return;
 }
 
 void DisplayMgr::unlockSlot(uint8_t slotId)
@@ -618,8 +608,6 @@ void DisplayMgr::unlockSlot(uint8_t slotId)
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
 
     m_slotList.unlock(slotId);
-
-    return;
 }
 
 bool DisplayMgr::isSlotLocked(uint8_t slotId)
@@ -688,8 +676,6 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
             *slotId = m_selectedSlotId;
         }
     }
-
-    return;
 }
 
 uint8_t DisplayMgr::getMaxSlots() const
@@ -867,8 +853,6 @@ void DisplayMgr::fadeInOut(YAGfx& dst)
             break;
         }
     }
-
-    return;
 }
 
 void DisplayMgr::process()
@@ -1095,8 +1079,6 @@ void DisplayMgr::process()
             plugin->process(m_isNetworkConnected);
         }
     }
-
-    return;
 }
 
 void DisplayMgr::update()
@@ -1122,8 +1104,6 @@ void DisplayMgr::update()
     }
 
     display.show();
-
-    return;
 }
 
 bool DisplayMgr::createProcessTask()
@@ -1186,8 +1166,6 @@ void DisplayMgr::destroyProcessTask()
 
         LOG_DEBUG("ProcessTask is down.");
     }
-    
-    return;
 }
 
 bool DisplayMgr::createUpdateTask()
@@ -1250,8 +1228,6 @@ void DisplayMgr::destroyUpdateTask()
 
         LOG_DEBUG("UpdateTask is down.");
     }
-
-    return;
 }
 
 void DisplayMgr::processTask(void* parameters)
@@ -1289,8 +1265,6 @@ void DisplayMgr::processTask(void* parameters)
     }
 
     vTaskDelete(nullptr);
-
-    return;
 }
 
 void DisplayMgr::updateTask(void* parameters)
@@ -1402,8 +1376,6 @@ void DisplayMgr::updateTask(void* parameters)
     }
 
     vTaskDelete(nullptr);
-
-    return;
 }
 
 /******************************************************************************

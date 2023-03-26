@@ -105,8 +105,6 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max, bool block
             }
         }
     }
-
-    return;
 }
 
 bool SysMsg::isReady() const

@@ -65,15 +65,11 @@ void GameOfLifePlugin::start(uint16_t width, uint16_t height)
     m_gridSize  = ((m_width * m_height) + (BITS - 1U)) / BITS;
 
     (void)createGrids();
-
-    return;
 }
 
 void GameOfLifePlugin::stop()
 {
     destroyGrids();
-
-    return;
 }
 
 void GameOfLifePlugin::active(YAGfx& gfx)
@@ -106,8 +102,6 @@ void GameOfLifePlugin::active(YAGfx& gfx)
 
     m_displayTimer.start(DISPLAY_PERIOD);
     m_forceRestartTimer.start(FORCE_RESTART_PERIOD);
-
-    return;
 }
 
 void GameOfLifePlugin::inactive()
@@ -115,8 +109,6 @@ void GameOfLifePlugin::inactive()
     m_forceRestartTimer.stop();
     m_restartTimer.stop();
     m_displayTimer.stop();
-
-    return;
 }
 
 void GameOfLifePlugin::update(YAGfx& gfx)
@@ -254,8 +246,6 @@ void GameOfLifePlugin::update(YAGfx& gfx)
         /* Nothing to do. */
         ;
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -305,8 +295,6 @@ void GameOfLifePlugin::destroyGrids()
 
         ++index;
     }
-
-    return;
 }
 
 void GameOfLifePlugin::generateInitialPattern(uint8_t gridId)
@@ -322,8 +310,6 @@ void GameOfLifePlugin::generateInitialPattern(uint8_t gridId)
 
         ++gridDataIndex;
     }
-
-    return;
 }
 
 bool GameOfLifePlugin::getCellState(uint8_t gridId, int16_t x, int16_t y)
@@ -417,8 +403,6 @@ void GameOfLifePlugin::setCellState(uint8_t gridId, int16_t x, int16_t y, bool s
             m_grids[gridId][cellDataIndex] |= 1 << bitIndex;
         }
     }
-
-    return;
 }
 
 uint8_t GameOfLifePlugin::countAliveNeighbours(uint8_t gridId, int16_t x, int16_t y)
@@ -476,8 +460,6 @@ void GameOfLifePlugin::update(YAGfx& gfx, uint8_t gridId)
             }
         }
     }
-
-    return;
 }
 
 /******************************************************************************
