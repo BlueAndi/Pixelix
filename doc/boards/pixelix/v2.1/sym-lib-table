@@ -1,0 +1,7 @@
+(sym_lib_table
+  (lib (name "ESP32-DEVKITC-32D_new")(type "Legacy")(uri "${KIPRJMOD}/symbols/ESP32-DEVKITC-32D_new.lib")(options "")(descr ""))
+  (lib (name "CDSOD323-T05C")(type "Legacy")(uri "${KIPRJMOD}/symbols/CDSOD323-T05C.lib")(options "")(descr ""))
+  (lib (name "MCU_Module_new")(type "Legacy")(uri "${KIPRJMOD}/symbols/MCU_Module_new.lib")(options "")(descr ""))
+  (lib (name "Pixelix-rescue")(type "Legacy")(uri "${KIPRJMOD}/Pixelix-rescue.lib")(options "")(descr ""))
+  (lib (name "MCU_Module_Project")(type "KiCad")(uri "${KIPRJMOD}/symbols/MCU_Module_Project.kicad_sym")(options "")(descr ""))
+)
