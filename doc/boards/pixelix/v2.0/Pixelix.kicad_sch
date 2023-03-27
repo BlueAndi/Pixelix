@@ -2855,7 +2855,7 @@
       (reference "#PWR019") (unit 1) (value "GND") (footprint "")
     )
     (path "/00000000-0000-0000-0000-000062912066/8ecb915c-b731-4a5c-8b99-42a81379ab6f"
-      (reference "A1") (unit 1) (value "Adafruit_Feather_V2_ESP32") (footprint "footprints:Adafruit_Feather_V2_ESP32")
+      (reference "A1") (unit 1) (value "Adafruit_Feather_V2_ESP32") (footprint "Module:Adafruit_Feather")
     )
     (path "/00000000-0000-0000-0000-00006252756b"
       (reference "C1") (unit 1) (value "100n") (footprint "Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder")
