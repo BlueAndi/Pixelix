@@ -129,6 +129,23 @@ extern void Board::reset()
     /* Will never be reached. */
 }
 
+extern void Board::ledOn()
+{
+    /* Low active */
+    onBoardLedOut.write(LOW);
+}
+
+extern void Board::ledOff()
+{
+    /* Low active */
+    onBoardLedOut.write(HIGH);
+}
+
+extern bool Board::isLedOn()
+{
+    return (LOW == onBoardLedOut.read()) ? true : false;
+}
+
 /******************************************************************************
  * Local Functions
  *****************************************************************************/

@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <StateMachine.hpp>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -135,13 +136,21 @@ public:
 
 private:
 
-    ErrorId m_errorId;  /**< The error cause, why this state is active. */
+    /** Signal lamp on period in ms. */
+    static const uint32_t   BLINK_ON_PERIOD     = 200U;
+
+    /** Signal lamp off period in ms. */
+    static const uint32_t   BLINK_OFF_PERIOD    = 200U;
+
+    ErrorId     m_errorId;  /**< The error cause, why this state is active. */
+    SimpleTimer m_timer;    /**< Timer used for onboard LED signalling. */
 
     /**
      * Constructs the state.
      */
     ErrorState() :
-        m_errorId(ERROR_ID_NO_ERROR)
+        m_errorId(ERROR_ID_NO_ERROR),
+        m_timer()
     {
     }
 
@@ -154,7 +163,6 @@ private:
     
     ErrorState(const ErrorState& state);
     ErrorState& operator=(const ErrorState& state);
-
 };
 
 /******************************************************************************

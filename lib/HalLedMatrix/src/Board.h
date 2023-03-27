@@ -122,10 +122,10 @@ extern const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 extern const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
 
 /** ADC resolution in digits */
-constexpr uint16_t  adcResolution   = 4096U;
+constexpr uint16_t  adcResolution           = 4096U;
 
 /** ADC reference voltage in mV */
-constexpr uint16_t  adcRefVoltage   = 3300U;
+constexpr uint16_t  adcRefVoltage           = 3300U;
 
 /** LED matrix specific values */
 namespace LedMatrix
@@ -161,6 +161,23 @@ extern void init();
  * Execute a hard reset!
  */
 extern void reset();
+
+/**
+ * Switch onboard LED on.
+ */
+extern void ledOn();
+
+/**
+ * Switch onboard LED off.
+ */
+extern void ledOff();
+
+/**
+ * Is the onboard LED on?
+ * 
+ * @return If onboard LED is on, it will return true otherwise false.
+ */
+extern bool isLedOn();
 
 };
 

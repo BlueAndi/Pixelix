@@ -40,6 +40,7 @@
 #include <Display.h>
 #include <YAFont.h>
 #include <TomThumb.h>
+#include <Board.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -72,6 +73,9 @@ void ErrorState::entry(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     LOG_INFO("Going in error state.");
+
+    m_timer.start(BLINK_ON_PERIOD);
+    Board::ledOn();
 
     /* Any low level error happended and no error message can be shown
      * by the system message handler?
@@ -122,6 +126,21 @@ void ErrorState::entry(StateMachine& sm)
 void ErrorState::process(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
+
+    /* The error state is signalled with the onboard LED. */
+    if (true == m_timer.isTimeout())
+    {
+        if (false == Board::isLedOn())
+        {
+            Board::ledOn();
+            m_timer.start(BLINK_ON_PERIOD);
+        }
+        else
+        {
+            Board::ledOff();
+            m_timer.start(BLINK_OFF_PERIOD);
+        }
+    }
 
     /* Wait for manual reset. */
 }
