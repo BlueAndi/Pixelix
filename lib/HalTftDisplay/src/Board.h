@@ -155,6 +155,23 @@ extern void init();
  */
 extern void reset();
 
+/**
+ * Switch onboard LED on.
+ */
+extern void ledOn();
+
+/**
+ * Switch onboard LED off.
+ */
+extern void ledOff();
+
+/**
+ * Is the onboard LED on?
+ * 
+ * @return If onboard LED is on, it will return true otherwise false.
+ */
+extern bool isLedOn();
+
 };
 
 #endif  /* BOARD_H */
