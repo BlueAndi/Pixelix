@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __INITSTATE_H__
-#define __INITSTATE_H__
+#ifndef INITSTATE_H
+#define INITSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -127,7 +127,7 @@ private:
     /**
      * Show startup information on the display.
      */
-    void showStartupInfoOnDisplay(void);
+    void showStartupInfoOnDisplay(bool isQuietEnabled);
 
     /**
      * Welcome the user on the very first start.
@@ -142,6 +142,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __INITSTATE_H__ */
+#endif  /* INITSTATE_H */
 
 /** @} */

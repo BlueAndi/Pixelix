@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -102,8 +102,6 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
 
     m_isError = false;
     m_parCnt = 0U;
-
-    return;
 }
 
 void WsCmdBrightness::setPar(const char* par)
@@ -139,8 +137,6 @@ void WsCmdBrightness::setPar(const char* par)
     }
 
     ++m_parCnt;
-
-    return;
 }
 
 /******************************************************************************

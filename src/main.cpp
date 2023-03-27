@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,16 +40,22 @@
 #include <Board.h>
 
 #include "InitState.h"
+#include "RestartState.h"
 #include "TaskMon.h"
 #include "MemMon.h"
 #include "ResetMon.h"
+#include "MiniTerminal.h"
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
+#ifndef CONFIG_ESP_LOG_SEVERITY
+#define CONFIG_ESP_LOG_SEVERITY (ESP_LOG_INFO)
+#endif /* CONFIG_ESP_LOG_SEVERITY */
+
 #ifndef CONFIG_LOG_SEVERITY
-#define CONFIG_LOG_SEVERITY (Logging::LOG_LEVEL_INFO)
+#define CONFIG_LOG_SEVERITY     (Logging::LOG_LEVEL_INFO)
 #endif /* CONFIG_LOG_SEVERITY */
 
 /******************************************************************************
@@ -60,11 +66,12 @@
  * Prototypes
  *****************************************************************************/
 
-static int main_espLogVPrintf(const char* szFormat, va_list args);
-
 /******************************************************************************
  * Variables
  *****************************************************************************/
+
+/** Serial terminal */
+static MiniTerminal     gTerminal(Serial);
 
 /** System state machine */
 static StateMachine     gSysStateMachine(InitState::getInstance());
@@ -78,11 +85,21 @@ static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstanc
 /** Serial interface baudrate. */
 static const uint32_t   SERIAL_BAUDRATE     = 115200U;
 
-/** Buffer for esp_log_write() method output. */
-static char             gLogPrintBuffer[512U];
-
 /** Task period in ms of the loop() task. */
 static const uint32_t   LOOP_TASK_PERIOD    = 40U;
+
+#if ARDUINO_USB_MODE
+#if ARDUINO_USB_CDC_ON_BOOT /* Serial used for USB CDC */
+
+/**
+ * Minimize the USB tx timeout (ms) to avoid too long blocking behaviour during
+ * writing e.g. log messages to it. If the value is too high, it will influence
+ * the display refresh bad.
+ */
+static const uint32_t   HWCDC_TX_TIMEOUT    = 4U;
+
+#endif  /* ARDUINO_USB_CDC_ON_BOOT */
+#endif  /* ARDUINO_USB_MODE */
 
 /******************************************************************************
  * External functions
@@ -98,10 +115,21 @@ void setup()
 
     /* Setup serial interface */
     Serial.begin(SERIAL_BAUDRATE);
+    
+    #if ARDUINO_USB_MODE
+    #if ARDUINO_USB_CDC_ON_BOOT
+    Serial.setTxTimeoutMs(HWCDC_TX_TIMEOUT);
+    #endif  /* ARDUINO_USB_CDC_ON_BOOT */
+    #endif  /* ARDUINO_USB_MODE */
 
-    /* Pipe esp_log_write() output through own logging system. */
-    (void)esp_log_set_vprintf(main_espLogVPrintf);
-    esp_log_level_set("*", ESP_LOG_INFO);
+    /* Ensure a distance between the boot mode message and the first log message.
+     * Otherwise the first log message appears in the same line than the last
+     * boot mode message.
+     */
+    Serial.println("\n");
+
+    /* Set severity for esp logging system. */
+    esp_log_level_set("*", CONFIG_ESP_LOG_SEVERITY);
 
     /* Register serial log sink and select it per default. */
     if (true == Logging::getInstance().registerSink(&gLogSinkSerial))
@@ -112,7 +140,7 @@ void setup()
     /* Register websocket log sink. */
     (void)Logging::getInstance().registerSink(&gLogSinkWebsocket);
 
-    /* Set severity */
+    /* Set severity for Pixelix logging system. */
     Logging::getInstance().setLogLevel(CONFIG_LOG_SEVERITY);
 
     /* The setup routine shall handle only the initialization state.
@@ -123,8 +151,6 @@ void setup()
         gSysStateMachine.process();
     }
     while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
-
-    return;
 }
 
 /**
@@ -144,103 +170,18 @@ void loop()
     /* Memory monitor */
     MemMon::getInstance().process();
 
+    /* Process terminal */
+    gTerminal.process();
+
+    if (true == gTerminal.isRestartRequested())
+    {
+        gSysStateMachine.setState(RestartState::getInstance());
+    }
+
     /* Schedule other tasks with same or lower priority. */
     delay(LOOP_TASK_PERIOD);
-
-    return;
 }
 
 /******************************************************************************
  * Local functions
  *****************************************************************************/
-
-/**
- * This method is called by esp_log_write() to write log messages.
- *
- * @param[in] szFormat  Print format
- * @param[in] args      Variable argument list
- *
- * @return Number of written characters.
- */
-static int main_espLogVPrintf(const char* szFormat, va_list args)
-{
-    int ret = vsnprintf(gLogPrintBuffer, sizeof(gLogPrintBuffer), szFormat, args);
-
-    if (0 <= ret)
-    {
-        Logging::LogLevel   logLevel    = Logging::LOG_LEVEL_INFO;
-        int                 index       = 0;
-        String              timestamp;
-        String              logger;
-        String              message;
-
-        /* Determine log level */
-        if (0 < ret)
-        {
-            switch(gLogPrintBuffer[index])
-            {
-            case 'E':
-                logLevel = Logging::LOG_LEVEL_ERROR;
-                break;
-
-            case 'W':
-                logLevel = Logging::LOG_LEVEL_WARNING;
-                break;
-
-            case 'I':
-                logLevel = Logging::LOG_LEVEL_INFO;
-                break;
-
-            case 'D':
-                logLevel = Logging::LOG_LEVEL_DEBUG;
-                break;
-
-            case 'V':
-                logLevel = Logging::LOG_LEVEL_TRACE;
-                break;
-
-            default:
-                break;
-            }
-
-            index += 2; /* Overstep log level and SP */
-        }
-
-        /* Determine timestamp */
-        ++index; /* Overstep '(' */
-        while((ret > index) && (')' != gLogPrintBuffer[index]))
-        {
-            timestamp += gLogPrintBuffer[index];
-            ++index;
-        }
-        index += 2; /* Overstep ')' and SP */
-
-        /* Determine logger */
-        while((ret > index) && (':' != gLogPrintBuffer[index]))
-        {
-            logger += gLogPrintBuffer[index];
-            ++index;
-        }
-        index += 2; /* Overstep ':' and SP */
-
-        message = &gLogPrintBuffer[index];
-
-        /* Cut message on the next CR or LF. */
-        index = 0;
-        while('\0' != message[index])
-        {
-            if (('\r' == message[index]) ||
-                ('\n' == message[index]))
-            {
-                message.remove(index);
-                break;
-            }
-
-            ++index;
-        }
-
-        Logging::getInstance().processLogMessage(timestamp.toInt(), logger, logLevel, message);
-    }
-
-    return ret;
-}

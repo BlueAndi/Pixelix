@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SENSOR_DATA_PROVIDER_H__
-#define __SENSOR_DATA_PROVIDER_H__
+#ifndef SENSOR_DATA_PROVIDER_H
+#define SENSOR_DATA_PROVIDER_H
 
 /******************************************************************************
  * Compile Switches
@@ -151,6 +151,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SENSOR_DATA_PROVIDER_H__ */
+#endif  /* SENSOR_DATA_PROVIDER_H */
 
 /** @} */

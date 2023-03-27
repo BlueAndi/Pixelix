@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">DDPPlugin</h1>
+                <p><img src="DDPPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin setup a server supporting the Distributed Display Protocol (DDP), which is used e.g. by <a href="https://www.xlights.org/" target="_self">xlights</a> or <a href="https://www.ledfx.app/" target="_self">LedFx</a>.</p>
+                <p>Supported formats:</p>
+                <ul>
+                    <li>RGB with 24-bit per pixel</li>
+                </ul>
+                <h2 class="mt-1">xlights Configuration</h2>
+                <h3 class="mt-1">Add Ethernet controller</h3>
+                <ul>
+                    <li>Name: Pixelix</li>
+                    <li>IP Address:&lt;IP-ADDRESS&gt;</li>
+                    <li>Protocol: DDP</li>
+                </ul>
+                <h3 class="mt-1">Add Layout</h3>
+                <h4 class="mt-1">Create new matrix</h4>
+                <ul>
+                    <li>Name: Matrix8x32</li>
+                </ul>
+                <h4 class="mt-1">Matrix</h4>
+                <ul>
+                    <li>Direction: Horizontal</li>
+                    <li>Strings: 8</li>
+                    <li>Nodes/String: 32</li>
+                    <li>Strands/String: 1</li>
+                    <li>Starting Location: Top Left</li>
+                    <li>Controller: Pixelix</li>
+                </ul>
+                <h4 class="mt-1">Controller Connection</h4>
+                <ul>
+                    <li>Port: 1</li>
+                    <li>Protocol: LED Panel Matrix</li>
+                </ul>
+                <h4 class="mt-1">String Properties</h4>
+                <ul>
+                    <li>String Type: RGB Nodes</li>
+                </ul>
+                <h4 class="mt-1">Appearance</h4>
+                <ul>
+                    <li>Pixel Size: 10</li>
+                    <li>Pixel Style: Square</li>
+                </ul>
+                <h2 class="mt-1">REST API</h2>
+                <pre class="text-light"><code>-</code></pre>
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+
+        <script>
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.create("menu", menu.data);
+            });
+        </script>
+    </body>
+</html>

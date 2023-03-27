@@ -1,0 +1,21 @@
+{
+    "name": "HalTftDisplay",
+    "version": "0.1.0",
+    "description": "HAL for TTGO T-Display.",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Common"
+    }, {
+        "name": "YAGfx"
+    }, {
+        "name": "bodmer/TFT_eSPI"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

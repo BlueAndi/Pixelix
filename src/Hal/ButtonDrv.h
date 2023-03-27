@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BUTTONDRV_H__
-#define __BUTTONDRV_H__
+#ifndef BUTTONDRV_H
+#define BUTTONDRV_H
 
 /******************************************************************************
  * Includes
@@ -52,6 +52,49 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+
+/**
+ * Button states
+ */
+typedef enum
+{
+    BUTTON_STATE_UNKNOWN = 0,   /**< Button state is unknown yet */
+    BUTTON_STATE_RELEASED,      /**< Button is released. */
+    BUTTON_STATE_PRESSED        /**< Button is pressed. */
+
+} ButtonState;
+
+/**
+ * Abstract interface for a button observer.
+ */
+class IButtonObserver
+{
+public:
+
+    /**
+     * Destroys the button observer interface.
+     */
+    virtual ~IButtonObserver()
+    {
+    }
+
+    /**
+     * Notify the observer about the new button state.
+     * 
+     * @param[in] state New button state
+     */
+    virtual void notify(ButtonState state) = 0;
+
+protected:
+
+    /**
+     * Creates the button observer interface.
+     */
+    IButtonObserver()
+    {
+    }
+
+};
 
 /**
  * Button driver.
@@ -87,28 +130,31 @@ public:
     Ret init();
 
     /**
-     * Button states
-     */
-    enum State
-    {
-        STATE_UNKNOWN = 0,  /**< Button state is unknown yet */
-        STATE_RELEASED,     /**< Button is released. */
-        STATE_PRESSED,      /**< Button is pressed. */
-        STATE_TRIGGERED     /**< Button was triggered (released -> pressed -> released) */
-    };
-
-    /**
      * Get button state.
      * 
      * @return Button state
      */
-    State getState();
+    ButtonState getState();
+
+    /**
+     * Register an observer to get notifyed about button
+     * state changes. Only one observer is supported!
+     * 
+     * @param[in] observer  The button observer
+     */
+    void registerObserver(IButtonObserver& observer);
+
+    /**
+     * Unregister the current observer.
+     */
+    void unregisterObserver();
 
 private:
 
     TaskHandle_t        m_buttonTaskHandle; /**< Button task handle */
-    State               m_state;            /**< Current button state */
+    ButtonState         m_state;            /**< Current button state */
     SemaphoreHandle_t   m_semaphore;        /**< Semaphore lock */
+    IButtonObserver*    m_observer;         /**< Observer for button state changes */
 
     /** Button task stack size in bytes */
     static const uint32_t   BUTTON_TASK_STACKE_SIZE = 2048U;
@@ -127,8 +173,9 @@ private:
      */
     ButtonDrv() :
         m_buttonTaskHandle(nullptr),
-        m_state(STATE_UNKNOWN),
-        m_semaphore(nullptr)
+        m_state(BUTTON_STATE_UNKNOWN),
+        m_semaphore(nullptr),
+        m_observer(nullptr)
     {
     }
 
@@ -161,6 +208,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BUTTONDRV_H__ */
+#endif  /* BUTTONDRV_H */
 
 /** @} */

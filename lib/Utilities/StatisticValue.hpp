@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __STATISTIC_VALUE_HPP__
-#define __STATISTIC_VALUE_HPP__
+#ifndef STATISTIC_VALUE_HPP
+#define STATISTIC_VALUE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -225,6 +225,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __STATISTIC_VALUE_HPP__ */
+#endif  /* STATISTIC_VALUE_HPP */
 
 /** @} */

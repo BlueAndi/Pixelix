@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CLOCKDRV_H__
-#define __CLOCKDRV_H__
+#ifndef CLOCKDRV_H
+#define CLOCKDRV_H
 
 /******************************************************************************
  * Compile Switches
@@ -80,48 +80,51 @@ public:
     void init();
 
     /**
-     * Get the current time.
+     * Get the local time by considering device timezone.
      *
-     * @param[out] currentTime Pointer to the currentTime.
+     * @param[out] timeInfo Time information.
      *
      * @return If time is not synchronized, it will return false otherwise true.
      */
-    bool getTime(tm *currentTime);
+    bool getTime(tm* timeInfo);
 
     /**
-     * Get the time format.
+     * Get the current time in UTC.
      *
-     * @return true if 24h format is set otherwise false.
+     * @param[out] timeInfo Time information.
+     *
+     * @return If time is not synchronized, it will return false otherwise true.
      */
-    bool getTimeFormat();
+    bool getUtcTime(tm* timeInfo);
 
     /**
-     * Get the date format.
-     *
-     * @return true if DayMonthYear format is set otherwise false.
+     * Get the local time by considering the timezone.
+     * 
+     * @param[in]   tz          Timzone string
+     * @param[out]  timeInfo    Local time information
+     * 
+     * @return If time is not synchronized, it will return false otherwise true.
      */
-    bool getDateFormat();
+    bool getTzTime(const char* tz, tm* timeInfo);
 
 private:
 
+    /** Use UTC timezone by default. */
+    static const char* TZ_UTC;
+
     /** Flag indicating a initialized clock driver. */
-    bool m_isClockDrvInitialized;
+    bool    m_isClockDrvInitialized;
 
-    /** Flag holding the time format. */
-    bool m_is24HourFormat;
-
-    /** Flag holding the date format. */
-    bool m_isDayMonthYear;
+    /** Device timezone */
+    String  m_timeZone;
 
     /**
      * Construct ClockDrv.
      */
     ClockDrv() :
         m_isClockDrvInitialized(false),
-        m_is24HourFormat(false),
-        m_isDayMonthYear(false)
+        m_timeZone(TZ_UTC)
     {
-
     }
 
     /**
@@ -129,7 +132,6 @@ private:
      */
     ~ClockDrv()
     {
-
     }
 
     /* Prevent copying */
@@ -141,6 +143,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CLOCKDRV_H__ */
+#endif  /* CLOCKDRV_H */
 
 /** @} */

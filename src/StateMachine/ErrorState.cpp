@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "ErrorState.h"
+#include "Services.h"
 
 #include <Logging.h>
 #include <Util.h>
@@ -77,7 +78,7 @@ void ErrorState::entry(StateMachine& sm)
      */
     if (ERROR_ID_NO_ERROR != m_errorId)
     {
-        LOG_INFO("Low level error %u.", m_errorId);
+        LOG_INFO("Low level error E%u.", m_errorId);
 
         /* Lets try to show the error cause on the display.
          * We can not assume that the display manager is still running.
@@ -115,7 +116,7 @@ void ErrorState::entry(StateMachine& sm)
         LOG_INFO("No low level error, see display for more information.");
     }
 
-    return;
+    Services::stopAll();
 }
 
 void ErrorState::process(StateMachine& sm)
@@ -123,7 +124,6 @@ void ErrorState::process(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     /* Wait for manual reset. */
-    return;
 }
 
 void ErrorState::exit(StateMachine& sm)
@@ -131,7 +131,6 @@ void ErrorState::exit(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     /* Nothing to do. */
-    return;
 }
 
 /******************************************************************************

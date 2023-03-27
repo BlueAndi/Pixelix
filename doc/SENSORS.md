@@ -7,23 +7,64 @@
 
 - [Sensors](#sensors)
 - [Purpose](#purpose)
+- [General](#general)
+- [Ambient light sensor](#ambient-light-sensor)
+  - [Photoresistor GL5528](#photoresistor-gl5528)
+- [Temperature and humidity sensors](#temperature-and-humidity-sensors)
+  - [DHTx (Proprietary one-wire)](#dhtx-proprietary-one-wire)
+  - [SHT3x (I2C)](#sht3x-i2c)
+- [Audio (digital micropohone with I2S)](#audio-digital-micropohone-with-i2s)
+  - [INMP441](#inmp441)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
 
 # Purpose
-Here is a list of supported sensors. Where they are connected, depends on the used [hardware board](BOARDS.md). Some of them need additional external parts e.g. the DHTx need a ext. 4.7kOhm pull-up resistor. Please check the corresponding datasheets.
+Here is a list of supported sensors. Where they are connected, depends on the used [hardware board](./boards/README.md). Some of them need additional external parts e.g. the DHTx need a ext. 4.7kOhm pull-up resistor. Please check the corresponding datasheets.
 
-* Ambient light sensor
-  * Photoresistor GL5528
-* Temperature and humidity sensors
-  * DHT11 (Proprietary one-wire)
-  * DHT12 (Proprietary one-wire)
-  * DHT21 (Proprietary one-wire)
-  * DHT22 (Proprietary one-wire)
-  * SHT3x (I2C)
-* Digital microphone
-  * INMP441
+# General
+A "X" in the development board column means valid all development boards. Exceptions may be listed separately.
+
+# Ambient light sensor
+
+## Photoresistor GL5528
+
+| Development Board | Photoresistor pin 1 | Photoresistor pin 2 |
+| ----------------- | ------------------- | ------------------- |
+| X | Vcc | Pin 34 |
+| Lilygo&reg; TTGO ESP32 T-Display | Vcc | Pin 32 |
+| Lilygo&reg; ESP32 T-Display S3 | Vcc | Pin 10 |
+
+# Temperature and humidity sensors
+
+## DHTx (Proprietary one-wire)
+* DHT11 (Proprietary one-wire)
+* DHT12 (Proprietary one-wire)
+* DHT21 (Proprietary one-wire)
+* DHT22 (Proprietary one-wire)
+
+| Development Board | DHTx pin 1 | DHTx pin 2 |
+| ----------------- | ---------- | ---------- |
+| X | Vcc | Pin 5 |
+| Lilygo&reg; TTGO ESP32 T-Display | Vcc | Pin 27 |
+| Lilygo&reg; ESP32 T-Display S3 | Vcc | Pin 21 |
+
+## SHT3x (I2C)
+
+| Development Board | I2C SCL | I2C SDA |
+| ----------------- | ------- | ------- |
+| X | Pin 22 | Pin 21 |
+| Lilygo&reg; ESP32 T-Display S3 | Pin 17 | Pin 18 |
+
+# Audio (digital micropohone with I2S)
+
+## INMP441
+Only the left channel is supported, therefore the L/R channel select signal shall be connected to GND.
+
+| Development Board | Left/Right Clock (LRCL) | Data Output (DOUT) | Bit Clock (BCLK) | Left/Right Channel Select (L/R) | Chip Enable (CHIPEN) |
+| ----------------- | ----------------------- | ------------------ | ---------------- | ------------------------------- | -------------------- |
+| X | Pin 25 | Pin 33 | Pin 26 | GND | Vcc |
+| Lilygo&reg; ESP32 T-Display S3 | Pin 12 | Pin 18 | Pin 11 | GND | Vcc |
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

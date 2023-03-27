@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,12 +47,13 @@
 #include "Version.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
-#include "Settings.h"
 #include "PluginMgr.h"
 #include "WebConfig.h"
 #include "FileSystem.h"
 #include "JsonFile.h"
 #include "Version.h"
+#include "Services.h"
+#include "PluginList.hpp"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -61,8 +62,8 @@
 #include <Logging.h>
 #include <Util.h>
 #include <ESPmDNS.h>
+#include <SettingsService.h>
 
-#include <PluginList.hpp>
 
 #include <lwip/init.h>
 
@@ -98,7 +99,7 @@ static const char*  WELCOME_PLUGIN_TYPE     = "IconTextPlugin";
  * the plugin type whether to show the welcome icon and message after a reboot
  * again.
  */
-static const char*  WELCOME_PLUGIN_ALIAS    = "#welcome";
+static const char*  WELCOME_PLUGIN_ALIAS    = "_welcome";
 
 /******************************************************************************
  * Public Methods
@@ -116,8 +117,15 @@ void InitState::entry(StateMachine& sm)
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
 
+    /* Set two-wire (I2C) pins, before calling begin(). */
+    if (false == Wire.setPins(Board::Pin::i2cSdaPinNo, Board::Pin::i2cSclPinNo))
+    {
+        LOG_FATAL("Couldn't set two-wire pins.");
+        errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
+        isError = true;
+    }
     /* Initialize two-wire (I2C) */
-    if (false == Wire.begin())
+    else if (false == Wire.begin())
     {
         LOG_FATAL("Couldn't initialize two-wire.");
         errorId = ErrorState::ERROR_ID_TWO_WIRE_ERROR;
@@ -144,6 +152,13 @@ void InitState::entry(StateMachine& sm)
     {
         LOG_FATAL("Filesystem is invalid.");
         errorId = ErrorState::ERROR_ID_BAD_FS;
+        isError = true;
+    }
+    /* Start all services */
+    else if (false == Services::startAll())
+    {
+        LOG_FATAL("Starting services failed.");
+        errorId = ErrorState::ERROR_ID_SERVICE;
         isError = true;
     }
     else
@@ -194,19 +209,31 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        Settings*           settings = &Settings::getInstance();
+        SettingsService&    settings = SettingsService::getInstance();
         JsonFile            jsonFile(FILESYSTEM);
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        bool                isQuiet         = false;
+
+        /* Clean up settings first! Important step after a firmware update to
+         * keep the settings up-to-date and prevent the persistency will
+         * silently growing up with unused stuff.
+         */
+        if (true == settings.open(false))
+        {
+            LOG_INFO("Clean up settings.");
+            settings.cleanUp();
+            settings.close();
+        }
 
         /* Load some general configuration parameters from persistent memory. */
-        if (true == settings->open(true))
+        if (true == settings.open(true))
         {
             /* Enable or disable the automatic display brightness adjustment,
              * depended on settings. Enable it may fail in case there is no
              * LDR sensor available.
              */
-            bool isEnabled = settings->getAutoBrightnessAdjustment().getValue();
+            bool isEnabled = settings.getAutoBrightnessAdjustment().getValue();
 
             if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
             {
@@ -214,13 +241,19 @@ void InitState::entry(StateMachine& sm)
             }
 
             /* Set text scroll pause for all text widgets. */
-            uint32_t scrollPause = settings->getScrollPause().getValue();
+            uint32_t scrollPause = settings.getScrollPause().getValue();
             if (false == TextWidget::setScrollPause(scrollPause))
             {
                 LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
             }
 
-            settings->close();
+            isQuiet = settings.getQuietMode().getValue();
+
+            settings.close();
+        }
+        else
+        {
+            isQuiet = settings.getQuietMode().getDefault();
         }
 
         /* Don't store the wifi configuration in the NVS.
@@ -230,13 +263,13 @@ void InitState::entry(StateMachine& sm)
         WiFi.persistent(false);
 
         /* Show some informations on the display. */
-        showStartupInfoOnDisplay();
+        showStartupInfoOnDisplay(isQuiet);
 
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
         if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
         {
-            JsonVariant jsonVersion             = jsonDoc["version"];
-            bool        isFileSystemCompatible  = true;
+            JsonVariantConst    jsonVersion             = jsonDoc["version"];
+            bool                isFileSystemCompatible  = true;
 
             if (true == jsonVersion.isNull())
             {
@@ -267,8 +300,11 @@ void InitState::entry(StateMachine& sm)
 
                 LOG_WARNING(errMsg);
 
-                SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
-                SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+                if (false == isQuiet)
+                {
+                    SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+                    SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+                }
             }
         }
     }
@@ -279,22 +315,20 @@ void InitState::entry(StateMachine& sm)
         ErrorState::getInstance().setErrorId(errorId);
         sm.setState(ErrorState::getInstance());
     }
-
-    return;
 }
 
 void InitState::process(StateMachine& sm)
 {
-    ButtonDrv::State    buttonState = ButtonDrv::getInstance().getState();
+    ButtonState buttonState = ButtonDrv::getInstance().getState();
 
     /* Connect to a remote wifi network? */
-    if (ButtonDrv::STATE_RELEASED == buttonState)
+    if (BUTTON_STATE_RELEASED == buttonState)
     {
         sm.setState(ConnectingState::getInstance());
         m_isApModeRequested = false;
     }
     /* Does the user request for setting up an wifi access point? */
-    else if (ButtonDrv::STATE_PRESSED == buttonState)
+    else if (BUTTON_STATE_PRESSED == buttonState)
     {
         sm.setState(APState::getInstance());
         m_isApModeRequested = true;
@@ -305,7 +339,7 @@ void InitState::process(StateMachine& sm)
         ;
     }
 
-    return;
+    Services::processAll();
 }
 
 void InitState::exit(StateMachine& sm)
@@ -313,19 +347,25 @@ void InitState::exit(StateMachine& sm)
     /* Continue initialization steps only, if there was no low level error before. */
     if (ErrorState::ERROR_ID_NO_ERROR == ErrorState::getInstance().getErrorId())
     {
-        wifi_mode_t wifiMode = WIFI_MODE_NULL;
-        String      hostname;
+        SettingsService&    settings    = SettingsService::getInstance();
+        wifi_mode_t         wifiMode    = WIFI_MODE_NULL;
+        String              hostname;
+        bool                isQuiet     = false;
 
         /* Get hostname. */
-        if (false == Settings::getInstance().open(true))
+        if (false == settings.open(true))
         {
             LOG_WARNING("Use default hostname.");
-            hostname = Settings::getInstance().getHostname().getDefault();
+            
+            hostname    = settings.getHostname().getDefault();
+            isQuiet     = settings.getQuietMode().getDefault();
         }
         else
         {
-            hostname = Settings::getInstance().getHostname().getValue();
-            Settings::getInstance().close();
+            hostname    = settings.getHostname().getValue();
+            isQuiet     = settings.getQuietMode().getValue();
+
+            settings.close();
         }
 
         /* Start wifi and initialize the LwIP stack here. */
@@ -368,12 +408,17 @@ void InitState::exit(StateMachine& sm)
             /* Do some stuff only in wifi station mode. */
             if (false == m_isApModeRequested)
             {
-                /* In the next step the plugins are loaded and would automatically be shown.
-                 * To avoid this until the connection establishment takes place, show the following
-                 * message infinite.
-                 */
-                SysMsg::getInstance().show("...");
-                delay(500U); /* Just to avoid a short splash */
+                if (false == isQuiet)
+                {
+                    const uint32_t MIN_WAIT_TIME = 500U; /* Min. wait time in ms to avoid splash screen. */
+
+                    /* In the next step the plugins are loaded and would automatically be shown.
+                     * To avoid this until the connection establishment takes place, show the following
+                     * message infinite.
+                     */
+                    SysMsg::getInstance().show("...");
+                    delay(MIN_WAIT_TIME); /* Just to avoid a short splash */
+                }
 
                 /* Loading plugin installation failed? */
                 if (false == PluginMgr::getInstance().load())
@@ -422,8 +467,6 @@ void InitState::exit(StateMachine& sm)
             MyWebServer::begin();
         }
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -437,37 +480,37 @@ void InitState::exit(StateMachine& sm)
 void InitState::showStartupInfoOnSerial()
 {
     LOG_INFO("PIXELIX starts up ...");
+    LOG_INFO("Target: %s", Version::TARGET);
     LOG_INFO("SW version: %s", Version::SOFTWARE_VER);
     LOG_INFO("SW revision: %s", Version::SOFTWARE_REV);
     LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
     LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
     LOG_INFO("Wifi MAC: %s", WiFi.macAddress().c_str());
     LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
-
-    return;
 }
 
-void InitState::showStartupInfoOnDisplay()
+void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
 {
-    const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+    const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
     const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
     const uint32_t  DURATION_PAUSE          = 500U; /* ms */
     const uint32_t  SCROLLING_NO_REPEAT     = 0U;
     SysMsg&         sysMsg                  = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\calign\\#FF0000P\\#0FF000I\\#00FF00X\\#000FF0E\\#0000FFL\\#F0000FI\\#FF0000X", DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+    sysMsg.show("\\calign\\#FF0000P\\#FFFF00I\\#00FF00X\\#00FFFFE\\#0000FFL\\#FF00FFI\\#FF0000X", DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
-    /* Clear and wait */
-    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+    if (false == isQuietEnabled)
+    {
+        /* Clear and wait */
+        sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
 
-    /* Show sw version (short) */
-    sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+        /* Show sw version (short) */
+        sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
 
-    /* Clear and wait */
-    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
-
-    return;
+        /* Clear and wait */
+        sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+    }
 }
 
 void InitState::welcome(IPluginMaintenance* plugin)
@@ -492,8 +535,6 @@ void InitState::welcome(IPluginMaintenance* plugin)
         (void)welcomePlugin->loadBitmap("/images/smiley.bmp");
         welcomePlugin->setText("Hello World!");
     }
-
-    return;
 }
 
 /******************************************************************************

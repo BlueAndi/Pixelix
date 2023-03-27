@@ -17,6 +17,9 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Others](#others)
 - [Installation](#installation)
 - [Very First Startup](#very-first-startup)
+  - [Variant 1: Configure wifi station SSID and passphrase with the browser](#variant-1-configure-wifi-station-ssid-and-passphrase-with-the-browser)
+  - [Variant 2: Configure wifi station SSID and passphrase with the terminal](#variant-2-configure-wifi-station-ssid-and-passphrase-with-the-terminal)
+  - [Pixelix Is Ready](#pixelix-is-ready)
 - [User Interface](#user-interface)
 - [Documentation](#documentation)
 - [Used Libraries](#used-libraries)
@@ -29,6 +32,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [Why do I see sometimes values from the LDR in the SensorPlugin, although no LDR is installed?](#why-do-i-see-sometimes-values-from-the-ldr-in-the-sensorplugin-although-no-ldr-is-installed)
   - [How can I use alternative icons?](#how-can-i-use-alternative-icons)
   - [Is it possible to use a font with 8px height?](#is-it-possible-to-use-a-font-with-8px-height)
+  - [How to configure the date/time format?](#how-to-configure-the-datetime-format)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -38,9 +42,9 @@ I want to have a remote display to show multiple kind of information, running 24
 
 | Some impressions |   |
 | - | - |
-| ![TimePlugin](./data/images/TimePlugin.jpg) | ![DatePlugin](./data/images/DatePlugin.jpg) |
-| ![IconTextLampPlugin](./data/images/IconTextLampPlugin.jpg) | ![IconTextPlugin](./data/images/IconTextPlugin.jpg) |
-| ![WifiStatusPlugin](./data/images/WifiStatusPlugin.jpg) | ... |
+| ![TimePlugin](./lib/WifiStatusPlugin/web/DateTimePlugin1.jpg) | ![DatePlugin](./lib/WifiStatusPlugin/web/DateTimePlugin2.jpg) |
+| ![IconTextLampPlugin](./lib/WifiStatusPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/WifiStatusPlugin/web/IconTextPlugin.jpg) |
+| ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg) | ... |
 
 # Overview
 
@@ -65,7 +69,8 @@ The following shows the absolute minimal wiring setup:
 In the meantime several other boards are supported as well. You can see them in the platformio configuration (platformio.ini) or the [list of boards](./doc/boards/README.md).
 
 Additional supported variants, which were original not in focus:
-* [TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
+* [LILYGO&reg; TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
+* [LILYGO&reg; T-Display ESP32-S3 1.9 inch ST7789 LCD Display Touch Screen Development Board](https://www.lilygo.cc/products/t-display-s3)
 
 Although Pixelix was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
 * Temperature and humidity sensors DHTx
@@ -75,19 +80,46 @@ Although Pixelix was designed to show information, that is pushed or pulled via 
 # Installation
 The following steps are necessary for the first time and to get PIXELIX initial running on the target. Once it runs, later on the firmware and filesystem can be updated via the PIXELIX webinterface.
 
-1. Setup the [toolchain](./doc/TOOLCHAIN-INSTALLATION.md).
-2. [Build the software](./doc/SW-BUILD.md) and check whether the toolchain works.
-3. [Upload/Update the software and firmware](./doc/SW-UPDATE.md) to the target.
+1. Setup the [toolchain](./doc/config/TOOLCHAIN-INSTALLATION.md).
+2. [Build the software](./doc/config/SW-BUILD.md) and check whether the toolchain works.
+3. [Upload/Update the software and firmware](./doc/config/SW-UPDATE.md) to the target.
+4. Verify that the LED panel topology is correct and you see the "Hello World" on the display.
+
+Note, that the LED panel topology and the display width/height can currently not be changed in the web interface. If its necessary, adapt first in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ according your LED matrix. In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 # Very First Startup
-If the device starts the very first time, the wifi station SSID and passphrase settings are empty. To be able to configure them, start the device and keep the button pressed until it shows the SSID. The device will start up as wifi access point with the default SSID "pixelix" and the default password "Luke, I am your father.".
+If the device starts the very first time, the wifi station SSID and passphrase settings are empty. They can be configured in two possible ways:
+1. Using the browser and set them in the captive portal.
+2. Using a terminal connecting via usb.
 
-Use the browser to connect to the captive portal and configure the wifi station SSID and passphrase. Depended on the type of device you are using for connecting to Pixelix, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
+## Variant 1: Configure wifi station SSID and passphrase with the browser
+Restart the device and keep the button pressed until it shows the SSID of the wifi access point, spawned by Pixelix. Search for it with your mobile device and connect.
+* SSID: **pixelix**
+* Passphrase: **Luke, I am your father.**
 
-After configuration restart and voila, Pixelix will be available in your wifi network.
+Depended on the type of device you are using for connecting to Pixelix, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
+
+Use the following default credentials to get access to the Pixelix webinterface:
+* User: **luke**
+* Password: **skywalker**
+
+## Variant 2: Configure wifi station SSID and passphrase with the terminal
+Connect Pixelix with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
+* Write wifi passphrase: ```write wifi passphrase <your-passphrase>```
+* Write wifi SSID: ```write wifi ssid <your-ssid>```
+* Restart Pixelix: ```reset```
+
+## Pixelix Is Ready
+After configuration, restart again and voila, Pixelix will be available in your wifi network.
+
+For changing whats displayed, go to its webinterface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
 
 # User Interface
-* The user button activates always the next slot.
+* The user button provides several features:
+    * On short pulse: Activates the next slot.
+    * Two short pulses: Activates next fade effect.
+    * Five short pulses: IP address is shown.
+    * Long pressed: Increases the display brightness until maximum and then decreases until minimum. After that it will again increases it and so on.
 * If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
 * If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
 * The web interface provides the possibility to install plugins, control their duration in the slots and etc.
@@ -117,6 +149,7 @@ For more information, see the [documentation](./doc/README.md).
 * [JSZip](https://github.com/Stuk/jszip) - A library for creating, reading and editing .zip files with JavaScript, with a lovely and simple API. - MIT License
 * [JSZipUtils](https://github.com/Stuk/jszip-utils) - A collection of cross-browser utilities to go along with JSZip. - MIT License
 * [FileSaver.js](https://github.com/eligrey/FileSaver.js) - FileSaver.js is the solution to saving files on the client-side. - MIT License
+* [Arduino client for MQTT](https://github.com/knolleary/pubsubclient) - This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT. - MIT License
 
 # FAQ
 
@@ -202,6 +235,18 @@ Example:
 
 Not all plugin may support this in case they get conflicts with their layout.
 If a plugin don't support it, it will use the default font type.
+
+## How to configure the date/time format?
+The date/time format used by plugins, e.g. the DateTimePlugin or the SunrisePlugin, can be configured in their configuration JSON file. Use the file editor in the web interface to modify it according to your needs. The file can be found in the ```/configuration``` folder and the filename is ```<PLUGIN-UID>.json```. The format specifiers following [strftime()](https://cplusplus.com/reference/ctime/strftime/).
+
+Examples:
+* ```%I:%M %p```: 02:30 PM
+* ```%H:%M```: 14:30
+* ```%m/%d```: 11/12
+* ```%d.%m.```: 11.12.
+* ```%d - %b```: 11 - Nov
+
+You can colorize it by using the [text properties](#how-to-change-text-properties).
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

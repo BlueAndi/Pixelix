@@ -1,0 +1,47 @@
+@startuml
+
+title PIO Environment Dependencies
+
+component "Mcu" as mcu
+component "Board" as board
+component "Display" as display
+component "Checker" as checker
+component "Environment" as env
+component "Mode" as mode
+
+env ..> board
+env ..> checker
+env ..> mode
+
+board ..> mcu
+board ..> display
+
+note top of env
+    PlatformIO specific configuration.
+end note
+
+note bottom of mode
+    * release
+    * debug
+    * trace
+end note
+
+note bottom of checker
+    Static code analysis tools
+    and rules.
+end note
+
+note top of board
+    Development board configuration.
+end note
+
+note bottom of mcu
+    MCU configuration, e.g. for
+    the ESP32.
+end note
+
+note bottom of display
+    Display configuration.
+end note
+
+@enduml

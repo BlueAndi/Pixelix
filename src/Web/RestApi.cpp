@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,6 @@
  *****************************************************************************/
 #include "RestApi.h"
 #include "HttpStatus.h"
-#include "Settings.h"
 #include "DisplayMgr.h"
 #include "Version.h"
 #include "PluginMgr.h"
@@ -49,6 +48,7 @@
 #include <Esp.h>
 #include <Logging.h>
 #include <SensorDataProvider.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,6 +69,7 @@
 static void handleButton(AsyncWebServerRequest* request);
 static void handleFadeEffect(AsyncWebServerRequest* request);
 static void handleSlots(AsyncWebServerRequest* request);
+static void handleSlot(AsyncWebServerRequest* request);
 static void handlePluginInstall(AsyncWebServerRequest* request);
 static void handlePluginUninstall(AsyncWebServerRequest* request);
 static void handlePlugins(AsyncWebServerRequest* request);
@@ -77,7 +78,7 @@ static void handleSettings(AsyncWebServerRequest* request);
 static void handleSetting(AsyncWebServerRequest* request);
 static bool storeSetting(KeyValue* parameter, const String& value, String& error);
 static void handleStatus(AsyncWebServerRequest* request);
-static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count);
+static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
 static String getContentType(const String& filename);
@@ -111,6 +112,7 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/button", handleButton);
     (void)srv.on("/rest/api/v1/display/fadeEffect", handleFadeEffect);
     (void)srv.on("/rest/api/v1/display/slots", handleSlots);
+    (void)srv.on("/rest/api/v1/display/slot/*", handleSlot);
     (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
     (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
     (void)srv.on("/rest/api/v1/plugins", handlePlugins);
@@ -122,8 +124,6 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/fs/file", HTTP_POST, handleFilePost, uploadHandler);
     (void)srv.on("/rest/api/v1/fs/file", HTTP_DELETE, handleFileDelete);
     (void)srv.on("/rest/api/v1/fs", handleFilesystem);
-
-    return;
 }
 
 /**
@@ -145,8 +145,6 @@ void RestApi::error(AsyncWebServerRequest* request)
     RestUtil::prepareRspError(jsonDoc, "Invalid path requested.");
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /******************************************************************************
@@ -184,8 +182,6 @@ static void handleButton(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -217,7 +213,7 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
         JsonVariant             dataObj             = RestUtil::prepareRspSuccess(jsonDoc);
         DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
         uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
-        DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1);
+        DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
 
         httpStatusCode = HttpStatus::STATUS_CODE_OK;
 
@@ -232,8 +228,6 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -245,7 +239,7 @@ static void handleFadeEffect(AsyncWebServerRequest* request)
 static void handleSlots(AsyncWebServerRequest* request)
 {
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    const size_t        JSON_DOC_SIZE   = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
     if (nullptr == request)
@@ -264,6 +258,7 @@ static void handleSlots(AsyncWebServerRequest* request)
         JsonArray   slotArray   = dataObj.createNestedArray("slots");
         uint8_t     slotId      = 0U;
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
+        uint8_t     stickySlot  = displayMgr.getStickySlot();
 
         /* Add max. number of slots */
         dataObj["maxSlots"] = displayMgr.getMaxSlots();
@@ -282,6 +277,16 @@ static void handleSlots(AsyncWebServerRequest* request)
             slot["name"]        = name;
             slot["uid"]         = uid;
             slot["alias"]       = alias;
+
+            if (stickySlot != slotId)
+            {
+                slot["isSticky"] = false;
+            }
+            else
+            {
+                slot["isSticky"] = true;
+            }
+
             slot["isLocked"]    = isLocked;
             slot["duration"]    = duration;
         }
@@ -290,8 +295,123 @@ static void handleSlots(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
 
-    return;
+/**
+ * Activate a specific slot or set a slot sticky or clear the sticky flag.
+ * POST \c "/api/v1/display/slot/<id>"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleSlot(AsyncWebServerRequest* request)
+{
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    const size_t        JSON_DOC_SIZE   = 1024U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_POST != request->method())
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        const char* uriWithSlotId = "/rest/api/v1/display/slot/";
+
+        if (0U == request->url().startsWith(uriWithSlotId))
+        {
+            RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
+            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+        }
+        else
+        {
+            uint8_t slotId          = SlotList::SLOT_ID_INVALID;
+            size_t  baseUriLen      = strlen(uriWithSlotId);
+            bool    slotIdStatus    = Util::strToUInt8(request->url().substring(baseUriLen), slotId);
+
+            if (false == slotIdStatus)
+            {
+                RestUtil::prepareRspError(jsonDoc, "Invalid slot id.");
+                httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+            }
+            /* Only activate a slot? */
+            else if (false == request->hasArg("sticky"))
+            {
+                if (false == DisplayMgr::getInstance().activateSlot(slotId))
+                {
+                    RestUtil::prepareRspError(jsonDoc, "Request rejected.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                }
+                else
+                {
+                    JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+
+                    UTIL_NOT_USED(dataObj);
+                    httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+                }
+            }
+            /* Consider sticky flag. */
+            else
+            {
+                const String&   stickyFlagStr   = request->arg("sticky");
+                bool            stickyFlag      = false;
+
+                if (stickyFlagStr == "true")
+                {
+                    stickyFlag = true;
+                }
+                else if (stickyFlagStr == "false")
+                {
+                    stickyFlag = false;
+                }
+                else
+                {
+                    RestUtil::prepareRspError(jsonDoc, "Invalid sticky flag.");
+                    httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                }
+
+                if (HttpStatus::STATUS_CODE_OK == httpStatusCode)
+                {
+                    if (false == stickyFlag)
+                    {
+                        if (slotId != DisplayMgr::getInstance().getStickySlot())
+                        {
+                            RestUtil::prepareRspError(jsonDoc, "Slot is not sticky.");
+                            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                        }
+                        else
+                        {
+                            JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+
+                            DisplayMgr::getInstance().clearSticky();
+
+                            UTIL_NOT_USED(dataObj);
+                            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+                        }
+                    }
+                    else if (false == DisplayMgr::getInstance().setSlotSticky(slotId))
+                    {
+                        RestUtil::prepareRspError(jsonDoc, "Request rejected.");
+                        httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+                    }
+                    else
+                    {
+                        JsonVariant dataObj = RestUtil::prepareRspSuccess(jsonDoc);
+
+                        UTIL_NOT_USED(dataObj);
+                        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+                    }
+                }
+            }
+        }
+    }
+
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 }
 
 /**
@@ -354,8 +474,6 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -442,8 +560,6 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -484,8 +600,6 @@ static void handlePlugins(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -525,7 +639,6 @@ static void handleSensors(AsyncWebServerRequest* request)
             if (nullptr != sensor)
             {
                 uint8_t     numChannels     = sensor->getNumChannels();
-                uint8_t     channelIdx      = 0U;
                 JsonObject  sensorObj       = sensorsArray.createNestedObject();
 
                 sensorObj["index"]          = sensorIdx;
@@ -534,7 +647,8 @@ static void handleSensors(AsyncWebServerRequest* request)
 
                 /* Block is only used, to have the channels in the correct JSON order. */
                 {
-                    JsonArray   channelsArray = sensorObj.createNestedArray("channels");
+                    uint8_t     channelIdx      = 0U;
+                    JsonArray   channelsArray   = sensorObj.createNestedArray("channels");
 
                     for(channelIdx = 0U; channelIdx < numChannels; ++channelIdx)
                     {
@@ -556,8 +670,6 @@ static void handleSensors(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -586,10 +698,11 @@ static void handleSettings(AsyncWebServerRequest* request)
     {
         JsonVariant dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
         JsonArray   settingsArray   = dataObj.createNestedArray("settings");
-        uint8_t     settingIdx      = 0U;
-        KeyValue**  settings        = Settings::getInstance().getList();
+        size_t      settingIdx      = 0U;
+        size_t      settingsCount   = 0U;
+        KeyValue**  settings        = SettingsService::getInstance().getList(settingsCount);
 
-        for(settingIdx = 0; settingIdx < Settings::KEY_VALUE_PAIR_NUM; ++settingIdx)
+        for(settingIdx = 0; settingIdx < settingsCount; ++settingIdx)
         {
             KeyValue*   setting = settings[settingIdx];
 
@@ -603,8 +716,6 @@ static void handleSettings(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -616,9 +727,10 @@ static void handleSettings(AsyncWebServerRequest* request)
  */
 static void handleSetting(AsyncWebServerRequest* request)
 {
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    const size_t        JSON_DOC_SIZE   = 2048U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+    SettingsService&    settings        = SettingsService::getInstance();
 
     if (nullptr == request)
     {
@@ -632,7 +744,7 @@ static void handleSetting(AsyncWebServerRequest* request)
             RestUtil::prepareRspError(jsonDoc, "Key is missing.");
             httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
         }
-        else if (false == Settings::getInstance().open(true))
+        else if (false == settings.open(true))
         {
             RestUtil::prepareRspError(jsonDoc, "Internal error.");
             httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
@@ -641,7 +753,7 @@ static void handleSetting(AsyncWebServerRequest* request)
         {
             JsonVariant     dataObj = RestUtil::prepareRspSuccess(jsonDoc);
             const String&   key     = request->arg("key");
-            KeyValue*       setting = Settings::getInstance().getSettingByKey(key.c_str());
+            KeyValue*       setting = settings.getSettingByKey(key.c_str());
 
             dataObj["key"]  = setting->getKey();
             dataObj["name"] = setting->getName();
@@ -723,7 +835,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                 break;
             }
 
-            Settings::getInstance().close();
+            settings.close();
 
             httpStatusCode = HttpStatus::STATUS_CODE_OK;
         }
@@ -743,14 +855,14 @@ static void handleSetting(AsyncWebServerRequest* request)
         else
         {
             const String&   key     = request->arg("key");
-            KeyValue*       setting = Settings::getInstance().getSettingByKey(key.c_str());
+            KeyValue*       setting = settings.getSettingByKey(key.c_str());
 
             if (nullptr == setting)
             {
                 RestUtil::prepareRspError(jsonDoc, "Key not found.");
                 httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
             }
-            else if (false == Settings::getInstance().open(false))
+            else if (false == settings.open(false))
             {
                 RestUtil::prepareRspError(jsonDoc, "Internal error.");
                 httpStatusCode = HttpStatus::STATUS_CODE_BAD_REQUEST;
@@ -772,7 +884,7 @@ static void handleSetting(AsyncWebServerRequest* request)
                     httpStatusCode = HttpStatus::STATUS_CODE_OK;
                 }
 
-                Settings::getInstance().close();
+                settings.close();
             }
         }
     }
@@ -783,8 +895,6 @@ static void handleSetting(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -807,6 +917,8 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
     }
     else
     {
+        SettingsService&    settings    = SettingsService::getInstance();
+
         switch(parameter->getValueType())
         {
         case KeyValue::TYPE_STRING:
@@ -814,7 +926,7 @@ static bool storeSetting(KeyValue* parameter, const String& value, String& error
                 KeyValueString* kvStr = static_cast<KeyValueString*>(parameter);
 
                 /* If it is the hostname, verify it explicit. */
-                if (0 == strcmp(Settings::getInstance().getHostname().getKey(), kvStr->getKey()))
+                if (0 == strcmp(settings.getHostname().getKey(), kvStr->getKey()))
                 {
                     if (false == isValidHostname(value))
                     {
@@ -1042,13 +1154,14 @@ static void handleStatus(AsyncWebServerRequest* request)
     }
     else
     {
-        String      ssid;
-        int8_t      rssi            = -100; // dbm
-        JsonVariant dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonObject  hwObj           = dataObj.createNestedObject("hardware");
-        JsonObject  swObj           = dataObj.createNestedObject("software");
-        JsonObject  internalRamObj  = swObj.createNestedObject("internalRam");
-        JsonObject  wifiObj         = dataObj.createNestedObject("wifi");
+        String              ssid;
+        int8_t              rssi            = -100; // dbm
+        JsonVariant         dataObj         = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonObject          hwObj           = dataObj.createNestedObject("hardware");
+        JsonObject          swObj           = dataObj.createNestedObject("software");
+        JsonObject          internalRamObj  = swObj.createNestedObject("internalRam");
+        JsonObject          wifiObj         = dataObj.createNestedObject("wifi");
+        SettingsService&    settings        = SettingsService::getInstance();
 
         /* Only in station mode it makes sense to retrieve the RSSI.
          * Otherwise keep it -100 dbm.
@@ -1058,10 +1171,10 @@ static void handleStatus(AsyncWebServerRequest* request)
             rssi = WiFi.RSSI();
         }
 
-        if (true == Settings::getInstance().open(true))
+        if (true == settings.open(true))
         {
-            ssid = Settings::getInstance().getWifiSSID().getValue();
-            Settings::getInstance().close();
+            ssid = settings.getWifiSSID().getValue();
+            settings.close();
         }
 
         /* Prepare response */
@@ -1083,12 +1196,10 @@ static void handleStatus(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
- * Get the files in the directory recursively and fill the JSON array flat.
+ * Get the files in the directory (optional: recursively) and fill the JSON array flat.
  * It will start to collect the files/directories after "preCount" were found.
  * It will stop to collect after "count" files.
  * 
@@ -1096,8 +1207,9 @@ static void handleStatus(AsyncWebServerRequest* request)
  * @param[out]      files       JSON array for collecting the files.
  * @param[in,out]   preCount    This amount of files will be skipped.
  * @param[in,out]   count       Amount of files which max. to collect.
+ * @param[in]       isRecursive If true, it will get all files recursive from root to all leafs.
  */
-static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, uint32_t& count)
+static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive)
 {
     File fd = dir.openNextFile();
 
@@ -1106,18 +1218,22 @@ static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, ui
         /* Skip the first number of files. */
         if (0U < preCount)
         {
-            /* One file skipped */
+            /* One file/directory skipped. */
             --preCount;
 
             /* Dive into every directory recursively. */
-            if (true == fd.isDirectory())
+            if ((true == isRecursive) &&
+                (true == fd.isDirectory()))
             {
-                getFilesRecursive(fd, files, preCount, count);
+                getFiles(fd, files, preCount, count, isRecursive);
             }
         }
         else
         {
             JsonObject jsonFile = files.createNestedObject();
+
+            /* One file/directory collected. */
+            --count;
 
             jsonFile["name"] = String(fd.path());
             jsonFile["size"] = fd.size();
@@ -1126,16 +1242,16 @@ static void getFilesRecursive(File dir, JsonArray& files, uint32_t& preCount, ui
             {
                 jsonFile["type"] = "dir";
 
-                /* Dive into every directory recursively. */
-                getFilesRecursive(fd, files, preCount, count);
+                if (true == isRecursive)
+                {
+                    /* Dive into every directory recursively. */
+                    getFiles(fd, files, preCount, count, isRecursive);
+                }
             }
             else
             {
                 jsonFile["type"] = "file";
             }
-
-            /* One file collected. */
-            --count;
         }
 
         fd.close();
@@ -1209,7 +1325,8 @@ static void handleFilesystem(AsyncWebServerRequest* request)
             }
             else
             {
-                getFilesRecursive(fdRoot, jsonData, preCount, count);
+                LOG_INFO("List %s (page = %u)", path.c_str(), page);
+                getFiles(fdRoot, jsonData, preCount, count, false);
             }
 
             fdRoot.close();
@@ -1222,8 +1339,6 @@ static void handleFilesystem(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -1272,8 +1387,6 @@ static void handleFileGet(AsyncWebServerRequest* request)
             request->send(FILESYSTEM, path, getContentType(path));
         }
     }
-
-    return;
 }
 
 /**
@@ -1373,8 +1486,6 @@ static void handleFilePost(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -1431,8 +1542,6 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         /* Inform client about abort.*/
         request->send(HttpStatus::STATUS_CODE_BAD_REQUEST, "text/plain", "Upload aborted.");
     }
-
-    return;
 }
 
 /**
@@ -1477,8 +1586,6 @@ static void handleFileDelete(AsyncWebServerRequest* request)
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
 }
 
 /**
@@ -1491,9 +1598,10 @@ static void handleFileDelete(AsyncWebServerRequest* request)
  */
 static bool isValidHostname(const String& hostname)
 {
-    bool            isValid             = true;
-    const size_t    MIN_HOSTNAME_LENGTH = Settings::getInstance().getHostname().getMinLength();
-    const size_t    MAX_HOSTNAME_LENGTH = Settings::getInstance().getHostname().getMaxLength();
+    bool                isValid         = true;
+    SettingsService&    settings        = SettingsService::getInstance();
+    const size_t    MIN_HOSTNAME_LENGTH = settings.getHostname().getMinLength();
+    const size_t    MAX_HOSTNAME_LENGTH = settings.getHostname().getMaxLength();
 
     if ((MIN_HOSTNAME_LENGTH > hostname.length()) ||
         (MAX_HOSTNAME_LENGTH < hostname.length()))

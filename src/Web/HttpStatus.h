@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __HTTP_STATUS__
-#define __HTTP_STATUS__
+#ifndef HTTP_STATUS
+#define HTTP_STATUS
 
 /******************************************************************************
  * Compile Switches
@@ -129,6 +129,6 @@ enum StatusCode
 
 }
 
-#endif  /* __HTTP_STATUS__ */
+#endif  /* HTTP_STATUS */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -87,10 +87,15 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max, bool block
 {
     if (nullptr != m_plugin)
     {
+        uint8_t slotId = DisplayMgr::getInstance().getSlotIdByPluginUID(m_plugin->getUID());
+
+        /* Important: Call first show() to enable plugin. Otherwise the slot activation request will fail. */
         m_plugin->show(msg, duration, max);
 
-        /* Schedule plugin immediately */
-        DisplayMgr::getInstance().activatePlugin(m_plugin);
+        if (false == DisplayMgr::getInstance().activateSlot(slotId))
+        {
+            LOG_WARNING("System message suppressed.");
+        }
 
         if (true == blocking)
         {
@@ -100,8 +105,6 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max, bool block
             }
         }
     }
-
-    return;
 }
 
 bool SysMsg::isReady() const

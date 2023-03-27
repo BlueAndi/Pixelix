@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +36,10 @@
 #include "SysMsg.h"
 #include "UpdateMgr.h"
 #include "MyWebServer.h"
-#include "Settings.h"
 #include "ClockDrv.h"
 #include "ButtonDrv.h"
 #include "DisplayMgr.h"
+#include "Services.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -49,6 +49,8 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Logging.h>
+#include <Util.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -76,27 +78,34 @@
 
 void ConnectedState::entry(StateMachine& sm)
 {
-    String infoStr = "Hostname: ";
-    String hostname;
-    String infoStringIp = "IP: ";
-    String notifyURL = "-";
+    SettingsService&    settings        = SettingsService::getInstance();
+    String              infoStr         = "Hostname: ";
+    String              hostname;
+    String              infoStringIp    = "IP: ";
+    String              notifyURL       = "-";
+    bool                isQuiet         = false;
 
     LOG_INFO("Connected.");
 
+    /* Observer button state changes and derrive actions. */
+    ButtonDrv::getInstance().registerObserver(m_buttonHandler);
+
     /* Get hostname and notifyURL. */
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::getInstance().getHostname().getDefault();
-        notifyURL = Settings::getInstance().getNotifyURL().getDefault();
 
+        hostname    = settings.getHostname().getDefault();
+        notifyURL   = settings.getNotifyURL().getDefault();
+        isQuiet     = settings.getQuietMode().getDefault();
     }
     else
     {
-        hostname = Settings::getInstance().getHostname().getValue();
-        notifyURL = Settings::getInstance().getNotifyURL().getValue();
+        hostname    = settings.getHostname().getValue();
+        notifyURL   = settings.getNotifyURL().getValue();
+        isQuiet     = settings.getQuietMode().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
     }
 
     /* Set hostname. Note, wifi must be connected somehow. */
@@ -125,18 +134,44 @@ void ConnectedState::entry(StateMachine& sm)
         infoStr += WiFi.getHostname(); /* Don't believe its the same as set before. */
         infoStr += " IP: ";
         infoStr += WiFi.localIP().toString();
-        SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
         LOG_INFO(infoStr);
+
+        if (false == isQuiet)
+        {
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
+        }
 
         /* If a push URL is set, notify about the online status. */
         if (false == notifyURL.isEmpty())
         {
-            if (true == m_client.begin(notifyURL))
+            String      url         = notifyURL;
+            const char* GET_CMD     = "get ";
+            const char* POST_CMD    = "post ";
+            bool        isGet       = true;
+
+            /* URL prefix might indicate the kind of request. */
+            url.toLowerCase();
+            if (0U != url.startsWith(GET_CMD))
+            {
+                url = url.substring(strlen(GET_CMD));
+                isGet = true;
+            }
+            else if (0U != url.startsWith(POST_CMD))
+            {
+                url = url.substring(strlen(POST_CMD));
+                isGet = false;
+            }
+            else
+            {
+                ;
+            }
+
+            if (true == m_client.begin(url))
             {
                 if (false == m_client.GET())
                 {
-                    LOG_WARNING("GET %s failed.", notifyURL.c_str());
+                    LOG_WARNING("GET %s failed.", url.c_str());
                 }
                 else
                 {
@@ -145,8 +180,6 @@ void ConnectedState::entry(StateMachine& sm)
             }
         }
     }
-
-    return;
 }
 
 void ConnectedState::initHttpClient()
@@ -168,7 +201,8 @@ void ConnectedState::initHttpClient()
 
 void ConnectedState::process(StateMachine& sm)
 {
-    ButtonDrv::State    buttonState = ButtonDrv::getInstance().getState();
+    /* Process button state changes */
+    m_buttonHandler.process();
 
     /* Handle update, there may be one in the background. */
     UpdateMgr::getInstance().process();
@@ -188,13 +222,7 @@ void ConnectedState::process(StateMachine& sm)
         sm.setState(ConnectingState::getInstance());
     }
 
-    /* If the user button is triggered, the next display slot will be activated. */
-    if (ButtonDrv::STATE_TRIGGERED == buttonState)
-    {
-        DisplayMgr::getInstance().activateNextSlot();
-    }
-
-    return;
+    Services::processAll();
 }
 
 void ConnectedState::exit(StateMachine& sm)
@@ -207,7 +235,8 @@ void ConnectedState::exit(StateMachine& sm)
     /* Notify about lost network connection. */
     DisplayMgr::getInstance().setNetworkStatus(false);
 
-    return;
+    /* Remove button handler as button state observer. */
+    ButtonDrv::getInstance().unregisterObserver();
 }
 
 /******************************************************************************

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __RESET_MON_H__
-#define __RESET_MON_H__
+#ifndef RESET_MON_H
+#define RESET_MON_H
 
 /******************************************************************************
  * Compile Switches
@@ -47,7 +47,7 @@
 #include <SysMsgPlugin.h>
 #include <WString.h>
 
-#include "esp32/rom/rtc.h"
+#include "rom/rtc.h"
 
 /******************************************************************************
  * Macros
@@ -124,7 +124,7 @@ private:
 
     /**
      * Get the reset reason as string.
-     * 
+     *
      * @param[out]  str         Reset reason as string
      * @param[in]   resetReason Reset reason id
      */
@@ -136,6 +136,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __RESET_MON_H__ */
+#endif  /* RESET_MON_H */
 
 /** @} */

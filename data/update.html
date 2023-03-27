@@ -31,6 +31,21 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
+                        </div>
+                        <div class="modal-body text-dark" id="dialogBody">
+                        </div>
+                        <div class="modal-footer text-dark" id="dialogFooter">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main view -->
             <div class="container">
                 <h1 class="mt-5">Update</h1>
 
@@ -45,9 +60,10 @@
                     <div class="tab-pane fade active show" id="update" role="tabpanel" aria-labelledby="update-tab">
                         <br />
                         <p>Upload <u>~FIRMWARE_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
+                        <p>Use multi-select to upload both at once.</p>
                         <div class="input-group">
                             <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="inputFile">
+                                <input type="file" class="custom-file-input" id="inputFile" multiple="multiple" accept=".bin">
                                 <label class="custom-file-label" for="inputFile">Choose file</label>
                             </div>
                             <div class="input-group-append">
@@ -70,7 +86,7 @@
                         <p>Restore the configuration.</p>
                         <div class="input-group">
                             <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="backupFile">
+                                <input type="file" class="custom-file-input" id="backupFile" accept=".zip">
                                 <label class="custom-file-label" for="backupFile">Choose backup file</label>
                             </div>
                             <div class="input-group-append">
@@ -88,18 +104,20 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2022 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.0.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
+        <script type="text/javascript" src="/js/dialog.js"></script>
         <!-- Pixelix REST API -->
         <script type="text/javascript" src="/js/rest.js"></script>
         <!-- Zip library-->
@@ -135,38 +153,58 @@
             }
 
             function upload() {
-                var file        = document.getElementById("inputFile").files[0];
-                var fileSize    = file.size;
+                var file        = null;
+                var fileCnt     = document.getElementById("inputFile").files.length;
+                var fileSize    = 0;
+                var index       = 0;
+                var files       = [];
+                var fileParameters  = {};
+                var fileHeaders     = {};
+                
+                if (2 < fileCnt) {
+                    fileCnt = 2;
+                }
+
+                for(index = 0; index < fileCnt; ++index) {
+                    file = document.getElementById("inputFile").files[index];
+
+                    if (("~FIRMWARE_FILENAME~" === file.name) ||
+                        ("~FILESYSTEM_FILENAME~" === file.name)) {
+                    
+                        files.push(file);
+                    }
+                }
 
                 $("#progressBar").css("width", "0%").attr("aria-valuenow", 0);
 
-                if ("undefined" === typeof file) {
+                if (0 === files.length) {
 
-                    alert("No file selected.");
-
-                } else if (("~FIRMWARE_FILENAME~" !== file.name) &&
-                        ("~FILESYSTEM_FILENAME~" !== file.name)) {
-
-                    alert("Unknown file: " + file.name);
+                    dialog.showWarning("<p>No file selected.</p>");
 
                 } else {
 
                     disableUI();
 
+                    for(index = 0; index < files.length; ++index) {
+                        fileParameters[files[index].name] = files[index];
+
+                        if ("~FIRMWARE_FILENAME~" === files[index].name) {
+                            fileHeaders["X-File-Size-Firmware"] = files[index].size;
+                        } else if ("~FILESYSTEM_FILENAME~" === files[index].name) {
+                            fileHeaders["X-File-Size-Filesystem"] = files[index].size;
+                        }
+                    }
+
                     utils.makeRequest({
                         method: "POST",
                         url: "/upload.html",
-                        parameter: {
-                            file: file
-                        },
-                        headers: {
-                            "X-File-Size": fileSize
-                        },
+                        parameter: fileParameters,
+                        headers: fileHeaders,
                         onProgress: updateProgress
                     }).then(function(rsp) {
-                        alert("Upload successful.");
+                        dialog.showInfo("<p>Upload successful.</p>")
                     }).catch(function(rsp) {
-                        alert("Error: " + rsp);
+                        dialog.showError("<p>Error: " + rsp + "</p>")
                     }).finally(function() {
                         enableUI();
                     });
@@ -202,18 +240,40 @@
             }
 
             function downloadWithBlob(fileUrlList) {
-                fileUrlList.forEach(function(fileUrl, index){
-                    var filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf('/') + 1);
-                    zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary:true });
-                });
-                zip.generateAsync({ type:'blob' }).then(function(content) {
-                    saveAs(content, "backup.zip");
+                return new Promise(function(resolve, reject) {
+                    fileUrlList.forEach(function(fileUrl, index){
+                        var filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf('/') + 1);
+                        zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary:true });
+                    });
+                    zip.generateAsync({ type:'blob' }).then(function(content) {
+                        var date = new Date();
+                        var day = date.getDate();
+                        day = ((day < 10) ? '0' : '') + day;
+                        var month = date.getMonth() + 1;
+                        month = ((month < 10) ? '0' : '') + month;
+                        var year = date.getFullYear();
+                        var hour = date.getHours();
+                        hour = ((hour < 10) ? '0' : '') + hour;
+                        var minutes = date.getMinutes();
+                        minutes = ((minutes < 10) ? '0' : '') + minutes;
+                        var seconds = date.getSeconds();
+                        seconds = ((seconds < 10) ? '0' : '') + seconds;
+                        var filename = year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
+                        saveAs(content, filename);
+                        resolve();
+                    });
                 });
             }
 
             function backup() {
-                getConfigurationFiles().then(function(fileUrlList) {
-                    downloadWithBlob(fileUrlList);
+                dialog.show("Backup", "<p>Please wait, backup is in progress.</p>").then(function() {
+                    return getConfigurationFiles();
+                }).then(function(fileUrlList) {
+                    return downloadWithBlob(fileUrlList);
+                }).then(function() {
+                    dialog.showInfo("<p>Backup successful.</p>");
+                }).catch(function() {
+                    dialog.showError("<p>Backup failed.</p>");
                 });
             }
 
@@ -222,7 +282,7 @@
 
                 if (0 === elem.files.length) {
 
-                    alert("No file selected.");
+                    dialog.showWarning("<p>No file selected.</p>");
 
                 } else {
                     var file        = elem.files[0];
@@ -230,13 +290,13 @@
 
                     if (false === file.name.endsWith(".zip")) {
 
-                        alert("Unknown file: " + file.name);
+                        dialog.showError("<p>Unknown file: " + file.name + "</p>");
 
                     } else {
 
-                        disableUI();
-
-                        zip.loadAsync(file).then(function(zipObj) {
+                        dialog.show("Restore", "<p>Please wait, restore is in progress.</p>").then(function() {
+                            return zip.loadAsync(file);
+                        }).then(function(zipObj) {
                             var files = Object.keys(zipObj.files);
                             var promiseChain = Promise.resolve();
 
@@ -264,8 +324,10 @@
                             });
 
                             return promiseChain;
-                        }).finally(function() {
-                            enableUI();
+                        }).then(function() {
+                            dialog.showInfo("<p>Restore successful.</p>");
+                        }).catch(function() {
+                            dialog.showError("<p>Restore failed.</p>");
                         });
                     }
                 }
@@ -273,6 +335,7 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
                 
                 $("#inputFile").on("change", function() {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -80,6 +80,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         String      msg;
         DisplayMgr& displayMgr  = DisplayMgr::getInstance();
         uint8_t     slotId      = SlotList::SLOT_ID_INVALID;
+        uint8_t     stickySlot  = displayMgr.getStickySlot();
 
         msg = displayMgr.getMaxSlots();
 
@@ -88,6 +89,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
          * - Plugin UID.
          * - Plugin alias name.
          * - Information about whether the slot is locked or not.
+         * - Information about whether the slot is sticky or not.
          * - Slot duration in ms.
          */
         for(slotId = 0U; slotId < displayMgr.getMaxSlots(); ++slotId)
@@ -97,6 +99,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             uint16_t            uid         = (nullptr != plugin) ? plugin->getUID() : 0U;
             String              alias       = (nullptr != plugin) ? plugin->getAlias() : "";
             bool                isLocked    = displayMgr.isSlotLocked(slotId);
+            bool                isSticky    = (stickySlot == slotId) ? true : false;
             uint32_t            duration    = displayMgr.getSlotDuration(slotId);
 
             msg += DELIMITER;
@@ -112,6 +115,8 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             msg += DELIMITER;
             msg += (false == isLocked) ? "0" : "1";
             msg += DELIMITER;
+            msg += (false == isSticky) ? "0" : "1";
+            msg += DELIMITER;
             msg += duration;
         }
 
@@ -119,8 +124,6 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
 
     m_isError = false;
-
-    return;
 }
 
 void WsCmdSlots::setPar(const char* par)
@@ -128,8 +131,6 @@ void WsCmdSlots::setPar(const char* par)
     UTIL_NOT_USED(par);
 
     m_isError = true;
-
-    return;
 }
 
 /******************************************************************************

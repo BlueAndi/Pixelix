@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __UTILITY_H__
-#define __UTILITY_H__
+#ifndef UTILITY_H
+#define UTILITY_H
 
 /******************************************************************************
  * Compile Switches
@@ -138,6 +138,6 @@ extern uint32_t hexToUInt32(const String& str);
 
 }
 
-#endif  /* __UTILITY_H__ */
+#endif  /* UTILITY_H */
 
 /** @} */

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ERRORSTATE_H__
-#define __ERRORSTATE_H__
+#ifndef ERRORSTATE_H
+#define ERRORSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -109,7 +109,8 @@ public:
         ERROR_ID_BAD_FS,            /**< Bad filesystem */
         ERROR_ID_DISP_MGR,          /**< Display manager error */
         ERROR_ID_SYS_MSG,           /**< System message handler error */
-        ERROR_ID_UPDATE_MGR         /**< Update manager error */
+        ERROR_ID_UPDATE_MGR,        /**< Update manager error */
+        ERROR_ID_SERVICE            /**< Service error */
     };
 
     /**
@@ -160,6 +161,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __ERRORSTATE_H__ */
+#endif  /* ERRORSTATE_H */
 
 /** @} */

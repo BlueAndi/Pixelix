@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">SignalDetectorPlugin</h1>
+                <p><img src="SignalDetectorPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin is able to detect a signal, which can be combined with up to 2 frequencies.</p>
+                <p>Each frequency must be detected for a specific configureable time.</p>
+                <p>As long as nothing is detected, the plugin will disable itself.</p>
+                <p>If a signal is detected, it will be shown on the display for the configured slot duration. After slot duration timeout or user changed the slot, the plugin will be disabled until next signal detection.</p>
+                <p>Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."</p>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get signal configuration</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg/&lt;FREQ-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg/&lt;FREQ-ID&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                </ul>
+                <h3 class="mt-1">Configure signal</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg/&lt;FREQ-ID&gt;?frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg/&lt;FREQ-ID&gt;?frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>FREQ-ID: The id of the frequency (starting with 0).</li>
+                    <li>FREQUENCY: The frequency in Hz.</li>
+                    <li>MIN-DURATION: The min. duration in ms the frequency must be detected.</li>
+                    <li>THRESHOLD: The frequency must be over this threshold to be able to detect it. Usually good values are above 2000.</li>
+                </ul>
+                <h3 class="mt-1">Get text</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                </ul>
+                <h3 class="mt-1">Set text</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?show=&lt;TEXT&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>TEXT: The text to show on the display if signal is detected.</li>
+                </ul>
+                <h3 class="mt-1">Get push URL</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/pushUrl</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/pushUrl</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                </ul>
+                <h3 class="mt-1">Set push URL</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/pushUrl?set=&lt;PUSH-URL&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/pushUrl?set=&lt;PUSH-URL&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>PUSH-URL: The URL which will be triggered if signal is detected.</li>
+                </ul>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Signal frequency 0</h3>
+                <form id="myFormFreq_0" enctype="multipart/form-data" action="javascript:setFreq(pluginUidFreq0.options[pluginUidFreq0.selectedIndex].value, freq_0.value, minDuration_0.value, threshold_0.value, 0)">
+                    <label for="pluginUidFreq0">Plugin UID:</label><br />
+                    <select id="pluginUidFreq0" name="pluginUid" size="1" onChange="getFreq(pluginUidFreq0.options[pluginUidFreq0.selectedIndex].value, 0)">
+                    </select>
+                    <br />
+                    <label for="freq_0">Frequency [Hz]:</label><br />
+                    <input id="freq_0" type="number" min="0" max="20000"/>
+                    <br />
+                    <label for="minDuration_0">Min. duration [ms]:</label><br />
+                    <input id="minDuration_0" type="number" min="0" max="10000"/>
+                    <br />
+                    <label for="threshold_0">Threshold:</label><br />
+                    <input id="threshold_0" type="number" min="0" max="40000"/>
+                    <br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Signal frequency 1</h3>
+                <form id="myFormFreq_1" enctype="multipart/form-data" action="javascript:setFreq(pluginUidFreq1.options[pluginUidFreq1.selectedIndex].value, freq_1.value, minDuration_1.value, threshold_1.value, 1)">
+                    <label for="pluginUidFreq1">Plugin UID:</label><br />
+                    <select id="pluginUidFreq1" name="pluginUid" size="1" onChange="getFreq(pluginUidFreq1.options[pluginUidFreq1.selectedIndex].value, 1)">
+                    </select>
+                    <br />
+                    <label for="freq_1">Frequency [Hz]:</label><br />
+                    <input id="freq_1" type="number" min="0" max="20000"/>
+                    <br />
+                    <label for="minDuration_1">Min. duration [ms]:</label><br />
+                    <input id="minDuration_1" type="number" min="0" max="10000"/>
+                    <br />
+                    <label for="threshold_1">Threshold:</label><br />
+                    <input id="threshold_1" type="number" min="0" max="40000"/>
+                    <br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Text</h3>
+                <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
+                    </select>
+                    <br />
+                    <label for="justText">Text:</label><br />
+                    <input type="text" id="justText" name="justText" value="" size="20" /><br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Push URL</h3>
+                <form id="myFormPushUrl" action="javascript:setPushUrl(pluginUidPushUrl.options[pluginUidPushUrl.selectedIndex].value, pushUrl.value)">
+                    <label for="pluginUid">Plugin UID:</label><br />
+                    <select id="pluginUidPushUrl" name="pluginUid" size="1" onChange="getPushUrl(pluginUidPushUrl.options[pluginUidPushUrl.selectedIndex].value, 'pushUrl')">
+                    </select>
+                    <br />
+                    <label for="pushUrl">URL:</label><br />
+                    <input type="text" id="pushUrl" name="pushUrl" value="" size="20" /><br />
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+
+            var pluginName  = "SignalDetectorPlugin";
+            var restClient  = new pixelix.rest.Client();
+
+            function enableUI() {
+                utils.enableForm("myFormFreq_0", true);
+                utils.enableForm("myFormFreq_1", true);
+                utils.enableForm("myFormText", true);
+                utils.enableForm("myFormPushUrl", true);
+            }
+
+            function disableUI() {
+                utils.enableForm("myFormFreq_0", false);
+                utils.enableForm("myFormFreq_1", false);
+                utils.enableForm("myFormText", false);
+                utils.enableForm("myFormPushUrl", false);
+            }
+
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var elemIndex   = 0;
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var elements    = document.getElementsByName("pluginUid");
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+
+                        for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                            if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                                optionText = rsp.data.slots[slotIndex].uid;
+                                optionText += " (";
+                                
+                                if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                    optionText += "-"
+                                } else {
+                                    optionText += rsp.data.slots[slotIndex].alias
+                                }
+
+                                optionText += ")";
+
+                                $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+                                
+                                $(elements[elemIndex]).append($option);
+
+                                ++cnt;
+                            }
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+
+            function getFreq(pluginUid, index) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg/" + index,
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var freqElement = document.getElementById("freq_" + index);
+                    var minDurationElement = document.getElementById("minDuration_" + index);
+                    var thresholdElement = document.getElementById("threshold_" + index);
+
+                    freqElement.value = rsp.data.frequency;
+                    minDurationElement.value = rsp.data.minDuration;
+                    thresholdElement.value = rsp.data.threshold;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setFreq(pluginUid, freq, minDuration, threshold, index) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg/" + index,
+                    isJsonResponse: true,
+                    parameter: {
+                        frequency: freq,
+                        minDuration: minDuration,
+                        threshold: threshold
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getText(pluginUid, justTextId) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var justTextInput = document.getElementById(justTextId);
+
+                    justTextInput.value = rsp.data.text;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setText(pluginUid, justText) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    isJsonResponse: true,
+                    parameter: {
+                        show: justText
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function getPushUrl(pluginUid, pushUrlId) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/pushUrl",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var pushUrlInput = document.getElementById(pushUrlId);
+
+                    pushUrl.value = rsp.data.pushUrl;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setPushUrl(pluginUid, pushUrl) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/pushUrl",
+                    isJsonResponse: true,
+                    parameter: {
+                        set: pushUrl
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.create("menu", menu.data);
+                
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var selectFreq0     = document.getElementById("pluginUidFreq0");
+                    var selectFreq1     = document.getElementById("pluginUidFreq1");
+                    var selectText      = document.getElementById("pluginUidText");
+                    var selectPushUrl   = document.getElementById("pluginUidPushUrl");
+    
+                    if (0 < cnt) {
+    
+                        return getFreq(selectFreq0.options[selectFreq0.selectedIndex].value, 0).then(function() {
+                            return getFreq(selectFreq1.options[selectFreq1.selectedIndex].value, 1);
+                        }).then(function() {
+                            return getText(selectText.options[selectText.selectedIndex].value, 'justText');
+                        }).then(function() {
+                            return getPushUrl(selectPushUrl.options[selectPushUrl.selectedIndex].value, 'pushUrl');
+                        })
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

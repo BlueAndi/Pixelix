@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WEBCONFIG_H__
-#define __WEBCONFIG_H__
+#ifndef WEBCONFIG_H
+#define WEBCONFIG_H
 
 /******************************************************************************
  * Compile Switches
@@ -84,6 +84,6 @@ static const uint32_t   ARDUINO_OTA_PORT        = 3232U;
 
 }
 
-#endif  /* __WEBCONFIG_H__ */
+#endif  /* WEBCONFIG_H */
 
 /** @} */

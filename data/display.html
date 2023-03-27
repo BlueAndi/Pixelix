@@ -31,6 +31,21 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
+                        </div>
+                        <div class="modal-body text-dark" id="dialogBody">
+                        </div>
+                        <div class="modal-footer text-dark" id="dialogFooter">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main view -->
             <div class="container">
                 <h1 class="mt-5">Display</h1>
                 <p>Slot: <span id="slotId">-</span></p>
@@ -39,6 +54,11 @@
                 <div id="divSlots">
                 </div>
                 <p style="clear: both;"><br /></p>
+                <ul>
+                    <li>Red shaded: Slot is locked and plugin can not be removed.</li>
+                    <li>Yellow shaded: Slot is sticky. Slot scheduling is stopped.</li>
+                    <li>Red/Yellow shaded: Slot is sticky and locked.</li>
+                </ul>
                 <p>
                     <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
                 </p>
@@ -63,19 +83,22 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2022 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.0.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix websocket library -->
         <script type="text/javascript" src="/js/ws.js"></script>
         <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/dialog.js"></script>
         <!-- Pixelix drag'n drop -->
         <script type="text/javascript" src="/js/dragDropTouch.js"></script>
 
@@ -112,7 +135,7 @@
                 window.clearTimeout(timerId);
 
                 if (false === isPageUnload) {
-                    alert("Websocket connection closed.");
+                    dialog.showError("<p>Websocket connection closed.</p>");
                 }
             }
 
@@ -173,7 +196,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Install " + pluginName + " failed.");
+                    return dialog.showError("<p>Install " + pluginName + " failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -190,7 +213,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Uninstall slot " + slotId + " failed.");
+                    return dialog.showError("<p>Uninstall slot " + slotId + " failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -206,7 +229,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Failed.");
+                    return dialog.showError("<p>Failed.</p>");
                 }).finally(function() {
                 });
             }
@@ -236,7 +259,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Failed.");
+                    return dialog.showError("<p>Failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -251,7 +274,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Moving failed.");
+                    return dialog.showError("<p>Moving failed.</p>");
                 }).finally(function() {
                     return updateSlotInfo();
                 });
@@ -300,7 +323,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Set duration failed.");
+                    return dialog.showError("<p>Set duration failed.</p>");
                 }).finally(function() {
                     return updateSlotInfo();
                 });
@@ -317,7 +340,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Set alias failed.");
+                    return dialog.showError("<p>Set alias failed.</p>");
                 }).finally(function() {
                     return updateSlotInfo();
                 });
@@ -341,12 +364,23 @@
                     for(index = 0; index < rsp.slots.length; ++index) {
                         $divSlot = $("<div>");
 
-                        if (false == rsp.slots[index].isLocked) {
-                            $divSlot.attr("class", "divSlot");
+                        if (false === rsp.slots[index].isLocked) {
+
+                            if (false === rsp.slots[index].isSticky) {
+                                $divSlot.attr("class", "divSlot");
+                            } else {
+                                $divSlot.attr("class", "divSlot sticky");
+                            }
+                            
                             $divSlot.attr("ondragover", "allowDrop(event)");
                             $divSlot.attr("ondrop", "drop(event)");
                         } else {
-                            $divSlot.attr("class", "divSlot locked");
+
+                            if (false === rsp.slots[index].isSticky) {
+                                $divSlot.attr("class", "divSlot locked");
+                            } else {
+                                $divSlot.attr("class", "divSlot lockedAndsticky");
+                            }
                         }
 
                         $divSlot.attr("id", index);
@@ -441,8 +475,8 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Changing brightness failed.");
                     updateBrightness();
+                    return dialog.showError("<p>Changing brightness failed.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -471,7 +505,7 @@
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Changing automatic brightness control failed.");
+                    return dialog.showError("<p>Changing automatic brightness control failed.</p>");
                 });
             }
 
@@ -480,6 +514,7 @@
                 var displayCanvas = document.getElementById("canvas");
                 ctx = displayCanvas.getContext("2d");
 
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
 
                 /* Connect to pixelix */

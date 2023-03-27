@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CAPTIVE_PORTAL_HANDLER_H__
-#define __CAPTIVE_PORTAL_HANDLER_H__
+#ifndef CAPTIVE_PORTAL_HANDLER_H
+#define CAPTIVE_PORTAL_HANDLER_H
 
 /******************************************************************************
  * Compile Switches
@@ -72,6 +72,7 @@ public:
      * @param[in] resetReqHandler   Reset request handler
      */
     CaptivePortalHandler(ResetReqHandler resetReqHandler) :
+        AsyncWebHandler(),
         m_resetReqHandler(resetReqHandler)
     {
     }
@@ -135,6 +136,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CAPTIVE_PORTAL_HANDLER_H__ */
+#endif  /* CAPTIVE_PORTAL_HANDLER_H */
 
 /** @} */

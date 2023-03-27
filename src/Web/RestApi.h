@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __RESTAPI_H__
-#define __RESTAPI_H__
+#ifndef RESTAPI_H
+#define RESTAPI_H
 
 /******************************************************************************
  * Compile Switches
@@ -83,6 +83,6 @@ void error(AsyncWebServerRequest* request);
 
 }
 
-#endif  /* __RESTAPI_H__ */
+#endif  /* RESTAPI_H */
 
 /** @} */

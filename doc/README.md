@@ -23,15 +23,19 @@
 
 # Software
 
-* [Toolchain installation](TOOLCHAIN-INSTALLATION.md)
-* [Software build](SW-BUILD.md)
-* [Software update](SW-UPDATE.md)
-* [Software configuration management](SW-RELEASE.md)
+* [Software architecture](./architecture/README.md)
+* [Software configuration management](./config/README.md)
+    * [Toolchain installation](./config/TOOLCHAIN-INSTALLATION.md)
+    * [Software build](./config/SW-BUILD.md)
+    * [Software update](./config/SW-UPDATE.md)
 * [Plugins](PLUGINS.md)
 * [Plugin Development](PLUGIN-DEV.md)
-* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0)
+* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.1)
+* [MQTT](MQTT.md)
+* [Home Assistant REST Wrapper](HOMEASSISTANT.md)
 * [Websocket API description](WEBSOCKET.md)
 * [Sprite sheet](SPRITESHEET.md)
+* [Alternative icons](ICONS.md)
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "DisplayMgr.h"
-#include "Settings.h"
 #include "BrightnessCtrl.h"
 #include "PluginMgr.h"
 
@@ -41,6 +40,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
+#include <SettingsService.h>
 
 #if (0 != CONFIG_DISPLAY_MGR_ENABLE_STATISTICS)
 #include <StatisticValue.hpp>
@@ -87,13 +87,12 @@ struct Statistics
 
 bool DisplayMgr::begin()
 {
-    bool        status              = false;
-    uint8_t     idx                 = 0U;
-    bool        isError             = false;
-    uint8_t     maxSlots            = 0U;
-    uint8_t     brightnessPercent   = 0U;
-    uint16_t    brightness          = 0U;
-    Settings&   settings            = Settings::getInstance();
+    bool                status              = false;
+    bool                isError             = false;
+    uint8_t             maxSlots            = 0U;
+    uint8_t             brightnessPercent   = 0U;
+    uint16_t            brightness          = 0U;
+    SettingsService&    settings            = SettingsService::getInstance();
 
     if (false == settings.open(true))
     {
@@ -124,22 +123,12 @@ bool DisplayMgr::begin()
 
             isError = true;
         }
-        else
-        {
-            /* Loading slot configuration failed? */
-            if (false == load())
-            {
-                /* Slot configuration may be empty in the very first startup.
-                 * In this case save the current one, so the user is able to
-                 * see how looks like.
-                 */
-                save();
-            }
-        }
     }
 
     if (false == isError)
     {
+        uint8_t idx = 0U;
+
         /* Allocate framebuffer memory. */
         for(idx = 0U; idx < UTIL_ARRAY_NUM(m_framebuffers); ++idx)
         {
@@ -248,8 +237,6 @@ void DisplayMgr::end()
     m_slotList.destroy();
 
     LOG_INFO("DisplayMgr is down.");
-
-    return;
 }
 
 bool DisplayMgr::setAutoBrightnessAdjustment(bool enable)
@@ -277,8 +264,6 @@ void DisplayMgr::setBrightness(uint8_t level)
     MutexGuard<MutexRecursive>  guard(m_mutexInterf);
 
     BrightnessCtrl::getInstance().setBrightness(level);
-
-    return;
 }
 
 uint8_t DisplayMgr::getBrightness(void)
@@ -450,38 +435,98 @@ IPluginMaintenance* DisplayMgr::getPluginInSlot(uint8_t slotId)
     return plugin;
 }
 
-void DisplayMgr::activatePlugin(IPluginMaintenance* plugin)
+uint8_t DisplayMgr::getStickySlot() const
 {
-    if (nullptr != plugin)
-    {
-        MutexGuard<MutexRecursive>  guard(m_mutexInterf);
-        uint8_t                     slotId = m_slotList.getSlotIdByPluginUID(plugin->getUID());
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    uint8_t                     slotId = m_slotList.getStickySlot();
 
-        /* Plugin must be in a slot, otherwise it makes no sense. */
-        if (true == m_slotList.isSlotIdValid(slotId))
+    return slotId;
+}
+
+bool DisplayMgr::setSlotSticky(uint8_t slotId)
+{
+    bool                        isSuccessful = false;
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+
+    /* Activation will take place in process(). */
+    isSuccessful = m_slotList.setSlotSticky(slotId);
+
+    if (true == isSuccessful)
+    {
+        if (SlotList::SLOT_ID_INVALID == slotId)
         {
-            m_requestedPlugin = plugin;
+            LOG_INFO("Sticky flag cleared.");
+        }
+        else
+        {
+            LOG_INFO("Set slot %u sticky.", slotId);
         }
     }
 
-    return;
+    return isSuccessful;
+}
+
+void DisplayMgr::clearSticky()
+{
+    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+
+    m_slotList.clearSticky();
+
+    if (SlotList::SLOT_ID_INVALID != m_selectedSlotId)
+    {
+        uint32_t duration = m_slotList.getDuration(m_selectedSlotId);
+
+        /* If sticky flag is removed, the slot timer was original stopped and will be started again.
+         * Makes only sense if the slot duration is not 0.
+         */
+        if ((0U != duration) &&
+            (false == m_slotTimer.isTimerRunning()))
+        {
+            m_slotTimer.start(duration);
+        }
+    }
+
+    LOG_INFO("Sticky flag cleared.");
+}
+
+bool DisplayMgr::activateSlot(uint8_t slotId)
+{
+    bool                        isSuccessful = false;
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+
+    if (true == m_slotList.isSlotIdValid(slotId))
+    {
+        /* Slot already active? */
+        if (slotId == m_selectedSlotId)
+        {
+            m_requestedPlugin   = nullptr;
+            isSuccessful        = true;
+        }
+        /* No slot is sticky? */
+        else if (SlotList::SLOT_ID_INVALID == m_slotList.getStickySlot())
+        {
+            m_requestedPlugin   = m_slotList.getPlugin(slotId);
+            isSuccessful        = true;
+        }
+        else
+        {
+            /* Activation not possible. */
+            ;
+        }
+    }
+
+    return isSuccessful;
 }
 
 void DisplayMgr::activateNextSlot()
 {
-    MutexGuard<MutexRecursive> guard(m_mutexInterf);
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    uint8_t                     nextSlotId = nextSlot(m_selectedSlotId);
 
-    /* Avoid changing to next slot, if the there is a pending slot change. */
-    if (FADE_IDLE == m_displayFadeState)
+    if (nextSlotId != m_selectedSlotId)
     {
-        /* If slot timer is running, force a slot change by setting the duration to 0. */
-        if (true == m_slotTimer.isTimerRunning())
-        {
-            m_slotTimer.start(0U);
-        }
+        (void)activateSlot(nextSlotId);
     }
-
-    return;
 }
 
 void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
@@ -498,8 +543,6 @@ void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
     }
 
     m_fadeEffectUpdate = true;
-
-    return;
 }
 
 DisplayMgr::FadeEffect DisplayMgr::getFadeEffect()
@@ -558,8 +601,6 @@ void DisplayMgr::lockSlot(uint8_t slotId)
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
 
     m_slotList.lock(slotId);
-
-    return;
 }
 
 void DisplayMgr::unlockSlot(uint8_t slotId)
@@ -567,8 +608,6 @@ void DisplayMgr::unlockSlot(uint8_t slotId)
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
 
     m_slotList.unlock(slotId);
-
-    return;
 }
 
 bool DisplayMgr::isSlotLocked(uint8_t slotId)
@@ -598,12 +637,6 @@ bool DisplayMgr::setSlotDuration(uint8_t slotId, uint32_t duration, bool store)
         if (slot->getDuration() != duration)
         {
             slot->setDuration(duration);
-
-            /* Save slot configuration */
-            if (true == store)
-            {
-                save();
-            }
         }
 
         status = true;
@@ -643,8 +676,6 @@ void DisplayMgr::getFBCopy(uint32_t* fb, size_t length, uint8_t* slotId)
             *slotId = m_selectedSlotId;
         }
     }
-
-    return;
 }
 
 uint8_t DisplayMgr::getMaxSlots() const
@@ -822,18 +853,32 @@ void DisplayMgr::fadeInOut(YAGfx& dst)
             break;
         }
     }
-
-    return;
 }
 
 void DisplayMgr::process()
 {
-    IDisplay&                   display = Display::getInstance();
-    uint8_t                     index   = 0U;
-    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    IDisplay&                   display     = Display::getInstance();
+    uint8_t                     index       = 0U;
+    uint8_t                     stickySlot  = SlotList::SLOT_ID_INVALID;
+    MutexGuard<MutexRecursive>  guardInterf(m_mutexInterf);
 
     /* Handle display brightness */
     BrightnessCtrl::getInstance().process();
+
+    /* Check whether a different slot got sticky and it shall be activated. */
+    stickySlot = m_slotList.getStickySlot();
+    if (SlotList::SLOT_ID_INVALID != stickySlot)
+    {
+        /* If slot is set sticky which is active, the slot timer will be stopped to prevent scheduling of other slots. */
+        if (m_selectedSlotId == stickySlot)
+        {
+            m_slotTimer.stop();
+        }
+        else
+        {
+            m_requestedPlugin = m_slotList.getPlugin(stickySlot);
+        }
+    }
 
     /* Plugin requested to choose? */
     if (nullptr != m_requestedPlugin)
@@ -964,8 +1009,13 @@ void DisplayMgr::process()
 
             m_selectedPlugin = m_slotList.getPlugin(m_selectedSlotId);
 
-            /* If plugin shall not be infinite active, start the slot timer. */
-            if (0U != duration)
+            /* If plugin shall be infinite active or is in a sticky slot, the slot timer will be stopped otherwise started. */
+            if ((0U == duration) ||
+                (m_selectedSlotId == m_slotList.getStickySlot()))
+            {
+                m_slotTimer.stop();
+            }
+            else
             {
                 m_slotTimer.start(duration);
             }
@@ -1029,8 +1079,6 @@ void DisplayMgr::process()
             plugin->process(m_isNetworkConnected);
         }
     }
-
-    return;
 }
 
 void DisplayMgr::update()
@@ -1056,8 +1104,6 @@ void DisplayMgr::update()
     }
 
     display.show();
-
-    return;
 }
 
 bool DisplayMgr::createProcessTask()
@@ -1120,8 +1166,6 @@ void DisplayMgr::destroyProcessTask()
 
         LOG_DEBUG("ProcessTask is down.");
     }
-    
-    return;
 }
 
 bool DisplayMgr::createUpdateTask()
@@ -1184,8 +1228,6 @@ void DisplayMgr::destroyUpdateTask()
 
         LOG_DEBUG("UpdateTask is down.");
     }
-
-    return;
 }
 
 void DisplayMgr::processTask(void* parameters)
@@ -1223,8 +1265,6 @@ void DisplayMgr::processTask(void* parameters)
     }
 
     vTaskDelete(nullptr);
-
-    return;
 }
 
 void DisplayMgr::updateTask(void* parameters)
@@ -1336,127 +1376,6 @@ void DisplayMgr::updateTask(void* parameters)
     }
 
     vTaskDelete(nullptr);
-
-    return;
-}
-
-bool DisplayMgr::load()
-{
-    bool        isSuccessful    = true;
-    Settings&   settings        = Settings::getInstance();
-
-    if (false == m_slotList.isAvailable())
-    {
-        LOG_WARNING("No slot exists.");
-        isSuccessful = false;
-    }
-    else if (false == settings.open(true))
-    {
-        LOG_WARNING("Couldn't open filesystem.");
-        isSuccessful = false;
-    }
-    else
-    {
-        String config = settings.getDisplaySlotConfig().getValue();
-
-        if (true == config.isEmpty())
-        {
-            LOG_WARNING("Display slot configuration is empty.");
-            isSuccessful = false;
-        }
-        else
-        {
-            const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-            DeserializationError    error           = deserializeJson(jsonDoc, config);
-
-            if (true == jsonDoc.overflowed())
-            {
-                LOG_ERROR("JSON document has less memory available.");
-            }
-            else
-            {
-                LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-            }
-
-            if (DeserializationError::Ok != error.code())
-            {
-                LOG_WARNING("JSON deserialization failed: %s", error.c_str());
-                isSuccessful = false;
-            }
-            else if (false == jsonDoc["slots"].is<JsonArray>())
-            {
-                LOG_WARNING("Invalid JSON format.");
-                isSuccessful = false;
-            }
-            else
-            {
-                JsonArray   jsonSlots   = jsonDoc["slots"].as<JsonArray>();
-                uint8_t     slotId      = 0;
-
-                for(JsonObject jsonSlot: jsonSlots)
-                {
-                    if (true == jsonSlot["duration"].is<uint32_t>())
-                    {
-                        uint32_t duration = jsonSlot["duration"].as<uint32_t>();
-
-                        m_slotList.setDuration(slotId, duration);
-
-                        ++slotId;
-                        if (DisplayMgr::getInstance().getMaxSlots() <= slotId)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        settings.close();
-    }
-
-    return isSuccessful;
-}
-
-void DisplayMgr::save()
-{
-    if (true == m_slotList.isAvailable())
-    {
-        String              config;
-        uint8_t             slotId      = 0;
-        Settings&           settings    = Settings::getInstance();
-        const size_t        JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonArray           jsonSlots   = jsonDoc.createNestedArray("slots");
-
-        for(slotId = 0; slotId < m_slotList.getMaxSlots(); ++slotId)
-        {
-            JsonObject jsonSlot = jsonSlots.createNestedObject();
-
-            jsonSlot["duration"] = m_slotList.getDuration(slotId);
-        }
-
-        if (true == jsonDoc.overflowed())
-        {
-            LOG_ERROR("JSON document has less memory available.");
-        }
-        else
-        {
-            LOG_INFO("JSON document size: %u", jsonDoc.memoryUsage());
-        }
-
-        if (false == settings.open(false))
-        {
-            LOG_WARNING("Couldn't open filesystem.");
-        }
-        else
-        {
-            (void)serializeJson(jsonDoc, config);
-
-            settings.getDisplaySlotConfig().setValue(config);
-            settings.close();
-        }
-    }
 }
 
 /******************************************************************************

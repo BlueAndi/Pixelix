@@ -1,6 +1,6 @@
 @echo off
 
-set ADDR2LINE=%userprofile%\.platformio\packages\toolchain-xtensa32\bin\xtensa-esp32-elf-addr2line.exe
+set ADDR2LINE=%userprofile%\.platformio\packages\toolchain-xtensa-esp32\bin\xtensa-esp32-elf-addr2line.exe
 set FIRMWARE=.pio\build\esp32doit-devkit-v1\firmware.elf
 
 if "" == "%1" (

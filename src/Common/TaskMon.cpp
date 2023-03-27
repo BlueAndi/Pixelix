@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -122,8 +122,8 @@ void TaskMon::process()
 
 #if configTASKLIST_INCLUDE_COREID
                 LOG_DEBUG("Task \"%s\": c %d, p %2u, %s, %3u%%, stack high water mark: %u",
-                    taskStatus[index].xCoreID,
                     fillUpSpaces(taskStatus[index].pcTaskName, taskNameMaxLen).c_str(),
+                    taskStatus[index].xCoreID,
                     taskStatus[index].uxCurrentPriority,
                     fillUpSpaces(taskState2Str(taskStatus[index].eCurrentState).c_str(), taskStateMaxLen).c_str(),
                     statsAsPercentage,

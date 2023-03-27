@@ -1,0 +1,57 @@
+@startuml
+
+title SW Deployment
+
+node "ESP32" {
+
+    node "Core 0\n(Protocol CPU, PRO_CPU)" as proCpu {
+
+        component "IDLE0\n(prio 0)" as idle1Task
+        component "Tmr Svc\n(prio 1)" as tmrSvcTask
+        component "mdns\n(prio 1)" as mdnsTask
+        component "tiT\n(prio 18)" as tiTTask
+        component "eventTask\n(prio 20)" as eventTask
+        component "esp_timer\n(prio 22)" as espTimerTask
+        component "wifi\n(prio 23)" as wifiTask
+        component "ipc0\n(prio 24)" as ipc0Task
+    }
+
+    node "Core 1\n(Application CPU, APP_CPU)" as appCpu {
+
+        component "IDLE1\n(prio 0)" as idle0Task
+        component "loopTask\n(prio 1)" as loopTask
+        component "buttonTask\n(prio 1)" as buttonTask
+        component "processTask\n(prio 1)" as processTask
+        component "network_event\n(prio 19)" as networkEventTask
+        component "async_tcp\n(prio 3)" as asyncTcpTask
+
+        component "arduino_events\n(prio 24)" as arduinoEvents
+
+        component "ipc1\n(prio 24)" as ipc1Task
+        component "spectrumAnalyzerTask\n(prio 1)" as spectrumAnalyzerTask
+        component "AsyncHttpClientTask\n(prio 1)" as asyncHttpClientTask
+    }
+
+    package "Floating tasks" as floatingTasks {
+        component "updateTask\n(prio 4)" as updateTask
+    }
+
+    note top of proCpu
+        The CPU core 0 controls the WiFi, Bluetooth and
+        other internal peripherals such as SPI, I2C, ADC, etc.
+    end note
+
+    note top of appCpu
+        The CPU core 1 is available to the application specific part.
+    end note
+
+    note bottom of floatingTasks
+        Floating tasks have no task affinity. That means the scheduler
+        decides in every cycle on which core they shall run.
+    end note
+
+    proCpu -[hidden]- appCpu
+    proCpu -[hidden]--- floatingTasks
+}
+
+@enduml

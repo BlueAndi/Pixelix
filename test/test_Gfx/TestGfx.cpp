@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -181,6 +181,21 @@ static void testGfx()
     TEST_ASSERT_TRUE(testGfx.verify(0, 1, 1U, YAGfxTest::HEIGHT - 2, COLOR));
     TEST_ASSERT_TRUE(testGfx.verify(YAGfxTest::WIDTH - 1, 1, 1U, YAGfxTest::HEIGHT - 2U, COLOR));
     TEST_ASSERT_TRUE(testGfx.verify(1, 1, YAGfxTest::WIDTH - 2U, YAGfxTest::HEIGHT - 2U, 0U));
+
+    /* Clear screen */
+    testGfx.fillScreen(0U);
+    TEST_ASSERT_TRUE(testGfx.verify(0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT, 0U));
+
+    /* Test drawing a circle */
+    testGfx.drawCircle(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2, 0U, COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2) == COLOR);
+
+    testGfx.fillScreen(0U);
+    testGfx.drawCircle(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2, 1U, COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2 + 1) == COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2, YAGfxTest::HEIGHT / 2 - 1) == COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2 + 1, YAGfxTest::HEIGHT / 2) == COLOR);
+    TEST_ASSERT_TRUE(testGfx.getColor(YAGfxTest::WIDTH / 2 - 1, YAGfxTest::HEIGHT / 2) == COLOR);
 
     /* Clear screen */
     testGfx.fillScreen(0U);

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CONNECTEDSTATE_H__
-#define __CONNECTEDSTATE_H__
+#ifndef CONNECTEDSTATE_H
+#define CONNECTEDSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include "AsyncHttpClient.h"
+#include "ButtonHandler.h"
 
 #include <stdint.h>
 #include <StateMachine.hpp>
@@ -99,13 +100,15 @@ public:
 
 private:
 
-    AsyncHttpClient m_client;   /**< Asynchronous HTTP client. */
+    AsyncHttpClient m_client;           /**< Asynchronous HTTP client. */
+    ButtonHandler   m_buttonHandler;    /**< Button handler */
 
     /**
      * Constructs the state.
      */
     ConnectedState():
-        m_client()
+        m_client(),
+        m_buttonHandler()
     {
         initHttpClient();
     }
@@ -131,6 +134,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTEDSTATE_H__ */
+#endif  /* CONNECTEDSTATE_H */
 
 /** @} */

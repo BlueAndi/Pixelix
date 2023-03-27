@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,6 +76,8 @@ SlotList& SlotList::operator=(const SlotList& list)
             {
                 m_slots[idx] = list.m_slots[idx];
             }
+
+            m_stickySlot = list.m_stickySlot;
         }
     }
 
@@ -126,8 +128,9 @@ void SlotList::destroy()
     {
         delete[] m_slots;
         
-        m_slots     = nullptr;
-        m_maxSlots  = 0U;
+        m_slots         = nullptr;
+        m_maxSlots      = 0U;
+        m_stickySlot    = SLOT_ID_INVALID;
     }
 }
 
@@ -149,7 +152,15 @@ bool SlotList::setPlugin(uint8_t slotId, IPluginMaintenance* plugin)
 
     if (true == isSlotIdValid(slotId))
     {
-        m_slots[slotId].setPlugin(plugin);
+        isSuccessful = m_slots[slotId].setPlugin(plugin);
+
+        /* If plugin is removed from sticky slot, the sticky flag will be removed. */
+        if ((true == isSuccessful) &&
+            (nullptr == plugin) &&
+            (m_stickySlot == slotId))
+        {
+            m_stickySlot = SLOT_ID_INVALID;
+        }
 
         isSuccessful = true;
     }
@@ -295,6 +306,48 @@ uint8_t SlotList::getSlotIdByPluginUID(uint16_t pluginUid)
     }
 
     return slotId;
+}
+
+uint8_t SlotList::getStickySlot() const
+{
+    return m_stickySlot;
+}
+
+/**
+ * Set slot sticky. Only one slot can be sticky!
+ * If a different slot is already sticky, the sticky flag will be moved.
+ * 
+ * If slot is empty or the plugin is disabled, it will fail.
+ * 
+ * @param[in]   slotId  The id of the slot which to set sticky.
+ * 
+ * @return If successful it will return true otherwise false.
+ */
+bool SlotList::setSlotSticky(uint8_t slotId)
+{
+    bool isSuccessful = false;
+
+    if (true == isSlotIdValid(slotId))
+    {
+        if (false == m_slots[slotId].isEmpty())
+        {
+            if (true == m_slots[slotId].getPlugin()->isEnabled())
+            {
+                m_stickySlot    = slotId;
+                isSuccessful    = true;
+            }
+        }
+    }
+
+    return isSuccessful;
+}
+
+/**
+ * Removes the sticky flag.
+ */
+void SlotList::clearSticky()
+{
+    m_stickySlot = SLOT_ID_INVALID;
 }
 
 /******************************************************************************

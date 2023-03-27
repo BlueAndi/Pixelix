@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __DISPLAYMGR_H__
-#define __DISPLAYMGR_H__
+#ifndef DISPLAYMGR_H
+#define DISPLAYMGR_H
 
 /******************************************************************************
  * Compile Switches
@@ -198,11 +198,39 @@ public:
     IPluginMaintenance* getPluginInSlot(uint8_t slotId);
 
     /**
-     * Activate a specific plugin immediately.
-     *
-     * @param[in] plugin    Plugin which to activate
+     * Get slot which is marked sticky.
+     * 
+     * @return Id of sticky slot. If no slot is sticky, it will return SLOT_ID_INVALID.
      */
-    void activatePlugin(IPluginMaintenance* plugin);
+    uint8_t getStickySlot() const;
+
+    /**
+     * Set slot sticky. Only one slot can be sticky!
+     * If a different slot is already sticky, the sticky flag will be moved.
+     * 
+     * If slot is empty or the plugin is disabled, it will fail.
+     * 
+     * Use SLOT_ID_INVALID to clear the sticky flag. Recommended: clearSticky()
+     * 
+     * @param[in]   slotId  The id of the slot which to set sticky.
+     * 
+     * @return If successful it will return true otherwise false.
+     */
+    bool setSlotSticky(uint8_t slotId);
+
+    /**
+     * Removes the sticky flag.
+     */
+    void clearSticky();
+
+    /**
+     * Activate the slot with the given id.
+     * If a different slot is marked sticky, it will fail.
+     * If no enabled plugin is in the slot, it will fail.
+     * 
+     * @param[in] slotId    Id of the slot which to activate.
+     */
+    bool activateSlot(uint8_t slotId);
 
     /**
      * Activate next slot.
@@ -480,24 +508,12 @@ private:
      * @param[in]   parameters  Task pParameters
      */
     static void updateTask(void* parameters);
-
-    /**
-     * Load display slot configuration from persistent memory.
-     * 
-     * @return If successful it will return true otherwise false.
-     */
-    bool load();
-
-    /**
-     * Save display slot configuration to persistent memory.
-     */
-    void save();
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __DISPLAYMGR_H__ */
+#endif  /* DISPLAYMGR_H */
 
 /** @} */

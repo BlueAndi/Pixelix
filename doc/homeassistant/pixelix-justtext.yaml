@@ -1,0 +1,186 @@
+blueprint:
+  name: Pixelix LED Matrix Wrapper for JustText Plugin
+  description: Pixelix LED Matrix Wrapper for JustText Plugin
+  domain: automation
+  source_url: https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/homeassistant/pixelix-justtext.yaml
+  input:
+    uid:
+      name: The uid of the Plugin
+      description: 'UID of the JustText Plugin'
+      selector:
+        number:
+          min: 0
+          max: 9999999
+          mode: box
+    align:
+      name: Align
+      description: 'The align of the text'
+      selector:
+        select:
+          options:
+            - label: Left
+              value: lalign
+            - label: Center
+              value: calign
+            - label: Right
+              value: ralign
+    color:
+      name: Color
+      description: 'The color of the text'
+      selector:
+        text:
+            type: color
+    prefix_text:
+      name: Prefix Text
+      description: 'Optional: The text to display before the sensor value.'
+      default: ''
+      selector:
+        text:
+    suffix_text:
+      name: Suffix Text
+      description: 'Optional: The text to display after the sensor value.'
+      default: ''
+      selector:
+        text:
+    sensors:
+      name: Sensors
+      description: 'The sensors to monitor in realtime'
+      selector:
+        entity:
+          multiple: true
+    sensor_labels:
+      name: Sensor labels
+      description: 'The labels of the sensors. Please use \"-\" before each entry and add as many entries as the number of your entered sensors. Each line should contain one entry. See documentation for more details.'
+      selector:
+        object:
+    use_sensor_value_coloration:
+      name: Value coloration
+      description: 'The color is changed on the value of the sensor. Supported formats: °C, %'
+      default: false
+      selector:
+        boolean:
+    is_room_temp:
+      name: Is room temperature sensor
+      description: 'If value coloration is used, then use coloration with the room temperature curve instead of the hardware temperature curve.'
+      default: false
+      selector:
+        boolean:
+variables:
+  var_uid: !input uid
+  var_align: !input align
+  var_color: !input color
+  var_prefix: !input prefix_text
+  var_suffix: !input suffix_text
+  var_sensors: !input sensors
+  var_value_coloration: !input use_sensor_value_coloration
+  var_is_room_temp: !input is_room_temp
+  var_sensor_labels: !input sensor_labels
+trigger:
+  - platform: state
+    entity_id: !input sensors
+condition: []
+action:
+  - service: rest_command.pixelix_just_text
+    data:
+      uid: !input uid
+      align: !input align
+      color: >-
+        {{ var_color | urlencode() }}
+      text:  >-
+        {% set sensors = var_sensors %}
+        {% set sensor_labels = var_sensor_labels %}
+        {% set prefix = var_prefix %}
+        {% set suffix = var_suffix %}
+        {% set use_coloring = var_value_coloration %}
+        {% set is_room_temp = var_is_room_temp %}
+        {% set align = var_align %}
+        {% set color = var_color %}
+        {% set sensor_text = namespace(text='', delimiter=', ') %}
+        {% for sensor in sensors %}
+          {% set state = states(sensor) %}
+          {% if (state != 'unknown') and (state != 'unavailable') %}
+            {% if state_attr(sensor, 'unit_of_measurement') != None %}
+              {% if use_coloring == true %}
+                {% if is_state_attr(sensor, 'unit_of_measurement', '%') and is_number(state) %}
+                  {% if state | float > 85.7  %}
+                    {% set s_color = '\#ff0000' %}
+                  {% elif state | float > 71.4 %}
+                    {% set s_color = '\#ff5c00' %}
+                  {% elif state | float > 57.1  %}
+                    {% set s_color = '\#ffae00' %}
+                  {% elif state | float > 42.8  %}
+                    {% set s_color = '\#ffeb00' %}
+                  {% elif state | float > 28.5  %}
+                    {% set s_color = '\#b0ff00' %}
+                  {% elif state | float > 14.2  %}
+                    {% set s_color = '\#5fff00' %}
+                  {% else %}
+                    {% set s_color = '\#00ff00' %}
+                  {% endif %}
+                {% elif is_state_attr(sensor, 'unit_of_measurement', '°C') and is_number(state) %}
+                  {% if is_room_temp == true %}
+                    {% if state | float > 33 %}
+                      {% set s_color = '\#ff0000' %}
+                    {% elif state | float > 29 %}
+                      {% set s_color = '\#ff5c00' %}
+                    {% elif state | float > 26 %}
+                      {% set s_color = '\#ffff00' %}
+                    {% elif state | float > 23 %}
+                      {% set s_color = '\#99ff00' %}
+                    {% elif state | float > 20 %}
+                      {% set s_color = '\#00ff8e' %}
+                    {% elif state | float > 18 %}
+                      {% set s_color = '\#00c1ff' %}
+                    {% else %}
+                      {% set s_color = '\#001eff' %}
+                    {% endif %}
+                  {% else %}
+                    {% if state | float > 90 %}
+                      {% set s_color = '\#ff0000' %}
+                    {% elif state | float > 80 %}
+                      {% set s_color = '\#ff5c00' %}
+                    {% elif state | float > 70 %}
+                      {% set s_color = '\#ffff00' %}
+                    {% elif state | float > 60 %}
+                      {% set s_color = '\#99ff00' %}
+                    {% elif state | float > 50 %}
+                      {% set s_color = '\#00ff8e' %}
+                    {% elif state | float > 40 %}
+                      {% set s_color = '\#00c1ff' %}
+                    {% else %}
+                      {% set s_color = '\#001eff' %}
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  {% set s_color = '\#ffffff' %}
+                {% endif %}
+                {% if loop.last %}
+                  {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + s_color + state + state_attr(sensor, 'unit_of_measurement') | replace('°', '')  %}
+                {% else %}
+                  {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + s_color + state + state_attr(sensor, 'unit_of_measurement') | replace('°', '') + '\\' + color + sensor_text.delimiter %}
+                {% endif %}
+              {% else %}
+                {% if loop.last %}
+                  {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + state + state_attr(sensor, 'unit_of_measurement') | replace('°', '') %}
+                {% else %}
+                  {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + state + state_attr(sensor, 'unit_of_measurement') | replace('°', '')  + sensor_text.delimiter %}
+                {% endif %}
+              {% endif %}
+            {% else %}
+              {% if loop.last %}
+                {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + state %}
+              {% else %}
+                {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + state + sensor_text.delimiter %}
+              {% endif %}
+            {% endif %}
+          {% else %}
+            {% if loop.last %}
+              {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + 'Error fetching data from Sensor' %}
+            {% else %}
+              {% set sensor_text.text = sensor_text.text + sensor_labels[loop.index-1] + ': ' + 'Error fetching data from Sensor' + sensor_text.delimiter %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {{ ('\\' + align + prefix + ' ' + sensor_text.text + ' ' + suffix) | urlencode }}
+
+mode: single

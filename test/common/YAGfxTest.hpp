@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __YAGFX_TEST_HPP__
-#define __YAGFX_TEST_HPP__
+#ifndef YAGFX_TEST_HPP
+#define YAGFX_TEST_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -339,6 +339,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __YAGFX_TEST_HPP__ */
+#endif  /* YAGFX_TEST_HPP */
 
 /** @} */

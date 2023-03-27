@@ -1,0 +1,84 @@
+@startuml
+
+skinparam component {
+    BackgroundColor<<Arduino>> Lightgreen
+    BackgroundColor<<Future>> White
+}
+
+package "Service" as servicePckg {
+    component "RestApi" as restApi
+    component "RestUtil" as restUtil
+    component "MqttService" as mqttService <<Future>>
+    component "WebSocket" as webSocket
+
+    package "SettingsService" {
+        component "SettingsService" as settingsService
+    }
+
+    component "MyWebServer" as myWebServer
+    component "Pages" as pages
+    component "AsyncHttpClient" as asnyHttpClient
+    component "CaptivePortalHandler" as captivePortalHandler
+
+    package "AudioService" as audioServicePckg {
+        component "SpectrumAnalyzer" as spectrumAnalyzer
+        component "AudioToneDetector" as audioToneDetector
+        component "AudioService" as audioService
+
+        audioService ..> spectrumAnalyzer
+        audioService ..> audioToneDetector
+    }
+
+    package FadeEffects    
+    package YAWidgets
+    package YAGfx
+    package BaseGfx
+
+    FadeEffects ..> YAGfx
+    YAWidgets ..> YAGfx
+    YAGfx ..> BaseGfx
+
+    package "3rd party" as service3rdPartyPckg {
+        component "PubSubClient" as pubSubClient <<Future>>
+        component "FS" as fs <<Arduino>>
+        component "Preferences" as preferences <<Arduino>>
+        component "NTP" as ntp <<Arduino>>
+
+        component "EspAsyncWebServer" as webServer
+        component "AsyncTcpSock" as tcp
+        component "mDNS" as dns <<Arduino>>
+        component "ArduinoOTA" <<Arduino>> as ota
+        component "LwIP" <<Arduino>> as lwip
+        component "ArduinoFFT" as fft
+
+        webServer ..> tcp
+        pubSubClient ..> tcp
+        tcp ..> lwip
+        dns ..> lwip
+        ota ..> lwip
+        ntp ..> lwip
+    }
+
+    package "WsCommand" as wsCommand {
+    }
+
+    myWebServer ...> webServer
+    pages ...> webServer
+    asnyHttpClient ....> tcp
+    captivePortalHandler ...> webServer
+
+    spectrumAnalyzer ....> fft
+
+    restApi ...> webServer
+    mqttService ...> pubSubClient
+    webSocket ...> webServer
+    settingsService ...> preferences
+
+    restApi ..> restUtil
+
+    webSocket ..> wsCommand
+
+    wsCommand ..> webServer
+}
+
+@enduml

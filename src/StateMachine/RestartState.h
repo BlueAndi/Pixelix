@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __RESTARTSTATE_H__
-#define __RESTARTSTATE_H__
+#ifndef RESTARTSTATE_H
+#define RESTARTSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -127,6 +127,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __RESTARTSTATE_H__ */
+#endif  /* RESTARTSTATE_H */
 
 /** @} */

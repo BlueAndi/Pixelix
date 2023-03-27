@@ -1,0 +1,35 @@
+@startuml
+
+title Slot handling
+
+state "Idle" as idle: /do Find next slot with enabled plugin (for last active slot + 1 to last active slot)
+state "Idle" as idle: /exit Select found slot
+
+state "FadeIn" as fadeIn: /entry Fade next plugin in
+
+state "Active" as active: /entry If slot duration > 0 then start timer
+state "Active" as active: /do Show plugin
+state "Active" as active: /exit Stop timer
+
+state "FadeOut" as fadeOut: /do Fade previous plugin out
+
+[*] --> idle: set last active slot to last slot in list
+
+idle --> fadeIn: [slot with enabled plugin found]
+
+fadeIn --> active: [fade in complete]
+
+active --> fadeOut: [plugin disabled] OR\n[plugin removed from slot]\nselect next slot with enable plugin
+active --> fadeOut: [timeout] AND\n[next slot contains enabled plugin] AND\n[next slot __is not__ current slot]\nselect next slot
+active --> fadeOut: [slot requested by user] AND\n[requested slot contains enabled plugin] AND\n[requested slot __is not__ current slot]\nselect requested slot
+active -> active: ([timeout] AND\n[next slot contains enabled plugin] AND\n[next slot __is same__ than current slot]) OR\n[slot duration re-configured]
+
+fadeOut --> idle: [fade out complete] AND\n[no slot selected]
+fadeOut --> fadeIn: [fade out complete] AND\n[slot selected]
+
+note top of active
+    If user configures a slot duration of 0 ms, the timer is disabled and
+    the slot will stay active until other conditions appear.
+end note
+
+@enduml

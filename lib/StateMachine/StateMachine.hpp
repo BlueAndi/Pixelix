@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __STATEMACHINE_HPP__
-#define __STATEMACHINE_HPP__
+#ifndef STATEMACHINE_HPP
+#define STATEMACHINE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -148,7 +148,6 @@ public:
     void setState(AbstractState& state)
     {
         m_nextState = &state;
-        return;
     }
 
     /**
@@ -183,8 +182,6 @@ public:
             /* Nothing to do */
             ;
         }
-
-        return;
     }
 
 private:
@@ -200,6 +197,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __STATEMACHINE_HPP__ */
+#endif  /* STATEMACHINE_HPP */
 
 /** @} */

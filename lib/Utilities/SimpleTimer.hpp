@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __SIMPLETIMER_HPP__
-#define __SIMPLETIMER_HPP__
+#ifndef SIMPLETIMER_HPP
+#define SIMPLETIMER_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -49,6 +49,18 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
+/** Convert [s] to [ms] for easier timer handling. */
+#define SIMPLE_TIMER_SECONDS(__timeInS)     ((__timeInS) * 1000U)
+
+/** Convert [m] to [ms] for easier timer handling. */
+#define SIMPLE_TIMER_MINUTES(__timeInMin)   SIMPLE_TIMER_SECONDS((__timeInMin) * 60U)
+
+/** Convert [h] to [ms] for easier timer handling. */
+#define SIMPLE_TIMER_HOURS(__timeInHours)   SIMPLE_TIMER_MINUTES((__timeInHours) * 60U)
+
+/** Convert [d] to [ms] for easier timer handling. */
+#define SIMPLE_TIMER_DAYS(__timeInDays)     SIMPLE_TIMER_HOURS((__timeInDays) * 24U)
 
 /******************************************************************************
  * Types and Classes
@@ -121,8 +133,6 @@ public:
         m_isTimeout = false;
         m_duration  = duration;
         m_start     = millis();
-
-        return;
     }
 
     /**
@@ -132,8 +142,6 @@ public:
     {
         m_isRunning = false;
         m_isTimeout = false;
-
-        return;
     }
 
     /**
@@ -144,8 +152,6 @@ public:
         m_isRunning = true;
         m_isTimeout = false;
         m_start     = millis();
-
-        return;
     }
 
     /**
@@ -198,6 +204,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __SIMPLETIMER_HPP__ */
+#endif  /* SIMPLETIMER_HPP */
 
 /** @} */

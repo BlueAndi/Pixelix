@@ -8,6 +8,7 @@
         <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
         <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
         <link rel="stylesheet" type="text/css" href="/style/style.css" />
+        <link rel="stylesheet" type="text/css" href="/style/btn-custom.css" />
 
         <title>PIXELIX</title>
         <link rel="shortcut icon" type="image/png" href="/favicon.png" />
@@ -31,6 +32,21 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
+                        </div>
+                        <div class="modal-body text-dark" id="dialogBody">
+                        </div>
+                        <div class="modal-footer text-dark" id="dialogFooter">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main view -->
             <div class="container">
                 <h1 class="mt-5">Debug</h1>
                 <ul class="nav nav-tabs" role="tablist">
@@ -47,15 +63,16 @@
                                 <button class="btn btn-light" type="button" onclick="clearLog();" disabled>Clear</button>
                             </div>
                             <div class="btn-group mr-2" role="group" aria-label="Log Levels">
-                                <button type="button" class="btn btn-outline-info active" id="buttonInfo" aria-pressed="true">INFO</button>
-                                <button type="button" class="btn btn-outline-warning active" id="buttonWarning" aria-pressed="true">WARNING</button>
-                                <button type="button" class="btn btn-outline-danger active" id="buttonError" aria-pressed="true">ERROR</button>
-                                <button type="button" class="btn btn-outline-danger active" id="buttonFatal" aria-pressed="true">FATAL</button>
-                                <button type="button" class="btn btn-light active" id="buttonDebug" aria-pressed="true">DEBUG</button>
-                                <button type="button" class="btn btn-light active" id="buttonTrace" aria-pressed="true">TRACE</button>
+                                <button type="button" class="btn btn-outline-log-level-info" id="buttonInfo" aria-pressed="true">INFO</button>
+                                <button type="button" class="btn btn-outline-log-level-warning" id="buttonWarning" aria-pressed="true">WARNING</button>
+                                <button type="button" class="btn btn-outline-log-level-error" id="buttonError" aria-pressed="true">ERROR</button>
+                                <button type="button" class="btn btn-outline-log-level-fatal" id="buttonFatal" aria-pressed="true">FATAL</button>
+                                <button type="button" class="btn btn-outline-log-level-debug" id="buttonDebug" aria-pressed="true">DEBUG</button>
+                                <button type="button" class="btn btn-outline-log-level-trace" id="buttonTrace" aria-pressed="true">TRACE</button>
                             </div>
                         </div>
                         <p>Note, only the last 40 messages are shown.</p>
+                        <p>The latest message is on top.</p>
                         <div class="table-responsive">
                             <table class="table table-striped" id="loggingOutput">
                                 <thead class="thead-light">
@@ -91,19 +108,22 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2022 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.0.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix websocket library -->
         <script type="text/javascript" src="/js/ws.js"></script>
         <script type="text/javascript" src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/dialog.js"></script>
 
         <!-- Custom javascript -->
         <script>
@@ -113,6 +133,7 @@
             var isLoggingEnabled        = false;
             var isMeasurementEnabled    = false;
             var filter                  = ["FATAL", "ERROR", "WARNING", "INFO", "DEBUG", "TRACE"];
+            var isIperfAvailable        = false;
 
             function toggleLogLevel(logLevel) {
                 var index = filter.indexOf(logLevel);
@@ -133,9 +154,46 @@
                 disableUI();
 
                 if (false === isPageUnload) {
-                    alert("Websocket connection closed.");
+                    dialog.showError("<p>Websocket connection closed.</p>");
                 }
             }
+
+            function logLevel2Color(logLevel) {
+                var color = "";
+
+                switch(logLevel)
+                {
+                case 0:
+                    color = "#FF0000";
+                    break;
+
+                case 1:
+                    color = "#FF8000";
+                    break;
+
+                case 2:
+                    color = "#FFFF00";
+                    break;
+
+                case 3:
+                    color = "#0EFF00"
+                    break;
+
+                case 4:
+                    color = "#00FFEB";
+                    break;
+
+                case 5:
+                    color = "#0004FF";
+                    break;
+                
+                default:
+                    color = "#0EFF00";
+                    break;
+                }
+
+                return color;
+            };
 
             /* Handle every websocket event. */
             function wsOnEvent(evt) {
@@ -143,7 +201,8 @@
                 var index           = filter.indexOf(logLevel);
                 var $row            = $("<tr>");
                 var $colTimestamp   = $("<td>").text(evt.timestamp);
-                var $colLogLevel    = $("<td>").text(pixelix.ws.getLogLevelStr(evt.level));
+                var $logLevelText   = $("<span>").text(pixelix.ws.getLogLevelStr(evt.level)).css("color", logLevel2Color(evt.level))
+                var $colLogLevel    = $("<td>").append($logLevelText);
                 var $colFilename    = $("<td>").text(evt.filename);
                 var $colLine        = $("<td>").text(evt.line);
                 var $colText        = $("<td>").text(evt.text);
@@ -152,7 +211,7 @@
                 if (0 <= index) {
 
                     if (maxLogs < rowCount) {
-                        $("#loggingOutput > tbody > tr:first-child").remove();
+                        $("#loggingOutput > tbody > tr:last-child").remove();
                     }
 
                     $($row).append($colTimestamp)
@@ -161,7 +220,7 @@
                         .append($colLine)
                         .append($colText);
 
-                    $("#loggingOutput > tbody").append($row);
+                    $("#loggingOutput > tbody").prepend($row);
                 }
             }
 
@@ -173,6 +232,10 @@
             /* Enable all UI elements. */
             function enableUI() {
                 $("main :button").prop("disabled", false);
+
+                if (false == isIperfAvailable) {
+                    $("#buttonMeasurement").prop("disabled", true);
+                }
             }
 
             /* Toggle logging */
@@ -203,13 +266,13 @@
                 disableUI();
 
                 wsClient.reset().then(function(rsp) {
-                    alert("Ok.");
+                    return dialog.showInfo("<p>Ok.</p>");
                 }).catch(function(err) {
-                    alert("Error.");
+                    return dialog.showError("<p>Error: " + err + "</p>");
                 });
             }
 
-            /* Toggle logging */
+            /* Toggle measurement */
             function toggleMeasurement() {
                 disableUI();
 
@@ -224,12 +287,12 @@
                         $("#buttonMeasurement").text("Stop");
                     }
 
-                    alert("Ok.");
+                    return dialog.showInfo("<p>Ok.</p>");
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);
                     }
-                    alert("Error.");
+                    return dialog.showError("<p>Error.</p>");
                 }).finally(function() {
                     enableUI();
                 });
@@ -237,6 +300,7 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
 
                 $("#buttonInfo").click(function(e) {
@@ -296,6 +360,9 @@
                         $("#buttonLog").text("Stop");
                     }
 
+                    /* Enable GUI elements, except measurement button. */
+                    enableUI();
+
                     /* Get current iperf status */
                     return wsClient.getIperf();
                 }).then(function(rsp) {
@@ -308,8 +375,10 @@
                         $("#buttonMeasurement").text("Stop");
                     }
 
-                    /* Enable UI at least. */
+                    /* Enable measurement button too. */
+                    isIperfAvailable = true;
                     enableUI();
+                    
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);

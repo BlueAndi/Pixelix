@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -92,8 +92,6 @@ void BrightnessCtrl::init(IDisplay& display)
         setAmbientLight(m_recentShortTermAverage.getValue());
         updateBrightnessGoal();
     }
-
-    return;
 }
 
 bool BrightnessCtrl::enable(bool state)
@@ -231,8 +229,6 @@ void BrightnessCtrl::setBrightness(uint8_t level)
             m_display->setBrightness(m_brightness);
         }
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -282,12 +278,10 @@ float BrightnessCtrl::getNormalizedLight()
 void BrightnessCtrl::setAmbientLight(float light)
 {
     m_ambientLight          = light;
-    m_brighteningThreshold  = m_ambientLight * (1.0f + BRIGHTENING_LIGHT_HYSTERESIS);
-    m_darkeningThreshold    = m_ambientLight * (1.0f - DARKENING_LIGHT_HYSTERESIS);
+    m_brighteningThreshold  = m_ambientLight * (1.0F + BRIGHTENING_LIGHT_HYSTERESIS);
+    m_darkeningThreshold    = m_ambientLight * (1.0F - DARKENING_LIGHT_HYSTERESIS);
 
     LOG_DEBUG("Light: %0.3f (b-thr %0.3f < x < d-thr %0.3f)", m_ambientLight, m_brighteningThreshold, m_darkeningThreshold);
-
-    return;
 }
 
 void BrightnessCtrl::applyLightSensorMeasurement(uint32_t dTime, float light)
@@ -296,8 +290,6 @@ void BrightnessCtrl::applyLightSensorMeasurement(uint32_t dTime, float light)
     (void)m_recentLongTermAverage.calc(light, dTime);
 
     LOG_DEBUG("Light: m %0.3f s-avg %0.3f l-avg %0.3f", light, m_recentShortTermAverage, m_recentLongTermAverage);
-
-    return;
 }
 
 void BrightnessCtrl::updateBrightnessGoal()
@@ -308,8 +300,6 @@ void BrightnessCtrl::updateBrightnessGoal()
     m_brightnessGoal = static_cast<uint8_t>(fBrightness);
 
     LOG_DEBUG("Change brightness goal to %u.", m_brightnessGoal);
-
-    return;
 }
 
 void BrightnessCtrl::updateBrightness()
@@ -352,8 +342,6 @@ void BrightnessCtrl::updateBrightness()
     {
         ;
     }
-
-    return;
 }
 
 /******************************************************************************

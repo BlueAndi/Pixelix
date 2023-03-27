@@ -28,15 +28,15 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["esp32doit-devkit-v1-usb", "ttgo-t-display-usb"]
+        environment: ["esp32doit-devkit-v1", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "adafruit_feather_esp32_v2"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -44,13 +44,15 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Cache PlatformIO
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
     
     - name: Install PlatformIO
       run: |
@@ -70,10 +72,10 @@ jobs:
     needs: intro
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -81,21 +83,23 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Cache PlatformIO
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
     
     - name: Install PlatformIO
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade platformio
 
-    - name: Perform static checks on target esp32doit-devkit-v1-usb
-      run: platformio check --environment esp32doit-devkit-v1-usb
+    - name: Perform static checks on target esp32doit-devkit-v1
+      run: platformio check --environment esp32doit-devkit-v1
 
     - name: Perform static checks on native environment
       run: platformio check --environment test
@@ -110,10 +114,10 @@ jobs:
     needs: intro
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -121,13 +125,15 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Cache PlatformIO
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
     
     - name: Install PlatformIO
       run: |
@@ -135,10 +141,10 @@ jobs:
         pip install --upgrade platformio
 
     - name: Set up graphviz
-      uses: ts-graphviz/setup-graphviz@v1
+      uses: ts-graphviz/setup-graphviz@v1.2.0
 
     - name: Set up doxygen and generate documentation
-      uses: mattnotmitt/doxygen-action@v1.1.0
+      uses: mattnotmitt/doxygen-action@v1.9.5
       with:
         working-directory: './doc/doxygen'
         doxyfile-path: './Doxyfile'

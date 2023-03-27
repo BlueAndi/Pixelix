@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __FILESYSTEM_H__
-#define __FILESYSTEM_H__
+#ifndef FILESYSTEM_H
+#define FILESYSTEM_H
 
 /******************************************************************************
  * Compile Switches
@@ -43,19 +43,21 @@
 /**
  * Defines LittleFS as filesystem format (must be 1).
  */
-#define FILESYSTEM_USE_LITTLEFS (0)
+#define FILESYSTEM_USE_LITTLEFS (1)
 
 #if FILESYSTEM_USE_LITTLEFS
 #define FILESYSTEM              LittleFS
+#define FILESYSTEM_FILENAME     "littlefs.bin"
 #endif  /* FILESYSTEM_USE_LITTLEFS */
 
 /**
  * Defines SPIFFS as filesystem format (must be 1).
  */
-#define FILESYSTEM_USE_SPIFFS   (1)
+#define FILESYSTEM_USE_SPIFFS   (0)
 
 #if FILESYSTEM_USE_SPIFFS
 #define FILESYSTEM              SPIFFS
+#define FILESYSTEM_FILENAME     "spiffs.bin"
 #endif  /* FILESYSTEM_USE_SPIFFS */
 
 /******************************************************************************
@@ -81,6 +83,6 @@
  * Functions
  *****************************************************************************/
 
-#endif  /* __FILESYSTEM_H__ */
+#endif  /* FILESYSTEM_H */
 
 /** @} */

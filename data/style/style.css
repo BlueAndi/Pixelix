@@ -38,6 +38,11 @@ code {
     user-select: none;
 }
 
+.scrollable-menu {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
 @media (min-width: 768px) {
     .bd-placeholder-img-lg {
         font-size: 3.5rem;
@@ -57,6 +62,12 @@ div.divSlot {
 }
 div.locked {
     background-image: repeating-linear-gradient(45deg, #ccc 0%, #ccc 2%, red 2%, red 4%, #ccc 4%);
+}
+div.sticky {
+    background-image: repeating-linear-gradient(45deg, #ccc 0%, yellow 2%, #ccc 2%, #ccc 4%, yellow 4%);
+}
+div.lockedAndSticky {
+    background-image: repeating-linear-gradient(45deg, #ccc 0%, yellow 2%, red 2%, red 4%, yellow 4%);
 }
 p.dragableSlot {
     border: 2px solid red;

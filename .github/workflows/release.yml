@@ -27,17 +27,17 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["esp32doit-devkit-v1-usb", "esp32-nodemcu-usb", "az-delivery-devkit-v4-usb", "ttgo-t-display-usb"]
+        environment: ["esp32doit-devkit-v1", "esp32-nodemcu", "az-delivery-devkit-v4", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "adafruit_feather_esp32_v2"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: ${{ github.event.inputs.tag_name }}
 
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -45,13 +45,15 @@ jobs:
           ${{ runner.os }}-pip-
 
     - name: Cache PlatformIO
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.platformio
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
     
     - name: Install PlatformIO
       run: |
@@ -75,6 +77,9 @@ jobs:
         path: |
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/bootloader.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/partitions.bin
         retention-days: 5
 
   # Deploy release artifacts

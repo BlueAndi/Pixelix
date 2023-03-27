@@ -1,0 +1,44 @@
+@startuml
+
+skinparam component {
+    BackgroundColor<<Arduino>> Lightgreen
+    BackgroundColor<<Future>> White
+}
+
+package "HAL" {
+
+    component "AudioDrv" as audioDrv
+    component "SensorDataProvider" as sensorDataProvider
+    component "ButtonDrv" as buttonDrv
+
+    package "Hal<concrete-name>" {
+        component "Display" as display
+        component "Board" as board
+    }
+
+    package "3rd party" as hal3rdParty {
+
+        component "TwoWire" <<Arduino>> as twoWire
+        component "WiFi" <<Arduino>> as wifi
+        component "OneWire\n(Propritary)" as oneWire
+        component "I2S" <<Arduino>> as i2s
+    }
+
+    package Sensors {
+        component "SensorDhtX" as sensorDhtX
+        component "SensorLdrGl5528" as sensorLdrGl5528
+        component "SensorSht3X" as sensorSht3X
+    }
+
+    audioDrv ...> i2s
+    sensorDataProvider ..> sensorSht3X
+    sensorDataProvider ..> sensorDhtX
+    sensorDataProvider ..> sensorLdrGl5528
+    buttonDrv ..> board
+
+    sensorSht3X ..> twoWire
+    sensorDhtX ..> oneWire
+    sensorLdrGl5528 .u.> board
+}
+
+@enduml

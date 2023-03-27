@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -121,7 +121,7 @@ extern float AmbientLight::normalizeIlluminance(float illuminance)
         /* Map lux values to human perception, according to
          * https://docs.microsoft.com/en-us/windows/win32/sensorsapi/understanding-and-interpreting-lux-values
          */
-        lightNormalized = log10f(illuminance) / 5.0F;
+        lightNormalized = log10f(illuminance) / 5.0F; // NOLINT (readability-magic-numbers)
     }
 
     return lightNormalized;

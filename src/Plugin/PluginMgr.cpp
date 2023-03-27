@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,16 +34,15 @@
  *****************************************************************************/
 #include "PluginMgr.h"
 #include "DisplayMgr.h"
-#include "MyWebServer.h"
-#include "RestApi.h"
-#include "Settings.h"
 #include "FileSystem.h"
 #include "Plugin.hpp"
-#include "HttpStatus.h"
-#include "RestUtil.h"
+#include "JsonFile.h"
+#include "TopicHandlers.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
+#include <Util.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -65,6 +64,10 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize static members */
+const char* PluginMgr::CONFIG_FILE_NAME         = "slotConfig.json";
+const char* PluginMgr::MQTT_SPECIAL_CHARACTERS  = "+#*>$"; /* See MQTT specification */
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -77,7 +80,6 @@ void PluginMgr::begin()
 void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
 {
     m_pluginFactory.registerPlugin(name, createFunc);
-    return;
 }
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
@@ -107,6 +109,7 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
         if (true == status)
         {
             unregisterTopics(plugin);
+
             m_pluginFactory.destroyPlugin(plugin);
         }
     }
@@ -129,7 +132,8 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
     bool isSuccessful = false;
 
     if ((nullptr != plugin) &&
-        (plugin->getAlias() != alias))
+        (plugin->getAlias() != alias) &&
+        (true == isPluginAliasValid(alias)))
     {
         /* First remove current registered topics. */
         unregisterTopics(plugin);
@@ -146,83 +150,40 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
     return isSuccessful;
 }
 
-String PluginMgr::getRestApiBaseUriByUid(uint16_t uid)
-{
-    String  baseUri = RestApi::BASE_URI;
-    baseUri += "/display";
-    baseUri += "/uid/";
-    baseUri += uid;
-
-    return baseUri;
-}
-
-String PluginMgr::getRestApiBaseUriByAlias(const String& alias)
-{
-    String  baseUri = RestApi::BASE_URI;
-    baseUri += "/display";
-    baseUri += "/alias/";
-    baseUri += alias;
-
-    return baseUri;
-}
-
 bool PluginMgr::load()
 {
-    bool        isSuccessful    = true;
-    Settings&   settings        = Settings::getInstance();
+    bool                isSuccessful            = true;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 4096U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    String              fullConfigFileName      = Plugin::CONFIG_PATH;
 
-    if (false == settings.open(true))
+    fullConfigFileName += "/";
+    fullConfigFileName += CONFIG_FILE_NAME;
+
+    if (false == jsonFile.load(fullConfigFileName, jsonDoc))
     {
-        LOG_WARNING("Couldn't open filesystem.");
+        LOG_WARNING("Failed to load file %s.", fullConfigFileName.c_str());
         isSuccessful = false;
     }
     else
     {
-        String installation = settings.getPluginInstallation().getValue();
+        JsonArray       jsonSlots   = jsonDoc["slotConfiguration"].as<JsonArray>();
+        uint8_t         slotId      = 0;
+        const uint8_t   MAX_SLOTS   = DisplayMgr::getInstance().getMaxSlots();
 
-        if (true == installation.isEmpty())
+        checkJsonDocOverflow(jsonDoc, __LINE__);
+
+        for(JsonObject jsonSlot: jsonSlots)
         {
-            LOG_WARNING("Plugin installation is empty.");
-            isSuccessful = false;
-        }
-        else
-        {
-            const size_t            JSON_DOC_SIZE   = 1280U;
-            DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
-            DeserializationError    error           = deserializeJson(jsonDoc, installation);
-
-            checkJsonDocOverflow(jsonDoc, __LINE__);
-
-            if (DeserializationError::Ok != error.code())
+            prepareSlotByConfiguration(slotId, jsonSlot);
+            
+            ++slotId;
+            if (MAX_SLOTS <= slotId)
             {
-                LOG_WARNING("JSON deserialization failed: %s", error.c_str());
-                isSuccessful = false;
-            }
-            else if (false == jsonDoc["slots"].is<JsonArray>())
-            {
-                LOG_WARNING("Invalid JSON format.");
-                isSuccessful = false;
-            }
-            else
-            {
-                JsonArray       jsonSlots   = jsonDoc["slots"].as<JsonArray>();
-                uint8_t         slotId      = 0;
-                const uint8_t   MAX_SLOTS   = DisplayMgr::getInstance().getMaxSlots();
-
-                for(JsonObject jsonSlot: jsonSlots)
-                {
-                    prepareSlotByConfiguration(slotId, jsonSlot);
-                    
-                    ++slotId;
-                    if (MAX_SLOTS <= slotId)
-                    {
-                        break;
-                    }
-                }
+                break;
             }
         }
-
-        settings.close();
     }
 
     return isSuccessful;
@@ -231,11 +192,15 @@ bool PluginMgr::load()
 void PluginMgr::save()
 {
     String              installation;
-    uint8_t             slotId          = 0;
-    Settings&           settings        = Settings::getInstance();
-    const size_t        JSON_DOC_SIZE   = 1280U;
+    uint8_t             slotId              = 0;
+    const size_t        JSON_DOC_SIZE       = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonArray           jsonSlots       = jsonDoc.createNestedArray("slots");
+    JsonArray           jsonSlots           = jsonDoc.createNestedArray("slotConfiguration");
+    JsonFile            jsonFile(FILESYSTEM);
+    String              fullConfigFileName  = Plugin::CONFIG_PATH;
+
+    fullConfigFileName += "/";
+    fullConfigFileName += CONFIG_FILE_NAME;
 
     for(slotId = 0; slotId < DisplayMgr::getInstance().getMaxSlots(); ++slotId)
     {
@@ -248,6 +213,7 @@ void PluginMgr::save()
             jsonSlot["uid"]         = 0;
             jsonSlot["alias"]       = "";
             jsonSlot["fontType"]    = Fonts::fontTypeToStr(Fonts::FONT_TYPE_DEFAULT);
+            jsonSlot["duration"]    = DisplayMgr::getInstance().getSlotDuration(slotId);
         }
         else
         {
@@ -255,21 +221,15 @@ void PluginMgr::save()
             jsonSlot["uid"]         = plugin->getUID();
             jsonSlot["alias"]       = plugin->getAlias();
             jsonSlot["fontType"]    = Fonts::fontTypeToStr(plugin->getFontType());
+            jsonSlot["duration"]    = DisplayMgr::getInstance().getSlotDuration(slotId);
         }
     }
 
     checkJsonDocOverflow(jsonDoc, __LINE__);
 
-    if (false == settings.open(false))
+    if (false == jsonFile.save(fullConfigFileName, jsonDoc))
     {
-        LOG_WARNING("Couldn't open filesystem.");
-    }
-    else
-    {
-        (void)serializeJson(jsonDoc, installation);
-
-        settings.getPluginInstallation().setValue(installation);
-        settings.close();
+        LOG_ERROR("Couldn't save slot configuration.");
     }
 }
 
@@ -313,14 +273,47 @@ void PluginMgr::createPluginConfigDirectory()
 
 void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jsonSlot)
 {
-    JsonVariant jsonName    = jsonSlot["name"];
-    JsonVariant jsonUid     = jsonSlot["uid"];
+    bool                isKeyValuePairMissing   = false;
+    JsonVariantConst    jsonName                = jsonSlot["name"];
+    JsonVariantConst    jsonUid                 = jsonSlot["uid"];
+    JsonVariantConst    jsonAlias               = jsonSlot["alias"];
+    JsonVariantConst    jsonFontType            = jsonSlot["fontType"];
+    JsonVariantConst    jsonDuration            = jsonSlot["duration"];
 
-    if ((true == jsonName.is<String>()) &&
-        (true == jsonUid.is<uint16_t>()))
+    if (false == jsonName.is<String>())
     {
-        String      name    = jsonName.as<String>();
-        uint16_t    uid     = jsonUid.as<uint16_t>();
+        LOG_WARNING("Slot %u: Name is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == jsonUid.is<uint16_t>())
+    {
+        LOG_WARNING("Slot %u: UID is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == jsonAlias.is<String>())
+    {
+        LOG_WARNING("Slot %u: Alias is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == jsonFontType.is<String>())
+    {
+        LOG_WARNING("Slot %u: Font type is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == jsonDuration.is<uint32_t>())
+    {
+        LOG_WARNING("Slot %u: Slot duration is missing.", slotId);
+        isKeyValuePairMissing = true;
+    }
+
+    if (false == isKeyValuePairMissing)
+    {
+        String      name        = jsonName.as<String>();
+        uint32_t    duration    = jsonDuration.as<uint32_t>();
 
         if (false == name.isEmpty())
         {
@@ -331,6 +324,8 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
              */
             if (nullptr == plugin)
             {
+                uint16_t uid = jsonUid.as<uint16_t>();
+
                 plugin = m_pluginFactory.createPlugin(name, uid);
             
                 if (nullptr == plugin)
@@ -339,27 +334,13 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
                 }
                 else
                 {
-                    JsonVariant     jsonAlias       = jsonSlot["alias"];
-                    JsonVariant     jsonFontType    = jsonSlot["fontType"];
-                    Fonts::FontType fontType        = Fonts::FONT_TYPE_DEFAULT;
+                    String          alias           = jsonAlias.as<String>();
+                    String          filteredAlias   = filterPluginAlias(alias);
+                    String          fontTypeStr     = jsonFontType.as<String>();
+                    Fonts::FontType fontType        = Fonts::strToFontType(fontTypeStr.c_str());
 
-                    /* Plugin instance alias available? */
-                    if (false == jsonAlias.isNull())
-                    {
-                        String alias = jsonAlias.as<String>();
-
-                        plugin->setAlias(alias);
-                    }
-
-                    /* Plugin instance font type information available? */
-                    if (false == jsonFontType.isNull())
-                    {
-                        String fontTypeStr = jsonFontType.as<String>();
-
-                        fontType = Fonts::strToFontType(fontTypeStr.c_str());
-
-                        plugin->setFontType(fontType);
-                    }
+                    plugin->setAlias(filteredAlias);
+                    plugin->setFontType(fontType);
 
                     if (false == install(plugin, slotId))
                     {
@@ -375,6 +356,8 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
                 }
             }
         }
+
+        DisplayMgr::getInstance().setSlotDuration(slotId, duration);
     }
 }
 
@@ -444,308 +427,87 @@ void PluginMgr::registerTopics(IPluginMaintenance* plugin)
 {
     if (nullptr != plugin)
     {
-        const size_t        JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
-        JsonArray           topics          = topicsDoc.createNestedArray("topics");
+        uint8_t         idx                 = 0U;
+        uint8_t         count               = 0U;
+        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
 
-        /* Get topics from plugin. */
-        plugin->getTopics(topics);
-
-        /* Handle each topic */
-        if (0U < topics.size())
+        while(count > idx)
         {
-            PluginObjData*  metaData = new(std::nothrow) PluginObjData();
+            ITopicHandler* handler = topicHandlerList[idx];
 
-            if (nullptr != metaData)
+            if (nullptr != handler)
             {
-                String baseUriByUid     = getRestApiBaseUriByUid(plugin->getUID());
-                String baseUriByAlias;
-
-                if (false == plugin->getAlias().isEmpty())
-                {
-                    baseUriByAlias = getRestApiBaseUriByAlias(plugin->getAlias());
-                }
-
-                metaData->plugin = plugin;
-
-                for (JsonVariant topic : topics)
-                {
-                    registerTopic(baseUriByUid, metaData, topic.as<String>());
-
-                    if (false == baseUriByAlias.isEmpty())
-                    {
-                        registerTopic(baseUriByAlias, metaData, topic.as<String>());
-                    }
-                }
-
-                if (false == m_pluginMeta.append(metaData))
-                {
-                    LOG_WARNING("Couldn't append plugin meta data.");
-                }
-            }
-        }
-    }
-}
-
-void PluginMgr::registerTopic(const String& baseUri, PluginObjData* metaData, const String& topic)
-{
-    String          topicUri        = baseUri + topic;
-    uint8_t         idx             = 0U;
-    WebHandlerData* webHandlerData  = nullptr;
-
-    /* Find empty web handler slot */
-    for(idx = 0U; idx < PluginObjData::MAX_WEB_HANDLERS; ++idx)
-    {
-        if (nullptr == metaData->webHandlers[idx].webHandler)
-        {
-            webHandlerData = &metaData->webHandlers[idx];
-            break;
-        }
-    }
-
-    if (nullptr == webHandlerData)
-    {
-        LOG_WARNING("[%s][%u] No web handler available anymore.", metaData->plugin->getName(), metaData->plugin->getUID());
-    }
-    else
-    {
-        IPluginMaintenance* plugin = metaData->plugin;
-
-        webHandlerData->webHandler  = &MyWebServer::getInstance().on(
-                                        topicUri.c_str(),
-                                        HTTP_ANY,
-                                        [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request)
-                                        {
-                                            this->webReqHandler(request, plugin, topic, webHandlerData);
-                                        },
-                                        [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
-                                        {
-                                            this->uploadHandler(request, filename, index, data, len, final, plugin, topic, webHandlerData);
-                                        });
-        webHandlerData->uri         = topicUri;
-
-        LOG_INFO("[%s][%u] Register: %s", metaData->plugin->getName(), metaData->plugin->getUID(), topicUri.c_str());
-    }
-}
-
-void PluginMgr::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
-{
-    String              content;
-    const size_t        JSON_DOC_SIZE   = 1024U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    JsonObject          dataObj         = jsonDoc.createNestedObject("data");
-    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
-
-    if ((nullptr == request) ||
-        (nullptr == plugin) ||
-        (nullptr == webHandlerData))
-    {
-        return;
-    }
-
-    if (HTTP_GET == request->method())
-    {
-        if (false == plugin->getTopic(topic, dataObj))
-        {
-            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported.");
-
-            jsonDoc.remove("data");
-
-            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            jsonDoc["status"]   = "ok";
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
-        }
-    }
-    else if (HTTP_POST == request->method())
-    {
-        DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
-        size_t              idx = 0U;
-
-        /* Add arguments */
-        for(idx = 0U; idx < request->args(); ++idx)
-        {
-            jsonDocPar[request->argName(idx)] = request->arg(idx);
-        }
-
-        /* Add uploaded file */
-        if ((false == webHandlerData->isUploadError) &&
-            (false == webHandlerData->fullPath.isEmpty()))
-        {
-            jsonDocPar["fullPath"] = webHandlerData->fullPath;
-        }
-
-        if (false == plugin->setTopic(topic, jsonDocPar.as<JsonObject>()))
-        {
-            RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
-
-            jsonDoc.remove("data");
-
-            /* If a file is available, it will be removed now. */
-            if (false == webHandlerData->fullPath.isEmpty())
-            {
-                (void)FILESYSTEM.remove(webHandlerData->fullPath);
+                handler->registerTopics(plugin);
             }
 
-            httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
-        }
-        else
-        {
-            jsonDoc["status"]   = "ok";
-            httpStatusCode      = HttpStatus::STATUS_CODE_OK;
+            ++idx;
         }
     }
-    else
-    {
-        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
-
-        jsonDoc.remove("data");
-
-        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
-    }
-
-    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
-
-    return;
-}
-
-void PluginMgr::uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
-{
-    /* Begin of upload? */
-    if (0 == index)
-    {
-        AsyncWebHeader* headerXFileSize = request->getHeader("X-File-Size");
-        size_t          fileSize        = request->contentLength();
-        size_t          fileSystemSpace = FILESYSTEM.totalBytes() - FILESYSTEM.usedBytes();
-
-        /* File size available? */
-        if (nullptr != headerXFileSize)
-        {
-            uint32_t u32FileSize = 0U;
-
-            if (true == Util::strToUInt32(headerXFileSize->value(), u32FileSize))
-            {
-                fileSize = u32FileSize;
-            }
-        }
-
-        if (fileSystemSpace <= fileSize)
-        {
-            LOG_WARNING("Upload of %s aborted. Not enough space.", filename.c_str());
-            webHandlerData->isUploadError = true;
-            webHandlerData->fullPath.clear();
-        }
-        else
-        {
-            LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), fileSize);
-            webHandlerData->isUploadError = false;
-            webHandlerData->fullPath.clear();
-
-            /* Ask plugin, whether the upload is allowed or not. */
-            if (false == plugin->isUploadAccepted(topic, filename, webHandlerData->fullPath))
-            {
-                LOG_WARNING("[%s][%u] Upload not supported.", plugin->getName(), plugin->getUID());
-                webHandlerData->isUploadError = true;
-                webHandlerData->fullPath.clear();
-            }
-            else
-            {
-                /* Create a new file and overwrite a existing one. */
-                webHandlerData->fd = FILESYSTEM.open(webHandlerData->fullPath, "w");
-
-                if (false == webHandlerData->fd)
-                {
-                    LOG_ERROR("Couldn't create file: %s", webHandlerData->fullPath.c_str());
-                    webHandlerData->isUploadError = true;
-                    webHandlerData->fullPath.clear();
-                }
-            }
-        }
-    }
-
-    if (false == webHandlerData->isUploadError)
-    {
-        /* If file is open, write data to it. */
-        if (true == webHandlerData->fd)
-        {
-            if (len != webHandlerData->fd.write(data, len))
-            {
-                LOG_ERROR("Less data written, upload aborted.");
-                webHandlerData->isUploadError = true;
-                webHandlerData->fullPath.clear();
-                webHandlerData->fd.close();
-            }
-        }
-
-        /* Upload finished? */
-        if (true == final)
-        {
-            LOG_INFO("Upload of %s finished.", filename.c_str());
-
-            webHandlerData->fd.close();
-        }
-    }
-
-    return;
 }
 
 void PluginMgr::unregisterTopics(IPluginMaintenance* plugin)
 {
     if (nullptr != plugin)
     {
-        DLinkedListIterator<PluginObjData*> it(m_pluginMeta);
+        uint8_t         idx                 = 0U;
+        uint8_t         count               = 0U;
+        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
 
-        /* Walk through plugin meta and remove every topic.
-         * At the end, destroy the meta information.
-         */
-        if (true == it.first())
+        while(count > idx)
         {
-            PluginObjData*  pluginMeta  = *it.current();
-            bool            isFound     = false;
+            ITopicHandler* handler = topicHandlerList[idx];
 
-            while((false == isFound) && (nullptr != pluginMeta))
+            if (nullptr != handler)
             {
-                if (plugin == pluginMeta->plugin)
-                {
-                    isFound = true;
-                }
-                else if (false == it.next())
-                {
-                    pluginMeta = nullptr;
-                }
-                else
-                {
-                    pluginMeta = *it.current();
-                }
+                handler->unregisterTopics(plugin);
             }
 
-            if ((true == isFound) &&
-                (nullptr != pluginMeta))
-            {
-                uint8_t idx = 0U;
-
-                for(idx = 0U; idx < PluginObjData::MAX_WEB_HANDLERS; ++idx)
-                {
-                    if (nullptr != pluginMeta->webHandlers[idx].webHandler)
-                    {
-                        LOG_INFO("[%s][%u] Unregister: %s", pluginMeta->plugin->getName(), pluginMeta->plugin->getUID(), pluginMeta->webHandlers[idx].uri.c_str());
-
-                        if (false == MyWebServer::getInstance().removeHandler(pluginMeta->webHandlers[idx].webHandler))
-                        {
-                            LOG_WARNING("Couldn't remove handler %u.", idx);
-                        }
-
-                        pluginMeta->webHandlers[idx].webHandler = nullptr;
-                    }
-                }
-
-                it.remove();
-                delete pluginMeta;
-            }
+            ++idx;
         }
     }
+}
+
+bool PluginMgr::isPluginAliasValid(const String& alias)
+{
+    const size_t    MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
+    bool            isValid                     = true;
+    size_t          idx                         = 0U;
+    
+    while((MQTT_SPECIAL_CHARACTERS_LEN > idx) && (true == isValid))
+    {
+        if (0 <= alias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]))
+        {
+            isValid = false;
+        }
+        else
+        {
+            ++idx;
+        }
+    }
+
+    return isValid;
+}
+
+String PluginMgr::filterPluginAlias(const String& alias)
+{
+    const size_t    MQTT_SPECIAL_CHARACTERS_LEN = strlen(MQTT_SPECIAL_CHARACTERS);
+    size_t          idx                         = 0U;
+    String          filteredPluginAlias         = alias;
+
+    while(MQTT_SPECIAL_CHARACTERS_LEN > idx)
+    {
+        int pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
+
+        while(0 <= pos)
+        {
+            filteredPluginAlias.remove(pos, 1U);
+            pos = filteredPluginAlias.indexOf(MQTT_SPECIAL_CHARACTERS[idx]);
+        }
+
+        ++idx;
+    }
+
+    return filteredPluginAlias;
 }
 
 /******************************************************************************

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,6 @@
 #include <Arduino.h>
 #include "SysMsg.h"
 #include "MyWebServer.h"
-#include "Settings.h"
 #include "CaptivePortal.h"
 
 #include "ErrorState.h"
@@ -44,6 +43,8 @@
 
 #include <WiFi.h>
 #include <Logging.h>
+#include <Util.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -86,31 +87,32 @@ const uint16_t  APState::DNS_PORT                       = 53U;
 
 void APState::entry(StateMachine& sm)
 {
-    String hostname;
-    String wifiApSSID;
-    String wifiApPassphrase;
+    String              hostname;
+    String              wifiApSSID;
+    String              wifiApPassphrase;
+    SettingsService&    settings            = SettingsService::getInstance();
 
     LOG_INFO("Setup access point.");
 
     /* Get necessary settings. */
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::getInstance().getHostname().getDefault();
+        hostname = settings.getHostname().getDefault();
 
         LOG_WARNING("Use default wifi AP SSID.");
-        wifiApSSID = Settings::getInstance().getWifiApSSID().getDefault();
+        wifiApSSID = settings.getWifiApSSID().getDefault();
 
         LOG_WARNING("Use default wifi AP passphrase.");
-        wifiApPassphrase = Settings::getInstance().getWifiApPassphrase().getDefault();
+        wifiApPassphrase = settings.getWifiApPassphrase().getDefault();
     }
     else
     {
-        hostname            = Settings::getInstance().getHostname().getValue();
-        wifiApSSID          = Settings::getInstance().getWifiApSSID().getValue();
-        wifiApPassphrase    = Settings::getInstance().getWifiApPassphrase().getValue();
+        hostname            = settings.getHostname().getValue();
+        wifiApSSID          = settings.getWifiApSSID().getValue();
+        wifiApPassphrase    = settings.getWifiApPassphrase().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
     }
 
     /* Configure access point.
@@ -189,8 +191,6 @@ void APState::entry(StateMachine& sm)
         LOG_INFO(infoStr);
         SysMsg::getInstance().show(infoStr);
     }
-
-    return;
 }
 
 void APState::process(StateMachine& sm)
@@ -201,8 +201,6 @@ void APState::process(StateMachine& sm)
     {
         sm.setState(RestartState::getInstance());
     }
-
-    return;
 }
 
 void APState::exit(StateMachine& sm)
@@ -214,8 +212,6 @@ void APState::exit(StateMachine& sm)
 
     /* Stop DNS */
     m_dnsServer.stop();
-
-    return;
 }
 
 /******************************************************************************

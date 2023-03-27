@@ -1,3 +1,6 @@
+*.code-workspace
+__pycache__
+.DS_Store
 .pio
 .pioenvs
 .piolibdeps
@@ -5,8 +8,9 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/settings.json
+data/js/pluginsSubMenu.js
+data/plugins/
 doc/html/
-out
 firmware.map
-upload.json
-*.code-workspace
+out
+src/Generated/

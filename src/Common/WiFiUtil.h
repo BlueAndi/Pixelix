@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WIFI_UTIL_H__
-#define __WIFI_UTIL_H__
+#ifndef WIFI_UTIL_H
+#define WIFI_UTIL_H
 
 /******************************************************************************
  * Compile Switches
@@ -74,6 +74,6 @@ extern uint8_t getSignalQuality(int8_t rssi);
 
 }
 
-#endif  /* __WIFI_UTIL_H__ */
+#endif  /* WIFI_UTIL_H */
 
 /** @} */

@@ -1,0 +1,114 @@
+@startuml
+
+participant "SoundReactivePlugin" as plugin
+participant "AudioService" as audioService
+participant "SpectrumAnalyzer" as specAnalyzer
+participant "AudioDrv" as audioDrv
+participant "I2S" as i2s
+
+autoactivate on
+
+alt Once in init state
+
+-> audioService: start
+    audioService -> audioDrv: start
+
+        audioDrv -> audioDrv: create task (if not already)
+
+        note over audioDrv
+            Audio driver task spawns
+            on the other esp32 core for
+            load sharing.
+        end note
+
+        audioDrv <-- audioDrv
+
+    audioService <-- audioDrv
+    audioService -> audioDrv: register spectrum analyzer as observer
+    audioService <-- audioDrv
+<-- audioService
+
+end alt
+
+alt setup audio driver task
+
+    audioDrv -> i2s: install driver for I2S port 0
+
+    activate audioDrv
+
+    note over i2s
+        * Port: 0
+        * Sample rate: 40 kHz
+        * Samples: 1024 (power of 2)
+        * Bits per sample: 16
+        * DMA block size: 128 bytes (64 samples)
+        * DMA blocks: 4
+        * Sample period: 25 us (per sample)
+        * Block sample time: 1.6 ms
+        * Trigger by I2S_EVENT_RX_DONE event
+    end note
+
+    audioDrv <-- i2s
+
+    audioDrv -> i2s: set pin configuration
+    audioDrv <-- i2s
+
+    deactivate audioDrv
+
+end alt
+
+alt audio driver task triggered by I2S_EVENT_RX_DONE
+
+    audioDrv <<- i2s: I2S_EVENT_RX_DONE
+
+    loop For each sample in one block
+
+        audioDrv -> i2s: read sample value
+        audioDrv <-- i2s: sample value
+        audioDrv -> audioDrv: store sample value in FFT input buffer
+        audioDrv <-- audioDrv
+
+    end loop
+
+    alt Every 16 blocks
+
+        audioDrv -> specAnalyzer: notify
+
+            specAnalyzer -> specAnalyzer: calculate FFT
+            specAnalyzer <-- specAnalyzer
+            specAnalyzer -> specAnalyzer: copy frequency bins and set ready flag
+            specAnalyzer <-- specAnalyzer
+
+        audioDrv <-- specAnalyzer
+
+    end alt
+
+    deactivate audioDrv
+
+end alt
+
+alt Every 20 ms
+
+-> plugin: process
+
+    plugin -> audioDrv: get spectrum analyzer
+    plugin <-- audioDrv: spectrum analyzer
+    
+    plugin -> specAnalyzer: Are frequency bins ready?
+    plugin <-- specAnalyzer: true/false
+
+    alt If frequency bins are ready
+
+        plugin -> specAnalyzer: get frequency bins by copy
+        plugin <-- specAnalyzer: frequency bins
+
+        plugin -> plugin: post-processing
+        plugin <-- plugin
+
+    end alt
+
+<-- plugin
+
+end alt
+
+@enduml

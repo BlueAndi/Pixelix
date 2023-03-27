@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,9 +33,10 @@
  * Includes
  *****************************************************************************/
 #include "CaptivePortalHandler.h"
-#include "Settings.h"
 #include "HttpStatus.h"
 #include "FileSystem.h"
+
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -73,7 +74,7 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
         if ((true == request->hasArg("ssid")) &&
             (true == request->hasArg("passphrase")))
         {
-            Settings&   settings = Settings::getInstance();
+            SettingsService&    settings    = SettingsService::getInstance();
 
             if (true == settings.open(false))
             {
@@ -137,19 +138,27 @@ String CaptivePortalHandler::captivePortalPageProcessor(const String& var)
 
     if (var == "SSID")
     {
-        if (true == Settings::getInstance().open(true))
+        SettingsService&    settings    = SettingsService::getInstance();
+
+        if (true == settings.open(true))
         {
-            result = Settings::getInstance().getWifiSSID().getValue();
-            Settings::getInstance().close();
+            result = settings.getWifiSSID().getValue();
+            settings.close();
         }
     }
     else if (var == "PASSPHRASE")
     {
-        if (true == Settings::getInstance().open(true))
+        SettingsService&    settings    = SettingsService::getInstance();
+
+        if (true == settings.open(true))
         {
-            result = Settings::getInstance().getWifiPassphrase().getValue();
-            Settings::getInstance().close();
+            result = settings.getWifiPassphrase().getValue();
+            settings.close();
         }
+    }
+    else if (var == "MAC_ADDR")
+    {
+        result = WiFi.macAddress();
     }
     else
     {

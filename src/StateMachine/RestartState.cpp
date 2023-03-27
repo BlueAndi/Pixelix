@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,7 @@
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
 #include "FileSystem.h"
+#include "Services.h"
 
 #include <Board.h>
 #include <Display.h>
@@ -76,7 +77,7 @@ void RestartState::entry(StateMachine& sm)
 
     m_timer.start(WAIT_TILL_STOP_SVC);
 
-    return;
+    Services::stopAll();
 }
 
 void RestartState::process(StateMachine& sm)
@@ -113,8 +114,6 @@ void RestartState::process(StateMachine& sm)
         /* Reset */
         Board::reset();
     }
-
-    return;
 }
 
 void RestartState::exit(StateMachine& sm)
@@ -122,7 +121,6 @@ void RestartState::exit(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     /* Nothing to do. */
-    return;
 }
 
 /******************************************************************************
