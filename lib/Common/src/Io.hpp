@@ -360,7 +360,7 @@ public:
      */
     uint16_t read() const
     {
-        return (NC == pinNo) ? analogRead(pinNo) : LOW;
+        return (NC != pinNo) ? analogRead(pinNo) : LOW;
     }
 
 private:
