@@ -170,7 +170,6 @@ public:
         {
             digitalWrite(pinNo, value);
         }
-        return;
     }
 
 private:
