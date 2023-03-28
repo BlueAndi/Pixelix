@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "WiFiUtil.h"
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -98,6 +99,19 @@ extern uint8_t WiFiUtil::getSignalQuality(int8_t rssi)
     }
 
     return signalQuality;
+}
+
+extern void WiFiUtil::addDeviceUniqueId(String& dst)
+{
+    /* Use the last 4 bytes of the wifi MAC address to generate a unique id. */
+    String uniqueId = WiFi.macAddress();
+
+    uniqueId.replace(":", "");
+    uniqueId.toLowerCase();
+    uniqueId.remove(0U, 4U);
+
+    dst += "-";
+    dst += uniqueId;
 }
 
 /******************************************************************************

@@ -54,6 +54,7 @@
 #include "Version.h"
 #include "Services.h"
 #include "PluginList.hpp"
+#include "WiFiUtil.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -63,7 +64,6 @@
 #include <Util.h>
 #include <ESPmDNS.h>
 #include <SettingsService.h>
-
 
 #include <lwip/init.h>
 
@@ -110,12 +110,19 @@ void InitState::entry(StateMachine& sm)
     bool                isError             = false;
     ErrorState::ErrorId errorId             = ErrorState::ERROR_ID_UNKNOWN;
     const char*         VERSION_FILE_NAME   = "/version.json";
+    SettingsService&    settings            = SettingsService::getInstance();
+    String              uniqueId;
 
     /* Initialize hardware */
     Board::init();
 
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
+
+    /* To avoid name clashes, add a unqiue id to some of the default values. */
+    WiFiUtil::addDeviceUniqueId(uniqueId);
+    settings.getWifiApSSID().setUniqueId(uniqueId);
+    settings.getHostname().setUniqueId(uniqueId);
 
     /* Set two-wire (I2C) pins, before calling begin(). */
     if (false == Wire.setPins(Board::Pin::i2cSdaPinNo, Board::Pin::i2cSclPinNo))
@@ -209,7 +216,6 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        SettingsService&    settings = SettingsService::getInstance();
         JsonFile            jsonFile(FILESYSTEM);
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
