@@ -137,20 +137,25 @@ public:
 private:
 
     /** Signal lamp on period in ms. */
-    static const uint32_t   BLINK_ON_PERIOD     = 200U;
+    static const uint32_t   BLINK_ON_PERIOD         = 200U;
 
-    /** Signal lamp off period in ms. */
-    static const uint32_t   BLINK_OFF_PERIOD    = 200U;
+    /** Signal lamp short off period in ms. */
+    static const uint32_t   BLINK_OFF_SHORT_PERIOD  = 200U;
+
+    /** Signal lamp long off period in ms. */
+    static const uint32_t   BLINK_OFF_LONG_PERIOD   = 1000U;
 
     ErrorId     m_errorId;  /**< The error cause, why this state is active. */
     SimpleTimer m_timer;    /**< Timer used for onboard LED signalling. */
+    uint8_t     m_cnt;      /**< Count number of flashes. */
 
     /**
      * Constructs the state.
      */
     ErrorState() :
         m_errorId(ERROR_ID_NO_ERROR),
-        m_timer()
+        m_timer(),
+        m_cnt(0U)
     {
     }
 

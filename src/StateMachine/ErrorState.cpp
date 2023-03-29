@@ -76,6 +76,7 @@ void ErrorState::entry(StateMachine& sm)
 
     m_timer.start(BLINK_ON_PERIOD);
     Board::ledOn();
+    m_cnt = 0U;
 
     /* Any low level error happended and no error message can be shown
      * by the system message handler?
@@ -127,7 +128,10 @@ void ErrorState::process(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
-    /* The error state is signalled with the onboard LED. */
+    /* The error state is signalled with the onboard LED.
+     * If a dedicated error id is set, the number of the error is blinked, so
+     * the user can count it.
+     */
     if (true == m_timer.isTimeout())
     {
         if (false == Board::isLedOn())
@@ -138,7 +142,25 @@ void ErrorState::process(StateMachine& sm)
         else
         {
             Board::ledOff();
-            m_timer.start(BLINK_OFF_PERIOD);
+
+            if (ERROR_ID_NO_ERROR == m_errorId)
+            {
+                m_timer.start(BLINK_OFF_SHORT_PERIOD);
+            }
+            else
+            {
+                ++m_cnt;
+
+                if (m_cnt < static_cast<uint8_t>(m_errorId))
+                {
+                    m_timer.start(BLINK_OFF_SHORT_PERIOD);
+                }
+                else
+                {
+                    m_timer.start(BLINK_OFF_LONG_PERIOD);
+                    m_cnt = 0U;
+                }
+            }
         }
     }
 
