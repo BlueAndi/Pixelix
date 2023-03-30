@@ -131,19 +131,19 @@ extern void Board::reset()
 
 extern void Board::ledOn()
 {
-    /* Low active */
-    onBoardLedOut.write(LOW);
+    /* High active */
+    onBoardLedOut.write(HIGH);
 }
 
 extern void Board::ledOff()
 {
-    /* Low active */
-    onBoardLedOut.write(HIGH);
+    /* High active */
+    onBoardLedOut.write(LOW);
 }
 
 extern bool Board::isLedOn()
 {
-    return (LOW == onBoardLedOut.read()) ? true : false;
+    return (HIGH == onBoardLedOut.read()) ? true : false;
 }
 
 /******************************************************************************
