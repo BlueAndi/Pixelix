@@ -73,13 +73,21 @@ namespace Pin
     /** Pin number of dht sensor in */
     constexpr uint8_t   dhtInPinNo              = 5U;
 
+#ifdef ARDUINO_LOLIN_S2_MINI
+    /** Pin number of I2C SDA */
+    constexpr uint8_t   i2cSdaPinNo             = 33U;
+
+    /** Pin number of I2C SCL */
+    constexpr uint8_t   i2cSclPinNo             = 35U;
+#else
     /** Pin number of I2C SDA */
     constexpr uint8_t   i2cSdaPinNo             = 21U;
 
     /** Pin number of I2C SCL */
     constexpr uint8_t   i2cSclPinNo             = 22U;
+#endif
 
-#ifdef BOARD_ADAFRUIT_FEATHER_ESP32_V2
+#ifdef ARDUINO_ADAFRUIT_FEATHER_ESP32_V2
     /** Pin number of test pin */
     constexpr uint8_t   testPinNo               = 32U;
 #else
@@ -87,20 +95,34 @@ namespace Pin
     constexpr uint8_t   testPinNo               = 23U;
 #endif
 
+#ifndef ARDUINO_LOLIN_S2_MINI
     /** Pin number of I2S word select (chooses between left and right channel) */
     constexpr uint8_t   i2sWordSelect           = 25U;
 
     /** Pin number of I2S serial clock (bit clock line BCLK) */
     constexpr uint8_t   i2sSerialClock          = 26U;
+#endif
 
+#ifdef ARDUINO_LOLIN_S2_MINI
+    /** Pin number of LED matrix data out */
+    constexpr uint8_t   ledMatrixDataOutPinNo   = 21U;
+#else
     /** Pin number of LED matrix data out */
     constexpr uint8_t   ledMatrixDataOutPinNo   = 27U;
+#endif
 
+#ifndef ARDUINO_LOLIN_S2_MINI
     /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
     constexpr uint8_t   i2sSerialDataIn         = 33U;
+#endif
 
+#ifdef ARDUINO_LOLIN_S2_MINI
+    /** Pin number of LDR in */
+    constexpr uint8_t   ldrInPinNo              = 1U;
+#else
     /** Pin number of LDR in */
     constexpr uint8_t   ldrInPinNo              = 34U;
+#endif
 };
 
 /* Digital output pin: Onboard LED */
