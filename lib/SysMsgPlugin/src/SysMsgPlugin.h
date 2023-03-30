@@ -78,7 +78,11 @@ public:
         m_timer(),
         m_duration(0U),
         m_max(0U),
-        m_isInit(true)
+        m_isInit(true),
+        m_messages(),
+        m_wrIndex(0U),
+        m_rdIndex(0U),
+        m_isSignalEnabled(false)
     {
     }
 
@@ -178,14 +182,84 @@ public:
      */
     void show(const String& msg, uint32_t duration, uint32_t max);
 
+    /**
+     * Enable signal in the corners as additional user information.
+     */
+    void enableSignal()
+    {
+        m_isSignalEnabled = true;
+    }
+
+    /**
+     * Disable signal in the corners as additional user information.
+     */
+    void disableSignal()
+    {
+        m_isSignalEnabled = false;
+    }
+
+    /**
+     * Show next message in the queue and abort the current one.
+     * If no message is in the queue anymore, the plugin will be disabled.
+     */
+    void next()
+    {
+        if (false == nextMessage())
+        {
+            m_textWidget.clear();
+            disable();
+        }
+    }
+
 private:
 
-    Fonts::FontType m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget      m_textWidget;   /**< Text widget, used for showing the text. */
-    SimpleTimer     m_timer;        /**< Timer used to observer minimum duration */
-    uint32_t        m_duration;     /**< Duration in ms, how long a non-scrolling text shall be shown. */
-    uint32_t        m_max;          /**< Maximum number how often a scrolling text shall be shown. */
-    bool            m_isInit;       /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
+    /** Max. number of system messages in the queue. */
+    static const size_t MAX_SYS_MSG = 10U;
+
+    /**
+     * System message.
+     */
+    struct SysMsg
+    {
+        String      msg;        /**< Message */
+        uint32_t    duration;   /**< Duration in ms, how long the text shall be shown. */
+        uint32_t    max;        /**< Maximum number how often a scrolling text shall be shown. */
+
+        /**
+         * Construct a system message.
+         */
+        SysMsg() :
+            msg(),
+            duration(0U),
+            max(0U)
+        {
+        }
+
+        /**
+         * Destroy a system message.
+         */
+        ~SysMsg()
+        {
+        }
+    };
+
+    Fonts::FontType m_fontType;             /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget      m_textWidget;           /**< Text widget, used for showing the text. */
+    SimpleTimer     m_timer;                /**< Timer used to observer minimum duration */
+    uint32_t        m_duration;             /**< Duration in ms, how long a non-scrolling text shall be shown. */
+    uint32_t        m_max;                  /**< Maximum number how often a scrolling text shall be shown. */
+    bool            m_isInit;               /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
+    SysMsg          m_messages[MAX_SYS_MSG];/**< System message buffer */
+    size_t          m_wrIndex;              /**< System message buffer write index. */
+    size_t          m_rdIndex;              /**< System message buffer read index. */
+    bool            m_isSignalEnabled;      /**< Is signal enabled? */
+
+    /**
+     * Show next message from the queue.
+     * 
+     * @return If a message is available to be shown, it will return true otherwise false.
+     */
+    bool nextMessage();
 
 };
 

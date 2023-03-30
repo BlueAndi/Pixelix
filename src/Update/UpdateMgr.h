@@ -47,6 +47,7 @@
 #include <ArduinoOTA.h>
 #include <TextWidget.h>
 #include <ProgressBar.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -121,11 +122,19 @@ public:
 
     /**
      * Request a restart.
+     * 
+     * @param[in] delay How long the restart shall be delayed in ms.
      */
-    void reqRestart()
+    void reqRestart(uint32_t delay)
     {
-        m_isRestartReq = true;
-        return;
+        if (0U == delay)
+        {
+            m_isRestartReq = true;
+        }
+        else
+        {
+            m_timer.start(delay);
+        }
     }
 
     /**
@@ -175,6 +184,9 @@ private:
 
     /** During the update the user shall be informed about the update progress. */
     ProgressBar         m_progressBar;
+
+    /** Timer used to delay a restart request. */
+    SimpleTimer         m_timer;
 
     /**
      * Constructs the update manager.

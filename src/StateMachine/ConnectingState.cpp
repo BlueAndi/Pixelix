@@ -140,7 +140,7 @@ void ConnectingState::process(StateMachine& sm)
 
         if (false == m_isQuiet)
         {
-            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
         }
 
         /* Remote wifi network informations are available, try to establish a connection. */

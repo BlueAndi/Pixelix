@@ -461,7 +461,7 @@ static void uploadPage(AsyncWebServerRequest* request)
     request->onDisconnect(
         []()
         {
-            UpdateMgr::getInstance().reqRestart();
+            UpdateMgr::getInstance().reqRestart(0U);
         }
     );
 }

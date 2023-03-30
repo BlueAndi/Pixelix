@@ -117,7 +117,17 @@ void ButtonHandler::process()
             switch(m_triggerCnt)
             {
             case ACTIVATE_NEXT_SLOT:
-                DisplayMgr::getInstance().activateNextSlot();
+                /* If a system message is active shown, the next one shall be shown.
+                 * Otherwise activate the next slot.
+                 */
+                if (true == SysMsg::getInstance().isActive())
+                {
+                    SysMsg::getInstance().next();
+                }
+                else
+                {
+                    DisplayMgr::getInstance().activateNextSlot();
+                }
                 break;
 
             case NEXT_FADE_EFFECT:

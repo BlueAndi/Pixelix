@@ -34,6 +34,8 @@
  *****************************************************************************/
 #include "SysMsgPlugin.h"
 
+#include <Logging.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -93,9 +95,11 @@ void SysMsgPlugin::inactive()
     disable();
 
     /* Clear information to avoid that old information is later shown again,
-     * caused by scrolling feature of the underlying text widget.
+     * caused by scrolling feature of the underlying text widget or by the
+     * queued system messages.
      */
     m_textWidget.clear();
+    m_rdIndex = m_wrIndex;
 }
 
 void SysMsgPlugin::update(YAGfx& gfx)
@@ -106,6 +110,17 @@ void SysMsgPlugin::update(YAGfx& gfx)
 
     gfx.fillScreen(ColorDef::BLACK);
     m_textWidget.update(gfx);
+
+    if (true == m_isSignalEnabled)
+    {
+        int16_t xMax = static_cast<int16_t>(gfx.getWidth()) - 1;
+        int16_t yMax = static_cast<int16_t>(gfx.getHeight()) - 1;
+
+        gfx.drawPixel(0, 0, ColorDef::YELLOW);
+        gfx.drawPixel(0, yMax, ColorDef::YELLOW);
+        gfx.drawPixel(xMax, 0, ColorDef::YELLOW);
+        gfx.drawPixel(xMax, yMax, ColorDef::YELLOW);
+    }
 
     status = m_textWidget.getScrollInfo(isScrollingEnabled, scrollingCnt);
 
@@ -130,36 +145,60 @@ void SysMsgPlugin::update(YAGfx& gfx)
     /* Is timer running for non-scrolled text? */
     else if (true == m_timer.isTimerRunning())
     {
-        /* Disable plugin after duration. */
         if (true == m_timer.isTimeout())
         {
-            disable();
+            /* If no message is available anymore, the plugin will be disabled. */
+            if (false == nextMessage())
+            {
+                disable();
+            }
         }
     }
     /* Shall scrolling text be shown a specific number of times? */
     else if (0U < m_max)
     {
-        /* Disable plugin after specific number of times, the text was shown. */
-        if (m_max <= scrollingCnt)
+        /* Show next message after specific number of times, the text was shown. */
+        if (m_max < scrollingCnt)
         {
-            disable();
+            /* If no message is available anymore, the plugin will be disabled. */
+            if (false == nextMessage())
+            {
+                disable();
+            }
         }
     }
     else
     {
-        /* Show infinite */
-        ;
+        /* Show infinite until next message arrives. */
+        (void)nextMessage();
     }
 }
 
 void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
 {
-    m_textWidget.setFormatStr(msg);
-    m_duration  = duration;
-    m_max       = max;
-    m_isInit    = true;
+    size_t nextWrIndex = m_wrIndex + 1U;
+    nextWrIndex %= MAX_SYS_MSG;
 
-    enable();
+    /* Queue full? */
+    if (nextWrIndex == m_rdIndex)
+    {
+        LOG_WARNING("System message queue full.");
+    }
+    else
+    {
+        m_messages[m_wrIndex].msg       = msg;
+        m_messages[m_wrIndex].duration  = duration;
+        m_messages[m_wrIndex].max       = max;
+
+        m_wrIndex = nextWrIndex;
+
+        /* If plugin is disabled, it will be enabled and next is shown. */
+        if (false == isEnabled())
+        {
+            nextMessage();
+            enable();
+        }
+    }
 }
 
 /******************************************************************************
@@ -169,6 +208,29 @@ void SysMsgPlugin::show(const String& msg, uint32_t duration, uint32_t max)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+bool SysMsgPlugin::nextMessage()
+{
+    bool isMsgAvailable = false;
+
+    /* Not empty? */
+    if (m_rdIndex != m_wrIndex)
+    {
+        SysMsg& sysMsg = m_messages[m_rdIndex];
+
+        m_textWidget.setFormatStr(sysMsg.msg);
+        m_duration  = sysMsg.duration;
+        m_max       = sysMsg.max;
+        m_isInit    = true;
+
+        ++m_rdIndex;
+        m_rdIndex %= MAX_SYS_MSG;
+
+        isMsgAvailable = true;
+    }
+
+    return isMsgAvailable;
+}
 
 /******************************************************************************
  * External Functions

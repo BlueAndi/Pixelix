@@ -46,6 +46,7 @@
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <IPluginMaintenance.hpp>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -99,13 +100,23 @@ public:
 
 private:
 
-    bool    m_isApModeRequested;    /**< Is wifi AP mode requested? */
+    /**
+     * How long shall the logo be shown in ms.
+     * As long as it is shown, stay in this state!
+     */
+    const uint32_t SHOW_LOGO_DURATION   = 2000U;
+
+    bool        m_isQuiet;              /**< Is quite mode active? */
+    bool        m_isApModeRequested;    /**< Is wifi AP mode requested? */
+    SimpleTimer m_timer;                /**< Timer used to stay for a min. time in this state. */
 
     /**
      * Constructs the state.
      */
     InitState() :
-        m_isApModeRequested(false)
+        m_isQuiet(false),
+        m_isApModeRequested(false),
+        m_timer()
     {
     }
 
@@ -136,6 +147,13 @@ private:
      *                      plugin will be created and installed.
      */
     void welcome(IPluginMaintenance* plugin);
+
+    /**
+     * Checks whether the filesystem content is compatible to the Pixelix version.
+     * 
+     * @return If filesystem content is compatible, it will return true otherwise false.
+     */
+    bool isFsCompatible();
 };
 
 /******************************************************************************

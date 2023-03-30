@@ -83,7 +83,7 @@ bool SysMsg::init()
     return status;
 }
 
-void SysMsg::show(const String& msg, uint32_t duration, uint32_t max, bool blocking)
+void SysMsg::show(const String& msg, uint32_t duration, uint32_t max)
 {
     if (nullptr != m_plugin)
     {
@@ -96,27 +96,43 @@ void SysMsg::show(const String& msg, uint32_t duration, uint32_t max, bool block
         {
             LOG_WARNING("System message suppressed.");
         }
-
-        if (true == blocking)
-        {
-            while(true == m_plugin->isEnabled())
-            {
-                delay(1U);
-            }
-        }
     }
 }
 
-bool SysMsg::isReady() const
+void SysMsg::enableSignal()
 {
-    bool isReady = false;
+    if (nullptr != m_plugin)
+    {
+        m_plugin->enableSignal();
+    }
+}
+
+void SysMsg::disableSignal()
+{
+    if (nullptr != m_plugin)
+    {
+        m_plugin->disableSignal();
+    }
+}
+
+bool SysMsg::isActive() const
+{
+    bool isActive = false;
 
     if (nullptr != m_plugin)
     {
-        isReady = (false == m_plugin->isEnabled()) ? true : false;
+        isActive = m_plugin->isEnabled();
     }
 
-    return isReady;
+    return isActive;
+}
+
+void SysMsg::next()
+{
+    if (nullptr != m_plugin)
+    {
+        m_plugin->next();
+    }
 }
 
 /******************************************************************************
