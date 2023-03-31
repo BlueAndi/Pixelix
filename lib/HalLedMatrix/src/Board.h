@@ -65,64 +65,37 @@ namespace Board
 namespace Pin
 {
     /** Pin number of onboard LED */
-    constexpr uint8_t   onBoardLedPinNo         = LED_BUILTIN;
+    constexpr uint8_t   onBoardLedPinNo         = CONFIG_PIN_ONBOARD_LED;
 
     /** Pin number of user button */
-    constexpr uint8_t   userButtonPinNo         = 4U;
+    constexpr uint8_t   userButtonPinNo         = CONFIG_PIN_USER_BUTTON;
 
     /** Pin number of dht sensor in */
-    constexpr uint8_t   dhtInPinNo              = 5U;
+    constexpr uint8_t   dhtInPinNo              = CONFIG_PIN_DHT_IN;
 
-#ifdef ARDUINO_LOLIN_S2_MINI
     /** Pin number of I2C SDA */
-    constexpr uint8_t   i2cSdaPinNo             = 33U;
+    constexpr uint8_t   i2cSdaPinNo             = CONFIG_PIN_I2C_SDA;
 
     /** Pin number of I2C SCL */
-    constexpr uint8_t   i2cSclPinNo             = 35U;
-#else
-    /** Pin number of I2C SDA */
-    constexpr uint8_t   i2cSdaPinNo             = 21U;
+    constexpr uint8_t   i2cSclPinNo             = CONFIG_PIN_I2C_SCL;
 
-    /** Pin number of I2C SCL */
-    constexpr uint8_t   i2cSclPinNo             = 22U;
-#endif
-
-#ifdef ARDUINO_ADAFRUIT_FEATHER_ESP32_V2
     /** Pin number of test pin */
-    constexpr uint8_t   testPinNo               = 32U;
-#else
-    /** Pin number of test pin */
-    constexpr uint8_t   testPinNo               = 23U;
-#endif
+    constexpr uint8_t   testPinNo               = CONFIG_PIN_TEST;
 
-#ifndef ARDUINO_LOLIN_S2_MINI
     /** Pin number of I2S word select (chooses between left and right channel) */
-    constexpr uint8_t   i2sWordSelect           = 25U;
+    constexpr uint8_t   i2sWordSelect           = CONFIG_PIN_I2S_WS;
 
     /** Pin number of I2S serial clock (bit clock line BCLK) */
-    constexpr uint8_t   i2sSerialClock          = 26U;
-#endif
+    constexpr uint8_t   i2sSerialClock          = CONFIG_PIN_I2S_SC;
 
-#ifdef ARDUINO_LOLIN_S2_MINI
     /** Pin number of LED matrix data out */
-    constexpr uint8_t   ledMatrixDataOutPinNo   = 21U;
-#else
-    /** Pin number of LED matrix data out */
-    constexpr uint8_t   ledMatrixDataOutPinNo   = 27U;
-#endif
+    constexpr uint8_t   ledMatrixDataOutPinNo   = CONFIG_PIN_LED_MATRIX_OUT;
 
-#ifndef ARDUINO_LOLIN_S2_MINI
     /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
-    constexpr uint8_t   i2sSerialDataIn         = 33U;
-#endif
+    constexpr uint8_t   i2sSerialDataIn         = CONFIG_PIN_I2S_DI;
 
-#ifdef ARDUINO_LOLIN_S2_MINI
     /** Pin number of LDR in */
-    constexpr uint8_t   ldrInPinNo              = 1U;
-#else
-    /** Pin number of LDR in */
-    constexpr uint8_t   ldrInPinNo              = 34U;
-#endif
+    constexpr uint8_t   ldrInPinNo              = CONFIG_PIN_LDR_IN;
 };
 
 /* Digital output pin: Onboard LED */
@@ -144,10 +117,10 @@ extern const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 extern const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
 
 /** ADC resolution in digits */
-constexpr uint16_t  adcResolution           = 4096U;
+constexpr uint16_t  adcResolution               = 4096U;
 
 /** ADC reference voltage in mV */
-constexpr uint16_t  adcRefVoltage           = 3300U;
+constexpr uint16_t  adcRefVoltage               = 3300U;
 
 /** LED matrix specific values */
 namespace LedMatrix

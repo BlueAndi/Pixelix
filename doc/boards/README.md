@@ -10,13 +10,15 @@ To find out which part shall be connected to which pin of your development board
 
 - [Pixelix Board v1.5](#pixelix-board-v15)
 - [Pixelix Board v2.0](#pixelix-board-v20)
+- [Pixelix Board v2.1](#pixelix-board-v21)
 - [Development Boards](#development-boards)
+  - [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
   - [DOIT ESP32 DEVKIT V1](#doit-esp32-devkit-v1)
   - [DOIT ESP32 DEVKIT V4](#doit-esp32-devkit-v4)
   - [ESP32 NodeMCU](#esp32-nodemcu)
-  - [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
-  - [LILYGO® TTGO ESP32 T-Display](#lilygo-ttgo-esp32-t-display)
   - [LILYGO® ESP32 T-Display S3](#lilygo-esp32-t-display-s3)
+  - [LILYGO® TTGO ESP32 T-Display](#lilygo-ttgo-esp32-t-display)
+  - [WEMOS Lolin S2 Mini](#wemos-lolin-s2-mini)
 
 # Pixelix Board v1.5
 This board was original developed with a ESP32 DevKit V1 development board as piggy bag.
@@ -35,32 +37,50 @@ The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed f
 * [Pinning](../../lib/HalLedMatrix/Board.h)
 * [Housing](./pixelix/v2.0/3D-files/)
 
+# Pixelix Board v2.1
+The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
+* [Hardware description](./pixelix/v2.1/ELECTRONIC.md)
+* [Bill of material](./pixelix/v2.1/BOM.md)
+* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Housing](./pixelix/v2.1/3D-files/)
+
 # Development Boards
-
-## DOIT ESP32 DEVKIT V1
-* [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
-
-## DOIT ESP32 DEVKIT V4
-* [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
-
-## ESP32 NodeMCU
-* [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
 
 ## AZ-Delivery ESP-32 Dev Kit C V4
 * Manufacturer: [AZ-Delivery](https://www.az-delivery.de/products/esp-32-dev-kit-c-v4)
-* [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
+* [Pinning](../../platformio.ini)
+* Compatible with Pixelix boards.
 
-## LILYGO&reg; TTGO ESP32 T-Display
-The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
+## DOIT ESP32 DEVKIT V1
+* [Pinning](../../platformio.ini)
+* Compatible with Pixelix boards.
 
-* Manufacturer: [Lilygo](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
-* [Pinning](../../lib/HalTftDisplay/Board.h)
+## DOIT ESP32 DEVKIT V4
+* [Pinning](../../platformio.ini)
+* Compatible with Pixelix boards.
+
+## ESP32 NodeMCU
+* [Pinning](../../platformio.ini)
+* Compatible with Pixelix boards.
 
 ## LILYGO&reg; ESP32 T-Display S3
 The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, because the onboard display is used instead of a external LED matrix.
 
 * Manufacturer: [Lilygo](https://www.lilygo.cc/products/t-display-s3)
-* [Pinning](../../lib/HalTftDisplay/Board.h)
+* [Pinning](../../platformio.ini)
+* Not compatible with Pixelix boards.
+
+## LILYGO&reg; TTGO ESP32 T-Display
+The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
+
+* Manufacturer: [Lilygo](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
+* [Pinning](../../platformio.ini)
+* Not compatible with Pixelix boards.
+
+## WEMOS Lolin S2 Mini
+* Manufacturer: [WEMOS](https://www.wemos.cc/en/latest/s2/s2_mini.html)
+* [Pinning](../../platformio.ini)
+* Not compatible with Pixelix boards.
 
 # Issues, Ideas And Bugs <!-- omit in toc -->
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

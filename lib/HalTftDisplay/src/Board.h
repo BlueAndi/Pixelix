@@ -64,63 +64,35 @@ namespace Board
 /** Pin number of all used pins. */
 namespace Pin
 {
-#if defined(ARDUINO_LILYGO_T_DISPLAY_S3)
     /** Pin number of onboard LED */
-    constexpr uint8_t    onBoardLedPinNo         = IoPin::NC;  // Not available
+    constexpr uint8_t   onBoardLedPinNo         = CONFIG_PIN_ONBOARD_LED;
 
     /** Pin number of I2C SDA */
-    constexpr uint8_t    i2cSdaPinNo             = 18U;
+    constexpr uint8_t   i2cSdaPinNo             = CONFIG_PIN_I2C_SDA;
 
     /** Pin number of I2C SDL */
-    constexpr uint8_t    i2cSclPinNo             = 17U;
+    constexpr uint8_t   i2cSclPinNo             = CONFIG_PIN_I2C_SCL;
+
+    /** Pin number of test pin */
+    constexpr uint8_t   testPinNo               = CONFIG_PIN_TEST;
 
     /** Pin number of I2S word select (chooses between left and right channel) */
-    constexpr uint8_t    i2sWordSelect           = 12U;
+    constexpr uint8_t   i2sWordSelect           = CONFIG_PIN_I2S_WS;
 
     /** Pin number of I2S serial clock (bit clock line BCLK) */
-    constexpr uint8_t    i2sSerialClock          = 11U;
+    constexpr uint8_t   i2sSerialClock          = CONFIG_PIN_I2S_SC;
 
     /** Pin number of dht sensor in */
-    constexpr uint8_t    dhtInPinNo              = 21U;
+    constexpr uint8_t   dhtInPinNo              = CONFIG_PIN_DHT_IN;
 
     /** Pin number of LDR in */
-    constexpr uint8_t    ldrInPinNo              = 10U;
+    constexpr uint8_t   ldrInPinNo              = CONFIG_PIN_LDR_IN;
 
     /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
-    constexpr uint8_t    i2sSerialDataIn         = 18U;
+    constexpr uint8_t   i2sSerialDataIn         = CONFIG_PIN_I2S_DI;
 
     /** Pin number of user button */
-    constexpr uint8_t    userButtonPinNo         = 14U;
-
-#else //defined(ARDUINO_LILYGO_T_DISPLAY_S3)
-
-    /** Pin number of onboard LED */
-    constexpr uint8_t   onBoardLedPinNo         = 2U;
-
-    /** Pin number of I2C SDA */
-    constexpr uint8_t   i2cSdaPinNo             = 21U;
-
-    /** Pin number of I2C SDL */
-    constexpr uint8_t   i2cSclPinNo             = 22U;
-
-    /** Pin number of I2S word select (chooses between left and right channel) */
-    constexpr uint8_t   i2sWordSelect           = 25U;
-
-    /** Pin number of I2S serial clock (bit clock line BCLK) */
-    constexpr uint8_t   i2sSerialClock          = 26U;
-
-    /** Pin number of dht sensor in */
-    constexpr uint8_t   dhtInPinNo              = 27U;
-
-    /** Pin number of LDR in */
-    constexpr uint8_t   ldrInPinNo              = 32U;
-
-    /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
-    constexpr uint8_t   i2sSerialDataIn         = 33U;
-
-    /** Pin number of user button */
-    constexpr uint8_t   userButtonPinNo         = 35U;
-#endif //!defined(ARDUINO_LILYGO_T_DISPLAY_S3)
+    constexpr uint8_t   userButtonPinNo         = CONFIG_PIN_USER_BUTTON;
 };
 
 /* Digital output pin: Onboard LED */
@@ -129,6 +101,9 @@ extern const DOutPin<Pin::onBoardLedPinNo>              onBoardLedOut;
 /* Digital input pin: User button (input with pull-up) */
 extern const DInPin<Pin::userButtonPinNo, INPUT_PULLUP> userButtonIn;
 
+/* Digital output pin: Test pin (only for debug purposes) */
+extern const DOutPin<Pin::testPinNo>                    testPinOut;
+
 /* Analog input pin: LDR in */
 extern const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 
@@ -136,10 +111,10 @@ extern const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 extern const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
 
 /** ADC resolution in digits */
-constexpr uint16_t  adcResolution   = 4096U;
+constexpr uint16_t  adcResolution               = 4096U;
 
 /** ADC reference voltage in mV */
-constexpr uint16_t  adcRefVoltage   = 3300U;
+constexpr uint16_t  adcRefVoltage               = 3300U;
 
 /******************************************************************************
  * Functions
