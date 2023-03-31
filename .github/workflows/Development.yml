@@ -28,7 +28,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["esp32doit-devkit-v1", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "adafruit_feather_esp32_v2"]
+        environment: ["adafruit_feather_esp32_v2", "esp32doit-devkit-v1", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "wemos_lolin_s2_mini"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
