@@ -15,6 +15,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 - [Overview](#overview)
   - [Original setup](#original-setup)
   - [Others](#others)
+  - [Recommendation](#recommendation)
 - [Installation](#installation)
 - [Very First Startup](#very-first-startup)
   - [Variant 1: Configure wifi station SSID and passphrase with the browser](#variant-1-configure-wifi-station-ssid-and-passphrase-with-the-browser)
@@ -58,7 +59,7 @@ The original setup during development and the first release was:
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
 
-The following shows the absolute minimal wiring setup:
+The following shows the absolute minimal wiring setup e.g. for the ESP32 DevKitV1. It may differ depended on your development board.
 
 ![PixelixMinimalSetup](./doc/images/PixelixMinimalSetup.png)
 
@@ -76,6 +77,9 @@ Although Pixelix was designed to show information, that is pushed or pulled via 
 * Temperature and humidity sensors DHTx
 * Temperature and humidity sensors SHT3x
 * Digitial microphone INMP441 for some sound reactive stuff.
+
+## Recommendation
+Its recommended to use a development board with 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited. Also recommended is to use a esp32 dual core variant, which provides more processing power.
 
 # Installation
 The following steps are necessary for the first time and to get PIXELIX initial running on the target. Once it runs, later on the firmware and filesystem can be updated via the PIXELIX webinterface.
