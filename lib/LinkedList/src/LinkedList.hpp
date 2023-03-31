@@ -133,7 +133,6 @@ public:
     void setPrev(ListElement* prev)
     {
         m_prev = prev;
-        return;
     }
 
     /**
@@ -164,7 +163,6 @@ public:
     void setNext(ListElement* next)
     {
         m_next = next;
-        return;
     }
 
 private:
