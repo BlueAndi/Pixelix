@@ -48,38 +48,38 @@ The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed f
 
 ## AZ-Delivery ESP-32 Dev Kit C V4
 * Manufacturer: [AZ-Delivery](https://www.az-delivery.de/products/esp-32-dev-kit-c-v4)
-* [Pinning](../../platformio.ini)
+* [Pinning](../../config/board.ini)
 * Compatible with Pixelix boards.
 
 ## DOIT ESP32 DEVKIT V1
-* [Pinning](../../platformio.ini)
+* [Pinning](../../config/board.ini)
 * Compatible with Pixelix boards.
 
 ## DOIT ESP32 DEVKIT V4
-* [Pinning](../../platformio.ini)
+* [Pinning](../../config/board.ini)
 * Compatible with Pixelix boards.
 
 ## ESP32 NodeMCU
-* [Pinning](../../platformio.ini)
+* [Pinning](../../config/board.ini)
 * Compatible with Pixelix boards.
 
 ## LILYGO&reg; ESP32 T-Display S3
 The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, because the onboard display is used instead of a external LED matrix.
 
 * Manufacturer: [Lilygo](https://www.lilygo.cc/products/t-display-s3)
-* [Pinning](../../platformio.ini)
+* [Pinning](../../config/board.ini)
 * Not compatible with Pixelix boards.
 
 ## LILYGO&reg; TTGO ESP32 T-Display
 The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
 
 * Manufacturer: [Lilygo](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
-* [Pinning](../../platformio.ini)
+* [Pinning](../../config/board.ini)
 * Not compatible with Pixelix boards.
 
 ## WEMOS Lolin S2 Mini
 * Manufacturer: [WEMOS](https://www.wemos.cc/en/latest/s2/s2_mini.html)
-* [Pinning](../../platformio.ini)
+* [Pinning](../../config/board.ini)
 * Not compatible with Pixelix boards.
 
 # Issues, Ideas And Bugs <!-- omit in toc -->
