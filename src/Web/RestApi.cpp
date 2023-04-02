@@ -62,6 +62,14 @@
  * Types and classes
  *****************************************************************************/
 
+/** Content type element */
+typedef struct
+{
+    const char* fileExtension;  /**< File extension used to determine content type */
+    const char* contentType;    /**< Content type */
+
+} ContentTypeElem;
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -81,7 +89,7 @@ static void handleStatus(AsyncWebServerRequest* request);
 static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
-static String getContentType(const String& filename);
+static const char* getContentType(const String& filename);
 static void handleFilePost(AsyncWebServerRequest* request);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 static void handleFileDelete(AsyncWebServerRequest* request);
@@ -90,6 +98,23 @@ static bool isValidHostname(const String& hostname);
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/** Table of content types and the file extensions they will be derived from. */
+static const ContentTypeElem    contentTypeTable[] =
+{
+    { ".html",  "text/html"                 },
+    { ".css",   "text/css"                  },
+    { ".js",    "application/javascript"    },
+    { ".bmp",   "image/bmp"                 },
+    { ".png",   "image/png"                 },
+    { ".gif",   "image/gif"                 },
+    { ".jpg",   "image/jpg"                 },
+    { ".ico",   "image/x-icon"              },
+    { ".xml",   "text/xml"                  },
+    { ".pdf",   "application/x-pdf"         },
+    { ".zip",   "application/x-zip"         },
+    { ".gz",    "application/x-gzip"        }
+};
 
 /******************************************************************************
  * Public Methods
@@ -1396,61 +1421,20 @@ static void handleFileGet(AsyncWebServerRequest* request)
  * 
  * @return The file specific content type.
  */
-static String getContentType(const String& filename)
+static const char* getContentType(const String& filename)
 {
-    String contentType = "text/plain";
+    const char* contentType = "text/plain";
+    uint8_t     idx         = 0U;
 
-    if (filename.endsWith(".html"))
+    while(UTIL_ARRAY_NUM(contentTypeTable) > idx)
     {
-        contentType = "text/html";
-    }
-    else if (filename.endsWith(".css"))
-    {
-        contentType = "text/css";
-    }
-    else if (filename.endsWith(".js"))
-    {
-        contentType = "application/javascript";
-    }
-    else if (filename.endsWith(".bmp"))
-    {
-        contentType = "image/bmp";
-    }
-    else if (filename.endsWith(".png"))
-    {
-        contentType = "image/png";
-    }
-    else if (filename.endsWith(".gif"))
-    {
-        contentType = "image/gif";
-    }
-    else if (filename.endsWith(".jpg"))
-    {
-        contentType = "image/jpeg";
-    }
-    else if (filename.endsWith(".ico"))
-    {
-        contentType = "image/x-icon";
-    }
-    else if (filename.endsWith(".xml"))
-    {
-        contentType = "text/xml";
-    }
-    else if (filename.endsWith(".pdf"))
-    {
-        contentType = "application/x-pdf";
-    }
-    else if (filename.endsWith(".zip"))
-    {
-        contentType = "application/x-zip";
-    }
-    else if (filename.endsWith(".gz"))
-    {
-        contentType = "application/x-gzip";
-    }
-    else
-    {
-        ;
+        if (true == filename.endsWith(contentTypeTable[idx].fileExtension))
+        {
+            contentType = contentTypeTable[idx].contentType;
+            break;
+        }
+
+        ++idx;
     }
 
     return contentType;

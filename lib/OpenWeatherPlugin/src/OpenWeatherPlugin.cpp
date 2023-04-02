@@ -38,6 +38,7 @@
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <JsonFile.h>
+#include <Util.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,6 +60,15 @@
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
+
+/** UV-index element */
+typedef struct
+{
+    uint8_t     lower;  /**< Lower UV-index value */
+    uint8_t     upper;  /**< Upper UV-index value */
+    const char* color;  /**< Color to show in this UV-index range */
+
+} UvIndexElem;
 
 /******************************************************************************
  * Prototypes
@@ -88,6 +98,15 @@ const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "https://api.openweath
 
 /* Initialize plugin topic. */
 const char* OpenWeatherPlugin::TOPIC                    = "/weather";
+
+/** UV-index table */
+static const UvIndexElem uvIndexTable[] =
+{
+    { 0U,   3U,     "\\#c0ffa0" },
+    { 3U,   6U,     "\\#f8f140" },
+    { 6U,   8U,     "\\#f77820" },
+    { 8U,   11U,    "\\#d80020" }
+};
 
 /******************************************************************************
  * Public Methods
@@ -489,29 +508,21 @@ void OpenWeatherPlugin::setUnits(const String& units)
  * Private Methods
  *****************************************************************************/
 
-String OpenWeatherPlugin::uvIndexToColor(float uvIndex)
+const char* OpenWeatherPlugin::uvIndexToColor(uint8_t uvIndex)
 {
-    String color;
+    uint8_t     idx     = 0U;
+    const char* color   = "\\#a80081"; /* Default color */
 
-    if ((0.0F <= uvIndex) && (3.0F > uvIndex))
+    while(UTIL_ARRAY_NUM(uvIndexTable) > idx)
     {
-        color = "\\#c0ffa0"; 
-    }
-    else if ((3.0F <= uvIndex) && (6.0F > uvIndex))
-    {
-        color = "\\#f8f140";
-    }
-    else if ((6.0F <= uvIndex) && (8.0F > uvIndex))
-    {
-        color = "\\#f77820";
-    }
-    else if ((8.0F <= uvIndex) && (11.0F > uvIndex))
-    {
-        color = "\\#d80020";
-    }
-    else 
-    {
-        color = "\\#a80081";
+        if ((uvIndexTable[idx].lower <= uvIndex) &&
+            (uvIndexTable[idx].upper > uvIndex))
+        {
+            color = uvIndexTable[idx].color;
+            break;
+        }
+
+        ++idx;
     }
 
     return color;
@@ -519,11 +530,9 @@ String OpenWeatherPlugin::uvIndexToColor(float uvIndex)
 
 void OpenWeatherPlugin::updateDisplay(bool force)
 {
-    bool        showGeneralWeatherInformation = ((0U == m_durationCounter) ? true : false);
-    bool        showAdditionalInformation = false;
-    uint32_t    duration = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
-    String      icon;
-    String      text;
+    bool        showGeneralWeatherInformation   = ((0U == m_durationCounter) ? true : false);
+    bool        showAdditionalInformation       = false;
+    uint32_t    duration                        = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
 
     /* If infinite duration was set switch every 15s between time and date. */
     if (0U == duration)
@@ -539,15 +548,12 @@ void OpenWeatherPlugin::updateDisplay(bool force)
 
     if ((false != showGeneralWeatherInformation) || (true == force))
     {
-        icon = m_currentWeatherIcon;
-        text = m_currentTemp;
-
-        if (false == m_bitmapWidget.load(FILESYSTEM, icon))
+        if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
         {
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
         }
 
-        m_textWidget.setFormatStr(text);
+        m_textWidget.setFormatStr(m_currentTemp);
 
         m_isUpdateAvailable = true;
 
@@ -555,33 +561,36 @@ void OpenWeatherPlugin::updateDisplay(bool force)
 
     if (false != showAdditionalInformation)
     {
+        String  text;
+        String  iconPath;
+
         switch (m_additionalInformation)
         {
         case UVI:
             text = m_currentUvIndex;
-            icon = IMAGE_PATH_UVI_ICON;
+            iconPath = IMAGE_PATH_UVI_ICON;
             break;
 
         case HUMIDITY:
             text = m_currentHumidity;
-            icon = IMAGE_PATH_HUMIDITY_ICON;
+            iconPath = IMAGE_PATH_HUMIDITY_ICON;
             break;
 
         case WIND:
             text = m_currentWindspeed;
-            icon = IMAGE_PATH_WIND_ICON;
+            iconPath = IMAGE_PATH_WIND_ICON;
             break;
 
         case OFF:
             text = m_currentTemp;
-            icon = m_currentWeatherIcon;
+            iconPath = m_currentWeatherIcon;
             break;
 
         default:
             break;
         }
 
-        if (false == m_bitmapWidget.load(FILESYSTEM, icon))
+        if (false == m_bitmapWidget.load(FILESYSTEM, iconPath))
         {
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
         }
@@ -659,11 +668,11 @@ void OpenWeatherPlugin::initHttpClient()
 
             if (nullptr != jsonDoc)
             {
-                size_t                          payloadSize             = 0U;
-                const char*                     payload                 = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-                const size_t                    FILTER_SIZE             = 128U;
+                size_t                          payloadSize     = 0U;
+                const char*                     payload         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t                    FILTER_SIZE     = 128U;
                 StaticJsonDocument<FILTER_SIZE> filter;
-                JsonObject                      filterCurrent           = filter.createNestedObject("current");
+                JsonObject                      filterCurrent   = filter.createNestedObject("current");
                 DeserializationError            error;
 
                 /* See https://openweathermap.org/api/one-call-api for an example of API response. */
@@ -766,7 +775,7 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
         /* Generate UV-Index string and adapt color of string accordingly. */
         m_currentUvIndex = "\\calign";
-        m_currentUvIndex += uvIndexToColor(uvIndex);
+        m_currentUvIndex += uvIndexToColor(static_cast<uint8_t>(uvIndex));
         m_currentUvIndex += uvIndex;
 
         const char* reducePrecision = (temperature < -9.9F) ? "%.0f" : "%.1f";
@@ -791,12 +800,12 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         m_currentWindspeed += "m/s";
 
         /* Handle icon depended on weather icon id.
-            * See https://openweathermap.org/weather-conditions
-            * 
-            * First check whether there is a specific icon available.
-            * If not, check for a generic weather icon.
-            * If this is not available too, use the standard OpenWeather icon.
-            */
+         * See https://openweathermap.org/weather-conditions
+         * 
+         * First check whether there is a specific icon available.
+         * If not, check for a generic weather icon.
+         * If this is not available too, use the standard OpenWeather icon.
+         */
         weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
         if (false == FILESYSTEM.exists(weatherConditionIcon))
         {
@@ -809,7 +818,6 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         updateDisplay(false);
     }
 }
-
 
 bool OpenWeatherPlugin::saveConfiguration() const
 {

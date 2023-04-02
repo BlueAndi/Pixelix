@@ -476,7 +476,7 @@ private:
     /**
      * Map the UV index value to a color corresponding the the icon.
     */
-    String uvIndexToColor(float uvIndex);
+    const char* uvIndexToColor(uint8_t uvIndex);
 
     /**
      * Request new data.
