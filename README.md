@@ -12,18 +12,20 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/0.jpg)](https://www.youtube.com/watch?v=UCjJCI5JShY "Pixelix - Remote Button")
 
 - [Motivation](#motivation)
-- [Overview](#overview)
-  - [Original setup](#original-setup)
-  - [Others](#others)
+- [Introduction](#introduction)
+- [Features](#features)
+- [Original Setup](#original-setup)
+- [Attention](#attention)
+- [Supported Development Boards](#supported-development-boards)
   - [Recommendation](#recommendation)
+  - [Special Variants](#special-variants)
 - [Installation](#installation)
 - [Very First Startup](#very-first-startup)
   - [Variant 1: Configure wifi station SSID and passphrase with the browser](#variant-1-configure-wifi-station-ssid-and-passphrase-with-the-browser)
   - [Variant 2: Configure wifi station SSID and passphrase with the terminal](#variant-2-configure-wifi-station-ssid-and-passphrase-with-the-terminal)
-  - [Pixelix Is Ready](#pixelix-is-ready)
+  - [PIXELIX Is Ready](#pixelix-is-ready)
 - [User Interface](#user-interface)
-- [Documentation](#documentation)
-- [Used Libraries](#used-libraries)
+- [Details](#details)
 - [FAQ](#faq)
   - [Where to change panel topology of the LED matrix?](#where-to-change-panel-topology-of-the-led-matrix)
   - [How to change text properties?](#how-to-change-text-properties)
@@ -34,12 +36,24 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   - [How can I use alternative icons?](#how-can-i-use-alternative-icons)
   - [Is it possible to use a font with 8px height?](#is-it-possible-to-use-a-font-with-8px-height)
   - [How to configure the date/time format?](#how-to-configure-the-datetime-format)
+  - [How to configure my own list of plugins?](#how-to-configure-my-own-list-of-plugins)
+- [Used Libraries](#used-libraries)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
 
 # Motivation
-I want to have a remote display to show multiple kind of information, running 24/7 reliable. Connected over wifi to the local network, it can be controlled via REST API or websocket.
+My initial goal was to have a remote display that would show multiple kind of information and run reliably 24/7. Can be connected to the local network via WiFi and controlled via REST API or Websocket. PIXELIX was born! :-)
+
+# Introduction
+The PIXELIX firmware is for ESP32 boards that controls a RGB LED matrix. It can be used to display text and animations.
+
+# Features
+* Supports 32x8 LED matrix size out of the box. Its possible to cascade another matrix to have a longer display.
+* Can display static or scrolling text, as well as static or animated icons.
+* Includes a web interface for configuring and controlling the LED matrix.
+* Supports REST API and MQTT (beta) for remote control and integration with other systems.
+* Can be extended with custom effects and animations. See list of [plugins](./doc/PLUGINS.md).
 
 | Some impressions |   |
 | - | - |
@@ -47,14 +61,8 @@ I want to have a remote display to show multiple kind of information, running 24
 | ![IconTextLampPlugin](./lib/WifiStatusPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/WifiStatusPlugin/web/IconTextPlugin.jpg) |
 | ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg) | ... |
 
-# Overview
-
-The firmware contains a plugin concept (at compile time) to provide different functionalities. Each plugin can create its own layout and place the information as required. If you are only interested in showing just text provided via REST API, choose the JustTextPlugin. It uses the whole display size and will scroll text automatically. Sometimes in front of the text a nice icon is required, in this case choose the IconTextPlugin. These are only examples and you will find more in the [plugin list](./doc/PLUGINS.md).
-
-A little bit more detail about the generic plugins and the first idea can be found in this [rough overview](./doc/Overview.pdf).
-
-## Original setup
-The original setup during development and the first release was:
+# Original Setup
+The original setup for development and the first release was:
 * [ESP32 DevKitV1](https://github.com/playelek/pinout-doit-32devkitv1)
 * WS2812B 5050 8x32 RGB Flexible LED Matrix Panel
 * Power supply 5 V / 4 A
@@ -63,26 +71,32 @@ The following shows the absolute minimal wiring setup e.g. for the ESP32 DevKitV
 
 ![PixelixMinimalSetup](./doc/images/PixelixMinimalSetup.png)
 
-> :warning: **If you power all via USB**: Be very careful, because it may destroy your esp32 board if the LED current gets too high. Avoid increasing the LED display brightness or filling it complete with white pixels. Please use a external power supply with at least 5V / 4A.
+# Attention
 
-## Others
+> :warning: **If you power the development board and the LED matrix via USB**: Be very careful, because it may destroy your ESP32 board if the LED current is too high. Avoid increasing the LED display brightness or filling it complete with white pixels. Please use a external power supply with at least 5V / 4A.
 
-In the meantime several other boards are supported as well. You can see them in the platformio configuration (platformio.ini) or the [list of boards](./doc/boards/README.md).
+> :information_source: To avoid any damage on your hardware and by the way to your eyes ;-), PIXELIX starts up with a low brightness setting. Additional the max. current is limited by software.
+
+# Supported Development Boards
+
+In the meantime several other boards are supported as well. You can find them in the [list of boards](./doc/boards/README.md).
+
+## Recommendation
+Its recommended to use a development board with 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited. Also recommended is to use a esp32 dual core variant, which provides more processing power.
+
+## Special Variants
 
 Additional supported variants, which were original not in focus:
 * [LILYGO&reg; TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
 * [LILYGO&reg; T-Display ESP32-S3 1.9 inch ST7789 LCD Display Touch Screen Development Board](https://www.lilygo.cc/products/t-display-s3)
 
-Although Pixelix was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
+Although PIXELIX was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
 * Temperature and humidity sensors DHTx
 * Temperature and humidity sensors SHT3x
 * Digitial microphone INMP441 for some sound reactive stuff.
 
-## Recommendation
-Its recommended to use a development board with 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited. Also recommended is to use a esp32 dual core variant, which provides more processing power.
-
 # Installation
-The following steps are necessary for the first time and to get PIXELIX initial running on the target. Once it runs, later on the firmware and filesystem can be updated via the PIXELIX webinterface.
+The following steps are necessary for the first time and to get PIXELIX initial running on the target. Once it runs, later on the firmware and filesystem can be updated via the PIXELIX web interface.
 
 1. Setup the [toolchain](./doc/config/TOOLCHAIN-INSTALLATION.md).
 2. [Build the software](./doc/config/SW-BUILD.md) and check whether the toolchain works.
@@ -97,26 +111,26 @@ If the device starts the very first time, the wifi station SSID and passphrase s
 2. Using a terminal connecting via usb.
 
 ## Variant 1: Configure wifi station SSID and passphrase with the browser
-Restart the device and keep the button pressed until it shows the SSID of the wifi access point, spawned by Pixelix. Search for it with your mobile device and connect.
-* SSID: **pixelix**
+Restart the device and keep the button pressed until it shows the SSID of the wifi access point, spawned by PIXELIX. Search for it with your mobile device and connect.
+* SSID: **pixelix-&lt;DEVICE-ID&gt;**
 * Passphrase: **Luke, I am your father.**
 
-Depended on the type of device you are using for connecting to Pixelix, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
+Depended on the type of device you are using for connecting to PIXELIX, you may get a notification that further information is necessary and automatically routed to the captive portal. In any other case enter the URL http://192.168.4.1 in the browser address field.
 
-Use the following default credentials to get access to the Pixelix webinterface:
+Use the following default credentials to get access to the PIXELIX web interface:
 * User: **luke**
 * Password: **skywalker**
 
 ## Variant 2: Configure wifi station SSID and passphrase with the terminal
-Connect Pixelix with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
+Connect PIXELIX with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
 * Write wifi passphrase: ```write wifi passphrase <your-passphrase>```
 * Write wifi SSID: ```write wifi ssid <your-ssid>```
-* Restart Pixelix: ```reset```
+* Restart PIXELIX: ```reset```
 
-## Pixelix Is Ready
-After configuration, restart again and voila, Pixelix will be available in your wifi network.
+## PIXELIX Is Ready
+After configuration, restart again and voila, PIXELIX will be available in your wifi network.
 
-For changing whats displayed, go to its webinterface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
+For changing whats displayed, go to its web interface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
 
 # User Interface
 * The user button provides several features:
@@ -131,29 +145,8 @@ For changing whats displayed, go to its webinterface. Use the same credentials t
 
 Note, the websocket interface is currently only used as a service in the web interface.
 
-# Documentation
-For more information, see the [documentation](./doc/README.md).
-
-# Used Libraries
-* [Arduino](https://github.com/platformio/platform-espressif32) - ESP32 Arduino framework - Apache-2.0 License
-* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Controlling the LED matrix with hardware support (RMT) - LGPL-3.0 License
-* [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) - Webserver - LGPL-2.1 License
-* [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock) - TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets - LGPL-3.0 License
-* [ArduinoJson](https://arduinojson.org/) - JSON handling - MIT License
-* [StreamUtils](https://github.com/bblanchon/ArduinoStreamUtils) - Stream utilities - MIT License
-* [Bootstrap](https://getbootstrap.com/) - CSS Framework - MIT License
-* [POPPER JS](https://popper.js.org/) - POPPER JS - MIT License
-* [jQuery](https://jquery.com/) - Javascript librariy for DOM handling - MIT License
-* [Adafruit Unified Sensor Driver](https://github.com/adafruit/Adafruit_Sensor) - A unified sensor abstraction layer. - Apache License 2.0 License
-* [Adafruit DHT sensor library](https://github.com/adafruit/DHT-sensor-library) - An Arduino library for the DHT series of low-cost temperature/humidity sensors. - MIT License
-* [arduino-sht](https://github.com/Sensirion/arduino-sht) - An Arduino library for reading the SHT3x family of temperature and humidity sensors. - BSD-3-Clause License
-* [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) - Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips - Mixed licenses: MIT, BSD, FreeBSD
-* [arduinoFFT](https://github.com/kosme/arduinoFFT) - Fast Fourier Transform for Arduino. - GPL 3.0 License
-* [mufonts](https://github.com/muwerk/mufonts) - A collection of fonts compatible with Adafruit GFX library. These fonts were developed when creating various samples for mupplet display code. - MIT License
-* [JSZip](https://github.com/Stuk/jszip) - A library for creating, reading and editing .zip files with JavaScript, with a lovely and simple API. - MIT License
-* [JSZipUtils](https://github.com/Stuk/jszip-utils) - A collection of cross-browser utilities to go along with JSZip. - MIT License
-* [FileSaver.js](https://github.com/eligrey/FileSaver.js) - FileSaver.js is the solution to saving files on the client-side. - MIT License
-* [Arduino client for MQTT](https://github.com/knolleary/pubsubclient) - This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT. - MIT License
+# Details
+For more detailed information, see the [documentation](./doc/README.md).
 
 # FAQ
 
@@ -202,7 +195,7 @@ This is a low level error code. Please have a look into the following table.
 | E7 | The update manager didn't start up. |
 
 ## How can I use animated icons?
-Upload first the bitmap texture image (.bmp) and afterwards the sprite sheet file (.sprite). See the details [here](./doc/SPRITESHEET.md).
+Upload **first** the bitmap texture image (.bmp) and **afterwards** the sprite sheet file (.sprite). See the details [here](./doc/SPRITESHEET.md). The order is important, because if a bitmap is uploaded, it is assumed that an existing spritesheet is obsolete and will be removed.
 
 ## How do I know that my sensor is recognized?
 
@@ -251,6 +244,40 @@ Examples:
 * ```%d - %b```: 11 - Nov
 
 You can colorize it by using the [text properties](#how-to-change-text-properties).
+
+## How to configure my own list of plugins?
+The list of plugins which are available depend on the development board you use. Because board with only 4 MB flash don't have enough capacity for all. Or in case of a ESP-S2 (single core) not enough power.
+
+To handle there are several .ini files in the ```./config``` folder:
+* configSmall.ini: Used for boards with 4 MB flash.
+* configNormal.ini: Used for boards with 8 MB flash or more.
+* configSmallNoI2s.ini: Used for boards with 4 MB flash and less mcu power.
+
+Update the one you use for your needs by commenting in or out.
+
+# Used Libraries
+
+| Library | Description | License |
+| - | - | - |
+| [Arduino](https://github.com/platformio/platform-espressif32) | ESP32 Arduino framework | Apache-2.0 |
+| [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) | Controlling the LED matrix with hardware support (I2S) | LGPL-3.0 |
+| [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) | Webserver | LGPL-2.1 |
+| [AsyncTCPSock](https://github.com/yubox-node-org/AsyncTCPSock) | TCP library, Reimplementation of the API of me-no-dev/AsyncTCP using high-level BSD sockets | MIT |
+| [ArduinoJson](https://arduinojson.org/) | JSON handling | MIT |
+| [StreamUtils](https://github.com/bblanchon/ArduinoStreamUtils) | Stream utilities | MIT |
+| [Bootstrap](https://getbootstrap.com/) | CSS Framework | MIT |
+| [POPPER JS](https://popper.js.org/) | POPPER JS | MIT |
+| [jQuery](https://jquery.com/) | Javascript librariy for DOM handling | MIT |
+| [Adafruit Unified Sensor Driver](https://github.com/adafruit/Adafruit_Sensor) | A unified sensor abstraction layer. | Apache License 2.0 |
+| [Adafruit DHT sensor library](https://github.com/adafruit/DHT-sensor-library) | An Arduino library for the DHT series of low-cost temperature/humidity sensors. | MIT |
+| [arduino-sht](https://github.com/Sensirion/arduino-sht) | An Arduino library for reading the SHT3x family of temperature and humidity sensors. | BSD-3-Clause |
+| [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) | Arduino and PlatformIO IDE compatible TFT library optimised for the Raspberry Pi Pico (RP2040), STM32, ESP8266 and ESP32 that supports different driver chips | Mixed licenses: MIT, BSD, FreeBSD |
+| [arduinoFFT](https://github.com/kosme/arduinoFFT) | Fast Fourier Transform for Arduino. | GPL 3.0 |
+| [mufonts](https://github.com/muwerk/mufonts) | A collection of fonts compatible with Adafruit GFX library. These fonts were developed when creating various samples for mupplet display code. | MIT |
+| [JSZip](https://github.com/Stuk/jszip) | A library for creating, reading and editing .zip files with JavaScript, with a lovely and simple API. | MIT |
+| [JSZipUtils](https://github.com/Stuk/jszip-utils) | A collection of cross-browser utilities to go along with JSZip. | MIT |
+| [FileSaver.js](https://github.com/eligrey/FileSaver.js) | FileSaver.js is the solution to saving files on the client-side. | MIT |
+| [Arduino client for MQTT](https://github.com/knolleary/pubsubclient) | This library provides a client for doing simple publish/subscribe messaging with a server that supports MQTT. | MIT |
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
