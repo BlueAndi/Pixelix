@@ -37,15 +37,15 @@
                 <p>The plugin shows the remaining days until a configured target date.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get target date and target day description.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/countdown</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set target day and target day desription.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&plural=&lt;PLURAL&gt;&singular=&lt;SINGULAR&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&plural=&lt;PLURAL&gt;&singular=&lt;SINGULAR&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&descPlural=&lt;PLURAL&gt;&descSingular=&lt;SINGULAR&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&descPlural=&lt;PLURAL&gt;&descSingular=&lt;SINGULAR&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -57,17 +57,24 @@
                 </ul>
                 <h3 class="mt-2">Configuration</h3>
                 <h3 class="mt-1">Target Date</h3>
-                <form id="myForm" action="javascript:setTargetDate(pluginUid.options[pluginUid.selectedIndex].value, targetDate.valueAsDate, targetDayPlural.value, targetDaySingular.value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getTargetDate(pluginUid.options[pluginUid.selectedIndex].value, 'targetDate', 'targetDayPlural', 'targetDaySingular')">
-                    </select>
-                    <br />
-                    <label for="targetDate">Target date:</label><br />
-                    <input type="date" id="targetDate" name="targetDate" value="2020-09-01" /><br />
-                    <label for="targetDayPlural">Target day in plural form:</label><br />
-                    <input type="text" id="targetDayPlural" name="targetDayPlural" value="DAYS" /><br />
-                    <label for="targetDaySingular">Target day in singular form:</label><br />
-                    <input type="text" id="targetDaySingular" name="targetDaySingular" value="DAY" /><br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="targetDate">Target date:</label>
+                        <input type="date" id="targetDate" name="targetDate" value="2020-09-01" />
+                    </div>
+                    <div class="form-group">
+                        <label for="targetDayPlural">Target day in plural form:</label>
+                        <input type="text" id="targetDayPlural" name="targetDayPlural" value="DAYS" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="targetDaySingular">Target day in singular form:</label>
+                        <input type="text" id="targetDaySingular" name="targetDaySingular" value="DAY" />    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>            
             </div>
@@ -144,21 +151,17 @@
                 });
             };
     
-            function getTargetDate(pluginUid, targetDateId, targetDayPluralId, targetDaySingularId) {
+            function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var targetDateInput         = document.getElementById(targetDateId);
-                    var targetDayPluralInput    = document.getElementById(targetDayPluralId);
-                    var targetDaySingularInput  = document.getElementById(targetDaySingularId);
-    
-                    targetDateInput.valueAsDate     = new Date(rsp.data.year + "-" + rsp.data.month + "-" + rsp.data.day);
-                    targetDayPluralInput.value      = rsp.data.plural;
-                    targetDaySingularInput.value    = rsp.data.singular;
-    
+                    var targetDateInput = document.getElementById("targetDate");
+                    targetDateInput.valueAsDate = new Date(rsp.data.year + "-" + rsp.data.month + "-" + rsp.data.day);
+                    $("#targetDayPlural").val(rsp.data.descPlural);
+                    $("#targetDaySingular").val(rsp.data.descSingular);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -166,19 +169,21 @@
                 });
             }
     
-            function setTargetDate(pluginUid, targetDate, targetDayPlural, targetDaySingular) {
+            function setConfig(pluginUid) {
                 disableUI();
+
+                var date = new Date($("#targetDate").val());
     
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true,
                     parameter: {
-                        day: targetDate.getDate(),
-                        month: targetDate.getMonth() + 1,
-                        year: targetDate.getFullYear(),
-                        plural: targetDayPlural,
-                        singular: targetDaySingular
+                        day: date.getDate(),
+                        month: date.getMonth() + 1,
+                        year: date.getFullYear(),
+                        descPlural: $("#targetDayPlural").val(),
+                        descSingular: $("#targetDaySingular").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -204,11 +209,8 @@
     
                     if (0 < cnt) {
     
-                        return getTargetDate(
-                            select.options[select.selectedIndex].value,
-                            "targetDate",
-                            "targetDayPlural",
-                            "targetDaySingular"
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

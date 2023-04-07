@@ -52,6 +52,7 @@
 #include <TextWidget.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -65,11 +66,8 @@
  * Shows the current state of VOLUMIO and the artist/title of the played music.
  * If the VOLUMIO server is offline, the plugin gets automatically disabled,
  * otherwise enabled.
- *
- * Change VOLUMIO host address via REST API:
- * Text: POST \c "<base-uri>/host?set=<host-address>"
  */
-class VolumioPlugin : public Plugin
+class VolumioPlugin : public Plugin, private PluginConfigFsHandler
 {
 public:
 
@@ -81,6 +79,7 @@ public:
      */
     VolumioPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        PluginConfigFsHandler(uid, FILESYSTEM),
         m_textCanvas(),
         m_iconCanvas(),
         m_stdIconWidget(),
@@ -99,6 +98,9 @@ public:
         m_lastSeekValue(0U),
         m_pos(0U),
         m_state(STATE_UNKNOWN),
+        m_cfgReloadTimer(),
+        m_storeConfigReq(false),
+        m_reloadConfigReq(false),
         m_taskProxy()
     {
         (void)m_mutex.create();
@@ -214,20 +216,6 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /**
-     * Get VOLUMIO host address.
-     * 
-     * @return VOLUMIO host address.
-     */
-    String getHost() const;
-
-    /**
-     * Set VOLUMIO host address.
-     * 
-     * @param[in] host  VOLUMIO host address
-     */
-    void setHost(const String& host);
-
 private:
 
     /**
@@ -272,9 +260,9 @@ private:
     static const char*      IMAGE_PATH_PAUSE_ICON;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
 
     /**
      * Period in ms for requesting data from server.
@@ -296,24 +284,34 @@ private:
      */
     static const uint32_t   OFFLINE_PERIOD      = SIMPLE_TIMER_SECONDS(60U);
 
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_stdIconWidget;            /**< Bitmap widget, used to show the standard icon. */
-    BitmapWidget            m_stopIconWidget;           /**< Bitmap widget, used to show the stop icon. */
-    BitmapWidget            m_playIconWidget;           /**< Bitmap widget, used to show the play icon. */
-    BitmapWidget            m_pauseIconWidget;          /**< Bitmap widget, used to show the pause icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    String                  m_volumioHost;              /**< Host address of the VOLUMIO server. */
-    String                  m_urlIcon;                  /**< REST API URL for updating the icon */
-    String                  m_urlText;                  /**< REST API URL for updating the text */
-    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer             m_requestTimer;             /**< Timer used for cyclic request of new data. */
-    SimpleTimer             m_offlineTimer;             /**< Timer used for offline detection. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    bool                    m_isConnectionError;        /**< Is connection error happened? */
-    uint32_t                m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
-    uint8_t                 m_pos;                      /**< Current music position in percent. */
-    VolumioState            m_state;                    /**< Volumio player state */
+    /**
+     * The configuration in the persistent memory shall be cyclic loaded.
+     * This mechanism ensure that manual changes in the file are considered.
+     * This is the reload period in ms.
+     */
+    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
+
+    WidgetGroup             m_textCanvas;           /**< Canvas used for the text widget. */
+    WidgetGroup             m_iconCanvas;           /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_stdIconWidget;        /**< Bitmap widget, used to show the standard icon. */
+    BitmapWidget            m_stopIconWidget;       /**< Bitmap widget, used to show the stop icon. */
+    BitmapWidget            m_playIconWidget;       /**< Bitmap widget, used to show the play icon. */
+    BitmapWidget            m_pauseIconWidget;      /**< Bitmap widget, used to show the pause icon. */
+    TextWidget              m_textWidget;           /**< Text widget, used for showing the text. */
+    String                  m_volumioHost;          /**< Host address of the VOLUMIO server. */
+    String                  m_urlIcon;              /**< REST API URL for updating the icon */
+    String                  m_urlText;              /**< REST API URL for updating the text */
+    AsyncHttpClient         m_client;               /**< Asynchronous HTTP client. */
+    SimpleTimer             m_requestTimer;         /**< Timer used for cyclic request of new data. */
+    SimpleTimer             m_offlineTimer;         /**< Timer used for offline detection. */
+    mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                    m_isConnectionError;    /**< Is connection error happened? */
+    uint32_t                m_lastSeekValue;        /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
+    uint8_t                 m_pos;                  /**< Current music position in percent. */
+    VolumioState            m_state;                /**< Volumio player state */
+    SimpleTimer             m_cfgReloadTimer;       /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_storeConfigReq;       /**< Is requested to store the configuration in persistent memory? */
+    bool                    m_reloadConfigReq;      /**< Is requested to reload the configuration from persistent memory? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -350,6 +348,27 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
+     * Request to store configuration to persistent memory.
+     */
+    void requestStoreToPersistentMemory();
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
+
+    /**
      * Change Volumio player state.
      * Depended on the new state, the corresponding bitmap icon is enabled.
      *
@@ -375,16 +394,6 @@ private:
      * @param[in] jsonDoc   Web response as JSON document
      */
     void handleWebResponse(DynamicJsonDocument& jsonDoc);
-    
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 
     /**
      * Clear the task proxy queue.

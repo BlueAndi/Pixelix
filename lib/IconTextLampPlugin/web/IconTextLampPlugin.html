@@ -89,44 +89,53 @@
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Icon</h3>
                 <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
-                    <label for="pluginUidIcon">Plugin UID:</label><br />
-                    <select id="pluginUidIcon" name="pluginUid" size="1">
-                    </select>
-                    <br />
-                    <label for="icon">Icon:</label><br />
-                    <input id="icon" type="file" /><br />
+                    <div class="form-group">
+                        <label for="pluginUidIcon">Plugin UID:</label>
+                        <select id="pluginUidIcon" name="pluginUid" size="1">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="icon">Icon:</label>
+                        <input id="icon" type="file" />    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h3 class="mt-1">Text</h3>
                 <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
-                    <label for="pluginUidText">Plugin UID:</label><br />
-                    <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
-                    </select>
-                    <br />
-                    <label for="justText">Text:</label><br />
-                    <input type="text" id="justText" name="justText" value="" size="20" /><br />
+                    <div class="form-group">
+                        <label for="pluginUidText">Plugin UID:</label>
+                        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="justText">Text:</label>
+                        <input type="text" id="justText" name="justText" value="" size="20" />    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h3 class="mt-1">Lamp</h3>
                 <form id="myFormLamp" action="javascript:setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampId.options[lampId.selectedIndex].value, lampState.options[lampState.selectedIndex].value)">
-                    <label for="pluginUidLamp">Plugin UID:</label><br />
-                    <select id="pluginUidLamp" name="pluginUid" size="1">
-                    </select>
-                    <br />
-                    <label for="lampId">Lamp:</label><br />
-                    <select id="lampId" size="1" onChange="getLamp(pluginUidText.options[pluginUidText.selectedIndex].value, lampId.options[lampId.selectedIndex].value, 'lampState')">
-                        <option value="0" selected>0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
-                    <br />
-                    <label for="lampState">State:</label><br />
-                    <select id="lampState" size="1">
-                        <option value="off" selected>off</option>
-                        <option value="on">on</option>
-                    </select>
-                    <br />
+                    <div class="form-group">
+                        <label for="pluginUidLamp">Plugin UID:</label>
+                        <select id="pluginUidLamp" name="pluginUid" size="1">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="lampId">Lamp:</label>
+                        <select id="lampId" size="1" onChange="getLamp(pluginUidText.options[pluginUidText.selectedIndex].value, lampId.options[lampId.selectedIndex].value, 'lampState')">
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="lampState">State:</label>
+                        <select id="lampState" size="1">
+                            <option value="off" selected>off</option>
+                            <option value="on">on</option>
+                        </select>    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>          
             </div>

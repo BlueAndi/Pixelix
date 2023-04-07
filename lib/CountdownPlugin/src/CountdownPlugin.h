@@ -53,6 +53,7 @@
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -69,7 +70,7 @@
  * in the filesystem, where the target date has to be configured.
  *
  */
-class CountdownPlugin : public Plugin
+class CountdownPlugin : public Plugin, private PluginConfigFsHandler
 {
 public:
 
@@ -177,6 +178,7 @@ public:
      */
     CountdownPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        PluginConfigFsHandler(uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -187,7 +189,9 @@ public:
         m_targetDateInformation(),
         m_remainingDays(""),
         m_mutex(),
-        m_cfgReloadTimer()
+        m_cfgReloadTimer(),
+        m_storeConfigReq(false),
+        m_reloadConfigReq(false)
     {
         /* Example data, used to generate the very first configuration file. */
         m_targetDate.day                    = 29;
@@ -297,7 +301,7 @@ public:
      */
     void start(uint16_t width, uint16_t height) final;
 
-   /**
+    /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
      * 
@@ -306,40 +310,22 @@ public:
     void stop() final;
 
     /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     * 
+     * @param[in] isConnected   The network connection status. If network
+     *                          connection is established, it will be true otherwise false.
+     */
+    void process(bool isConnected) final;
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
      * @param[in] gfx   Display graphics interface
      */
     void update(YAGfx& gfx) final;
-
-    /**
-     * Get current target date for countdown.
-     *
-     * @return Target date
-     */
-    DateDMY getTargetDate() const;
-
-    /**
-     * Set target date for countdown.
-     *
-     * @param[in] targetDate    Target date
-     */
-    void setTargetDate(const DateDMY& targetDate);
-
-    /**
-     * Get the language depended strings for the unit.
-     *
-     * @return Target day unit descriptions
-     */
-    TargetDayDescription getTargetDayDescription() const;
-
-    /**
-     * Set language depended strings for the unit.
-     *
-     * @param[in] targetDayDescription  Unit in plural and singular form, e.g. "days/day".
-     */
-    void setTargetDayDescription(const TargetDayDescription& targetDayDescription);
 
 private:
 
@@ -359,9 +345,9 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
 
    /**
     * Offset to translate the month of the tm struct (time.h)
@@ -393,16 +379,29 @@ private:
     String                  m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
+    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
 
     /**
-     * Saves current configuration to JSON file.
+     * Request to store configuration to persistent memory.
      */
-    bool saveConfiguration() const;
+    void requestStoreToPersistentMemory();
 
     /**
-     * Load configuration from JSON file.
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
      */
-    bool loadConfiguration();
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
      * Calculates the difference between m_targetTime and m_currentTime in days.

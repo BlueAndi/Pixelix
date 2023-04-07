@@ -39,28 +39,31 @@
                 <h3 class="mt-1">Get all installed sensor drivers and their provided channels.</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/sensors</code></pre>
                 <h3 class="mt-1">Get current selected sensor and channel.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/channel</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
                 <h3 class="mt-1">Set sensor and channel, which values to show.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/channel?sensorIndex=&lt;SENSOR-IDX&gt;&channelIndex=&lt;CHANNEL-IDX&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?sensorIndex=&lt;SENSOR-IDX&gt;&channelIndex=&lt;CHANNEL-IDX&gt;</code></pre>
                 <ul>
                     <li>SENSOR-IDX: The sensor index.</li>
                     <li>CHANNEL-IDX: The channel index of the sensor.</li>
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Sensor and Channel</h3>
-                <form id="myForm" action="javascript:setSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value, sensorList.options[sensorList.selectedIndex].value, channelList.options[channelList.selectedIndex].value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value, 'sensorIndex', 'channelIndex')">
-                    </select>
-                    <br />
-                    <label for="sensorList">Sensor:</label><br />
-                    <select id="sensorList" onChange="updateChannelList(sensorList.options[sensorList.selectedIndex].value)">
-                    </select>
-                    <br />
-                    <label for="channelList">Channel:</label><br />
-                    <select id="channelList">
-                    </select>
-                    <br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="sensorList">Sensor:</label>
+                        <select id="sensorList" onChange="updateChannelList(sensorList.options[sensorList.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="channelList">Channel:</label>
+                        <select id="channelList">
+                        </select>    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>       
             </div>
@@ -169,11 +172,11 @@
                 });
             }
     
-            function getSensorAndChannel(pluginUid, sensorId, channelId) {
+            function getSensorAndChannel(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true
                 }).then(function(rsp) {
 
@@ -207,16 +210,16 @@
                 });
             }
 
-            function setSensorAndChannel(pluginUid, sensorIndex, channelIndex) {
+            function setConfig(pluginUid) {
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true,
                     parameter: {
-                        sensorIndex: sensorIndex,
-                        channelIndex: channelIndex
+                        sensorIndex: $("#apiKey").val("sensorIndex"),
+                        channelIndex: $("#apiKey").val("channelIndex")
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -265,9 +268,7 @@
                     if (0 < cnt) {
 
                         return getSensorAndChannel(
-                            select.options[select.selectedIndex].value,
-                            "sensorIndex",
-                            "channelIndex"
+                            select.options[select.selectedIndex].value
                         );
                     }
                 }).catch(function(err) {

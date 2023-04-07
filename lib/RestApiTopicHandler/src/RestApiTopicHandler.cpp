@@ -241,6 +241,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, IPluginM
 
     if (HTTP_GET == request->method())
     {
+        /* Topic data will be transported in the HTTP body as JSON. */
         if (false == plugin->getTopic(topic, dataObj))
         {
             RestUtil::prepareRspError(jsonDoc, "Requested topic not supported.");
@@ -258,13 +259,9 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, IPluginM
     else if (HTTP_POST == request->method())
     {
         DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
-        size_t              idx = 0U;
-
-        /* Add arguments */
-        for(idx = 0U; idx < request->args(); ++idx)
-        {
-            jsonDocPar[request->argName(idx)] = request->arg(idx);
-        }
+        
+        /* Topic data is in the HTTP parameters and needs to be converted to JSON. */
+        par2Json(jsonDocPar, request);
 
         /* Add uploaded file */
         if ((false == webHandlerData->isUploadError) &&
@@ -379,6 +376,71 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
             LOG_INFO("Upload of %s finished.", filename.c_str());
 
             webHandlerData->fd.close();
+        }
+    }
+}
+
+void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest *request)
+{
+    size_t idx = 0U;
+
+    /* Add arguments:
+     * - key=value              --> { "key": "value" }
+     * - key.subKey=value       --> { "key": { "subKey": "value "} }
+     * - key._0_=value          --> { "key": [ "value" ] }
+     * - key._0_.subKey=value   --> { "key": [ "subKey": "value" ] }
+     * 
+     * Note: Only the patterns above are supported, but not a higher
+     *       nesting level.
+     */
+    for(idx = 0U; idx < request->args(); ++idx)
+    {
+        const String&   keyPattern  = request->argName(idx);
+        const String&   value 	    = request->arg(idx);
+        int             dotIdx      = keyPattern.indexOf(".");
+
+        /* No "."  in the key pattern means: key=value */
+        if (0 > dotIdx)
+        {
+            jsonDocPar[keyPattern] = value;
+        }
+        /* No "_" after the "." means: key.subKey=value */
+        else if ('_' != keyPattern[dotIdx + 1U])
+        {
+            String  key     = keyPattern.substring(0, dotIdx);
+            String  subKey  = keyPattern.substring(dotIdx + 1U);
+
+            jsonDocPar[key][subKey] = value;
+        }
+        /* Its an array. */
+        else
+        {
+            String  key     = keyPattern.substring(0, dotIdx);
+            int     dot2Idx = keyPattern.lastIndexOf(".");
+
+            /* No additional "." means: key._0_=value */
+            if (dotIdx == dot2Idx)
+            {
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+
+                /* Remove "_" at the front and the end. */
+                strArrayIdx.remove(0U, 1U);
+                strArrayIdx.remove(strArrayIdx.length() - 1U);
+
+                jsonDocPar[key][strArrayIdx.toInt()] = value;
+            }
+            /* Additional "." means: key._0_.subKey=value */
+            else
+            {
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String  subKey      = keyPattern.substring(dot2Idx + 1U);
+
+                /* Remove "_" at the front and the end. */
+                strArrayIdx.remove(0U, 1U);
+                strArrayIdx.remove(strArrayIdx.length() - 1U);
+
+                jsonDocPar[key][strArrayIdx.toInt()][subKey] = value;
+            }
         }
     }
 }

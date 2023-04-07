@@ -49,6 +49,7 @@
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
 #include <math.h>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -62,7 +63,7 @@
  * The sound reactive plugin shows a bar graph, which represents the frequency
  * bands of audio input.
  */
-class SoundReactivePlugin : public Plugin
+class SoundReactivePlugin : public Plugin, private PluginConfigFsHandler
 {
 public:
 
@@ -74,6 +75,7 @@ public:
      */
     SoundReactivePlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        PluginConfigFsHandler(uid, FILESYSTEM),
         m_mutex(),
         m_barHeight{0U},
         m_peakHeight{0U},
@@ -82,7 +84,10 @@ public:
         m_maxHeight(0U),
         m_freqBins(nullptr),
         m_corrFactors(),
-        m_peak(INMP441_MAX_SPL)
+        m_peak(INMP441_MAX_SPL),
+        m_cfgReloadTimer(),
+        m_storeConfigReq(false),
+        m_reloadConfigReq(false)
     {
         uint8_t bandIdx = 0U;
 
@@ -195,6 +200,8 @@ public:
      */
     void update(YAGfx& gfx) final;
 
+private:
+
     /* Supported number of frequency bands. */
     enum NumOfBands
     {
@@ -203,43 +210,9 @@ public:
     };
 
     /**
-     * Get current number of shown frequency bands.
-     * 
-     * @return Number of frequency bands
+     * Plugin topic, used to read/write the configuration.
      */
-    NumOfBands getFreqBandLen() const
-    {
-        NumOfBands                  freqBandLen     = NUM_OF_BANDS_8;
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-
-        freqBandLen = m_numOfFreqBands;
-
-        return freqBandLen;
-    }
-
-    /**
-     * Set number of shown frequency bands.
-     * 
-     * @param[in] freqBandLen   Number of frequency bands to show
-     */
-    void setFreqBandLen(NumOfBands freqBandLen)
-    {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-
-        if (freqBandLen != m_numOfFreqBands)
-        {
-            m_numOfFreqBands = freqBandLen;
-
-            (void)saveConfiguration();
-        }
-    }
-
-private:
-
-    /**
-     * Plugin topic, used for parameter exchange.
-     */
-    static const char*      TOPIC_CHANNEL;
+    static const char*      TOPIC_CONFIG;
 
     /**
      * The max. number of frequency bands, the plugin supports.
@@ -319,6 +292,13 @@ private:
      */
     static const uint16_t   LIST_16_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_16];
 
+    /**
+     * The configuration in the persistent memory shall be cyclic loaded.
+     * This mechanism ensure that manual changes in the file are considered.
+     * This is the reload period in ms.
+     */
+    static const uint32_t   CFG_RELOAD_PERIOD                   = SIMPLE_TIMER_SECONDS(30U);
+
     mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
     uint16_t                m_barHeight[MAX_FREQ_BANDS];    /**< The current height of every bar, which represents a frequency band. */
     uint16_t                m_peakHeight[MAX_FREQ_BANDS];   /**< The peak of every bar, which represents the peak in the frequency band. */
@@ -328,16 +308,30 @@ private:
     float*                  m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
     float                   m_corrFactors[MAX_FREQ_BANDS];  /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
     float                   m_peak;                         /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
+    SimpleTimer             m_cfgReloadTimer;               /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_storeConfigReq;               /**< Is requested to store the configuration in persistent memory? */
+    bool                    m_reloadConfigReq;              /**< Is requested to reload the configuration from persistent memory? */
 
     /**
-     * Saves current configuration to JSON file.
+     * Request to store configuration to persistent memory.
      */
-    bool saveConfiguration() const;
+    void requestStoreToPersistentMemory();
 
     /**
-     * Load configuration from JSON file.
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
      */
-    bool loadConfiguration();
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
      * Decay graphical signal peak periodically.
@@ -354,7 +348,24 @@ private:
      */
     void handleFreqBins(float* freqBins, size_t freqBinLen);
 
+    /**
+     * Convert the frequency bins to octave frequency bands.
+     * 
+     * @param[out]  octaveFreqBands     Array of octave frequency bands
+     * @param[in]   octaveFreqBandsLen  Number of octave frequency bands
+     * @param[in]   freqBins            Array of frequency bins
+     * @param[in]   freqBinLen          Number of frequency bins
+     */
     void convertToOctaveFreqBands(float* octaveFreqBands, size_t octaveFreqBandsLen, float* freqBins, size_t freqBinLen);
+
+    /**
+     * Calculate the average over the amplitudes of the octave frequency bands.
+     * 
+     * @param[in] octaveFreqBands       Array of octave frequency bands
+     * @param[in] octaveFreqBandsLen    Number of octave frequency bands
+     * 
+     * @return Average amplitude value
+     */
     float calculateAmplitudeAverage(float* octaveFreqBands, size_t octaveFreqBandsLen);
 };
 

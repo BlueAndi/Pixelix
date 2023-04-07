@@ -38,11 +38,11 @@
                 <p>If the VOLUMIO server is offline, the plugin gets automatically disabled, otherwise enabled.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get VOLUMIO host address</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/host</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/host</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
                 <h3 class="mt-1">Set VOLUMIO host address</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/host?set=&lt;HOST-ADDRESS&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/host?set=&lt;HOST-ADDRESS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?host=&lt;HOST-ADDRESS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?host=&lt;HOST-ADDRESS&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -50,13 +50,16 @@
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Host Address</h3>
-                <form id="myForm" action="javascript:setHost(pluginUid.options[pluginUid.selectedIndex].value, host.value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getHost(pluginUid.options[pluginUid.selectedIndex].value, 'host')">
-                    </select>
-                    <br />
-                    <label for="host">Host address of server:</label><br />
-                    <input type="text" id="host" name="host" value="volumio.fritz.box" /><br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="host">Host address of server:</label>
+                        <input type="text" id="host" name="host" value="volumio.fritz.box" />    
+                    </div>                    
                     <input name="submit" type="submit" value="Update"/>
                 </form>       
             </div>
@@ -133,17 +136,14 @@
                 });
             };
     
-            function getHost(pluginUid, hostId) {
+            function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/host",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var hostInput = document.getElementById(hostId);
-
-                    hostInput.value = rsp.data.host;
-
+                    $("#host").val(rsp.data.host);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -151,15 +151,14 @@
                 });
             }
 
-            function setHost(pluginUid, host) {
+            function setConfig(pluginUid) {
                 disableUI();
-
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/host",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true,
                     parameter: {
-                        set: host
+                        host: $("#host").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -185,9 +184,8 @@
 
                     if (0 < cnt) {
 
-                        return getHost(
-                            select.options[select.selectedIndex].value,
-                            "host"
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

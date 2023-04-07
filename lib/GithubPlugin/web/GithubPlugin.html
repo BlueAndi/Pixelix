@@ -37,10 +37,10 @@
                 <p>The plugin shows the stargazers count of a github repository.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get github user and repository name</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/github</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
                 <h3 class="mt-1">Set github user and/or repository name</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/github?user=&lt;USER&gt;&repository=&lt;REPOSITORY&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/github?user=&lt;USER&gt;&repository=&lt;REPOSITORY&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?user=&lt;USER&gt;&repository=&lt;REPOSITORY&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?user=&lt;USER&gt;&repository=&lt;REPOSITORY&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -49,15 +49,20 @@
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">User</h3>
-                <form id="myForm" action="javascript:setUserAndRepository(pluginUid.options[pluginUid.selectedIndex].value, user.value, repository.value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getUserAndRepository(pluginUid.options[pluginUid.selectedIndex].value, 'user', 'repository')">
-                    </select>
-                    <br />
-                    <label for="user">User name:</label><br />
-                    <input type="text" id="user" name="user" value="BlueAndi" /><br />
-                    <label for="repository">Repository name:</label><br />
-                    <input type="text" id="repository" name="repository" value="esp-rgb-led-matrix" /><br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="user">User name:</label>
+                        <input type="text" id="user" name="user" value="BlueAndi" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="repository">Repository name:</label>
+                        <input type="text" id="repository" name="repository" value="esp-rgb-led-matrix" />    
+                    </div>                    
                     <input name="submit" type="submit" value="Update"/>
                 </form>       
             </div>
@@ -134,19 +139,15 @@
                 });
             };
     
-            function getUserAndRepository(pluginUid, userId, repositoryId) {
+            function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/github",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var userInput = document.getElementById(userId);
-                    var repositoryInput = document.getElementById(repositoryId);
-
-                    userInput.value = rsp.data.user;
-                    repositoryInput.value = rsp.data.repository
-
+                    $("#user").val(rsp.data.user);
+                    $("#repository").val(rsp.data.repository);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -154,16 +155,16 @@
                 });
             }
 
-            function setUserAndRepository(pluginUid, user, repository) {
+            function setConfig(pluginUid) {
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/github",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true,
                     parameter: {
-                        user: user,
-                        repository: repository
+                        user:  $("#user").val(),
+                        repository: $("#repository").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -189,10 +190,8 @@
 
                     if (0 < cnt) {
 
-                        return getUserAndRepository(
-                            select.options[select.selectedIndex].value,
-                            "user",
-                            "repository"
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

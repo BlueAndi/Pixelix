@@ -73,22 +73,28 @@
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Icon</h3>
                 <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUidIcon" name="pluginUid" size="1">
-                    </select>
-                    <br />
-                    <label for="icon">Icon:</label><br />
-                    <input id="icon" type="file" /><br />
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUidIcon" name="pluginUid" size="1">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="icon">Icon:</label>
+                        <input id="icon" type="file" />    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h3 class="mt-1">Text</h3>
                 <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
-                    <label for="pluginUidText">Plugin UID:</label><br />
-                    <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
-                    </select>
-                    <br />
-                    <label for="justText">Text:</label><br />
-                    <input type="text" id="justText" name="justText" value="" size="20" /><br />
+                    <div class="form-group">
+                        <label for="pluginUidText">Plugin UID:</label>
+                        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="justText">Text:</label>
+                        <input type="text" id="justText" name="justText" value="" size="20" />    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>                      
             </div>

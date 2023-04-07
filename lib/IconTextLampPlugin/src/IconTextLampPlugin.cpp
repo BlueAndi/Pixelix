@@ -422,7 +422,7 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 
 String IconTextLampPlugin::getFileName(const String& ext)
 {
-    return generateFullPath(ext);
+    return PluginConfigFsHandler::generateFullPath(getUID(), ext);
 }
 
 bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)

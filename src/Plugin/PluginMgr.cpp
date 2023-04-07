@@ -156,7 +156,7 @@ bool PluginMgr::load()
     JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 4096U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              fullConfigFileName      = Plugin::CONFIG_PATH;
+    String              fullConfigFileName      = PluginConfigFsHandler::CONFIG_PATH;
 
     fullConfigFileName += "/";
     fullConfigFileName += CONFIG_FILE_NAME;
@@ -197,7 +197,7 @@ void PluginMgr::save()
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonArray           jsonSlots           = jsonDoc.createNestedArray("slotConfiguration");
     JsonFile            jsonFile(FILESYSTEM);
-    String              fullConfigFileName  = Plugin::CONFIG_PATH;
+    String              fullConfigFileName  = PluginConfigFsHandler::CONFIG_PATH;
 
     fullConfigFileName += "/";
     fullConfigFileName += CONFIG_FILE_NAME;
@@ -262,11 +262,11 @@ void PluginMgr::checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int lin
 
 void PluginMgr::createPluginConfigDirectory()
 {
-    if (false == FILESYSTEM.exists(Plugin::CONFIG_PATH))
+    if (false == FILESYSTEM.exists(PluginConfigFsHandler::CONFIG_PATH))
     {
-        if (false == FILESYSTEM.mkdir(Plugin::CONFIG_PATH))
+        if (false == FILESYSTEM.mkdir(PluginConfigFsHandler::CONFIG_PATH))
         {
-            LOG_WARNING("Couldn't create directory: %s", Plugin::CONFIG_PATH);
+            LOG_WARNING("Couldn't create directory: %s", PluginConfigFsHandler::CONFIG_PATH);
         }
     }
 }

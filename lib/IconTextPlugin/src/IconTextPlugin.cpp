@@ -302,7 +302,7 @@ bool IconTextPlugin::loadBitmap(const String& filename)
 
 String IconTextPlugin::getFileName(const String& ext)
 {
-    return generateFullPath(ext);
+    return PluginConfigFsHandler::generateFullPath(getUID(), ext);
 }
 
 /******************************************************************************

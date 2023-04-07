@@ -33,11 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "SensorPlugin.h"
-#include "FileSystem.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <JsonFile.h>
 #include <SensorDataProvider.h>
 #include <SensorChannelType.hpp>
 
@@ -62,7 +60,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* SensorPlugin::TOPIC_CHANNEL = "/channel";
+const char* SensorPlugin::TOPIC_CONFIG = "/config";
 
 /******************************************************************************
  * Public Methods
@@ -70,28 +68,17 @@ const char* SensorPlugin::TOPIC_CHANNEL = "/channel";
 
 void SensorPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC_CHANNEL);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool SensorPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CHANNEL))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        uint8_t sensorIdx   = 0U;
-        uint8_t channelIdx  = 0U;
-        bool    isAvailable = getSensorChannel(sensorIdx, channelIdx);
-
-        value["sensorIndex"]    = sensorIdx;
-        value["channelIndex"]   = channelIdx;
-        value["isAvailable"]    = isAvailable;
-
+        getConfiguration(value);
         isSuccessful = true;
-    }
-    else
-    {
-        ;
     }
 
     return isSuccessful;
@@ -101,20 +88,47 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObject& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CHANNEL))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        JsonVariantConst    jsonSensorIndex     = value["sensorIndex"];
-        JsonVariantConst    jsonChannelIndex    = value["channelIndex"];
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonSensorIndex         = value["sensorIndex"];
+        JsonVariantConst    jsonChannelIndex        = value["channelIndex"];
 
-        if ((false == jsonSensorIndex.isNull()) &&
-            (false == jsonChannelIndex.isNull()))
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
+
+        if (false == jsonSensorIndex.isNull())
         {
-            uint8_t sensorIdx   = jsonSensorIndex.as<uint8_t>();
-            uint8_t channelIdx  = jsonChannelIndex.as<uint8_t>();
-        
-            (void)setSensorChannel(sensorIdx, channelIdx);
-
+            jsonCfg["sensorIndex"] = jsonSensorIndex;
             isSuccessful = true;
+        }
+
+        if (false == jsonChannelIndex.isNull())
+        {
+            jsonCfg["channelIndex"] = jsonChannelIndex;
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
     }
     else
@@ -155,6 +169,15 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
             LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
+    else
+    {
+        /* Remember current timestamp to detect updates of the configuration in the
+         * filesystem without using the plugin API.
+         */
+        updateTimestampLastUpdate();
+    }
+
+    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
     m_sensorChannel = getChannel(m_sensorIdx, m_channelIdx);
 
@@ -167,30 +190,56 @@ void SensorPlugin::stop()
     String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
+    m_cfgReloadTimer.stop();
+
     if (false != FILESYSTEM.remove(configurationFilename))
     {
         LOG_INFO("File %s removed", configurationFilename.c_str());
     }
 }
 
-void SensorPlugin::active(YAGfx& gfx)
+void SensorPlugin::process(bool isConnected)
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    PLUGIN_NOT_USED(gfx);
+    PLUGIN_NOT_USED(isConnected);
 
-    /* Load configuration, because it may be changed by web request
-     * or direct editing.
-     */
-    if (true == loadConfiguration())
+    /* Configuration in persistent memory updated? */
+    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
+        (true == m_cfgReloadTimer.isTimeout()))
     {
-        m_sensorChannel = getChannel(m_sensorIdx, m_channelIdx);
-    }
-}
+        if (true == isConfigurationUpdated())
+        {
+            m_reloadConfigReq = true;
+        }
 
-void SensorPlugin::inactive()
-{
-    /* Nothing to do. */
+        m_cfgReloadTimer.restart();
+    }
+
+    if (true == m_storeConfigReq)
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
+        }
+
+        m_storeConfigReq = false;
+    }
+    else if (true == m_reloadConfigReq)
+    {
+        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
+
+        if (true == loadConfiguration())
+        {
+            updateTimestampLastUpdate();
+        }
+
+        m_reloadConfigReq = false;
+    }
+    else
+    {
+        ;
+    }
 }
 
 void SensorPlugin::update(YAGfx& gfx)
@@ -207,62 +256,6 @@ void SensorPlugin::update(YAGfx& gfx)
     m_textWidget.update(gfx);
 }
 
-bool SensorPlugin::getSensorChannel(uint8_t& sensorIdx, uint8_t& channelIdx) const
-{
-    bool                        isAvailable = false;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    sensorIdx   = m_sensorIdx;
-    channelIdx  = m_channelIdx;
-
-    if (nullptr != m_sensorChannel)
-    {
-        isAvailable = true;
-    }
-
-    return isAvailable;
-}
-
-bool SensorPlugin::setSensorChannel(uint8_t sensorIdx, uint8_t channelIdx)
-{
-    ISensorChannel*             channel     = nullptr;
-    bool                        isAvailable = false;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    /* Anything changed? */
-    if ((sensorIdx != m_sensorIdx) ||
-        (channelIdx != m_channelIdx))
-    {
-        channel = getChannel(sensorIdx, channelIdx);
-
-        m_sensorIdx     = sensorIdx;
-        m_channelIdx    = channelIdx;
-        m_sensorChannel = channel;
-
-        if (nullptr != channel)
-        {
-            isAvailable = true;
-        }
-
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Couldn't save configuration.");
-        }
-    }
-    /* Nothing changed and sensor is available? */
-    else if (nullptr != m_sensorChannel)
-    {
-        isAvailable = true;
-    }
-    else
-    {
-        /* Nothing changed, sensor is not available. */
-        ;
-    }
-
-    return isAvailable;
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -270,6 +263,51 @@ bool SensorPlugin::setSensorChannel(uint8_t sensorIdx, uint8_t channelIdx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void SensorPlugin::requestStoreToPersistentMemory()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_storeConfigReq = true;
+}
+
+void SensorPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        isAvailable     = (nullptr != m_sensorChannel)  ? true : false;
+
+    jsonCfg["sensorIndex"]  = m_sensorIdx;
+    jsonCfg["channelIndex"] = m_channelIdx;
+    jsonCfg["isAvailable"]  = isAvailable;
+}
+
+bool SensorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool                status              = false;
+    JsonVariantConst    jsonSensorIndex     = jsonCfg["sensorIndex"];
+    JsonVariantConst    jsonChannelIndex    = jsonCfg["channelIndex"];
+
+    if (false == jsonSensorIndex.is<uint8_t>())
+    {
+        LOG_WARNING("Sensor index not found or invalid type.");
+    }
+    else if (false == jsonChannelIndex.is<uint8_t>())
+    {
+        LOG_WARNING("Channel index not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        m_sensorIdx     = jsonSensorIndex.as<uint8_t>();
+        m_channelIdx    = jsonChannelIndex.as<uint8_t>();
+        m_sensorChannel = getChannel(m_sensorIdx, m_channelIdx);
+
+        status = true;
+    }
+
+    return status;
+}
 
 void SensorPlugin::update()
 {
@@ -307,68 +345,6 @@ ISensorChannel* SensorPlugin::getChannel(uint8_t sensorIdx, uint8_t channelIdx)
     }
 
     return channel;
-}
-
-bool SensorPlugin::saveConfiguration() const
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    jsonDoc["sensorIndex"]  = m_sensorIdx;
-    jsonDoc["channelIndex"] = m_channelIdx;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
-}
-
-bool SensorPlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonVariantConst    jsonSensorIndex     = jsonDoc["sensorIndex"];
-        JsonVariantConst    jsonChannelIndex    = jsonDoc["channelIndex"];
-
-        if (false == jsonSensorIndex.is<uint8_t>())
-        {
-            LOG_WARNING("Sensor index not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonChannelIndex.is<uint8_t>())
-        {
-            LOG_WARNING("Channel index not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_sensorIdx     = jsonSensorIndex.as<uint8_t>();
-            m_channelIdx    = jsonChannelIndex.as<uint8_t>();
-        }
-    }
-
-    return status;
 }
 
 /******************************************************************************

@@ -33,11 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "VolumioPlugin.h"
-#include "FileSystem.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -72,7 +70,7 @@ const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/plugins/VolumioPlugin/vo
 const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/plugins/VolumioPlugin/volumioPause.bmp";
 
 /* Initialize plugin topic. */
-const char* VolumioPlugin::TOPIC                    = "/host";
+const char* VolumioPlugin::TOPIC_CONFIG             = "/config";
 
 /******************************************************************************
  * Public Methods
@@ -80,19 +78,16 @@ const char* VolumioPlugin::TOPIC                    = "/host";
 
 void VolumioPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool VolumioPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        String  host    = getHost();
-
-        value["host"] = host;
-
+        getConfiguration(value);
         isSuccessful = true;
     }
 
@@ -103,20 +98,40 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        String              host;
-        JsonVariantConst    jsonHost = value["host"];
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonHost                = value["host"];
+
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
 
         if (false == jsonHost.isNull())
         {
-            host = jsonHost.as<String>();
+            jsonCfg["host"] = jsonHost.as<String>();
             isSuccessful = true;
         }
 
         if (true == isSuccessful)
         {
-            setHost(host);
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
     }
 
@@ -176,6 +191,15 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
             LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
+    else
+    {
+        /* Remember current timestamp to detect updates of the configuration in the
+         * filesystem without using the plugin API.
+         */
+        updateTimestampLastUpdate();
+    }
+
+    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
     initHttpClient();
 
@@ -187,6 +211,7 @@ void VolumioPlugin::stop()
     String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
+    m_cfgReloadTimer.stop();
     m_offlineTimer.stop();
     m_requestTimer.stop();
 
@@ -201,6 +226,43 @@ void VolumioPlugin::process(bool isConnected)
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
+    /* Configuration in persistent memory updated? */
+    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
+        (true == m_cfgReloadTimer.isTimeout()))
+    {
+        if (true == isConfigurationUpdated())
+        {
+            m_reloadConfigReq = true;
+        }
+
+        m_cfgReloadTimer.restart();
+    }
+
+    if (true == m_storeConfigReq)
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
+        }
+
+        m_storeConfigReq = false;
+    }
+    else if (true == m_reloadConfigReq)
+    {
+        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
+
+        if (true == loadConfiguration())
+        {
+            updateTimestampLastUpdate();
+        }
+
+        m_reloadConfigReq = false;
+    }
+    else
+    {
+        ;
+    }
+    
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
      */
@@ -322,27 +384,6 @@ void VolumioPlugin::update(YAGfx& gfx)
     PLUGIN_NOT_USED(tcY);
 }
 
-String VolumioPlugin::getHost() const
-{
-    String                      host;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    host = m_volumioHost;
-
-    return host;
-}
-
-void VolumioPlugin::setHost(const String& host)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (host != m_volumioHost)
-    {
-        m_volumioHost = host;
-        (void)saveConfiguration();
-    }
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -350,6 +391,44 @@ void VolumioPlugin::setHost(const String& host)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void VolumioPlugin::requestStoreToPersistentMemory()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_storeConfigReq = true;
+}
+
+void VolumioPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["host"] = m_volumioHost;
+}
+
+bool VolumioPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool                status      = false;
+    JsonVariantConst    jsonHost    = jsonCfg["host"];
+
+    if (false == jsonHost.is<String>())
+    {
+        LOG_WARNING("Host not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        m_volumioHost = jsonHost.as<String>();
+
+        /* Force update on display */
+        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+
+        status = true;
+    }
+
+    return status;
+}
 
 void VolumioPlugin::changeState(VolumioState state)
 {
@@ -644,60 +723,6 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
             enable();
         }
     }
-}
-
-bool VolumioPlugin::saveConfiguration() const
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    jsonDoc["host"] = m_volumioHost;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
-}
-
-bool VolumioPlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonVariantConst jsonHost = jsonDoc["host"];
-
-        if (false == jsonHost.is<String>())
-        {
-            LOG_WARNING("Host not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_volumioHost = jsonHost.as<String>();
-        }
-    }
-
-    return status;
 }
 
 void VolumioPlugin::clearQueue()

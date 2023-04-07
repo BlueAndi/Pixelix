@@ -54,6 +54,7 @@
 #include <SimpleTimer.hpp>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -66,7 +67,7 @@
 /**
  * Shows the current AC power being drawn via a Shelly PlugS, in watts.
  */
-class ShellyPlugSPlugin : public Plugin
+class ShellyPlugSPlugin : public Plugin, private PluginConfigFsHandler
 {
 public:
 
@@ -78,6 +79,7 @@ public:
      */
     ShellyPlugSPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        PluginConfigFsHandler(uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -87,6 +89,9 @@ public:
         m_client(),
         m_mutex(),
         m_requestTimer(),
+        m_cfgReloadTimer(),
+        m_storeConfigReq(false),
+        m_reloadConfigReq(false),
         m_taskProxy()
     {
         (void)m_mutex.create();
@@ -259,9 +264,9 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
 
     /**
      * Period in ms for requesting power consumption from the Shelly PlugS.
@@ -275,6 +280,13 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_SECONDS(10U);
 
+    /**
+     * The configuration in the persistent memory shall be cyclic loaded.
+     * This mechanism ensure that manual changes in the file are considered.
+     * This is the reload period in ms.
+     */
+    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
+
     Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_textCanvas;       /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;       /**< Canvas used for the bitmap widget. */
@@ -284,6 +296,9 @@ private:
     AsyncHttpClient         m_client;           /**< Asynchronous HTTP client. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_requestTimer;     /**< Timer is used for cyclic ShellyPlugS  http request. */
+    SimpleTimer             m_cfgReloadTimer;   /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_storeConfigReq;   /**< Is requested to store the configuration in persistent memory? */
+    bool                    m_reloadConfigReq;  /**< Is requested to reload the configuration from persistent memory? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -318,6 +333,27 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
+     * Request to store configuration to persistent memory.
+     */
+    void requestStoreToPersistentMemory();
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
+
+    /**
      * Request new data.
      *
      * @return If successful it will return true otherwise false.
@@ -335,16 +371,6 @@ private:
      * @param[in] jsonDoc   Web response as JSON document
      */
     void handleWebResponse(DynamicJsonDocument& jsonDoc);
-
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 
     /**
      * Clear the task proxy queue.

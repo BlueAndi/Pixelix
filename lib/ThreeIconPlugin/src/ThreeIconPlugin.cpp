@@ -420,7 +420,7 @@ void ThreeIconPlugin::clearBitmap(uint8_t iconId)
 
 String ThreeIconPlugin::getFileName(uint8_t iconId, const String& ext)
 {
-    return generateFullPath("_" + String(iconId) + ext);
+    return PluginConfigFsHandler::generateFullPath(getUID(), "_" + String(iconId) + ext);
 }
 
 /******************************************************************************

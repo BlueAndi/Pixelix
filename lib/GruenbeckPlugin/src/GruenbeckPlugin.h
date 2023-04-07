@@ -45,13 +45,15 @@
  * Includes
  *****************************************************************************/
 #include "AsyncHttpClient.h"
-#include <stdint.h>
 #include "Plugin.hpp"
+
+#include <stdint.h>
 #include <WidgetGroup.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -65,7 +67,7 @@
  * Shows the remaining system capacity (parameter = D_Y_10_1 ) 
  * of the Gruenbeck softliQ SC18 via the system's RESTful webservice.
  */
-class GruenbeckPlugin : public Plugin
+class GruenbeckPlugin : public Plugin, private PluginConfigFsHandler
 {
 public:
 
@@ -77,6 +79,7 @@ public:
      */
     GruenbeckPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        PluginConfigFsHandler(uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -89,6 +92,9 @@ public:
         m_requestTimer(),
         m_mutex(),
         m_isConnectionError(false),
+        m_cfgReloadTimer(),
+        m_storeConfigReq(false),
+        m_reloadConfigReq(false),
         m_taskProxy()
     {
         (void)m_mutex.create();
@@ -243,20 +249,6 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /**
-     * Get ip-address.
-     * 
-     * @return IP-address
-     */
-    String getIPAddress() const;
-
-    /**
-     * Set ip-address.
-     * 
-     * @param[in] ipAddress IP-address
-     */
-    void setIPAddress(const String& ipAddress);
-
 private:
 
     /**
@@ -275,9 +267,9 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
 
     /**
      * Period in ms for requesting data from server.
@@ -291,6 +283,13 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_SECONDS(10U);
 
+    /**
+     * The configuration in the persistent memory shall be cyclic loaded.
+     * This mechanism ensure that manual changes in the file are considered.
+     * This is the reload period in ms.
+     */
+    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
+
     Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -303,6 +302,9 @@ private:
     SimpleTimer             m_requestTimer;             /**< Timer, used for cyclic request of new data. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
     bool                    m_isConnectionError;        /**< Is connection error happened? */
+    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
+    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -339,6 +341,27 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
+     * Request to store configuration to persistent memory.
+     */
+    void requestStoreToPersistentMemory();
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
+
+    /**
      * Request new data.
      * 
      * @return If successful it will return true otherwise false.
@@ -356,16 +379,6 @@ private:
      * @param[in] jsonDoc   Web response as JSON document
      */
     void handleWebResponse(const DynamicJsonDocument& jsonDoc);
-    
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 
     /**
      * Clear the task proxy queue.

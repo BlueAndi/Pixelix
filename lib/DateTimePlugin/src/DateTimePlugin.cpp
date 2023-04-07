@@ -36,8 +36,6 @@
 #include "ClockDrv.h"
 
 #include <Logging.h>
-#include <FileSystem.h>
-#include <JsonFile.h>
 #include <Util.h>
 
 /******************************************************************************
@@ -60,11 +58,19 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize static constants. */
-const char* DateTimePlugin::TOPIC_CFG           = "/dateTime";
+/* Initialize plugin topic. */
+const char* DateTimePlugin::TOPIC_CONFIG        = "/config";
+
+/* Initialize default time format. */
 const char* DateTimePlugin::TIME_FORMAT_DEFAULT = "%I:%M %p";
+
+/* Initialize default date format. */
 const char* DateTimePlugin::DATE_FORMAT_DEFAULT = "%m/%d";
+
+/* Initialize the color of the actual day. */
 const Color DateTimePlugin::DAY_ON_COLOR        = ColorDef::LIGHTGRAY;
+
+/* Initialize the color of the other days (not the actual day). */
 const Color DateTimePlugin::DAY_OFF_COLOR       = ColorDef::ULTRADARKGRAY;
 
 /******************************************************************************
@@ -73,17 +79,16 @@ const Color DateTimePlugin::DAY_OFF_COLOR       = ColorDef::ULTRADARKGRAY;
 
 void DateTimePlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC_CFG);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool DateTimePlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CFG))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        value["cfg"] = getCfg();
-
+        getConfiguration(value);
         isSuccessful = true;
     }
 
@@ -94,15 +99,75 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObject& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CFG))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        JsonVariantConst jsonCfg = value["cfg"];
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonMode                = value["mode"];
+        JsonVariantConst    jsonTimeFormat          = value["timeFormat"];
+        JsonVariantConst    jsonDateFormat          = value["dateFormat"];
+        JsonVariantConst    jsonTimeZone            = value["timeZone"];
+        JsonVariantConst    jsonDayOnColor          = value["dayOnColor"];
+        JsonVariantConst    jsonDayOffColor         = value["dayOffColor"];
 
-        if (false == jsonCfg.isNull())
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
+
+        if (false == jsonMode.isNull())
         {
-            setCfg(static_cast<Cfg>(jsonCfg.as<uint8_t>()));
-
+            jsonCfg["mode"] = jsonMode.as<uint8_t>();
             isSuccessful = true;
+        }
+        
+        if (false == jsonTimeFormat.isNull())
+        {
+            jsonCfg["timeFormat"] = jsonTimeFormat.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonDateFormat.isNull())
+        {
+            jsonCfg["dateFormat"] = jsonDateFormat.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonTimeZone.isNull())
+        {
+            jsonCfg["timeZone"] = jsonTimeZone.as<String>();
+            isSuccessful = true;
+        }
+        
+        if (false == jsonDayOnColor.isNull())
+        {
+            jsonCfg["dayOnColor"] = jsonDayOnColor.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonDayOffColor.isNull())
+        {
+            jsonCfg["dayOffColor"] = jsonDayOffColor.as<String>();
+            isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
     }
 
@@ -160,6 +225,15 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
             LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
+    else
+    {
+        /* Remember current timestamp to detect updates of the configuration in the
+         * filesystem without using the plugin API.
+         */
+        updateTimestampLastUpdate();
+    }
+
+    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
     m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
 
@@ -185,8 +259,10 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
 
 void DateTimePlugin::stop()
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
     String                      configurationFilename   = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    m_cfgReloadTimer.stop();
 
     if (false != FILESYSTEM.remove(configurationFilename))
     {
@@ -199,6 +275,43 @@ void DateTimePlugin::process(bool isConnected)
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     PLUGIN_NOT_USED(isConnected);
+
+    /* Configuration in persistent memory updated? */
+    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
+        (true == m_cfgReloadTimer.isTimeout()))
+    {
+        if (true == isConfigurationUpdated())
+        {
+            m_reloadConfigReq = true;
+        }
+
+        m_cfgReloadTimer.restart();
+    }
+
+    if (true == m_storeConfigReq)
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
+        }
+
+        m_storeConfigReq = false;
+    }
+    else if (true == m_reloadConfigReq)
+    {
+        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
+
+        if (true == loadConfiguration())
+        {
+            updateTimestampLastUpdate();
+        }
+
+        m_reloadConfigReq = false;
+    }
+    else
+    {
+        ;
+    }
 
     /* The date/time information shall be retrieved every second while plugin is activated. */
     if ((true == m_checkUpdateTimer.isTimerRunning()) &&
@@ -252,13 +365,84 @@ void DateTimePlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
+void DateTimePlugin::requestStoreToPersistentMemory()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_storeConfigReq = true;
+}
+
+void DateTimePlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["mode"]         = m_mode;
+    jsonCfg["timeFormat"]   = m_timeFormat;
+    jsonCfg["dateFormat"]   = m_dateFormat;
+    jsonCfg["timeZone"]     = m_timeZone;
+    jsonCfg["dayOnColor"]   = colorToHtml(m_dayOnColor);
+    jsonCfg["dayOffColor"]  = colorToHtml(m_dayOffColor);
+}
+
+bool DateTimePlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool             status             = false;
+    JsonVariantConst jsonMode           = jsonCfg["mode"];
+    JsonVariantConst jsonTimeFormat     = jsonCfg["timeFormat"];
+    JsonVariantConst jsonDateFormat     = jsonCfg["dateFormat"];
+    JsonVariantConst jsonTimeZone       = jsonCfg["timeZone"];
+    JsonVariantConst jsonDayOnColor     = jsonCfg["dayOnColor"];
+    JsonVariantConst jsonDayOffColor    = jsonCfg["dayOffColor"];
+
+    if ((false == jsonMode.is<uint8_t>()) &&
+        (MODE_MAX <= jsonMode.as<uint8_t>()))
+    {
+        LOG_WARNING("JSON mode not found or invalid type.");
+    }
+    else if (false == jsonTimeFormat.is<String>())
+    {
+        LOG_WARNING("JSON time format not found or invalid type.");
+    }
+    else if (false == jsonDateFormat.is<String>())
+    {
+        LOG_WARNING("JSON date format not found or invalid type.");
+    }
+    else if (false == jsonTimeZone.is<String>())
+    {
+        LOG_WARNING("JSON timezone not found or invalid type.");
+    }
+    else if (false == jsonDayOnColor.is<String>())
+    {
+        LOG_WARNING("JSON day on color not found or invalid type.");
+    }
+    else if (false == jsonDayOffColor.is<String>())
+    {
+        LOG_WARNING("JSON day off color not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        m_mode          = static_cast<Mode>(jsonMode.as<uint8_t>());
+        m_timeFormat    = jsonTimeFormat.as<String>();
+        m_dateFormat    = jsonDateFormat.as<String>();
+        m_timeZone      = jsonTimeZone.as<String>();
+        m_dayOnColor    = colorFromHtml(jsonDayOnColor.as<String>());
+        m_dayOffColor   = colorFromHtml(jsonDayOffColor.as<String>());
+
+        status = true;
+    }
+
+    return status;
+}
+
 void DateTimePlugin::updateDateTime(bool force)
 {
     ClockDrv&   clockDrv            = ClockDrv::getInstance();
     struct tm   timeInfo            = { 0 };
     bool        isClockAvailable    = false;
 
-    /* If not other timzone is given, the local time shall be used. */
+    /* If not other timezone is given, the local time shall be used. */
     if (true == m_timeZone.isEmpty())
     {
         isClockAvailable = clockDrv.getTime(&timeInfo);
@@ -274,9 +458,9 @@ void DateTimePlugin::updateDateTime(bool force)
         bool    showTime    = false;
 
         /* Decide what to show. */
-        switch(m_cfg)
+        switch(m_mode)
         {
-        case CFG_DATE_TIME:
+        case MODE_DATE_TIME:
             {
                 uint32_t    duration            = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
                 uint8_t     halfDurationTicks   = 0U;
@@ -320,17 +504,17 @@ void DateTimePlugin::updateDateTime(bool force)
             }
             break;
 
-        case CFG_DATE_ONLY:
+        case MODE_DATE_ONLY:
             showDate = true;
             break;
         
-        case CFG_TIME_ONLY:
+        case MODE_TIME_ONLY:
             showTime = true;
             break;
         
         default:
             /* Should never happen. */
-            m_cfg = CFG_DATE_TIME;
+            m_mode = MODE_DATE_TIME;
             break;
         };
 
@@ -458,120 +642,6 @@ bool DateTimePlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistan
             }
 
             status = true;
-        }
-    }
-
-    return status;
-}
-
-bool DateTimePlugin::saveConfiguration() const
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    jsonDoc["cfg"]          = m_cfg;
-    jsonDoc["timeFormat"]   = m_timeFormat;
-    jsonDoc["dateFormat"]   = m_dateFormat;
-    jsonDoc["timeZone"]     = m_timeZone;
-    jsonDoc["dayOnColor"]   = colorToHtml(m_dayOnColor);
-    jsonDoc["dayOffColor"]  = colorToHtml(m_dayOffColor);
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
-}
-
-bool DateTimePlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonVariantConst jsonCfg            = jsonDoc["cfg"];
-        JsonVariantConst jsonTimeFormat     = jsonDoc["timeFormat"];
-        JsonVariantConst jsonDateFormat     = jsonDoc["dateFormat"];
-        JsonVariantConst jsonTimeZone       = jsonDoc["timeZone"];
-        JsonVariantConst jsonDayOnColor     = jsonDoc["dayOnColor"];
-        JsonVariantConst jsonDayOffColor    = jsonDoc["dayOffColor"];
-
-        if (false == jsonCfg.is<uint8_t>())
-        {
-            LOG_WARNING("JSON cfg not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_cfg = static_cast<Cfg>(jsonCfg.as<uint8_t>());
-        }
-
-        if (false == jsonTimeFormat.is<String>())
-        {
-            LOG_WARNING("JSON time format not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_timeFormat = jsonTimeFormat.as<String>();
-        }
-
-        if (false == jsonDateFormat.is<String>())
-        {
-            LOG_WARNING("JSON date format not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_dateFormat = jsonDateFormat.as<String>();
-        }
-
-        if (false == jsonTimeZone.is<String>())
-        {
-            LOG_WARNING("JSON timezone not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_timeZone = jsonTimeZone.as<String>();
-        }
-
-        if (false == jsonDayOnColor.is<String>())
-        {
-            LOG_WARNING("JSON day on color not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_dayOnColor = colorFromHtml(jsonDayOnColor.as<String>());
-        }
-
-        if (false == jsonDayOffColor.is<String>())
-        {
-            LOG_WARNING("JSON day off color not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_dayOffColor = colorFromHtml(jsonDayOffColor.as<String>());
         }
     }
 

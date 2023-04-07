@@ -52,6 +52,7 @@
 #include <TextWidget.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -64,7 +65,7 @@
 /**
  * Shows weather informations provided by OpenWeather: https://openweathermap.org/
  */
-class OpenWeatherPlugin : public Plugin
+class OpenWeatherPlugin : public Plugin, private PluginConfigFsHandler
 {
 public:
 
@@ -76,6 +77,7 @@ public:
      */
     OpenWeatherPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        PluginConfigFsHandler(uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -100,6 +102,9 @@ public:
         m_slotInterf(nullptr),
         m_durationCounter(0u),
         m_isUpdateAvailable(false),
+        m_cfgReloadTimer(),
+        m_storeConfigReq(false),
+        m_reloadConfigReq(false),
         m_taskProxy()
     {
         (void)m_mutex.create();
@@ -386,9 +391,9 @@ private:
     static const char*      OPEN_WEATHER_BASE_URI;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
 
     /**
      * Period in ms for requesting data from server.
@@ -407,6 +412,13 @@ private:
     /** Time for duration tick period in ms */
     static const uint32_t   DURATION_TICK_PERIOD    = SIMPLE_TIMER_SECONDS(1U);
 
+    /**
+     * The configuration in the persistent memory shall be cyclic loaded.
+     * This mechanism ensure that manual changes in the file are considered.
+     * This is the reload period in ms.
+     */
+    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
+    
     Fonts::FontType             m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup                 m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -431,7 +443,10 @@ private:
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
     uint8_t                     m_durationCounter;          /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
     bool                        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
-    
+    SimpleTimer                 m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                        m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
+    bool                        m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
+
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
      */
@@ -467,16 +482,37 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
-     * Updates the text and icon, which to be displayed.
-     *
-     * @param[in] force Force update.
+     * Request to store configuration to persistent memory.
      */
-    void updateDisplay(bool force);
+    void requestStoreToPersistentMemory();
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
      * Map the UV index value to a color corresponding the the icon.
     */
     const char* uvIndexToColor(uint8_t uvIndex);
+
+    /**
+     * Updates the text and icon, which to be displayed.
+     *
+     * @param[in] force Force update.
+     */
+    void updateDisplay(bool force);
 
     /**
      * Request new data.
@@ -496,16 +532,6 @@ private:
      * @param[in] jsonDoc   Web response as JSON document
      */
     void handleWebResponse(DynamicJsonDocument& jsonDoc);
-
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 
     /**
      * Clear the task proxy queue.

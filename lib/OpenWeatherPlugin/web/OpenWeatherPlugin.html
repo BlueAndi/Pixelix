@@ -37,15 +37,15 @@
                 <p>The plugin shows the current weather condition (icon and temperature) and one aditional information (see configuration below) provided by https://openweathermap.org/.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get the OpenWeather related configuration .</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set OpenWeather related configuration.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather?apiKey=&lt;API-KEY&gt;&lat=&lt;LATITUDE&gt;&lon=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather?apiKey=&lt;API-KEY&gt;&lat=&lt;LATITUDE&gt;&lon=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?apiKey=&lt;API-KEY&gt;&lat=&lt;LATITUDE&gt;&lon=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?apiKey=&lt;API-KEY&gt;&lat=&lt;LATITUDE&gt;&lon=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -57,29 +57,40 @@
 
                 </ul>
                 <h3 class="mt-2">Configuration</h3>
-                <form id="myForm" action="javascript:setWeatherData(pluginUid.options[pluginUid.selectedIndex].value, apiKey.value, lat.value, lon.value, other.options[other.selectedIndex].value, units.options[units.selectedIndex].value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getWeatherData(pluginUid.options[pluginUid.selectedIndex].value, 'apiKey', 'lat', lon, 'other.options[other.selectedIndex].value, units.options[units.selectedIndex].value')">
-                    </select>
-                    <br />
-                    <label for="apiKey">API key:</label><br />
-                    <input type="text" id="apiKey" name="apiKey" value="Your API key" /><br />
-                    <label for="lat">Latitude:</label><br />
-                    <input type="text" id="lat" name="lat" value="The latitude" /><br />
-                    <label for="lon">Longitude:</label><br />
-                    <input type="text" id="lon" name="lon" value="The longitude" /><br />
-                    <label for="other">Additional information:</label><br />
-                    <select id="other" size="1">
-                        <option value="0">uvIndex</option>
-                        <option value="1">humidity</option>
-                        <option value="2">windspeed</option>
-                        <option value="3">off</option>
-                    </select><br />
-                    <label for="units">Units:</label><br />
-                    <select id="units" size="1">
-                        <option value="metric">metric</option>
-                        <option value="imperial">imperial</option>
-                    </select><br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKey">API key:</label>
+                        <input type="text" id="apiKey" name="apiKey" value="Your API key" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="lat">Latitude:</label>
+                        <input type="text" id="lat" name="lat" value="The latitude" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="lon">Longitude:</label>
+                        <input type="text" id="lon" name="lon" value="The longitude" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="other">Additional information:</label>
+                        <select id="other" size="1">
+                            <option value="0">uvIndex</option>
+                            <option value="1">humidity</option>
+                            <option value="2">windspeed</option>
+                            <option value="3">off</option>
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="units">Units:</label>
+                        <select id="units" size="1">
+                            <option value="metric">metric</option>
+                            <option value="imperial">imperial</option>
+                        </select>    
+                    </div>                    
                     <input name="submit" type="submit" value="Update"/>
                 </form>
             </div>
@@ -156,25 +167,18 @@
                 });
             };
     
-            function getWeatherData(pluginUid, apiKeyId, latId, lonId, otherId, unitId) {
+            function getConfig(pluginUid, apiKeyId, latId, lonId, otherId, unitId) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/weather",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var apiKeyInput     = document.getElementById(apiKeyId);
-                    var latInput        = document.getElementById(latId);
-                    var lonInput        = document.getElementById(lonId);
-                    var otherInput      = document.getElementById(otherId);
-                    var unitInput       = document.getElementById(unitId);
-
-                    apiKeyInput.value           = rsp.data.apiKey;
-                    latInput.value              = rsp.data.lat;
-                    lonInput.value              = rsp.data.lon;
-                    otherInput.options.value    = rsp.data.other;
-                    unitInput.options.value     = rsp.data.unit;
-
+                    $("#apiKey").val(rsp.data.apiKey);
+                    $("#lat").val(rsp.data.lat);
+                    $("#lon").val(rsp.data.lon);
+                    $("#other").val(rsp.data.other);
+                    $("#units").val(rsp.data.units);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -182,19 +186,19 @@
                 });
             }
     
-            function setWeatherData(pluginUid, apiKey, lat, lon, other, units) {
+            function setConfig(pluginUid, apiKey, lat, lon, other, units) {
                 disableUI();
     
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/weather",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true,
                     parameter: {
-                        apiKey: apiKey,
-                        lat: lat,
-                        lon: lon,
-                        other: other,
-                        units:units
+                        apiKey: $("#apiKey").val(),
+                        lat: $("#lat").val(),
+                        lon: $("#lon").val(),
+                        other: $("#other").val(),
+                        units: $("#units").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -220,13 +224,8 @@
     
                     if (0 < cnt) {
     
-                        return getWeatherData(
-                            select.options[select.selectedIndex].value,
-                            "apiKey",
-                            "lat",
-                            "lon",
-                            "other",
-                            "units"
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

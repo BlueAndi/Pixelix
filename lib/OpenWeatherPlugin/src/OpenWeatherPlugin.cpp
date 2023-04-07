@@ -33,11 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "OpenWeatherPlugin.h"
-#include "FileSystem.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <JsonFile.h>
 #include <Util.h>
 
 /******************************************************************************
@@ -97,7 +95,7 @@ const char* OpenWeatherPlugin::IMAGE_PATH               = "/plugins/OpenWeatherP
 const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "https://api.openweathermap.org";
 
 /* Initialize plugin topic. */
-const char* OpenWeatherPlugin::TOPIC                    = "/weather";
+const char* OpenWeatherPlugin::TOPIC_CONFIG             = "/config";
 
 /** UV-index table */
 static const UvIndexElem uvIndexTable[] =
@@ -114,21 +112,16 @@ static const UvIndexElem uvIndexTable[] =
 
 void OpenWeatherPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool OpenWeatherPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        value["apiKey"]   = getApiKey();
-        value["lat"]      = getLatitude();
-        value["lon"]      = getLongitude();
-        value["other"]    = static_cast<int>(getAdditionalInformation());
-        value["units"]    = getUnits();
-
+        getConfiguration(value);
         isSuccessful = true;
     }
 
@@ -139,44 +132,68 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        JsonVariantConst    jsonApiKey  = value["apiKey"];
-        JsonVariantConst    jsonLat     = value["lat"];
-        JsonVariantConst    jsonLon     = value["lon"];
-        JsonVariantConst    jsonOther   = value["other"];
-        JsonVariantConst    jsonUnits   = value["units"];
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonApiKey              = value["apiKey"];
+        JsonVariantConst    jsonLat                 = value["lat"];
+        JsonVariantConst    jsonLon                 = value["lon"];
+        JsonVariantConst    jsonOther               = value["other"];
+        JsonVariantConst    jsonUnits               = value["units"];
+
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
 
         if (false == jsonApiKey.isNull())
         {
-            setApiKey(jsonApiKey.as<String>());
+            jsonCfg["apiKey"] = jsonApiKey.as<String>();
             isSuccessful = true;
         }
 
         if (false == jsonLat.isNull())
         {
-            setLatitude(jsonLat.as<String>());
+            jsonCfg["lat"] = jsonLat.as<String>();
             isSuccessful = true;
         }
         
         if (false == jsonLon.isNull())
         {
-            setLongitude(jsonLon.as<String>());
+            jsonCfg["lon"] = jsonLon.as<String>();
             isSuccessful = true;
         }
 
         if (false == jsonOther.isNull())
         {
-            OtherWeatherInformation other = static_cast<OtherWeatherInformation>(jsonOther.as<uint8_t>());
-
-            setAdditionalInformation(other);
+            jsonCfg["other"] = jsonOther.as<int>();
             isSuccessful = true;
         }
 
         if (false == jsonUnits.isNull())
         {
-            setUnits(jsonUnits.as<String>());
+            jsonCfg["units"] = jsonUnits.as<String>();
             isSuccessful = true;
+        }
+
+        if (true == isSuccessful)
+        {
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
     }
 
@@ -227,6 +244,15 @@ void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
             LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
+    else
+    {
+        /* Remember current timestamp to detect updates of the configuration in the
+         * filesystem without using the plugin API.
+         */
+        updateTimestampLastUpdate();
+    }
+
+    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
     initHttpClient();
 }
@@ -236,6 +262,7 @@ void OpenWeatherPlugin::stop()
     String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
+    m_cfgReloadTimer.stop();
     m_requestTimer.stop();
 
     if (false != FILESYSTEM.remove(configurationFilename))
@@ -248,6 +275,43 @@ void OpenWeatherPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    /* Configuration in persistent memory updated? */
+    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
+        (true == m_cfgReloadTimer.isTimeout()))
+    {
+        if (true == isConfigurationUpdated())
+        {
+            m_reloadConfigReq = true;
+        }
+
+        m_cfgReloadTimer.restart();
+    }
+
+    if (true == m_storeConfigReq)
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
+        }
+
+        m_storeConfigReq = false;
+    }
+    else if (true == m_reloadConfigReq)
+    {
+        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
+
+        if (true == loadConfiguration())
+        {
+            updateTimestampLastUpdate();
+        }
+
+        m_reloadConfigReq = false;
+    }
+    else
+    {
+        ;
+    }
 
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
@@ -353,11 +417,6 @@ void OpenWeatherPlugin::active(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    /* Load configuration, because it may be changed by web request
-     * or direct editing.
-     */
-    (void)loadConfiguration();
-
     /* Force immediate weather update on activation */
     updateDisplay(true);
 
@@ -390,116 +449,6 @@ void OpenWeatherPlugin::update(YAGfx& gfx)
     }
 }
 
-String OpenWeatherPlugin::getApiKey() const
-{
-    String                      apiKey;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    apiKey = m_apiKey;
-
-    return apiKey;
-}
-
-void OpenWeatherPlugin::setApiKey(const String& apiKey)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (apiKey != m_apiKey)
-    {
-        m_apiKey = apiKey;
-
-        (void)saveConfiguration();
-    }
-}
-
-String OpenWeatherPlugin::getLatitude() const
-{
-    String                      latitude;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    latitude = m_latitude;
-
-    return latitude;
-}
-
-void OpenWeatherPlugin::setLatitude(const String& latitude)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (latitude != m_latitude)
-    {
-        m_latitude = latitude;
-
-        (void)saveConfiguration();
-    }
-}
-
-String OpenWeatherPlugin::getLongitude() const
-{
-    String                      longitude;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    longitude = m_longitude;
-
-    return longitude;
-}
-
-void OpenWeatherPlugin::setLongitude(const String& longitude)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (longitude != m_longitude)
-    {
-        m_longitude = longitude;
-
-        (void)saveConfiguration();
-    }
-}
-
-OpenWeatherPlugin::OtherWeatherInformation OpenWeatherPlugin::getAdditionalInformation() const
-{
-    OtherWeatherInformation     additionalInformation;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    additionalInformation = m_additionalInformation;
-
-    return additionalInformation;
-}
-
-void OpenWeatherPlugin::setAdditionalInformation(const OtherWeatherInformation& additionalInformation)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (additionalInformation != m_additionalInformation)
-    {
-        m_additionalInformation = additionalInformation;
-
-        (void)saveConfiguration();
-    }
-}
-
-String OpenWeatherPlugin::getUnits() const
-{
-    String                      units;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    units = m_units;
-
-    return units;
-}
-
-void OpenWeatherPlugin::setUnits(const String& units)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (units != m_units)
-    {
-        m_units = units;
-
-        (void)saveConfiguration();
-    }
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -507,6 +456,72 @@ void OpenWeatherPlugin::setUnits(const String& units)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void OpenWeatherPlugin::requestStoreToPersistentMemory()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_storeConfigReq = true;
+}
+
+void OpenWeatherPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["apiKey"]   = m_apiKey;
+    jsonCfg["lat"]      = m_latitude;
+    jsonCfg["lon"]      = m_longitude;
+    jsonCfg["other"]    = static_cast<int>(m_additionalInformation);
+    jsonCfg["units"]    = m_units;
+}
+
+bool OpenWeatherPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool                status      = false;
+    JsonVariantConst    jsonApiKey  = jsonCfg["apiKey"];
+    JsonVariantConst    jsonLat     = jsonCfg["lat"];
+    JsonVariantConst    jsonLon     = jsonCfg["lon"];
+    JsonVariantConst    jsonOther   = jsonCfg["other"];
+    JsonVariantConst    jsonUnits   = jsonCfg["units"];
+
+    if (false == jsonApiKey.is<String>())
+    {
+        LOG_WARNING("API key not found or invalid type.");
+    }
+    else if (false == jsonLat.is<String>())
+    {
+        LOG_WARNING("Latitude not found or invalid type.");
+    }
+    else if (false == jsonLon.is<String>())
+    {
+        LOG_WARNING("Longitude not found or invalid type.");
+    }
+    else if (false == jsonOther.is<int>())
+    {
+        LOG_WARNING("other not found or invalid type.");
+    }
+    else if (false == jsonUnits.is<String>())
+    {
+        LOG_WARNING("Units not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        m_apiKey                = jsonApiKey.as<String>();
+        m_latitude              = jsonLat.as<String>();
+        m_longitude             = jsonLon.as<String>();
+        m_additionalInformation = static_cast<OtherWeatherInformation>(jsonOther.as<int>());
+        m_units                 = jsonUnits.as<String>();
+
+        /* Force update on display */
+        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+
+        status = true;
+    }
+
+    return status;
+}
 
 const char* OpenWeatherPlugin::uvIndexToColor(uint8_t uvIndex)
 {
@@ -817,92 +832,6 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
         updateDisplay(false);
     }
-}
-
-bool OpenWeatherPlugin::saveConfiguration() const
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    jsonDoc["apiKey"]   = m_apiKey;
-    jsonDoc["lat"]      = m_latitude;
-    jsonDoc["lon"]      = m_longitude;
-    jsonDoc["other"]    = static_cast<int>(m_additionalInformation);
-    jsonDoc["units"]    = m_units;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
-}
-
-bool OpenWeatherPlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonVariantConst    jsonApiKey  = jsonDoc["apiKey"];
-        JsonVariantConst    jsonLat     = jsonDoc["lat"];
-        JsonVariantConst    jsonLon     = jsonDoc["lon"];
-        JsonVariantConst    jsonOther   = jsonDoc["other"];
-        JsonVariantConst    jsonUnits   = jsonDoc["units"];
-
-        if (false == jsonApiKey.is<String>())
-        {
-            LOG_WARNING("API key not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonLat.is<String>())
-        {
-            LOG_WARNING("Latitude not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonLon.is<String>())
-        {
-            LOG_WARNING("Longitude not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonOther.is<int>())
-        {
-            LOG_WARNING("other not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonUnits.is<String>())
-        {
-            LOG_WARNING("Units not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_apiKey                = jsonApiKey.as<String>();
-            m_latitude              = jsonLat.as<String>();
-            m_longitude             = jsonLon.as<String>();
-            m_additionalInformation = static_cast<OtherWeatherInformation>(jsonOther.as<int>());
-            m_units                 = jsonUnits.as<String>();
-        }
-    }
-
-    return status;
 }
 
 void OpenWeatherPlugin::clearQueue()

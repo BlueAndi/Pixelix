@@ -50,6 +50,7 @@
 #include <ISensorChannel.hpp>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -62,7 +63,7 @@
 /**
  * The sensor plugin can show a provided value by any connected sensor.
  */
-class SensorPlugin : public Plugin
+class SensorPlugin : public Plugin, private PluginConfigFsHandler
 {
 public:
 
@@ -74,12 +75,16 @@ public:
      */
     SensorPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
+        PluginConfigFsHandler(uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textWidget(),
         m_mutex(),
         m_sensorIdx(0U),
         m_channelIdx(0U),
-        m_sensorChannel(nullptr)
+        m_sensorChannel(nullptr),
+        m_cfgReloadTimer(),
+        m_storeConfigReq(false),
+        m_reloadConfigReq(false)
     {
         (void)m_mutex.create();
     }
@@ -188,18 +193,14 @@ public:
     void stop() final;
 
     /**
-     * This method will be called in case the plugin is set active, which means
-     * it will be shown on the display in the next step.
-     *
-     * @param[in] gfx   Display graphics interface
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     * 
+     * @param[in] isConnected   The network connection status. If network
+     *                          connection is established, it will be true otherwise false.
      */
-    void active(YAGfx& gfx) final;
-
-    /**
-     * This method will be called in case the plugin is set inactive, which means
-     * it won't be shown on the display anymore.
-     */
-    void inactive() final;
+    void process(bool isConnected) final;
 
     /**
      * Update the display.
@@ -209,43 +210,54 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /**
-     * Get selected sensor and channel, which data is shown.
-     * 
-     * @param[out] sensorIdx    Sensor index
-     * @param[out] channelIdx   Sensor channel index
-     * 
-     * @return If selected sensor is available, it will return true otherwise false.
-     */
-    bool getSensorChannel(uint8_t& sensorIdx, uint8_t& channelIdx) const;
-
-    /**
-     * Select sensor and channel, which data to show.
-     * 
-     * @param[in] sensorIdx     Sensor index
-     * @param[in] channelIdx    Sensor channel index
-     * 
-     * @return If sensor is available, it will return true otherwise false.
-     */
-    bool setSensorChannel(uint8_t sensorIdx, uint8_t channelIdx);
-
 private:
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC_CHANNEL;
+    static const char*      TOPIC_CONFIG;
 
     /** Sensor value update period in ms. */
     static const uint32_t   UPDATE_PERIOD   = SIMPLE_TIMER_SECONDS(2U);
 
-    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
-    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
-    uint8_t                 m_sensorIdx;        /**< Index of selected sensor. */
-    uint8_t                 m_channelIdx;       /**< Index of selected channel. */
-    ISensorChannel*         m_sensorChannel;    /**< Values of this channel will be shown. */
-    SimpleTimer             m_updateTimer;      /**< Sensor value update timer. */
+    /**
+     * The configuration in the persistent memory shall be cyclic loaded.
+     * This mechanism ensure that manual changes in the file are considered.
+     * This is the reload period in ms.
+     */
+    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
+
+    Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
+    uint8_t                 m_sensorIdx;                /**< Index of selected sensor. */
+    uint8_t                 m_channelIdx;               /**< Index of selected channel. */
+    ISensorChannel*         m_sensorChannel;            /**< Values of this channel will be shown. */
+    SimpleTimer             m_updateTimer;              /**< Sensor value update timer. */
+    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
+    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
+
+    /**
+     * Request to store configuration to persistent memory.
+     */
+    void requestStoreToPersistentMemory();
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
      * Update shown information.
@@ -261,16 +273,6 @@ private:
      * @return Sensor channel
      */
     ISensorChannel* getChannel(uint8_t sensorIdx, uint8_t channelIdx);
-
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 };
 
 /******************************************************************************

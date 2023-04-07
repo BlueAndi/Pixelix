@@ -36,11 +36,9 @@
 #include "ClockDrv.h"
 #include "SunrisePlugin.h"
 #include "time.h"
-#include "FileSystem.h"
 
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -66,7 +64,7 @@
 const char* SunrisePlugin::IMAGE_PATH           = "/plugins/SunrisePlugin/sunrise.bmp";
 
 /* Initialize plugin topic. */
-const char* SunrisePlugin::TOPIC                = "/location";
+const char* SunrisePlugin::TOPIC_CONFIG         = "/config";
 
 /* Initialize time format. */
 const char* SunrisePlugin::TIME_FORMAT_DEFAULT  = "%I:%M %p";
@@ -77,23 +75,16 @@ const char* SunrisePlugin::TIME_FORMAT_DEFAULT  = "%I:%M %p";
 
 void SunrisePlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool SunrisePlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        String  longitude;
-        String  latitude;
-
-        getLocation(longitude, latitude);
-
-        value["longitude"]  = longitude;
-        value["latitude"]   = latitude;
-
+        getConfiguration(value);
         isSuccessful = true;
     }
 
@@ -104,30 +95,47 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        String              longitude;
-        String              latitude;
-        JsonVariantConst    jsonLongitude   = value["longitude"];
-        JsonVariantConst    jsonLatitude    = value["latitude"];
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonLongitude           = value["longitude"];
+        JsonVariantConst    jsonLatitude            = value["latitude"];
 
-        getLocation(longitude, latitude);
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
 
         if (false == jsonLongitude.isNull())
         {
-            longitude = jsonLongitude.as<String>();
+            jsonCfg["longitude"] = jsonLongitude.as<String>();
             isSuccessful = true;
         }
 
         if (false == jsonLatitude.isNull())
         {
-            latitude = jsonLatitude.as<String>();
+            jsonCfg["latitude"] = jsonLatitude.as<String>();
             isSuccessful = true;
         }
 
         if (true == isSuccessful)
         {
-            setLocation(longitude, latitude);
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
     }
 
@@ -173,6 +181,15 @@ void SunrisePlugin::start(uint16_t width, uint16_t height)
             LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
         }
     }
+    else
+    {
+        /* Remember current timestamp to detect updates of the configuration in the
+         * filesystem without using the plugin API.
+         */
+        updateTimestampLastUpdate();
+    }
+
+    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
     initHttpClient();
 }
@@ -182,6 +199,7 @@ void SunrisePlugin::stop()
     String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
+    m_cfgReloadTimer.stop();
     m_requestTimer.stop();
 
     if (false != FILESYSTEM.remove(configurationFilename))
@@ -194,6 +212,43 @@ void SunrisePlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    /* Configuration in persistent memory updated? */
+    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
+        (true == m_cfgReloadTimer.isTimeout()))
+    {
+        if (true == isConfigurationUpdated())
+        {
+            m_reloadConfigReq = true;
+        }
+
+        m_cfgReloadTimer.restart();
+    }
+
+    if (true == m_storeConfigReq)
+    {
+        if (false == saveConfiguration())
+        {
+            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
+        }
+
+        m_storeConfigReq = false;
+    }
+    else if (true == m_reloadConfigReq)
+    {
+        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
+
+        if (true == loadConfiguration())
+        {
+            updateTimestampLastUpdate();
+        }
+
+        m_reloadConfigReq = false;
+    }
+    else
+    {
+        ;
+    }
 
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
@@ -270,31 +325,6 @@ void SunrisePlugin::update(YAGfx& gfx)
     m_textCanvas.update(gfx);
 }
 
-void SunrisePlugin::getLocation(String& longitude, String&latitude) const
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    longitude   = m_longitude;
-    latitude    = m_latitude;
-}
-
-void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if ((longitude != m_longitude) ||
-        (latitude != m_latitude))
-    {
-        m_longitude = longitude;
-        m_latitude  = latitude;
-
-        /* Always stores the configuration, otherwise it will be overwritten during
-         * plugin activation.
-         */
-        (void)saveConfiguration();
-    }
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -302,6 +332,58 @@ void SunrisePlugin::setLocation(const String& longitude, const String& latitude)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void SunrisePlugin::requestStoreToPersistentMemory()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    m_storeConfigReq = true;
+}
+
+void SunrisePlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["longitude"]    = m_longitude;
+    jsonCfg["latitude"]     = m_latitude;
+    jsonCfg["timeFormat"]   = m_timeFormat;
+}
+
+bool SunrisePlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool                status          = false;
+    JsonVariantConst    jsonLon         = jsonCfg["longitude"];
+    JsonVariantConst    jsonLat         = jsonCfg["latitude"];
+    JsonVariantConst    jsonTimeFormat  = jsonCfg["timeFormat"];
+
+    if (false == jsonLon.is<String>())
+    {
+        LOG_WARNING("longitude not found or invalid type.");
+    }
+    else if (false == jsonLat.is<String>())
+    {
+        LOG_WARNING("latitude not found or invalid type.");
+    }
+    else if (false == jsonTimeFormat.is<String>())
+    {
+        LOG_WARNING("JSON time format not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        m_longitude     = jsonLon.as<String>();
+        m_latitude      = jsonLat.as<String>();
+        m_timeFormat    = jsonTimeFormat.as<String>();
+
+        /* Force update on display */
+        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+
+        status = true;
+    }
+
+    return status;
+}
 
 bool SunrisePlugin::startHttpRequest()
 {
@@ -447,80 +529,6 @@ String SunrisePlugin::addCurrentTimezoneValues(const String& dateTimeString) con
     (void)strftime(timeBuffer, sizeof(timeBuffer), m_timeFormat.c_str(), lcTimeInfo);
 
     return timeBuffer;
-}
-
-bool SunrisePlugin::saveConfiguration() const
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    jsonDoc["longitude"]    = m_longitude;
-    jsonDoc["latitude"]     = m_latitude;
-    jsonDoc["timeFormat"]   = m_timeFormat;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
-}
-
-bool SunrisePlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonVariantConst    jsonLon         = jsonDoc["longitude"];
-        JsonVariantConst    jsonLat         = jsonDoc["latitude"];
-        JsonVariantConst    jsonTimeFormat  = jsonDoc["timeFormat"];
-
-        if (false == jsonLon.is<String>())
-        {
-            LOG_WARNING("longitude not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonLat.is<String>())
-        {
-            LOG_WARNING("latitude not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_longitude = jsonLon.as<String>();
-            m_latitude  = jsonLat.as<String>();
-        }
-
-        if (false == jsonTimeFormat.is<String>())
-        {
-            LOG_WARNING("JSON time format not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_timeFormat = jsonTimeFormat.as<String>();
-        }
-    }
-
-    return status;
 }
 
 void SunrisePlugin::clearQueue()

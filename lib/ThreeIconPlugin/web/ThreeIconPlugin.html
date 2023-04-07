@@ -82,61 +82,71 @@
                 <h3 class="mt-1">Bitmap/Sprite sheet</h3>
                 <h4 class="mt-1">Set Icon</h4>
                 <form id="setIconForm" enctype="multipart/form-data" action="javascript:setIconByForm('setIconForm')">
-                    <label for="pluginUidBitmap">Plugin UID:</label><br />
-                    <select id="pluginUidBitmap" name="pluginUid" size="1">
-                    </select>
-                    <br />
-                    <label for="iconPosBitmap">Icon Position:</label><br />
-                    <select id="iconPosBitmap" name="iconPos" size="1">
-                        <option value="0" selected>Left</option>
-                        <option value="1">Middle</option>
-                        <option value="2">Right</option>
-                    </select>
-                    <br />
-                    <label for="bitmap">Icon:</label><br />
-                    <input id="fileBitmap" name="file" type="file" /><br />
+                    <div class="form-group">
+                        <label for="pluginUidBitmap">Plugin UID:</label>
+                        <select id="pluginUidBitmap" name="pluginUid" size="1">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="iconPosBitmap">Icon Position:</label>
+                        <select id="iconPosBitmap" name="iconPos" size="1">
+                            <option value="0" selected>Left</option>
+                            <option value="1">Middle</option>
+                            <option value="2">Right</option>
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="bitmap">Icon:</label>
+                        <input id="fileBitmap" name="file" type="file" />    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h4 class="mt-1">Clear Icon</h4>
                 <form id="clearIconForm" enctype="multipart/form-data" action="javascript:clearIconByForm('clearIconForm')">
-                    <label for="pluginUidClearIcon">Plugin UID:</label><br />
-                    <select id="pluginUidClearIcon" name="pluginUid" size="1">
-                    </select>
-                    <br />
-                    <label for="iconPosClearIcon">Icon Position:</label><br />
-                    <select id="iconPosClearIcon" name="iconPos" size="1">
-                        <option value="0" selected>Left</option>
-                        <option value="1">Middle</option>
-                        <option value="2">Right</option>
-                    </select>
-                    <br />
+                    <div class="form-group">
+                        <label for="pluginUidClearIcon">Plugin UID:</label>
+                        <select id="pluginUidClearIcon" name="pluginUid" size="1">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="iconPosClearIcon">Icon Position:</label>
+                        <select id="iconPosClearIcon" name="iconPos" size="1">
+                            <option value="0" selected>Left</option>
+                            <option value="1">Middle</option>
+                            <option value="2">Right</option>
+                        </select>    
+                    </div>
                     <input name="submit" type="submit" value="Clear"/>
                 </form>
                 <h3 class="mt-1">Animation configuration</h3>
                 <form id="myFormAnimation" enctype="multipart/form-data" action="javascript:setAnimationByForm('myFormAnimation')">
-                    <label for="pluginUidAnimation">Plugin UID:</label><br />
-                    <select id="pluginUidAnimation" name="pluginUid" size="1">
-                    </select>
-                    <br />
-                    <label for="iconPosAnimation">Icon Position:</label><br />
-                    <select id="iconPosAnimation" name="iconPos" size="1" onchange="getAnimationByForm('myFormAnimation')">
-                        <option value="0" selected>Left</option>
-                        <option value="1">Middle</option>
-                        <option value="2">Right</option>
-                    </select>
-                    <br />
-                    <label for="forwardAnimation">Forward:</label><br />
-                    <select id="forwardAnimation" name="forward" size="1">
-                        <option>false</option>
-                        <option>true</option>
-                    </select>
-                    <br />
-                    <label for="repeatAnimation">Repeat:</label><br />
-                    <select id="repeatAnimation" name="repeat" size="1">
-                        <option>false</option>
-                        <option>true</option>
-                    </select>
-                    <br />
+                    <div class="form-group">
+                        <label for="pluginUidAnimation">Plugin UID:</label>
+                        <select id="pluginUidAnimation" name="pluginUid" size="1">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="iconPosAnimation">Icon Position:</label>
+                        <select id="iconPosAnimation" name="iconPos" size="1" onchange="getAnimationByForm('myFormAnimation')">
+                            <option value="0" selected>Left</option>
+                            <option value="1">Middle</option>
+                            <option value="2">Right</option>
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="forwardAnimation">Forward:</label>
+                        <select id="forwardAnimation" name="forward" size="1">
+                            <option>false</option>
+                            <option>true</option>
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="repeatAnimation">Repeat:</label>
+                        <select id="repeatAnimation" name="repeat" size="1">
+                            <option>false</option>
+                            <option>true</option>
+                        </select>    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
             </div>

@@ -205,6 +205,13 @@ private:
      */
     void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
 
+    /**
+     * Convert HTTP parameters to JSON format.
+     * 
+     * @param[in, out]  jsonDocPar  JSON document which the parameters will be transfered to.
+     * @param[in]       request     HTTP request with parameters
+     */
+    void par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest *request);
 };
 
 /******************************************************************************
