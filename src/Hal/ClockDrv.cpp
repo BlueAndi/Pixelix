@@ -73,6 +73,7 @@ void ClockDrv::init()
         String              ntpServerAddress;
         struct tm           timeInfo            = { 0 };
         SettingsService&    settings            = SettingsService::getInstance();
+        char                tzBuffer[TZ_MIN_SIZE];
 
         /* Get the GMT offset, daylight saving enabled/disabled and NTP server address from persistent memory. */
         if (false == settings.open(true))
@@ -89,6 +90,12 @@ void ClockDrv::init()
             settings.close();
         }
 
+        /* Workaround part 1 to avoid memory leaks by calling setenv() of the newlib.
+         * https://github.com/espressif/esp-idf/issues/3046
+         */
+        strcpy(tzBuffer, TZ_UTC);
+        fillUpWithSpaces(tzBuffer, TZ_MIN_SIZE);
+
         /* Configure NTP:
          * This will periodically synchronize the time. The time synchronization
          * period is determined by CONFIG_LWIP_SNTP_UPDATE_DELAY (default value is one hour).
@@ -96,7 +103,12 @@ void ClockDrv::init()
          * https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/system_time.html
          * https://github.com/espressif/esp-idf/issues/4386
          */
-        configTzTime(TZ_UTC, ntpServerAddress.c_str());
+        configTzTime(tzBuffer, ntpServerAddress.c_str());
+
+        /* Workaround part 2 to avoid memory leaks by calling setenv() of the newlib.
+         * https://github.com/espressif/esp-idf/issues/3046
+         */
+        m_internalTimeZoneBuffer = getenv("TZ");
 
         /* Wait for synchronization (default 5s) */
         if (false == getLocalTime(&timeInfo))
@@ -119,26 +131,7 @@ void ClockDrv::init()
 
 bool ClockDrv::getTime(tm* timeInfo)
 {
-    const uint32_t  WAIT_TIME_MS    = 0U;
-    bool            result          = false;
-
-    if (false == m_timeZone.isEmpty())
-    {
-        /* Configure timezone */
-        setenv("TZ", m_timeZone.c_str(), 1);
-        tzset();
-    }
-
-    result = getLocalTime(timeInfo, WAIT_TIME_MS);
-
-    if (false == m_timeZone.isEmpty())
-    {
-        /* Reset timezone to UTC */
-        setenv("TZ", TZ_UTC, 1);
-        tzset();
-    }
-
-    return result;
+    return getTzTime(m_timeZone.c_str(), timeInfo);
 }
 
 bool ClockDrv::getUtcTime(tm* timeInfo)
@@ -156,8 +149,17 @@ bool ClockDrv::getTzTime(const char* tz, tm* timeInfo)
     if (nullptr != tz)
     {
         /* Configure timezone */
-        setenv("TZ", tz, 1);
-        tzset();
+        if (nullptr != m_internalTimeZoneBuffer)
+        {
+            /* Not nice, just a workaround which replaces
+             * setenv("TZ", tz, 1);
+             * to avoid memory leaks.
+             */
+            strncpy(m_internalTimeZoneBuffer, tz, TZ_MIN_SIZE - 1U);
+            m_internalTimeZoneBuffer[TZ_MIN_SIZE - 1U] = '\0';
+
+            tzset();
+        }
     }
 
     result = getLocalTime(timeInfo, WAIT_TIME_MS);
@@ -165,8 +167,17 @@ bool ClockDrv::getTzTime(const char* tz, tm* timeInfo)
     if (nullptr != tz)
     {
         /* Reset timezone to UTC */
-        setenv("TZ", TZ_UTC, 1);
-        tzset();
+        if (nullptr != m_internalTimeZoneBuffer)
+        {
+            /* Not nice, just a workaround which replaces
+             * setenv("TZ", TZ_UTC, 1);
+             * to avoid memory leaks.
+             */
+            strncpy(m_internalTimeZoneBuffer, TZ_UTC, TZ_MIN_SIZE - 1U);
+            m_internalTimeZoneBuffer[TZ_MIN_SIZE - 1U] = '\0';
+
+            tzset();
+        }
     }
 
     return result;
@@ -179,6 +190,20 @@ bool ClockDrv::getTzTime(const char* tz, tm* timeInfo)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void ClockDrv::fillUpWithSpaces(char* str, size_t size)
+{
+    size_t idx          = strlen(str);
+    size_t maxLength    = size - 1U;
+
+    while(maxLength > idx)
+    {
+        str[idx] = ' ';
+        ++idx;
+    }
+
+    str[size - 1U] = '\0';
+}
 
 /******************************************************************************
  * External Functions

@@ -109,8 +109,13 @@ public:
 
 private:
 
+    /**
+     * The minimum timezone string size (incl. string termination).
+     */
+    static const size_t TZ_MIN_SIZE = 60U;
+
     /** Use UTC timezone by default. */
-    static const char* TZ_UTC;
+    static const char*  TZ_UTC;
 
     /** Flag indicating a initialized clock driver. */
     bool    m_isClockDrvInitialized;
@@ -118,12 +123,16 @@ private:
     /** Device timezone */
     String  m_timeZone;
 
+    /** newlib's internal timezone buffer. */
+    char*   m_internalTimeZoneBuffer;
+
     /**
      * Construct ClockDrv.
      */
     ClockDrv() :
         m_isClockDrvInitialized(false),
-        m_timeZone(TZ_UTC)
+        m_timeZone(TZ_UTC),
+        m_internalTimeZoneBuffer(nullptr)
     {
     }
 
@@ -137,6 +146,14 @@ private:
     /* Prevent copying */
     ClockDrv(const ClockDrv&);
     ClockDrv&operator=(const ClockDrv&);
+
+    /**
+     * Fill string up with spaces.
+     * 
+     * @param[in, out]  str     String which to fill up.
+     * @param[in]       size    String buffer size in byte (incl. termination)
+     */
+    void fillUpWithSpaces(char* str, size_t size);
 };
 
 /******************************************************************************
