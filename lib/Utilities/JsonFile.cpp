@@ -34,8 +34,12 @@
  *****************************************************************************/
 #include "JsonFile.h"
 
+#ifndef NATIVE
+
 #define STREAMUTILS_ENABLE_EEPROM 0
 #include <StreamUtils.h>
+
+#endif  /* NATIVE */
 
 /******************************************************************************
  * Compiler Switches
@@ -68,8 +72,12 @@ bool JsonFile::load(const String& fileName, JsonDocument& doc)
 
     if (true == fd)
     {
+#ifdef NATIVE
+        DeserializationError    error   = deserializeJson(doc, fd);
+#else   /* NATIVE */
         ReadBufferingStream     bufferedStream(fd, CHUNK_SIZE);
         DeserializationError    error   = deserializeJson(doc, bufferedStream);
+#endif  /* NATIVE */
 
         if (DeserializationError::Ok == error.code())
         {
@@ -89,15 +97,25 @@ bool JsonFile::save(const String& fileName, const JsonDocument& doc)
 
     if (true == fd)
     {
+#ifndef NATIVE
         WriteBufferingStream    bufferedStream(fd, CHUNK_SIZE);
+#endif  /* NATIVE */
+
         size_t                  write   = measureJsonPretty(doc);
         
+#ifdef NATIVE        
+        if (write == serializeJsonPretty(doc, fd))
+#else   /* NATIVE */
         if (write == serializeJsonPretty(doc, bufferedStream))
+#endif  /* NATIVE */
         {
             isSuccessful = true;
         }
 
+#ifndef NATIVE
         bufferedStream.flush();
+#endif  /* NATIVE*/
+
         fd.close();
     }
 
