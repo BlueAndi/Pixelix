@@ -67,6 +67,8 @@ void LogSinkWebsocket::send(const Logging::Msg& msg)
 
         buffer += "EVT";
         buffer += DELIMITER;
+        buffer += "LOG";
+        buffer += DELIMITER;
         buffer += msg.timestamp;
         buffer += DELIMITER;
         buffer += msg.level;

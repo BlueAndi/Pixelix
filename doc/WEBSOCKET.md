@@ -181,7 +181,7 @@ Response:
   * ```NACK```
 
 Event: If logging is enabled, a event will be automatically be sent for every log message.
-* ```EVT;<timestamp>;<level>;<filename>;<line>;<text>```
+* ```EVT;LOG;<timestamp>;<level>;<filename>;<line>;<text>```
 * ```<timestamp>```: Timestamp in ms
 * ```<level>```: Log level
 * ```<filename>```: Filename where the log message comes from, emphasized in "".
