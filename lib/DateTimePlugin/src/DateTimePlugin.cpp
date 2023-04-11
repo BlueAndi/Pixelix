@@ -588,8 +588,15 @@ void DateTimePlugin::setWeekdayIndicator(tm timeInfo)
     /* Last active lamp has to be deactivated. */
     uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);
 
-    m_lampWidgets[activeLamp].setOnState(true);
-    m_lampWidgets[lampToDeactivate].setOnState(false);
+    if (DateTimePlugin::MAX_LAMPS > activeLamp)
+    {
+        m_lampWidgets[activeLamp].setOnState(true);
+    }
+
+    if (DateTimePlugin::MAX_LAMPS > lampToDeactivate)
+    {
+        m_lampWidgets[lampToDeactivate].setOnState(false);
+    }
 }
 
 bool DateTimePlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)
