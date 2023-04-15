@@ -86,8 +86,8 @@ public:
         m_pageTime(10000U),
         m_timer(),
         m_mutex(),
-        m_humid(0.0F),
-        m_temp(0.0F),
+        m_humidity(0.0F),
+        m_temperature(0.0F),
         m_sensorUpdateTimer(),
         m_slotInterf(nullptr),
         m_temperatureSensorCh(nullptr),
@@ -248,15 +248,25 @@ private:
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     uint8_t                     m_page;                     /**< Number of page, which to show. */
-    unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
+    uint32_t                    m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
     SimpleTimer                 m_timer;                    /**< Timer for changing page. */
     MutexRecursive              m_mutex;                    /**< Mutex to protect against concurrent access. */
-    float                       m_humid;                    /**< Last sensor humidity value */
-    float                       m_temp;                     /**< Last sensor temperature value */
+    float                       m_humidity;                 /**< Last sensor humidity value in %. */
+    float                       m_temperature;              /**< Last sensor temperature value in °C. */
     SimpleTimer                 m_sensorUpdateTimer;        /**< Time used for cyclic sensor reading. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
     ISensorChannel*             m_temperatureSensorCh;      /**< Temperature sensor channel */
     ISensorChannel*             m_humiditySensorCh;         /**< Humidity sensor channel */
+
+    /**
+     * Get the current temperature and prepare the widgets about shall be shown.
+     */
+    void handleTemperature();
+
+    /**
+     * Get the current humidity and prepare the widgets about shall be shown.
+     */
+    void handleHumidity();
 };
 
 /******************************************************************************
