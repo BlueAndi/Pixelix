@@ -396,6 +396,16 @@ private:
     static const char*      TOPIC_CONFIG;
 
     /**
+     * Filename extension of bitmap image file.
+     */
+    static const char*      FILE_EXT_BITMAP;
+
+    /**
+     * Filename extension of sprite sheet parameter file.
+     */
+    static const char*      FILE_EXT_SPRITE_SHEET;
+
+    /**
      * Period in ms for requesting data from server.
      * This is used in case the last request to the server was successful.
      * 

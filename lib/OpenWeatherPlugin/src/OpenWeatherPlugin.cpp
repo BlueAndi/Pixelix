@@ -97,6 +97,12 @@ const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "https://api.openweath
 /* Initialize plugin topic. */
 const char* OpenWeatherPlugin::TOPIC_CONFIG             = "/weather";
 
+/* Initialize bitmap image filename extension. */
+const char* OpenWeatherPlugin::FILE_EXT_BITMAP          = ".bmp";
+
+/* Initialize sprite sheet parameter filename extension. */
+const char* OpenWeatherPlugin::FILE_EXT_SPRITE_SHEET    = ".sprite";
+
 /** UV-index table */
 static const UvIndexElem uvIndexTable[] =
 {
@@ -563,6 +569,20 @@ void OpenWeatherPlugin::updateDisplay(bool force)
 
     if ((false != showGeneralWeatherInformation) || (true == force))
     {
+        String spriteSheetPath = m_currentWeatherIcon.substring(0U, m_currentWeatherIcon.length() - strlen(FILE_EXT_BITMAP)) + FILE_EXT_SPRITE_SHEET;
+
+        /* If there is an icon in the filesystem, it will be loaded otherwise
+         * the standard icon. First check whether it is a animated sprite sheet
+         * and if not, try to load just the bitmap image.
+         */
+        if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetPath, m_currentWeatherIcon))
+        {
+            if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
+            {
+                (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+            }
+        }
+
         if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
         {
             (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
@@ -821,11 +841,11 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
          * If not, check for a generic weather icon.
          * If this is not available too, use the standard OpenWeather icon.
          */
-        weatherConditionIcon = IMAGE_PATH + weatherIconId + ".bmp";
+        weatherConditionIcon = IMAGE_PATH + weatherIconId + FILE_EXT_BITMAP;
         if (false == FILESYSTEM.exists(weatherConditionIcon))
         {
             weatherConditionIcon  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
-            weatherConditionIcon += ".bmp";
+            weatherConditionIcon += FILE_EXT_BITMAP;
         }
 
         m_currentWeatherIcon = weatherConditionIcon;
