@@ -70,7 +70,7 @@ const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/plugins/VolumioPlugin/vo
 const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/plugins/VolumioPlugin/volumioPause.bmp";
 
 /* Initialize plugin topic. */
-const char* VolumioPlugin::TOPIC_CONFIG             = "/config";
+const char* VolumioPlugin::TOPIC_CONFIG             = "/host";
 
 /******************************************************************************
  * Public Methods

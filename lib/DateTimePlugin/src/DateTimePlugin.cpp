@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* DateTimePlugin::TOPIC_CONFIG        = "/config";
+const char* DateTimePlugin::TOPIC_CONFIG        = "/dateTime";
 
 /* Initialize default time format. */
 const char* DateTimePlugin::TIME_FORMAT_DEFAULT = "%I:%M %p";

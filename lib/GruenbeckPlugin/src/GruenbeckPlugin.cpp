@@ -62,7 +62,7 @@
 const char* GruenbeckPlugin::IMAGE_PATH     = "/plugin/GruenbeckPlugin/gruenbeck.bmp";
 
 /* Initialize plugin topic. */
-const char* GruenbeckPlugin::TOPIC_CONFIG   = "/config";
+const char* GruenbeckPlugin::TOPIC_CONFIG   = "/ipAddress";
 
 /******************************************************************************
  * Public Methods
@@ -96,7 +96,7 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
         String              ipAddress;
-        JsonVariantConst    jsonGruenbeckIp         = value["gruenbeckIP"];
+        JsonVariantConst    jsonIpAddress           = value["ipAddress"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -109,9 +109,9 @@ bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
          * The type check will follow in the setConfiguration().
          */
 
-        if (false == jsonGruenbeckIp.isNull())
+        if (false == jsonIpAddress.isNull())
         {
-            jsonCfg["gruenbeckIP"] = jsonGruenbeckIp.as<String>();
+            jsonCfg["ipAddress"] = jsonIpAddress.as<String>();
             isSuccessful = true;
         }
 
@@ -383,23 +383,23 @@ void GruenbeckPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["gruenbeckIP"] = m_ipAddress;
+    jsonCfg["ipAddress"] = m_ipAddress;
 }
 
 bool GruenbeckPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 {
     bool                status          = false;
-    JsonVariantConst    jsonGruenbeckIp = jsonCfg["gruenbeckIP"];
+    JsonVariantConst    jsonIpAddress   = jsonCfg["ipAddress"];
 
-    if (false == jsonGruenbeckIp.is<String>())
+    if (false == jsonIpAddress.is<String>())
     {
-        LOG_WARNING("JSON gruenbeckIP not found or invalid type.");
+        LOG_WARNING("JSON ipAddress not found or invalid type.");
     }
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_ipAddress = jsonGruenbeckIp.as<String>();
+        m_ipAddress = jsonIpAddress.as<String>();
 
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);

@@ -95,7 +95,7 @@ const char* OpenWeatherPlugin::IMAGE_PATH               = "/plugins/OpenWeatherP
 const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "https://api.openweathermap.org";
 
 /* Initialize plugin topic. */
-const char* OpenWeatherPlugin::TOPIC_CONFIG             = "/config";
+const char* OpenWeatherPlugin::TOPIC_CONFIG             = "/weather";
 
 /** UV-index table */
 static const UvIndexElem uvIndexTable[] =
@@ -138,8 +138,8 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonApiKey              = value["apiKey"];
-        JsonVariantConst    jsonLat                 = value["lat"];
-        JsonVariantConst    jsonLon                 = value["lon"];
+        JsonVariantConst    jsonLatitude            = value["latitude"];
+        JsonVariantConst    jsonLongitude           = value["longitude"];
         JsonVariantConst    jsonOther               = value["other"];
         JsonVariantConst    jsonUnits               = value["units"];
 
@@ -160,15 +160,15 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
             isSuccessful = true;
         }
 
-        if (false == jsonLat.isNull())
+        if (false == jsonLatitude.isNull())
         {
-            jsonCfg["lat"] = jsonLat.as<String>();
+            jsonCfg["latitude"] = jsonLatitude.as<String>();
             isSuccessful = true;
         }
         
-        if (false == jsonLon.isNull())
+        if (false == jsonLongitude.isNull())
         {
-            jsonCfg["lon"] = jsonLon.as<String>();
+            jsonCfg["longitude"] = jsonLongitude.as<String>();
             isSuccessful = true;
         }
 
@@ -468,31 +468,31 @@ void OpenWeatherPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["apiKey"]   = m_apiKey;
-    jsonCfg["lat"]      = m_latitude;
-    jsonCfg["lon"]      = m_longitude;
-    jsonCfg["other"]    = static_cast<int>(m_additionalInformation);
-    jsonCfg["units"]    = m_units;
+    jsonCfg["apiKey"]       = m_apiKey;
+    jsonCfg["latitude"]     = m_latitude;
+    jsonCfg["longitude"]    = m_longitude;
+    jsonCfg["other"]        = static_cast<int>(m_additionalInformation);
+    jsonCfg["units"]        = m_units;
 }
 
 bool OpenWeatherPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 {
-    bool                status      = false;
-    JsonVariantConst    jsonApiKey  = jsonCfg["apiKey"];
-    JsonVariantConst    jsonLat     = jsonCfg["lat"];
-    JsonVariantConst    jsonLon     = jsonCfg["lon"];
-    JsonVariantConst    jsonOther   = jsonCfg["other"];
-    JsonVariantConst    jsonUnits   = jsonCfg["units"];
+    bool                status          = false;
+    JsonVariantConst    jsonApiKey      = jsonCfg["apiKey"];
+    JsonVariantConst    jsonLatitude    = jsonCfg["latitude"];
+    JsonVariantConst    jsonLongitude   = jsonCfg["longitude"];
+    JsonVariantConst    jsonOther       = jsonCfg["other"];
+    JsonVariantConst    jsonUnits       = jsonCfg["units"];
 
     if (false == jsonApiKey.is<String>())
     {
         LOG_WARNING("API key not found or invalid type.");
     }
-    else if (false == jsonLat.is<String>())
+    else if (false == jsonLatitude.is<String>())
     {
         LOG_WARNING("Latitude not found or invalid type.");
     }
-    else if (false == jsonLon.is<String>())
+    else if (false == jsonLongitude.is<String>())
     {
         LOG_WARNING("Longitude not found or invalid type.");
     }
@@ -509,8 +509,8 @@ bool OpenWeatherPlugin::setConfiguration(JsonObjectConst& jsonCfg)
         MutexGuard<MutexRecursive> guard(m_mutex);
 
         m_apiKey                = jsonApiKey.as<String>();
-        m_latitude              = jsonLat.as<String>();
-        m_longitude             = jsonLon.as<String>();
+        m_latitude              = jsonLatitude.as<String>();
+        m_longitude             = jsonLongitude.as<String>();
         m_additionalInformation = static_cast<OtherWeatherInformation>(jsonOther.as<int>());
         m_units                 = jsonUnits.as<String>();
 

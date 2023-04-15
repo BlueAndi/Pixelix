@@ -64,7 +64,7 @@
 const char* ShellyPlugSPlugin::IMAGE_PATH   = "/plugins/ShellyPlugSPlugin/plug.bmp";
 
 /* Initialize plugin topic. */
-const char* ShellyPlugSPlugin::TOPIC_CONFIG = "/config";
+const char* ShellyPlugSPlugin::TOPIC_CONFIG = "/ipAddress";
 
 /******************************************************************************
  * Public Methods
@@ -97,7 +97,7 @@ bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
         const size_t        JSON_DOC_SIZE           = 512U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonShellyPlugSIp       = value["shellyPlugSIP"];
+        JsonVariantConst    jsonIpAddress           = value["ipAddress"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -110,9 +110,9 @@ bool ShellyPlugSPlugin::setTopic(const String& topic, const JsonObject& value)
          * The type check will follow in the setConfiguration().
          */
 
-        if (false == jsonShellyPlugSIp.isNull())
+        if (false == jsonIpAddress.isNull())
         {
-            jsonCfg["shellyPlugSIP"] = jsonShellyPlugSIp.as<String>();
+            jsonCfg["ipAddress"] = jsonIpAddress.as<String>();
             isSuccessful = true;
         }
 
@@ -334,23 +334,23 @@ void ShellyPlugSPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["shellyPlugSIP"] = m_ipAddress;
+    jsonCfg["ipAddress"] = m_ipAddress;
 }
 
 bool ShellyPlugSPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 {
-    bool                status              = false;
-    JsonVariantConst    jsonShellyPlugSIp   = jsonCfg["shellyPlugSIP"];
+    bool                status          = false;
+    JsonVariantConst    jsonIpAddress   = jsonCfg["ipAddress"];
 
-    if (false == jsonShellyPlugSIp.is<String>())
+    if (false == jsonIpAddress.is<String>())
     {
-        LOG_WARNING("shellyPlugSIP not found or invalid type.");
+        LOG_WARNING("ipAddress not found or invalid type.");
     }
     else
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_ipAddress = jsonShellyPlugSIp.as<String>();
+        m_ipAddress = jsonIpAddress.as<String>();
 
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);

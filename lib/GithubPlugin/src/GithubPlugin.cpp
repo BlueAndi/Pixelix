@@ -61,7 +61,7 @@
 const char* GithubPlugin::IMAGE_PATH_STD_ICON      = "/plugins/GithubPlugin/github.bmp";
 
 /* Initialize plugin topic. */
-const char* GithubPlugin::TOPIC_CONFIG             = "/config";
+const char* GithubPlugin::TOPIC_CONFIG             = "/github";
 
 /******************************************************************************
  * Public Methods

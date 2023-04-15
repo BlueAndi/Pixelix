@@ -64,7 +64,7 @@
 const char* SunrisePlugin::IMAGE_PATH           = "/plugins/SunrisePlugin/sunrise.bmp";
 
 /* Initialize plugin topic. */
-const char* SunrisePlugin::TOPIC_CONFIG         = "/config";
+const char* SunrisePlugin::TOPIC_CONFIG         = "/location";
 
 /* Initialize time format. */
 const char* SunrisePlugin::TIME_FORMAT_DEFAULT  = "%I:%M %p";

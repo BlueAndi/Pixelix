@@ -63,7 +63,7 @@
 const char* CountdownPlugin::IMAGE_PATH     = "/plugins/CountdownPlugin/countdown.bmp";
 
 /* Initialize plugin topic. */
-const char* CountdownPlugin::TOPIC_CONFIG   = "/config";
+const char* CountdownPlugin::TOPIC_CONFIG   = "/countdown";
 
 /******************************************************************************
  * Public Methods

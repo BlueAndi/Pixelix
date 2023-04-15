@@ -37,11 +37,11 @@
                 <p>The plugin shows the remaining system capacity (parameter = D_Y_10_1 ) of the Gruenbeck softliQ SC18 via the system's RESTful webservice.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get ip-address</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/ipAddress</code></pre>
                 <h3 class="mt-1">Set ip-address</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?gruenbeckIP=&lt;IPADDRESS&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?gruenbeckIP=&lt;IPADDRESS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress?gruenbeckIP=&lt;IPADDRESS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/ipAddress?gruenbeckIP=&lt;IPADDRESS&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -139,7 +139,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#gruenbeckIP").val(rsp.data.gruenbeckIP);
@@ -154,7 +154,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress",
                     isJsonResponse: true,
                     parameter: {
                         gruenbeckIP: $("#gruenbeckIP").val()
