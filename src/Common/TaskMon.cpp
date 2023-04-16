@@ -144,9 +144,11 @@ void TaskMon::process()
 #endif  /* configUSE_TRACE_FACILITY */
 }
 
-String TaskMon::taskState2Str(eTaskState state)
+#if configUSE_TRACE_FACILITY
+
+const char* TaskMon::taskState2Str(eTaskState state)
 {
-    String name;
+    const char* name = "";
 
     switch(state)
     {
@@ -199,6 +201,8 @@ String TaskMon::fillUpSpaces(const char* str, size_t len)
 
     return result;
 }
+
+#endif  /* configUSE_TRACE_FACILITY */
 
 /******************************************************************************
  * Protected Methods
