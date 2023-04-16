@@ -15,6 +15,7 @@
   - [SHT3x (I2C)](#sht3x-i2c)
 - [Audio (digital micropohone with I2S)](#audio-digital-micropohone-with-i2s)
   - [INMP441](#inmp441)
+- [Calibration](#calibration)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
 - [Contribution](#contribution)
@@ -36,7 +37,7 @@ A "X" in the development board column means valid all development boards. Except
 | Lilygo&reg; TTGO ESP32 T-Display | Vcc | Pin 32 |
 | WEMOS Lolin S2 Mini | Vcc | Pin 1 |
 
-The pin 2 needs additional a pull-down.
+The photoresistor pin 2 needs additional a pull-down.
 
 # Temperature and humidity sensors
 
@@ -70,6 +71,45 @@ Only the left channel is supported, therefore the L/R channel select signal shal
 | X | Pin 25 | Pin 33 | Pin 26 | GND | Vcc |
 | Lilygo&reg; ESP32 T-Display S3 | Pin 12 | Pin 18 | Pin 11 | GND | Vcc |
 | WEMOS Lolin S2 Mini | - | - | - | - | - |
+
+# Calibration
+With Pixelix v7.x.x the following sensor values can be calibrated with an offset. Open in the file browser web page the file ```/configuration/sensors.json``` to adjust them. Note, a change applies only after a reset!
+
+The sensors.json will be automatically created after the first start. Every available sensor will be considered. If a sensor is not available, it will appear but without any channel value.
+
+Example in case no sensor is available:
+```json
+{
+  "GL5528": [],
+  "SHT3x": [],
+  "DHT11": []
+}
+```
+
+The channel id order of the sensor is the order in the array:
+
+| Sensor | Channel id | Channel description |
+| - | - | - |
+| GL5528 | 0 | Illuminance in lux |
+| SHT3x | 0 | Temperature in °C |
+| SHT3x | 1 | Humidity in % |
+| DHT11 | 0 | Temperature in ° C |
+| DHT11 | 1 | Humidity in % |
+
+Example in case all sensors are available:
+```json
+{
+  "GL5528": [
+    0.0
+  ],
+  "SHT3x": [
+    0.0, 0.0
+  ],
+  "DHT11": [
+    0.0, 0.0
+  ]
+}
+```
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
