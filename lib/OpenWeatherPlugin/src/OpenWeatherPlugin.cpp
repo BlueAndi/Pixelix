@@ -448,11 +448,13 @@ void OpenWeatherPlugin::update(YAGfx& gfx)
     if (false != m_isUpdateAvailable)
     {
         gfx.fillScreen(ColorDef::BLACK);
-        m_iconCanvas.update(gfx);
         m_textCanvas.update(gfx);
 
         m_isUpdateAvailable = false;
     }
+
+    /* Update the icon always, as it may be animated. */
+    m_iconCanvas.update(gfx);
 }
 
 /******************************************************************************
@@ -581,11 +583,6 @@ void OpenWeatherPlugin::updateDisplay(bool force)
             {
                 (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
             }
-        }
-
-        if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
-        {
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
         }
 
         m_textWidget.setFormatStr(m_currentTemp);
