@@ -95,6 +95,20 @@ public:
     virtual T getValue() = 0;
 
     /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value
+     */
+    virtual T getOffset() const = 0;
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value.
+     */
+    virtual void setOffset(T offset) = 0;
+
+    /**
      * Get value as string.
      * 
      * @param[in] precision The precision (ignored for integer values) of the value.
@@ -151,6 +165,20 @@ public:
      * @return Sensor data value
      */
     virtual float getValue() = 0;
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value
+     */
+    virtual float getOffset() const = 0;
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value.
+     */
+    virtual void setOffset(float offset) = 0;
 
     /**
      * Get value as string.

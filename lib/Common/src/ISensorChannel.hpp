@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Abstrac sensor data channel interface
+ * @brief  Abstract sensor data channel interface
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup hal

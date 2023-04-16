@@ -71,7 +71,7 @@ const uint16_t  SensorLdrGl5528::NO_LDR_THRESHOLD   = (3UL * (Board::adcResoluti
 
 float LdrChannelIlluminance::getValue()
 {
-    return m_driver->getIlluminance();
+    return m_driver->getIlluminance() + m_offset;
 }
 
 void SensorLdrGl5528::begin()

@@ -60,16 +60,16 @@
  *****************************************************************************/
 
 /** The LDR GL5528 is used for automatic display brightness control. */
-static SensorLdrGl5528          gLdrGl5528;
+static SensorLdrGl5528  gLdrGl5528;
 
 /** The SHT3x sensor in autodetect mode (for two-wire sensors only). */
-static SensorSht3X              gSht3x(SHTSensor::AUTO_DETECT);
+static SensorSht3X      gSht3x(SHTSensor::AUTO_DETECT);
 
 /** The DHT11 sensor. */
-static SensorDhtX               gDht11(SensorDhtX::MODEL_DHT11);
+static SensorDhtX       gDht11(SensorDhtX::MODEL_DHT11);
 
 /** A list with all registered sensors. */
-static ISensor*                 gSensors[] =
+static ISensor*         gSensors[] =
 {
     &gLdrGl5528,
     &gSht3x,

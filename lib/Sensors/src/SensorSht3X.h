@@ -70,7 +70,8 @@ public:
      * @param[in] driver    The SHT3x driver.
      */
     Sht3XTemperatureChannel(SHTSensor& driver) :
-        m_driver(driver)
+        m_driver(driver),
+        m_offset(0.0F)
     {
     }
 
@@ -94,16 +95,37 @@ public:
     /**
      * Get data value.
      * 
-     * @return Sensor data value
+     * @return Sensor data value in °C.
      */
-    float getValue()
+    float getValue() final
     {
-        return m_driver.getTemperature();
+        return m_driver.getTemperature() + m_offset;
+    }
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value in °C.
+     */
+    float getOffset() const final
+    {
+        return m_offset;
+    }
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value in °C.
+     */
+    void setOffset(float offset) final
+    {
+        m_offset = offset;
     }
 
 private:
 
     SHTSensor&  m_driver;   /**< SHT3x sensor driver. */
+    float       m_offset;   /**< Temperature offset in °C for sensor tolerance compensation. */
 
     Sht3XTemperatureChannel();
     Sht3XTemperatureChannel(const Sht3XTemperatureChannel& channel);
@@ -123,7 +145,8 @@ public:
      * @param[in] driver    The SHT3x driver.
      */
     Sht3XHumidityChannel(SHTSensor& driver) :
-        m_driver(driver)
+        m_driver(driver),
+        m_offset(0.0F)
     {
     }
 
@@ -147,16 +170,37 @@ public:
     /**
      * Get data value.
      * 
-     * @return Sensor data value
+     * @return Sensor data value in %.
      */
-    float getValue()
+    float getValue() final
     {
-        return m_driver.getHumidity();
+        return m_driver.getHumidity() + m_offset;
+    }
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value in %.
+     */
+    float getOffset() const final
+    {
+        return m_offset;
+    }
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value in %.
+     */
+    void setOffset(float offset) final
+    {
+        m_offset = offset;
     }
 
 private:
 
     SHTSensor&  m_driver;   /**< SHT3x sensor driver. */
+    float       m_offset;   /**< Humidity offset in % for sensor tolerance compensation. */
 
     Sht3XHumidityChannel();
     Sht3XHumidityChannel(const Sht3XHumidityChannel& channel);

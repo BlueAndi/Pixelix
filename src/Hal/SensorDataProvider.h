@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <ISensor.hpp>
+#include <ArduinoJson.h>
 
 /******************************************************************************
  * Macros
@@ -127,11 +128,30 @@ public:
                 uint8_t channelStartIdx = 0U);
 
     /**
+     * Load sensor calibration values from persistent memory.
+     * 
+     * @return If successful loaded, it will return true otherwise false.
+     */
+    bool load();
+
+    /**
+     * Save sensor calibration values to persistent memory.
+     * 
+     * @return If successful saved, it will return true otherwise false.
+     */
+    bool save();
+
+    /**
      * Invalid sensor index.
      */
     static const uint8_t    INVALID_SENSOR_IDX  = UINT8_MAX;
 
 private:
+
+    /**
+     * Full path to sensor calibration value file.
+     */
+    static const char*      SENSOR_CALIB_FILE_NAME;
 
     /**
      * Hidden implementation to avoid to include here all available sensors directly.
@@ -143,8 +163,25 @@ private:
      */
     SensorDataProvider();
 
+    /* Not allowed. */
     SensorDataProvider(const SensorDataProvider& instance);
     SensorDataProvider& operator=(const SensorDataProvider& instance);
+
+    /**
+     * Add the channel offset value to the JSON array.
+     * 
+     * @param[out]  jsonOffset  JSON offset array
+     * @param[in]   channel     Sensor channel
+     */
+    void channelOffsetToJson(JsonArray& jsonOffset, const ISensorChannel& channel) const;
+
+    /**
+     * Get the channel offset from the JSON value.
+     * 
+     * @param[out]  channel     Sensor channel
+     * @param[in]   jsonOffset  JSON offset value
+     */
+    void channelOffsetFromJson(ISensorChannel& channel, JsonVariantConst jsonOffset) const;
 };
 
 /******************************************************************************

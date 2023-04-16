@@ -70,7 +70,8 @@ public:
      * @param[in] driver    The DHTx driver.
      */
     DhtXTemperatureChannel(DHT& driver) :
-        m_driver(driver)
+        m_driver(driver),
+        m_offset(0.0F)
     {
     }
 
@@ -94,16 +95,37 @@ public:
     /**
      * Get data value.
      * 
-     * @return Sensor data value
+     * @return Sensor data value in °C.
      */
-    float getValue()
+    float getValue() final
     {
-        return m_driver.readTemperature();
+        return m_driver.readTemperature() + m_offset;
+    }
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value in °C.
+     */
+    float getOffset() const final
+    {
+        return m_offset;
+    }
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value in °C.
+     */
+    void setOffset(float offset) final
+    {
+        m_offset = offset;
     }
 
 private:
 
     DHT&    m_driver;   /**< DHTx sensor driver. */
+    float   m_offset;   /**< Temperature offset in °C for sensor tolerance compensation. */
 
     DhtXTemperatureChannel();
     DhtXTemperatureChannel(const DhtXTemperatureChannel& channel);
@@ -123,7 +145,8 @@ public:
      * @param[in] driver    The DHTx driver.
      */
     DhtXHumidityChannel(DHT& driver) :
-        m_driver(driver)
+        m_driver(driver),
+        m_offset(0.0F)
     {
     }
 
@@ -147,16 +170,37 @@ public:
     /**
      * Get data value.
      * 
-     * @return Sensor data value
+     * @return Sensor data value in %.
      */
-    float getValue()
+    float getValue() final
     {
-        return m_driver.readHumidity();
+        return m_driver.readHumidity() + m_offset;
+    }
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value in %.
+     */
+    float getOffset() const final
+    {
+        return m_offset;
+    }
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value in %.
+     */
+    void setOffset(float offset) final
+    {
+        m_offset = offset;
     }
 
 private:
 
     DHT&    m_driver;   /**< DHTx sensor driver. */
+    float   m_offset;   /**< Humidity offset in % for sensor tolerance compensation. */
 
     DhtXHumidityChannel();
     DhtXHumidityChannel(const DhtXHumidityChannel& channel);

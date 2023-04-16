@@ -35,6 +35,9 @@
 #include "SensorDataProvider.h"
 #include <Sensors.h>
 #include <Logging.h>
+#include <JsonFile.h>
+#include <FileSystem.h>
+#include <SensorChannelType.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -56,6 +59,9 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize file name where to find the sensor calibration values. */
+const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME = "/configuration/sensors.json";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -67,6 +73,12 @@ void SensorDataProvider::begin()
 
     /* Initialize all sensor drivers. */
     m_impl->begin();
+    
+    /* Load calibration values. If they are not available, save it with the sensor defaults. */
+    if (false == load())
+    {
+        (void)save();
+    }
 
     /* For debug purposes, show the sensor driver states. */
     for(index = 0U; index < cnt; ++index)
@@ -160,6 +172,98 @@ bool SensorDataProvider::find(
     return isFound;
 }
 
+bool SensorDataProvider::load()
+{
+    bool                status                  = false;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint8_t             sensorIdx               = 0U;
+    const uint8_t       SENSOR_CNT              = m_impl->getNumSensors();
+
+    if (true == jsonFile.load(SENSOR_CALIB_FILE_NAME, jsonDoc))
+    {
+        while(SENSOR_CNT > sensorIdx)
+        {
+            ISensor* sensor = m_impl->getSensor(sensorIdx);
+            
+            if (nullptr != sensor)
+            {
+                JsonArrayConst jsonArray = jsonDoc[sensor->getName()];
+
+                if (false == jsonArray.isNull())
+                {
+                    uint8_t         channelIdx  = 0U;
+                    const uint8_t   CHANNEL_CNT = sensor->getNumChannels();
+
+                    while(CHANNEL_CNT > channelIdx)
+                    {
+                        ISensorChannel* channel = sensor->getChannel(channelIdx);
+
+                        if (nullptr != channel)
+                        {
+                            channelOffsetFromJson(*channel, jsonArray[channelIdx]);
+                        }
+
+                        ++channelIdx;
+                    }
+                }
+            }
+
+            ++sensorIdx;
+        }
+
+        status = true;
+    }
+
+    return status;
+}
+
+bool SensorDataProvider::save()
+{
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint8_t             sensorIdx               = 0U;
+    const uint8_t       SENSOR_CNT              = m_impl->getNumSensors();
+
+    while(SENSOR_CNT > sensorIdx)
+    {
+        ISensor* sensor = m_impl->getSensor(sensorIdx);
+
+        if (nullptr != sensor)
+        {
+            JsonArray jsonChannels = jsonDoc.createNestedArray(sensor->getName());
+
+            if (true == sensor->isAvailable())
+            {
+                uint8_t         channelIdx  = 0U;
+                const uint8_t   CHANNEL_CNT = sensor->getNumChannels();
+
+                while(CHANNEL_CNT > channelIdx)
+                {
+                    ISensorChannel* channel = sensor->getChannel(channelIdx);
+
+                    if (nullptr == channel)
+                    {
+                        jsonChannels.add("null");
+                    }
+                    else
+                    {
+                        channelOffsetToJson(jsonChannels, *channel);
+                    }
+
+                    ++channelIdx;
+                }
+            }
+        }
+
+        ++sensorIdx;
+    }
+
+    return jsonFile.save(SENSOR_CALIB_FILE_NAME, jsonDoc);
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -171,6 +275,114 @@ bool SensorDataProvider::find(
 SensorDataProvider::SensorDataProvider() :
     m_impl(Sensors::getSensorDataProviderImpl())
 {
+}
+
+void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISensorChannel& channel) const
+{
+    switch(channel.getDataType())
+    {
+    case ISensorChannel::DataType::DATA_TYPE_INVALID:
+        jsonOffset.add("NaN");
+        break;
+
+    case ISensorChannel::DataType::DATA_TYPE_UINT32:
+        {
+            const SensorChannelUInt32* uint32Channel = reinterpret_cast<const SensorChannelUInt32*>(&channel);
+
+            if (nullptr == uint32Channel)
+            {
+                jsonOffset.add("NaN");
+            }
+            else
+            {
+                jsonOffset.add(uint32Channel->getOffset());
+            }
+        }
+        break;
+
+    case ISensorChannel::DataType::DATA_TYPE_INT32:
+        {
+            const SensorChannelInt32* int32Channel = reinterpret_cast<const SensorChannelInt32*>(&channel);
+
+            if (nullptr == int32Channel)
+            {
+                jsonOffset.add("NaN");
+            }
+            else
+            {
+                jsonOffset.add(int32Channel->getOffset());
+            }
+
+        }
+        break;
+
+    case ISensorChannel::DataType::DATA_TYPE_FLOAT32:
+        {
+            const SensorChannelFloat32* float32Channel = reinterpret_cast<const SensorChannelFloat32*>(&channel);
+
+            if (nullptr == float32Channel)
+            {
+                jsonOffset.add("NaN");
+            }
+            else
+            {
+                jsonOffset.add(float32Channel->getOffset());
+            }
+        }
+        break;
+
+    default:
+        jsonOffset.add("NaN");
+        break;
+    }
+}
+
+void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVariantConst jsonOffset) const
+{
+    switch(channel.getDataType())
+    {
+    case ISensorChannel::DataType::DATA_TYPE_INVALID:
+        break;
+
+    case ISensorChannel::DataType::DATA_TYPE_UINT32:
+        {
+            SensorChannelUInt32* uint32Channel = reinterpret_cast<SensorChannelUInt32*>(&channel);
+
+            if ((nullptr != uint32Channel) &&
+                (true == jsonOffset.is<uint32_t>()))
+            {
+                uint32Channel->setOffset(jsonOffset.as<uint32_t>());
+            }
+        }
+        break;
+
+    case ISensorChannel::DataType::DATA_TYPE_INT32:
+        {
+            SensorChannelInt32* int32Channel = reinterpret_cast<SensorChannelInt32*>(&channel);
+
+            if ((nullptr != int32Channel) &&
+                (true == jsonOffset.is<int32_t>()))
+            {
+                int32Channel->setOffset(jsonOffset.as<int32_t>());
+            }
+        }
+        break;
+
+    case ISensorChannel::DataType::DATA_TYPE_FLOAT32:
+        {
+            SensorChannelFloat32* float32Channel = reinterpret_cast<SensorChannelFloat32*>(&channel);
+
+            if ((nullptr != float32Channel) &&
+                (true == jsonOffset.is<float>()))
+            {
+                float32Channel->setOffset(jsonOffset.as<float>());
+            }
+        }
+        break;
+
+    default:
+        break;
+    }
 }
 
 /******************************************************************************

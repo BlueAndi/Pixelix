@@ -69,7 +69,8 @@ public:
      * Constructs the illuminance channel of the LDR GL5528 sensor.
      */
     LdrChannelIlluminance() :
-        m_driver(nullptr)
+        m_driver(nullptr),
+        m_offset(0.0F)
     {
     }
 
@@ -93,7 +94,7 @@ public:
     /**
      * Get data value.
      * 
-     * @return Sensor data value
+     * @return Sensor data value in lux.
      */
     float getValue() final;
 
@@ -107,9 +108,30 @@ public:
         m_driver = driver;
     }
 
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value in lux.
+     */
+    float getOffset() const final
+    {
+        return m_offset;
+    }
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value in lux.
+     */
+    void setOffset(float offset) final
+    {
+        m_offset = offset;
+    }
+
 private:
 
     SensorLdrGl5528*    m_driver;   /**< LDR GL5528 sensor driver. */
+    float               m_offset;   /**< Illuminance offset in lux for sensor tolerance compensation. */
 
     LdrChannelIlluminance(const LdrChannelIlluminance& channel);
     LdrChannelIlluminance& operator=(const LdrChannelIlluminance& channel);
@@ -193,7 +215,7 @@ public:
 private:
 
     /**
-     * Threshold to detect a not connected LDR.
+     * Threshold in ADC digits to detect a not connected LDR.
      */
     static const uint16_t   NO_LDR_THRESHOLD;
 
