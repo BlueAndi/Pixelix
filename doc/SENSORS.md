@@ -42,6 +42,11 @@ The photoresistor pin 2 needs additional a pull-down.
 # Temperature and humidity sensors
 
 ## DHTx (Proprietary one-wire)
+Different DHT sensors are supported. Out of the box the DHT11 is configured. It can be changed in the source code, see /lib/Sensors/Sensors.cpp:
+```cpp
+static SensorDhtX       gDht11(SensorDhtX::MODEL_DHT11);
+```
+
 * DHT11 (Proprietary one-wire)
 * DHT12 (Proprietary one-wire)
 * DHT21 (Proprietary one-wire)
@@ -95,6 +100,12 @@ The channel id order of the sensor is the order in the array:
 | SHT3x | 1 | Humidity in % |
 | DHT11 | 0 | Temperature in ° C |
 | DHT11 | 1 | Humidity in % |
+| DHT12 | 0 | Temperature in ° C |
+| DHT12 | 1 | Humidity in % |
+| DHT21 | 0 | Temperature in ° C |
+| DHT21 | 1 | Humidity in % |
+| DHT22 | 0 | Temperature in ° C |
+| DHT22 | 1 | Humidity in % |
 
 Example in case all sensors are available:
 ```json
