@@ -423,14 +423,16 @@ void OpenWeatherPlugin::active(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    /* Force immediate weather update on activation */
+    /* Force immediate weather update on activation.
+     * By setting the duration counter to 0, start showing
+     * the general weather information first.
+     */
+    m_durationCounter = 0U;
     updateDisplay(true);
 
-    /* Force drawing on display in the update() method for the very first time
-     * after activation.
+    /* Start time to check cyclic whether an update of the
+     * display is necessary.
      */
-    m_isUpdateAvailable = true;
-    m_durationCounter = 0U;
     m_updateContentTimer.start(DURATION_TICK_PERIOD);
 }
 
@@ -553,98 +555,124 @@ const char* OpenWeatherPlugin::uvIndexToColor(uint8_t uvIndex)
 
 void OpenWeatherPlugin::updateDisplay(bool force)
 {
-    bool        showGeneralWeatherInformation   = ((0U == m_durationCounter) ? true : false);
-    bool        showAdditionalInformation       = false;
-    uint32_t    duration                        = (nullptr == m_slotInterf) ? 0U : m_slotInterf->getDuration();
+    bool showWeather        = true;
+    bool isUpdateNecessary  = force;
 
-    /* If infinite duration was set switch every 15s between time and date. */
-    if (0U == duration)
+    /* Handle additional weather information only if enabled. */
+    if (OTHER_WEATHER_INFO_OFF != m_additionalInformation)
     {
-        showAdditionalInformation = ((MAX_COUNTER_VALUE_FOR_DURATION_INFINITE == m_durationCounter) ? true : false);
-    }
-    else
-    {
-        showAdditionalInformation = ((duration / (2U * MS_TO_SEC_DIVIDER) == m_durationCounter) ? true : false);
-    }
+        const uint32_t  INFINITE            = 0U;
+        uint32_t        slotDuration        = INFINITE;
+        uint32_t        durationOfEachPart  = INFINITE;
 
-    m_durationCounter++;
-
-    if ((false != showGeneralWeatherInformation) || (true == force))
-    {
-        String spriteSheetPath = m_currentWeatherIcon.substring(0U, m_currentWeatherIcon.length() - strlen(FILE_EXT_BITMAP)) + FILE_EXT_SPRITE_SHEET;
-
-        /* If there is an icon in the filesystem, it will be loaded otherwise
-         * the standard icon. First check whether it is a animated sprite sheet
-         * and if not, try to load just the bitmap image.
-         */
-        if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetPath, m_currentWeatherIcon))
+        /* Get the slot duration periodically, because the user can change it dynamically. */
+        if (nullptr != m_slotInterf)
         {
-            if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
+            slotDuration = m_slotInterf->getDuration();
+        }
+
+        /* If slot duration is infinite, additional weather information will be shown periodically for a constant time. */
+        if (INFINITE == slotDuration)
+        {
+            durationOfEachPart = MAX_COUNTER_VALUE_FOR_DURATION_INFINITE;
+        }
+        /* Otherwise additional weather information will be shown half of the slot duration. */
+        else
+        {
+            durationOfEachPart = slotDuration / (2U * MS_TO_SEC_DIVIDER);
+        }
+
+        /* The additional weather information shall be shown after a dedicated time. */
+        if (durationOfEachPart <= m_durationCounter)
+        {
+            showWeather = false;
+        }
+
+        /* Update necessary?
+         * Avoid updating everytime, because it might destroy the animation of icons.
+         */
+        if ((0U == m_durationCounter) ||
+            (durationOfEachPart == m_durationCounter))
+        {
+            isUpdateNecessary = true;
+        }
+
+        ++m_durationCounter;
+
+        /* Reset duration counter after the general weather and the additional weather information
+         * were shown for the same amount of time.
+         */
+        if ((2U * durationOfEachPart) <= m_durationCounter)
+        {
+            m_durationCounter = 0U;
+        }
+    }
+
+    if (true == isUpdateNecessary)
+    {
+        String text;
+
+        if (true == showWeather)
+        {
+            String spriteSheetPath = m_currentWeatherIcon.substring(0U, m_currentWeatherIcon.length() - strlen(FILE_EXT_BITMAP)) + FILE_EXT_SPRITE_SHEET;
+
+            /* If there is an icon in the filesystem, it will be loaded otherwise
+            * the standard icon. First check whether it is a animated sprite sheet
+            * and if not, try to load just the bitmap image.
+            */
+            if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetPath, m_currentWeatherIcon))
             {
-                (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
+                {
+                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                }
+            }
+
+            text = m_currentTemp;
+        }
+        else
+        {
+            String  iconPath;
+
+            switch (m_additionalInformation)
+            {
+            case OTHER_WEATHER_INFO_UVI:
+                text = m_currentUvIndex;
+                iconPath = IMAGE_PATH_UVI_ICON;
+                break;
+
+            case OTHER_WEATHER_INFO_HUMIDITY:
+                text = m_currentHumidity;
+                iconPath = IMAGE_PATH_HUMIDITY_ICON;
+                break;
+
+            case OTHER_WEATHER_INFO_WIND:
+                text = m_currentWindspeed;
+                iconPath = IMAGE_PATH_WIND_ICON;
+                break;
+
+            case OTHER_WEATHER_INFO_OFF:
+                /* Should never reach here. */
+                break;
+
+            default:
+                /* Should never reach here. */
+                m_additionalInformation = OTHER_WEATHER_INFO_OFF;
+                break;
+            }
+
+            if (false == iconPath.isEmpty())
+            {
+                if (false == m_bitmapWidget.load(FILESYSTEM, iconPath))
+                {
+                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                }
             }
         }
 
-        m_textWidget.setFormatStr(m_currentTemp);
-
-        m_isUpdateAvailable = true;
-
-    }
-
-    if (false != showAdditionalInformation)
-    {
-        String  text;
-        String  iconPath;
-
-        switch (m_additionalInformation)
-        {
-        case UVI:
-            text = m_currentUvIndex;
-            iconPath = IMAGE_PATH_UVI_ICON;
-            break;
-
-        case HUMIDITY:
-            text = m_currentHumidity;
-            iconPath = IMAGE_PATH_HUMIDITY_ICON;
-            break;
-
-        case WIND:
-            text = m_currentWindspeed;
-            iconPath = IMAGE_PATH_WIND_ICON;
-            break;
-
-        case OFF:
-            text = m_currentTemp;
-            iconPath = m_currentWeatherIcon;
-            break;
-
-        default:
-            break;
-        }
-
-        if (false == m_bitmapWidget.load(FILESYSTEM, iconPath))
-        {
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-        }
-
         m_textWidget.setFormatStr(text);
-        m_isUpdateAvailable = true;
-    }
 
-    /* If infinite duration was switch every 15s between general and additional information. */
-    if (0U == duration)
-    {
-        if ((2U * MAX_COUNTER_VALUE_FOR_DURATION_INFINITE) == m_durationCounter)
-        {
-            m_durationCounter = 0U;
-        }
-    }
-    else
-    {
-        if ((duration / MS_TO_SEC_DIVIDER) == m_durationCounter)
-        {
-            m_durationCounter = 0U;
-        }
+        m_isUpdateAvailable = true;
     }
 }
 
@@ -845,9 +873,14 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
             weatherConditionIcon += FILE_EXT_BITMAP;
         }
 
-        m_currentWeatherIcon = weatherConditionIcon;
-
-        updateDisplay(false);
+        /* If there is really a change, the display shall be updated otherwise
+         * not to not destroy running animations.
+         */
+        if (weatherConditionIcon != m_currentWeatherIcon)
+        {
+            updateDisplay(true);
+            m_currentWeatherIcon = weatherConditionIcon;
+        }
     }
 }
 

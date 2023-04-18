@@ -86,7 +86,7 @@ public:
         m_apiKey(""),
         m_latitude("48.858"),/* Example data */
         m_longitude("2.295"),/* Example data */
-        m_additionalInformation(OFF),
+        m_additionalInformation(OTHER_WEATHER_INFO_OFF),
         m_units("metric"),
         m_configurationFilename(),
         m_client(),
@@ -115,10 +115,10 @@ public:
      */
     enum OtherWeatherInformation
     {
-        UVI = 0,    /**< Display UV Index as additional information. */
-        HUMIDITY,   /**< Display humidity in % as additional information. */
-        WIND,       /**< Display windspeed in m/s as additional information. */
-        OFF         /**< Display only general weather information. */
+        OTHER_WEATHER_INFO_UVI = 0,     /**< Display UV Index as additional information. */
+        OTHER_WEATHER_INFO_HUMIDITY,    /**< Display humidity in % as additional information. */
+        OTHER_WEATHER_INFO_WIND,        /**< Display windspeed in m/s as additional information. */
+        OTHER_WEATHER_INFO_OFF          /**< Display only general weather information. */
     };
 
     /**
