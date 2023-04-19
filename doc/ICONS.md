@@ -41,9 +41,9 @@ Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
 
 |  |  |  |  |
 | -------- | -------- | -------- | -------- |
-|![01d](./../doc/images/icons/OpenWeatherPluginAnimated/preview/01d.png)|![01n](./../doc/images/icons/OpenWeatherPluginAnimated/preview/01n.png)|![02d](./../doc/images/icons/OpenWeatherPluginAnimated/preview/02d.png)|![02n](./../doc/images/icons/OpenWeatherPluginAnimated/preview/02n.png)|
-|![04](./../doc/images/icons/OpenWeatherPluginAnimated/preview/04.png)|![09](./../doc/images/icons/OpenWeatherPluginAnimated/preview/09.png)|![10d](./../doc/images/icons/OpenWeatherPluginAnimated/preview/10d.png)|![10n](./../doc/images/icons/OpenWeatherPluginAnimated/preview/10n.png)|
-|![11](./../doc/images/icons/OpenWeatherPluginAnimated/preview/11.png)|![13](./../doc/images/icons/OpenWeatherPluginAnimated/preview/13.png)|![50](./../doc/images/icons/OpenWeatherPluginAnimated/preview/50.png)||
+|![01d](./../doc/images/icons/OpenWeatherPluginAnimated/preview/01d.gif)|![01n](./../doc/images/icons/OpenWeatherPluginAnimated/preview/01n.gif)|![02d](./../doc/images/icons/OpenWeatherPluginAnimated/preview/02d.gif)|![02n](./../doc/images/icons/OpenWeatherPluginAnimated/preview/02n.gif)|
+|![04](./../doc/images/icons/OpenWeatherPluginAnimated/preview/04.gif)|![09](./../doc/images/icons/OpenWeatherPluginAnimated/preview/09.gif)|![10d](./../doc/images/icons/OpenWeatherPluginAnimated/preview/10d.gif)|![10n](./../doc/images/icons/OpenWeatherPluginAnimated/preview/10n.gif)|
+|![11](./../doc/images/icons/OpenWeatherPluginAnimated/preview/11.gif)|![13](./../doc/images/icons/OpenWeatherPluginAnimated/preview/13.gif)|![50](./../doc/images/icons/OpenWeatherPluginAnimated/preview/50.gif)||
 
 Designed by [ddijanic](https://github.com/ddijanic)
 
