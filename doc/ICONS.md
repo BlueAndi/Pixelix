@@ -53,9 +53,9 @@ Designed by [ddijanic](https://github.com/ddijanic)
 
 # BTCQuotePlugin
 
-|  |  |  |  |
-| -------- | -------- | -------- | -------- |
-|![BTC_USD](./../doc/images/icons/BTCQuotePluginColorIntense/preview/BTC_USD.png)||||
+|  |
+| -------- |
+|![BTC_USD](./../doc/images/icons/BTCQuotePluginColorIntense/preview/BTC_USD.png)|
 
 Find them here: [./images/icons/BTCQuotePluginColorIntense/](./images/icons/BTCQuotePluginColorIntense/)
 
