@@ -35,6 +35,8 @@ In the following you find all available alternative icons classified according t
 |![04](./../doc/images/icons/OpenWeatherPluginColorIntense/preview/04.png)|![09](./../doc/images/icons/OpenWeatherPluginColorIntense/preview/09.png)|![10d](./../doc/images/icons/OpenWeatherPluginColorIntense/preview/10d.png)|![10n](./../doc/images/icons/OpenWeatherPluginColorIntense/preview/10n.png)|
 |![11](./../doc/images/icons/OpenWeatherPluginColorIntense/preview/11.png)|![13](./../doc/images/icons/OpenWeatherPluginColorIntense/preview/13.png)|![50](./../doc/images/icons/OpenWeatherPluginColorIntense/preview/50.png)||
 
+Find them here: [./images/icons/OpenWeatherPluginColorIntense/](./images/icons/OpenWeatherPluginColorIntense/)
+
 Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
 
 ## Animated
@@ -45,6 +47,8 @@ Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
 |![04](./../doc/images/icons/OpenWeatherPluginAnimated/preview/04.gif)|![09](./../doc/images/icons/OpenWeatherPluginAnimated/preview/09.gif)|![10d](./../doc/images/icons/OpenWeatherPluginAnimated/preview/10d.gif)|![10n](./../doc/images/icons/OpenWeatherPluginAnimated/preview/10n.gif)|
 |![11](./../doc/images/icons/OpenWeatherPluginAnimated/preview/11.gif)|![13](./../doc/images/icons/OpenWeatherPluginAnimated/preview/13.gif)|![50](./../doc/images/icons/OpenWeatherPluginAnimated/preview/50.gif)||
 
+Find them here: [./images/icons/OpenWeatherPluginAnimated/](./images/icons/OpenWeatherPluginAnimated/)
+
 Designed by [ddijanic](https://github.com/ddijanic)
 
 # BTCQuotePlugin
@@ -52,6 +56,8 @@ Designed by [ddijanic](https://github.com/ddijanic)
 |  |  |  |  |
 | -------- | -------- | -------- | -------- |
 |![BTC_USD](./../doc/images/icons/BTCQuotePluginColorIntense/preview/BTC_USD.png)||||
+
+Find them here: [./images/icons/BTCQuotePluginColorIntense/](./images/icons/BTCQuotePluginColorIntense/)
 
 Designed by [NSD4rKn3SS](https://github.com/NSD4rKn3SS)
 
