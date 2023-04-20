@@ -99,6 +99,7 @@ public:
         m_currentUvIndex("\\calign?"),
         m_currentHumidity("\\calign?"),
         m_currentWindspeed("\\calign?"),
+        m_hasWeatherIconChanged(true),
         m_slotInterf(nullptr),
         m_durationCounter(0u),
         m_isUpdateAvailable(false),
@@ -450,6 +451,7 @@ private:
     String                      m_currentUvIndex;           /**< The current UV index. */
     String                      m_currentHumidity;          /**< The current humidity. */
     String                      m_currentWindspeed;         /**< The current wind speed. */
+    bool                        m_hasWeatherIconChanged;    /**< Has weather icon changed? If yes, it will be updated otherwise skipped to not disturb running animations. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
     uint8_t                     m_durationCounter;          /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
     bool                        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */

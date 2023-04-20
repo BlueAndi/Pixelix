@@ -614,18 +614,23 @@ void OpenWeatherPlugin::updateDisplay(bool force)
 
         if (true == showWeather)
         {
-            String spriteSheetPath = m_currentWeatherIcon.substring(0U, m_currentWeatherIcon.length() - strlen(FILE_EXT_BITMAP)) + FILE_EXT_SPRITE_SHEET;
-
-            /* If there is an icon in the filesystem, it will be loaded otherwise
-            * the standard icon. First check whether it is a animated sprite sheet
-            * and if not, try to load just the bitmap image.
-            */
-            if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetPath, m_currentWeatherIcon))
+            if (true == m_hasWeatherIconChanged)
             {
-                if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
+                String spriteSheetPath = m_currentWeatherIcon.substring(0U, m_currentWeatherIcon.length() - strlen(FILE_EXT_BITMAP)) + FILE_EXT_SPRITE_SHEET;
+
+                /* If there is an icon in the filesystem, it will be loaded otherwise
+                * the standard icon. First check whether it is a animated sprite sheet
+                * and if not, try to load just the bitmap image.
+                */
+                if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetPath, m_currentWeatherIcon))
                 {
-                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                    if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
+                    {
+                        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+                    }
                 }
+
+                m_hasWeatherIconChanged = false;
             }
 
             text = m_currentTemp;
@@ -878,9 +883,11 @@ void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
          */
         if (weatherConditionIcon != m_currentWeatherIcon)
         {
-            updateDisplay(true);
+            m_hasWeatherIconChanged = true;
             m_currentWeatherIcon = weatherConditionIcon;
         }
+
+        updateDisplay(true);
     }
 }
 
