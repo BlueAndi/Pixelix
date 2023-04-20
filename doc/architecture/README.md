@@ -113,6 +113,8 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 ### Dynamic View
 ![plugin-service-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/plugin-service-dynamic.wsd)
 
+![plugin-cfg-handling-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/plugin_cfg_handling.wsd)
+
 ## Spectrum Analyzer
 ![specturm-analyzer-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/spectrum-analyzer.wsd)
 
