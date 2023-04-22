@@ -317,7 +317,7 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
             }
         }
 
-        if (false == plugin->setTopic(topic, jsonDoc.to<JsonObject>()))
+        if (false == plugin->setTopic(topic, jsonDoc.as<JsonObject>()))
         {
             LOG_WARNING("Plugin %u rejected payload.", plugin->getUID());
         }
