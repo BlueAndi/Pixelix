@@ -136,86 +136,15 @@ void MqttService::process()
     switch(m_state)
     {
     case STATE_DISCONNECTED:
-        if (true == WiFi.isConnected())
-        {
-            bool connectNow = false;
-
-            /* Connect immediately after service is started initially? */
-            if (false == m_reconnectTimer.isTimerRunning())
-            {
-                connectNow = true;
-
-                m_reconnectTimer.start(RECONNECT_PERIOD);
-            }
-            else if (true == m_reconnectTimer.isTimeout())
-            {
-                connectNow = true;
-            }
-            else
-            {
-                ;
-            }
-
-            if (true == connectNow)
-            {
-                bool isConnected = false;
-
-                /* Authentication necessary? */
-                if (false == m_user.isEmpty())
-                {
-                    LOG_INFO("Connect to %s as %s with %s.", m_url.c_str(), m_user.c_str(), m_hostname.c_str());
-
-                    isConnected = m_mqttClient.connect(m_hostname.c_str(), m_user.c_str(), m_password.c_str());
-                }
-                /* Connect anonymous */
-                else
-                {
-                    LOG_INFO("Connect anyonymous to %s with %s.", m_url.c_str(), m_hostname.c_str());
-
-                    isConnected = m_mqttClient.connect(m_hostname.c_str());
-                }
-
-                /* Connection to broker failed? */
-                if (false == isConnected)
-                {
-                    /* Try to reconnect later. */
-                    m_reconnectTimer.restart();
-                }
-                /* Connection to broker successful. */
-                else
-                {
-                    LOG_INFO("Connection to MQTT broker established.");
-
-                    m_state = STATE_CONNECTED;
-                    m_reconnectTimer.stop();
-
-                    (void)m_mqttClient.publish(m_hostname.c_str(), HELLO_WORLD);
-                    
-                    resubscribe();
-                }
-            }
-        }
+        disconnectedState();
         break;
 
     case STATE_CONNECTED:
-        /* Connection with broker lost? */
-        if (false == m_mqttClient.connected())
-        {
-            LOG_INFO("Connection to MQTT broker disconnected.");
-            m_state = STATE_DISCONNECTED;
-
-            /* Try to reconnect later. */
-            m_reconnectTimer.restart();
-        }
-        /* Connection to broker still established. */
-        else
-        {
-            (void)m_mqttClient.loop();
-        }
+        connectedState();
         break;
 
     case STATE_IDLE:
-        /* Nothing to do. */
+        idleState();
         break;
 
     default:
@@ -337,6 +266,92 @@ void MqttService::unsubscribe(const char* topic)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void MqttService::disconnectedState()
+{
+    if (true == WiFi.isConnected())
+    {
+        bool connectNow = false;
+
+        /* Connect immediately after service is started initially? */
+        if (false == m_reconnectTimer.isTimerRunning())
+        {
+            connectNow = true;
+
+            m_reconnectTimer.start(RECONNECT_PERIOD);
+        }
+        else if (true == m_reconnectTimer.isTimeout())
+        {
+            connectNow = true;
+        }
+        else
+        {
+            ;
+        }
+
+        if (true == connectNow)
+        {
+            bool isConnected = false;
+
+            /* Authentication necessary? */
+            if (false == m_user.isEmpty())
+            {
+                LOG_INFO("Connect to %s as %s with %s.", m_url.c_str(), m_user.c_str(), m_hostname.c_str());
+
+                isConnected = m_mqttClient.connect(m_hostname.c_str(), m_user.c_str(), m_password.c_str());
+            }
+            /* Connect anonymous */
+            else
+            {
+                LOG_INFO("Connect anyonymous to %s with %s.", m_url.c_str(), m_hostname.c_str());
+
+                isConnected = m_mqttClient.connect(m_hostname.c_str());
+            }
+
+            /* Connection to broker failed? */
+            if (false == isConnected)
+            {
+                /* Try to reconnect later. */
+                m_reconnectTimer.restart();
+            }
+            /* Connection to broker successful. */
+            else
+            {
+                LOG_INFO("Connection to MQTT broker established.");
+
+                m_state = STATE_CONNECTED;
+                m_reconnectTimer.stop();
+
+                (void)m_mqttClient.publish(m_hostname.c_str(), HELLO_WORLD);
+                
+                resubscribe();
+            }
+        }
+    }
+}
+
+void MqttService::connectedState()
+{
+    /* Connection with broker lost? */
+    if (false == m_mqttClient.connected())
+    {
+        LOG_INFO("Connection to MQTT broker disconnected.");
+        m_state = STATE_DISCONNECTED;
+
+        /* Try to reconnect later. */
+        m_reconnectTimer.restart();
+    }
+    /* Connection to broker still established. */
+    else
+    {
+        (void)m_mqttClient.loop();
+    }
+}
+
+void MqttService::idleState()
+{
+    /* Nothing to do. */
+}
 
 void MqttService::rxCallback(char* topic, uint8_t* payload, uint32_t length)
 {

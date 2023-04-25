@@ -258,6 +258,21 @@ private:
     MqttService& operator=(const MqttService& service);
 
     /**
+     * Handles the DISCONNECTED state.
+     */
+    void disconnectedState();
+
+    /**
+     * Handles the CONNECTED state.
+     */
+    void connectedState();
+
+    /**
+     * Handles the IDLE state.
+     */
+    void idleState();
+
+    /**
      * MQTT receive callback.
      * 
      * @param[in] topic     The topic name.
