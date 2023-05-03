@@ -163,9 +163,10 @@ void MqttService::process()
                 /* Authentication necessary? */
                 if (false == m_user.isEmpty())
                 {
-                    LOG_INFO("Connect to %s as %s with %s.", m_url.c_str(), m_user.c_str(), m_hostname.c_str());
+                    LOG_INFO("Connect to %s as %s : %s with %s.", m_url.c_str(), m_user.c_str(), m_password.c_str(), m_hostname.c_str());
 
-                    isConnected = m_mqttClient.connect(m_hostname.c_str(), m_user.c_str(), m_password.c_str());
+                    //isConnected = m_mqttClient.connect(m_hostname.c_str(), m_user.c_str(), m_password.c_str());
+                    isConnected = m_mqttClient.connect(m_hostname.c_str(), "fdrs", "data"); //just for testing
                 }
                 /* Connect anonymous */
                 else
@@ -395,6 +396,8 @@ void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
     /* User and passwort */
     idx = m_url.indexOf("@");
 
+    LOG_INFO("MQTT Broker Url %s", m_url.c_str());
+
     m_user.clear();
     m_password.clear();
 
@@ -406,16 +409,18 @@ void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
         if (0 > dividerIdx)
         {
             m_user = m_url.substring(0U, idx);
+            LOG_INFO("MQTT User without password %s", m_user.c_str());
         }
         /* At least one character for a user name must exist. */
         else if (0 < dividerIdx)
         {
             m_user = m_url.substring(0U, dividerIdx);
-
+            LOG_INFO("MQTT User %s", m_user.c_str());
             /* Password not empty? */
             if (idx > (dividerIdx + 1))
             {
                 m_password = m_url.substring(dividerIdx + 1, idx - dividerIdx - 1);
+                LOG_INFO("MQTT password %s", m_user.c_str());
             }
         }
 
