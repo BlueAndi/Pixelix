@@ -122,6 +122,8 @@ void AudioService::stop()
     }
 
     AudioDrv::getInstance().stop();
+
+    LOG_INFO("Audio service stopped.");
 }
 
 void AudioService::process()
