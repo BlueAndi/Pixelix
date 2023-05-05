@@ -194,6 +194,19 @@ bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObject& value
     return isSuccessful;
 }
 
+bool SignalDetectorPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
+}
+
 void SignalDetectorPlugin::setSlot(const ISlotPlugin* slotInterf)
 {
     m_slotInterf = slotInterf;
@@ -441,7 +454,7 @@ bool SignalDetectorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 
         for(JsonVariantConst tone : jsonTones)
         {
-            AudioToneDetector*  audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
+            AudioToneDetector* audioToneDetector = AudioService::getInstance().getAudioToneDetector(idx);
 
             if (nullptr == audioToneDetector)
             {
@@ -487,6 +500,8 @@ bool SignalDetectorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 
         m_textWidget.setFormatStr(jsonText.as<String>());
         m_pushUrl = jsonPushUrl.as<String>();
+
+        m_hasTopicChanged = true;
     }
 
     return status;

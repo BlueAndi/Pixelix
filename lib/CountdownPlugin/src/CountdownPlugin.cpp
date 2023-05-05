@@ -159,6 +159,19 @@ bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+bool CountdownPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
+}
+
 void CountdownPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
@@ -343,6 +356,8 @@ bool CountdownPlugin::setConfiguration(JsonObjectConst& jsonCfg)
         m_targetDateInformation.singular    = jsonDescSingular.as<String>();
 
         calculateDifferenceInDays();
+
+        m_hasTopicChanged = true;
 
         status = true;
     }

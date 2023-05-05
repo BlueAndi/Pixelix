@@ -174,6 +174,19 @@ bool DateTimePlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+bool DateTimePlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
+}
+
 void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 {
     m_slotInterf = slotInterf;
@@ -429,6 +442,8 @@ bool DateTimePlugin::setConfiguration(JsonObjectConst& jsonCfg)
         m_timeZone      = jsonTimeZone.as<String>();
         m_dayOnColor    = colorFromHtml(jsonDayOnColor.as<String>());
         m_dayOffColor   = colorFromHtml(jsonDayOffColor.as<String>());
+
+        m_hasTopicChanged = true;
 
         status = true;
     }

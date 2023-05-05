@@ -82,7 +82,8 @@ public:
         m_bitmapWidget(),
         m_textWidget(),
         m_isUploadError(false),
-        m_mutex()
+        m_mutex(),
+        m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
     }
@@ -193,6 +194,17 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+
+    /**
      * Is a upload request accepted or rejected?
      * 
      * @param[in] topic         The topic which the upload belongs to.
@@ -297,6 +309,7 @@ private:
     TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
     bool                    m_isUploadError;    /**< Flag to signal a upload error. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */
 
     /**
      * Get filename with path.

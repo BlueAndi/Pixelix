@@ -77,7 +77,8 @@ public:
         m_bitmapWidget(),
         m_isSpriteSheetAvailable{false},
         m_isUploadError(false),
-        m_mutex()
+        m_mutex(),
+        m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
     }
@@ -154,6 +155,17 @@ public:
      * @return If successful it will return true otherwise false.
      */
     bool setTopic(const String& topic, const JsonObject& value) final;
+    
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
     
     /**
      * Is a upload request accepted or rejected?
@@ -294,6 +306,7 @@ private:
     bool                    m_isSpriteSheetAvailable[MAX_ICONS];    /**< Flag to indicate whether a spritesheet is used or just a bitmap. */
     bool                    m_isUploadError;                        /**< Flag to signal a upload error. */
     mutable MutexRecursive  m_mutex;                                /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged;                      /**< Has the topic content changed? */
 
     /**
      * Get image filename with path.

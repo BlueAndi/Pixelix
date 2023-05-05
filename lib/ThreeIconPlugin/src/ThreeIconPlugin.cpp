@@ -217,6 +217,30 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+bool ThreeIconPlugin::hasTopicChanged(const String& topic)
+{
+    bool hasTopicChanged = false;
+
+    if (0U != topic.startsWith(String(TOPIC_ANIMATION) + "/"))
+    {
+        uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
+        String      iconIdStr           = topic.substring(indexBeginIconId);
+        uint8_t     iconId              = MAX_ICONS;
+        bool        status              = Util::strToUInt8(iconIdStr, iconId);
+
+        if ((true == status) &&
+            (MAX_ICONS > iconId) &&
+            (false != m_isSpriteSheetAvailable[iconId]))
+        {
+            MutexGuard<MutexRecursive> guard(m_mutex);
+
+            m_hasTopicChanged = false;
+        }
+    }
+
+    return hasTopicChanged;
+}
+
 bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename)
 {
     bool isAccepted = false;
@@ -369,7 +393,12 @@ void ThreeIconPlugin::setIsForward(uint8_t iconId, bool state)
 
     if (MAX_ICONS > iconId)
     {
-        m_bitmapWidget[iconId].setSpriteSheetForward(state);
+        if (state != m_bitmapWidget[iconId].isSpriteSheetForward())
+        {
+            m_bitmapWidget[iconId].setSpriteSheetForward(state);
+
+            m_hasTopicChanged = true;
+        }
     }
 }
 
@@ -392,7 +421,12 @@ void ThreeIconPlugin::setIsRepeat(uint8_t iconId, bool state)
 
     if (MAX_ICONS > iconId)
     {
-        m_bitmapWidget[iconId].setSpriteSheetRepeatInfinite(state);
+        if (state != m_bitmapWidget[iconId].isSpriteSheetRepeatInfinite())
+        {
+            m_bitmapWidget[iconId].setSpriteSheetRepeatInfinite(state);
+
+            m_hasTopicChanged = true;
+        }
     }
 }
 

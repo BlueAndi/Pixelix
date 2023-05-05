@@ -138,6 +138,19 @@ bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+bool VolumioPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
+}
+
 void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
     uint16_t                    tcHeight        = 0U;
@@ -423,6 +436,8 @@ bool VolumioPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
+
+        m_hasTopicChanged = true;
 
         status = true;
     }

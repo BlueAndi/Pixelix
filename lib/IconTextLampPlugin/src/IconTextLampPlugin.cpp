@@ -86,14 +86,16 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
     uint8_t     lampId      = 0U;
     JsonObject  jsonText    = topics.createNestedObject();
     JsonObject  jsonIcon    = topics.createNestedObject();
+    JsonObject  jsonLamps   = topics.createNestedObject();
 
     jsonText["name"]            = TOPIC_TEXT;
     jsonText["ha"]["component"] = "text"; /* Home Assistant component */
 
-    jsonIcon["name"]    = TOPIC_ICON;
-    jsonIcon["access"]  = "w"; /* Only icon upload is supported. */
+    jsonIcon["name"]            = TOPIC_ICON;
+    jsonIcon["access"]          = "w"; /* Only icon upload is supported. */
 
-    (void)topics.add(TOPIC_LAMPS);
+    jsonLamps["name"]           = TOPIC_LAMPS;
+    jsonLamps["access"]         = "r"; /* Only read access allowed. */
 
     for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
     {
@@ -223,6 +225,48 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
     }
 
     return isSuccessful;
+}
+
+bool IconTextLampPlugin::hasTopicChanged(const String& topic)
+{
+    bool hasTopicChanged = false;
+
+    if (0U != topic.equals(TOPIC_TEXT))
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        hasTopicChanged = m_hasTopicTextChanged;
+        m_hasTopicTextChanged = false;
+    }
+    else if (0U != topic.equals(TOPIC_LAMPS))
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        hasTopicChanged = m_hasTopicLampsChanged;
+        m_hasTopicLampsChanged = false;
+    }
+    else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
+    {
+        uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
+        String      lampIdStr           = topic.substring(indexBeginLampId);
+        uint8_t     lampId              = MAX_LAMPS;
+        bool        status              = Util::strToUInt8(lampIdStr, lampId);
+
+        if ((true == status) &&
+            (MAX_LAMPS > lampId))
+        {
+            MutexGuard<MutexRecursive> guard(m_mutex);
+            
+            hasTopicChanged = m_hasTopicLampChanged[lampId];
+            m_hasTopicLampChanged[lampId] = false;
+        }
+    }
+    else
+    {
+        ;
+    }
+
+    return hasTopicChanged;
 }
 
 bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename)
@@ -355,7 +399,12 @@ void IconTextLampPlugin::setText(const String& formatText)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_textWidget.setFormatStr(formatText);
+    if (m_textWidget.getFormatStr() != formatText)
+    {
+        m_textWidget.setFormatStr(formatText);
+
+        m_hasTopicTextChanged = true;
+    }
 }
 
 bool IconTextLampPlugin::loadBitmap(const String& filename)
@@ -413,7 +462,13 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_lampWidgets[lampId].setOnState(state);
+        if (state != m_lampWidgets[lampId].getOnState())
+        {
+            m_lampWidgets[lampId].setOnState(state);
+
+            m_hasTopicLampsChanged = true;
+            m_hasTopicLampChanged[lampId] = true;
+        }
     }
 }
 

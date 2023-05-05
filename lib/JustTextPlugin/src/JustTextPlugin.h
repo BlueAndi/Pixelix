@@ -249,7 +249,7 @@ private:
     Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged;  /**< Has the topic content changed? */
+    bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */
 };
 
 /******************************************************************************

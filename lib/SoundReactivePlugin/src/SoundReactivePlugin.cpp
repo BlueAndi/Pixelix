@@ -147,6 +147,19 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+bool SoundReactivePlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
+}
+
 void SoundReactivePlugin::start(uint16_t width, uint16_t height)
 {
     SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
@@ -363,6 +376,8 @@ bool SoundReactivePlugin::setConfiguration(JsonObjectConst& jsonCfg)
             MutexGuard<MutexRecursive>  guard(m_mutex);
 
             m_numOfFreqBands = numOfBands;
+
+            m_hasTopicChanged = true;
 
             status = true;
         }

@@ -191,7 +191,8 @@ public:
         m_mutex(),
         m_cfgReloadTimer(),
         m_storeConfigReq(false),
-        m_reloadConfigReq(false)
+        m_reloadConfigReq(false),
+        m_hasTopicChanged(false)
     {
         /* Example data, used to generate the very first configuration file. */
         m_targetDate.day                    = 29;
@@ -302,6 +303,17 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+    
+    /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
      * and provides the canvas size.
@@ -396,6 +408,7 @@ private:
     SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
     bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
     bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
+    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
 
     /**
      * Request to store configuration to persistent memory.

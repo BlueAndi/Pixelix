@@ -88,7 +88,8 @@ public:
         m_slotInterf(nullptr),
         m_cfgReloadTimer(),
         m_storeConfigReq(false),
-        m_reloadConfigReq(false)
+        m_reloadConfigReq(false),
+        m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
         m_textWidget.setFormatStr(DEFAULT_TEXT);
@@ -200,6 +201,17 @@ public:
     bool setTopic(const String& topic, const JsonObject& value) final;
 
     /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+    
+    /**
      * Set the slot interface, which the plugin can used to request information
      * from the slot, it is plugged in.
      *
@@ -278,18 +290,19 @@ private:
      */
     static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
 
-    Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget              m_textWidget;               /**< If signal is detected, it will show a corresponding text. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    bool                    m_isDetected;               /**< Shows that the signal was detected. */
-    String                  m_pushUrl;                  /**< Push URL which will be triggered if signal is detected. */
-    AsyncHttpClient         m_client;                   /**< HTTP(S) client used for push notification. */
-    bool                    m_isUpdateReq;              /**< Display update request, by changing the text. */
-    SimpleTimer             m_timer;                    /**< Timer used for slot duration timeout detection in case deactivate() is not called. */
-    const ISlotPlugin*      m_slotInterf;               /**< Slot interface */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
+    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget              m_textWidget;       /**< If signal is detected, it will show a corresponding text. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
+    bool                    m_isDetected;       /**< Shows that the signal was detected. */
+    String                  m_pushUrl;          /**< Push URL which will be triggered if signal is detected. */
+    AsyncHttpClient         m_client;           /**< HTTP(S) client used for push notification. */
+    bool                    m_isUpdateReq;      /**< Display update request, by changing the text. */
+    SimpleTimer             m_timer;            /**< Timer used for slot duration timeout detection in case deactivate() is not called. */
+    const ISlotPlugin*      m_slotInterf;       /**< Slot interface */
+    SimpleTimer             m_cfgReloadTimer;   /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_storeConfigReq;   /**< Is requested to store the configuration in persistent memory? */
+    bool                    m_reloadConfigReq;  /**< Is requested to reload the configuration from persistent memory? */
+    bool                    m_hasTopicChanged;  /**< Has the topic content changed? */
 
     /**
      * Request to store configuration to persistent memory.

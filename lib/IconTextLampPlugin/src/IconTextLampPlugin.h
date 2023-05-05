@@ -84,7 +84,10 @@ public:
         m_bitmapWidget(),
         m_textWidget(),
         m_lampWidgets(),
-        m_mutex()
+        m_mutex(),
+        m_hasTopicTextChanged(false),
+        m_hasTopicLampsChanged(false),
+        m_hasTopicLampChanged{false, false, false, false}
     {
         (void)m_mutex.create();
     }
@@ -161,6 +164,17 @@ public:
      * @return If successful it will return true otherwise false.
      */
     bool setTopic(const String& topic, const JsonObject& value) final;
+
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
 
     /**
      * Is a upload request accepted or rejected?
@@ -292,13 +306,16 @@ private:
      */
     static const uint8_t    MAX_LAMPS   = 4U;
 
-    WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_lampCanvas;               /**< Canvas used for the lamp widget. */
-    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    LampWidget              m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal different things. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
+    WidgetGroup             m_iconCanvas;                       /**< Canvas used for the bitmap widget. */
+    WidgetGroup             m_textCanvas;                       /**< Canvas used for the text widget. */
+    WidgetGroup             m_lampCanvas;                       /**< Canvas used for the lamp widget. */
+    BitmapWidget            m_bitmapWidget;                     /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidget;                       /**< Text widget, used for showing the text. */
+    LampWidget              m_lampWidgets[MAX_LAMPS];           /**< Lamp widgets, used to signal different things. */
+    mutable MutexRecursive  m_mutex;                            /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicTextChanged;              /**< Has the topic text content changed? */
+    bool                    m_hasTopicLampsChanged;             /**< Has the topic lamps content changed? */
+    bool                    m_hasTopicLampChanged[MAX_LAMPS];   /**< Has the topic lamp content changed? */
 
     /**
      * Get filename with path.

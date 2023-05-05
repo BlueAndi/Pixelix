@@ -155,6 +155,22 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+bool IconTextPlugin::hasTopicChanged(const String& topic)
+{
+    bool hasTopicChanged = false;
+
+    if (0U != topic.equals(TOPIC_TEXT))
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        hasTopicChanged = m_hasTopicChanged;
+
+        m_hasTopicChanged = false;
+    }
+
+    return hasTopicChanged;
+}
+
 bool IconTextPlugin::isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename)
 {
     bool isAccepted = false;
@@ -260,7 +276,12 @@ void IconTextPlugin::setText(const String& formatText)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_textWidget.setFormatStr(formatText);
+    if (m_textWidget.getFormatStr() != formatText)
+    {
+        m_textWidget.setFormatStr(formatText);
+
+        m_hasTopicChanged = true;
+    }
 }
 
 bool IconTextPlugin::loadBitmap(const String& filename)

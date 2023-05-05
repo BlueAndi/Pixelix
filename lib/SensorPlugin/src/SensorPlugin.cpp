@@ -139,6 +139,19 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+bool SensorPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
+}
+
 void SensorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
@@ -302,6 +315,8 @@ bool SensorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
         m_sensorIdx     = jsonSensorIndex.as<uint8_t>();
         m_channelIdx    = jsonChannelIndex.as<uint8_t>();
         m_sensorChannel = getChannel(m_sensorIdx, m_channelIdx);
+
+        m_hasTopicChanged = true;
 
         status = true;
     }
