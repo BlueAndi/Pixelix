@@ -45,7 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <IDisplay.hpp>
-#include <NeoPixelBrightnessBus.h>
+#include <NeoPixelBusLg.h>
 #include <ColorDef.hpp>
 #include <YAGfxBitmap.h>
 
@@ -132,14 +132,14 @@ public:
      */
     void setBrightness(uint8_t brightness) final
     {
-        /* To protect the electronic parts, the brigntness will be scaled down
+        /* To protect the electronic parts, the luminance will be scaled down
          * according to the max. supply current.
          */
-        const uint8_t SAFE_BRIGHTNESS =
+        const uint8_t SAFE_LUMINANCE =
             (Board::LedMatrix::supplyCurrentMax * brightness) /
             (Board::LedMatrix::maxCurrentPerLed * Board::LedMatrix::width *Board::LedMatrix::height);
 
-        m_strip.SetBrightness(SAFE_BRIGHTNESS);
+        m_strip.SetLuminance(SAFE_LUMINANCE);
         return;
     }
 
@@ -200,8 +200,11 @@ public:
 
 private:
 
-    /** Pixel representation of the LED matrix */
-    NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod>                  m_strip;
+    /**
+     * Pixel representation of the LED matrix, using a gamma table for speed.
+     * Needs about 256 byte memory.
+     */
+    NeoPixelBusLg<NeoGrbFeature, Neo800KbpsMethod, NeoGammaTableMethod>     m_strip;
 
     /** Panel topology, used to map coordinates to the framebuffer. */
     NeoTopology<ColumnMajorAlternatingLayout>                               m_topo;
