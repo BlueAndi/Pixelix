@@ -201,10 +201,9 @@ public:
 private:
 
     /**
-     * Pixel representation of the LED matrix, using a gamma table for speed.
-     * Needs about 256 byte memory.
+     * Pixel representation of the LED matrix. Gamma correction disabled.
      */
-    NeoPixelBusLg<NeoGrbFeature, Neo800KbpsMethod, NeoGammaTableMethod>     m_strip;
+    NeoPixelBusLg<NeoGrbFeature, Neo800KbpsMethod, NeoGammaNullMethod>      m_strip;
 
     /** Panel topology, used to map coordinates to the framebuffer. */
     NeoTopology<ColumnMajorAlternatingLayout>                               m_topo;
