@@ -129,6 +129,8 @@ void MqttService::stop()
     m_mqttClient.disconnect();
     m_state = STATE_IDLE;
     m_reconnectTimer.stop();
+
+    LOG_INFO("MQTT service stopped.");
 }
 
 void MqttService::process()
@@ -150,6 +152,11 @@ void MqttService::process()
     default:
         break;
     }
+}
+
+MqttService::State MqttService::getState() const
+{
+    return m_state;
 }
 
 bool MqttService::publish(const String& topic, const String& msg)

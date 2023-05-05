@@ -81,7 +81,10 @@ bool JustTextPlugin::isEnabled() const
 
 void JustTextPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC_TEXT);
+    JsonObject jsonText = topics.createNestedObject();
+ 
+    jsonText["name"]            = TOPIC_TEXT;
+    jsonText["ha"]["component"] = "text"; /* Home Assistant component */
 }
 
 bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -122,6 +125,19 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
     }
 
     return isSuccessful;
+}
+
+bool JustTextPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
 }
 
 void JustTextPlugin::start(uint16_t width, uint16_t height)
@@ -172,7 +188,12 @@ void JustTextPlugin::setText(const String& formatText)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_textWidget.setFormatStr(formatText);
+    if (m_textWidget.getFormatStr() != formatText)
+    {
+        m_textWidget.setFormatStr(formatText);
+
+        m_hasTopicChanged = true;
+    }
 }
 
 /******************************************************************************

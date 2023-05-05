@@ -22,6 +22,7 @@
   - [Widgets](#widgets)
   - [User Button Handling](#user-button-handling)
   - [Audio Service](#audio-service)
+  - [Topic Handler Service](#topic-handler-service)
   - [Plugin Handling](#plugin-handling)
     - [Static View](#static-view)
     - [Dynamic View](#dynamic-view)
@@ -103,7 +104,10 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 ![button-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/button.wsd)
 
 ## Audio Service
-![button-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/audio_service.wsd)
+![audio-service-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/audio_service.wsd)
+
+## Topic Handler Service
+![topic-handler-service-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/topic_handler_service.wsd)
 
 ## Plugin Handling
 

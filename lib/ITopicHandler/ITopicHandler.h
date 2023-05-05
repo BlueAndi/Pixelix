@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <IPluginMaintenance.hpp>
+#include <ArduinoJson.h>
 
 /******************************************************************************
  * Macros
@@ -62,6 +63,15 @@ class ITopicHandler
 {
 public:
 
+    /** Topic accessibility */
+    typedef enum
+    {
+        ACCESS_READ_ONLY = 0,   /**< Read only */
+        ACCESS_READ_WRITE,      /**< Read and write */
+        ACCESS_WRITE_ONLY       /**< Write only */
+    
+    } Access;
+
     /**
      * Destroy the interface.
      */
@@ -70,18 +80,35 @@ public:
     }
 
     /**
-     * Register all topics of the given plugin.
+     * Register a single topic of the given plugin.
      * 
-     * @param[in] plugin    The plugin, which topics shall be registered.
+     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] topic     The topic name.
+     * @param[in] access    The topic accessibility.
+     * @param[in] extra     Extra parameters, which depend on the topic handler.
      */
-    virtual void registerTopics(IPluginMaintenance* plugin) = 0;
+    virtual void registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra) = 0;
 
     /**
-     * Unregister all topics of the given plugin.
+     * Unregister the topic of the given plugin.
      * 
-     * @param[in] plugin    The plugin, which topics to unregister.
+     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] topic     The topic name.
      */
-    virtual void unregisterTopics(IPluginMaintenance* plugin) = 0;
+    virtual void unregisterTopic(IPluginMaintenance* plugin, const String& topic) = 0;
+
+    /**
+     * Process the topic handler.
+     */
+    virtual void process() = 0;
+
+    /**
+     * Notify that the topic has changed.
+     * 
+     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] topic     The topic name.
+     */
+    virtual void notify(IPluginMaintenance* plugin, const String& topic) = 0;
 
 protected:
 

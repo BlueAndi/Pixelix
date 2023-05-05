@@ -1,5 +1,6 @@
 @startuml
 
+participant "RestApiTopicHandler" as restApiTopicHandler
 participant "PluginMgr" as pluginMgr
 participant "DisplayMgr" as displayMgr
 participant "Plugin" as plugin
@@ -7,7 +8,7 @@ participant "FS" as fs
 
 autoactivate on
 
-note over pluginMgr,fs
+note over restApiTopicHandler,fs
     Initial start of the plugin.
 end note
 
@@ -30,33 +31,33 @@ end note
     pluginMgr <-- displayMgr
 <-- pluginMgr
 
-note over pluginMgr,fs
+note over restApiTopicHandler,fs
     Read configuration via REST API.
 end note
 
--> pluginMgr: GET /rest/api/v1/display/uid/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI>
-    note over pluginMgr
-        The plugin manager would be able to read the configuration
+-> restApiTopicHandler: GET /rest/api/v1/display/uid/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI>
+    note over restApiTopicHandler
+        The topic handler would be able to read the configuration
         from the filesystem. But this shall be avoided because of
         slow flash access and to avoid that plugin has internally
         a different configuration than stored in the filesystem.
     end note
-    pluginMgr -> plugin: Read configuration
-    pluginMgr <-- plugin: Configuration as JSON
-<-- pluginMgr: Configuration as JSON
+    restApiTopicHandler -> plugin: Read configuration
+    restApiTopicHandler <-- plugin: Configuration as JSON
+<-- restApiTopicHandler: Configuration as JSON
 
-note over pluginMgr,fs
+note over restApiTopicHandler,fs
     Write configuration via REST API.
 end note
 
--> pluginMgr: POST /rest/api/v1/display/uid/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI> with JSON
+-> restApiTopicHandler: POST /rest/api/v1/display/uid/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI> with JSON
     note over plugin
         Don't write configuration to flash, because flash access is
         slow. It shall be written during plugin processing.
     end note
-    pluginMgr -> plugin: Write configuration
-    pluginMgr <-- plugin
-<-- pluginMgr
+    restApiTopicHandler -> plugin: Write configuration
+    restApiTopicHandler <-- plugin
+<-- restApiTopicHandler
 
 note over plugin
     Store configuration triggered by previous
@@ -70,7 +71,7 @@ end note
     displayMgr <-- plugin
 <-- displayMgr
 
-note over pluginMgr,fs
+note over restApiTopicHandler,fs
     Stop of the plugin.
 end note
 

@@ -6,10 +6,11 @@
 # Plugin development <!-- omit in toc -->
 
 - [MQTT](#mqtt)
-- [MQTT Channels](#mqtt-channels)
+- [Overview Mindmap](#overview-mindmap)
+- [MQTT Topics](#mqtt-topics)
   - [Notifications: \<HOSTNAME\>](#notifications-hostname)
   - [Plugin base URI](#plugin-base-uri)
-  - [Channel name](#channel-name)
+  - [Topic name](#topic-name)
   - [Sending a bitmap](#sending-a-bitmap)
 - [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 - [License](#license)
@@ -28,23 +29,27 @@ Examples:
     * myuser:mypassword@mosquitto.at.home
     * mqtt://myuser:mypassword@mosquitto.at.home
 
-# MQTT Channels
+# Overview Mindmap
+
+![topic-handling-minmap](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/topic_handling_mindmap.wsd)
+
+# MQTT Topics
 
 ## Notifications: &lt;HOSTNAME&gt;
-After the connection to the MQTT broker is established, Pixelix will send "Obi Wan Kenobi" over the &lt;HOSTNAME&gt; channel.
+After the successful connection establishment to the MQTT broker, Pixelix will send "Obi Wan Kenobi" to the &lt;HOSTNAME&gt; topic.
 
 ## Plugin base URI
-The base URI to access plugin related channels can be setup with the plugin UID or the plugin alias:
+The base URI to access plugin related topics can be setup with the plugin UID or the plugin alias:
 * &lt;HOSTNAME&gt;/uid/&lt;PLUGIN-UID&gt;/...
 * &lt;HOSTNAME&gt;/alias/&lt;PLUGIN-ALIAS&gt;/...
 
-## Channel name
-The complete channel name can be derived from the REST API documentation.
+## Topic name
+The complete topic name can be derived from the REST API documentation.
 
 Example: JustTextPlugin
 
 The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;
-1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1 part with &lt;HOSTNAME&gt; --> &lt;HOSTNAME&gt;/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;
+1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/display part with &lt;HOSTNAME&gt; --> &lt;HOSTNAME&gt;/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;
 2. Every URL parameter, which is in this case show=&lt;TEXT&gt; must be sent in JSON format.
 
 ```json

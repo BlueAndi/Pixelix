@@ -73,6 +73,16 @@ public:
     typedef std::function<void(const String& topic, const uint8_t* payload, size_t size)>    TopicCallback;
 
     /**
+     * MQTT service states.
+     */
+    enum State
+    {
+        STATE_DISCONNECTED = 0, /**< No connection to a MQTT broker */
+        STATE_CONNECTED,        /**< Connected with a MQTT broker */
+        STATE_IDLE              /**< Service is idle */
+    };
+
+    /**
      * Get the audio service instance.
      * 
      * @return Audio service instance
@@ -98,6 +108,13 @@ public:
      * Process the service.
      */
     void process() final;
+
+    /**
+     * Get current MQTT connection state.
+     * 
+     * @return MQTT connection state
+     */
+    State getState() const;
 
     /**
      * Publish a message for a topic.
@@ -156,16 +173,6 @@ public:
     void unsubscribe(const char* topic);
 
 private:
-
-    /**
-     * MQTT service states.
-     */
-    enum State
-    {
-        STATE_DISCONNECTED = 0, /**< No connection to a MQTT broker */
-        STATE_CONNECTED,        /**< Connected with a MQTT broker */
-        STATE_IDLE              /**< Service is idle */
-    };
 
     /**
      * Subscriber information

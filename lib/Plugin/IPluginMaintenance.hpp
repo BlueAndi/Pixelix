@@ -134,6 +134,21 @@ public:
      *     ]
      * }
      * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
+     * }
+     * 
      * @param[out] topics   Topis in JSON format
      */
     virtual void getTopics(JsonArray& topics) const = 0;
@@ -159,6 +174,17 @@ public:
      * @return If successful it will return true otherwise false.
      */
     virtual bool setTopic(const String& topic, const JsonObject& value) = 0;
+
+    /**
+     * Has the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    virtual bool hasTopicChanged(const String& topic) = 0;
 
     /**
      * Is a upload request accepted or rejected?

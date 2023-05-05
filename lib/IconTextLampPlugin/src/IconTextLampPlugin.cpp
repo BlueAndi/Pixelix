@@ -83,17 +83,22 @@ const char* IconTextLampPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
 
 void IconTextLampPlugin::getTopics(JsonArray& topics) const
 {
-    uint8_t lampId = 0U;
+    uint8_t     lampId      = 0U;
+    JsonObject  jsonText    = topics.createNestedObject();
+    JsonObject  jsonIcon    = topics.createNestedObject();
 
-    (void)topics.add(TOPIC_TEXT);
+    jsonText["name"]            = TOPIC_TEXT;
+    jsonText["ha"]["component"] = "text"; /* Home Assistant component */
+
+    jsonIcon["name"]    = TOPIC_ICON;
+    jsonIcon["access"]  = "w"; /* Only icon upload is supported. */
+
     (void)topics.add(TOPIC_LAMPS);
 
     for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
     {
         (void)topics.add(String(TOPIC_LAMP) + "/" + lampId);
     }
-
-    (void)topics.add(TOPIC_ICON);
 }
 
 bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const

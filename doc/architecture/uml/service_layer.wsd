@@ -3,13 +3,17 @@
 skinparam component {
     BackgroundColor<<Arduino>> Lightgreen
     BackgroundColor<<Future>> White
+    BackgroundColor<<Generated>> Orange
 }
 
 package "Service" as servicePckg {
     component "RestApi" as restApi
     component "RestUtil" as restUtil
-    component "MqttService" as mqttService <<Future>>
     component "WebSocket" as webSocket
+
+    package "MqttService" {
+        component "MqttService" as mqttService
+    }
 
     package "SettingsService" {
         component "SettingsService" as settingsService
@@ -29,6 +33,13 @@ package "Service" as servicePckg {
         audioService ..> audioToneDetector
     }
 
+    package "TopicHandlerService" as topicHandlerServicePckg {
+        component "TopicHandlerService" as topicHandlerService
+        component "TopicHandlers" as topicHandler <<Generated>>
+
+        topicHandlerService ..> topicHandler
+    }
+
     package FadeEffects    
     package YAWidgets
     package YAGfx
@@ -39,7 +50,7 @@ package "Service" as servicePckg {
     YAGfx ..> BaseGfx
 
     package "3rd party" as service3rdPartyPckg {
-        component "PubSubClient" as pubSubClient <<Future>>
+        component "PubSubClient" as pubSubClient
         component "FS" as fs <<Arduino>>
         component "Preferences" as preferences <<Arduino>>
         component "NTP" as ntp <<Arduino>>
@@ -70,9 +81,9 @@ package "Service" as servicePckg {
     spectrumAnalyzer ....> fft
 
     restApi ...> webServer
-    mqttService ...> pubSubClient
+    mqttService ......> pubSubClient
     webSocket ...> webServer
-    settingsService ...> preferences
+    settingsService ......> preferences
 
     restApi ..> restUtil
 

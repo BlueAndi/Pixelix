@@ -69,7 +69,7 @@ public:
      */
     RestApiTopicHandler() :
         ITopicHandler(),
-        m_pluginMeta()
+        m_pluginTopicList()
     {
     }
 
@@ -78,67 +78,74 @@ public:
      */
     ~RestApiTopicHandler()
     {
+        clearPluginTopics();
     }
 
     /**
-     * Register all topics of the given plugin.
+     * Register a single topic of the given plugin.
      * 
-     * @param[in] plugin    The plugin, which topics shall be registered.
+     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] topic     The topic name.
+     * @param[in] access    The topic accessibility.
+     * @param[in] extra     Extra parameters, which depend on the topic handler.
      */
-    void registerTopics(IPluginMaintenance* plugin) final;
+    void registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra) final;
 
     /**
-     * Unregister all topics of the given plugin.
+     * Unregister the topic of the given plugin.
      * 
-     * @param[in] plugin    The plugin, which topics to unregister.
+     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] topic     The topic name.
      */
-    void unregisterTopics(IPluginMaintenance* plugin) final;
+    void unregisterTopic(IPluginMaintenance* plugin, const String& topic) final;
+
+    /**
+     * Process the topic handler.
+     */
+    void process() final
+    {
+        /* Nothing to do. */
+    }
+
+    /**
+     * Notify that the topic has changed.
+     * 
+     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] topic     The topic name.
+     */
+    void notify(IPluginMaintenance* plugin, const String& topic) final
+    {
+        /* Nothing to do. */
+    }
 
 private:
 
     /**
-     * Web handler data, which is necessary for the webserver handling.
+     * Plugin topic relevant data.
      */
-    struct WebHandlerData
+    struct PluginTopic
     {
+        IPluginMaintenance*         plugin;         /**< The plugin which provides the topic. */
+        String                      topic;          /**< The plugin topic. */
         AsyncCallbackWebHandler*    webHandler;     /**< Webhandler callback, necessary to remove it later again. */
         String                      uri;            /**< URI where the handler is registered. */
         bool                        isUploadError;  /**< If upload error happened, it will be true otherwise false. */
         String                      fullPath;       /**< Full path of uploaded file. If empty, there is no file available. */
         File                        fd;             /**< Upload file descriptor */
+        Access                      access;         /**< Access to the topic (r, rw, w) */
 
         /**
          * Initialize the web handler data.
          */
-        WebHandlerData() :
+        PluginTopic() :
+            plugin(nullptr),
+            topic(),
             webHandler(nullptr),
             uri(),
             isUploadError(false),
             fullPath(),
-            fd()
-        {
-        }
-    };
-
-    /**
-     * List of web handler data.
-     */
-    typedef std::vector<WebHandlerData*>    WebHandlerDataList;
-
-    /**
-     * Plugin object specific data, used for plugin management.
-     */
-    struct PluginObjData
-    {
-        IPluginMaintenance* plugin;         /**< Plugin object, where this data record belongs to. */
-        WebHandlerDataList  webHandlers;    /**< Web handler data of the plugin, necessary to remove it later again. */
-
-        /**
-         * Initializes the plugin object data.
-         */
-        PluginObjData() :
-            plugin(nullptr),
-            webHandlers()
+            fd(),
+            access(ACCESS_READ_WRITE)
         {
         }
     };
@@ -146,9 +153,9 @@ private:
     /**
      * List of plugin object data.
      */
-    typedef std::vector<PluginObjData*> PluginObjDataList;
+    typedef std::vector<PluginTopic*> PluginTopicList;
 
-    PluginObjDataList m_pluginMeta; /**< Plugin object management information. */
+    PluginTopicList m_pluginTopicList;  /**< List of plugin topics with webhandler data. */
 
     RestApiTopicHandler(const RestApiTopicHandler& adapter);
     RestApiTopicHandler& operator=(const RestApiTopicHandler& adapter);
@@ -174,21 +181,21 @@ private:
     /**
      * Register a single topic of the given plugin.
      * 
-     * @param[in] baseUri   The REST API base URI.
-     * @param[in] metaData  The plugin meta data, which shall be handled.
-     * @param[in] topic     The topic.
+     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] topic     The topic name.
+     * @param[in] access    The topic accessibility.
+     * @param[in] extra     Extra parameters, which depend on the topic handler.
+     * @param[in] baseUri   The REST API base URI which to use.
      */
-    void registerTopic(const String& baseUri, PluginObjData* metaData, const String& topic);
+    void registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra, const String& baseUri);
 
     /**
      * The web request handler handles all incoming HTTP requests for every plugin topic.
      * 
-     * @param[in] request           The web request information from the client.
-     * @param[in] plugin            The responsible plugin, which is related to the request.
-     * @param[in] topic             The topic, which is requested.
-     * @param[in] webHandlerData    Plugin web handler data, which is related to this request.
+     * @param[in] request       The web request information from the client.
+     * @param[in] pluginTopic   The related plugin topic data.
      */
-    void webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
+    void webReqHandler(AsyncWebServerRequest *request, PluginTopic* pluginTopic);
 
     /**
      * File upload handler.
@@ -199,11 +206,9 @@ private:
      * @param[in] data              Next data part of file, starting at offset.
      * @param[in] len               Data part size in byte.
      * @param[in] final             Is final packet or not.
-     * @param[in] plugin            The responsible plugin, which is related to the upload.
-     * @param[in] topic             The topic, which is requested.
-     * @param[in] webHandlerData    Plugin web handler data, which is related to this upload.
+     * @param[in] pluginTopic   The related plugin topic data.
      */
-    void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData);
+    void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, PluginTopic* pluginTopic);
 
     /**
      * Convert HTTP parameters to JSON format.
@@ -212,6 +217,11 @@ private:
      * @param[in]       request     HTTP request with parameters
      */
     void par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest *request);
+
+    /**
+     * Clear plugin topics.
+     */
+    void clearPluginTopics();
 };
 
 /******************************************************************************

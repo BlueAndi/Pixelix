@@ -47,7 +47,6 @@
 #include "SlotList.h"
 #include "PluginFactory.h"
 
-#include <ITopicHandler.h>
 #include <IPluginMaintenance.hpp>
 
 /******************************************************************************
@@ -235,20 +234,6 @@ private:
      * @return If successful installed, it will return true otherwise false.
      */
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
-
-    /**
-     * Register all topics of the given plugin.
-     * 
-     * @param[in] plugin    The plugin, which topics shall be registered.
-     */
-    void registerTopics(IPluginMaintenance* plugin);
-
-    /**
-     * Unregister all topics of the given plugin.
-     * 
-     * @param[in] plugin    The plugin, which topics to unregister.
-     */
-    void unregisterTopics(IPluginMaintenance* plugin);
 
     /**
      * Checks whether the alias is valid. It will check for not compliant

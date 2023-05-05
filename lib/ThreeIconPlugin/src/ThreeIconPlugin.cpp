@@ -81,8 +81,12 @@ void ThreeIconPlugin::getTopics(JsonArray& topics) const
 
     for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
     {
-        (void)topics.add(String(TOPIC_BITMAP)       + "/" + iconId);
-        (void)topics.add(String(TOPIC_ANIMATION)    + "/" + iconId);
+        JsonObject  jsonIcon    = topics.createNestedObject();
+
+        jsonIcon["name"]    = String(TOPIC_BITMAP) + "/" + iconId;
+        jsonIcon["access"]  = "w"; /* Only icon upload is supported. */
+
+        (void)topics.add(String(TOPIC_ANIMATION) + "/" + iconId);
     }
 }
 

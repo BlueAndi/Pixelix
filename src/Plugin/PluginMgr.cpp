@@ -37,12 +37,12 @@
 #include "FileSystem.h"
 #include "Plugin.hpp"
 #include "JsonFile.h"
-#include "TopicHandlers.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
 #include <SettingsService.h>
+#include <TopicHandlerService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -108,7 +108,7 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
-            unregisterTopics(plugin);
+            TopicHandlerService::getInstance().unregisterTopics(plugin);
 
             m_pluginFactory.destroyPlugin(plugin);
         }
@@ -136,13 +136,13 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
         (true == isPluginAliasValid(alias)))
     {
         /* First remove current registered topics. */
-        unregisterTopics(plugin);
+        TopicHandlerService::getInstance().unregisterTopics(plugin);
 
         /* Set new alias */
         plugin->setAlias(alias);
 
         /* Register web API, based on new alias. */
-        registerTopics(plugin);
+        TopicHandlerService::getInstance().registerTopics(plugin);
 
         isSuccessful = true;
     }
@@ -378,7 +378,7 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (true == isSuccessful)
         {
-            registerTopics(plugin);
+            TopicHandlerService::getInstance().registerTopics(plugin);
         }
     }
 
@@ -421,50 +421,6 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
     }
 
     return status;
-}
-
-void PluginMgr::registerTopics(IPluginMaintenance* plugin)
-{
-    if (nullptr != plugin)
-    {
-        uint8_t         idx                 = 0U;
-        uint8_t         count               = 0U;
-        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
-
-        while(count > idx)
-        {
-            ITopicHandler* handler = topicHandlerList[idx];
-
-            if (nullptr != handler)
-            {
-                handler->registerTopics(plugin);
-            }
-
-            ++idx;
-        }
-    }
-}
-
-void PluginMgr::unregisterTopics(IPluginMaintenance* plugin)
-{
-    if (nullptr != plugin)
-    {
-        uint8_t         idx                 = 0U;
-        uint8_t         count               = 0U;
-        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
-
-        while(count > idx)
-        {
-            ITopicHandler* handler = topicHandlerList[idx];
-
-            if (nullptr != handler)
-            {
-                handler->unregisterTopics(plugin);
-            }
-
-            ++idx;
-        }
-    }
 }
 
 bool PluginMgr::isPluginAliasValid(const String& alias)

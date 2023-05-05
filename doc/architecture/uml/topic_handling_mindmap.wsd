@@ -1,0 +1,118 @@
+@startmindmap
+
++[#lightgreen] Topic
+++ Access
+
++++ REST API
+
+++++ Base URI: http://<HOSTNAME>/rest/api/v1
+
+++++ GET
++++++ URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<TOPIC>
++++++ URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<TOPIC>
+
+++++ POST
++++++ URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<TOPIC>
++++++ URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<TOPIC>
+
++++++ Parameters via HTTP arguments
+******: key=value __converts to__
+<code>
+{
+    "key": "value"
+}
+</code>;
+******: key.sub=value __converts to__
+<code>
+{
+    "key": {
+        "sub": "value"
+    }
+}
+</code>;
+******: key._0_=value __converts to__
+<code>
+{
+    "key": [
+        "value"
+    ]
+}
+</code>;
+******: key._0_.sub=value __converts to__
+<code>
+{
+    "key": [{
+        "sub": "value"
+    }]
+}
+</code>;
+
++++++ A file is BASE64 encoded and provided in HTTP body.
+
+
+++++ General response
++++++ In case of successful request
+******:
+<code>
+{
+    "data": {},
+    "status": "ok"
+}
+</code>;
+
++++++ In case of an error
+******:
+<code>
+{
+    "data": {},
+    "status": "error"
+}
+</code>;
++++++ The data element contains the request specific information.
+
++++ MQTT API
+
+++++ Homeassistant auto discovery
++++++ Path: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/<PLUGIN-UID>/config
+*****:
+<code>
+{
+    "~": "<HOSTNAME>/display/uid/<PLUGIN-UID>",
+    "name": "<HOSTNAME>",
+    "device_class": "<HOMEASSISTANT-DEVICE-CLASS>",
+    "state_topic": "~/<TOPIC>/state",
+    "command_topic": "~/<TOPIC>/set"
+}
+</code>;
+++++ HOMEASSISTANT-DEVICE-CLASS: ????
+++++ HOMEASSISTANT-COMPONENT
++++++ Components nowadays integrations: https://www.home-assistant.io/integrations
++++++ The integration depends on the plugin.
++++++ Integration: text
+++++++ https://www.home-assistant.io/integrations/text.mqtt/
++++++ Integration: sensor
+++++++ https://www.home-assistant.io/integrations/sensor.mqtt/
+++++ Device classes: ????
+
+++++ Status
++++++ Path: <HOSTNAME>/uid/<PLUGIN-UID>/<TOPIC>/state
++++++ Path: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<TOPIC>/state
++++++ Direction: Pixelix --> Client(s)
+++++ Command
++++++ Path: <HOSTNAME>/uid/<PLUGIN-UID>/<TOPIC>/set
++++++ Path: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<TOPIC>/set
++++++ Direction: Client(s) --> Pixelix
+++++ Availability
++++++ Path: <HOSTNAME>/uid/<PLUGIN-UID>/<TOPIC>/available
++++++ Path: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<TOPIC>/available
++++++ Direction: Pixelix --> Client(s)
++++++ "online"/"offline"
+
+-- A plugin deals only with topics\nand doesn't know about REST or MQTT.
+-- Device identification
+--- Unique hostname (HOSTNAME)
+-- Plugin identification
+--- Unique plugin ID (PLUGIN-UID) assigned at instance creation
+--- Unique plugin alias (PLUGIN-ALIAS) assigned by user
+
+@endmindmap

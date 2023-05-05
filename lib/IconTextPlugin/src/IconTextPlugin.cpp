@@ -90,8 +90,14 @@ bool IconTextPlugin::isEnabled() const
 
 void IconTextPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC_TEXT);
-    (void)topics.add(TOPIC_ICON);
+    JsonObject  jsonText    = topics.createNestedObject();
+    JsonObject  jsonIcon    = topics.createNestedObject();
+
+    jsonText["name"]            = TOPIC_TEXT;
+    jsonText["ha"]["component"] = "text"; /* Home Assistant component */
+
+    jsonIcon["name"]    = TOPIC_ICON;
+    jsonIcon["access"]  = "w"; /* Only icon upload is supported. */
 }
 
 bool IconTextPlugin::getTopic(const String& topic, JsonObject& value) const
