@@ -86,7 +86,7 @@ bool MqttService::start()
     {
         String mqttBrokerUrl = m_mqttBrokerUrlSetting.getValue();
 
-        /* Determine URL, user and pasword. */
+        /* Determine URL, user and password. */
         parseMqttBrokerUrl(mqttBrokerUrl);
 
         m_hostname = settings.getHostname().getValue();
