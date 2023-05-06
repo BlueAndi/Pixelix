@@ -47,13 +47,19 @@ The generic plugins allow the user to control the different UI elements describe
 The IconTextPlugin shows an icon on left side, text on right side. If no text is set, the plugin will be skipped in the slot.\
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.3.0#/IconTextPlugin).
 
+If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
+
 ## IconTextLampPlugin
 The IconTextLampPlugin shows an icon on left side, text on right side and lamps at the bottom.\
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.3.0#/IconTextLampPlugin).
 
+If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
+
 ## JustTextPlugin
 The JustTextPlugin shows only text on the whole display. If no text is set, the plugin will be skipped in the slot.\
 The text to be displayed can be set via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.3.0#/JustTextPlugin).
+
+If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
 
 ## ThreeIconPlugin
 The ThreeIconPlugin shows three icons on the display.\
