@@ -95,7 +95,8 @@ void RestApiTopicHandler::unregisterTopic(IPluginMaintenance* plugin, const Stri
         {
             PluginTopic* pluginTopic = *pluginTopicListIt;
 
-            if ((plugin == pluginTopic->plugin) &&
+            if ((nullptr != pluginTopic) &&
+                (plugin == pluginTopic->plugin) &&
                 (topic == pluginTopic->topic))
             {
                 if (false == MyWebServer::getInstance().removeHandler(pluginTopic->webHandler))
@@ -108,6 +109,7 @@ void RestApiTopicHandler::unregisterTopic(IPluginMaintenance* plugin, const Stri
                 }
 
                 pluginTopicListIt = m_pluginTopicList.erase(pluginTopicListIt);
+                
                 delete pluginTopic;
                 pluginTopic = nullptr;
             }
@@ -417,11 +419,19 @@ void RestApiTopicHandler::clearPluginTopics()
     {
         PluginTopic* pluginTopic = *pluginTopicListIt;
 
-        (void)MyWebServer::getInstance().removeHandler(pluginTopic->webHandler);
+        if (nullptr != pluginTopic)
+        {
+            (void)MyWebServer::getInstance().removeHandler(pluginTopic->webHandler);
 
-        pluginTopicListIt = m_pluginTopicList.erase(pluginTopicListIt);
-        delete pluginTopic;
-        pluginTopic = nullptr;
+            pluginTopicListIt = m_pluginTopicList.erase(pluginTopicListIt);
+
+            delete pluginTopic;
+            pluginTopic = nullptr;
+        }
+        else
+        {
+            ++pluginTopicListIt;
+        }
     }
 }
 

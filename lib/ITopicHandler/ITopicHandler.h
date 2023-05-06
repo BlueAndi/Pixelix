@@ -80,6 +80,16 @@ public:
     }
 
     /**
+     * Start the topic handler.
+     */
+    virtual void start() = 0;
+
+    /**
+     * Stop the topic handler.
+     */
+    virtual void stop() = 0;
+
+    /**
      * Register a single topic of the given plugin.
      * 
      * @param[in] plugin    The plugin which provides the topic.

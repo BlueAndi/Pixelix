@@ -48,6 +48,8 @@
 #include <IPluginMaintenance.hpp>
 #include <vector>
 
+#include "HomeAssistantMqtt.h"
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -70,7 +72,8 @@ public:
         ITopicHandler(),
         m_hostname(),
         m_listOfTopicStates(),
-        m_isMqttConnected(false)
+        m_isMqttConnected(false),
+        m_haExtension()
     {
     }
 
@@ -81,6 +84,16 @@ public:
     {
         clearTopicStates();
     }
+
+    /**
+     * Start the topic handler.
+     */
+    void start() final;
+
+    /**
+     * Stop the topic handler.
+     */
+    void stop() final;
 
     /**
      * Register a single topic of the given plugin.
@@ -152,6 +165,7 @@ private:
     String              m_hostname;             /**< Hostname cache used for the base URI */
     ListOfTopicStates   m_listOfTopicStates;    /**< List of registered plugins. */
     bool                m_isMqttConnected;      /**< Is the MQTT connection to the broker established? */
+    HomeAssistantMqtt   m_haExtension;          /**< Home Assistant extension */
 
     MqttApiTopicHandler(const MqttApiTopicHandler& adapter);
     MqttApiTopicHandler& operator=(const MqttApiTopicHandler& adapter);

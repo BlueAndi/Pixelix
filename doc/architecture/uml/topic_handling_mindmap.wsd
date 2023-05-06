@@ -8,12 +8,12 @@
 ++++ Base URI: http://<HOSTNAME>/rest/api/v1
 
 ++++ GET
-+++++ URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<TOPIC>
-+++++ URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<TOPIC>
++++++ URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>
++++++ URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>
 
 ++++ POST
-+++++ URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<TOPIC>
-+++++ URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<TOPIC>
++++++ URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>
++++++ URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>
 
 +++++ Parameters via HTTP arguments
 ******: key=value __converts to__
@@ -73,18 +73,31 @@
 +++ MQTT API
 
 ++++ Homeassistant auto discovery
-+++++ Path: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/<PLUGIN-UID>/config
++++++ Topic with plugin UID: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/<PLUGIN-UID>/config
 *****:
 <code>
 {
-    "~": "<HOSTNAME>/display/uid/<PLUGIN-UID>",
+    "~": "<HOSTNAME>/uid/<PLUGIN-UID>",
     "name": "<HOSTNAME>",
     "device_class": "<HOMEASSISTANT-DEVICE-CLASS>",
-    "state_topic": "~/<TOPIC>/state",
-    "command_topic": "~/<TOPIC>/set"
+    "state_topic": "~/<PLUGIN-TOPIC>/state",
+    "command_topic": "~/<PLUGIN-TOPIC>/set"
 }
 </code>;
-++++ HOMEASSISTANT-DEVICE-CLASS: ????
++++++ Topic with plugin alias: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/<PLUGIN-ALIAS>/config
+*****:
+<code>
+{
+    "~": "<HOSTNAME>/alias/<PLUGIN-ALIAS>",
+    "name": "<HOSTNAME>",
+    "device_class": "<HOMEASSISTANT-DEVICE-CLASS>",
+    "state_topic": "~/<PLUGIN-TOPIC>/state",
+    "command_topic": "~/<PLUGIN-TOPIC>/set"
+}
+</code>;
+++++ HOMEASSISTANT-DEVICE-CLASS
++++++ Customizeable in Home assistant: https://www.home-assistant.io/docs/configuration/customizing-devices
++++++ Use "display"
 ++++ HOMEASSISTANT-COMPONENT
 +++++ Components nowadays integrations: https://www.home-assistant.io/integrations
 +++++ The integration depends on the plugin.
@@ -92,19 +105,18 @@
 ++++++ https://www.home-assistant.io/integrations/text.mqtt/
 +++++ Integration: sensor
 ++++++ https://www.home-assistant.io/integrations/sensor.mqtt/
-++++ Device classes: ????
 
 ++++ Status
-+++++ Path: <HOSTNAME>/uid/<PLUGIN-UID>/<TOPIC>/state
-+++++ Path: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<TOPIC>/state
++++++ MQTT topic: <HOSTNAME>/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/state
++++++ MQTT topic: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/state
 +++++ Direction: Pixelix --> Client(s)
 ++++ Command
-+++++ Path: <HOSTNAME>/uid/<PLUGIN-UID>/<TOPIC>/set
-+++++ Path: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<TOPIC>/set
++++++ MQTT topic: <HOSTNAME>/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/set
++++++ MQTT topic: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/set
 +++++ Direction: Client(s) --> Pixelix
 ++++ Availability
-+++++ Path: <HOSTNAME>/uid/<PLUGIN-UID>/<TOPIC>/available
-+++++ Path: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<TOPIC>/available
++++++ MQTT topic: <HOSTNAME>/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/available
++++++ MQTT topic: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/available
 +++++ Direction: Pixelix --> Client(s)
 +++++ "online"/"offline"
 

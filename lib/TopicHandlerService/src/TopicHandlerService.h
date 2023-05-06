@@ -212,6 +212,21 @@ private:
     void processOnChange();
 
     /**
+     * Start all topic handlers.
+     */
+    void startAllHandlers();
+
+    /**
+     * Stop all topic handlers.
+     */
+    void stopAllHandlers();
+
+    /**
+     * Process all topic handlers.
+     */
+    void processAllHandlers();
+
+    /**
      * Notify all topic handlers about changed topic.
      * 
      * @param[in] plugin    The plugin which provides the topic.

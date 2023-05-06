@@ -82,6 +82,22 @@ public:
     }
 
     /**
+     * Start the topic handler.
+     */
+    void start() final
+    {
+        /* Nothing to do. */
+    }
+
+    /**
+     * Stop the topic handler.
+     */
+    void stop() final
+    {
+        /* Nothing to do. */
+    }
+
+    /**
      * Register a single topic of the given plugin.
      * 
      * @param[in] plugin    The plugin which provides the topic.

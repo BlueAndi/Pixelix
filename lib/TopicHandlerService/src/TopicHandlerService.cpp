@@ -65,6 +65,8 @@ bool TopicHandlerService::start()
 {
     bool isSuccessful = true;
 
+    startAllHandlers();
+
     m_onChangeTimer.start(ON_CHANGE_PERIOD);
 
     if (false == isSuccessful)
@@ -83,26 +85,14 @@ void TopicHandlerService::stop()
 {
     m_onChangeTimer.stop();
 
+    stopAllHandlers();
+
     LOG_INFO("Topic handler service stopped.");
 }
 
 void TopicHandlerService::process()
 {
-    uint8_t         idx                 = 0U;
-    uint8_t         count               = 0U;
-    ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
-
-    while(count > idx)
-    {
-        ITopicHandler* handler = topicHandlerList[idx];
-
-        if (nullptr != handler)
-        {
-            handler->process();
-        }
-
-        ++idx;
-    }
+    processAllHandlers();
 
     if ((true == m_onChangeTimer.isTimerRunning()) &&
         (true == m_onChangeTimer.isTimeout()))
@@ -261,7 +251,7 @@ void TopicHandlerService::unregisterTopic(IPluginMaintenance* plugin, const Stri
         uint8_t         count               = 0U;
         ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
 
-        /* Register topic by every known topic handler. */
+        /* Unregister topic by every known topic handler. */
         while(count > idx)
         {
             ITopicHandler* handler = topicHandlerList[idx];
@@ -328,10 +318,12 @@ void TopicHandlerService::removeFromList(IPluginMaintenance* plugin, const Strin
         {
             PluginTopic* pluginTopic = *pluginTopicListIt;
 
-            if ((plugin == pluginTopic->plugin) &&
+            if ((nullptr != pluginTopic) &&
+                (plugin == pluginTopic->plugin) &&
                 (topic == pluginTopic->topic))
             {
                 pluginTopicListIt = m_pluginTopicList.erase(pluginTopicListIt);
+                
                 delete pluginTopic;
                 pluginTopic = nullptr;
             }
@@ -351,12 +343,70 @@ void TopicHandlerService::processOnChange()
     {
         PluginTopic* pluginTopic = *pluginTopicListIt;
 
-        if (true == pluginTopic->plugin->hasTopicChanged(pluginTopic->topic))
+        if ((nullptr != pluginTopic) &&
+            (true == pluginTopic->plugin->hasTopicChanged(pluginTopic->topic)))
         {
             notifyAllHandlers(pluginTopic->plugin, pluginTopic->topic);
         }
 
         ++pluginTopicListIt;
+    }
+}
+
+void TopicHandlerService::startAllHandlers()
+{
+    uint8_t         idx                 = 0U;
+    uint8_t         count               = 0U;
+    ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+
+    while(count > idx)
+    {
+        ITopicHandler* handler = topicHandlerList[idx];
+
+        if (nullptr != handler)
+        {
+            handler->start();
+        }
+
+        ++idx;
+    }
+}
+
+void TopicHandlerService::stopAllHandlers()
+{
+    uint8_t         idx                 = 0U;
+    uint8_t         count               = 0U;
+    ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+
+    while(count > idx)
+    {
+        ITopicHandler* handler = topicHandlerList[idx];
+
+        if (nullptr != handler)
+        {
+            handler->stop();
+        }
+
+        ++idx;
+    }
+}
+
+void TopicHandlerService::processAllHandlers()
+{
+    uint8_t         idx                 = 0U;
+    uint8_t         count               = 0U;
+    ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+
+    while(count > idx)
+    {
+        ITopicHandler* handler = topicHandlerList[idx];
+
+        if (nullptr != handler)
+        {
+            handler->process();
+        }
+
+        ++idx;
     }
 }
 
@@ -369,7 +419,6 @@ void TopicHandlerService::notifyAllHandlers(IPluginMaintenance* plugin, const St
         uint8_t         count               = 0U;
         ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
 
-        /* Register topic by every known topic handler. */
         while(count > idx)
         {
             ITopicHandler* handler = topicHandlerList[idx];
