@@ -165,7 +165,7 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
     if (0U != topic.equals(TOPIC_TEXT))
     {
         String              text;
-        JsonVariantConst    jsonShow    = value["show"];
+        JsonVariantConst    jsonShow    = value["text"];
 
         if (false == jsonShow.isNull())
         {
@@ -184,7 +184,7 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
         String              lampIdStr           = topic.substring(indexBeginLampId);
         uint8_t             lampId              = MAX_LAMPS;
         bool                status              = Util::strToUInt8(lampIdStr, lampId);
-        JsonVariantConst    jsonSet             = value["set"];
+        JsonVariantConst    jsonSet             = value["state"];
 
         if ((true == status) &&
             (MAX_LAMPS > lampId) &&

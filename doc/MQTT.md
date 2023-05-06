@@ -48,13 +48,13 @@ The complete topic name can be derived from the REST API documentation.
 
 Example: JustTextPlugin
 
-The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;
-1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/display part with &lt;HOSTNAME&gt; --> &lt;HOSTNAME&gt;/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;
+The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;
+1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/display part with &lt;HOSTNAME&gt; --> &lt;HOSTNAME&gt;/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;
 2. Every URL parameter, which is in this case show=&lt;TEXT&gt; must be sent in JSON format.
 
 ```json
 {
-    "show": "<text>"
+    "text": "<text>"
 }
 ```
 

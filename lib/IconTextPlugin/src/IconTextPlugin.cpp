@@ -123,7 +123,7 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObject& value)
     if (0U != topic.equals(TOPIC_TEXT))
     {
         String              text;
-        JsonVariantConst    jsonShow    = value["show"];
+        JsonVariantConst    jsonShow    = value["text"];
 
         if (false == jsonShow.isNull())
         {

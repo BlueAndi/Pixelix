@@ -26,7 +26,7 @@ Add the following lines of code to your `configuration.yaml`:
 ```yaml
 rest_command:
   pixelix_just_text:
-    url: 'http://192.168.178.10/rest/api/v1/display/uid/{{ uid }}/text?show={{ "%5C" + align + "%5C" + color + text }}'
+    url: 'http://192.168.178.10/rest/api/v1/display/uid/{{ uid }}/text?text={{ "%5C" + align + "%5C" + color + text }}'
     method: POST
 ```
 You need to replace the IP `192.168.178.10` with your Pixelix instance IP.
