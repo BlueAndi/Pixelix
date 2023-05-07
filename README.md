@@ -52,8 +52,10 @@ The PIXELIX firmware is for ESP32 boards that controls a RGB LED matrix. It can 
 * Supports 32x8 LED matrix size out of the box. Its possible to cascade another matrix to have a longer display.
 * Can display static or scrolling text, as well as static or animated icons.
 * Includes a web interface for configuring and controlling the LED matrix.
-* Supports REST API and MQTT (beta) for remote control and integration with other systems.
+* Supports REST API and MQTT for remote control and integration with other systems, like [Home Assistant](https://www.home-assistant.io/).
 * Can be extended with custom effects and animations. See list of [plugins](./doc/PLUGINS.md).
+
+Please note, that not every feature might be available for all kind of development boards. E.g. for MQTT support you need 8 a development board with 8 MB flash or more. See the `config<variant>.ini` configuration files in [./config](./config) folder.
 
 | Some impressions |   |
 | - | - |
