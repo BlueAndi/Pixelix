@@ -77,27 +77,47 @@
 *****:
 <code>
 {
-    "~": "<HOSTNAME>/uid/<PLUGIN-UID>",
-    "name": "<HOSTNAME>",
-    "device_class": "<HOMEASSISTANT-DEVICE-CLASS>",
-    "state_topic": "~/<PLUGIN-TOPIC>/state",
-    "command_topic": "~/<PLUGIN-TOPIC>/set"
+  "name": "MQTT text",
+  "object_id": "19583",
+  "unique_id": "pixelix-facfc834/19583",
+  "device": {
+    "identifiers": "F4:12:FA:CF:C8:34",
+    "configuration_url": "http://192.168.2.62",
+    "name": "pixelix-facfc834",
+    "model": "Pixelix",
+    "manufacturer": "DIY",
+    "sw_version": "v6.0.0:lc:b"
+  },
+  "state_topic": "pixelix-facfc834/uid/19583/text/state",
+  "value_template": "{{ value_json.text }}",
+  "command_topic": "pixelix-facfc834/uid/19583/text/set",
+  "command_template": "{\"text\": \"{{ value }}\" }"
 }
 </code>;
 +++++ Topic with plugin alias: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/<PLUGIN-ALIAS>/config
 *****:
 <code>
 {
-    "~": "<HOSTNAME>/alias/<PLUGIN-ALIAS>",
-    "name": "<HOSTNAME>",
-    "device_class": "<HOMEASSISTANT-DEVICE-CLASS>",
-    "state_topic": "~/<PLUGIN-TOPIC>/state",
-    "command_topic": "~/<PLUGIN-TOPIC>/set"
+  "name": "MQTT text",
+  "object_id": "display",
+  "unique_id": "pixelix-facfc834/display",
+  "device": {
+    "identifiers": "F4:12:FA:CF:C8:34",
+    "configuration_url": "http://192.168.2.62",
+    "name": "pixelix-facfc834",
+    "model": "Pixelix",
+    "manufacturer": "DIY",
+    "sw_version": "v6.0.0:lc:b"
+  },
+  "state_topic": "pixelix-facfc834/alias/display/text/state",
+  "value_template": "{{ value_json.text }}",
+  "command_topic": "pixelix-facfc834/alias/display/text/set",
+  "command_template": "{\"text\": \"{{ value }}\" }"
 }
 </code>;
 ++++ HOMEASSISTANT-DEVICE-CLASS
 +++++ Customizeable in Home assistant: https://www.home-assistant.io/docs/configuration/customizing-devices
-+++++ Use "display"
++++++ Skipped, because no matching device class is available.
 ++++ HOMEASSISTANT-COMPONENT
 +++++ Components nowadays integrations: https://www.home-assistant.io/integrations
 +++++ The integration depends on the plugin.
@@ -119,6 +139,7 @@
 +++++ MQTT topic: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/available
 +++++ Direction: Pixelix --> Client(s)
 +++++ "online"/"offline"
++++++ Skipped for the moment. May be supported in future.
 
 -- A plugin deals only with topics\nand doesn't know about REST or MQTT.
 -- Device identification
