@@ -89,7 +89,11 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
     JsonObject  jsonLamps   = topics.createNestedObject();
 
     jsonText["name"]            = TOPIC_TEXT;
-    jsonText["ha"]["component"] = "text"; /* Home Assistant component */
+
+    /* Home Assistant support of MQTT discovery */
+    jsonText["ha"]["component"]         = "text";
+    jsonText["ha"]["commandTemplate"]   = "{\"text\": \"{{ value }}\" }";
+    jsonText["ha"]["valueTemplate"]     = "{{ value_json.text }}";
 
     jsonIcon["name"]            = TOPIC_ICON;
     jsonIcon["access"]          = "w"; /* Only icon upload is supported. */

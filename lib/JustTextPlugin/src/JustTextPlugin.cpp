@@ -83,8 +83,12 @@ void JustTextPlugin::getTopics(JsonArray& topics) const
 {
     JsonObject jsonText = topics.createNestedObject();
  
-    jsonText["name"]            = TOPIC_TEXT;
-    jsonText["ha"]["component"] = "text"; /* Home Assistant component */
+    jsonText["name"]                    = TOPIC_TEXT;
+
+    /* Home Assistant support of MQTT discovery */
+    jsonText["ha"]["component"]         = "text";
+    jsonText["ha"]["commandTemplate"]   = "{\"text\": \"{{ value }}\" }";
+    jsonText["ha"]["valueTemplate"]     = "{{ value_json.text }}";
 }
 
 bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const

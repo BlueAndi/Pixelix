@@ -139,11 +139,13 @@ private:
     /** Information necessary for Home Assistant MQTT discovery. */
     struct MqttDiscoveryInfo
     {
-        String  component;      /**< Home Assistant component */
-        String  nodeId;         /**< Home Assistant node id */
-        String  objectId;       /**< Home Assistant object id */
-        String  stateTopic;     /**< Status topic */
-        String  commandTopic;   /**< Command topic */
+        String  component;          /**< Home Assistant component */
+        String  nodeId;             /**< Home Assistant node id */
+        String  objectId;           /**< Home Assistant object id */
+        String  stateTopic;         /**< Status topic */
+        String  valueTemplate;      /**< Value template to extract the text state value */
+        String  commandTopic;       /**< Command topic */
+        String  commandTemplate;    /**< Command template to generate payload to send to command topic */
 
         /** Construct Home Assistant MQTT discovery information. */
         MqttDiscoveryInfo() :
@@ -151,7 +153,9 @@ private:
             nodeId(),
             objectId(),
             stateTopic(),
-            commandTopic()
+            valueTemplate(),
+            commandTopic(),
+            commandTemplate()
         {
         }
     };

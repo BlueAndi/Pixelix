@@ -37,6 +37,7 @@
 #include <SettingsService.h>
 #include <Logging.h>
 #include <MqttService.h>
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -45,6 +46,12 @@
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
+/** Stringizing the value. */
+#define Q(x) #x
+
+/** Quote the given value to get a string literal. */
+#define QUOTE(x) Q(x)
 
 /******************************************************************************
  * Types and classes
@@ -112,7 +119,9 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String
         /* Configuration available? */
         if (false == jsonHomeAssistant.isNull())
         {
-            JsonVariantConst jsonComponent = jsonHomeAssistant["component"];
+            JsonVariantConst    jsonComponent       = jsonHomeAssistant["component"];
+            JsonVariantConst    jsonCommandTemplate = jsonHomeAssistant["commandTemplate"];
+            JsonVariantConst    jsonValueTemplate   = jsonHomeAssistant["valueTemplate"];
 
             if (true == jsonComponent.is<String>())
             {
@@ -125,6 +134,18 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String
                     mqttDiscoveryInfo->objectId     = objectId;
                     mqttDiscoveryInfo->stateTopic   = stateTopic;
                     mqttDiscoveryInfo->commandTopic = cmdTopic;
+
+                    /* Command template is optional */
+                    if (true == jsonCommandTemplate.is<String>())
+                    {
+                        mqttDiscoveryInfo->commandTemplate = jsonCommandTemplate.as<String>();
+                    }
+
+                    /* Value template is optional */
+                    if (true == jsonValueTemplate.is<String>())
+                    {
+                        mqttDiscoveryInfo->valueTemplate = jsonValueTemplate.as<String>();
+                    }
 
                     m_mqttDiscoveryInfoList.push_back(mqttDiscoveryInfo);
                 }
@@ -188,19 +209,48 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo()
 
         jsonDoc.clear();
 
-        jsonDoc["name"]         = mqttDiscoveryInfo->nodeId;
-        jsonDoc["device_class"] = "display";
+        /* Entity name */
+        jsonDoc["name"]                         = "MQTT text";
+        /* The object id is used to generate the entity id. */
+        jsonDoc["object_id"]                    = mqttDiscoveryInfo->objectId;
+        /* The unique id identifies the device and its entity. */
+        jsonDoc["unique_id"]                    = mqttDiscoveryInfo->nodeId + "/" + mqttDiscoveryInfo->objectId;
+        /* Device identifier */
+        jsonDoc["device"]["identifiers"]        = WiFi.macAddress();
+        /* URL to configuration of the device. */
+        jsonDoc["device"]["configuration_url"]  = String("http://") + WiFi.localIP().toString();
+        /* Name of the device. */
+        jsonDoc["device"]["name"]               = mqttDiscoveryInfo->nodeId;
+        /* Device model name */
+        jsonDoc["device"]["model"]              = "Pixelix";
+        /* Manufacturer */
+        jsonDoc["device"]["manufacturer"]       = "DIY";
+        /* SW version of the device*/
+        jsonDoc["device"]["sw_version"]         = QUOTE(SW_VERSION);
 
+        /* Readable topic? */
         if (false == mqttDiscoveryInfo->stateTopic.isEmpty())
         {
             jsonDoc["state_topic"] = mqttDiscoveryInfo->stateTopic;
+
+            if (false == mqttDiscoveryInfo->valueTemplate.isEmpty())
+            {
+                jsonDoc["value_template"] = mqttDiscoveryInfo->valueTemplate;
+            }
         }
 
+        /* Writeable topic? */
         if (false == mqttDiscoveryInfo->commandTopic.isEmpty())
         {
             jsonDoc["command_topic"] = mqttDiscoveryInfo->commandTopic;
+
+            if (false == mqttDiscoveryInfo->commandTemplate.isEmpty())
+            {
+                jsonDoc["command_template"] = mqttDiscoveryInfo->commandTemplate;
+            }
         }
 
+        /* Send the JSON as string. */
         if (0U < serializeJson(jsonDoc, discoveryInfo))
         {
             if (false == mqttService.publish(mqttTopic, discoveryInfo))
