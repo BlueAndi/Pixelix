@@ -224,7 +224,7 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo()
         /* Device model name */
         jsonDoc["device"]["model"]              = "Pixelix";
         /* Manufacturer */
-        jsonDoc["device"]["manufacturer"]       = "DIY";
+        jsonDoc["device"]["manufacturer"]       = "BlueAndi & Friends";
         /* SW version of the device*/
         jsonDoc["device"]["sw_version"]         = QUOTE(SW_VERSION);
 

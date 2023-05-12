@@ -85,8 +85,8 @@
     "configuration_url": "http://192.168.2.62",
     "name": "pixelix-facfc834",
     "model": "Pixelix",
-    "manufacturer": "DIY",
-    "sw_version": "v6.0.0:lc:b"
+    "manufacturer": "BlueAndi & Friends",
+    "sw_version": "v7.0.0"
   },
   "state_topic": "pixelix-facfc834/uid/19583/text/state",
   "value_template": "{{ value_json.text }}",
@@ -106,8 +106,8 @@
     "configuration_url": "http://192.168.2.62",
     "name": "pixelix-facfc834",
     "model": "Pixelix",
-    "manufacturer": "DIY",
-    "sw_version": "v6.0.0:lc:b"
+    "manufacturer": "BlueAndi & Friends",
+    "sw_version": "v7.0.0"
   },
   "state_topic": "pixelix-facfc834/alias/display/text/state",
   "value_template": "{{ value_json.text }}",

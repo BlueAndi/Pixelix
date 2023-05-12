@@ -64,9 +64,9 @@
 
 void DDPPlugin::start(uint16_t width, uint16_t height)
 {
-    String  manufacturer    = "DIY";        /* Do-It-Yourself project */
-    String  model           = "Pixelix";    /* Use project name */
-    String  version         = "0.1.0";      /* From library.json */
+    String  manufacturer    = "BlueAndi & Friends"; /* Do-It-Yourself project */
+    String  model           = "Pixelix";            /* Use project name */
+    String  version         = "0.1.0";              /* From library.json */
     String  mac             = WiFi.macAddress();
 
     if (false == m_framebuffer.create(width, height))
