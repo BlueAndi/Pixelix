@@ -134,6 +134,8 @@ After configuration, restart again and voila, PIXELIX will be available in your 
 
 For changing whats displayed, go to its web interface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
 
+For changing whats displayed, go to its webinterface. Login with user "luke" and password "skywalker". In the "Display" page you can change it according to your needs.
+
 # User Interface
 * The user button provides several features:
     * On short pulse: Activates the next slot.
