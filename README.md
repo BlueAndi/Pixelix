@@ -59,8 +59,8 @@ Please note, that not every feature might be available for all kind of developme
 
 | Some impressions |   |
 | - | - |
-| ![TimePlugin](./lib/WifiStatusPlugin/web/DateTimePlugin1.jpg) | ![DatePlugin](./lib/WifiStatusPlugin/web/DateTimePlugin2.jpg) |
-| ![IconTextLampPlugin](./lib/WifiStatusPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/WifiStatusPlugin/web/IconTextPlugin.jpg) |
+| ![TimePlugin](./lib/DateTimePlugin/web/DateTimePlugin1.jpg) | ![DatePlugin](./lib//DateTimePlugin/web/DateTimePlugin2.jpg) |
+| ![IconTextLampPlugin](./lib/IconTextLampPlugin/web/IconTextLampPlugin.jpg) | ![IconTextPlugin](./lib/IconTextPlugin/web/IconTextPlugin.jpg) |
 | ![WifiStatusPlugin](./lib/WifiStatusPlugin/web/WifiStatusPlugin.jpg) | ... |
 
 # Original Setup
