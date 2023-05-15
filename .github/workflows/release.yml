@@ -67,19 +67,26 @@ jobs:
     - name: Compile ${{ matrix.environment }} firmware
       run: platformio run --environment ${{ matrix.environment }}
     
+    - name: Deploy ${{ matrix.environment }} firmware
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.environment }}_firmware
+        path: |
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/bootloader.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/partitions.bin
+        retention-days: 5
+
     - name: Build ${{ matrix.environment }} filesystem image
       run: platformio run --environment ${{ matrix.environment }} --target buildfs
 
-    - name: Deploy ${{ matrix.environment }}
-      uses: actions/upload-artifact@v2
+    - name: Deploy ${{ matrix.environment }} filesystem image
+      uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.environment }}
+        name: ${{ matrix.environment }}_filesystem
         path: |
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/bootloader.bin
-          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/partitions.bin
         retention-days: 5
 
   # Deploy release artifacts
