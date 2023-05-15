@@ -1,0 +1,15 @@
+{
+    "name": "Iperf",
+    "version": "0.1.0",
+    "description": "Iperf is used for active measurement of the maximum achievable bandwidth on IP networks",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [],
+    "frameworks": "*",
+    "platforms": "*"
+}

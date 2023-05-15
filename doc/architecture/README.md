@@ -21,6 +21,8 @@
   - [Graphic Base Functionality](#graphic-base-functionality)
   - [Widgets](#widgets)
   - [User Button Handling](#user-button-handling)
+  - [Audio Service](#audio-service)
+  - [Topic Handler Service](#topic-handler-service)
   - [Plugin Handling](#plugin-handling)
     - [Static View](#static-view)
     - [Dynamic View](#dynamic-view)
@@ -101,6 +103,12 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 ## User Button Handling
 ![button-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/button.wsd)
 
+## Audio Service
+![audio-service-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/audio_service.wsd)
+
+## Topic Handler Service
+![topic-handler-service-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/topic_handler_service.wsd)
+
 ## Plugin Handling
 
 ### Static View
@@ -108,6 +116,8 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 
 ### Dynamic View
 ![plugin-service-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/plugin-service-dynamic.wsd)
+
+![plugin-cfg-handling-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/plugin_cfg_handling.wsd)
 
 ## Spectrum Analyzer
 ![specturm-analyzer-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/spectrum-analyzer.wsd)

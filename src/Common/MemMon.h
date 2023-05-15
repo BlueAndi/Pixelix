@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MEM_MON_H__
-#define __MEM_MON_H__
+#ifndef MEM_MON_H
+#define MEM_MON_H
 
 /******************************************************************************
  * Compile Switches
@@ -80,10 +80,10 @@ public:
     void process();
 
     /** Processing cycle in ms. */
-    static const uint32_t PROCESSING_CYCLE          = 60U * 1000U;
+    static const uint32_t   PROCESSING_CYCLE        = 60U * 1000U;
 
     /** Minimum size of heap memory in bytes, the monitor starts to warn. */
-    static const size_t     MIN_HEAP_MEMORY         = 1024U;
+    static const size_t     MIN_HEAP_MEMORY         = 10240U;
 
     /** Minimum size of largest block of heap that can be allocated at once in bytes, the monitor starts to warn. */
     static const size_t     MIN_HEAP_BLOCK_MEMORY   = 4096U;
@@ -115,6 +115,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __MEM_MON_H__ */
+#endif  /* MEM_MON_H */
 
 /** @} */

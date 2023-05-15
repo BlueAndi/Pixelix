@@ -7,7 +7,7 @@ skinparam component {
 
 package "HAL" {
 
-    component "SpectrumAnalyzer" as spectrumAnalyzer
+    component "AudioDrv" as audioDrv
     component "SensorDataProvider" as sensorDataProvider
     component "ButtonDrv" as buttonDrv
 
@@ -30,7 +30,7 @@ package "HAL" {
         component "SensorSht3X" as sensorSht3X
     }
 
-    spectrumAnalyzer ...> i2s
+    audioDrv ...> i2s
     sensorDataProvider ..> sensorSht3X
     sensorDataProvider ..> sensorDhtX
     sensorDataProvider ..> sensorLdrGl5528

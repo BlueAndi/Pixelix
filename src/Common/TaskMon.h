@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __TASK_MON_H__
-#define __TASK_MON_H__
+#ifndef TASK_MON_H
+#define TASK_MON_H
 
 /******************************************************************************
  * Compile Switches
@@ -104,12 +104,14 @@ private:
     TaskMon(const TaskMon& taskMon);
     TaskMon& operator=(const TaskMon& taskMon);
 
+#if configUSE_TRACE_FACILITY
+
     /**
      * Get task state as user friendly string.
      *
      * @return Task state name
      */
-    String taskState2Str(eTaskState state);
+    const char* taskState2Str(eTaskState state);
 
     /**
      * Fill string up with spaces until given length is reached.
@@ -120,12 +122,14 @@ private:
      * @return Filled up string
      */
     String fillUpSpaces(const char* str, size_t len);
+
+#endif  /* configUSE_TRACE_FACILITY */
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __TASK_MON_H__ */
+#endif  /* TASK_MON_H */
 
 /** @} */

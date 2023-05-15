@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __WEBSOCKET_H__
-#define __WEBSOCKET_H__
+#ifndef WEBSOCKET_H
+#define WEBSOCKET_H
 
 /******************************************************************************
  * Compile Switches
@@ -205,6 +205,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __WEBSOCKET_H__ */
+#endif  /* WEBSOCKET_H */
 
 /** @} */

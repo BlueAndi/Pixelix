@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CONNECTINGSTATE_H__
-#define __CONNECTINGSTATE_H__
+#ifndef CONNECTINGSTATE_H
+#define CONNECTINGSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -120,6 +120,9 @@ private:
     /** Button handler */
     ButtonHandler   m_buttonHandler;
 
+    /** Is quiet mode active? Quiet mode no unnecessary system messages on the display. */
+    bool            m_isQuiet;
+
     /**
      * Constructs the state.
      */
@@ -127,7 +130,8 @@ private:
         m_wifiSSID(),
         m_wifiPassphrase(),
         m_retryTimer(),
-        m_buttonHandler()
+        m_buttonHandler(),
+        m_isQuiet(false)
     {
     }
 
@@ -147,6 +151,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __CONNECTINGSTATE_H__ */
+#endif  /* CONNECTINGSTATE_H */
 
 /** @} */

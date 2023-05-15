@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">DateTimePlugin</h1>
+                <p><img src="DateTimePlugin1.jpg" alt="Screenshot" /></p>
+                <p><img src="DateTimePlugin2.jpg" alt="Screenshot" /></p>
+                <p>The plugin shows the current time and/or date.</p>
+                <p>If date and time are configured, first the time will be shown for half of the slot duration and after it the date.</p>
+                <p>It can be configured to show only the date or only the time as well.</p>
+                <p>Below the day of the week is shown, starting from the left with Monday.</p>
+                <h2 class="mt-1">Date/Time Format</h2>
+                <p>Configure the date and time format in the plugin configuration JSON file. The format itself is according to <a href="https://cplusplus.com/reference/ctime/strftime/" target="_blank">strftime()</a>. For colorization text properties can be added.</p>
+                <ul>
+                    <li>%b - Abbreviated month name (3 characters)</li>
+                    <li>%d - Day of the month, zero-padded (01-31)</li>
+                    <li>%m - Month as a decimal number (01-12)</li>
+                    <li>%H - Hour in 24h format (00-23)</li>
+                    <li>%I - Hour in 12h format (01-12)</li>
+                    <li>%M - Minute (00-59)</li>
+                    <li>%p - AM or PM designation</li>
+                    <li>%Y - Year</li>
+                </ul>
+                <p>By default the local time (see timezone in the settings) is used. It can be overwritten by the plugin configuration.</p>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get configuration about what the plugin shows.</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime</code></pre>
+                <h3 class="mt-1">Set configuration about what the plugin shall show.</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime?mode=&lt;MODE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime?mode=&lt;MODE&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>MODE: Display mode
+                        <ul>
+                            <li>0: Show date and time.</li>
+                            <li>1: Show only the date.</li>
+                            <li>2: Show only the time.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Display</h3>
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mode">Display mode:</label>
+                        <select id="mode">
+                            <option value="0">Show date and time.</option>
+                            <option value="1">Show only the date.</option>
+                            <option value="2">Show only the time.</option>
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Time format:</label>
+                        <input type="text" id="timeFormat" name="timeFormat" value="" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Date format:</label>
+                        <input type="text" id="dateFormat" name="dateFormat" value="" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Time zone:</label>
+                        <input type="text" id="timeZone" name="timeZone" value="" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Color of actual day:</label>
+                        <input type="text" id="dayOnColor" name="dayOnColor" value="" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Color of other days:</label>
+                        <input type="text" id="dayOffColor" name="dayOffColor" value="" />    
+                    </div>                    
+                    <input name="submit" type="submit" value="Update"/>
+                </form>   
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+            var pluginName  = "DateTimePlugin";
+            var restClient  = new pixelix.rest.Client();
+
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+    
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+                            
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
+
+                            optionText += ")";
+
+                            $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+                            
+                            $("#pluginUid").append($option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+
+            function getConfig(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    $("#mode").val(rsp.data.mode);
+                    $("#timeFormat").val(rsp.data.timeFormat);
+                    $("#dateFormat").val(rsp.data.dateFormat);
+                    $("#timeZone").val(rsp.data.timeZone);
+                    $("#dayOnColor").val(rsp.data.dayOnColor);
+                    $("#dayOffColor").val(rsp.data.dayOffColor);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setConfig(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
+                    isJsonResponse: true,
+                    parameter: {
+                        mode: $("#mode").val(),
+                        timeFormat: $("#timeFormat").val(),
+                        dateFormat: $("#dateFormat").val(),
+                        timeZone: $("#timeZone").val(),
+                        dayOnColor: $("#dayOnColor").val(),
+                        dayOffColor: $("#dayOffColor").val()
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.create("menu", menu.data);
+
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+
+                        return getConfig(
+                            select.options[select.selectedIndex].value
+                        );
+                    }
+                });
+
+            });
+        </script>
+    </body>
+</html>

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,8 +38,8 @@ Provides the software version.
  * @{
  */
 
-#ifndef __VERSION_H__
-#define __VERSION_H__
+#ifndef VERSION_H
+#define VERSION_H
 
 /******************************************************************************
  * Compile Switches
@@ -123,6 +123,6 @@ namespace Version
     static const char   TARGET[]                = QUOTE(PIO_ENV);
 }
 
-#endif  /* __VERSION_H__ */
+#endif  /* VERSION_H */
 
 /** @} */

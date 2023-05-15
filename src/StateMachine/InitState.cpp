@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,12 +47,14 @@
 #include "Version.h"
 #include "MyWebServer.h"
 #include "UpdateMgr.h"
-#include "Settings.h"
 #include "PluginMgr.h"
 #include "WebConfig.h"
 #include "FileSystem.h"
 #include "JsonFile.h"
 #include "Version.h"
+#include "Services.h"
+#include "PluginList.hpp"
+#include "WiFiUtil.h"
 
 #include "APState.h"
 #include "ConnectingState.h"
@@ -61,8 +63,7 @@
 #include <Logging.h>
 #include <Util.h>
 #include <ESPmDNS.h>
-
-#include <PluginList.hpp>
+#include <SettingsService.h>
 
 #include <lwip/init.h>
 
@@ -87,6 +88,11 @@
  *****************************************************************************/
 
 /**
+ * The filename of the version information file.
+ */
+static const char* VERSION_FILE_NAME        = "/version.json";
+
+/**
  * Plugin type of the welcome plugin. This is used to install it in the very
  * first startup. In further startups it is used in addition to the plugin
  * alias whether to show the welcome icon and message.
@@ -98,7 +104,7 @@ static const char*  WELCOME_PLUGIN_TYPE     = "IconTextPlugin";
  * the plugin type whether to show the welcome icon and message after a reboot
  * again.
  */
-static const char*  WELCOME_PLUGIN_ALIAS    = "#welcome";
+static const char*  WELCOME_PLUGIN_ALIAS    = "_welcome";
 
 /******************************************************************************
  * Public Methods
@@ -106,15 +112,21 @@ static const char*  WELCOME_PLUGIN_ALIAS    = "#welcome";
 
 void InitState::entry(StateMachine& sm)
 {
-    bool                isError             = false;
-    ErrorState::ErrorId errorId             = ErrorState::ERROR_ID_UNKNOWN;
-    const char*         VERSION_FILE_NAME   = "/version.json";
+    bool                isError     = false;
+    ErrorState::ErrorId errorId     = ErrorState::ERROR_ID_UNKNOWN;
+    SettingsService&    settings    = SettingsService::getInstance();
+    String              uniqueId;
 
     /* Initialize hardware */
     Board::init();
 
     /* Show as soon as possible the user on the serial console that the system is booting. */
     showStartupInfoOnSerial();
+
+    /* To avoid name clashes, add a unqiue id to some of the default values. */
+    WiFiUtil::addDeviceUniqueId(uniqueId);
+    settings.getWifiApSSID().setUniqueId(uniqueId);
+    settings.getHostname().setUniqueId(uniqueId);
 
     /* Set two-wire (I2C) pins, before calling begin(). */
     if (false == Wire.setPins(Board::Pin::i2cSdaPinNo, Board::Pin::i2cSclPinNo))
@@ -151,6 +163,13 @@ void InitState::entry(StateMachine& sm)
     {
         LOG_FATAL("Filesystem is invalid.");
         errorId = ErrorState::ERROR_ID_BAD_FS;
+        isError = true;
+    }
+    /* Start all services */
+    else if (false == Services::startAll())
+    {
+        LOG_FATAL("Starting services failed.");
+        errorId = ErrorState::ERROR_ID_SERVICE;
         isError = true;
     }
     else
@@ -201,19 +220,25 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
-        Settings*           settings = &Settings::getInstance();
-        JsonFile            jsonFile(FILESYSTEM);
-        const size_t        JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        /* Clean up settings first! Important step after a firmware update to
+         * keep the settings up-to-date and prevent the persistency will
+         * silently growing up with unused stuff.
+         */
+        if (true == settings.open(false))
+        {
+            LOG_INFO("Clean up settings.");
+            settings.cleanUp();
+            settings.close();
+        }
 
         /* Load some general configuration parameters from persistent memory. */
-        if (true == settings->open(true))
+        if (true == settings.open(true))
         {
             /* Enable or disable the automatic display brightness adjustment,
              * depended on settings. Enable it may fail in case there is no
              * LDR sensor available.
              */
-            bool isEnabled = settings->getAutoBrightnessAdjustment().getValue();
+            bool isEnabled = settings.getAutoBrightnessAdjustment().getValue();
 
             if (false == DisplayMgr::getInstance().setAutoBrightnessAdjustment(isEnabled))
             {
@@ -221,13 +246,19 @@ void InitState::entry(StateMachine& sm)
             }
 
             /* Set text scroll pause for all text widgets. */
-            uint32_t scrollPause = settings->getScrollPause().getValue();
+            uint32_t scrollPause = settings.getScrollPause().getValue();
             if (false == TextWidget::setScrollPause(scrollPause))
             {
                 LOG_WARNING("Scroll pause %u ms couldn't be set.", scrollPause);
             }
 
-            settings->close();
+            m_isQuiet = settings.getQuietMode().getValue();
+
+            settings.close();
+        }
+        else
+        {
+            m_isQuiet = settings.getQuietMode().getDefault();
         }
 
         /* Don't store the wifi configuration in the NVS.
@@ -237,45 +268,23 @@ void InitState::entry(StateMachine& sm)
         WiFi.persistent(false);
 
         /* Show some informations on the display. */
-        showStartupInfoOnDisplay();
+        showStartupInfoOnDisplay(m_isQuiet);
 
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
-        if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
+        if (false == isFsCompatible())
         {
-            JsonVariant jsonVersion             = jsonDoc["version"];
-            bool        isFileSystemCompatible  = true;
+            const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+            const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
+            const uint32_t  DURATION_PAUSE          = 500U; /* ms */
+            const uint32_t  SCROLLING_NO_REPEAT     = 0U;
+            const char*     errMsg                  = "WARN: Filesystem may not be compatible.";
 
-            if (true == jsonVersion.isNull())
+            LOG_WARNING(errMsg);
+
+            if (false == m_isQuiet)
             {
-                isFileSystemCompatible = false;
-            }
-            else
-            {
-                String fileSystemVersion    = jsonVersion.as<String>();
-                String firmwareVersion      = Version::SOFTWARE_VER;
-
-                /* Note that the firmware version may have a additional postfix.
-                 * Example: v4.1.2:b or v4.1.2:b:lc
-                 * See ./scripts/get_get_rev.py for the different postfixes.
-                 */
-                if (0U == firmwareVersion.startsWith(fileSystemVersion))
-                {
-                    isFileSystemCompatible = false;
-                }
-            }
-
-            if (false == isFileSystemCompatible)
-            {
-                const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
-                const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
-                const uint32_t  DURATION_PAUSE          = 500U; /* ms */
-                const uint32_t  SCROLLING_NO_REPEAT     = 0U;
-                const char*     errMsg                  = "WARN: Filesystem may not be compatible.";
-
-                LOG_WARNING(errMsg);
-
-                SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
-                SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+                SysMsg::getInstance().show(errMsg, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
+                SysMsg::getInstance().show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
             }
         }
     }
@@ -286,8 +295,14 @@ void InitState::entry(StateMachine& sm)
         ErrorState::getInstance().setErrorId(errorId);
         sm.setState(ErrorState::getInstance());
     }
-
-    return;
+    /* No error */
+    else
+    {
+        /* Stay for a minium time in this state.
+         * This is only to give the user the chance to enter access point mode.
+         */
+        m_timer.start(SHOW_LOGO_DURATION);
+    }
 }
 
 void InitState::process(StateMachine& sm)
@@ -297,14 +312,14 @@ void InitState::process(StateMachine& sm)
     /* Connect to a remote wifi network? */
     if (BUTTON_STATE_RELEASED == buttonState)
     {
-        sm.setState(ConnectingState::getInstance());
         m_isApModeRequested = false;
+        SysMsg::getInstance().disableSignal();
     }
     /* Does the user request for setting up an wifi access point? */
     else if (BUTTON_STATE_PRESSED == buttonState)
     {
-        sm.setState(APState::getInstance());
         m_isApModeRequested = true;
+        SysMsg::getInstance().enableSignal();
     }
     else
     {
@@ -312,7 +327,22 @@ void InitState::process(StateMachine& sm)
         ;
     }
 
-    return;
+    Services::processAll();
+
+    /* Leave this state? */
+    if (true == m_timer.isTimeout())
+    {
+        m_timer.stop();
+
+        if (false == m_isApModeRequested)
+        {
+            sm.setState(ConnectingState::getInstance());
+        }
+        else
+        {
+            sm.setState(APState::getInstance());
+        }
+    }
 }
 
 void InitState::exit(StateMachine& sm)
@@ -320,19 +350,25 @@ void InitState::exit(StateMachine& sm)
     /* Continue initialization steps only, if there was no low level error before. */
     if (ErrorState::ERROR_ID_NO_ERROR == ErrorState::getInstance().getErrorId())
     {
-        wifi_mode_t wifiMode = WIFI_MODE_NULL;
-        String      hostname;
+        SettingsService&    settings    = SettingsService::getInstance();
+        wifi_mode_t         wifiMode    = WIFI_MODE_NULL;
+        String              hostname;
+        bool                isQuiet     = false;
 
         /* Get hostname. */
-        if (false == Settings::getInstance().open(true))
+        if (false == settings.open(true))
         {
             LOG_WARNING("Use default hostname.");
-            hostname = Settings::getInstance().getHostname().getDefault();
+            
+            hostname    = settings.getHostname().getDefault();
+            isQuiet     = settings.getQuietMode().getDefault();
         }
         else
         {
-            hostname = Settings::getInstance().getHostname().getValue();
-            Settings::getInstance().close();
+            hostname    = settings.getHostname().getValue();
+            isQuiet     = settings.getQuietMode().getValue();
+
+            settings.close();
         }
 
         /* Start wifi and initialize the LwIP stack here. */
@@ -375,12 +411,17 @@ void InitState::exit(StateMachine& sm)
             /* Do some stuff only in wifi station mode. */
             if (false == m_isApModeRequested)
             {
-                /* In the next step the plugins are loaded and would automatically be shown.
-                 * To avoid this until the connection establishment takes place, show the following
-                 * message infinite.
-                 */
-                SysMsg::getInstance().show("...");
-                delay(500U); /* Just to avoid a short splash */
+                if (false == isQuiet)
+                {
+                    const uint32_t MIN_WAIT_TIME = 500U; /* Min. wait time in ms to avoid splash screen. */
+
+                    /* In the next step the plugins are loaded and would automatically be shown.
+                     * To avoid this until the connection establishment takes place, show the following
+                     * message infinite.
+                     */
+                    SysMsg::getInstance().show("...");
+                    delay(MIN_WAIT_TIME); /* Just to avoid a short splash */
+                }
 
                 /* Loading plugin installation failed? */
                 if (false == PluginMgr::getInstance().load())
@@ -429,8 +470,6 @@ void InitState::exit(StateMachine& sm)
             MyWebServer::begin();
         }
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -446,36 +485,38 @@ void InitState::showStartupInfoOnSerial()
     LOG_INFO("PIXELIX starts up ...");
     LOG_INFO("Target: %s", Version::TARGET);
     LOG_INFO("SW version: %s", Version::SOFTWARE_VER);
+    delay(20U); /* To avoid missing log messages on the console */
     LOG_INFO("SW revision: %s", Version::SOFTWARE_REV);
     LOG_INFO("ESP32 chip rev.: %u", ESP.getChipRevision());
     LOG_INFO("ESP32 SDK version: %s", ESP.getSdkVersion());
+    delay(20U); /* To avoid missing log messages on the console */
     LOG_INFO("Wifi MAC: %s", WiFi.macAddress().c_str());
     LOG_INFO("LwIP version: %s", LWIP_VERSION_STRING);
-
-    return;
+    delay(20U); /* To avoid missing log messages on the console */
 }
 
-void InitState::showStartupInfoOnDisplay()
+void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
 {
-    const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
-    const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+    const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
+    const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
     const uint32_t  DURATION_PAUSE          = 500U; /* ms */
     const uint32_t  SCROLLING_NO_REPEAT     = 0U;
     SysMsg&         sysMsg                  = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\calign\\#FF0000P\\#FFFF00I\\#00FF00X\\#00FFFFE\\#0000FFL\\#FF00FFI\\#FF0000X", DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+    sysMsg.show("\\calign\\#FF0000P\\#FFFF00I\\#00FF00X\\#00FFFFE\\#0000FFL\\#FF00FFI\\#FF0000X", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
 
-    /* Clear and wait */
-    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
+    if (false == isQuietEnabled)
+    {
+        /* Clear and wait */
+        sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
 
-    /* Show sw version (short) */
-    sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+        /* Show sw version (short) */
+        sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
-    /* Clear and wait */
-    sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT, true);
-
-    return;
+        /* Clear and wait */
+        sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
+    }
 }
 
 void InitState::welcome(IPluginMaintenance* plugin)
@@ -500,8 +541,36 @@ void InitState::welcome(IPluginMaintenance* plugin)
         (void)welcomePlugin->loadBitmap("/images/smiley.bmp");
         welcomePlugin->setText("Hello World!");
     }
+}
 
-    return;
+bool InitState::isFsCompatible()
+{
+    bool                isCompatible            = false;
+    JsonFile            jsonFile(FILESYSTEM);
+    const size_t        JSON_DOC_SIZE           = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+
+    if (true == jsonFile.load(VERSION_FILE_NAME, jsonDoc))
+    {
+        JsonVariantConst jsonVersion = jsonDoc["version"];
+
+        if (false == jsonVersion.isNull())
+        {
+            String fileSystemVersion    = jsonVersion.as<String>();
+            String firmwareVersion      = Version::SOFTWARE_VER;
+
+            /* Note that the firmware version may have a additional postfix.
+             * Example: v4.1.2:b or v4.1.2:b:lc
+             * See ./scripts/get_get_rev.py for the different postfixes.
+             */
+            if (true == firmwareVersion.startsWith(fileSystemVersion))
+            {
+                isCompatible = true;
+            }
+        }
+    }
+
+    return isCompatible;
 }
 
 /******************************************************************************

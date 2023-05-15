@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __CLOCKDRV_H__
-#define __CLOCKDRV_H__
+#ifndef CLOCKDRV_H
+#define CLOCKDRV_H
 
 /******************************************************************************
  * Compile Switches
@@ -80,60 +80,59 @@ public:
     void init();
 
     /**
-     * Get the current time.
+     * Get the local time by considering device timezone.
      *
-     * @param[out] currentTime Pointer to the currentTime.
+     * @param[out] timeInfo Time information.
      *
      * @return If time is not synchronized, it will return false otherwise true.
      */
-    bool getTime(tm *currentTime);
+    bool getTime(tm* timeInfo);
 
     /**
-     * Get the current time as formatted string.
-     * The format is equal to strftime(), please have a look there.
-     * 
-     * Use getTimeFormat() or getDateFormat() for the user configured format.
-     * 
-     * @param[out]  time            The formatted time string.
-     * @param[in]   format          The format according to strftime().
-     * @param[in]   currentTime     The current time (optional).
-     * 
-     * @return If successful, it will return true otherwise false.
-     */
-    bool getTimeAsString(String& time, const String& format, const tm *currentTime = nullptr);
-    
-    /**
-     * Get the time format from configuration.
+     * Get the current time in UTC.
      *
-     * @return Time format.
+     * @param[out] timeInfo Time information.
+     *
+     * @return If time is not synchronized, it will return false otherwise true.
      */
-    const String& getTimeFormat();
+    bool getUtcTime(tm* timeInfo);
 
     /**
-     * Get the date format from configuration.
-     *
-     * @return Date format.
+     * Get the local time by considering the timezone.
+     * 
+     * @param[in]   tz          Timzone string
+     * @param[out]  timeInfo    Local time information
+     * 
+     * @return If time is not synchronized, it will return false otherwise true.
      */
-    const String& getDateFormat();
+    bool getTzTime(const char* tz, tm* timeInfo);
 
 private:
+
+    /**
+     * The minimum timezone string size (incl. string termination).
+     */
+    static const size_t TZ_MIN_SIZE = 60U;
+
+    /** Use UTC timezone by default. */
+    static const char*  TZ_UTC;
 
     /** Flag indicating a initialized clock driver. */
     bool    m_isClockDrvInitialized;
 
-    /** Time format */
-    String  m_timeFormat;
+    /** Device timezone */
+    String  m_timeZone;
 
-    /** Date format */
-    String  m_dateFormat;
+    /** newlib's internal timezone buffer. */
+    char*   m_internalTimeZoneBuffer;
 
     /**
      * Construct ClockDrv.
      */
     ClockDrv() :
         m_isClockDrvInitialized(false),
-        m_timeFormat(),
-        m_dateFormat()
+        m_timeZone(TZ_UTC),
+        m_internalTimeZoneBuffer(nullptr)
     {
     }
 
@@ -142,18 +141,25 @@ private:
      */
     ~ClockDrv()
     {
-
     }
 
     /* Prevent copying */
     ClockDrv(const ClockDrv&);
     ClockDrv&operator=(const ClockDrv&);
+
+    /**
+     * Fill string up with spaces.
+     * 
+     * @param[in, out]  str     String which to fill up.
+     * @param[in]       size    String buffer size in byte (incl. termination)
+     */
+    void fillUpWithSpaces(char* str, size_t size);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __CLOCKDRV_H__ */
+#endif  /* CLOCKDRV_H */
 
 /** @} */

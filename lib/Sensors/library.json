@@ -11,6 +11,18 @@
     "license": "MIT",
     "dependencies": [{
         "name": "common"
+    }, {
+        "owner": "adafruit",
+        "name": "Adafruit Unified Sensor",
+        "version": "~1.1.5"
+    }, {
+        "owner": "adafruit",
+        "name": "DHT sensor library",
+        "version": "~1.4.2"
+    }, {
+        "owner": "sensirion",
+        "name": "arduino-sht",
+        "version": "~1.2.2"
     }],
     "frameworks": "*",
     "platforms": "*"

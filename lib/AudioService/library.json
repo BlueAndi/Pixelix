@@ -1,0 +1,22 @@
+{
+    "name": "AudioService",
+    "version": "0.1.0",
+    "description": "...",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Os"
+    }, {
+        "name": "Service"
+    }, {
+        "name": "arduinoFFT",
+        "version": "https://github.com/kosme/arduinoFFT#develop @ ~1.9.2"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

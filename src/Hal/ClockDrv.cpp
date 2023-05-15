@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,11 +33,11 @@
  * Includes
  *****************************************************************************/
 #include "ClockDrv.h"
-#include "Settings.h"
 #include "time.h"
 
 #include <sys/time.h>
 #include <Logging.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,6 +59,9 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize static constants. */
+const char* ClockDrv::TZ_UTC = "UTC+0";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -67,28 +70,31 @@ void ClockDrv::init()
 {
     if (false == m_isClockDrvInitialized)
     {
-        String      timezone;
-        String      ntpServerAddress;
-        struct tm   timeInfo            = { 0 };
+        String              ntpServerAddress;
+        struct tm           timeInfo            = { 0 };
+        SettingsService&    settings            = SettingsService::getInstance();
+        char                tzBuffer[TZ_MIN_SIZE];
 
         /* Get the GMT offset, daylight saving enabled/disabled and NTP server address from persistent memory. */
-        if (false == Settings::getInstance().open(true))
+        if (false == settings.open(true))
         {
             LOG_WARNING("Use default values for NTP request.");
 
-            timezone            = Settings::getInstance().getTimezone().getDefault();
-            ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getDefault();
-            m_timeFormat        = Settings::getInstance().getTimeFormat().getDefault();
-            m_dateFormat        = Settings::getInstance().getDateFormat().getDefault();
+            m_timeZone          = settings.getTimezone().getDefault();
+            ntpServerAddress    = settings.getNTPServerAddress().getDefault();
         }
         else
         {
-            timezone            = Settings::getInstance().getTimezone().getValue();
-            ntpServerAddress    = Settings::getInstance().getNTPServerAddress().getValue();
-            m_timeFormat        = Settings::getInstance().getTimeFormat().getValue();
-            m_dateFormat        = Settings::getInstance().getDateFormat().getValue();
-            Settings::getInstance().close();
+            m_timeZone          = settings.getTimezone().getValue();
+            ntpServerAddress    = settings.getNTPServerAddress().getValue();
+            settings.close();
         }
+
+        /* Workaround part 1 to avoid memory leaks by calling setenv() of the newlib.
+         * https://github.com/espressif/esp-idf/issues/3046
+         */
+        strcpy(tzBuffer, TZ_UTC);
+        fillUpWithSpaces(tzBuffer, TZ_MIN_SIZE);
 
         /* Configure NTP:
          * This will periodically synchronize the time. The time synchronization
@@ -97,7 +103,12 @@ void ClockDrv::init()
          * https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/system_time.html
          * https://github.com/espressif/esp-idf/issues/4386
          */
-        configTzTime(timezone.c_str(), ntpServerAddress.c_str());
+        configTzTime(tzBuffer, ntpServerAddress.c_str());
+
+        /* Workaround part 2 to avoid memory leaks by calling setenv() of the newlib.
+         * https://github.com/espressif/esp-idf/issues/3046
+         */
+        m_internalTimeZoneBuffer = getenv("TZ");
 
         /* Wait for synchronization (default 5s) */
         if (false == getLocalTime(&timeInfo))
@@ -106,7 +117,7 @@ void ClockDrv::init()
         }
         else
         {
-            LOG_INFO("Local time: %d-%d-%d %d:%d", 
+            LOG_INFO("UTC: %d-%d-%d %d:%d", 
                 (timeInfo.tm_year + 1900),
                 (timeInfo.tm_mon + 1),
                 timeInfo.tm_mday,
@@ -118,56 +129,58 @@ void ClockDrv::init()
     }
 }
 
-bool ClockDrv::getTime(tm *currentTime)
+bool ClockDrv::getTime(tm* timeInfo)
 {
-    const uint32_t WAIT_TIME_MS = 0;
-
-    return getLocalTime(currentTime, WAIT_TIME_MS);
+    return getTzTime(m_timeZone.c_str(), timeInfo);
 }
 
-bool ClockDrv::getTimeAsString(String& time, const String& format, const tm *currentTime)
+bool ClockDrv::getUtcTime(tm* timeInfo)
 {
-    bool        isSuccessful    = false;
-    tm          timeStruct;
-    const tm*   timeStructPtr   = nullptr;
+    const uint32_t WAIT_TIME_MS = 0U;
 
-    if (nullptr == currentTime)
+    return getLocalTime(timeInfo, WAIT_TIME_MS);
+}
+
+bool ClockDrv::getTzTime(const char* tz, tm* timeInfo)
+{
+    const uint32_t  WAIT_TIME_MS    = 0U;
+    bool            result          = false;
+
+    if (nullptr != tz)
     {
-        timeStructPtr = &timeStruct;
-
-        if (false == getTime(&timeStruct))
+        /* Configure timezone */
+        if (nullptr != m_internalTimeZoneBuffer)
         {
-            timeStructPtr = nullptr;
-        }
-    }
-    else
-    {
-        timeStructPtr = currentTime;
-    }
+            /* Not nice, just a workaround which replaces
+             * setenv("TZ", tz, 1);
+             * to avoid memory leaks.
+             */
+            strncpy(m_internalTimeZoneBuffer, tz, TZ_MIN_SIZE - 1U);
+            m_internalTimeZoneBuffer[TZ_MIN_SIZE - 1U] = '\0';
 
-    if (nullptr != timeStructPtr)
-    {
-        const uint32_t  MAX_TIME_BUFFER_SIZE    = format.length() + 20U;
-        char            buffer[MAX_TIME_BUFFER_SIZE];
-
-        if (0U != strftime(buffer, sizeof(buffer), format.c_str(), currentTime))
-        {
-            time = buffer;
-            isSuccessful = true;
+            tzset();
         }
     }
 
-    return isSuccessful;
-}
+    result = getLocalTime(timeInfo, WAIT_TIME_MS);
 
-const String& ClockDrv::getTimeFormat()
-{
-    return m_timeFormat;
-}
+    if (nullptr != tz)
+    {
+        /* Reset timezone to UTC */
+        if (nullptr != m_internalTimeZoneBuffer)
+        {
+            /* Not nice, just a workaround which replaces
+             * setenv("TZ", TZ_UTC, 1);
+             * to avoid memory leaks.
+             */
+            strncpy(m_internalTimeZoneBuffer, TZ_UTC, TZ_MIN_SIZE - 1U);
+            m_internalTimeZoneBuffer[TZ_MIN_SIZE - 1U] = '\0';
 
-const String& ClockDrv::getDateFormat()
-{
-    return m_dateFormat;
+            tzset();
+        }
+    }
+
+    return result;
 }
 
 /******************************************************************************
@@ -177,6 +190,20 @@ const String& ClockDrv::getDateFormat()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void ClockDrv::fillUpWithSpaces(char* str, size_t size)
+{
+    size_t idx          = strlen(str);
+    size_t maxLength    = size - 1U;
+
+    while(maxLength > idx)
+    {
+        str[idx] = ' ';
+        ++idx;
+    }
+
+    str[size - 1U] = '\0';
+}
 
 /******************************************************************************
  * External Functions

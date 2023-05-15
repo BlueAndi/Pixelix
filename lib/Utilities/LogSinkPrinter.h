@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __LOG_SINK_PRINTER_H__
-#define __LOG_SINK_PRINTER_H__
+#ifndef LOG_SINK_PRINTER_H
+#define LOG_SINK_PRINTER_H
 
 /******************************************************************************
  * Compile Switches
@@ -173,6 +173,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __LOG_SINK_PRINTER_H__ */
+#endif  /* LOG_SINK_PRINTER_H */
 
 /** @} */

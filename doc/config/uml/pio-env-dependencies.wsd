@@ -7,20 +7,22 @@ component "Board" as board
 component "Display" as display
 component "Checker" as checker
 component "Environment" as env
-component "Mode" as mode
+component "Build Mode" as buildMode
+component "Config" as config
 
 env ..> board
 env ..> checker
-env ..> mode
+env ..> buildMode
 
 board ..> mcu
 board ..> display
+board ..> config
 
 note top of env
     PlatformIO specific configuration.
 end note
 
-note bottom of mode
+note bottom of buildMode
     * release
     * debug
     * trace
@@ -42,6 +44,11 @@ end note
 
 note bottom of display
     Display configuration.
+end note
+
+note bottom of config
+    Configuration of the services and
+    plugins.
 end note
 
 @enduml

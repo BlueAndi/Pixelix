@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __BUTTON_HANDLER_H__
-#define __BUTTON_HANDLER_H__
+#ifndef BUTTON_HANDLER_H
+#define BUTTON_HANDLER_H
 
 /******************************************************************************
  * Includes
@@ -136,6 +136,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __BUTTON_HANDLER_H__ */
+#endif  /* BUTTON_HANDLER_H */
 
 /** @} */

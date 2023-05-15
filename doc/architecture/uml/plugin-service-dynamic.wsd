@@ -6,11 +6,11 @@ participant "App" as app
 participant "PluginMgr" as pluginMgr
 participant "DisplayMgr" as displayMgr
 participant "Plugin" as plugin
-participant "Webserver" as webServer
+participant "TopicHandlerService" as topicHandlerService
 
 autoactivate on
 
-note over app,webServer
+note over app,topicHandlerService
     Install plugin
 end note
 
@@ -27,16 +27,10 @@ alt Empty slot available
     displayMgr -> plugin: Start plugin and provide display width and height.
     plugin --> displayMgr
     displayMgr --> pluginMgr: slot id
-    pluginMgr -> plugin: Get topics, used for web communication.
-    plugin --> pluginMgr: List of topics
-
-    loop for each topic
-        pluginMgr -> plugin: Get topic parameters.
-        plugin --> pluginMgr: Topic parameters
-        pluginMgr -> webServer: Register web interface
-        webServer --> pluginMgr: Web handler
-    end loop
-
+    pluginMgr -> topicHandlerService: Register plugin topics
+        topicHandlerService -> plugin: Get topics
+        topicHandlerService <-- plugin: topics
+    pluginMgr <-- topicHandlerService
     pluginMgr --> app: Concrete plugin
 
     alt Depends on application
@@ -48,18 +42,14 @@ else No slot available
     pluginMgr --> app: no plugin
 end alt
 
-note over app,webServer
+note over app,topicHandlerService
     Uninstall plugin
 end note
 
 app -> pluginMgr: Uninstall concrete plugin.
 pluginMgr -> displayMgr: Uninstall plugin.
-
-loop for each web handler
-    pluginMgr -> webServer: UnRegister web interface
-    webServer --> pluginMgr
-end loop
-
+pluginMgr -> topicHandlerService: Unregister topics
+topicHandlerService --> pluginMgr
 displayMgr -> plugin: Stop plugin.
 plugin --> displayMgr
 displayMgr -> displayMgr: Remove plugin from slot.
@@ -69,7 +59,7 @@ displayMgr --> pluginMgr
 pluginMgr -> pluginMgr: Destroy concrete plugin.
 pluginMgr --> app
 
-note over app,webServer
+note over app,topicHandlerService
     Plugin scheduler
 end note
 

@@ -1,0 +1,27 @@
+{
+    "name": "BTCQuotePlugin",
+    "version": "0.1.0",
+    "description": "....",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "AsyncHttpClient"
+    }, {
+        "name": "LittleFS"
+    }, {
+        "name": "Os"
+    }, {
+        "name": "Plugin"
+    }, {
+        "name": "YAWidgets"
+    }, {
+        "name": "Utilities"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

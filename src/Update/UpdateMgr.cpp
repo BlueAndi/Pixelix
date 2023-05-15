@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,10 +37,10 @@
 #include <Logging.h>
 #include <Esp.h>
 #include <Display.h>
+#include <SettingsService.h>
 
 #include "FileSystem.h"
 #include "MyWebServer.h"
-#include "Settings.h"
 #include "DisplayMgr.h"
 #include "SysMsg.h"
 #include "PluginMgr.h"
@@ -77,7 +77,8 @@ const char* UpdateMgr::OTA_PASSWORD = "maytheforcebewithyou";
 
 bool UpdateMgr::init()
 {
-    String  hostname;
+    String              hostname;
+    SettingsService&    settings    = SettingsService::getInstance();
 
     /* Prepare over the air update. Note, the configuration must be done
      * before the update server is running.
@@ -98,15 +99,15 @@ bool UpdateMgr::init()
     ArduinoOTA.setMdnsEnabled(false);
 
     /* Get hostname */
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
         LOG_WARNING("Use default hostname.");
-        hostname = Settings::getInstance().getHostname().getDefault();
+        hostname = settings.getHostname().getDefault();
     }
     else
     {
-        hostname = Settings::getInstance().getHostname().getValue();
-        Settings::getInstance().close();
+        hostname = settings.getHostname().getValue();
+        settings.close();
     }
 
     ArduinoOTA.setHostname(hostname.c_str());
@@ -128,8 +129,6 @@ void UpdateMgr::begin()
         LOG_INFO(String("Sketch size: ") + ESP.getSketchSize() + " bytes");
         LOG_INFO(String("Free size: ") + ESP.getFreeSketchSpace() + " bytes");
     }
-
-    return;
 }
 
 void UpdateMgr::end()
@@ -139,8 +138,6 @@ void UpdateMgr::end()
         /* Stop over-the-air server */
         ArduinoOTA.end();
     }
-
-    return;
 }
 
 void UpdateMgr::process()
@@ -148,9 +145,15 @@ void UpdateMgr::process()
     if (true == m_isInitialized)
     {
         ArduinoOTA.handle();
-    }
 
-    return;
+        /* Delayed restart request? */
+        if ((true == m_timer.isTimerRunning()) &&
+            (true == m_timer.isTimeout()))
+        {
+            m_isRestartReq = true;
+            m_timer.stop();
+        }
+    }
 }
 
 void UpdateMgr::beginProgress()
@@ -167,8 +170,6 @@ void UpdateMgr::beginProgress()
         /* Show user update status */
         updateProgress(0U);
     }
-
-    return;
 }
 
 void UpdateMgr::updateProgress(uint8_t progress)
@@ -200,8 +201,6 @@ void UpdateMgr::updateProgress(uint8_t progress)
         /* Show update status on console. */
         LOG_INFO(String("[") + m_progress + "%]");
     }
-
-    return;
 }
 
 void UpdateMgr::endProgress()
@@ -214,8 +213,6 @@ void UpdateMgr::endProgress()
             LOG_WARNING("Couldn't initialize display manager again.");
         }
     }
-
-    return;
 }
 
 /******************************************************************************
@@ -232,7 +229,8 @@ UpdateMgr::UpdateMgr() :
     m_progress(0U),
     m_isRestartReq(false),
     m_textWidget(),
-    m_progressBar()
+    m_progressBar(),
+    m_timer()
 {
     /* Move text for a better look. */
     m_textWidget.move(1, 1);
@@ -268,8 +266,6 @@ void UpdateMgr::onStart()
     LOG_INFO(infoStr);
 
     getInstance().beginProgress();
-
-    return;
 }
 
 void UpdateMgr::onEnd()
@@ -285,9 +281,7 @@ void UpdateMgr::onEnd()
     /* Note, there is no need here to start the webserver or the display
      * manager again, because we request a restart of the system now.
      */
-    getInstance().reqRestart();
-
-    return;
+    getInstance().reqRestart(0U);
 }
 
 void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
@@ -295,8 +289,6 @@ void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
     const uint32_t  PROGRESS_PERCENT    = (progress * 100U) / total;
 
     getInstance().updateProgress(PROGRESS_PERCENT);
-
-    return;
 }
 
 void UpdateMgr::onError(ota_error_t error)
@@ -335,8 +327,12 @@ void UpdateMgr::onError(ota_error_t error)
     /* Mount filesystem, because it may be unmounted in case of failed filesystem update. */
     if (false == FILESYSTEM.begin())
     {
+        /* To ensure the log information will be shown. */
+        const uint32_t RESTART_DELAY = 100U; /* ms */
+
         LOG_FATAL("Couldn't mount filesystem.");
-        getInstance().reqRestart();
+
+        getInstance().reqRestart(RESTART_DELAY);
     }
     else
     {
@@ -350,16 +346,14 @@ void UpdateMgr::onError(ota_error_t error)
             const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
             const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
 
-            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
             /* Request a restart */
-            getInstance().reqRestart();
+            getInstance().reqRestart(DURATION_NON_SCROLLING);
         }
     }
 
     getInstance().m_updateIsRunning = false;
-
-    return;
 }
 
 /******************************************************************************

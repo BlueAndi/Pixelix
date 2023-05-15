@@ -22,13 +22,18 @@
 - [Contribution](#contribution)
 
 # What must be done?
-
-1. The plugin sources (.h/.cpp) shall be in ```/src/Plugin/Plugins``` folder.
-2. The plugin shall be registered in the module ```/src/Plugin/PlugnList.hpp```, function ```void PluginList::registerAll()```.
-3. A short plugin description shall be in ```/doc/PLUGINS.md```.
-4. A plugin specific HTML page shall be in ```/data/plugins```. Add the page to the menu in ```/data/js/menu.js```.
-5. Place a plugin screenshot as image in ```/data/images```, using the plugin name and the file extension. It shall be shown in the HTML page.
-6. If the plugin spawns a REST API:
+1. Create the plugin as library:
+   1. Create a folder in ```/lib/<plugin-name>``` with the plugin name. Very important: The plugin name shall end with "Plugin", e.g. "FirePlugin".
+   2. Create two additional folders underneath:
+      * ```src```: Contains the plugin sourcecode.
+      * ```web```: Contains all web relevant files, including icons the plugin may need.
+   3. Create a ```library.json``` with the library meta information.
+2. The plugin sources (.h/.cpp) shall be in ```/lib/<plugin-name>/src``` folder.
+3. The plugin shall be registered in one or more configurations in ```/config/config-<type>.ini``` like PlatformIO libraries.
+4. A short plugin description shall be in ```/doc/PLUGINS.md```.
+5. A plugin specific HTML page shall be in ```/lib/<plugin-name>/web```.
+6. Place a plugin screenshot as image in ```/lib/<plugin-name>/web```, using the plugin name and the file extension. It shall be shown in the HTML page.
+7. If the plugin spawns a REST API:
    1. The HTML page must be able to get/set the corresponding information via REST API.
    2. The [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix) shall be extended. Ask the owner to do this via issue or pull-request.
 

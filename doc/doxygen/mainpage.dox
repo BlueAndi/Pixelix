@@ -40,4 +40,14 @@ All web related functions.
 @{
 @}
 
+@defgroup audio_service Audio Service
+Provides different kind of audio related functionality.
+@{
+@}
+
+@defgroup settings Settings Service
+Settings are stored persistent and will survive an firmware or filesystem update.
+@{
+@}
+
 */

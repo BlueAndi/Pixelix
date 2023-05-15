@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -85,8 +85,6 @@ void PluginFactory::registerPlugin(const String& name, IPluginMaintenance::Creat
     {
         LOG_ERROR("Couldn't add %s to registry.", name.c_str());
     }
-
-    return;
 }
 
 IPluginMaintenance* PluginFactory::createPlugin(const String& name)

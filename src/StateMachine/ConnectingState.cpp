@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * Includes
  *****************************************************************************/
 #include "ConnectingState.h"
-#include "Settings.h"
 #include "SysMsg.h"
+#include "Services.h"
 
 #include "IdleState.h"
 #include "ConnectedState.h"
@@ -42,6 +42,8 @@
 
 #include <WiFi.h>
 #include <Logging.h>
+#include <Util.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,16 +71,23 @@
 
 void ConnectingState::entry(StateMachine& sm)
 {
+    SettingsService& settings = SettingsService::getInstance();
+
     /* Observer button state changes and derrive actions. */
     ButtonDrv::getInstance().registerObserver(m_buttonHandler);
 
     /* Are remote wifi network informations available? */
-    if (true == Settings::getInstance().open(true))
+    if (true == settings.open(true))
     {
-        m_wifiSSID          = Settings::getInstance().getWifiSSID().getValue();
-        m_wifiPassphrase    = Settings::getInstance().getWifiPassphrase().getValue();
+        m_wifiSSID          = settings.getWifiSSID().getValue();
+        m_wifiPassphrase    = settings.getWifiPassphrase().getValue();
+        m_isQuiet           = settings.getQuietMode().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
+    }
+    else
+    {
+        m_isQuiet = settings.getQuietMode().getDefault();
     }
 
     /* No remote wifi network informations available? */
@@ -109,8 +118,6 @@ void ConnectingState::entry(StateMachine& sm)
 
         sm.setState(ErrorState::getInstance());
     }
-
-    return;
 }
 
 void ConnectingState::process(StateMachine& sm)
@@ -130,7 +137,11 @@ void ConnectingState::process(StateMachine& sm)
         infoStr += ".";
 
         LOG_INFO(infoStr);
-        SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+
+        if (false == m_isQuiet)
+        {
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
+        }
 
         /* Remote wifi network informations are available, try to establish a connection. */
         status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());
@@ -174,7 +185,7 @@ void ConnectingState::process(StateMachine& sm)
         }
     }
 
-    return;
+    Services::processAll();
 }
 
 void ConnectingState::exit(StateMachine& sm)
@@ -183,8 +194,6 @@ void ConnectingState::exit(StateMachine& sm)
 
     /* Remove button handler as button state observer. */
     ButtonDrv::getInstance().unregisterObserver();
-
-    return;
 }
 
 /******************************************************************************

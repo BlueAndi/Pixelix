@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">JustTextPlugin</h1>
+                <p><img src="JustTextPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin shows only text on the whole display. If no text is set, the plugin will be skipped in the slot.</p>
+                <p>If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.</p>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get text</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                </ul>
+                <h3 class="mt-1">Set text</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?text=&lt;TEXT&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>TEXT: The text to show on the display.</li>
+                </ul>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Text</h3>
+                <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="justText">Text:</label>
+                        <input type="text" id="justText" name="justText" value="" size="20" />                            
+                    </div>
+                    <input name="submit" type="submit" value="Update"/>
+                </form>          
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+
+            var pluginName  = "JustTextPlugin";
+            var restClient  = new pixelix.rest.Client();
+
+            function enableUI() {
+                utils.enableForm("myFormText", true);
+            }
+
+            function disableUI() {
+                utils.enableForm("myFormText", false);
+            }
+
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var elemIndex   = 0;
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var elements    = document.getElementsByName("pluginUid");
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(elemIndex = 0; elemIndex < elements.length; ++elemIndex) {
+
+                        for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                            if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                                optionText = rsp.data.slots[slotIndex].uid;
+                                optionText += " (";
+                                
+                                if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                    optionText += "-"
+                                } else {
+                                    optionText += rsp.data.slots[slotIndex].alias
+                                }
+
+                                optionText += ")";
+
+                                $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+                                
+                                $(elements[elemIndex]).append($option);
+
+                                ++cnt;
+                            }
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+
+            function getText(pluginUid, justTextId) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    var justTextInput = document.getElementById(justTextId);
+
+                    justTextInput.value = rsp.data.text;
+
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setText(pluginUid, justText) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
+                    isJsonResponse: true,
+                    parameter: {
+                        text: justText
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.create("menu", menu.data);
+                
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var selectText = document.getElementById("pluginUidText");
+
+                    if (0 < cnt) {
+
+                        return getText(
+                            selectText.options[selectText.selectedIndex].value,
+                            "justText"
+                        );
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

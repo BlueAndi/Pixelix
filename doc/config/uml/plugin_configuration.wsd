@@ -1,0 +1,83 @@
+@startuml
+
+title Example for small configuration
+
+file "platformio.ini" as filePlatformio
+
+package "scripts" {
+    file "configure_small.py" as fileConfigureSmall
+    file "configure_normal.py" as fileConfigureNormal
+}
+
+package "data" as pckgData {
+    package "plugins" as pckgPlugins {
+        package "<plugin-name>Plugin" as pcgkPlugin {
+            file "..."
+        }
+    }
+
+    package "js" as pckgJs {
+        file "menu.js" as fileMenu
+    }
+}
+
+package "config" as pckgConfig {
+    file "configSmall.ini" as fileConfigSmall
+    file "configNormal.ini" as fileConfigNormal
+}
+
+package "lib" as pckgLib {
+
+    package "<plugin-name>Plugin" as pckgLibPlugin {
+        file "library.json" as filePluginLibrary
+
+        package "src" as pckgLibPluginSrc {
+            file "<plugin-name>Plugin.h" as filePluginHeader
+            file "<plugin-name>Plugin.cpp" as filePluginSource
+        }
+
+        package "web" as pckgLibPluginWeb {
+            file "<plugin-name>Plugin.html"
+            file "<plugin-name>Plugin.jpg"
+        }
+    }
+
+    filePluginLibrary -[hidden]- pckgLibPluginSrc
+    pckgLibPluginSrc -[hidden]- pckgLibPluginWeb
+}
+
+package "src" as src {
+    package "generated" as generatedSrc {
+        file "PluginList.hpp" as pluginList
+    }
+}
+
+fileConfigureSmall .u.> pluginList: <<generate>>
+fileConfigureSmall .u.> pcgkPlugin: <<create>>\n<<copy to>>
+fileConfigureSmall .u.> fileMenu: <<generate>>
+
+filePlatformio ..> pckgConfig: extra_configs
+filePlatformio .....> fileConfigureSmall: extra_scripts = pre:<script>
+
+fileConfigSmall .....> pckgLibPlugin
+fileConfigSmall ...> fileConfigureSmall: extra_scripts = pre:<script>
+
+note top of pckgData
+    Contains the data which is generated
+    to the filesystem binary.
+end note
+
+note top of src
+    Everything in the source code folder
+    will be automatically compiled in.
+end note
+
+note top of fileConfigSmall
+    For development boards with 4 MB flash.
+end note
+
+note top of fileConfigNormal
+    For development boards with 8 MB flash or more.
+end note
+
+@enduml

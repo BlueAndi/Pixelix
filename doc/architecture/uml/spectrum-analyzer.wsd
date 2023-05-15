@@ -1,34 +1,40 @@
 @startuml
 
 participant "SoundReactivePlugin" as plugin
+participant "AudioService" as audioService
 participant "SpectrumAnalyzer" as specAnalyzer
+participant "AudioDrv" as audioDrv
 participant "I2S" as i2s
 
 autoactivate on
 
-alt Once at plugin start
+alt Once in init state
 
--> plugin: start
-plugin -> specAnalyzer: start
-specAnalyzer -> specAnalyzer: create task (if not already)
+-> audioService: start
+    audioService -> audioDrv: start
 
-note over specAnalyzer
-    Spectrum analyzer task spawns
-    on the other esp32 core for
-    load sharing.
-end note
+        audioDrv -> audioDrv: create task (if not already)
 
-specAnalyzer <-- specAnalyzer
-plugin <-- specAnalyzer
-<-- plugin
+        note over audioDrv
+            Audio driver task spawns
+            on the other esp32 core for
+            load sharing.
+        end note
+
+        audioDrv <-- audioDrv
+
+    audioService <-- audioDrv
+    audioService -> audioDrv: register spectrum analyzer as observer
+    audioService <-- audioDrv
+<-- audioService
 
 end alt
 
-alt setup spectrum analyzer task
+alt setup audio driver task
 
-    specAnalyzer -> i2s: install driver for I2S port 0
+    audioDrv -> i2s: install driver for I2S port 0
 
-    activate specAnalyzer
+    activate audioDrv
 
     note over i2s
         * Port: 0
@@ -42,59 +48,67 @@ alt setup spectrum analyzer task
         * Trigger by I2S_EVENT_RX_DONE event
     end note
 
-    specAnalyzer <-- i2s
+    audioDrv <-- i2s
 
-    specAnalyzer -> i2s: set pin configuration
-    specAnalyzer <-- i2s
+    audioDrv -> i2s: set pin configuration
+    audioDrv <-- i2s
 
-    deactivate specAnalyzer
+    deactivate audioDrv
 
 end alt
 
-alt spectrum analyzer task triggered by I2S_EVENT_RX_DONE
+alt audio driver task triggered by I2S_EVENT_RX_DONE
 
-    specAnalyzer <<- i2s: I2S_EVENT_RX_DONE
+    audioDrv <<- i2s: I2S_EVENT_RX_DONE
 
     loop For each sample in one block
 
-        specAnalyzer -> i2s: read sample value
-        specAnalyzer <-- i2s: sample value
-        specAnalyzer -> specAnalyzer: store sample value in FFT input buffer
-        specAnalyzer <-- specAnalyzer
+        audioDrv -> i2s: read sample value
+        audioDrv <-- i2s: sample value
+        audioDrv -> audioDrv: store sample value in FFT input buffer
+        audioDrv <-- audioDrv
 
     end loop
 
     alt Every 16 blocks
 
-        specAnalyzer -> specAnalyzer: calculate FFT
-        specAnalyzer <-- specAnalyzer
-        specAnalyzer -> specAnalyzer: copy frequency bins and set ready flag
-        specAnalyzer <-- specAnalyzer
+        audioDrv -> specAnalyzer: notify
+
+            specAnalyzer -> specAnalyzer: calculate FFT
+            specAnalyzer <-- specAnalyzer
+            specAnalyzer -> specAnalyzer: copy frequency bins and set ready flag
+            specAnalyzer <-- specAnalyzer
+
+        audioDrv <-- specAnalyzer
 
     end alt
 
-    deactivate specAnalyzer
+    deactivate audioDrv
 
 end alt
 
 alt Every 20 ms
 
 -> plugin: process
-plugin -> specAnalyzer: Are frequency bins ready?
-plugin <-- specAnalyzer: true/false
 
-alt If frequency bins are ready
+    plugin -> audioDrv: get spectrum analyzer
+    plugin <-- audioDrv: spectrum analyzer
+    
+    plugin -> specAnalyzer: Are frequency bins ready?
+    plugin <-- specAnalyzer: true/false
 
-    plugin -> specAnalyzer: get frequency bins by copy
-    plugin <-- specAnalyzer: frequency bins
+    alt If frequency bins are ready
 
-    plugin -> plugin: post-processing
-    plugin <-- plugin
+        plugin -> specAnalyzer: get frequency bins by copy
+        plugin <-- specAnalyzer: frequency bins
 
-end alt
+        plugin -> plugin: post-processing
+        plugin <-- plugin
+
+    end alt
 
 <-- plugin
 
-end loop
+end alt
 
 @enduml

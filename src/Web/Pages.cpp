@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,6 @@
 #include "Pages.h"
 #include "HttpStatus.h"
 #include "WebConfig.h"
-#include "Settings.h"
 #include "Version.h"
 #include "UpdateMgr.h"
 #include "DisplayMgr.h"
@@ -50,6 +49,7 @@
 #include <Util.h>
 #include <ArduinoJson.h>
 #include <lwip/init.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -75,8 +75,6 @@ struct TmplKeyWordFunc
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
-
-static String fitToSpiffs(const String& path, const String& filenNameWithoutExt, const String& fileNameExtension);
 
 static String tmplPageProcessor(const String& var);
 
@@ -111,9 +109,6 @@ static const char*      FIRMWARE_FILENAME               = "firmware.bin";
 
 /** Path to the plugin webpages. */
 static const String     PLUGIN_PAGE_PATH                = "/plugins/";
-
-/** Plugin webpage file extension. */
-static const String     PLUGIN_PAGE_FILE_EXTENSION      = ".html";
 
 /** SPIFFS limits the max. filename length, which includes the path as well. */
 static const uint32_t   SPIFFS_FILENAME_LENGTH_LIMIT    = 32U;
@@ -176,21 +171,22 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
 
 void Pages::init(AsyncWebServer& srv)
 {
-    const char* pluginName = nullptr;
-    String      webLoginUser;
-    String      webLoginPassword;
+    const char*         pluginName          = nullptr;
+    String              webLoginUser;
+    String              webLoginPassword;
+    SettingsService&    settings            = SettingsService::getInstance();
 
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getDefault();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getDefault();
+        webLoginUser        = settings.getWebLoginUser().getDefault();
+        webLoginPassword    = settings.getWebLoginPassword().getDefault();
     }
     else
     {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getValue();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getValue();
+        webLoginUser        = settings.getWebLoginUser().getValue();
+        webLoginPassword    = settings.getWebLoginPassword().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
     }
 
     (void)srv.on("/about.html", HTTP_GET, aboutPage)
@@ -239,25 +235,30 @@ void Pages::init(AsyncWebServer& srv)
     pluginName = PluginMgr::getInstance().findFirst();
     while(nullptr != pluginName)
     {
-        String uri = fitToSpiffs(PLUGIN_PAGE_PATH, String(pluginName), PLUGIN_PAGE_FILE_EXTENSION);
-
+        String uri = PLUGIN_PAGE_PATH + pluginName;
+        
         (void)srv.on(   uri.c_str(),
                         HTTP_GET,
-                        [uri](AsyncWebServerRequest* request)
+                        [](AsyncWebServerRequest* request)
                         {
                             if (nullptr == request)
                             {
                                 return;
                             }
 
-                            request->send(FILESYSTEM, uri, "text/html", false, tmplPageProcessor);
+                            if (0U != request->url().endsWith(".html"))
+                            {
+                                request->send(FILESYSTEM, request->url(), "text/html", false, tmplPageProcessor);
+                            }
+                            else
+                            {
+                                request->send(FILESYSTEM, request->url());
+                            }
 
                         }).setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());;
 
         pluginName = PluginMgr::getInstance().findNext();
     }
-
-    return;
 }
 
 /**
@@ -275,30 +276,11 @@ void Pages::error(AsyncWebServerRequest* request)
     LOG_INFO("Invalid web request: %s", request->url().c_str());
 
     request->send(FILESYSTEM, "/error.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /******************************************************************************
  * Local Functions
  *****************************************************************************/
-
-/**
- * SPIFFS full filename (path + filename + extension) is limited to 32 characters.
- * This function reduces only the filename length and returns the full path.
- *
- * @param[in] path                  Path, e.g. "/mypath/".
- * @param[in] fileNameWithoutExt    Filename without extension, e.g. "myFile".
- * @param[in] fileNameExtension     Filename extension, e.g. ".html"
- *
- * @return Full path
- */
-static String fitToSpiffs(const String& path, const String& filenNameWithoutExt, const String& fileNameExtension)
-{
-    String fileNameReduced = filenNameWithoutExt.substring(0, SPIFFS_FILENAME_LENGTH_LIMIT - path.length() - fileNameExtension.length() - 1U);
-
-    return path + fileNameReduced + fileNameExtension;
-}
 
 /**
  * Processor for page template, containing the common part, which is available
@@ -344,8 +326,6 @@ static void aboutPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/about.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -361,8 +341,6 @@ static void debugPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/debug.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -378,8 +356,6 @@ static void displayPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/display.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -395,8 +371,6 @@ static void editPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/edit.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -412,8 +386,6 @@ static void indexPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/index.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -429,8 +401,6 @@ static void infoPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/info.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -446,8 +416,6 @@ static void settingsPage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/settings.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -463,8 +431,6 @@ static void updatePage(AsyncWebServerRequest* request)
     }
 
     request->send(FILESYSTEM, "/update.html", "text/html", false, tmplPageProcessor);
-
-    return;
 }
 
 /**
@@ -495,11 +461,9 @@ static void uploadPage(AsyncWebServerRequest* request)
     request->onDisconnect(
         []()
         {
-            UpdateMgr::getInstance().reqRestart();
+            UpdateMgr::getInstance().reqRestart(0U);
         }
     );
-
-    return;
 }
 
 /**
@@ -624,12 +588,14 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
                 /* Update was successful! */
                 else
                 {
+                    const uint8_t PROGRESS_FINISHED = 100U; /* % */
+
                     LOG_INFO("Upload of %s finished.", filename.c_str());
 
                     /* Filesystem is not mounted here, because we will restart in the next seconds. */
 
                     /* Ensure that the user see 100% update status on the display. */
-                    UpdateMgr::getInstance().updateProgress(100U);
+                    UpdateMgr::getInstance().updateProgress(PROGRESS_FINISHED);
                     UpdateMgr::getInstance().endProgress();
 
                     /* Restart is requested in upload page handler, see uploadPage(). */
@@ -652,8 +618,6 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
             request->send(HttpStatus::STATUS_CODE_PAYLOAD_TOO_LARGE, "text/plain", "Upload aborted.");
         }
     }
-
-    return;
 }
 
 /**
@@ -668,11 +632,12 @@ namespace tmpl
      */
     static String getEspChipId()
     {
-        String      result;
-        uint64_t    chipId      = ESP.getEfuseMac();
-        uint32_t    highPart    = (chipId >> 32U) & 0x0000ffffU;
-        uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
-        char        chipIdStr[13];
+        String          result;
+        uint64_t        chipId              = ESP.getEfuseMac();
+        uint32_t        highPart            = (chipId >> 32U) & 0x0000ffffU;
+        uint32_t        lowPart             = (chipId >>  0U) & 0xffffffffU;
+        const size_t    CHIP_ID_STR_SIZE    = 13U;
+        char            chipIdStr[CHIP_ID_STR_SIZE];
 
         (void)snprintf(chipIdStr, UTIL_ARRAY_NUM(chipIdStr), "%04X%08X", highPart, lowPart);
 
@@ -818,12 +783,13 @@ namespace tmpl
      */
     static String getSSID()
     {
-        String result;
+        String              result;
+        SettingsService&    settings    = SettingsService::getInstance();
 
-        if (true == Settings::getInstance().open(true))
+        if (true == settings.open(true))
         {
-            result = Settings::getInstance().getWifiSSID().getValue();
-            Settings::getInstance().close();
+            result = settings.getWifiSSID().getValue();
+            settings.close();
         }
 
         return result;

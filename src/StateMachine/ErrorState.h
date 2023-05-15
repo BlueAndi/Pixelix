@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __ERRORSTATE_H__
-#define __ERRORSTATE_H__
+#ifndef ERRORSTATE_H
+#define ERRORSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <StateMachine.hpp>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -109,7 +110,8 @@ public:
         ERROR_ID_BAD_FS,            /**< Bad filesystem */
         ERROR_ID_DISP_MGR,          /**< Display manager error */
         ERROR_ID_SYS_MSG,           /**< System message handler error */
-        ERROR_ID_UPDATE_MGR         /**< Update manager error */
+        ERROR_ID_UPDATE_MGR,        /**< Update manager error */
+        ERROR_ID_SERVICE            /**< Service error */
     };
 
     /**
@@ -134,13 +136,26 @@ public:
 
 private:
 
-    ErrorId m_errorId;  /**< The error cause, why this state is active. */
+    /** Signal lamp on period in ms. */
+    static const uint32_t   BLINK_ON_PERIOD         = 200U;
+
+    /** Signal lamp short off period in ms. */
+    static const uint32_t   BLINK_OFF_SHORT_PERIOD  = 200U;
+
+    /** Signal lamp long off period in ms. */
+    static const uint32_t   BLINK_OFF_LONG_PERIOD   = 1000U;
+
+    ErrorId     m_errorId;  /**< The error cause, why this state is active. */
+    SimpleTimer m_timer;    /**< Timer used for onboard LED signalling. */
+    uint8_t     m_cnt;      /**< Count number of flashes. */
 
     /**
      * Constructs the state.
      */
     ErrorState() :
-        m_errorId(ERROR_ID_NO_ERROR)
+        m_errorId(ERROR_ID_NO_ERROR),
+        m_timer(),
+        m_cnt(0U)
     {
     }
 
@@ -153,13 +168,12 @@ private:
     
     ErrorState(const ErrorState& state);
     ErrorState& operator=(const ErrorState& state);
-
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __ERRORSTATE_H__ */
+#endif  /* ERRORSTATE_H */
 
 /** @} */

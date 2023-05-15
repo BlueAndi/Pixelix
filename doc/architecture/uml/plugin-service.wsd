@@ -11,6 +11,7 @@ interface IPluginMaintenance {
     + {abstract} getTopics(topics : JsonArray&) const = 0 : void
     + {abstract} getTopic(topic : const String&, value : JsonObject&) const = 0 : bool
     + {abstract} setTopic(topic : const String&, value : const JsonObject&) const = 0 : bool
+    + {abstract} hasTopicChanged(topic : const String&) = 0 : void
     + {abstract} isUploadAccepted(topic : const String&, srcFilename : const String&, dstFilename : String&) const = 0 : bool
     + {abstract} getName() const = 0 : const char*
     + {abstract} enable() = 0 : void

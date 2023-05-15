@@ -1,0 +1,21 @@
+{
+    "name": "TopicHandlerService",
+    "version": "0.1.0",
+    "description": "...",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Service"
+    }, {
+        "name": "ITopicHandler"
+    }, {
+        "name": "Plugin"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

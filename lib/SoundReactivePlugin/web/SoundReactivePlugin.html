@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">SoundReactivePlugin</h1>
+                <p><img src="SoundReactivePlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin shows octave frequency bands, depended on the environment sound.</p>
+                <p>Required: A digital microphone (INMP441) is required, connected to the I2S port.</p>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get configuration about how many frequency bands are shown.</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
+                <h3 class="mt-1">Set configuration about how many frequency bands shall be shown.</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>FREQ-BAND-LEN: Number of frequency bands to show.
+                        <ul>
+                            <li>8: Show 8 frequency bands.</li>
+                            <li>16: Show 16 frequency bands.</li>
+                        </ul>
+                    </li>
+                </ul>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">Number of frequency bands</h3>
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="freqBandLen">Configuration:</label>
+                        <select id="freqBandLen">
+                            <option value="8">Show 8 frequency bands.</option>
+                            <option value="16">Show 16 frequency bands.</option>
+                        </select>    
+                    </div>
+                    <input name="submit" type="submit" value="Update"/>
+                </form>   
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+            var pluginName  = "SoundReactivePlugin";
+            var restClient  = new pixelix.rest.Client();
+
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+    
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+                            
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
+
+                            optionText += ")";
+
+                            $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+                            
+                            $("#pluginUid").append($option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+
+            function getConfig(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    $("#freqBandLen").val(rsp.data.freqBandLen);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setConfig(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
+                    isJsonResponse: true,
+                    parameter: {
+                        freqBandLen: $("#freqBandLen").val()
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.create("menu", menu.data);
+
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+
+                        return getConfig(
+                            select.options[select.selectedIndex].value
+                        );
+                    }
+                });
+
+            });
+        </script>
+    </body>
+</html>

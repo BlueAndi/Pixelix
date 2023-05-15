@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __MUTEX_HPP__
-#define __MUTEX_HPP__
+#ifndef MUTEX_HPP
+#define MUTEX_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 /******************************************************************************
  * Macros
@@ -337,6 +338,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* __MUTEX_HPP__ */
+#endif  /* MUTEX_HPP */
 
 /** @} */

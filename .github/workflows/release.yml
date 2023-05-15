@@ -27,7 +27,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["esp32doit-devkit-v1-usb", "esp32-nodemcu-usb", "az-delivery-devkit-v4-usb", "lilygo-ttgo-t-display-usb", "lilygo-t-display-s3-usb", "adafruit_feather_esp32_v2-usb"]
+        environment: ["adafruit_feather_esp32_v2", "az-delivery-devkit-v4", "esp32doit-devkit-v1", "esp32-nodemcu", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "m5stack_core", "wemos_lolin_s2_mini"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
@@ -52,6 +52,8 @@ jobs:
 
     - name: Set up Python
       uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
     
     - name: Install PlatformIO
       run: |
@@ -76,6 +78,8 @@ jobs:
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/firmware.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/spiffs.bin
           ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/littlefs.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/bootloader.bin
+          ${{ github.workspace }}/.pio/build/${{ matrix.environment }}/partitions.bin
         retention-days: 5
 
   # Deploy release artifacts

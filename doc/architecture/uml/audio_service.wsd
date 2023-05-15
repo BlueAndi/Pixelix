@@ -1,0 +1,54 @@
+@startuml
+
+package "HAL" {
+
+    interface AudioObserver
+    class AudioDrv<<singleton>>
+    class "IDF I2S driver" as I2SDrv
+}
+
+package "lib" {
+    package "AudioService" {
+        class SpectrumAnalyzer
+        class AudioToneDetector
+        class AudioService<<singleton>>
+    }
+}
+
+class Plugin
+
+AudioObserver "0..3" <--o AudioDrv
+AudioObserver <|... SpectrumAnalyzer: <<realize>>
+AudioObserver <|... AudioToneDetector: <<realize>>
+
+AudioDrv <.... AudioService: <<use>>
+SpectrumAnalyzer <--* AudioService
+AudioToneDetector "2" <--* AudioService
+
+AudioService <.. "*" Plugin: <<use>>
+
+AudioDrv ..> I2SDrv: <<use>>
+
+note top of SpectrumAnalyzer
+    Provides the frequency spectrum by using
+    the FFT algorithm.
+end note
+
+note top of AudioToneDetector
+    Audio tone detector by using the
+    Goertzel algorithm.
+end note
+
+note right of Plugin
+    Several plugins can use the audio service.
+
+    Attention: Every plugin may re-configure!
+end note
+
+note right of AudioService
+    Start/stop the audio driver.
+    Provides the spectrum analyzer and tone
+    detector instances to plugins.
+end note
+
+@enduml

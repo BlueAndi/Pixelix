@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,9 +40,11 @@
 #include <Board.h>
 
 #include "InitState.h"
+#include "RestartState.h"
 #include "TaskMon.h"
 #include "MemMon.h"
 #include "ResetMon.h"
+#include "MiniTerminal.h"
 
 /******************************************************************************
  * Macros
@@ -67,6 +69,9 @@
 /******************************************************************************
  * Variables
  *****************************************************************************/
+
+/** Serial terminal */
+static MiniTerminal     gTerminal(Serial);
 
 /** System state machine */
 static StateMachine     gSysStateMachine(InitState::getInstance());
@@ -117,6 +122,12 @@ void setup()
     #endif  /* ARDUINO_USB_CDC_ON_BOOT */
     #endif  /* ARDUINO_USB_MODE */
 
+    /* Ensure a distance between the boot mode message and the first log message.
+     * Otherwise the first log message appears in the same line than the last
+     * boot mode message.
+     */
+    Serial.println("\n");
+
     /* Set severity for esp logging system. */
     esp_log_level_set("*", CONFIG_ESP_LOG_SEVERITY);
 
@@ -140,8 +151,6 @@ void setup()
         gSysStateMachine.process();
     }
     while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
-
-    return;
 }
 
 /**
@@ -161,10 +170,16 @@ void loop()
     /* Memory monitor */
     MemMon::getInstance().process();
 
+    /* Process terminal */
+    gTerminal.process();
+
+    if (true == gTerminal.isRestartRequested())
+    {
+        gSysStateMachine.setState(RestartState::getInstance());
+    }
+
     /* Schedule other tasks with same or lower priority. */
     delay(LOOP_TASK_PERIOD);
-
-    return;
 }
 
 /******************************************************************************

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,6 @@
  * Includes
  *****************************************************************************/
 #include "WebSocket.h"
-#include "Settings.h"
 
 #include "WsCmdAlias.h"
 #include "WsCmdBrightness.h"
@@ -52,6 +51,7 @@
 
 #include <Logging.h>
 #include <Util.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -103,8 +103,12 @@ static WsCmdMove            gWsCmdMove;
 /** Websocket slot duration command */
 static WsCmdSlotDuration    gWsCmdSlotDuration;
 
+#if CONFIG_FEATURE_IPERF == 1
+
 /** Websocket iperf command */
 static WsCmdIperf           gWsCmdIperf;
+
+#endif /* CONFIG_FEATURE_IPERF == 1 */
 
 /** Websocket control virtual button command */
 static WsCmdButton          gWsCmdButton;
@@ -128,7 +132,9 @@ static WsCmd*       gWsCommands[] =
     &gWsCmdLog,
     &gWsCmdMove,
     &gWsCmdSlotDuration,
+#if CONFIG_FEATURE_IPERF == 1
     &gWsCmdIperf,
+#endif /* CONFIG_FEATURE_IPERF == 1 */
     &gWsCmdButton,
     &gWsCmdEffect,
     &gWsCmdAlias
@@ -140,20 +146,21 @@ static WsCmd*       gWsCommands[] =
 
 void WebSocketSrv::init(AsyncWebServer& srv)
 {
-    String      webLoginUser;
-    String      webLoginPassword;
+    String              webLoginUser;
+    String              webLoginPassword;
+    SettingsService&    settings        = SettingsService::getInstance();
 
-    if (false == Settings::getInstance().open(true))
+    if (false == settings.open(true))
     {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getDefault();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getDefault();
+        webLoginUser        = settings.getWebLoginUser().getDefault();
+        webLoginPassword    = settings.getWebLoginPassword().getDefault();
     }
     else
     {
-        webLoginUser        = Settings::getInstance().getWebLoginUser().getValue();
-        webLoginPassword    = Settings::getInstance().getWebLoginPassword().getValue();
+        webLoginUser        = settings.getWebLoginUser().getValue();
+        webLoginPassword    = settings.getWebLoginPassword().getValue();
 
-        Settings::getInstance().close();
+        settings.close();
     }
 
     /* Register websocket event handler */
@@ -164,8 +171,6 @@ void WebSocketSrv::init(AsyncWebServer& srv)
 
     /* Register websocket on webserver */
     srv.addHandler(&m_webSocket);
-
-    return;
 }
 
 /******************************************************************************
@@ -214,8 +219,6 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     default:
         break;
     }
-
-    return;
 }
 
 void WebSocketSrv::onConnect(AsyncWebSocket* server, AsyncWebSocketClient* client, AsyncWebServerRequest* request)
@@ -223,13 +226,11 @@ void WebSocketSrv::onConnect(AsyncWebSocket* server, AsyncWebSocketClient* clien
     UTIL_NOT_USED(request);
 
     LOG_INFO("ws[%s][%u] Client connected.", server->url(), client->id());
-    return;
 }
 
 void WebSocketSrv::onDisconnect(AsyncWebSocket* server, AsyncWebSocketClient* client)
 {
     LOG_INFO("ws[%s][%u] Client disconnected.", server->url(), client->id());
-    return;
 }
 
 void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, uint8_t* data, size_t len)
@@ -243,8 +244,6 @@ void WebSocketSrv::onPong(AsyncWebSocket* server, AsyncWebSocketClient* client, 
     {
         LOG_INFO("ws[%s][%u] Pong: %s", server->url(), client->id(), data);
     }
-
-    return;
 }
 
 void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client, uint16_t reasonCode, const char* reasonStr, size_t reasonStrLen)
@@ -258,8 +257,6 @@ void WebSocketSrv::onError(AsyncWebSocket* server, AsyncWebSocketClient* client,
     {
         LOG_INFO("ws[%s][%u] Error %u: %s", server->url(), client->id(), reasonCode, reasonStr);
     }
-
-    return;
 }
 
 void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsFrameInfo* info, const uint8_t* data, size_t len)
@@ -299,8 +296,6 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
         LOG_ERROR("ws[%s][%u] Fragmented messages not supported.", server->url(), client->id());
         server->close(client->id(), 0U, "Not supported message type.");
     }
-
-    return;
 }
 
 void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen)
@@ -384,8 +379,6 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
             wsCmd->execute(server, client);
         }
     }
-
-    return;
 }
 
 /******************************************************************************

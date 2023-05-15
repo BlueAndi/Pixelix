@@ -9,76 +9,7 @@ menu.data = [{
 }, {
     "title": "Plugins",
     "hyperRef": "#",
-    "subMenu": [{
-        "title": "BTC Quote Plugin",
-        "hyperRef": "/plugins/BTCQuotePlugin.html"
-    }, {
-        "title": "Countdown Plugin",
-        "hyperRef": "/plugins/CountdownPlugin.html"
-    }, {
-        "title": "DateTime Plugin",
-        "hyperRef": "/plugins/DateTimePlugin.html"
-    }, {
-        "title": "Fire Plugin",
-        "hyperRef": "/plugins/FirePlugin.html"
-    }, {
-        "title": "GameOfLife Plugin",
-        "hyperRef": "/plugins/GameOfLifePlugin.html"
-    }, {
-        "title": "Github Plugin",
-        "hyperRef": "/plugins/GithubPlugin.html"
-    }, {
-        "title": "Gruenbeck Plugin",
-        "hyperRef": "/plugins/GruenbeckPlugin.html"
-    }, {
-        "title": "IconTextLamp Plugin",
-        "hyperRef": "/plugins/IconTextLampPlugi.html"
-    }, {
-        "title": "IconText Plugin",
-        "hyperRef": "/plugins/IconTextPlugin.html"
-    }, {
-        "title": "JustText Plugin",
-        "hyperRef": "/plugins/JustTextPlugin.html"
-    }, {
-        "title": "Matrix Plugin",
-        "hyperRef": "/plugins/MatrixPlugin.html"
-    }, {
-        "title": "OpenWeather Plugin",
-        "hyperRef": "/plugins/OpenWeatherPlugin.html"
-    }, {
-        "title": "Rainbow Plugin",
-        "hyperRef": "/plugins/RainbowPlugin.html"
-    }, {
-        "title": "Sensor Plugin",
-        "hyperRef": "/plugins/SensorPlugin.html"
-    }, {
-        "title": "ShellyPlugS Plugin",
-        "hyperRef": "/plugins/ShellyPlugSPlugin.html"
-    }, {
-        "title": "Sound Reactive Plugin",
-        "hyperRef": "/plugins/SoundReactivePlug.html"
-    }, {
-        "title": "Sunrise Plugin",
-        "hyperRef": "/plugins/SunrisePlugin.html"
-    }, {
-        "title": "SysMsg Plugin",
-        "hyperRef": "/plugins/SysMsgPlugin.html"
-    }, {
-        "title": "TempHumid Plugin",
-        "hyperRef": "/plugins/TempHumidPlugin.html"
-    }, {
-        "title": "Test Plugin",
-        "hyperRef": "/plugins/TestPlugin.html"
-    }, {
-        "title": "ThreeIcon Plugin",
-        "hyperRef": "/plugins/ThreeIconPlugin.html"
-    }, {
-        "title": "Volumio Plugin",
-        "hyperRef": "/plugins/VolumioPlugin.html"
-    }, {
-        "title": "WifiStatus Plugin",
-        "hyperRef": "/plugins/WifiStatusPlugin.html"
-    }]
+    "subMenu": []
 }, {
     "title": "Settings",
     "hyperRef": "/settings.html"
@@ -110,6 +41,18 @@ menu.captivePortal = [{
     "title": "About",
     "hyperRef": "/about.html"
 }];
+
+menu.addSubMenu = function(menuData, title, subMenu) {
+    var index = 0;
+
+    for(index = 0; index < menuData.length; ++index)
+    {
+        if (menuData[index].title === title) {
+            menuData[index].subMenu = menuData[index].subMenu.concat(subMenu);
+            break;
+        }
+    }
+}
 
 menu.create = function(ulId, menuData) {
     var index = 0;
@@ -150,7 +93,7 @@ menu._createSubMenu = function(ulId, menuItem) {
                     .attr("aria-expanded", "false")
                     .text(menuItem.title);
     var div         = $("<div>")
-                    .attr("class", "dropdown-menu")
+                    .attr("class", "dropdown-menu scrollable-menu")
                     .attr("aria-labelledby", menuItem.title + "-dropdown");
     var index       = 0;
 

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "WiFiUtil.h"
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -72,29 +73,45 @@
 
 extern uint8_t WiFiUtil::getSignalQuality(int8_t rssi)
 {
-    uint8_t         signalQuality   = 0U;
-    const int8_t    RSSI_INVALID    = 0;    // Invalid dBm value
-    const int8_t    RSSI_HIGH       = -50;  // dBm
-    const int8_t    RSSI_UNUSABLE   = -100; // dBm
+    uint8_t         signalQuality       = 0U;
+    const int8_t    RSSI_INVALID        = 0;    /* Invalid dBm value */
+    const int8_t    RSSI_HIGH           = -50;  /* dBm */
+    const int8_t    RSSI_UNUSABLE       = -100; /* dBm */
+    const uint8_t   SIGNAL_QUALITY_FULL = 100U; /* % */
+    const uint8_t   SIGNAL_QUALITY_BAD  = 0U;   /* % */
+    const uint8_t   CONVERSION_FACTOR   = 100U / static_cast<uint8_t>(RSSI_HIGH - RSSI_UNUSABLE);
 
     if (RSSI_INVALID == rssi)
     {
-        signalQuality = 0U;
+        signalQuality = SIGNAL_QUALITY_BAD;
     }
     else if (RSSI_HIGH <= rssi)
     {
-        signalQuality = 100U;
+        signalQuality = SIGNAL_QUALITY_FULL;
     }
     else if (RSSI_UNUSABLE >= rssi)
     {
-        signalQuality = 0U;
+        signalQuality = SIGNAL_QUALITY_BAD;
     }
     else
     {
-        signalQuality = static_cast<uint8_t>(2 * (rssi + 100));
+        signalQuality = static_cast<uint8_t>(rssi - RSSI_HIGH) * CONVERSION_FACTOR;
     }
 
     return signalQuality;
+}
+
+extern void WiFiUtil::addDeviceUniqueId(String& dst)
+{
+    /* Use the last 4 bytes of the wifi MAC address to generate a unique id. */
+    String uniqueId = WiFi.macAddress();
+
+    uniqueId.replace(":", "");
+    uniqueId.toLowerCase();
+    uniqueId.remove(0U, 4U);
+
+    dst += "-";
+    dst += uniqueId;
 }
 
 /******************************************************************************

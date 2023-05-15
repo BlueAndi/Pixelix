@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -105,8 +105,6 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
 
     m_isError   = false;
     m_slotId    = SlotList::SLOT_ID_INVALID;
-
-    return;
 }
 
 void WsCmdUninstall::setPar(const char* par)
@@ -126,8 +124,6 @@ void WsCmdUninstall::setPar(const char* par)
             m_isError = true;
         }
     }
-
-    return;
 }
 
 /******************************************************************************

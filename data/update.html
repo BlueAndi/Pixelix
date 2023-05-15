@@ -31,6 +31,21 @@
 
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
+            <!-- Dialog -->
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header" id="dialogHeader">
+                            <h5 class="modal-title" id="dialogTitle"></h5>
+                        </div>
+                        <div class="modal-body text-dark" id="dialogBody">
+                        </div>
+                        <div class="modal-footer text-dark" id="dialogFooter">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main view -->
             <div class="container">
                 <h1 class="mt-5">Update</h1>
 
@@ -89,18 +104,20 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2022 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.0.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
         <!-- Pixelix utilities -->
         <script type="text/javascript" src="/js/utils.js"></script>
+        <script type="text/javascript" src="/js/dialog.js"></script>
         <!-- Pixelix REST API -->
         <script type="text/javascript" src="/js/rest.js"></script>
         <!-- Zip library-->
@@ -162,7 +179,7 @@
 
                 if (0 === files.length) {
 
-                    alert("No file selected.");
+                    dialog.showWarning("<p>No file selected.</p>");
 
                 } else {
 
@@ -185,9 +202,9 @@
                         headers: fileHeaders,
                         onProgress: updateProgress
                     }).then(function(rsp) {
-                        alert("Upload successful.");
+                        dialog.showInfo("<p>Upload successful.</p>")
                     }).catch(function(rsp) {
-                        alert("Error: " + rsp);
+                        dialog.showError("<p>Error: " + rsp + "</p>")
                     }).finally(function() {
                         enableUI();
                     });
@@ -223,18 +240,40 @@
             }
 
             function downloadWithBlob(fileUrlList) {
-                fileUrlList.forEach(function(fileUrl, index){
-                    var filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf('/') + 1);
-                    zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary:true });
-                });
-                zip.generateAsync({ type:'blob' }).then(function(content) {
-                    saveAs(content, "backup.zip");
+                return new Promise(function(resolve, reject) {
+                    fileUrlList.forEach(function(fileUrl, index){
+                        var filenameOnly = fileUrl.name.substring(fileUrl.name.lastIndexOf('/') + 1);
+                        zip.file(filenameOnly, urlToPromise(fileUrl.url), { binary:true });
+                    });
+                    zip.generateAsync({ type:'blob' }).then(function(content) {
+                        var date = new Date();
+                        var day = date.getDate();
+                        day = ((day < 10) ? '0' : '') + day;
+                        var month = date.getMonth() + 1;
+                        month = ((month < 10) ? '0' : '') + month;
+                        var year = date.getFullYear();
+                        var hour = date.getHours();
+                        hour = ((hour < 10) ? '0' : '') + hour;
+                        var minutes = date.getMinutes();
+                        minutes = ((minutes < 10) ? '0' : '') + minutes;
+                        var seconds = date.getSeconds();
+                        seconds = ((seconds < 10) ? '0' : '') + seconds;
+                        var filename = year + month + day + "_" + hour + minutes + seconds + "_backup.zip";
+                        saveAs(content, filename);
+                        resolve();
+                    });
                 });
             }
 
             function backup() {
-                getConfigurationFiles().then(function(fileUrlList) {
-                    downloadWithBlob(fileUrlList);
+                dialog.show("Backup", "<p>Please wait, backup is in progress.</p>").then(function() {
+                    return getConfigurationFiles();
+                }).then(function(fileUrlList) {
+                    return downloadWithBlob(fileUrlList);
+                }).then(function() {
+                    dialog.showInfo("<p>Backup successful.</p>");
+                }).catch(function() {
+                    dialog.showError("<p>Backup failed.</p>");
                 });
             }
 
@@ -243,7 +282,7 @@
 
                 if (0 === elem.files.length) {
 
-                    alert("No file selected.");
+                    dialog.showWarning("<p>No file selected.</p>");
 
                 } else {
                     var file        = elem.files[0];
@@ -251,13 +290,13 @@
 
                     if (false === file.name.endsWith(".zip")) {
 
-                        alert("Unknown file: " + file.name);
+                        dialog.showError("<p>Unknown file: " + file.name + "</p>");
 
                     } else {
 
-                        disableUI();
-
-                        zip.loadAsync(file).then(function(zipObj) {
+                        dialog.show("Restore", "<p>Please wait, restore is in progress.</p>").then(function() {
+                            return zip.loadAsync(file);
+                        }).then(function(zipObj) {
                             var files = Object.keys(zipObj.files);
                             var promiseChain = Promise.resolve();
 
@@ -285,8 +324,10 @@
                             });
 
                             return promiseChain;
-                        }).finally(function() {
-                            enableUI();
+                        }).then(function() {
+                            dialog.showInfo("<p>Restore successful.</p>");
+                        }).catch(function() {
+                            dialog.showError("<p>Restore failed.</p>");
                         });
                     }
                 }
@@ -294,6 +335,7 @@
 
             /* Execute after page is ready. */
             $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
                 
                 $("#inputFile").on("change", function() {

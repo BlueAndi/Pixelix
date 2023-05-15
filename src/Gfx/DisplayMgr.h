@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef __DISPLAYMGR_H__
-#define __DISPLAYMGR_H__
+#ifndef DISPLAYMGR_H
+#define DISPLAYMGR_H
 
 /******************************************************************************
  * Compile Switches
@@ -508,24 +508,12 @@ private:
      * @param[in]   parameters  Task pParameters
      */
     static void updateTask(void* parameters);
-
-    /**
-     * Load display slot configuration from persistent memory.
-     * 
-     * @return If successful it will return true otherwise false.
-     */
-    bool load();
-
-    /**
-     * Save display slot configuration to persistent memory.
-     */
-    void save();
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* __DISPLAYMGR_H__ */
+#endif  /* DISPLAYMGR_H */
 
 /** @} */
