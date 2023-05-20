@@ -219,43 +219,43 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo()
         jsonDoc.clear();
 
         /* Entity name */
-        jsonDoc["name"]                         = "MQTT text";
-        /* The object id is used to generate the entity id. */
-        jsonDoc["object_id"]                    = mqttDiscoveryInfo->objectId;
-        /* The unique id identifies the device and its entity. */
-        jsonDoc["unique_id"]                    = mqttDiscoveryInfo->nodeId + "/" + mqttDiscoveryInfo->objectId;
+        jsonDoc["name"]                 = "MQTT text";
+        /* The object id (object_id) is used to generate the entity id. */
+        jsonDoc["obj_id"]               = mqttDiscoveryInfo->objectId;
+        /* The unique id (unique_id) identifies the device and its entity. */
+        jsonDoc["uniq_id"]              = mqttDiscoveryInfo->nodeId + "/" + mqttDiscoveryInfo->objectId;
         /* Device identifier */
-        jsonDoc["device"]["identifiers"]        = WiFi.macAddress();
-        /* URL to configuration of the device. */
-        jsonDoc["device"]["configuration_url"]  = String("http://") + WiFi.localIP().toString();
+        jsonDoc["dev"]["identifiers"]   = WiFi.macAddress();
+        /* URL to configuration of the device (configuration_url). */
+        jsonDoc["dev"]["cu"]            = String("http://") + WiFi.localIP().toString();
         /* Name of the device. */
-        jsonDoc["device"]["name"]               = mqttDiscoveryInfo->nodeId;
-        /* Device model name */
-        jsonDoc["device"]["model"]              = "Pixelix";
-        /* Manufacturer */
-        jsonDoc["device"]["manufacturer"]       = "BlueAndi & Friends";
-        /* SW version of the device*/
-        jsonDoc["device"]["sw_version"]         = QUOTE(SW_VERSION);
+        jsonDoc["dev"]["name"]          = mqttDiscoveryInfo->nodeId;
+        /* Device model name (model) */
+        jsonDoc["dev"]["mdl"]           = "Pixelix";
+        /* Manufacturer (manufacturer) */
+        jsonDoc["dev"]["mf"]            = "BlueAndi & Friends";
+        /* SW version of the device (sw_version) */
+        jsonDoc["dev"]["sw"]            = QUOTE(SW_VERSION);
 
         /* Readable topic? */
         if (false == mqttDiscoveryInfo->stateTopic.isEmpty())
         {
-            jsonDoc["state_topic"] = mqttDiscoveryInfo->stateTopic;
+            jsonDoc["stat_t"] = mqttDiscoveryInfo->stateTopic;
 
             if (false == mqttDiscoveryInfo->valueTemplate.isEmpty())
             {
-                jsonDoc["value_template"] = mqttDiscoveryInfo->valueTemplate;
+                jsonDoc["val_tpl"] = mqttDiscoveryInfo->valueTemplate;
             }
         }
 
         /* Writeable topic? */
         if (false == mqttDiscoveryInfo->commandTopic.isEmpty())
         {
-            jsonDoc["command_topic"] = mqttDiscoveryInfo->commandTopic;
+            jsonDoc["cmd_t"] = mqttDiscoveryInfo->commandTopic;
 
             if (false == mqttDiscoveryInfo->commandTemplate.isEmpty())
             {
-                jsonDoc["command_template"] = mqttDiscoveryInfo->commandTemplate;
+                jsonDoc["cmd_tpl"] = mqttDiscoveryInfo->commandTemplate;
             }
         }
 
