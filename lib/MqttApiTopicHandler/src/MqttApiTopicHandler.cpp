@@ -85,16 +85,19 @@ void MqttApiTopicHandler::registerTopic(IPluginMaintenance* plugin, const String
     if ((nullptr != plugin) &&
         (false == topic.isEmpty()))
     {
-        String baseUriByUid = getBaseUriByUid(plugin->getUID());
+        String baseUri;
 
-        registerTopic(plugin, topic, access, extra, baseUriByUid);
-
+        /* If plugin has no alias, use the plugin UID for the base URI otherwise use the alias. */
         if (false == plugin->getAlias().isEmpty())
         {
-            String baseUriByAlias = getBaseUriByAlias(plugin->getAlias());
-
-            registerTopic(plugin, topic, access, extra, baseUriByAlias);
+            baseUri = getBaseUriByAlias(plugin->getAlias());
         }
+        else
+        {
+            baseUri = getBaseUriByUid(plugin->getUID());
+        }
+
+        registerTopic(plugin, topic, access, extra, baseUri);
     }
 }
 
@@ -103,16 +106,19 @@ void MqttApiTopicHandler::unregisterTopic(IPluginMaintenance* plugin, const Stri
     if ((nullptr != plugin) &&
         (false == topic.isEmpty()))
     {
-        String baseUriByUid = getBaseUriByUid(plugin->getUID());
+        String baseUri;
 
-        unregisterTopic(plugin, topic, baseUriByUid);
-
+        /* If plugin has no alias, use the plugin UID for the base URI otherwise use the alias. */
         if (false == plugin->getAlias().isEmpty())
         {
-            String baseUriByAlias = getBaseUriByAlias(plugin->getAlias());
-
-            unregisterTopic(plugin, topic, baseUriByAlias);
+            baseUri = getBaseUriByAlias(plugin->getAlias());
         }
+        else
+        {
+            baseUri = getBaseUriByUid(plugin->getUID());
+        }
+
+        unregisterTopic(plugin, topic, baseUri);
     }
 }
 
