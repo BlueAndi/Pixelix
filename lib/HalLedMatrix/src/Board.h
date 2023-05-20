@@ -96,6 +96,9 @@ namespace Pin
 
     /** Pin number of LDR in */
     constexpr uint8_t   ldrInPinNo              = CONFIG_PIN_LDR_IN;
+
+    /** Pin number of battery voltage in */
+    constexpr uint8_t   batteryInPinNo          = CONFIG_PIN_BATTERY_IN;
 };
 
 /* Digital output pin: Onboard LED */
@@ -115,6 +118,9 @@ extern const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
 
 /* Digital input pin: DHT Sensor (input with pull-up) */
 extern const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
+
+/* Analog input pin: battery voltage in */
+extern const AnalogPin<Pin::batteryInPinNo>             batteryVoltageIn;
 
 /** ADC resolution in digits */
 constexpr uint16_t  adcResolution               = 4096U;

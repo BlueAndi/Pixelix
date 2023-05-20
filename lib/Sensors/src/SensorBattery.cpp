@@ -25,20 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Sensors
+ * @brief  Battery state of charge driver
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Sensors.h"
+#include "SensorBattery.h"
 
-#include <Util.h>
-#include <SensorLdr.h>
-#include <SensorSht3X.h>
-#include <SensorDhtX.h>
-#include <SensorBattery.h>
+#include <Board.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -60,33 +56,79 @@
  * Local Variables
  *****************************************************************************/
 
-/** The LDR is used for automatic display brightness control. */
-static SensorLdr        gLdr(CONFIG_SENSOR_LDR, CONFIG_SENSOR_LDR_SERIES_RESISTANCE);
-
-/** The SHT3x sensor in autodetect mode (for two-wire sensors only). */
-static SensorSht3X      gSht3x(SHTSensor::AUTO_DETECT);
-
-/** The DHT11 sensor. */
-static SensorDhtX       gDht11(SensorDhtX::MODEL_DHT11);
-
-/** Battery sensor. */
-static SensorBattery    gBattery;
-
-/** A list with all registered sensors. */
-static ISensor*         gSensors[] =
-{
-    &gLdr,
-    &gSht3x,
-    &gDht11,
-    &gBattery
-};
-
-/** The concrete sensor data provider implementation. */
-static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors));
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+uint32_t BatteryChannelSoC::getValue()
+{
+    return m_driver->getStateOfCharge() + m_offset;
+}
+
+void SensorBattery::begin()
+{
+    if (IoPin::NC != Board::batteryVoltageIn.getPinNo())
+    {
+        m_isAvailable = true;
+    }
+}
+
+bool SensorBattery::isAvailable() const
+{
+    return m_isAvailable;
+}
+
+ISensorChannel* SensorBattery::getChannel(uint8_t index)
+{
+    ISensorChannel* channel = nullptr;
+
+    if (true == m_isAvailable)
+    {
+        if (0U == index)
+        {
+            channel = &m_socChannel;
+        }
+    }
+
+    return channel;
+}
+
+float SensorBattery::getStateOfCharge()
+{
+    const uint16_t  ADC_BATTERY_VOLTAGE = Board::batteryVoltageIn.read();
+    uint32_t        stateOfCharge       = 0U;
+
+    if (true == m_isInit)
+    {
+        m_batteryRaw = ADC_BATTERY_VOLTAGE;
+        m_isInit = false;
+    }
+    else
+    {
+        /* Simple moving average.
+         * 75% of original value
+         * 25% of new value
+         */
+        m_batteryRaw -= m_batteryRaw / 4U;
+        m_batteryRaw += ADC_BATTERY_VOLTAGE / 4U;
+    }
+
+    if (ADC_RAW_FULL <= m_batteryRaw)
+    {
+        stateOfCharge = 100U;
+    }
+    else if (ADC_RAW_EMPTY < m_batteryRaw)
+    {
+        stateOfCharge = m_batteryRaw - ADC_RAW_EMPTY;
+        stateOfCharge /= ADC_RAW_FULL - ADC_RAW_EMPTY;
+    }
+    else
+    {
+        ;
+    }
+
+    return stateOfCharge;
+}
 
 /******************************************************************************
  * Protected Methods
@@ -99,11 +141,6 @@ static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM
 /******************************************************************************
  * External Functions
  *****************************************************************************/
-
-extern SensorDataProviderImpl* Sensors::getSensorDataProviderImpl()
-{
-    return &gSensorDataProviderImpl;
-}
 
 /******************************************************************************
  * Local Functions

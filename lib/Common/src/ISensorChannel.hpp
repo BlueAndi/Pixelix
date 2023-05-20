@@ -80,7 +80,8 @@ public:
         TYPE_RAW_NONE = 0,                  /**< Raw digits */
         TYPE_TEMPERATURE_DEGREE_CELSIUS,    /**< Temperature in [°C] */
         TYPE_HUMIDITY_PERCENT,              /**< Humidity in [%] */
-        TYPE_ILLUMINANCE_LUX                /**< Illuminance in [lux] */
+        TYPE_ILLUMINANCE_LUX,               /**< Illuminance in [lux] */
+        TYPE_STATE_OF_CHARGE_PERCENT        /**< State of Charge in [%] */
     };
 
     /**
@@ -142,6 +143,10 @@ public:
             name = "illuminance";
             break;
 
+        case ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT:
+            name = "soc";
+            break;
+
         default:
             break;
         }
@@ -177,6 +182,10 @@ public:
 
         case ISensorChannel::TYPE_ILLUMINANCE_LUX:
             unit = "lux";
+            break;
+
+        case ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT:
+            unit = "%";
             break;
 
         default:
