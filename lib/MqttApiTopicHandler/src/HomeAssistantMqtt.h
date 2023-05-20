@@ -149,6 +149,7 @@ private:
         String  valueTemplate;      /**< Value template to extract the text state value */
         String  commandTopic;       /**< Command topic */
         String  commandTemplate;    /**< Command template to generate payload to send to command topic */
+        String  icon;               /**< Icon name from MaterialDesignIcons.com */
         bool    isReqToPublish;     /**< Is requested to publish this discovery info? */
 
         /** Construct Home Assistant MQTT discovery information. */
@@ -160,6 +161,7 @@ private:
             valueTemplate(),
             commandTopic(),
             commandTemplate(),
+            icon(),
             isReqToPublish(true)
         {
         }

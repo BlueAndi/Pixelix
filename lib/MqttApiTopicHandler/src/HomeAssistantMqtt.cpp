@@ -139,6 +139,7 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String
             JsonVariantConst    jsonComponent       = jsonHomeAssistant["component"];
             JsonVariantConst    jsonCommandTemplate = jsonHomeAssistant["commandTemplate"];
             JsonVariantConst    jsonValueTemplate   = jsonHomeAssistant["valueTemplate"];
+            JsonVariantConst    jsonIcon            = jsonHomeAssistant["icon"];
 
             if (true == jsonComponent.is<String>())
             {
@@ -162,6 +163,12 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String
                     if (true == jsonValueTemplate.is<String>())
                     {
                         mqttDiscoveryInfo->valueTemplate = jsonValueTemplate.as<String>();
+                    }
+
+                    /* Icon is optional */
+                    if (true == jsonIcon.is<String>())
+                    {
+                        mqttDiscoveryInfo->icon = jsonIcon.as<String>();
                     }
 
                     m_mqttDiscoveryInfoList.push_back(mqttDiscoveryInfo);
@@ -284,6 +291,12 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
     jsonDoc["dev"]["mf"]            = "BlueAndi & Friends";
     /* SW version of the device (sw_version) */
     jsonDoc["dev"]["sw"]            = QUOTE(SW_VERSION);
+
+    /* Entity icon available? */
+    if (false == mqttDiscoveryInfo.icon.isEmpty())
+    {
+        jsonDoc["icon"] = mqttDiscoveryInfo.icon;
+    }
 
     /* Readable topic? */
     if (false == mqttDiscoveryInfo.stateTopic.isEmpty())

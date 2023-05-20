@@ -89,6 +89,7 @@ void JustTextPlugin::getTopics(JsonArray& topics) const
     jsonText["ha"]["component"]         = "text";
     jsonText["ha"]["commandTemplate"]   = "{\"text\": \"{{ value }}\" }";
     jsonText["ha"]["valueTemplate"]     = "{{ value_json.text }}";
+    jsonText["ha"]["icon"]              = "mdi:form-textbox";
 }
 
 bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const
