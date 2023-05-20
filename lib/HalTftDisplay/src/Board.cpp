@@ -71,6 +71,9 @@ const AnalogPin<Pin::ldrInPinNo>                 Board::ldrIn;
 /** Digital input pin: DHT Sensor (input with pull-up) */
 const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      Board::dhtIn;
 
+/** Analog input pin: battery voltage in */
+const AnalogPin<Pin::batteryInPinNo>             Board::batteryVoltageIn;
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -81,7 +84,8 @@ static const IoPin* ioPinList[] =
     &onBoardLedOut,
     &userButtonIn,
     &ldrIn,
-    &dhtIn
+    &dhtIn,
+    &batteryVoltageIn
 };
 
 /******************************************************************************
