@@ -174,6 +174,16 @@ private:
      * Clear MQTT discovery info list.
      */
     void clearMqttDiscoveryInfoList();
+
+    /**
+     * Get the discovery configuration topic.
+     * 
+     * @param[out]  haConfigTopic   Discovery configuration topic
+     * @param[in]   component       Home Assistant component
+     * @param[in]   nodeId          Home Assistant node id
+     * @param[in]   objectId        Home Assistant object id
+     */
+    void getConfigTopic(String& haConfigTopic, const String& component, const String& nodeId, const String& objectId);
 };
 
 /******************************************************************************

@@ -173,6 +173,21 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& nodeId, const Stri
                 (stateTopic == mqttDiscoveryInfo->stateTopic) &&
                 (cmdTopic == mqttDiscoveryInfo->commandTopic))
             {
+                MqttService&    mqttService = MqttService::getInstance();
+                String          mqttTopic;
+
+                getConfigTopic(mqttTopic, mqttDiscoveryInfo->component, mqttDiscoveryInfo->nodeId, mqttDiscoveryInfo->objectId);
+
+                /* Purge discovery info. */
+                if (false == mqttService.publish(mqttTopic, ""))
+                {
+                    LOG_WARNING("[%s] Failed to purge HA discovery info.", mqttDiscoveryInfo->objectId.c_str());
+                }
+                else
+                {
+                    LOG_INFO("[%s] HA discovery info purged.", mqttDiscoveryInfo->objectId.c_str());
+                }
+
                 listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.erase(listOfMqttDiscoveryInfoIt);
 
                 delete mqttDiscoveryInfo;
@@ -196,16 +211,10 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo()
     while(m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
     {
         MqttDiscoveryInfo*  mqttDiscoveryInfo   = *listOfMqttDiscoveryInfoIt;
-        String              mqttTopic           = m_haDiscoveryPrefix;
+        String              mqttTopic;
         String              discoveryInfo;
 
-        mqttTopic += "/";
-        mqttTopic += mqttDiscoveryInfo->component;
-        mqttTopic += "/";
-        mqttTopic += mqttDiscoveryInfo->nodeId;
-        mqttTopic += "/";
-        mqttTopic += mqttDiscoveryInfo->objectId;
-        mqttTopic += "/config";
+        getConfigTopic(mqttTopic, mqttDiscoveryInfo->component, mqttDiscoveryInfo->nodeId, mqttDiscoveryInfo->objectId);
 
         jsonDoc.clear();
 
@@ -291,6 +300,18 @@ void HomeAssistantMqtt::clearMqttDiscoveryInfoList()
             mqttDiscoveryInfo = nullptr;
         }
     }
+}
+
+void HomeAssistantMqtt::getConfigTopic(String& haConfigTopic, const String& component, const String& nodeId, const String& objectId)
+{
+    haConfigTopic  = m_haDiscoveryPrefix;
+    haConfigTopic += "/";
+    haConfigTopic += component;
+    haConfigTopic += "/";
+    haConfigTopic += nodeId;
+    haConfigTopic += "/";
+    haConfigTopic += objectId;
+    haConfigTopic += "/config";
 }
 
 /******************************************************************************
