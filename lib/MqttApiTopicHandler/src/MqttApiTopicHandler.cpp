@@ -174,13 +174,8 @@ void MqttApiTopicHandler::process()
         ++topicStateIt;
     }
 
-    /* Publish Home Assistant auto discovery information after connection
-     * establishment to the MQTT broker.
-     */
-    if (true == publishAll)
-    {
-        m_haExtension.publishAutoDiscoveryInfo();
-    }
+    /* Process Home Assistant extension. */
+    m_haExtension.process(m_isMqttConnected);
 }
 
 void MqttApiTopicHandler::notify(IPluginMaintenance* plugin, const String& topic)
@@ -461,6 +456,16 @@ void MqttApiTopicHandler::unregisterTopic(IPluginMaintenance* plugin, const Stri
                     (ACCESS_READ_WRITE == topicState->access))
                 {
                     topicUriReadable = topicUri + MQTT_ENDPOINT_READ_ACCESS;
+
+                    /* Purge topic */
+                    if (false == mqttService.publish(topicUriReadable, ""))
+                    {
+                        LOG_WARNING("[%u] Failed to purge: %s", plugin->getUID(), topicUriReadable.c_str());
+                    }
+                    else
+                    {
+                        LOG_INFO("[%u] Purged: %s", plugin->getUID(), topicUriReadable.c_str());
+                    }
                 }
                 
                 if ((ACCESS_READ_WRITE == topicState->access) ||

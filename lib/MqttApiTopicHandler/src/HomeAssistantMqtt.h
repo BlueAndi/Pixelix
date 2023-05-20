@@ -69,7 +69,8 @@ public:
      */
     HomeAssistantMqtt() :
         m_haDiscoveryPrefixSetting(KEY_HA_DISCOVERY_PREFIX, NAME_HA_DISCOVERY_PREFIX, DEFAULT_HA_DISCOVERY_PREFIX, MIN_VALUE_HA_DISCOVERY_PREFIX, MAX_VALUE_HA_DISCOVERY_PREFIX),
-        m_haDiscoveryPrefix()
+        m_haDiscoveryPrefix(),
+        m_isConnected(false)
     {
     }
 
@@ -90,6 +91,13 @@ public:
      * Stop the Home Assistant extension.
      */
     void stop();
+
+    /**
+     * Process the Home Assistant extension.
+     * 
+     * @param[in] isConnected   Is a MQTT broker connection established?
+     */
+    void process(bool isConnected);
 
     /**
      * Register Home Assistant MQTT discovery.
@@ -113,11 +121,6 @@ public:
      * @param[in]   cmdTopic    The MQTT command topic.
      */
     void unregisterMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic);
-
-    /**
-     * Publish the MQTT auto discovery information.
-     */
-    void publishAutoDiscoveryInfo();
 
 private:
 
@@ -146,6 +149,7 @@ private:
         String  valueTemplate;      /**< Value template to extract the text state value */
         String  commandTopic;       /**< Command topic */
         String  commandTemplate;    /**< Command template to generate payload to send to command topic */
+        bool    isReqToPublish;     /**< Is requested to publish this discovery info? */
 
         /** Construct Home Assistant MQTT discovery information. */
         MqttDiscoveryInfo() :
@@ -155,7 +159,8 @@ private:
             stateTopic(),
             valueTemplate(),
             commandTopic(),
-            commandTemplate()
+            commandTemplate(),
+            isReqToPublish(true)
         {
         }
     };
@@ -166,6 +171,7 @@ private:
     KeyValueString          m_haDiscoveryPrefixSetting; /**< Setting for the Home Assistant MQTT discovery prefix. */
     String                  m_haDiscoveryPrefix;        /**< Home Assistant MQTT discovery prefix. */
     ListOfMqttDiscoveryInfo m_mqttDiscoveryInfoList;    /**< List of Home Assistant MQTT discovery informations. */
+    bool                    m_isConnected;              /**< Is MQTT broker connection established? */
 
     HomeAssistantMqtt(const HomeAssistantMqtt& ext);
     HomeAssistantMqtt& operator=(const HomeAssistantMqtt& ext);
@@ -184,6 +190,18 @@ private:
      * @param[in]   objectId        Home Assistant object id
      */
     void getConfigTopic(String& haConfigTopic, const String& component, const String& nodeId, const String& objectId);
+
+    /**
+     * Publish the MQTT auto discovery information.
+     */
+    void publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscoveryInfo);
+
+    /**
+     * Publish all MQTT auto discovery informations, which are requested.
+     * 
+     * @param[in] force If set to true, all will be published independed whether requested or not.
+     */
+    void publishAllAutoDiscoveryInfo(bool force);
 };
 
 /******************************************************************************
