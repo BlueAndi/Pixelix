@@ -61,7 +61,7 @@
 template < FFTWindow windowType >
 struct WindowCorrection
 {
-    /* No implementation to force a compile errr. */
+    /* No implementation to force a compile error. */
 };
 
 /**
