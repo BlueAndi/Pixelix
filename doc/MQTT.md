@@ -5,16 +5,16 @@
 
 # Plugin development <!-- omit in toc -->
 
-- [MQTT](#mqtt)
-- [Overview Mindmap](#overview-mindmap)
-- [MQTT Topics](#mqtt-topics)
-  - [Notifications: \<HOSTNAME\>](#notifications-hostname)
-  - [Plugin base URI](#plugin-base-uri)
-  - [Topic name](#topic-name)
-  - [Sending a bitmap](#sending-a-bitmap)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [MQTT](#mqtt)
+* [Overview Mindmap](#overview-mindmap)
+* [MQTT Topics](#mqtt-topics)
+  * [Birth and last will](#birth-and-last-will)
+  * [Plugin base URI](#plugin-base-uri)
+  * [Topic name](#topic-name)
+  * [Sending a bitmap](#sending-a-bitmap)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # MQTT
 Pixelix is a MQTT client which can be connected to a MQTT broker. The MQTT broker URL is configued in the settings via webinterface.
@@ -35,8 +35,10 @@ Examples:
 
 # MQTT Topics
 
-## Notifications: &lt;HOSTNAME&gt;
-After the successful connection establishment to the MQTT broker, Pixelix will send "Obi Wan Kenobi" to the &lt;HOSTNAME&gt; topic.
+## Birth and last will
+Pixelix supports birth and last will messages.
+
+After the successful connection establishment to the MQTT broker, Pixelix will send "online" to the &lt;HOSTNAME&gt;/status topic. In any disconnect case, "offline" will be sent to the &lt;HOSTNAME&gt;/status topic.
 
 ## Plugin base URI
 The base URI to access plugin related topics can be setup with the plugin UID or the plugin alias:

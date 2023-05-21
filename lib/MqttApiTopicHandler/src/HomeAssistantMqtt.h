@@ -104,13 +104,14 @@ public:
      * It will not publish, just prepare the MQTT discovery information
      * and hold it internally.
      * 
-     * @param[in]   nodeId      ID of the node providing the topic.
-     * @param[in]   objectId    ID of the object to divide between topics.
-     * @param[in]   stateTopic  The MQTT status topic.
-     * @param[in]   cmdTopic    The MQTT command topic.
-     * @param[in]   extra       Extra parameters used by this extension.
+     * @param[in]   nodeId              ID of the node providing the topic.
+     * @param[in]   objectId            ID of the object to divide between topics.
+     * @param[in]   stateTopic          The MQTT status topic.
+     * @param[in]   cmdTopic            The MQTT command topic.
+     * @param[in]   availabilityTopic   The MQTT availability topic.
+     * @param[in]   extra               Extra parameters used by this extension.
      */
-    void registerMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic, JsonObjectConst& extra);
+    void registerMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic, const String& availabilityTopic, JsonObjectConst& extra);
 
     /**
      * Unregister Home Assistant MQTT discovery.
@@ -149,6 +150,7 @@ private:
         String  valueTemplate;      /**< Value template to extract the text state value */
         String  commandTopic;       /**< Command topic */
         String  commandTemplate;    /**< Command template to generate payload to send to command topic */
+        String  availabilityTopic;  /**< Availability topic */
         String  icon;               /**< Icon name from MaterialDesignIcons.com */
         bool    isReqToPublish;     /**< Is requested to publish this discovery info? */
 
@@ -161,6 +163,7 @@ private:
             valueTemplate(),
             commandTopic(),
             commandTemplate(),
+            availabilityTopic(),
             icon(),
             isReqToPublish(true)
         {

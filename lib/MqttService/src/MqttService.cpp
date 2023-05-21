@@ -61,7 +61,6 @@
 const char* MqttService::KEY_MQTT_BROKER_URL        = "mqtt_broker_url";
 const char* MqttService::NAME_MQTT_BROKER_URL       = "MQTT broker URL";
 const char* MqttService::DEFAULT_MQTT_BROKER_URL    = "";
-const char* MqttService::HELLO_WORLD                = "Obi Wan Kenobi";
 
 /******************************************************************************
  * Public Methods
@@ -298,21 +297,22 @@ void MqttService::disconnectedState()
 
         if (true == connectNow)
         {
-            bool isConnected = false;
+            bool    isConnected = false;
+            String  willTopic   = m_hostname + "/status";
 
             /* Authentication necessary? */
             if (false == m_user.isEmpty())
             {
                 LOG_INFO("Connect to %s as %s with %s.", m_url.c_str(), m_user.c_str(), m_hostname.c_str());
 
-                isConnected = m_mqttClient.connect(m_hostname.c_str(), m_user.c_str(), m_password.c_str());
+                isConnected = m_mqttClient.connect(m_hostname.c_str(), m_user.c_str(), m_password.c_str(), willTopic.c_str(), 0, true, "offline");
             }
             /* Connect anonymous */
             else
             {
                 LOG_INFO("Connect anyonymous to %s with %s.", m_url.c_str(), m_hostname.c_str());
 
-                isConnected = m_mqttClient.connect(m_hostname.c_str());
+                isConnected = m_mqttClient.connect(m_hostname.c_str(), nullptr, nullptr, willTopic.c_str(), 0, true, "offline");
             }
 
             /* Connection to broker failed? */
@@ -324,12 +324,15 @@ void MqttService::disconnectedState()
             /* Connection to broker successful. */
             else
             {
+                String willTopic = m_hostname + "/status";
+
                 LOG_INFO("Connection to MQTT broker established.");
 
                 m_state = STATE_CONNECTED;
                 m_reconnectTimer.stop();
 
-                (void)m_mqttClient.publish(m_hostname.c_str(), HELLO_WORLD);
+                /* Provide online status */
+                (void)m_mqttClient.publish(willTopic.c_str(), "online", true);
                 
                 resubscribe();
             }

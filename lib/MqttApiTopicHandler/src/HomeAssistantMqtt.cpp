@@ -124,7 +124,7 @@ void HomeAssistantMqtt::process(bool isConnected)
     m_isConnected = isConnected;
 }
 
-void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic, JsonObjectConst& extra)
+void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic, const String& availabilityTopic, JsonObjectConst& extra)
 {
     /* The Home Assistant discovery prefix must be available, otherwise this
      * feature is disabled.
@@ -147,11 +147,12 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String
 
                 if (nullptr != mqttDiscoveryInfo)
                 {
-                    mqttDiscoveryInfo->component    = jsonComponent.as<String>();
-                    mqttDiscoveryInfo->nodeId       = nodeId;
-                    mqttDiscoveryInfo->objectId     = objectId;
-                    mqttDiscoveryInfo->stateTopic   = stateTopic;
-                    mqttDiscoveryInfo->commandTopic = cmdTopic;
+                    mqttDiscoveryInfo->component            = jsonComponent.as<String>();
+                    mqttDiscoveryInfo->nodeId               = nodeId;
+                    mqttDiscoveryInfo->objectId             = objectId;
+                    mqttDiscoveryInfo->stateTopic           = stateTopic;
+                    mqttDiscoveryInfo->commandTopic         = cmdTopic;
+                    mqttDiscoveryInfo->availabilityTopic    = availabilityTopic;
 
                     /* Command template is optional */
                     if (true == jsonCommandTemplate.is<String>())
@@ -319,6 +320,9 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
             jsonDoc["cmd_tpl"] = mqttDiscoveryInfo.commandTemplate;
         }
     }
+
+    /* Set availability topic (availability_topic) */
+    jsonDoc["avty_t"] = mqttDiscoveryInfo.availabilityTopic;
 
     /* Send the JSON as string. */
     if (0U < serializeJson(jsonDoc, discoveryInfo))

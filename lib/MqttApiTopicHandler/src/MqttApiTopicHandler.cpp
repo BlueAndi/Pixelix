@@ -331,9 +331,10 @@ void MqttApiTopicHandler::registerTopic(IPluginMaintenance* plugin, const String
 
                 if (0 <= dividerIdx)
                 {
-                    String haObjectId = baseUri.substring(dividerIdx + 1);
+                    String  haObjectId   = baseUri.substring(dividerIdx + 1);
+                    String  willTopic    = m_hostname + "/status";
 
-                    m_haExtension.registerMqttDiscovery(m_hostname, haObjectId, topicUriReadable, topicUriWriteable, extra);
+                    m_haExtension.registerMqttDiscovery(m_hostname, haObjectId, topicUriReadable, topicUriWriteable, willTopic, extra);
                 }
             }
 
