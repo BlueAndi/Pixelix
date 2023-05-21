@@ -341,10 +341,8 @@ void OpenWeatherPlugin::process(bool isConnected)
         {
             if (false == startHttpRequest())
             {
-                /* If a request fails, show standard icon and a '?' */
-                (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-                m_textWidget.setFormatStr("\\calign?");
-
+                LOG_WARNING("Failed to request weather info.");
+                
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
             else
@@ -369,9 +367,7 @@ void OpenWeatherPlugin::process(bool isConnected)
         {
             if (false == startHttpRequest())
             {
-                /* If a request fails, show standard icon and a '?' */
-                (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-                m_textWidget.setFormatStr("\\calign?");
+                LOG_WARNING("Failed to request weather info.");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -411,10 +407,6 @@ void OpenWeatherPlugin::process(bool isConnected)
 
             if (true == m_isConnectionError)
             {
-                /* If a request fails, show standard icon and a '?' */
-                (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-                m_textWidget.setFormatStr("\\calign?");
-
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
             m_isConnectionError = false;
@@ -634,13 +626,15 @@ void OpenWeatherPlugin::updateDisplay(bool force)
                 String spriteSheetPath = m_currentWeatherIcon.substring(0U, m_currentWeatherIcon.length() - strlen(FILE_EXT_BITMAP)) + FILE_EXT_SPRITE_SHEET;
 
                 /* If there is an icon in the filesystem, it will be loaded otherwise
-                * the standard icon. First check whether it is a animated sprite sheet
-                * and if not, try to load just the bitmap image.
-                */
+                 * the standard icon. First check whether it is a animated sprite sheet
+                 * and if not, try to load just the bitmap image.
+                 */
                 if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetPath, m_currentWeatherIcon))
                 {
                     if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIcon))
                     {
+                        LOG_WARNING("Icon doesn't exists: %s", m_currentWeatherIcon.c_str());
+
                         (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
                     }
                 }
@@ -685,8 +679,15 @@ void OpenWeatherPlugin::updateDisplay(bool force)
             {
                 if (false == m_bitmapWidget.load(FILESYSTEM, iconPath))
                 {
+                    LOG_WARNING("Icon doesn't exists: %s", iconPath.c_str());
+
                     (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
                 }
+
+                /* Ensure that in case the weather icon shall be shown again,
+                 * it will be loaded.
+                 */
+                m_hasWeatherIconChanged = true;
             }
         }
 
