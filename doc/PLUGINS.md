@@ -7,38 +7,39 @@
 The content of the display can be configured by installing an individual set of plugins.
 Each plugin is identified by its unique UID.
 
-- [Generic plugins](#generic-plugins)
-  - [IconTextPlugin](#icontextplugin)
-  - [IconTextLampPlugin](#icontextlampplugin)
-  - [JustTextPlugin](#justtextplugin)
-  - [ThreeIconPlugin](#threeiconplugin)
-- [Dedicated plugins](#dedicated-plugins)
-  - [BTCQuotePlugin](#btcquoteplugin)
-  - [CountdownPlugin](#countdownplugin)
-  - [DateTimePlugin](#datetimeplugin)
-  - [DDPPlugin](#ddpplugin)
-    - [xlights Configuration](#xlights-configuration)
-  - [FirePlugin](#fireplugin)
-  - [GameOfLifePlugin](#gameoflifeplugin)
-  - [GithubPlugin](#githubplugin)
-  - [GruenbeckPlugin](#gruenbeckplugin)
-  - [MatrixPlugin](#matrixplugin)
-  - [OpenWeatherPlugin](#openweatherplugin)
-  - [RainbowPlugin](#rainbowplugin)
-  - [SensorPlugin](#sensorplugin)
-  - [ShellyPlugSPlugin](#shellyplugsplugin)
-  - [SignalDetectorPlugin](#signaldetectorplugin)
-  - [SoundReactivePlugin](#soundreactiveplugin)
-  - [SunrisePlugin](#sunriseplugin)
-  - [SysMsgPlugin](#sysmsgplugin)
-  - [TempHumidPlugin](#temphumidplugin)
-  - [TestPlugin](#testplugin)
-  - [VolumioPlugin](#volumioplugin)
-  - [WifiStatusPlugin](#wifistatusplugin)
-  - [WormPlugin](#wormplugin)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Generic plugins](#generic-plugins)
+  * [IconTextPlugin](#icontextplugin)
+  * [IconTextLampPlugin](#icontextlampplugin)
+  * [JustTextPlugin](#justtextplugin)
+  * [ThreeIconPlugin](#threeiconplugin)
+* [Dedicated plugins](#dedicated-plugins)
+  * [BatteryPlugin](#batteryplugin)
+  * [BTCQuotePlugin](#btcquoteplugin)
+  * [CountdownPlugin](#countdownplugin)
+  * [DateTimePlugin](#datetimeplugin)
+  * [DDPPlugin](#ddpplugin)
+    * [xlights Configuration](#xlights-configuration)
+  * [FirePlugin](#fireplugin)
+  * [GameOfLifePlugin](#gameoflifeplugin)
+  * [GithubPlugin](#githubplugin)
+  * [GruenbeckPlugin](#gruenbeckplugin)
+  * [MatrixPlugin](#matrixplugin)
+  * [OpenWeatherPlugin](#openweatherplugin)
+  * [RainbowPlugin](#rainbowplugin)
+  * [SensorPlugin](#sensorplugin)
+  * [ShellyPlugSPlugin](#shellyplugsplugin)
+  * [SignalDetectorPlugin](#signaldetectorplugin)
+  * [SoundReactivePlugin](#soundreactiveplugin)
+  * [SunrisePlugin](#sunriseplugin)
+  * [SysMsgPlugin](#sysmsgplugin)
+  * [TempHumidPlugin](#temphumidplugin)
+  * [TestPlugin](#testplugin)
+  * [VolumioPlugin](#volumioplugin)
+  * [WifiStatusPlugin](#wifistatusplugin)
+  * [WormPlugin](#wormplugin)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Generic plugins
 The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.3.0).
@@ -67,6 +68,9 @@ Each icon can be set separately via the [REST API](https://app.swaggerhub.com/ap
 
 # Dedicated plugins
 Dedicated plugins are plugins which only serves one single purpose thy are only internally configurable.
+
+## BatteryPlugin
+This plugin displays the battery symbol with state of charge bar.
 
 ## BTCQuotePlugin
 The BTCQuotePlugin shows the current exchange rate from Bitcoin to USD.\
