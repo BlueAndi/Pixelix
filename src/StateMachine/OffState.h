@@ -25,16 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connected
+ * @brief  System state: Off
  * @author Andreas Merkle <web@blue-andi.de>
- * 
+ *
  * @addtogroup sys_states
- * 
+ *
  * @{
  */
 
-#ifndef CONNECTEDSTATE_H
-#define CONNECTEDSTATE_H
+#ifndef OFFSTATE_H
+#define OFFSTATE_H
 
 /******************************************************************************
  * Compile Switches
@@ -43,11 +43,9 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "AsyncHttpClient.h"
-
 #include <stdint.h>
 #include <StateMachine.hpp>
-#include <WString.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -58,79 +56,70 @@
  *****************************************************************************/
 
 /**
- * System state: Connected
+ * System state: Off
  */
-class ConnectedState : public AbstractState
+class OffState : public AbstractState
 {
 public:
 
     /**
      * Get state instance.
-     * 
+     *
      * @return State instance
      */
-    static ConnectedState& getInstance()
+    static OffState& getInstance()
     {
-        static ConnectedState instance; /* singleton idiom to force initialization in the first usage. */
+        static OffState instance;   /* singleton idiom to force initialization in the first usage. */
 
         return instance;
     }
 
     /**
      * The entry is called once, a state is entered.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void entry(StateMachine& sm) final;
 
     /**
      * The process routine is called cyclic, as long as the state is active.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void process(StateMachine& sm) final;
 
     /**
      * The exit is called once, a state will be left.
-     * 
+     *
      * @param[in] sm    Responsible state machine
      */
     void exit(StateMachine& sm) final;
 
 private:
 
-    AsyncHttpClient m_client; /**< Asynchronous HTTP client. */
-
     /**
      * Constructs the state.
      */
-    ConnectedState():
-        m_client()
+    OffState()
     {
-        initHttpClient();
     }
 
     /**
      * Destroys the state.
      */
-    ~ConnectedState()
+    ~OffState()
     {
     }
 
-    ConnectedState(const ConnectedState& state);
-    ConnectedState& operator=(const ConnectedState& state);
+    OffState(const OffState& state);
+    OffState& operator=(const OffState& state);
 
-    /**
-     * Register callback function on response reception.
-     */
-    void initHttpClient(void);
-    
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* CONNECTEDSTATE_H */
+#endif  /* OFFSTATE_H */
 
 /** @} */

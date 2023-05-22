@@ -41,10 +41,15 @@
 
 #include "InitState.h"
 #include "RestartState.h"
+#include "OffState.h"
 #include "TaskMon.h"
 #include "MemMon.h"
 #include "ResetMon.h"
 #include "MiniTerminal.h"
+
+#include "ButtonDrv.h"
+#include "ButtonHandler.h"
+#include <UpdateMgr.h>
 
 /******************************************************************************
  * Macros
@@ -81,6 +86,9 @@ static LogSinkPrinter   gLogSinkSerial("Serial", &Serial);
 
 /** Websocket log sink */
 static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
+
+/** Button handler */
+static ButtonHandler    gButtonHandler;
 
 /** Serial interface baudrate. */
 static const uint32_t   SERIAL_BAUDRATE     = 115200U;
@@ -151,6 +159,11 @@ void setup()
         gSysStateMachine.process();
     }
     while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
+
+    /* Observer button state changes and derrive actions.
+     * Do this after init state!
+     */
+    ButtonDrv::getInstance().registerObserver(gButtonHandler);
 }
 
 /**
@@ -176,6 +189,23 @@ void loop()
     if (true == gTerminal.isRestartRequested())
     {
         gSysStateMachine.setState(RestartState::getInstance());
+    }
+
+    /* Handle button actions only if
+     * - No update is running.
+     * - Not in OffState.
+     * - Not in RestartState.
+     */
+    if ((false == UpdateMgr::getInstance().isUpdateRunning()) &&
+        (&OffState::getInstance() != gSysStateMachine.getState()) &&
+        (&RestartState::getInstance() != gSysStateMachine.getState()))
+    {
+        gButtonHandler.process();
+
+        if (true == gButtonHandler.isSwitchOffRequested())
+        {
+            gSysStateMachine.setState(OffState::getInstance());
+        }
     }
 
     /* Schedule other tasks with same or lower priority. */

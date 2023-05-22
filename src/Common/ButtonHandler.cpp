@@ -110,51 +110,7 @@ void ButtonHandler::process()
     {
         if (BUTTON_STATE_RELEASED == m_lastButtonInfo.state)
         {
-            const uint32_t ACTIVATE_NEXT_SLOT   = 1U;
-            const uint32_t NEXT_FADE_EFFECT     = 2U;
-            const uint32_t SHOW_IP_ADDR         = 5U;
-
-            switch(m_triggerCnt)
-            {
-            case ACTIVATE_NEXT_SLOT:
-                /* If a system message is active shown, the next one shall be shown.
-                 * Otherwise activate the next slot.
-                 */
-                if (true == SysMsg::getInstance().isActive())
-                {
-                    SysMsg::getInstance().next();
-                }
-                else
-                {
-                    DisplayMgr::getInstance().activateNextSlot();
-                }
-                break;
-
-            case NEXT_FADE_EFFECT:
-                {
-                    DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
-                    uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
-                    DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
-
-                    DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
-                }
-                break;
-
-            case SHOW_IP_ADDR:
-                {
-                    const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
-                    const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
-                    String          infoStr                 = "IP: ";
-
-                    infoStr += WiFi.localIP().toString();
-                    SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
-                }
-                break;
-
-            default:
-                break;
-            }
-
+            handleTriggers(m_triggerCnt);
             m_triggerCnt = 0U;
         }
         else if (BUTTON_STATE_PRESSED == m_lastButtonInfo.state)
@@ -218,6 +174,89 @@ void ButtonHandler::notify(ButtonState state)
     info.timestamp  = millis();
 
     (void)m_stateQueue.sendToBack(info, portMAX_DELAY);
+}
+
+void ButtonHandler::handleTriggers(uint32_t triggerCnt)
+{
+    switch(triggerCnt)
+    {
+    case TRIGGER_ACTION_ACTIVATE_NEXT_SLOT:
+        nextSlot();
+        break;
+    
+    case TRIGGER_ACTION_ACTIVATE_PREV_SLOT:
+        previousSlot();
+        break;
+
+    case TRIGGER_ACTION_NEXT_FADE_EFFECT:
+        nextFadeEffect();
+        break;
+
+    case TRIGGER_ACTION_SHOW_IP_ADDRESS:
+        showIpAddress();
+        break;
+
+    case TRIGGER_ACTION_SWITCH_OFF:
+        switchOff();
+        break;
+
+    default:
+        break;
+    }
+}
+
+void ButtonHandler::nextSlot() const
+{
+    /* If a system message is active shown, the next one shall be shown.
+     * Otherwise activate the next slot.
+     */
+    if (true == SysMsg::getInstance().isActive())
+    {
+        SysMsg::getInstance().next();
+    }
+    else
+    {
+        DisplayMgr::getInstance().activateNextSlot();
+    }
+}
+
+void ButtonHandler::previousSlot() const
+{
+    /* If a system message is active shown, the next one shall be shown.
+     * Otherwise activate the previous slot.
+     */
+    if (true == SysMsg::getInstance().isActive())
+    {
+        SysMsg::getInstance().next();
+    }
+    else
+    {
+        DisplayMgr::getInstance().activatePreviousSlot();
+    }
+}
+
+void ButtonHandler::nextFadeEffect() const
+{
+    DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
+    uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
+    DisplayMgr::FadeEffect  nextFadeEffect      = static_cast<DisplayMgr::FadeEffect>(fadeEffectId + 1U);
+
+    DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
+}
+
+void ButtonHandler::showIpAddress() const
+{
+    const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
+    const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
+    String          infoStr                 = "IP: ";
+
+    infoStr += WiFi.localIP().toString();
+    SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
+}
+
+void ButtonHandler::switchOff()
+{
+    m_isSwitchOffRequested = true;
 }
 
 /******************************************************************************

@@ -504,7 +504,7 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
     SysMsg&         sysMsg                  = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\calign\\#FF0000P\\#FFFF00I\\#00FF00X\\#00FFFFE\\#0000FFL\\#FF00FFI\\#FF0000X", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
+    sysMsg.show("\\calign\\#FFFFFF.:\\#FF0000P\\#FFFF00I\\#00FF00X\\#00FFFFE\\#0000FFL\\#FF00FFI\\#FF0000X\\#FFFFFF:.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
 
     if (false == isQuietEnabled)
     {

@@ -25,25 +25,22 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Connecting
+ * @brief  System state: Off
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "ConnectingState.h"
-#include "SysMsg.h"
-#include "Services.h"
+#include "OffState.h"
+#include "RestartState.h"
+#include "DisplayMgr.h"
+#include "Display.h"
 
-#include "IdleState.h"
-#include "ConnectedState.h"
-#include "ErrorState.h"
-
-#include <WiFi.h>
-#include <Logging.h>
 #include <Util.h>
-#include <SettingsService.h>
+#include <Logging.h>
+#include <Board.h>
+#include <esp_sleep.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,120 +66,43 @@
  * Public Methods
  *****************************************************************************/
 
-void ConnectingState::entry(StateMachine& sm)
+void OffState::entry(StateMachine& sm)
 {
-    SettingsService& settings = SettingsService::getInstance();
+    UTIL_NOT_USED(sm);
 
-    /* Are remote wifi network informations available? */
-    if (true == settings.open(true))
-    {
-        m_wifiSSID          = settings.getWifiSSID().getValue();
-        m_wifiPassphrase    = settings.getWifiPassphrase().getValue();
-        m_isQuiet           = settings.getQuietMode().getValue();
+    LOG_INFO("Going in off state.");
 
-        settings.close();
-    }
-    else
-    {
-        m_isQuiet = settings.getQuietMode().getDefault();
-    }
+    /* Prepare wakeup sources */
+    gpio_wakeup_enable(static_cast<gpio_num_t>(Board::Pin::userButtonPinNo), GPIO_INTR_LOW_LEVEL);
+    esp_sleep_enable_gpio_wakeup();
+}
 
-    /* No remote wifi network informations available? */
-    if ((0 == m_wifiSSID.length()) ||
-        (0 == m_wifiPassphrase.length()))
-    {
-        String infoStr = "Keep button pressed and reboot. Set SSID/password via webserver.";
+void OffState::process(StateMachine& sm)
+{
+    UTIL_NOT_USED(sm);
 
-        LOG_INFO(infoStr);
-        SysMsg::getInstance().show(infoStr);
+    /* Stop display manager and clear the display to minimize power consumption. */
+    DisplayMgr::getInstance().end();
+    Display::getInstance().clear();
+    Display::getInstance().show();
 
-        sm.setState(IdleState::getInstance());
-    }
-
-    /* Disable retry mechanism. */
-    m_retryTimer.stop();
-
-    /* Disable automatic reconnect, so we are able to handle the
-     * reconnect behaviour by ourself.
+    /* Wait until the LED matrix is updated to avoid artifacts on the
+     * display.
      */
-    if (false == WiFi.setAutoReconnect(false))
+    while(false == Display::getInstance().isReady())
     {
-        String errorStr = "Set autom. reconnect failed.";
-
-        /* Fatal error */
-        LOG_FATAL(errorStr);
-        SysMsg::getInstance().show(errorStr);
-
-        sm.setState(ErrorState::getInstance());
+        /* Just wait and give other tasks a chance. */
+        delay(1U);
     }
+
+    /* Enter sleep mode. The function will return by wakeup. */
+    esp_light_sleep_start();
+
+    /* Restart the device. */
+    sm.setState(RestartState::getInstance());
 }
 
-void ConnectingState::process(StateMachine& sm)
-{
-    /* No retry mechanism is running? */
-    if (false == m_retryTimer.isTimerRunning())
-    {
-        const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
-        const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
-        wl_status_t status      = WL_IDLE_STATUS;
-        String      infoStr     = "Connecting to ";
-
-        infoStr += m_wifiSSID;
-        infoStr += ".";
-
-        LOG_INFO(infoStr);
-
-        if (false == m_isQuiet)
-        {
-            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
-        }
-
-        /* Remote wifi network informations are available, try to establish a connection. */
-        status = WiFi.begin(m_wifiSSID.c_str(), m_wifiPassphrase.c_str());
-
-        /* Connection establishment pending? */
-        if (WL_CONNECTED != status)
-        {
-            /* Wait a little bit, until retry. */
-            m_retryTimer.start(RETRY_DELAY);
-        }
-        /* Connected */
-        else
-        {
-            /* Disable retry mechanism. */
-            m_retryTimer.stop();
-
-            sm.setState(ConnectedState::getInstance());
-        }
-    }
-    /* Retry mechanism is active. */
-    else
-    {
-        /* Retry delay timeout? */
-        if (true == m_retryTimer.isTimeout())
-        {
-            /* Disable retry mechanism. */
-            m_retryTimer.stop();
-        }
-        /* Connection successful established? */
-        else if (true == WiFi.isConnected())
-        {
-            /* Disable retry mechanism. */
-            m_retryTimer.stop();
-
-            sm.setState(ConnectedState::getInstance());
-        }
-        else
-        {
-            /* Wait ... */
-            ;
-        }
-    }
-
-    Services::processAll();
-}
-
-void ConnectingState::exit(StateMachine& sm)
+void OffState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 

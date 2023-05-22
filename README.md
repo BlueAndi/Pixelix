@@ -136,9 +136,11 @@ For changing whats displayed, go to its web interface. Use the same credentials 
 
 # User Interface
 * The user button provides several features:
-    * On short pulse: Activates the next slot.
-    * Two short pulses: Activates next fade effect.
-    * Five short pulses: IP address is shown.
+    * 1 short pulse: Activates the next slot.
+    * 2 short pulses: Activates the previous slot.
+    * 3 short pulses: Activates next fade effect.
+    * 4 short pulses: IP address is shown.
+    * 5 short pulses: Switch device off.
     * Long pressed: Increases the display brightness until maximum and then decreases until minimum. After that it will again increases it and so on.
 * If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
 * If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.

@@ -529,6 +529,17 @@ void DisplayMgr::activateNextSlot()
     }
 }
 
+void DisplayMgr::activatePreviousSlot()
+{
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    uint8_t                     previousSlotId = previousSlot(m_selectedSlotId);
+
+    if (previousSlotId != m_selectedSlotId)
+    {
+        (void)activateSlot(previousSlotId);
+    }
+}
+
 void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
@@ -767,6 +778,65 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
 
         ++slotId;
         slotId %= m_slotList.getMaxSlots();
+
+        ++count;
+    }
+    while (m_slotList.getMaxSlots() > count);
+
+    if (m_slotList.getMaxSlots() <= count)
+    {
+        slotId = SlotList::SLOT_ID_INVALID;
+    }
+
+    return slotId;
+}
+
+uint8_t DisplayMgr::previousSlot(uint8_t slotId)
+{
+    uint8_t count = 0U;
+
+    if (m_slotList.getMaxSlots() <= slotId)
+    {
+        slotId = 0U;
+    }
+    else
+    {
+        if (0U == slotId)
+        {
+            slotId = m_slotList.getMaxSlots() - 1U;
+        }
+        else
+        {
+            --slotId;
+        }
+    }
+
+    /* Set previous slot active, precondition is a installed plugin which is enabled.  */
+    do
+    {
+        Slot* slot = m_slotList.getSlot(slotId);
+
+        if (nullptr != slot)
+        {
+            /* Plugin installed? */
+            if (false == slot->isEmpty())
+            {
+                /* Plugin enabled? */
+                if (true == slot->getPlugin()->isEnabled())
+                {
+                    break;
+                }
+            }
+        }
+
+        if (0U == slotId)
+        {
+            slotId = m_slotList.getMaxSlots() - 1U;
+        }
+        else
+        {
+            --slotId;
+        }
 
         ++count;
     }
