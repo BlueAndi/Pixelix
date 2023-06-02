@@ -66,6 +66,32 @@
 #define CONFIG_LOG_SEVERITY     (Logging::LOG_LEVEL_INFO)
 #endif /* CONFIG_LOG_SEVERITY */
 
+#if CONFIG_BUTTON_CTRL == 2
+
+/**
+ * Button control policy defines the number and kind of buttons, which are used to
+ * control Pixelix.
+ */
+#define BUTTON_CTRL_POLICY      TwoButtonCtrl<BUTTON_ID_LEFT, BUTTON_ID_RIGHT>
+
+#elif CONFIG_BUTTON_CTRL == 3
+
+/**
+ * Button control policy defines the number and kind of buttons, which are used to
+ * control Pixelix.
+ */
+#define BUTTON_CTRL_POLICY      ThreeButtonCtrl<BUTTON_ID_LEFT, BUTTON_ID_OK, BUTTON_ID_RIGHT>
+
+#else
+
+/**
+ * Button control policy defines the number and kind of buttons, which are used to
+ * control Pixelix.
+ */
+#define BUTTON_CTRL_POLICY      OneButtonCtrl<BUTTON_ID_OK>
+
+#endif
+
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
@@ -91,7 +117,7 @@ static LogSinkPrinter                       gLogSinkSerial("Serial", &Serial);
 static LogSinkWebsocket                     gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
 
 /** Button handler */
-static ButtonHandler<CONFIG_BUTTON_CTRL>    gButtonHandler;
+static ButtonHandler<BUTTON_CTRL_POLICY>    gButtonHandler;
 
 /** Serial interface baudrate. */
 static const uint32_t                       SERIAL_BAUDRATE     = 115200U;
