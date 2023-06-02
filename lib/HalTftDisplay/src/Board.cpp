@@ -60,19 +60,25 @@ using namespace Board;
  *****************************************************************************/
 
 /** Digital output pin: Onboard LED */
-const DOutPin<Pin::onBoardLedPinNo>              Board::onBoardLedOut;
+const DOutPin<Pin::onBoardLedPinNo>                 Board::onBoardLedOut;
 
-/** Digital input pin: User button (input with pull-up) */
-const DInPin<Pin::userButtonPinNo, INPUT_PULLUP> Board::userButtonIn;
+/** Digital input pin: Button "ok" (input with pull-up) */
+const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP>      Board::buttonOkIn;
+
+/** Digital input pin: Button "left" (input with pull-up) */
+const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
+
+/** Digital input pin: Button "right" (input with pull-up) */
+const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
 
 /** Analog input pin: LDR in */
-const AnalogPin<Pin::ldrInPinNo>                 Board::ldrIn;
+const AnalogPin<Pin::ldrInPinNo>                    Board::ldrIn;
 
 /** Digital input pin: DHT Sensor (input with pull-up) */
-const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      Board::dhtIn;
+const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>         Board::dhtIn;
 
 /** Analog input pin: battery voltage in */
-const AnalogPin<Pin::batteryInPinNo>             Board::batteryVoltageIn;
+const AnalogPin<Pin::batteryInPinNo>                Board::batteryVoltageIn;
 
 /******************************************************************************
  * Local Variables
@@ -82,7 +88,9 @@ const AnalogPin<Pin::batteryInPinNo>             Board::batteryVoltageIn;
 static const IoPin* ioPinList[] =
 {
     &onBoardLedOut,
-    &userButtonIn,
+    &buttonOkIn,
+    &buttonLeftIn,
+    &buttonRightIn,
     &ldrIn,
     &dhtIn,
     &batteryVoltageIn

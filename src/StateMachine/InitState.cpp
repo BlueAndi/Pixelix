@@ -143,7 +143,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Initialize button driver */
-    else if (ButtonDrv::RET_OK != ButtonDrv::getInstance().init())
+    else if (false == ButtonDrv::getInstance().init())
     {
         LOG_FATAL("Couldn't initialize button driver.");
         errorId = ErrorState::ERROR_ID_NO_USER_BUTTON;
@@ -307,7 +307,7 @@ void InitState::entry(StateMachine& sm)
 
 void InitState::process(StateMachine& sm)
 {
-    ButtonState buttonState = ButtonDrv::getInstance().getState();
+    ButtonState buttonState = ButtonDrv::getInstance().getState(BUTTON_ID_OK);
 
     /* Connect to a remote wifi network? */
     if (BUTTON_STATE_RELEASED == buttonState)

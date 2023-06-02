@@ -62,8 +62,14 @@ using namespace Board;
 /** Digital output pin: Onboard LED */
 const DOutPin<Pin::onBoardLedPinNo>                 Board::onBoardLedOut;
 
-/** Digital input pin: User button (input with pull-up) */
-const DInPin<Pin::userButtonPinNo, INPUT_PULLUP>    Board::userButtonIn;
+/** Digital input pin: Button "ok" (input with pull-up) */
+const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP>      Board::buttonOkIn;
+
+/** Digital input pin: Button "left" (input with pull-up) */
+const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
+
+/** Digital input pin: Button "right" (input with pull-up) */
+const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
 
 /** Digital output pin: Test pin (only for debug purposes) */
 const DOutPin<Pin::testPinNo>                       Board::testPinOut;
@@ -88,7 +94,9 @@ const AnalogPin<Pin::batteryInPinNo>                Board::batteryVoltageIn;
 static const IoPin* ioPinList[] =
 {
     &onBoardLedOut,
-    &userButtonIn,
+    &buttonOkIn,
+    &buttonLeftIn,
+    &buttonRightIn,
     &testPinOut,
     &ledMatrixDataOut,
     &ldrIn,

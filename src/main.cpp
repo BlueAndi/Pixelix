@@ -48,7 +48,10 @@
 #include "MiniTerminal.h"
 
 #include "ButtonDrv.h"
-#include "ButtonHandler.h"
+#include "ButtonHandler.hpp"
+#include "OneButtonCtrl.hpp"
+#include "TwoButtonCtrl.hpp"
+#include "ThreeButtonCtrl.hpp"
 #include <UpdateMgr.h>
 
 /******************************************************************************
@@ -76,25 +79,25 @@
  *****************************************************************************/
 
 /** Serial terminal */
-static MiniTerminal     gTerminal(Serial);
+static MiniTerminal                         gTerminal(Serial);
 
 /** System state machine */
-static StateMachine     gSysStateMachine(InitState::getInstance());
+static StateMachine                         gSysStateMachine(InitState::getInstance());
 
 /** Serial log sink */
-static LogSinkPrinter   gLogSinkSerial("Serial", &Serial);
+static LogSinkPrinter                       gLogSinkSerial("Serial", &Serial);
 
 /** Websocket log sink */
-static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
+static LogSinkWebsocket                     gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
 
 /** Button handler */
-static ButtonHandler    gButtonHandler;
+static ButtonHandler<CONFIG_BUTTON_CTRL>    gButtonHandler;
 
 /** Serial interface baudrate. */
-static const uint32_t   SERIAL_BAUDRATE     = 115200U;
+static const uint32_t                       SERIAL_BAUDRATE     = 115200U;
 
 /** Task period in ms of the loop() task. */
-static const uint32_t   LOOP_TASK_PERIOD    = 40U;
+static const uint32_t                       LOOP_TASK_PERIOD    = 40U;
 
 #if ARDUINO_USB_MODE
 #if ARDUINO_USB_CDC_ON_BOOT /* Serial used for USB CDC */
@@ -104,7 +107,7 @@ static const uint32_t   LOOP_TASK_PERIOD    = 40U;
  * writing e.g. log messages to it. If the value is too high, it will influence
  * the display refresh bad.
  */
-static const uint32_t   HWCDC_TX_TIMEOUT    = 4U;
+static const uint32_t                       HWCDC_TX_TIMEOUT    = 4U;
 
 #endif  /* ARDUINO_USB_CDC_ON_BOOT */
 #endif  /* ARDUINO_USB_MODE */

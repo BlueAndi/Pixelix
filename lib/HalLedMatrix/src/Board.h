@@ -67,8 +67,14 @@ namespace Pin
     /** Pin number of onboard LED */
     constexpr uint8_t   onBoardLedPinNo         = CONFIG_PIN_ONBOARD_LED;
 
-    /** Pin number of user button */
-    constexpr uint8_t   userButtonPinNo         = CONFIG_PIN_USER_BUTTON;
+    /** Pin number of button "ok" (former user button) */
+    constexpr uint8_t   buttonOkPinNo           = CONFIG_PIN_BUTTON_OK;
+
+    /** Pin number of button "left" */
+    constexpr uint8_t   buttonLeftPinNo         = CONFIG_PIN_BUTTON_LEFT;
+
+    /** Pin number of button "right" */
+    constexpr uint8_t   buttonRightPinNo        = CONFIG_PIN_BUTTON_RIGHT;
 
     /** Pin number of dht sensor in */
     constexpr uint8_t   dhtInPinNo              = CONFIG_PIN_DHT_IN;
@@ -88,9 +94,6 @@ namespace Pin
     /** Pin number of I2S serial clock (bit clock line BCLK) */
     constexpr uint8_t   i2sSerialClock          = CONFIG_PIN_I2S_SC;
 
-    /** Pin number of LED matrix data out */
-    constexpr uint8_t   ledMatrixDataOutPinNo   = CONFIG_PIN_LED_MATRIX_OUT;
-
     /** Pin number of I2S serial data (payload is transmitted in 2 complements). */
     constexpr uint8_t   i2sSerialDataIn         = CONFIG_PIN_I2S_DI;
 
@@ -99,28 +102,37 @@ namespace Pin
 
     /** Pin number of battery voltage in */
     constexpr uint8_t   batteryInPinNo          = CONFIG_PIN_BATTERY_IN;
+
+    /** Pin number of LED matrix data out */
+    constexpr uint8_t   ledMatrixDataOutPinNo   = CONFIG_PIN_LED_MATRIX_OUT;
 };
 
 /* Digital output pin: Onboard LED */
-extern const DOutPin<Pin::onBoardLedPinNo>              onBoardLedOut;
+extern const DOutPin<Pin::onBoardLedPinNo>                  onBoardLedOut;
 
-/* Digital input pin: User button (input with pull-up) */
-extern const DInPin<Pin::userButtonPinNo, INPUT_PULLUP> userButtonIn;
+/* Digital input pin: Button "ok" (input with pull-up) */
+extern const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP>       buttonOkIn;
+
+/* Digital input pin: Button "left" (input with pull-up) */
+extern const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>     buttonLeftIn;
+
+/* Digital input pin: Button "right" (input with pull-up) */
+extern const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>    buttonRightIn;
 
 /* Digital output pin: Test pin (only for debug purposes) */
-extern const DOutPin<Pin::testPinNo>                    testPinOut;
-
-/* Digital output pin: LED matrix data out */
-extern const DOutPin<Pin::ledMatrixDataOutPinNo>        ledMatrixDataOut;
+extern const DOutPin<Pin::testPinNo>                        testPinOut;
 
 /* Analog input pin: LDR in */
-extern const AnalogPin<Pin::ldrInPinNo>                 ldrIn;
+extern const AnalogPin<Pin::ldrInPinNo>                     ldrIn;
 
 /* Digital input pin: DHT Sensor (input with pull-up) */
-extern const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>      dhtIn;
+extern const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>          dhtIn;
 
 /* Analog input pin: battery voltage in */
-extern const AnalogPin<Pin::batteryInPinNo>             batteryVoltageIn;
+extern const AnalogPin<Pin::batteryInPinNo>                 batteryVoltageIn;
+
+/* Digital output pin: LED matrix data out */
+extern const DOutPin<Pin::ledMatrixDataOutPinNo>            ledMatrixDataOut;
 
 /** ADC resolution in digits */
 constexpr uint16_t  adcResolution               = 4096U;

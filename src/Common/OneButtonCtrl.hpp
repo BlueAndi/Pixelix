@@ -25,23 +25,21 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  System state: Off
+ * @brief  One button controller
  * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @addtogroup app
+ *
+ * @{
  */
+
+#ifndef ONE_BUTTON_CTRL_HPP
+#define ONE_BUTTON_CTRL_HPP
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "OffState.h"
-#include "RestartState.h"
-#include "DisplayMgr.h"
-#include "Display.h"
-#include "ButtonDrv.h"
-
-#include <Util.h>
-#include <Logging.h>
-#include <Board.h>
-#include <esp_sleep.h>
+#include "ButtonActions.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -52,77 +50,96 @@
  *****************************************************************************/
 
 /******************************************************************************
- * Types and classes
+ * Types and Classes
  *****************************************************************************/
 
-/******************************************************************************
- * Prototypes
- *****************************************************************************/
-
-/******************************************************************************
- * Local Variables
- *****************************************************************************/
-
-/******************************************************************************
- * Public Methods
- *****************************************************************************/
-
-void OffState::entry(StateMachine& sm)
+/**
+ * Used in case only one button is available to control the application.
+ * 
+ * @tparam tButtonOk    Button id of the single button.
+ */
+template < ButtonId tButtonOk >
+class OneButtonCtrl
 {
-    UTIL_NOT_USED(sm);
+protected:
 
-    LOG_INFO("Going in off state.");
-
-    /* Prepare wakeup sources.
-     * Use all available buttons as wakeup sources.
+    /**
+     * Handles short button triggers.
+     * 
+     * @param[in]   buttonId    The triggered button.
+     * @param[in]   triggerCnt  The number of triggers.
+     * 
+     * @return Returns the action which to execute.
      */
-    ButtonDrv::getInstance().enableWakeUpSources();
-}
-
-void OffState::process(StateMachine& sm)
-{
-    UTIL_NOT_USED(sm);
-
-    /* Stop display manager and clear the display to minimize power consumption. */
-    DisplayMgr::getInstance().end();
-    Display::getInstance().clear();
-    Display::getInstance().show();
-
-    /* Wait until the LED matrix is updated to avoid artifacts on the
-     * display.
-     */
-    while(false == Display::getInstance().isReady())
+    ButtonActionId handleTriggers(ButtonId buttonId, uint32_t triggerCnt)
     {
-        /* Just wait and give other tasks a chance. */
-        delay(1U);
+        ButtonActionId action = BUTTON_ACTION_ID_NO_ACTION;
+
+        if (tButtonOk == buttonId)
+        {
+            action = handleButtonOkTriggers(triggerCnt);
+        }
+
+        return action;
     }
 
-    /* Enter sleep mode. The function will return by wakeup. */
-    esp_light_sleep_start();
+    /**
+     * Handles a pressed button.
+     * 
+     * @param[in]   buttonId    The pressed button.
+     * 
+     * @return Returns the action which to execute.
+     */
+    ButtonActionId handlePressed(ButtonId buttonId)
+    {
+        ButtonActionId action = BUTTON_ACTION_ID_NO_ACTION;
 
-    /* Restart the device. */
-    sm.setState(RestartState::getInstance());
-}
+        if (tButtonOk == buttonId)
+        {
+            action = BUTTON_ACTION_ID_SWEEP_BRIGHTNESS;
+        }
 
-void OffState::exit(StateMachine& sm)
-{
-    UTIL_NOT_USED(sm);
+        return action;
+    }
 
-    /* Nothing to do. */
-}
+    /**
+     * Handles short button triggers.
+     * 
+     * @param[in]   triggerCnt  The number of triggers.
+     * 
+     * @return Returns the action which to execute.
+     */
+    ButtonActionId handleButtonOkTriggers(uint32_t triggerCnt)
+    {
+        ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
+        const ButtonActionId    ACTION_TABLE[]  =
+        {
+            /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
+            /* 1 */ BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT,
+            /* 2 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
+            /* 3 */ BUTTON_ACTION_ID_NEXT_FADE_EFFECT,
+            /* 4 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS,
+            /* 5 */ BUTTON_ACTION_ID_SWITCH_OFF
+        };
+        const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
+
+        if (TABLE_NUM_ELEMENTS > triggerCnt)
+        {
+            action = ACTION_TABLE[triggerCnt];
+        }
+
+        return action;
+    }
+};
 
 /******************************************************************************
- * Protected Methods
+ * Variables
  *****************************************************************************/
 
 /******************************************************************************
- * Private Methods
+ * Functions
  *****************************************************************************/
 
-/******************************************************************************
- * External Functions
- *****************************************************************************/
+#endif  /* ONE_BUTTON_CTRL_HPP */
 
-/******************************************************************************
- * Local Functions
- *****************************************************************************/
+/** @} */

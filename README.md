@@ -135,13 +135,35 @@ After configuration, restart again and voila, PIXELIX will be available in your 
 For changing whats displayed, go to its web interface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
 
 # User Interface
-* The user button provides several features:
+* Pixelix can be controlled with buttons. Most of the development are supported with just one user button.
+  * One button control:
     * 1 short pulse: Activates the next slot.
     * 2 short pulses: Activates the previous slot.
     * 3 short pulses: Activates next fade effect.
     * 4 short pulses: IP address is shown.
     * 5 short pulses: Switch device off.
     * Long pressed: Increases the display brightness until maximum and then decreases until minimum. After that it will again increases it and so on.
+  * Two button control (LILYGO&reg; T-Display ESP32-S3):
+    * Left button:
+      * 1 short pulses: Activates the previous slot.
+      * 2 short pulses: Switch device off.
+      * Long pressed: Decreases the display brightness until minimum. 
+    * Right button
+      * 1 short pulse: Activates the next slot.
+      * 2 short pulses: Activates next fade effect.
+      * 3 short pulses: IP address is shown.
+      * Long pressed: Increases the display brightness until maximum. 
+  * Three button control (Ulanzi TC001):
+    * Left button:
+      * 1 short pulses: Activates the previous slot.
+      * Long pressed: Decreases the display brightness until minimum.
+    * Ok button:
+      * 1 short pulses: Activates next fade effect.
+      * 2 short pulses: IP address is shown.
+      * Long pressed: Switch device off.
+    * Right button
+      * 1 short pulse: Activates the next slot.
+      * Long pressed: Increases the display brightness until maximum. 
 * If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
 * If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
 * The web interface provides the possibility to install plugins, control their duration in the slots and etc.

@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Button handler
+ * @brief  Button actions
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup app
@@ -33,16 +33,13 @@
  * @{
  */
 
-#ifndef BUTTON_HANDLER_H
-#define BUTTON_HANDLER_H
+#ifndef BUTTON_ACTIONS_H
+#define BUTTON_ACTIONS_H
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "ButtonDrv.h"
-
-#include <Queue.hpp>
-#include <SimpleTimer.hpp>
+#include <stdint.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -57,44 +54,52 @@
  *****************************************************************************/
 
 /**
- * The button handler executes functions depended on the button state changes.
- * 
- * One short button pulse : Activate next slot
- * Two short button pulses: Activate next fade effect
- * Keep pressed           : Display brightness increases/decreases
+ * Defines the possible actions, triggered by a button.
  */
-class ButtonHandler : public IButtonObserver
+enum ButtonActionId
 {
-public:
+    BUTTON_ACTION_ID_NO_ACTION = 0,         /**< No action */
+    BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT,    /**< Activate next slot */
+    BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,    /**< Activate previous slot */
+    BUTTON_ACTION_ID_NEXT_FADE_EFFECT,      /**< Select next fade effect */
+    BUTTON_ACTION_ID_SHOW_IP_ADDRESS,       /**< Show IP address on display */
+    BUTTON_ACTION_ID_SWITCH_OFF,            /**< Switch device off */
+    BUTTON_ACTION_ID_SWEEP_BRIGHTNESS,      /**< Sweep brightness from dark to bright and reverse */
+    BUTTON_ACTION_ID_INC_BRIGHTNESS,        /**< Increase display brightness till maximum. */
+    BUTTON_ACTION_ID_DEC_BRIGHTNESS         /**< Decrease display brightness till minimum. */
+};
+
+/**
+ * This is a collection of all possible button actions.
+ * It is independed of the number of buttons.
+ */
+class ButtonActions
+{
+protected:
 
     /**
-     * Construct the button handler.
+     * Construct the button actions.
      */
-    ButtonHandler() :
-        IButtonObserver(),
-        m_stateQueue(),
-        m_lastButtonInfo({BUTTON_STATE_UNKNOWN, 0UL}),
-        m_triggerCnt(0U),
-        m_timer(),
+    ButtonActions() :
         m_incBrightness(true),
         m_isSwitchOffRequested(false)
     {
-        (void)m_stateQueue.create(STATE_QUEUE_LENGTH);
     }
 
     /**
-     * Destroy the button handler.
+     * Destroys the button actions.
      * 
      */
-    ~ButtonHandler()
+    ~ButtonActions()
     {
-        m_stateQueue.destroy();
     }
 
     /**
-     * The button handler shall be processed periodically.
+     * Execute action by button action id.
+     * 
+     * @param[in] id    Button action id
      */
-    void process();
+    void executeAction(ButtonActionId id);
 
     /**
      * Is switch off requested?
@@ -112,52 +117,27 @@ public:
 
 private:
 
-    /** Length of the button info queue. */
-    static const size_t     STATE_QUEUE_LENGTH      = 10U;
+    static const uint8_t    BRIGHTNESS_DELTA    = 10U;
 
-    /** Short pulse threshold in ms. */
-    static const uint32_t   SHORT_PULSE_THRESHOLD   = 400U;
-
-    /**
-     * The button information combines the new button state with a
-     * absolute timestamp about its reception.
-     */
-    struct ButtonInfo
-    {
-        ButtonState state;      /**< Button state */
-        uint32_t    timestamp;  /**< Timestamp about button state reception in ms */
-    };
-
-    Queue<ButtonInfo>   m_stateQueue;           /**< Button info queue */
-    ButtonInfo          m_lastButtonInfo;       /**< Last handled button info */
-    uint8_t             m_triggerCnt;           /**< Number of counted button triggers (pressed -> released) */
-    SimpleTimer         m_timer;                /**< Timer used to detect different pulse variants. */
-    bool                m_incBrightness;        /**< If true the brightness will increase otherwise decrease. */
-    bool                m_isSwitchOffRequested; /**< Is switch off requested? */
+    bool    m_incBrightness;        /**< If true the brightness will increase otherwise decrease. */
+    bool    m_isSwitchOffRequested; /**< Is switch off requested? */
 
     /**
-     * The observed button will notify about changes.
-     * 
-     * @param[in] state New button state
+     * Sweep brightness from dark to bright and then the other way around.
      */
-    void notify(ButtonState state) override;
-
-    /** Defines the action by number of button triggers. */
-    enum TriggerAction : uint32_t
-    {
-        TRIGGER_ACTION_ACTIVATE_NEXT_SLOT   = 1U,   /**< Activate next slot */
-        TRIGGER_ACTION_ACTIVATE_PREV_SLOT   = 2U,   /**< Activate previous slot */
-        TRIGGER_ACTION_NEXT_FADE_EFFECT     = 3U,   /**< Select next fade effect */
-        TRIGGER_ACTION_SHOW_IP_ADDRESS      = 4U,   /**< Show IP address on display */
-        TRIGGER_ACTION_SWITCH_OFF           = 5U    /**< Switch device off */
-    };
+    void sweepBrightness();
 
     /**
-     * Handle button triggers and executing the corresponding action.
-     * 
-     * @param[in] triggerCnt    Number of button triggers
+     * Increase brightness until maximum.
+     * Every call is one step to brightness.
      */
-    void handleTriggers(uint32_t triggerCnt);
+    void increaseBrightness();
+
+    /**
+     * Decreaes brightness until minimum.
+     * Every call is one step to darkness.
+     */
+    void decreaseBrightness();
 
     /**
      * Trigger action: Activate next slot.
@@ -193,6 +173,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BUTTON_HANDLER_H */
+#endif  /* BUTTON_ACTIONS_H */
 
 /** @} */

@@ -25,14 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Button handler
+ * @brief  Button actions
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "ButtonHandler.h"
+#include "ButtonActions.h"
 #include "DisplayMgr.h"
 #include "SysMsg.h"
 
@@ -62,142 +62,48 @@
  * Public Methods
  *****************************************************************************/
 
-void ButtonHandler::process()
-{
-    ButtonInfo info;
-
-    /* A new button state change received? */
-    if (true == m_stateQueue.receive(&info, 0U))
-    {
-        uint32_t delta = info.timestamp - m_lastButtonInfo.timestamp;
-
-        /* Button changed from pressed to release state? */
-        if ((BUTTON_STATE_PRESSED == m_lastButtonInfo.state) &&
-            (BUTTON_STATE_RELEASED == info.state))
-        {
-            /* Short pulse detected? */
-            if (SHORT_PULSE_THRESHOLD > delta)
-            {
-                /* Count the short pulse */
-                ++m_triggerCnt;
-            }
-
-            /* Reset the counted short pulses always after a long released state. */
-            if ((true == m_timer.isTimerRunning()) &&
-                (true == m_timer.isTimeout()))
-            {
-                m_triggerCnt = 0U;
-            }
-
-            m_timer.start(SHORT_PULSE_THRESHOLD);
-        }
-        /* If button is pressed, the short pulse detection timer will be started. */
-        else if (BUTTON_STATE_PRESSED == info.state)
-        {
-            m_timer.start(SHORT_PULSE_THRESHOLD);
-        }
-        else
-        {
-            ;
-        }
-
-        m_lastButtonInfo = info;
-    }
-
-    /* After short pulse timer timeout, perform the action. */
-    if ((true == m_timer.isTimerRunning()) &&
-        (true == m_timer.isTimeout()))
-    {
-        if (BUTTON_STATE_RELEASED == m_lastButtonInfo.state)
-        {
-            handleTriggers(m_triggerCnt);
-            m_triggerCnt = 0U;
-        }
-        else if (BUTTON_STATE_PRESSED == m_lastButtonInfo.state)
-        {
-            const uint8_t BRIGHTNESS_DELTA = 10U;
-
-            if (0U == m_triggerCnt)
-            {
-                uint8_t brightness = DisplayMgr::getInstance().getBrightness();
-
-                if (false == m_incBrightness)
-                {
-                    if (BRIGHTNESS_DELTA > brightness)
-                    {
-                        brightness = 0U;
-
-                        m_incBrightness = true;
-                    }
-                    else
-                    {
-                        brightness -= BRIGHTNESS_DELTA;
-                    }
-                }
-                else
-                {
-                    if ((UINT8_MAX - BRIGHTNESS_DELTA) < brightness)
-                    {
-                        brightness = UINT8_MAX;
-
-                        m_incBrightness = false;
-                    }
-                    else
-                    {
-                        brightness += BRIGHTNESS_DELTA;
-                    }
-                }
-
-                DisplayMgr::getInstance().setBrightness(brightness);
-            }
-        }
-        else
-        {
-            ;
-        }
-    }
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
 
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-void ButtonHandler::notify(ButtonState state)
+void ButtonActions::executeAction(ButtonActionId id)
 {
-    ButtonInfo  info;
-
-    info.state      = state;
-    info.timestamp  = millis();
-
-    (void)m_stateQueue.sendToBack(info, portMAX_DELAY);
-}
-
-void ButtonHandler::handleTriggers(uint32_t triggerCnt)
-{
-    switch(triggerCnt)
+    switch(id)
     {
-    case TRIGGER_ACTION_ACTIVATE_NEXT_SLOT:
+    case BUTTON_ACTION_ID_NO_ACTION:
+        /* Nothing to do. */
+        break;
+    
+    case BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT:
         nextSlot();
         break;
     
-    case TRIGGER_ACTION_ACTIVATE_PREV_SLOT:
+    case BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT:
         previousSlot();
         break;
 
-    case TRIGGER_ACTION_NEXT_FADE_EFFECT:
+    case BUTTON_ACTION_ID_NEXT_FADE_EFFECT:
         nextFadeEffect();
         break;
 
-    case TRIGGER_ACTION_SHOW_IP_ADDRESS:
+    case BUTTON_ACTION_ID_SHOW_IP_ADDRESS:
         showIpAddress();
         break;
 
-    case TRIGGER_ACTION_SWITCH_OFF:
+    case BUTTON_ACTION_ID_SWITCH_OFF:
         switchOff();
+        break;
+
+    case BUTTON_ACTION_ID_SWEEP_BRIGHTNESS:
+        sweepBrightness();
+        break;
+
+    case BUTTON_ACTION_ID_INC_BRIGHTNESS:
+        increaseBrightness();
+        break;
+
+    case BUTTON_ACTION_ID_DEC_BRIGHTNESS:
+        decreaseBrightness();
         break;
 
     default:
@@ -205,7 +111,81 @@ void ButtonHandler::handleTriggers(uint32_t triggerCnt)
     }
 }
 
-void ButtonHandler::nextSlot() const
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void ButtonActions::sweepBrightness()
+{
+    uint8_t brightness = DisplayMgr::getInstance().getBrightness();
+
+    if (false == m_incBrightness)
+    {
+        if (BRIGHTNESS_DELTA > brightness)
+        {
+            brightness = 0U;
+
+            m_incBrightness = true;
+        }
+        else
+        {
+            brightness -= BRIGHTNESS_DELTA;
+        }
+    }
+    else
+    {
+        if ((UINT8_MAX - BRIGHTNESS_DELTA) < brightness)
+        {
+            brightness = UINT8_MAX;
+
+            m_incBrightness = false;
+        }
+        else
+        {
+            brightness += BRIGHTNESS_DELTA;
+        }
+    }
+
+    DisplayMgr::getInstance().setBrightness(brightness);
+}
+
+void ButtonActions::increaseBrightness()
+{
+    uint8_t brightness = DisplayMgr::getInstance().getBrightness();
+
+    if ((UINT8_MAX - BRIGHTNESS_DELTA) < brightness)
+    {
+        brightness = UINT8_MAX;
+
+        m_incBrightness = false;
+    }
+    else
+    {
+        brightness += BRIGHTNESS_DELTA;
+    }
+
+    DisplayMgr::getInstance().setBrightness(brightness);
+}
+
+void ButtonActions::decreaseBrightness()
+{
+    uint8_t brightness = DisplayMgr::getInstance().getBrightness();
+
+    if (BRIGHTNESS_DELTA > brightness)
+    {
+        brightness = 0U;
+
+        m_incBrightness = true;
+    }
+    else
+    {
+        brightness -= BRIGHTNESS_DELTA;
+    }
+
+    DisplayMgr::getInstance().setBrightness(brightness);
+}
+
+void ButtonActions::nextSlot() const
 {
     /* If a system message is active shown, the next one shall be shown.
      * Otherwise activate the next slot.
@@ -220,7 +200,7 @@ void ButtonHandler::nextSlot() const
     }
 }
 
-void ButtonHandler::previousSlot() const
+void ButtonActions::previousSlot() const
 {
     /* If a system message is active shown, the next one shall be shown.
      * Otherwise activate the previous slot.
@@ -235,7 +215,7 @@ void ButtonHandler::previousSlot() const
     }
 }
 
-void ButtonHandler::nextFadeEffect() const
+void ButtonActions::nextFadeEffect() const
 {
     DisplayMgr::FadeEffect  currentFadeEffect   = DisplayMgr::getInstance().getFadeEffect();
     uint8_t                 fadeEffectId        = static_cast<uint8_t>(currentFadeEffect);
@@ -244,7 +224,7 @@ void ButtonHandler::nextFadeEffect() const
     DisplayMgr::getInstance().activateNextFadeEffect(nextFadeEffect);
 }
 
-void ButtonHandler::showIpAddress() const
+void ButtonActions::showIpAddress() const
 {
     const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
     const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
@@ -254,7 +234,7 @@ void ButtonHandler::showIpAddress() const
     SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 }
 
-void ButtonHandler::switchOff()
+void ButtonActions::switchOff()
 {
     m_isSwitchOffRequested = true;
 }
