@@ -105,6 +105,9 @@ namespace Pin
 
     /** Pin number of LED matrix data out */
     constexpr uint8_t   ledMatrixDataOutPinNo   = CONFIG_PIN_LED_MATRIX_OUT;
+
+    /** Pin number of buzzer out */
+    constexpr uint8_t   buzzerOutPinNo          = CONFIG_PIN_BUZZER_OUT;
 };
 
 /* Digital output pin: Onboard LED */
@@ -134,6 +137,9 @@ extern const AnalogPin<Pin::batteryInPinNo>                 batteryVoltageIn;
 /* Digital output pin: LED matrix data out */
 extern const DOutPin<Pin::ledMatrixDataOutPinNo>            ledMatrixDataOut;
 
+/* Digital output pin: Buzzer */
+extern const DOutPin<Pin::buzzerOutPinNo>                   buzzerOut;
+
 /** ADC resolution in digits */
 constexpr uint16_t  adcResolution               = 4096U;
 
@@ -145,10 +151,10 @@ namespace LedMatrix
 {
 
     /** LED matrix width in pixels */
-    constexpr uint8_t   width               = 32U;
+    constexpr uint8_t   width               = CONFIG_LED_MATRIX_WIDTH;
 
     /** LED matrix height in pixels */
-    constexpr uint8_t   height              = 8U;
+    constexpr uint8_t   height              = CONFIG_LED_MATRIX_HEIGHT;
 
     /** LED matrix supply voltage in volt */
     constexpr uint8_t   supplyVoltage       = 5U;

@@ -102,6 +102,9 @@ namespace Pin
 
     /** Pin number of battery voltage in */
     constexpr uint8_t   batteryInPinNo          = CONFIG_PIN_BATTERY_IN;
+
+    /** Pin number of buzzer out */
+    constexpr uint8_t   buzzerOutPinNo          = CONFIG_PIN_BUZZER_OUT;
 };
 
 /* Digital output pin: Onboard LED */
@@ -127,6 +130,9 @@ extern const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>          dhtIn;
 
 /* Analog input pin: battery voltage in */
 extern const AnalogPin<Pin::batteryInPinNo>                 batteryVoltageIn;
+
+/* Digital output pin: Buzzer */
+extern const DOutPin<Pin::buzzerOutPinNo>                   buzzerOut;
 
 /** ADC resolution in digits */
 constexpr uint16_t  adcResolution               = 4096U;

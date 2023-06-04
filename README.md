@@ -105,7 +105,7 @@ The following steps are necessary for the first time and to get PIXELIX initial 
 3. [Upload/Update the software and firmware](./doc/config/SW-UPDATE.md) to the target.
 4. Verify that the LED panel topology is correct and you see the "Hello World" on the display.
 
-Note, that the LED panel topology and the display width/height can currently not be changed in the web interface. If its necessary, adapt first in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ according your LED matrix. In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
+Note, that the LED panel topology and the display width/height can currently not be changed in the web interface. If its necessary, adapt first in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LED_MATRIX_HEIGHT_ according your LED matrix and change _CONFIG_LED_TOPO_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase settings are empty. They can be configured in two possible ways:
@@ -177,9 +177,7 @@ For more detailed information, see the [documentation](./doc/README.md).
 # FAQ
 
 ## Where to change panel topology of the LED matrix?
-First adapt in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ according your LED matrix.
-
-In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
+Adapt in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LED_MATRIX_HEIGHT_ according your LED matrix and change _CONFIG_LED_TOPO_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 ## How to change text properties?
 Text properties can be changed using different keywords added to the string to be displayed.  

@@ -80,6 +80,9 @@ const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>         Board::dhtIn;
 /** Analog input pin: battery voltage in */
 const AnalogPin<Pin::batteryInPinNo>                Board::batteryVoltageIn;
 
+/** Digital output pin: Buzzer */
+const DOutPin<Pin::buzzerOutPinNo>                  Board::buzzerOut;
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -93,7 +96,8 @@ static const IoPin* ioPinList[] =
     &buttonRightIn,
     &ldrIn,
     &dhtIn,
-    &batteryVoltageIn
+    &batteryVoltageIn,
+    &buzzerOut
 };
 
 /******************************************************************************
@@ -124,6 +128,9 @@ extern void Board::init()
             ioPinList[index]->init();
         }
     }
+
+    /* Disable buzzer */
+    buzzerOut.write(LOW);
 }
 
 extern void Board::reset()
