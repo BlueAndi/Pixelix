@@ -75,14 +75,25 @@ static SensorBattery    gBattery;
 /** A list with all registered sensors. */
 static ISensor*         gSensors[] =
 {
-    &gLdr,
-    &gSht3x,
-    &gDht11,
-    &gBattery
+    /* Sensor id, Sensor driver */
+    /* 0 */ &gLdr,
+    /* 1 */ &gSht3x,
+    /* 2 */ &gDht11,
+    /* 3 */ &gBattery
 };
 
 /** The concrete sensor data provider implementation. */
 static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors));
+
+/**
+ * Default offset table, used to initialize the sensor channel offset once in the very
+ * first startup in the SensorDataProvider.
+ */
+static const SensorChannelDefaultValue gSensorDefaultValues[] =
+{
+    /* Sensor id    Channel id      Value as JSON string */
+    {   2U,         0U,             "{ offset = -9 }"  }    /* DHT11 temperature offset */
+};
 
 /******************************************************************************
  * Public Methods
@@ -103,6 +114,13 @@ static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM
 extern SensorDataProviderImpl* Sensors::getSensorDataProviderImpl()
 {
     return &gSensorDataProviderImpl;
+}
+
+extern const SensorChannelDefaultValue* Sensors::getSensorChannelDefaultValues(uint8_t& values)
+{
+    values = UTIL_ARRAY_NUM(gSensorDefaultValues);
+
+    return gSensorDefaultValues;
 }
 
 /******************************************************************************
