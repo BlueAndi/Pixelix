@@ -91,7 +91,7 @@ void BatteryPlugin::start(uint16_t width, uint16_t height)
     /* Use just the first found sensor for battery state of charge. */
     if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT, ISensorChannel::DATA_TYPE_UINT32))
     {
-        m_batterySensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
+        m_socSensorCh = sensorDataProv.getSensor(sensorIdx)->getChannel(channelIdx);
     }
 }
 
@@ -113,11 +113,11 @@ void BatteryPlugin::process(bool isConnected)
     if ((false == m_sensorUpdateTimer.isTimerRunning()) ||
         (true == m_sensorUpdateTimer.isTimeout()))
     {
-        if (nullptr != m_batterySensorCh)
+        if (nullptr != m_socSensorCh)
         {
-            if (ISensorChannel::DATA_TYPE_UINT32 == m_batterySensorCh->getDataType())
+            if (ISensorChannel::DATA_TYPE_UINT32 == m_socSensorCh->getDataType())
             {
-                SensorChannelUInt32* channel = static_cast<SensorChannelUInt32*>(m_batterySensorCh);
+                SensorChannelUInt32* channel = static_cast<SensorChannelUInt32*>(m_socSensorCh);
 
                 m_stateOfCharge = channel->getValue();
             }

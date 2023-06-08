@@ -151,7 +151,7 @@ public:
     SensorBattery() :
         m_isAvailable(false),
         m_socChannel(),
-        m_batteryRaw(0U),
+        m_adcRawAvg(0U),
         m_isInit(true)
     {
         m_socChannel.setDriver(this);
@@ -195,7 +195,7 @@ public:
      */
     uint8_t getNumChannels() const final
     {
-        return 1U;
+        return static_cast<uint8_t>(CHANNEL_ID_MAX);
     }
 
     /**
@@ -216,19 +216,35 @@ public:
 
 private:
 
+    /**
+     * Supported channels.
+     */
+    enum ChannelId
+    {
+        CHANNEL_ID_SOC = 0, /**< Id of SOC channel. */
+        CHANNEL_ID_MAX      /**< Max. number of supported channels. */
+    };
+
     /** Raw ADC value for a empty battery (0%). Note, this is for the Ulanzi TC001. */
-    static const uint16_t   ADC_RAW_EMPTY   = 470U;
+    static const uint16_t   ADC_RAW_EMPTY   = 2160U;
 
     /** Raw ADC value for a full battery (100%). Note, this is for the Ulanzi TC001. */
-    static const uint16_t   ADC_RAW_FULL    = 670U;
+    static const uint16_t   ADC_RAW_FULL    = 2500U;
 
-    bool                m_isAvailable;  /**< Is a sensor available or not? */
-    BatteryChannelSoC   m_socChannel;   /**< State of charge channel. */
-    uint16_t            m_batteryRaw;   /**< Moving average of raw battery ADC value. */
-    bool                m_isInit;       /**< First time the SOC is read? */
+    bool                    m_isAvailable;  /**< Is a sensor available or not? */
+    BatteryChannelSoC       m_socChannel;   /**< State of charge channel. */
+    uint16_t                m_adcRawAvg;    /**< Moving average of raw battery ADC value. */
+    bool                    m_isInit;       /**< First time the battery ADC value is read? */
 
     SensorBattery(const SensorBattery& sensor);
     SensorBattery& operator=(const SensorBattery& sensor);
+
+    /**
+     * Get the moving average of the battery ADC raw value.
+     * 
+     * @return Moving average of battery AC raw value in digits.
+     */
+    uint16_t getAdcRawAvg();
 };
 
 /******************************************************************************

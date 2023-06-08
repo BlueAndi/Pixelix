@@ -84,9 +84,14 @@ ISensorChannel* SensorBattery::getChannel(uint8_t index)
 
     if (true == m_isAvailable)
     {
-        if (0U == index)
+        switch(index)
         {
+        case CHANNEL_ID_SOC:
             channel = &m_socChannel;
+            break;
+
+        default:
+            break;
         }
     }
 
@@ -95,31 +100,17 @@ ISensorChannel* SensorBattery::getChannel(uint8_t index)
 
 float SensorBattery::getStateOfCharge()
 {
-    const uint16_t  ADC_BATTERY_VOLTAGE = Board::batteryVoltageIn.read();
-    uint32_t        stateOfCharge       = 0U;
+    uint32_t stateOfCharge  = 0U;
+    uint16_t adcRawAvg      = getAdcRawAvg();
 
-    if (true == m_isInit)
-    {
-        m_batteryRaw = ADC_BATTERY_VOLTAGE;
-        m_isInit = false;
-    }
-    else
-    {
-        /* Simple moving average.
-         * 75% of original value
-         * 25% of new value
-         */
-        m_batteryRaw -= m_batteryRaw / 4U;
-        m_batteryRaw += ADC_BATTERY_VOLTAGE / 4U;
-    }
-
-    if (ADC_RAW_FULL <= m_batteryRaw)
+    if (ADC_RAW_FULL <= adcRawAvg)
     {
         stateOfCharge = 100U;
     }
-    else if (ADC_RAW_EMPTY < m_batteryRaw)
+    else if (ADC_RAW_EMPTY < adcRawAvg)
     {
-        stateOfCharge = m_batteryRaw - ADC_RAW_EMPTY;
+        stateOfCharge = adcRawAvg - ADC_RAW_EMPTY;
+        stateOfCharge *= 100U;
         stateOfCharge /= ADC_RAW_FULL - ADC_RAW_EMPTY;
     }
     else
@@ -137,6 +128,28 @@ float SensorBattery::getStateOfCharge()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+uint16_t SensorBattery::getAdcRawAvg()
+{
+    const uint16_t ADC_BATTERY_VOLTAGE = Board::batteryVoltageIn.read();
+
+    if (true == m_isInit)
+    {
+        m_adcRawAvg = ADC_BATTERY_VOLTAGE;
+        m_isInit = false;
+    }
+    else
+    {
+        /* Simple moving average.
+         * 87.5% of original value
+         * 12.5% of new value
+         */
+        m_adcRawAvg -= m_adcRawAvg / 8U;
+        m_adcRawAvg += ADC_BATTERY_VOLTAGE / 8U;
+    }
+
+    return m_adcRawAvg;
+}
 
 /******************************************************************************
  * External Functions

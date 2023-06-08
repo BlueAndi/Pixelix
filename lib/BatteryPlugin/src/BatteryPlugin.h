@@ -76,7 +76,7 @@ public:
         m_batterySymbol(),
         m_mutex(),
         m_sensorUpdateTimer(),
-        m_batterySensorCh(nullptr),
+        m_socSensorCh(nullptr),
         m_stateOfCharge(0U),
         m_socBarX(0),
         m_socBarY(0),
@@ -162,14 +162,14 @@ public:
 private:
 
     /**
-     * Read sensor only every 30s.
+     * Read sensor only every 10s.
      */
-    static const uint32_t   SENSOR_UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(30U);
+    static const uint32_t   SENSOR_UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(10U);
 
     YAGfxDynamicBitmap      m_batterySymbol;        /**< The battery symbol. */
     MutexRecursive          m_mutex;                /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_sensorUpdateTimer;    /**< Time used for cyclic sensor reading. */
-    ISensorChannel*         m_batterySensorCh;      /**< Battery sensor channel */
+    ISensorChannel*         m_socSensorCh;          /**< Battery sensor SOC channel. */
     uint32_t                m_stateOfCharge;        /**< Last read state of charge in [0; 100] %. */
     int16_t                 m_socBarX;              /**< x-coordinate of graphical state of charge bar. */
     int16_t                 m_socBarY;              /**< y-coordinate of graphical state of charge bar. */
