@@ -160,7 +160,7 @@ namespace LedMatrix
     constexpr uint8_t   supplyVoltage       = 5U;
 
     /** LED matrix max. supply current in mA */
-    constexpr uint32_t  supplyCurrentMax    = 3500U;
+    constexpr uint32_t  supplyCurrentMax    = CONFIG_SUPPLY_CURRENT;
 
     /** Max. current in mA per LED */
     constexpr uint32_t  maxCurrentPerLed    = 60U;
