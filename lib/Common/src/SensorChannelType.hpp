@@ -200,6 +200,69 @@ public:
     }
 };
 
+/**
+ * Specialization for boolean value channel.
+ */
+template <>
+class SensorChannelType<bool, ISensorChannel::DATA_TYPE_BOOL> : public ISensorChannel
+{
+public:
+
+    /**
+     * Get the data type.
+     * 
+     * @return Sensor data type
+     */
+    DataType getDataType() const final
+    {
+        return DATA_TYPE_BOOL;
+    }
+
+    /**
+     * Get sensor channel type.
+     * 
+     * @return Sensor channel type
+     */
+    virtual Type getType() const = 0;
+
+    /**
+     * Get data value.
+     * 
+     * @return Sensor data value
+     */
+    virtual bool getValue() = 0;
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value
+     */
+    virtual bool getOffset() const = 0;
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value.
+     */
+    virtual void setOffset(bool offset) = 0;
+
+    /**
+     * Get value as string.
+     * 
+     * @param[in] precision The precision (ignored for integer values) of the value.
+     * 
+     * @return Value as string
+     */
+    String getValueAsString(uint32_t precision) override
+    {
+        bool value = getValue();
+
+        (void)precision;
+
+        return (false == value) ? "false" : "true";
+    }
+};
+
 /** Sensor, which provides data as 32 bit unsigned integer. */
 typedef SensorChannelType<uint32_t, ISensorChannel::DATA_TYPE_UINT32> SensorChannelUInt32;
 
@@ -208,6 +271,9 @@ typedef SensorChannelType<int32_t, ISensorChannel::DATA_TYPE_INT32> SensorChanne
 
 /** Sensor, which provides data as 32 bit floating point. */
 typedef SensorChannelType<float, ISensorChannel::DATA_TYPE_FLOAT32> SensorChannelFloat32;
+
+/** Sensor, which provides data as boolean. */
+typedef SensorChannelType<bool, ISensorChannel::DATA_TYPE_BOOL> SensorChannelBool;
 
 /******************************************************************************
  * Functions

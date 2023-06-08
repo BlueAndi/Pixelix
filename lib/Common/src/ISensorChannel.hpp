@@ -69,7 +69,8 @@ public:
         DATA_TYPE_INVALID = 0,  /**< Invalid data type */
         DATA_TYPE_UINT32,       /**< 32 bit unsigned integer */
         DATA_TYPE_INT32,        /**< 32 bit signed integer */
-        DATA_TYPE_FLOAT32       /**< 32 bit float */
+        DATA_TYPE_FLOAT32,      /**< 32 bit float */
+        DATA_TYPE_BOOL          /**< Boolean value */
     };
 
     /**
