@@ -62,13 +62,16 @@
  * Public Methods
  *****************************************************************************/
 
-void BrightnessCtrl::init(IDisplay& display)
+void BrightnessCtrl::init(IDisplay& display, uint8_t minBrightness, uint8_t maxBrightness)
 {
     SensorDataProvider& sensorDataProv  = SensorDataProvider::getInstance();
     uint8_t             sensorIdx       = 0U;
     uint8_t             channelIdx      = 0U;
     
-    m_display = &display;
+    m_display           = &display;
+    m_minBrightness     = minBrightness;
+    m_maxBrightness     = maxBrightness;
+    m_brightnessGoal    = minBrightness;
 
     /* Find a sensor channel, which provides the current illuminance. */
     if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_ILLUMINANCE_LUX, ISensorChannel::DATA_TYPE_FLOAT32))
@@ -222,7 +225,14 @@ void BrightnessCtrl::setBrightness(uint8_t level)
 {
     if (false == isEnabled())
     {
-        m_brightness = level;
+        if (m_minBrightness > level)
+        {
+            m_brightness = m_minBrightness;
+        }
+        else
+        {
+            m_brightness = level;
+        }
 
         if (nullptr != m_display)
         {
@@ -244,8 +254,8 @@ BrightnessCtrl::BrightnessCtrl() :
     m_illuminanceChannel(nullptr),
     m_autoBrightnessTimer(),
     m_brightness(0U),
-    m_minBrightness((UINT8_MAX * 10U) / 100U),  /* 10% */
-    m_maxBrightness(UINT8_MAX),                 /* 100% */
+    m_minBrightness(0U),
+    m_maxBrightness(0U),
     m_recentShortTermAverage(SHORT_TERM_AVG_LIGHT_TIME_CONST, 0.0F),
     m_recentLongTermAverage(LONG_TERM_AVG_LIGHT_TIME_CONST, 0.0F),
     m_brighteningThreshold(0.0F),
@@ -253,7 +263,7 @@ BrightnessCtrl::BrightnessCtrl() :
     m_ambientLight(0.0F),
     m_lightSensorDebounceTimer(),
     m_direction(AMBIENT_LIGHT_DIRECTION_BRIGHTER),
-    m_brightnessGoal(m_minBrightness)
+    m_brightnessGoal(0U)
 {
 }
 

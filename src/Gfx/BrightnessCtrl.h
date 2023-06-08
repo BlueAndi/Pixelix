@@ -169,9 +169,11 @@ public:
     /**
      * Initialize brightness controller and set initial display brightness.
      * 
-     * @param[in] display   The display, which to control.
+     * @param[in] display       The display, which to control.
+     * @param[in] minBrightness The minimal brightness in digits [0; 255].
+     * @param[in] maxBrightness The maximal brightness in digits [0; 255].
      */
-    void init(IDisplay& display);
+    void init(IDisplay& display, uint8_t minBrightness, uint8_t maxBrightness);
 
     /**
      * Enable/Disable automatic brightness adjustment.

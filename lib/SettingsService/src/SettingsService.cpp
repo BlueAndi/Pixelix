@@ -194,7 +194,7 @@ static const char*      DEFAULT_WEB_LOGIN_PASSWORD      = "skywalker";
 static const char*      DEFAULT_HOSTNAME                = "pixelix";
 
 /** Brightness default value in % */
-static const uint8_t    DEFAULT_BRIGHTNESS              = 10U; /* If powered via USB, keep this at 10% to avoid damage. */
+static const uint8_t    DEFAULT_BRIGHTNESS              = 20U; /* If powered via USB, keep this at 20% to avoid damage. */
 
 /** Automatic brightness control default value */
 static const bool       DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
@@ -244,7 +244,7 @@ static const size_t     MIN_VALUE_WEB_LOGIN_PASSWORD    = 4U;
 static const size_t     MIN_VALUE_HOSTNAME              = 1U;
 
 /** Brightness min. value in % */
-static const uint8_t    MIN_VALUE_BRIGHTNESS            = 0U;
+static const uint8_t    MIN_VALUE_BRIGHTNESS            = 10U;
 
 /*                      MIN_VALUE_AUTO_BRIGHTNESS_CTRL */
 
