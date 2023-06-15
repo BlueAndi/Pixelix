@@ -107,15 +107,27 @@ public:
             /* Button id shall be valid. */
             if (BUTTON_ID_CNT > info.buttonId)
             {
+                bool skipButtonInfo = false;
+
                 /* Skip not connected button. */
                 if (BUTTON_STATE_NC != info.state)
                 {
-                    uint32_t delta = info.timestamp - m_lastButtonInfo[info.buttonId].timestamp;
-
-                    /* Button changed from pressed to release state? */
-                    if ((BUTTON_STATE_PRESSED == m_lastButtonInfo[info.buttonId].state) &&
-                        (BUTTON_STATE_RELEASED == info.state))
+                    /* A button shall be released the very first time. Otherwise
+                     * all received states are ignored.
+                     */
+                    if (BUTTON_STATE_NC == m_lastButtonInfo[info.buttonId].state)
                     {
+                        if (BUTTON_STATE_RELEASED != info.state)
+                        {
+                            skipButtonInfo = true;
+                        }
+                    }
+                    /* Button changed from pressed to release state? */
+                    else if ((BUTTON_STATE_PRESSED == m_lastButtonInfo[info.buttonId].state) &&
+                             (BUTTON_STATE_RELEASED == info.state))
+                    {
+                        uint32_t delta = info.timestamp - m_lastButtonInfo[info.buttonId].timestamp;
+
                         /* Short pulse detected? */
                         if (SHORT_PULSE_THRESHOLD > delta)
                         {
@@ -143,7 +155,10 @@ public:
                     }
                 }
 
-                m_lastButtonInfo[info.buttonId] = info;
+                if (false == skipButtonInfo)
+                {
+                    m_lastButtonInfo[info.buttonId] = info;
+                }
             }
         }
         

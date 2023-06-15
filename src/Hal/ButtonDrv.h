@@ -162,8 +162,15 @@ public:
 
     /**
      * Enable all buttons as wakeup sources.
+     * A low level of the wakeup source will trigger the wakeup.
+     * Ensure that all buttons are released at the time of calling it,
+     * otherwise the wakeup will occurre immediately.
+     * 
+     * @return If not all buttons are released, it will return false and the
+     *          wakeup sources are not enabled. Otherwise it will return true
+     *          and the wakeup sources are enabled.
      */
-    void enableWakeUpSources();
+    bool enableWakeUpSources();
 
 private:
 

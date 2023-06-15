@@ -42,6 +42,12 @@
 #include <Logging.h>
 #include <Board.h>
 #include <esp_sleep.h>
+#include <esp_wifi.h>
+
+#if 0
+#include <esp_bt.h>
+#include <esp_bt_main.h>
+#endif
 
 /******************************************************************************
  * Compiler Switches
@@ -73,17 +79,21 @@ void OffState::entry(StateMachine& sm)
 
     LOG_INFO("Going in off state.");
 
-    /* Prepare wakeup sources.
-     * Use all available buttons as wakeup sources.
+    /* Before entering light sleep mode, WiFi and BT must be disabled by using
+     * appropriate calls (esp_bluedroid_disable(), esp_bt_controller_disable(), esp_wifi_stop()).
+     * WiFi and BT connections will not be maintained in deep sleep or light sleep,
+     * even if these functions are not called.
      */
-    ButtonDrv::getInstance().enableWakeUpSources();
-}
+    (void)esp_wifi_stop();
+#if 0
+    (void)esp_bluedroid_disable();
+    (void)esp_bt_controller_disable();
+#endif
 
-void OffState::process(StateMachine& sm)
-{
-    UTIL_NOT_USED(sm);
-
-    /* Stop display manager and clear the display to minimize power consumption. */
+    /* Stop display manager and clear the display to minimize power consumption.
+     * Additional clearing will show the user that he can stop pressing the "off"
+     * button.
+     */
     DisplayMgr::getInstance().end();
     Display::getInstance().clear();
     Display::getInstance().show();
@@ -96,12 +106,35 @@ void OffState::process(StateMachine& sm)
         /* Just wait and give other tasks a chance. */
         delay(1U);
     }
+}
 
-    /* Enter sleep mode. The function will return by wakeup. */
-    esp_light_sleep_start();
+void OffState::process(StateMachine& sm)
+{
+    UTIL_NOT_USED(sm);
 
-    /* Restart the device. */
-    sm.setState(RestartState::getInstance());
+    /* Prepare wakeup sources.
+     * Use all available buttons as wakeup sources.
+     */
+    if (true == ButtonDrv::getInstance().enableWakeUpSources())
+    {
+        esp_sleep_wakeup_cause_t wakeupCause = ESP_SLEEP_WAKEUP_UNDEFINED;
+
+        while(ESP_SLEEP_WAKEUP_GPIO != wakeupCause)
+        {
+            /* Enter sleep mode. The function will return by wakeup. */
+            if (ESP_OK != esp_light_sleep_start())
+            {
+                LOG_ERROR("Enter light sleep mode not possible.");
+            }
+            else
+            {
+                wakeupCause = esp_sleep_get_wakeup_cause();
+            }
+        }
+
+        /* Restart the device. */
+        sm.setState(RestartState::getInstance());
+    }
 }
 
 void OffState::exit(StateMachine& sm)

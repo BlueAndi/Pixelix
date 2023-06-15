@@ -210,26 +210,58 @@ void ButtonDrv::unregisterObserver()
     }
 }
 
-void ButtonDrv::enableWakeUpSources()
+bool ButtonDrv::enableWakeUpSources()
 {
-    uint8_t buttonIdx = 0U;
+    uint8_t buttonIdx           = 0U;
+    bool    allButtonsReleased  = true;
 
-    /* Use all available buttons as wakeup sources. */
+    /* Ensure that no button is pressed anymore. */
     while(BUTTON_ID_CNT > buttonIdx)
     {
         uint8_t pinNo = BUTTON_PIN[buttonIdx]->getPinNo();
 
         if (IoPin::NC != pinNo)
         {
-            gpio_num_t gpioPinNum = static_cast<gpio_num_t>(pinNo);
+            gpio_num_t  gpioPinNum  = static_cast<gpio_num_t>(pinNo);
 
-            gpio_wakeup_enable(gpioPinNum, GPIO_INTR_LOW_LEVEL);
+            if (0 == gpio_get_level(gpioPinNum))
+            {
+                allButtonsReleased = false;
+            }
+
+            LOG_DEBUG("Button %u state: %d", buttonIdx, gpio_get_level(gpioPinNum));
         }
 
         ++buttonIdx;
     }
 
-    (void)esp_sleep_enable_gpio_wakeup();
+    /* If no button is pressed anymore, enable them as wakeup source. */
+    if (true == allButtonsReleased)
+    {
+        /* Use all available buttons as wakeup sources. */
+        while(BUTTON_ID_CNT > buttonIdx)
+        {
+            uint8_t pinNo = BUTTON_PIN[buttonIdx]->getPinNo();
+
+            if (IoPin::NC != pinNo)
+            {
+                gpio_num_t  gpioPinNum  = static_cast<gpio_num_t>(pinNo);
+
+                /* Important: Buttons must be low active! */
+
+                if (ESP_OK != gpio_wakeup_enable(gpioPinNum, GPIO_INTR_LOW_LEVEL))
+                {
+                    LOG_ERROR("Button %u can not be used as wakeup source.", buttonIdx);
+                }
+            }
+
+            ++buttonIdx;
+        }
+
+        (void)esp_sleep_enable_gpio_wakeup();
+    }
+
+    return allButtonsReleased;
 }
 
 /******************************************************************************
@@ -271,6 +303,9 @@ void ButtonDrv::buttonTask(void *parameters)
                                 isrButton,
                                 &gButtonId[buttonIdx],
                                 CHANGE);
+            
+            /* Start the debouncing to get a stable initial button state. */
+            buttonDrv->m_timer[buttonIdx].start(DEBOUNCING_TIME);
         }
 
         ++buttonIdx;
