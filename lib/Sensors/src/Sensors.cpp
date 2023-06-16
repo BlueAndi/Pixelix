@@ -92,7 +92,7 @@ static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM
 static const SensorChannelDefaultValue gSensorDefaultValues[] =
 {
     /* Sensor id    Channel id      Value as JSON string */
-    {   2U,         0U,             "{ offset = -9 }"  }    /* DHT11 temperature offset */
+    {   1U,         0U,             "{ offset: -9 }"  }    /* SHT3x temperature offset */
 };
 
 /******************************************************************************
