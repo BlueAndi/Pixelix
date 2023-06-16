@@ -150,28 +150,31 @@ void MqttApiTopicHandler::process()
         ;
     }
 
-    /* If necessary, the topic state will be published. */
-    while(m_listOfTopicStates.end() != topicStateIt)
+    if (true == m_isMqttConnected)
     {
-        TopicState* topicState = *topicStateIt;
-
-        if ((nullptr != topicState) &&
-            (nullptr != topicState->plugin) &&
-            (
-                (ACCESS_READ_ONLY == topicState->access) ||
-                (ACCESS_READ_WRITE == topicState->access)
-            ))
+        /* If necessary, the topic state will be published. */
+        while(m_listOfTopicStates.end() != topicStateIt)
         {
-            if ((true == publishAll) ||
-                (true == topicState->isPublishReq))
+            TopicState* topicState = *topicStateIt;
+
+            if ((nullptr != topicState) &&
+                (nullptr != topicState->plugin) &&
+                (
+                    (ACCESS_READ_ONLY == topicState->access) ||
+                    (ACCESS_READ_WRITE == topicState->access)
+                ))
             {
-                publish(topicState->topicUri, topicState->plugin, topicState->topic);
+                if ((true == publishAll) ||
+                    (true == topicState->isPublishReq))
+                {
+                    publish(topicState->topicUri, topicState->plugin, topicState->topic);
 
-                topicState->isPublishReq = false;
+                    topicState->isPublishReq = false;
+                }
             }
-        }
 
-        ++topicStateIt;
+            ++topicStateIt;
+        }
     }
 
     /* Process Home Assistant extension. */
