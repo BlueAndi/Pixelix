@@ -228,8 +228,6 @@ bool ButtonDrv::enableWakeUpSources()
             {
                 allButtonsReleased = false;
             }
-
-            LOG_DEBUG("Button %u state: %d", buttonIdx, gpio_get_level(gpioPinNum));
         }
 
         ++buttonIdx;
