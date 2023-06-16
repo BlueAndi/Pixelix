@@ -81,16 +81,39 @@ void SensorDataProvider::begin()
         const SensorChannelDefaultValue*    sensorChannelDefaultValueList   = Sensors::getSensorChannelDefaultValues(defaultValues);
 
         /* Use the default values. */
-        for(index = 0U; index < defaultValues; ++index)
+        if (nullptr != sensorChannelDefaultValueList)
         {
-            const SensorChannelDefaultValue*    value   = &sensorChannelDefaultValueList[index];
-            ISensor*                            sensor  = getSensor(value->sensorId);
-            ISensorChannel*                     channel = sensor->getChannel(value->channelId);
-            DynamicJsonDocument                 jsonDoc(256U);
-
-            if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
+            for(index = 0U; index < defaultValues; ++index)
             {
-                channelOffsetFromJson(*channel, jsonDoc["offset"]);
+                const SensorChannelDefaultValue* value = &sensorChannelDefaultValueList[index];
+
+                if (nullptr != value)
+                {
+                    ISensor* sensor = getSensor(value->sensorId);
+
+                    if (nullptr == sensor)
+                    {
+                        LOG_ERROR("Sensor %u doesn't exists.", value->sensorId);
+                    }
+                    else
+                    {
+                        ISensorChannel* channel = sensor->getChannel(value->channelId);
+
+                        if (nullptr == channel)
+                        {
+                            LOG_ERROR("Sensor %u has no channel %u.", value->sensorId, value->channelId);
+                        }
+                        else
+                        {
+                            DynamicJsonDocument jsonDoc(256U);
+
+                            if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
+                            {
+                                channelOffsetFromJson(*channel, jsonDoc["offset"]);
+                            }
+                        }
+                    }
+                }
             }
         }
 
