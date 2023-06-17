@@ -68,8 +68,8 @@ public:
     LampWidget() :
         Widget(WIDGET_TYPE),
         m_isOn(false),
-        m_colorOff(ColorDef::RED),
-        m_colorOn(ColorDef::WHITE),
+        m_colorOff(ColorDef::BLACK),
+        m_colorOn(ColorDef::RED),
         m_width(DEFAULT_WIDTH)
     {
     }
