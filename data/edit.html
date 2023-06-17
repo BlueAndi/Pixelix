@@ -57,7 +57,24 @@
                     <h4 id="fileName" class="text-secondary"></h4>
                 </div>
                 <div class="row">
-                    <p>Use STRG + s to save a modified file.</p>
+                    <div class="col-3">
+                        <p>Use STRG + s to save a modified file.</p>
+                    </div>
+                    <div class="col-9">
+                        <div class="input-group">
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="uploadFile">
+                                <label class="custom-file-label" for="uploadFile">Choose file to upload:</label>
+                            </div>
+                            <div class="input-group-append" style="padding-left: 10px">
+                                <label for="directory">Directory:</label>
+                                <input type="text" id="directory" name="directory" value="/configuration" size="40" />                            
+                            </div>
+                            <div class="input-group-append">
+                                <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-3">
@@ -351,9 +368,33 @@
                 editor.getSession().setMode(mode);
             }
 
+            function upload() {
+                var fileCnt             = document.getElementById("uploadFile").files.length;
+                var dstDirectoryName    = $("#directory").val();
+                var file                = null;
+                var fullPath            = "";
+
+                if (fileCnt === 1)
+                {
+                    file        = document.getElementById("uploadFile").files[0];
+                    fullPath    = dstDirectoryName + "/" + file.name;
+
+                    return restClient.writeFile(fullPath, file, "application/octet-stream").then(function(rsp) {
+                        return dialog.showInfo("<p>File " + file.name + " uploaded.</p>")
+                    }).catch(function(rsp) {
+                        return dialog.showError("<p>" + rsp.error.msg + "</p>");
+                    });
+                }
+            }
+
             $(document).ready(function() {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
+
+                $("#uploadFile").on("change", function() {
+                    var fileName = $(this).val().split("\\").pop();
+                    $(this).next(".custom-file-label").addClass("selected").html(fileName);
+                });
 
                 $.fn.extend({
                     treed: function (o) {
