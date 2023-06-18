@@ -8,41 +8,18 @@ Pixelix supports different ESP32 development boards. Own PCBs were developed too
 
 To find out which part shall be connected to which pin of your development board you can see in the following chapters.
 
-- [Pixelix Board v1.5](#pixelix-board-v15)
-- [Pixelix Board v2.0](#pixelix-board-v20)
-- [Pixelix Board v2.1](#pixelix-board-v21)
-- [Development Boards](#development-boards)
-  - [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
-  - [DOIT ESP32 DEVKIT V1](#doit-esp32-devkit-v1)
-  - [DOIT ESP32 DEVKIT V4](#doit-esp32-devkit-v4)
-  - [ESP32 NodeMCU](#esp32-nodemcu)
-  - [LILYGO® ESP32 T-Display S3](#lilygo-esp32-t-display-s3)
-  - [LILYGO® TTGO ESP32 T-Display](#lilygo-ttgo-esp32-t-display)
-  - [WEMOS Lolin S2 Mini](#wemos-lolin-s2-mini)
-
-# Pixelix Board v1.5
-This board was original developed with a ESP32 DevKit V1 development board as piggy bag.
-* [Hardware description](./pixelix/v1.5/ELECTRONIC.md)
-* [Bill of material](./pixelix/v1.5/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
-* [Schematic](./pixelix/v1.5/schematics/)
-* [PCB](./pixelix/v1.5/pcb/)
-* [Housing Part 1](https://www.thingiverse.com/thing:2791276)
-* [Housing Part 2](https://www.thingiverse.com/thing:3884621)
-
-# Pixelix Board v2.0
-The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
-* [Hardware description](./pixelix/v2.0/ELECTRONIC.md)
-* [Bill of material](./pixelix/v2.0/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
-* [Housing](./pixelix/v2.0/3D-files/)
-
-# Pixelix Board v2.1
-The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
-* [Hardware description](./pixelix/v2.1/ELECTRONIC.md)
-* [Bill of material](./pixelix/v2.1/BOM.md)
-* [Pinning](../../lib/HalLedMatrix/Board.h)
-* [Housing](./pixelix/v2.1/3D-files/)
+* [Development Boards](#development-boards)
+  * [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
+  * [DOIT ESP32 DEVKIT V1](#doit-esp32-devkit-v1)
+  * [DOIT ESP32 DEVKIT V4](#doit-esp32-devkit-v4)
+  * [ESP32 NodeMCU](#esp32-nodemcu)
+  * [LILYGO® ESP32 T-Display S3](#lilygo-esp32-t-display-s3)
+  * [LILYGO® TTGO ESP32 T-Display](#lilygo-ttgo-esp32-t-display)
+  * [WEMOS Lolin S2 Mini](#wemos-lolin-s2-mini)
+* [Pixelix Board v1.5](#pixelix-board-v15)
+* [Pixelix Board v2.0](#pixelix-board-v20)
+* [Pixelix Board v2.1](#pixelix-board-v21)
+* [Ulanzi TC001 smart pixel clock](#ulanzi-tc001-smart-pixel-clock)
 
 # Development Boards
 
@@ -81,6 +58,34 @@ The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, be
 * Manufacturer: [WEMOS](https://www.wemos.cc/en/latest/s2/s2_mini.html)
 * [Pinning](../../config/board.ini)
 * Not compatible with Pixelix boards.
+
+# Pixelix Board v1.5
+This board was original developed with a ESP32 DevKit V1 development board as piggy bag.
+* [Hardware description](./pixelix/v1.5/ELECTRONIC.md)
+* [Bill of material](./pixelix/v1.5/BOM.md)
+* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Schematic](./pixelix/v1.5/schematics/)
+* [PCB](./pixelix/v1.5/pcb/)
+* [Housing Part 1](https://www.thingiverse.com/thing:2791276)
+* [Housing Part 2](https://www.thingiverse.com/thing:3884621)
+
+# Pixelix Board v2.0
+The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
+* [Hardware description](./pixelix/v2.0/ELECTRONIC.md)
+* [Bill of material](./pixelix/v2.0/BOM.md)
+* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Housing](./pixelix/v2.0/3D-files/)
+
+# Pixelix Board v2.1
+The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
+* [Hardware description](./pixelix/v2.1/ELECTRONIC.md)
+* [Bill of material](./pixelix/v2.1/BOM.md)
+* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Housing](./pixelix/v2.1/3D-files/)
+
+# Ulanzi TC001 smart pixel clock
+* Manufacturer: [Ulanzi](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882)
+* [Pinning](../../config/board.ini)
 
 # Issues, Ideas And Bugs <!-- omit in toc -->
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

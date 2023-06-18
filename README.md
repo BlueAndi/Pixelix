@@ -83,8 +83,10 @@ The following shows the absolute minimal wiring setup e.g. for the ESP32 DevKitV
 
 In the meantime several other boards are supported as well. You can find them in the [list of boards](./doc/boards/README.md).
 
+With the [Ulanzi TC001 smart pixel clock](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882) you even don't need to assemble the electronic and mechanic together.
+
 ## Recommendation
-Its recommended to use a development board with 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited. Also recommended is to use a esp32 dual core variant, which provides more processing power.
+If you assemble your own Pixelix hardware, its recommended to use a development board with 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited. Also recommended is to use a esp32 dual core variant, which provides more processing power.
 
 ## Special Variants
 
