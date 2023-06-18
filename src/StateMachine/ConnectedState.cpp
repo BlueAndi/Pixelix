@@ -37,7 +37,6 @@
 #include "UpdateMgr.h"
 #include "MyWebServer.h"
 #include "ClockDrv.h"
-#include "ButtonDrv.h"
 #include "DisplayMgr.h"
 #include "Services.h"
 
@@ -86,9 +85,6 @@ void ConnectedState::entry(StateMachine& sm)
     bool                isQuiet         = false;
 
     LOG_INFO("Connected.");
-
-    /* Observer button state changes and derrive actions. */
-    ButtonDrv::getInstance().registerObserver(m_buttonHandler);
 
     /* Get hostname and notifyURL. */
     if (false == settings.open(true))
@@ -201,9 +197,6 @@ void ConnectedState::initHttpClient()
 
 void ConnectedState::process(StateMachine& sm)
 {
-    /* Process button state changes */
-    m_buttonHandler.process();
-
     /* Handle update, there may be one in the background. */
     UpdateMgr::getInstance().process();
 
@@ -234,9 +227,6 @@ void ConnectedState::exit(StateMachine& sm)
 
     /* Notify about lost network connection. */
     DisplayMgr::getInstance().setNetworkStatus(false);
-
-    /* Remove button handler as button state observer. */
-    ButtonDrv::getInstance().unregisterObserver();
 }
 
 /******************************************************************************

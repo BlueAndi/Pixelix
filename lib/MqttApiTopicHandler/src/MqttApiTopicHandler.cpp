@@ -85,16 +85,19 @@ void MqttApiTopicHandler::registerTopic(IPluginMaintenance* plugin, const String
     if ((nullptr != plugin) &&
         (false == topic.isEmpty()))
     {
-        String baseUriByUid = getBaseUriByUid(plugin->getUID());
+        String baseUri;
 
-        registerTopic(plugin, topic, access, extra, baseUriByUid);
-
+        /* If plugin has no alias, use the plugin UID for the base URI otherwise use the alias. */
         if (false == plugin->getAlias().isEmpty())
         {
-            String baseUriByAlias = getBaseUriByAlias(plugin->getAlias());
-
-            registerTopic(plugin, topic, access, extra, baseUriByAlias);
+            baseUri = getBaseUriByAlias(plugin->getAlias());
         }
+        else
+        {
+            baseUri = getBaseUriByUid(plugin->getUID());
+        }
+
+        registerTopic(plugin, topic, access, extra, baseUri);
     }
 }
 
@@ -103,16 +106,19 @@ void MqttApiTopicHandler::unregisterTopic(IPluginMaintenance* plugin, const Stri
     if ((nullptr != plugin) &&
         (false == topic.isEmpty()))
     {
-        String baseUriByUid = getBaseUriByUid(plugin->getUID());
+        String baseUri;
 
-        unregisterTopic(plugin, topic, baseUriByUid);
-
+        /* If plugin has no alias, use the plugin UID for the base URI otherwise use the alias. */
         if (false == plugin->getAlias().isEmpty())
         {
-            String baseUriByAlias = getBaseUriByAlias(plugin->getAlias());
-
-            unregisterTopic(plugin, topic, baseUriByAlias);
+            baseUri = getBaseUriByAlias(plugin->getAlias());
         }
+        else
+        {
+            baseUri = getBaseUriByUid(plugin->getUID());
+        }
+
+        unregisterTopic(plugin, topic, baseUri);
     }
 }
 
@@ -144,37 +150,35 @@ void MqttApiTopicHandler::process()
         ;
     }
 
-    /* If necessary, the topic state will be published. */
-    while(m_listOfTopicStates.end() != topicStateIt)
+    if (true == m_isMqttConnected)
     {
-        TopicState* topicState = *topicStateIt;
-
-        if ((nullptr != topicState) &&
-            (nullptr != topicState->plugin) &&
-            (
-                (ACCESS_READ_ONLY == topicState->access) ||
-                (ACCESS_READ_WRITE == topicState->access)
-            ))
+        /* If necessary, the topic state will be published. */
+        while(m_listOfTopicStates.end() != topicStateIt)
         {
-            if ((true == publishAll) ||
-                (true == topicState->isPublishReq))
+            TopicState* topicState = *topicStateIt;
+
+            if ((nullptr != topicState) &&
+                (nullptr != topicState->plugin) &&
+                (
+                    (ACCESS_READ_ONLY == topicState->access) ||
+                    (ACCESS_READ_WRITE == topicState->access)
+                ))
             {
-                publish(topicState->topicUri, topicState->plugin, topicState->topic);
+                if ((true == publishAll) ||
+                    (true == topicState->isPublishReq))
+                {
+                    publish(topicState->topicUri, topicState->plugin, topicState->topic);
 
-                topicState->isPublishReq = false;
+                    topicState->isPublishReq = false;
+                }
             }
+
+            ++topicStateIt;
         }
-
-        ++topicStateIt;
     }
 
-    /* Publish Home Assistant auto discovery information after connection
-     * establishment to the MQTT broker.
-     */
-    if (true == publishAll)
-    {
-        m_haExtension.publishAutoDiscoveryInfo();
-    }
+    /* Process Home Assistant extension. */
+    m_haExtension.process(m_isMqttConnected);
 }
 
 void MqttApiTopicHandler::notify(IPluginMaintenance* plugin, const String& topic)
@@ -330,9 +334,10 @@ void MqttApiTopicHandler::registerTopic(IPluginMaintenance* plugin, const String
 
                 if (0 <= dividerIdx)
                 {
-                    String haObjectId = baseUri.substring(dividerIdx + 1);
+                    String  haObjectId   = baseUri.substring(dividerIdx + 1);
+                    String  willTopic    = m_hostname + "/status";
 
-                    m_haExtension.registerMqttDiscovery(m_hostname, haObjectId, topicUriReadable, topicUriWriteable, extra);
+                    m_haExtension.registerMqttDiscovery(m_hostname, haObjectId, topicUriReadable, topicUriWriteable, willTopic, extra);
                 }
             }
 
@@ -455,6 +460,16 @@ void MqttApiTopicHandler::unregisterTopic(IPluginMaintenance* plugin, const Stri
                     (ACCESS_READ_WRITE == topicState->access))
                 {
                     topicUriReadable = topicUri + MQTT_ENDPOINT_READ_ACCESS;
+
+                    /* Purge topic */
+                    if (false == mqttService.publish(topicUriReadable, ""))
+                    {
+                        LOG_WARNING("[%u] Failed to purge: %s", plugin->getUID(), topicUriReadable.c_str());
+                    }
+                    else
+                    {
+                        LOG_INFO("[%u] Purged: %s", plugin->getUID(), topicUriReadable.c_str());
+                    }
                 }
                 
                 if ((ACCESS_READ_WRITE == topicState->access) ||

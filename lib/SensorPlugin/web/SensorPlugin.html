@@ -218,8 +218,8 @@
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
                     isJsonResponse: true,
                     parameter: {
-                        sensorIndex: $("#apiKey").val("sensorIndex"),
-                        channelIndex: $("#apiKey").val("channelIndex")
+                        sensorIndex: $("#sensorList").val(),
+                        channelIndex: $("#channelList").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");

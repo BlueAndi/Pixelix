@@ -87,12 +87,16 @@ struct Statistics
 
 bool DisplayMgr::begin()
 {
-    bool                status              = false;
-    bool                isError             = false;
-    uint8_t             maxSlots            = 0U;
-    uint8_t             brightnessPercent   = 0U;
-    uint16_t            brightness          = 0U;
-    SettingsService&    settings            = SettingsService::getInstance();
+    bool                status                  = false;
+    bool                isError                 = false;
+    uint8_t             maxSlots                = 0U;
+    uint8_t             brightnessPercent       = 0U;
+    uint8_t             minBrightnessPercent    = 0U;
+    uint8_t             maxBrightnessPercent    = 0U;
+    uint16_t            brightness              = 0U;
+    uint16_t            minBrightness           = 0U;
+    uint16_t            maxBrightness           = 0U;
+    SettingsService&    settings                = SettingsService::getInstance();
 
     if (false == settings.open(true))
     {
@@ -107,11 +111,17 @@ bool DisplayMgr::begin()
         settings.close();
     }
 
+    minBrightnessPercent    = settings.getBrightness().getMin();
+    maxBrightnessPercent    = settings.getBrightness().getMax();
+
+    minBrightness   = (static_cast<uint16_t>(minBrightnessPercent) * UINT8_MAX) / 100U;
+    maxBrightness   = (static_cast<uint16_t>(maxBrightnessPercent) * UINT8_MAX) / 100U;
+
     /* Set the display brightness here just once.
      * There is no need to do this in the process() method periodically.
      */
-    BrightnessCtrl::getInstance().init(Display::getInstance());
-    brightness = (static_cast<uint16_t>(brightnessPercent) * UINT8_MAX) / 100U; /* Calculate brightness in digits */
+    BrightnessCtrl::getInstance().init(Display::getInstance(), minBrightness, maxBrightness);
+    brightness = (static_cast<uint16_t>(brightnessPercent) * UINT8_MAX) / 100U;
     BrightnessCtrl::getInstance().setBrightness(static_cast<uint8_t>(brightness));
 
     /* No slots available? */
@@ -529,6 +539,17 @@ void DisplayMgr::activateNextSlot()
     }
 }
 
+void DisplayMgr::activatePreviousSlot()
+{
+    MutexGuard<MutexRecursive>  guard(m_mutexInterf);
+    uint8_t                     previousSlotId = previousSlot(m_selectedSlotId);
+
+    if (previousSlotId != m_selectedSlotId)
+    {
+        (void)activateSlot(previousSlotId);
+    }
+}
+
 void DisplayMgr::activateNextFadeEffect(FadeEffect fadeEffect)
 {
     MutexGuard<MutexRecursive> guard(m_mutexInterf);
@@ -767,6 +788,65 @@ uint8_t DisplayMgr::nextSlot(uint8_t slotId)
 
         ++slotId;
         slotId %= m_slotList.getMaxSlots();
+
+        ++count;
+    }
+    while (m_slotList.getMaxSlots() > count);
+
+    if (m_slotList.getMaxSlots() <= count)
+    {
+        slotId = SlotList::SLOT_ID_INVALID;
+    }
+
+    return slotId;
+}
+
+uint8_t DisplayMgr::previousSlot(uint8_t slotId)
+{
+    uint8_t count = 0U;
+
+    if (m_slotList.getMaxSlots() <= slotId)
+    {
+        slotId = 0U;
+    }
+    else
+    {
+        if (0U == slotId)
+        {
+            slotId = m_slotList.getMaxSlots() - 1U;
+        }
+        else
+        {
+            --slotId;
+        }
+    }
+
+    /* Set previous slot active, precondition is a installed plugin which is enabled.  */
+    do
+    {
+        Slot* slot = m_slotList.getSlot(slotId);
+
+        if (nullptr != slot)
+        {
+            /* Plugin installed? */
+            if (false == slot->isEmpty())
+            {
+                /* Plugin enabled? */
+                if (true == slot->getPlugin()->isEnabled())
+                {
+                    break;
+                }
+            }
+        }
+
+        if (0U == slotId)
+        {
+            slotId = m_slotList.getMaxSlots() - 1U;
+        }
+        else
+        {
+            --slotId;
+        }
 
         ++count;
     }

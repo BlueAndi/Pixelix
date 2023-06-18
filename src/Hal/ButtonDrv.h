@@ -40,6 +40,8 @@
  * Includes
  *****************************************************************************/
 #include "Arduino.h"
+#include <SimpleTimer.hpp>
+#include <Io.hpp>
 
 /******************************************************************************
  * Compiler Switches
@@ -54,13 +56,26 @@
  *****************************************************************************/
 
 /**
+ * Button id
+ */
+typedef enum
+{
+    BUTTON_ID_OK = 0,   /**< Button "ok" */
+    BUTTON_ID_LEFT,     /**< Button "left "*/
+    BUTTON_ID_RIGHT,    /**< Button "right" */
+    BUTTON_ID_CNT       /**< Number of buttons */
+
+} ButtonId;
+
+/**
  * Button states
  */
 typedef enum
 {
-    BUTTON_STATE_UNKNOWN = 0,   /**< Button state is unknown yet */
-    BUTTON_STATE_RELEASED,      /**< Button is released. */
-    BUTTON_STATE_PRESSED        /**< Button is pressed. */
+    BUTTON_STATE_NC = 0,    /**< Button is not connected. */
+    BUTTON_STATE_UNKNOWN,   /**< Button state is unknown yet. */
+    BUTTON_STATE_RELEASED,  /**< Button is released. */
+    BUTTON_STATE_PRESSED    /**< Button is pressed. */
 
 } ButtonState;
 
@@ -81,9 +96,10 @@ public:
     /**
      * Notify the observer about the new button state.
      * 
-     * @param[in] state New button state
+     * @param[in] buttonId  The id of the related button.
+     * @param[in] state     New button state of the button.
      */
-    virtual void notify(ButtonState state) = 0;
+    virtual void notify(ButtonId buttonId, ButtonState state) = 0;
 
 protected:
 
@@ -115,26 +131,21 @@ public:
         return instance;
     }
 
-    /** Status return values */
-    enum Ret
-    {
-        RET_OK = 0, /**< Execution successful */
-        RET_ERROR   /**< Execution failed */
-    };
-
     /**
      * Initialize the driver.
      * 
-     * @return Status
+     * @return If successful initialized it will return true otherwise false.
      */
-    Ret init();
+    bool init();
 
     /**
      * Get button state.
      * 
+     * @param[in] buttonId  The id of the related button.
+     * 
      * @return Button state
      */
-    ButtonState getState();
+    ButtonState getState(ButtonId buttonId);
 
     /**
      * Register an observer to get notifyed about button
@@ -149,12 +160,35 @@ public:
      */
     void unregisterObserver();
 
+    /**
+     * Enable all buttons as wakeup sources.
+     * A low level of the wakeup source will trigger the wakeup.
+     * Ensure that all buttons are released at the time of calling it,
+     * otherwise the wakeup will occurre immediately.
+     * 
+     * @return If not all buttons are released, it will return false and the
+     *          wakeup sources are not enabled. Otherwise it will return true
+     *          and the wakeup sources are enabled.
+     */
+    bool enableWakeUpSources();
+
 private:
 
-    TaskHandle_t        m_buttonTaskHandle; /**< Button task handle */
-    ButtonState         m_state;            /**< Current button state */
-    SemaphoreHandle_t   m_semaphore;        /**< Semaphore lock */
-    IButtonObserver*    m_observer;         /**< Observer for button state changes */
+    /**
+     * The digital input buttons.
+     */
+    static const IoPin*     BUTTON_PIN[BUTTON_ID_CNT];
+
+    /**
+     * Debouncing time in ms.
+     */
+    static const uint32_t   DEBOUNCING_TIME         = 100U;
+
+    TaskHandle_t        m_buttonTaskHandle;     /**< Button task handle */
+    ButtonState         m_state[BUTTON_ID_CNT]; /**< Current button states */
+    SimpleTimer         m_timer[BUTTON_ID_CNT]; /**< Timer used for debouncing */
+    SemaphoreHandle_t   m_xSemaphore;           /**< Semaphore lock */
+    IButtonObserver*    m_observer;             /**< Observer for button state changes */
 
     /** Button task stack size in bytes */
     static const uint32_t   BUTTON_TASK_STACKE_SIZE = 2048U;
@@ -173,10 +207,33 @@ private:
      */
     ButtonDrv() :
         m_buttonTaskHandle(nullptr),
-        m_state(BUTTON_STATE_UNKNOWN),
-        m_semaphore(nullptr),
+        m_state(),
+        m_timer(),
+        m_xSemaphore(nullptr),
         m_observer(nullptr)
     {
+        uint8_t buttonIdx = 0U;
+
+        while(BUTTON_ID_CNT > buttonIdx)
+        {
+            /* No pin connected? */
+            if (IoPin::NC == BUTTON_PIN[buttonIdx]->getPinNo())
+            {
+                m_state[buttonIdx] = BUTTON_STATE_NC;
+            }
+            /* Interrupt can not be attached to pin? */
+            else if (NOT_AN_INTERRUPT == digitalPinToInterrupt(BUTTON_PIN[buttonIdx]->getPinNo()))
+            {
+                m_state[buttonIdx] = BUTTON_STATE_NC;
+            }
+            /* Configured pin is ok. */
+            else
+            {
+                m_state[buttonIdx] = BUTTON_STATE_UNKNOWN;
+            }
+
+            ++buttonIdx;
+        }
     }
 
     /**
@@ -192,12 +249,25 @@ private:
     ButtonDrv& operator=(const ButtonDrv& drv);
 
     /**
+     * Set button state.
+     * 
+     * @param[in] buttonId  The id of the button.
+     * @param[in] state     The state of the button.
+     */
+    void setState(ButtonId buttonId, ButtonState state);
+
+    /**
      * Button task is responsible for debouncing and updating the user button state
      * accordingly.
      * 
      * @param[in]   parameters  Task pParameters
      */
     static void buttonTask(void* parameters);
+
+    /**
+     * Button task main loop running in object context.
+     */
+    void buttonTaskMainLoop();
 };
 
 /******************************************************************************

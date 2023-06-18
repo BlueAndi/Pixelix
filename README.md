@@ -83,8 +83,10 @@ The following shows the absolute minimal wiring setup e.g. for the ESP32 DevKitV
 
 In the meantime several other boards are supported as well. You can find them in the [list of boards](./doc/boards/README.md).
 
+With the [Ulanzi TC001 smart pixel clock](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882) you even don't need to assemble the electronic and mechanic together.
+
 ## Recommendation
-Its recommended to use a development board with 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited. Also recommended is to use a esp32 dual core variant, which provides more processing power.
+If you assemble your own Pixelix hardware, its recommended to use a development board with 8 MB flash or more. 4 MB flash modules are still supported, but the functionality is limited. Also recommended is to use a esp32 dual core variant, which provides more processing power.
 
 ## Special Variants
 
@@ -105,7 +107,7 @@ The following steps are necessary for the first time and to get PIXELIX initial 
 3. [Upload/Update the software and firmware](./doc/config/SW-UPDATE.md) to the target.
 4. Verify that the LED panel topology is correct and you see the "Hello World" on the display.
 
-Note, that the LED panel topology and the display width/height can currently not be changed in the web interface. If its necessary, adapt first in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ according your LED matrix. In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
+Note, that the LED panel topology and the display width/height can currently not be changed in the web interface. If its necessary, adapt first in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LED_MATRIX_HEIGHT_ according your LED matrix and change _CONFIG_LED_TOPO_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 # Very First Startup
 If the device starts the very first time, the wifi station SSID and passphrase settings are empty. They can be configured in two possible ways:
@@ -135,11 +137,35 @@ After configuration, restart again and voila, PIXELIX will be available in your 
 For changing whats displayed, go to its web interface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
 
 # User Interface
-* The user button provides several features:
-    * On short pulse: Activates the next slot.
-    * Two short pulses: Activates next fade effect.
-    * Five short pulses: IP address is shown.
+* Pixelix can be controlled with buttons. Most of the development are supported with just one user button.
+  * One button control:
+    * 1 short pulse: Activates the next slot.
+    * 2 short pulses: Activates the previous slot.
+    * 3 short pulses: Activates next fade effect.
+    * 4 short pulses: IP address is shown.
+    * 5 short pulses: Switch device off.
     * Long pressed: Increases the display brightness until maximum and then decreases until minimum. After that it will again increases it and so on.
+  * Two button control (LILYGO&reg; T-Display ESP32-S3):
+    * Left button:
+      * 1 short pulses: Activates the previous slot.
+      * 2 short pulses: Switch device off.
+      * Long pressed: Decreases the display brightness until minimum. 
+    * Right button
+      * 1 short pulse: Activates the next slot.
+      * 2 short pulses: Activates next fade effect.
+      * 3 short pulses: IP address is shown.
+      * Long pressed: Increases the display brightness until maximum. 
+  * Three button control (Ulanzi TC001):
+    * Left button:
+      * 1 short pulses: Activates the previous slot.
+      * Long pressed: Decreases the display brightness until minimum.
+    * Ok button:
+      * 1 short pulses: Activates next fade effect.
+      * 2 short pulses: IP address is shown.
+      * Long pressed: Switch device off.
+    * Right button
+      * 1 short pulse: Activates the next slot.
+      * Long pressed: Increases the display brightness until maximum. 
 * If the display's location is hard to reach, the virtual user button can be used. It is controllable via REST API and perfect for remote buttons like the [Shelly Button 1](https://shelly.cloud/products/shelly-button-1-smart-home-automation-device/).
 * If a ambilight sensor (LDR) is connected, the display brightness is automatically adapted.
 * The web interface provides the possibility to install plugins, control their duration in the slots and etc.
@@ -153,9 +179,7 @@ For more detailed information, see the [documentation](./doc/README.md).
 # FAQ
 
 ## Where to change panel topology of the LED matrix?
-First adapt in ```./lib/HalLedMatrix/Board.h``` the _width_ and _height_ according your LED matrix.
-
-In the ```./lib/HalLedMatrix/LedMatrix.h``` file you have to change the member variable _m\_topo_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
+Adapt in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LED_MATRIX_HEIGHT_ according your LED matrix and change _CONFIG_LED_TOPO_ according to your physical panel topology. Take a look how your pixels are wired on the pcb and use the following page to choose the right one: https://github.com/Makuna/NeoPixelBus/wiki/Layout-objects
 
 ## How to change text properties?
 Text properties can be changed using different keywords added to the string to be displayed.  

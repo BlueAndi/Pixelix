@@ -207,12 +207,6 @@ private:
     static const size_t     MAX_VALUE_MQTT_BROKER_URL   = 64U;
 
     /**
-     * MQTT message which is published after successful connection to a MQTT broker
-     * via /<hostname> topic.
-     */
-    static const char*      HELLO_WORLD;
-
-    /**
      * Reconnect period in ms.
      */
     static const uint32_t   RECONNECT_PERIOD            = SIMPLE_TIMER_SECONDS(10U);

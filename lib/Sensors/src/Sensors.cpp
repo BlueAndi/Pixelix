@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Sensor data provider
+ * @brief  Sensors
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
@@ -35,9 +35,10 @@
 #include "Sensors.h"
 
 #include <Util.h>
-#include <SensorLdrGl5528.h>
+#include <SensorLdr.h>
 #include <SensorSht3X.h>
 #include <SensorDhtX.h>
+#include <SensorBattery.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,8 +60,8 @@
  * Local Variables
  *****************************************************************************/
 
-/** The LDR GL5528 is used for automatic display brightness control. */
-static SensorLdrGl5528  gLdrGl5528;
+/** The LDR is used for automatic display brightness control. */
+static SensorLdr        gLdr(CONFIG_SENSOR_LDR, CONFIG_SENSOR_LDR_SERIES_RESISTANCE);
 
 /** The SHT3x sensor in autodetect mode (for two-wire sensors only). */
 static SensorSht3X      gSht3x(SHTSensor::AUTO_DETECT);
@@ -68,16 +69,31 @@ static SensorSht3X      gSht3x(SHTSensor::AUTO_DETECT);
 /** The DHT11 sensor. */
 static SensorDhtX       gDht11(SensorDhtX::MODEL_DHT11);
 
+/** Battery sensor. */
+static SensorBattery    gBattery;
+
 /** A list with all registered sensors. */
 static ISensor*         gSensors[] =
 {
-    &gLdrGl5528,
-    &gSht3x,
-    &gDht11
+    /* Sensor id, Sensor driver */
+    /* 0 */ &gLdr,
+    /* 1 */ &gSht3x,
+    /* 2 */ &gDht11,
+    /* 3 */ &gBattery
 };
 
 /** The concrete sensor data provider implementation. */
 static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM(gSensors));
+
+/**
+ * Default offset table, used to initialize the sensor channel offset once in the very
+ * first startup in the SensorDataProvider.
+ */
+static const SensorChannelDefaultValue gSensorDefaultValues[] =
+{
+    /* Sensor id    Channel id      Value as JSON string */
+    {   1U,         0U,             "{ offset: -9 }"  }    /* SHT3x temperature offset */
+};
 
 /******************************************************************************
  * Public Methods
@@ -98,6 +114,13 @@ static SensorDataProviderImpl   gSensorDataProviderImpl(gSensors, UTIL_ARRAY_NUM
 extern SensorDataProviderImpl* Sensors::getSensorDataProviderImpl()
 {
     return &gSensorDataProviderImpl;
+}
+
+extern const SensorChannelDefaultValue* Sensors::getSensorChannelDefaultValues(uint8_t& values)
+{
+    values = UTIL_ARRAY_NUM(gSensorDefaultValues);
+
+    return gSensorDefaultValues;
 }
 
 /******************************************************************************

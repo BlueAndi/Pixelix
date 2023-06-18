@@ -238,6 +238,11 @@ public:
     void activateNextSlot();
 
     /**
+     * Activate previous slot.
+     */
+    void activatePreviousSlot();
+
+    /**
      * Activate next fade effect.
      * 
      * @param[in] fadeEffect fadeEffect to be activated.
@@ -442,6 +447,15 @@ private:
      * @return Id of next slot
      */
     uint8_t nextSlot(uint8_t slotId);
+
+    /**
+     * Schedule previous slot with a installed and enabled plugin.
+     *
+     * @param[in] slotId    Id of current slot
+     *
+     * @return Id of previous slot
+     */
+    uint8_t previousSlot(uint8_t slotId);
 
     /**
      * Start fade effect.

@@ -109,13 +109,13 @@ bool SensorPlugin::setTopic(const String& topic, const JsonObject& value)
 
         if (false == jsonSensorIndex.isNull())
         {
-            jsonCfg["sensorIndex"] = jsonSensorIndex;
+            jsonCfg["sensorIndex"] = jsonSensorIndex.as<uint8_t>();
             isSuccessful = true;
         }
 
         if (false == jsonChannelIndex.isNull())
         {
-            jsonCfg["channelIndex"] = jsonChannelIndex;
+            jsonCfg["channelIndex"] = jsonChannelIndex.as<uint8_t>();
             isSuccessful = true;
         }
 

@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Light depended resistor GL5528 driver
+ * @brief  Light depended resistor driver
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup hal
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef AMBIENT_LIGHT_SENSOR_H
-#define AMBIENT_LIGHT_SENSOR_H
+#ifndef SENSOR_LDR_H
+#define SENSOR_LDR_H
 
 /******************************************************************************
  * Compile Switches
@@ -56,17 +56,17 @@
  *****************************************************************************/
 
 /* Forward declaration */
-class SensorLdrGl5528;
+class SensorLdr;
 
 /**
- * Illuminance channel of the LDR GL5528 sensor.
+ * Illuminance channel of the LDR sensor.
  */
 class LdrChannelIlluminance : public SensorChannelFloat32
 {
 public:
 
     /**
-     * Constructs the illuminance channel of the LDR GL5528 sensor.
+     * Constructs the illuminance channel of the LDR sensor.
      */
     LdrChannelIlluminance() :
         m_driver(nullptr),
@@ -75,7 +75,7 @@ public:
     }
 
     /**
-     * Destroys the illuminance channel of the LDR GL5528 sensor.
+     * Destroys the illuminance channel of the LDR sensor.
      */
     ~LdrChannelIlluminance()
     {
@@ -99,11 +99,11 @@ public:
     float getValue() final;
 
     /**
-     * Set LDR GL5528 sensor driver.
+     * Set LDR sensor driver.
      * 
-     * @param[in] driver    LDR GL5528 driver
+     * @param[in] driver    LDR driver
      */
-    void setDriver(SensorLdrGl5528* driver)
+    void setDriver(SensorLdr* driver)
     {
         m_driver = driver;
     }
@@ -130,35 +130,57 @@ public:
 
 private:
 
-    SensorLdrGl5528*    m_driver;   /**< LDR GL5528 sensor driver. */
-    float               m_offset;   /**< Illuminance offset in lux for sensor tolerance compensation. */
+    SensorLdr*  m_driver;   /**< LDR sensor driver. */
+    float       m_offset;   /**< Illuminance offset in lux for sensor tolerance compensation. */
 
     LdrChannelIlluminance(const LdrChannelIlluminance& channel);
     LdrChannelIlluminance& operator=(const LdrChannelIlluminance& channel);
 };
 
 /**
- * Light depended resistor GL5528, connected with a 1k pull-down resistor as
+ * Light depended resistor, connected with a series pull-down resistor as
  * voltage divider.
  */
-class SensorLdrGl5528 : public ISensor
+class SensorLdr : public ISensor
 {
 public:
 
+    /** Supported LDR types. */
+    enum LdrType
+    {
+        LDR_TYPE_GL5516 = 0,    /**< GL5516 */
+        LDR_TYPE_GL5528,        /**< GL5528 */
+        LDR_TYPE_GL5537_1,      /**< GL5537-1 */
+        LDR_TYPE_GL5537_2,      /**< GL5537-2 */
+        LDR_TYPE_GL5539,        /**< GL5539 */
+        LDR_TYPE_GL5549,        /**< GL5549 */
+        LDR_TYPE_MAX            /**< Number of supported LDR types. */
+    };
+
     /**
-     * Constructs the driver or the GL5528.
+     * Constructs the driver for the LDR.
+     * 
+     * @param[in] ldrType       The type of the LDR.
+     * @param[in] resistance    The series resistance in Ohm.
      */
-    SensorLdrGl5528() :
+    SensorLdr(LdrType ldrType, float resistance) :
         m_isAvailable(false),
-        m_illuminanceChannel()
+        m_illuminanceChannel(),
+        m_ldrType(ldrType),
+        m_resistance(resistance)
     {
         m_illuminanceChannel.setDriver(this);
+
+        if (LDR_TYPE_MAX < m_ldrType)
+        {
+            m_ldrType = LDR_TYPE_MAX;
+        }
     }
 
     /**
-     * Destroys the driver for the GL5528.
+     * Destroys the driver for the LDR.
      */
-    ~SensorLdrGl5528()
+    ~SensorLdr()
     {
     }
 
@@ -172,10 +194,7 @@ public:
      * 
      * @return Sensor name
      */
-    const char* getName() const final
-    {
-        return "GL5528";
-    }
+    const char* getName() const final;
 
     /**
      * Is sensor available?
@@ -214,22 +233,20 @@ public:
 
 private:
 
-    /**
-     * Threshold in ADC digits to detect a not connected LDR.
-     */
-    static const uint16_t   NO_LDR_THRESHOLD;
-
     bool                    m_isAvailable;          /**< Is a sensor available or not? */
-    LdrChannelIlluminance   m_illuminanceChannel;   /**< Illuminance channel */
+    LdrChannelIlluminance   m_illuminanceChannel;   /**< Illuminance channel. */
+    LdrType                 m_ldrType;              /**< Type of the LDR. */
+    float                   m_resistance;           /**< The series restistance in Ohm. */
 
-    SensorLdrGl5528(const SensorLdrGl5528& sensor);
-    SensorLdrGl5528& operator=(const SensorLdrGl5528& sensor);
+    SensorLdr();
+    SensorLdr(const SensorLdr& sensor);
+    SensorLdr& operator=(const SensorLdr& sensor);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* AMBIENT_LIGHT_SENSOR_H */
+#endif  /* SENSOR_LDR_H */
 
 /** @} */

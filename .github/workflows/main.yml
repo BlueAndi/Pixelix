@@ -30,7 +30,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2", "az-delivery-devkit-v4", "esp32doit-devkit-v1", "esp32-nodemcu", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "m5stack_core", "wemos_lolin_s2_mini"]
+        environment: ["adafruit_feather_esp32_v2", "az-delivery-devkit-v4", "esp32doit-devkit-v1", "esp32-nodemcu", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "m5stack_core", "ulanzi-tc001", "wemos_lolin_s2_mini"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
@@ -90,7 +90,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2", "az-delivery-devkit-v4", "esp32doit-devkit-v1", "esp32-nodemcu", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "m5stack_core", "wemos_lolin_s2_mini"]
+        environment: ["adafruit_feather_esp32_v2", "az-delivery-devkit-v4", "esp32doit-devkit-v1", "esp32-nodemcu", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "m5stack_core", "ulanzi-tc001", "wemos_lolin_s2_mini"]
 
     steps:
     - name: Checkout repository

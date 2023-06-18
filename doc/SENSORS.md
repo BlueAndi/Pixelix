@@ -5,20 +5,20 @@
 
 # Sensors
 
-- [Sensors](#sensors)
-- [Purpose](#purpose)
-- [General](#general)
-- [Ambient light sensor](#ambient-light-sensor)
-  - [Photoresistor GL5528](#photoresistor-gl5528)
-- [Temperature and humidity sensors](#temperature-and-humidity-sensors)
-  - [DHTx (Proprietary one-wire)](#dhtx-proprietary-one-wire)
-  - [SHT3x (I2C)](#sht3x-i2c)
-- [Audio (digital micropohone with I2S)](#audio-digital-micropohone-with-i2s)
-  - [INMP441](#inmp441)
-- [Calibration](#calibration)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Sensors](#sensors)
+* [Purpose](#purpose)
+* [General](#general)
+* [Ambient light sensor](#ambient-light-sensor)
+  * [Photoresistor GLxx](#photoresistor-glxx)
+* [Temperature and humidity sensors](#temperature-and-humidity-sensors)
+  * [DHTx (Proprietary one-wire)](#dhtx-proprietary-one-wire)
+  * [SHT3x (I2C)](#sht3x-i2c)
+* [Audio (digital micropohone with I2S)](#audio-digital-micropohone-with-i2s)
+  * [INMP441](#inmp441)
+* [Calibration](#calibration)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Purpose
 Here is a list of supported sensors. Where they are connected, depends on the used [hardware board](./boards/README.md). Some of them need additional external parts e.g. the DHTx need a ext. 4.7kOhm pull-up resistor. Please check the corresponding datasheets.
@@ -28,7 +28,7 @@ A "X" in the development board column means valid all development boards. Except
 
 # Ambient light sensor
 
-## Photoresistor GL5528
+## Photoresistor GLxx
 
 | Development Board | Photoresistor pin 1 | Photoresistor pin 2 |
 | ----------------- | ------------------- | ------------------- |

@@ -73,9 +73,6 @@ void ConnectingState::entry(StateMachine& sm)
 {
     SettingsService& settings = SettingsService::getInstance();
 
-    /* Observer button state changes and derrive actions. */
-    ButtonDrv::getInstance().registerObserver(m_buttonHandler);
-
     /* Are remote wifi network informations available? */
     if (true == settings.open(true))
     {
@@ -122,9 +119,6 @@ void ConnectingState::entry(StateMachine& sm)
 
 void ConnectingState::process(StateMachine& sm)
 {
-    /* Process button state changes */
-    m_buttonHandler.process();
-
     /* No retry mechanism is running? */
     if (false == m_retryTimer.isTimerRunning())
     {
@@ -192,8 +186,7 @@ void ConnectingState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
-    /* Remove button handler as button state observer. */
-    ButtonDrv::getInstance().unregisterObserver();
+    /* Nothing to do. */
 }
 
 /******************************************************************************

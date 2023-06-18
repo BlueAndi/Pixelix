@@ -41,10 +41,18 @@
 
 #include "InitState.h"
 #include "RestartState.h"
+#include "OffState.h"
 #include "TaskMon.h"
 #include "MemMon.h"
 #include "ResetMon.h"
 #include "MiniTerminal.h"
+
+#include "ButtonDrv.h"
+#include "ButtonHandler.hpp"
+#include "OneButtonCtrl.hpp"
+#include "TwoButtonCtrl.hpp"
+#include "ThreeButtonCtrl.hpp"
+#include <UpdateMgr.h>
 
 /******************************************************************************
  * Macros
@@ -57,6 +65,32 @@
 #ifndef CONFIG_LOG_SEVERITY
 #define CONFIG_LOG_SEVERITY     (Logging::LOG_LEVEL_INFO)
 #endif /* CONFIG_LOG_SEVERITY */
+
+#if CONFIG_BUTTON_CTRL == 2
+
+/**
+ * Button control policy defines the number and kind of buttons, which are used to
+ * control Pixelix.
+ */
+#define BUTTON_CTRL_POLICY      TwoButtonCtrl<BUTTON_ID_LEFT, BUTTON_ID_RIGHT>
+
+#elif CONFIG_BUTTON_CTRL == 3
+
+/**
+ * Button control policy defines the number and kind of buttons, which are used to
+ * control Pixelix.
+ */
+#define BUTTON_CTRL_POLICY      ThreeButtonCtrl<BUTTON_ID_LEFT, BUTTON_ID_OK, BUTTON_ID_RIGHT>
+
+#else
+
+/**
+ * Button control policy defines the number and kind of buttons, which are used to
+ * control Pixelix.
+ */
+#define BUTTON_CTRL_POLICY      OneButtonCtrl<BUTTON_ID_OK>
+
+#endif
 
 /******************************************************************************
  * Types and Classes
@@ -71,22 +105,25 @@
  *****************************************************************************/
 
 /** Serial terminal */
-static MiniTerminal     gTerminal(Serial);
+static MiniTerminal                         gTerminal(Serial);
 
 /** System state machine */
-static StateMachine     gSysStateMachine(InitState::getInstance());
+static StateMachine                         gSysStateMachine(InitState::getInstance());
 
 /** Serial log sink */
-static LogSinkPrinter   gLogSinkSerial("Serial", &Serial);
+static LogSinkPrinter                       gLogSinkSerial("Serial", &Serial);
 
 /** Websocket log sink */
-static LogSinkWebsocket gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
+static LogSinkWebsocket                     gLogSinkWebsocket("Websocket", &WebSocketSrv::getInstance());
+
+/** Button handler */
+static ButtonHandler<BUTTON_CTRL_POLICY>    gButtonHandler;
 
 /** Serial interface baudrate. */
-static const uint32_t   SERIAL_BAUDRATE     = 115200U;
+static const uint32_t                       SERIAL_BAUDRATE     = 115200U;
 
 /** Task period in ms of the loop() task. */
-static const uint32_t   LOOP_TASK_PERIOD    = 40U;
+static const uint32_t                       LOOP_TASK_PERIOD    = 40U;
 
 #if ARDUINO_USB_MODE
 #if ARDUINO_USB_CDC_ON_BOOT /* Serial used for USB CDC */
@@ -96,7 +133,7 @@ static const uint32_t   LOOP_TASK_PERIOD    = 40U;
  * writing e.g. log messages to it. If the value is too high, it will influence
  * the display refresh bad.
  */
-static const uint32_t   HWCDC_TX_TIMEOUT    = 4U;
+static const uint32_t                       HWCDC_TX_TIMEOUT    = 4U;
 
 #endif  /* ARDUINO_USB_CDC_ON_BOOT */
 #endif  /* ARDUINO_USB_MODE */
@@ -151,6 +188,11 @@ void setup()
         gSysStateMachine.process();
     }
     while(static_cast<AbstractState*>(&InitState::getInstance()) == gSysStateMachine.getState());
+
+    /* Observer button state changes and derrive actions.
+     * Do this after init state!
+     */
+    ButtonDrv::getInstance().registerObserver(gButtonHandler);
 }
 
 /**
@@ -176,6 +218,23 @@ void loop()
     if (true == gTerminal.isRestartRequested())
     {
         gSysStateMachine.setState(RestartState::getInstance());
+    }
+
+    /* Handle button actions only if
+     * - No update is running.
+     * - Not in OffState.
+     * - Not in RestartState.
+     */
+    if ((false == UpdateMgr::getInstance().isUpdateRunning()) &&
+        (&OffState::getInstance() != gSysStateMachine.getState()) &&
+        (&RestartState::getInstance() != gSysStateMachine.getState()))
+    {
+        gButtonHandler.process();
+
+        if (true == gButtonHandler.isSwitchOffRequested())
+        {
+            gSysStateMachine.setState(OffState::getInstance());
+        }
     }
 
     /* Schedule other tasks with same or lower priority. */

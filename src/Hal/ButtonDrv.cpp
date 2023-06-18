@@ -36,6 +36,7 @@
 
 #include <Board.h>
 #include <Logging.h>
+#include <esp_sleep.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -59,28 +60,75 @@ static void IRAM_ATTR isrButton(void* arg);
  * Local Variables
  *****************************************************************************/
 
+const IoPin* ButtonDrv::BUTTON_PIN[BUTTON_ID_CNT] =
+{
+    &Board::buttonOkIn,
+    &Board::buttonLeftIn,
+    &Board::buttonRightIn
+};
+
+/**
+ * If a button is triggered, the ISR will set it to true.
+ * The task will set it to false and every time the task see true, it will
+ * (re-)start the debounce timer.
+ */
+static ButtonId         gButtonId[BUTTON_ID_CNT] =
+{
+    BUTTON_ID_OK,
+    BUTTON_ID_LEFT,
+    BUTTON_ID_RIGHT
+};
+
+/** Number of elements in the button id queue. */
+static const uint32_t   QUEUE_SIZE  = 10U;
+
+/**
+ * Button id queue, used to communicate from ISR to task.
+ * Every time the task detects a pin level change, it will notify the task
+ * about it by sending the corresponding button id via queue.
+ */
+static QueueHandle_t    gxQueue     = nullptr;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-ButtonDrv::Ret ButtonDrv::init()
+bool ButtonDrv::init()
 {
-    Ret         ret     = RET_OK;
-    BaseType_t  osRet   = pdFAIL;
+    bool        isSuccessful    = true;
+    BaseType_t  osRet           = pdFAIL;
 
-    /* Create semaphore to protect button state member. */
-    m_semaphore = xSemaphoreCreateBinary();
+    /* Create semaphore to protect the button trigger array, which is accessed
+     * by the task and the ISR.
+     */
+    gxQueue = xQueueCreate(QUEUE_SIZE, sizeof(ButtonId));
 
-    if (nullptr == m_semaphore)
+    if (nullptr == gxQueue)
     {
-        ret = RET_ERROR;
+        isSuccessful = false;
     }
-    /* The semaphore must be given, right after the creation! */
-    else if (pdTRUE != xSemaphoreGive(m_semaphore))
+
+    if (true == isSuccessful)
     {
-        ret = RET_ERROR;
+        /* Create semaphore to protect button state member. */
+        m_xSemaphore = xSemaphoreCreateBinary();
+
+        if (nullptr == m_xSemaphore)
+        {
+            isSuccessful = false;
+        }
+        /* The semaphore must be given, right after the creation! */
+        else if (pdTRUE != xSemaphoreGive(m_xSemaphore))
+        {
+            isSuccessful = false;
+        }
+        else
+        {
+            ;
+        }
     }
-    else
+
+    if (true == isSuccessful)
     {
         /* Create button task for debouncing */
         osRet = xTaskCreateUniversal(   buttonTask,
@@ -94,31 +142,39 @@ ButtonDrv::Ret ButtonDrv::init()
         /* Failed to create task? */
         if (pdPASS != osRet)
         {
-            ret = RET_ERROR;
-
-            vSemaphoreDelete(m_semaphore);
-            m_semaphore = nullptr;
+            isSuccessful = false;
         }
     }
 
-    return ret;
+    if (false == isSuccessful)
+    {
+        if (nullptr != gxQueue)
+        {
+            vQueueDelete(gxQueue);
+            gxQueue = nullptr;
+        }
+
+        if (nullptr != m_xSemaphore)
+        {
+            vSemaphoreDelete(m_xSemaphore);
+            m_xSemaphore = nullptr;
+        }
+    }
+
+    return isSuccessful;
 }
 
-ButtonState ButtonDrv::getState()
+ButtonState ButtonDrv::getState(ButtonId buttonId)
 {
     ButtonState state = BUTTON_STATE_UNKNOWN;
 
-    if (pdTRUE != xSemaphoreTake(m_semaphore, portMAX_DELAY))
+    if (BUTTON_ID_CNT > buttonId)
     {
-        LOG_WARNING("Update of button state not possible.");
-    }
-    else
-    {
-        state = m_state;
-
-        if (pdTRUE != xSemaphoreGive(m_semaphore))
+        if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
         {
-            LOG_FATAL("Can't give semaphore back.");
+            state = m_state[buttonId];
+
+            (void)xSemaphoreGive(m_xSemaphore);
         }
     }
 
@@ -127,24 +183,83 @@ ButtonState ButtonDrv::getState()
 
 void ButtonDrv::registerObserver(IButtonObserver& observer)
 {
-    if (pdTRUE == xSemaphoreTake(m_semaphore, portMAX_DELAY))
+    if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
     {
+        uint8_t buttonIndex = 0U;
+
         m_observer = &observer;
 
-        m_observer->notify(m_state);
+        while(BUTTON_ID_CNT > buttonIndex)
+        {
+            m_observer->notify(static_cast<ButtonId>(buttonIndex), m_state[buttonIndex]);
 
-        (void)xSemaphoreGive(m_semaphore);
+            ++buttonIndex;
+        }
+
+        (void)xSemaphoreGive(m_xSemaphore);
     }
 }
 
 void ButtonDrv::unregisterObserver()
 {
-    if (pdTRUE == xSemaphoreTake(m_semaphore, portMAX_DELAY))
+    if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
     {
         m_observer = nullptr;
         
-        (void)xSemaphoreGive(m_semaphore);
+        (void)xSemaphoreGive(m_xSemaphore);
     }
+}
+
+bool ButtonDrv::enableWakeUpSources()
+{
+    uint8_t buttonIdx           = 0U;
+    bool    allButtonsReleased  = true;
+
+    /* Ensure that no button is pressed anymore. */
+    while(BUTTON_ID_CNT > buttonIdx)
+    {
+        uint8_t pinNo = BUTTON_PIN[buttonIdx]->getPinNo();
+
+        if (IoPin::NC != pinNo)
+        {
+            gpio_num_t  gpioPinNum  = static_cast<gpio_num_t>(pinNo);
+
+            if (0 == gpio_get_level(gpioPinNum))
+            {
+                allButtonsReleased = false;
+            }
+        }
+
+        ++buttonIdx;
+    }
+
+    /* If no button is pressed anymore, enable them as wakeup source. */
+    if (true == allButtonsReleased)
+    {
+        /* Use all available buttons as wakeup sources. */
+        while(BUTTON_ID_CNT > buttonIdx)
+        {
+            uint8_t pinNo = BUTTON_PIN[buttonIdx]->getPinNo();
+
+            if (IoPin::NC != pinNo)
+            {
+                gpio_num_t  gpioPinNum  = static_cast<gpio_num_t>(pinNo);
+
+                /* Important: Buttons must be low active! */
+
+                if (ESP_OK != gpio_wakeup_enable(gpioPinNum, GPIO_INTR_LOW_LEVEL))
+                {
+                    LOG_ERROR("Button %u can not be used as wakeup source.", buttonIdx);
+                }
+            }
+
+            ++buttonIdx;
+        }
+
+        (void)esp_sleep_enable_gpio_wakeup();
+    }
+
+    return allButtonsReleased;
 }
 
 /******************************************************************************
@@ -155,90 +270,128 @@ void ButtonDrv::unregisterObserver()
  * Private Methods
  *****************************************************************************/
 
+void ButtonDrv::setState(ButtonId buttonId, ButtonState state)
+{
+    if (BUTTON_ID_CNT > buttonId)
+    {
+        if (pdTRUE == xSemaphoreTake(m_xSemaphore, portMAX_DELAY))
+        {
+            m_state[buttonId] = state;
+
+            (void)xSemaphoreGive(m_xSemaphore);
+        }
+    }
+
+    return;
+}
+
 void ButtonDrv::buttonTask(void *parameters)
 {
-    ButtonDrv* buttonDrv = reinterpret_cast<ButtonDrv*>(parameters);
+    ButtonDrv*  buttonDrv   = reinterpret_cast<ButtonDrv*>(parameters);
+    uint8_t     buttonIdx   = 0U;
 
     /* The ISR shall notify about on change to determine whether the
      * pin state is stable or not.
      */
-    attachInterruptArg( Board::userButtonIn.getPinNo(),
-                        isrButton,
-                        buttonDrv->m_buttonTaskHandle,
-                        CHANGE);
+    while(BUTTON_ID_CNT > buttonIdx)
+    {
+        if (IoPin::NC != BUTTON_PIN[buttonIdx]->getPinNo())
+        {
+            attachInterruptArg( BUTTON_PIN[buttonIdx]->getPinNo(),
+                                isrButton,
+                                &gButtonId[buttonIdx],
+                                CHANGE);
+            
+            /* Start the debouncing to get a stable initial button state. */
+            buttonDrv->m_timer[buttonIdx].start(DEBOUNCING_TIME);
+        }
+
+        ++buttonIdx;
+    }
 
     LOG_DEBUG("ButtonDrv task is ready.");
 
+    buttonDrv->buttonTaskMainLoop();
+
+    vTaskDelete(nullptr);
+}
+
+void ButtonDrv::buttonTaskMainLoop()
+{
     /* The main loop scans several times during one debounce period
      * for any pin change. If there is no change, the state is
      * considered as stable.
      */
     for(;;)
     {
-        /* Is button pin value stable? */
-        if (0U == ulTaskNotifyTake(pdTRUE, BUTTON_DEBOUNCE_TIME))
+        ButtonId    buttonId    = BUTTON_ID_CNT;
+        uint8_t     buttonIdx   = 0U;
+
+        /* Wait 25% of debouncing time whether any button level changed. */
+        if (pdTRUE == xQueueReceive(gxQueue, &buttonId, (DEBOUNCING_TIME / 4U) * portTICK_PERIOD_MS))
         {
-            /* Button state is stable, update it if applicable. */
-            if (pdTRUE != xSemaphoreTake(buttonDrv->m_semaphore, portMAX_DELAY))
+            if (BUTTON_ID_CNT > buttonId)
             {
-                LOG_WARNING("Update of button state not possible.");
+                m_timer[buttonId].start(DEBOUNCING_TIME);
             }
-            else
+        }
+
+        /* Debounce buttons */
+        while(BUTTON_ID_CNT > buttonIdx)
+        {
+            if ((true == m_timer[buttonIdx].isTimerRunning()) &&
+                (true == m_timer[buttonIdx].isTimeout()))
             {
-                uint8_t buttonValue = Board::userButtonIn.read();
+                ButtonState buttonState = BUTTON_STATE_UNKNOWN;
+                uint8_t     buttonValue = HIGH;
 
-                /* If the button state is unknown, just check and set. */
-                if (BUTTON_STATE_UNKNOWN == buttonDrv->m_state)
+                switch(buttonIdx)
                 {
-                    if (HIGH == buttonValue)
-                    {
-                        buttonDrv->m_state = BUTTON_STATE_RELEASED;
-                    }
-                    else
-                    {
-                        buttonDrv->m_state = BUTTON_STATE_PRESSED;
-                    }
+                case BUTTON_ID_OK:
+                    buttonValue = Board::buttonOkIn.read();
+                    break;
 
-                    /* Notify observer */
-                    if (nullptr != buttonDrv->m_observer)
-                    {
-                        buttonDrv->m_observer->notify(buttonDrv->m_state);
-                    }
+                case BUTTON_ID_LEFT:
+                    buttonValue = Board::buttonLeftIn.read();
+                    break;
+
+                case BUTTON_ID_RIGHT:
+                    buttonValue = Board::buttonRightIn.read();
+                    break;
+
+                default:
+                    break;
                 }
-                /* Button pressed now? */
-                else if ((BUTTON_STATE_RELEASED == buttonDrv->m_state) &&
-                         (LOW == buttonValue))
-                {
-                    buttonDrv->m_state = BUTTON_STATE_PRESSED;
 
-                    /* Notify observer */
-                    if (nullptr != buttonDrv->m_observer)
-                    {
-                        buttonDrv->m_observer->notify(buttonDrv->m_state);
-                    }
-                }
-                /* Button released now? */
-                else if ((BUTTON_STATE_PRESSED == buttonDrv->m_state) &&
-                         (HIGH == buttonValue))
+                if (LOW == buttonValue)
                 {
-                    buttonDrv->m_state = BUTTON_STATE_RELEASED;
-
-                    /* Notify observer */
-                    if (nullptr != buttonDrv->m_observer)
-                    {
-                        buttonDrv->m_observer->notify(buttonDrv->m_state);
-                    }
+                    buttonState = BUTTON_STATE_PRESSED;
                 }
                 else
                 {
-                    ;
+                    buttonState = BUTTON_STATE_RELEASED;
                 }
 
-                if (pdTRUE != xSemaphoreGive(buttonDrv->m_semaphore))
+                if (BUTTON_STATE_NC != m_state[buttonIdx])
                 {
-                    LOG_FATAL("Can't give semaphore back.");
+                    if (m_state[buttonIdx] != buttonState)
+                    {
+                        buttonId = static_cast<ButtonId>(buttonIdx);
+
+                        setState(buttonId, buttonState);
+
+                        /* Notify observer */
+                        if (nullptr != m_observer)
+                        {
+                            m_observer->notify(buttonId, m_state[buttonIdx]);
+                        }
+                    }
                 }
+
+                m_timer[buttonIdx].stop();
             }
+
+            ++buttonIdx;
         }
     }
 }
@@ -258,10 +411,10 @@ void ButtonDrv::buttonTask(void *parameters)
  */
 static void IRAM_ATTR isrButton(void* arg)
 {
-    TaskHandle_t    taskHandle                  = reinterpret_cast<TaskHandle_t>(arg);
+    ButtonId        buttonId                    = *reinterpret_cast<ButtonId*>(arg);
     BaseType_t      xHigherPriorityTaskWoken    = pdFALSE;
 
-    vTaskNotifyGiveFromISR(taskHandle, &xHigherPriorityTaskWoken);
+    (void)xQueueSendFromISR(gxQueue, &buttonId, &xHigherPriorityTaskWoken );
 
     /* If xHigherPriorityTaskWoken is now set to pdTRUE then a context switch
      * should be performed to ensure the interrupt returns directly to the highest

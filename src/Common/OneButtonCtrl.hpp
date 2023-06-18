@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Button handler
+ * @brief  One button controller
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup app
@@ -33,16 +33,13 @@
  * @{
  */
 
-#ifndef BUTTON_HANDLER_H
-#define BUTTON_HANDLER_H
+#ifndef ONE_BUTTON_CTRL_HPP
+#define ONE_BUTTON_CTRL_HPP
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "ButtonDrv.h"
-
-#include <Queue.hpp>
-#include <SimpleTimer.hpp>
+#include "ButtonActions.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -57,75 +54,82 @@
  *****************************************************************************/
 
 /**
- * The button handler executes functions depended on the button state changes.
+ * Used in case only one button is available to control the application.
  * 
- * One short button pulse : Activate next slot
- * Two short button pulses: Activate next fade effect
- * Keep pressed           : Display brightness increases/decreases
+ * @tparam tButtonOk    Button id of the single button.
  */
-class ButtonHandler : public IButtonObserver
+template < ButtonId tButtonOk >
+class OneButtonCtrl
 {
-public:
+protected:
 
     /**
-     * Construct the button handler.
+     * Handles short button triggers.
+     * 
+     * @param[in]   buttonId    The triggered button.
+     * @param[in]   triggerCnt  The number of triggers.
+     * 
+     * @return Returns the action which to execute.
      */
-    ButtonHandler() :
-        IButtonObserver(),
-        m_stateQueue(),
-        m_lastButtonInfo({BUTTON_STATE_UNKNOWN, 0UL}),
-        m_triggerCnt(0U),
-        m_timer(),
-        m_incBrightness(true)
+    ButtonActionId handleTriggers(ButtonId buttonId, uint32_t triggerCnt)
     {
-        (void)m_stateQueue.create(STATE_QUEUE_LENGTH);
+        ButtonActionId action = BUTTON_ACTION_ID_NO_ACTION;
+
+        if (tButtonOk == buttonId)
+        {
+            action = handleButtonOkTriggers(triggerCnt);
+        }
+
+        return action;
     }
 
     /**
-     * Destroy the button handler.
+     * Handles a pressed button.
      * 
+     * @param[in]   buttonId    The pressed button.
+     * 
+     * @return Returns the action which to execute.
      */
-    ~ButtonHandler()
+    ButtonActionId handlePressed(ButtonId buttonId)
     {
-        m_stateQueue.destroy();
+        ButtonActionId action = BUTTON_ACTION_ID_NO_ACTION;
+
+        if (tButtonOk == buttonId)
+        {
+            action = BUTTON_ACTION_ID_SWEEP_BRIGHTNESS;
+        }
+
+        return action;
     }
 
     /**
-     * The button handler shall be processed periodically.
-     */
-    void process();
-
-private:
-
-    /** Length of the button info queue. */
-    static const size_t     STATE_QUEUE_LENGTH      = 10U;
-
-    /** Short pulse threshold in ms. */
-    static const uint32_t   SHORT_PULSE_THRESHOLD   = 400U;
-
-    /**
-     * The button information combines the new button state with a
-     * absolute timestamp about its reception.
-     */
-    struct ButtonInfo
-    {
-        ButtonState state;      /**< Button state */
-        uint32_t    timestamp;  /**< Timestamp about button state reception in ms */
-    };
-
-    Queue<ButtonInfo>   m_stateQueue;       /**< Button info queue */
-    ButtonInfo          m_lastButtonInfo;   /**< Last handled button info */
-    uint8_t             m_triggerCnt;       /**< Number of counted button triggers (pressed -> released) */
-    SimpleTimer         m_timer;            /**< Timer used to detect different pulse variants. */
-    bool                m_incBrightness;    /**< If true the brightness will increase otherwise decrease. */
-
-    /**
-     * The observed button will notify about changes.
+     * Handles short button triggers.
      * 
-     * @param[in] state New button state
+     * @param[in]   triggerCnt  The number of triggers.
+     * 
+     * @return Returns the action which to execute.
      */
-    void notify(ButtonState state) override;
+    ButtonActionId handleButtonOkTriggers(uint32_t triggerCnt)
+    {
+        ButtonActionId          action          = BUTTON_ACTION_ID_NO_ACTION;
+        const ButtonActionId    ACTION_TABLE[]  =
+        {
+            /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
+            /* 1 */ BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT,
+            /* 2 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
+            /* 3 */ BUTTON_ACTION_ID_NEXT_FADE_EFFECT,
+            /* 4 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS,
+            /* 5 */ BUTTON_ACTION_ID_SWITCH_OFF
+        };
+        const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
 
+        if (TABLE_NUM_ELEMENTS > triggerCnt)
+        {
+            action = ACTION_TABLE[triggerCnt];
+        }
+
+        return action;
+    }
 };
 
 /******************************************************************************
@@ -136,6 +140,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BUTTON_HANDLER_H */
+#endif  /* ONE_BUTTON_CTRL_HPP */
 
 /** @} */

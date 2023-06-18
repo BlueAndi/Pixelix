@@ -77,6 +77,46 @@ void SensorDataProvider::begin()
     /* Load calibration values. If they are not available, save it with the sensor defaults. */
     if (false == load())
     {
+        uint8_t                             defaultValues                   = 0U;
+        const SensorChannelDefaultValue*    sensorChannelDefaultValueList   = Sensors::getSensorChannelDefaultValues(defaultValues);
+
+        /* Use the default values. */
+        if (nullptr != sensorChannelDefaultValueList)
+        {
+            for(index = 0U; index < defaultValues; ++index)
+            {
+                const SensorChannelDefaultValue* value = &sensorChannelDefaultValueList[index];
+
+                if (nullptr != value)
+                {
+                    ISensor* sensor = getSensor(value->sensorId);
+
+                    if (nullptr == sensor)
+                    {
+                        LOG_ERROR("Sensor %u doesn't exists.", value->sensorId);
+                    }
+                    else
+                    {
+                        ISensorChannel* channel = sensor->getChannel(value->channelId);
+
+                        if (nullptr == channel)
+                        {
+                            LOG_ERROR("Sensor %u has no channel %u.", value->sensorId, value->channelId);
+                        }
+                        else
+                        {
+                            DynamicJsonDocument jsonDoc(256U);
+
+                            if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
+                            {
+                                channelOffsetFromJson(*channel, jsonDoc["offset"]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         (void)save();
     }
 
@@ -331,6 +371,10 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
         }
         break;
 
+    case ISensorChannel::DataType::DATA_TYPE_BOOL:
+        jsonOffset.add("NaN");
+        break;
+
     default:
         jsonOffset.add("NaN");
         break;
@@ -378,6 +422,10 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
                 float32Channel->setOffset(jsonOffset.as<float>());
             }
         }
+        break;
+
+    case ISensorChannel::DataType::DATA_TYPE_BOOL:
+        /* Not supported. */
         break;
 
     default:

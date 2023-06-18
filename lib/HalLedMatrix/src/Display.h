@@ -206,7 +206,7 @@ private:
     NeoPixelBusLg<NeoGrbFeature, Neo800KbpsMethod, NeoGammaNullMethod>      m_strip;
 
     /** Panel topology, used to map coordinates to the framebuffer. */
-    NeoTopology<ColumnMajorAlternatingLayout>                               m_topo;
+    NeoTopology<CONFIG_LED_TOPO>                                            m_topo;
 
     /**
      * The LED matrix framebuffer.

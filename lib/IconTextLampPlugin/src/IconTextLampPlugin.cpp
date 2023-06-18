@@ -94,6 +94,7 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
     jsonText["ha"]["component"]         = "text";
     jsonText["ha"]["commandTemplate"]   = "{\"text\": \"{{ value }}\" }";
     jsonText["ha"]["valueTemplate"]     = "{{ value_json.text }}";
+    jsonText["ha"]["icon"]              = "mdi:form-textbox";
 
     jsonIcon["name"]            = TOPIC_ICON;
     jsonIcon["access"]          = "w"; /* Only icon upload is supported. */
