@@ -72,7 +72,7 @@ const char* HomeAssistantMqtt::KEY_HA_DISCOVERY_PREFIX      = "ha_dp";
 const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_PREFIX     = "Home Assistant Discovery Prefix";
 
 /* Initialize Home Assistant discovery prefix default value. */
-const char* HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_PREFIX  = "";
+const char* HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_PREFIX  = "homeassistant";
 
 /******************************************************************************
  * Public Methods
