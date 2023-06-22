@@ -74,6 +74,15 @@ const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_PREFIX     = "Home Assistant Di
 /* Initialize Home Assistant discovery prefix default value. */
 const char* HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_PREFIX  = "homeassistant";
 
+/* Initialize Home Assistant discovery enable flag key */
+const char* HomeAssistantMqtt::KEY_HA_DISCOVERY_ENABLE      = "ha_ena";
+
+/* Initialize Home Assistant discovery enable flag name */
+const char* HomeAssistantMqtt::NAME_HA_DISCOVERY_ENABLE     = "Enable Home Assistant Discovery";
+
+/* Initialize Home Assistant discovery enable flag default value */
+const bool  HomeAssistantMqtt::DEFAULT_HA_DISCOVERY_ENABLE  = false;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -86,13 +95,18 @@ void HomeAssistantMqtt::start()
     {
         LOG_ERROR("Couldn't register HA discovery prefix setting.");
     }
+    else if (false == settings.registerSetting(&m_haDiscoveryEnabledSetting))
+    {
+        LOG_ERROR("Couldn't register HA discovery enable setting.");
+    }
     else if (false == settings.open(true))
     {
         LOG_ERROR("Couldn't open settings.");
     }
     else
     {
-        m_haDiscoveryPrefix = m_haDiscoveryPrefixSetting.getValue();
+        m_haDiscoveryPrefix     = m_haDiscoveryPrefixSetting.getValue();
+        m_haDiscoveryEnabled    = m_haDiscoveryEnabledSetting.getValue();
 
         settings.close();
     }
@@ -103,21 +117,26 @@ void HomeAssistantMqtt::stop()
     SettingsService& settings = SettingsService::getInstance();
 
     settings.unregisterSetting(&m_haDiscoveryPrefixSetting);
+    settings.unregisterSetting(&m_haDiscoveryEnabledSetting);
 
     clearMqttDiscoveryInfoList();
 }
 
 void HomeAssistantMqtt::process(bool isConnected)
 {
-    if (true == isConnected)
+    /* The Home Assistant discovery must be enabled. */
+    if (true == m_haDiscoveryEnabled)
     {
-        if (false == m_isConnected)
+        if (true == isConnected)
         {
-            publishAllAutoDiscoveryInfo(true);
-        }
-        else
-        {
-            publishAllAutoDiscoveryInfo(false);
+            if (false == m_isConnected)
+            {
+                publishAllAutoDiscoveryInfo(true);
+            }
+            else
+            {
+                publishAllAutoDiscoveryInfo(false);
+            }
         }
     }
 
@@ -126,10 +145,11 @@ void HomeAssistantMqtt::process(bool isConnected)
 
 void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic, const String& availabilityTopic, JsonObjectConst& extra)
 {
-    /* The Home Assistant discovery prefix must be available, otherwise this
+    /* The Home Assistant discovery must be enabled and the prefix must be available, otherwise this
      * feature is disabled.
      */
-    if (false == m_haDiscoveryPrefix.isEmpty())
+    if ((true == m_haDiscoveryEnabled) &&
+        (false == m_haDiscoveryPrefix.isEmpty()))
     {
         JsonVariantConst jsonHomeAssistant = extra["ha"];
 
@@ -181,10 +201,11 @@ void HomeAssistantMqtt::registerMqttDiscovery(const String& nodeId, const String
 
 void HomeAssistantMqtt::unregisterMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic)
 {
-    /* The Home Assistant discovery prefix must be available, otherwise this
+    /* The Home Assistant discovery must be enabled and the prefix must be available, otherwise this
      * feature is disabled.
      */
-    if (false == m_haDiscoveryPrefix.isEmpty())
+    if ((true == m_haDiscoveryEnabled) &&
+        (false == m_haDiscoveryPrefix.isEmpty()))
     {
         ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
 

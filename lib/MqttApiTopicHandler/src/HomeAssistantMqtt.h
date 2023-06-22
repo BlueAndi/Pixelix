@@ -45,6 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <KeyValueString.h>
+#include <KeyValueBool.h>
 #include <ArduinoJson.h>
 #include <vector>
 
@@ -69,7 +70,9 @@ public:
      */
     HomeAssistantMqtt() :
         m_haDiscoveryPrefixSetting(KEY_HA_DISCOVERY_PREFIX, NAME_HA_DISCOVERY_PREFIX, DEFAULT_HA_DISCOVERY_PREFIX, MIN_VALUE_HA_DISCOVERY_PREFIX, MAX_VALUE_HA_DISCOVERY_PREFIX),
+        m_haDiscoveryEnabledSetting(KEY_HA_DISCOVERY_ENABLE, NAME_HA_DISCOVERY_ENABLE, DEFAULT_HA_DISCOVERY_ENABLE),
         m_haDiscoveryPrefix(),
+        m_haDiscoveryEnabled(false),
         m_isConnected(false)
     {
     }
@@ -140,6 +143,15 @@ private:
     /** Home Assistant discovery prefix max. length */
     static const size_t MAX_VALUE_HA_DISCOVERY_PREFIX   = 64U;
 
+    /** Home Assistant discovery enable flag key */
+    static const char*  KEY_HA_DISCOVERY_ENABLE;
+
+    /** Home Assistant discovery enable flag name */
+    static const char*  NAME_HA_DISCOVERY_ENABLE;
+
+    /** Home Assistant discovery enable flag default value */
+    static const bool   DEFAULT_HA_DISCOVERY_ENABLE;
+
     /** Information necessary for Home Assistant MQTT discovery. */
     struct MqttDiscoveryInfo
     {
@@ -173,10 +185,12 @@ private:
     /** List of Home Assistant MQTT discovery information. */
     typedef std::vector<MqttDiscoveryInfo*> ListOfMqttDiscoveryInfo;
 
-    KeyValueString          m_haDiscoveryPrefixSetting; /**< Setting for the Home Assistant MQTT discovery prefix. */
-    String                  m_haDiscoveryPrefix;        /**< Home Assistant MQTT discovery prefix. */
-    ListOfMqttDiscoveryInfo m_mqttDiscoveryInfoList;    /**< List of Home Assistant MQTT discovery informations. */
-    bool                    m_isConnected;              /**< Is MQTT broker connection established? */
+    KeyValueString          m_haDiscoveryPrefixSetting;     /**< Setting for the Home Assistant MQTT discovery prefix. */
+    KeyValueBool            m_haDiscoveryEnabledSetting;    /**< Setting for the Home Assistant MQTT discovery enable flag. */
+    String                  m_haDiscoveryPrefix;            /**< Home Assistant MQTT discovery prefix. */
+    bool                    m_haDiscoveryEnabled;           /**< Is the Home Assistant MQTT discovery enabled or not. */
+    ListOfMqttDiscoveryInfo m_mqttDiscoveryInfoList;        /**< List of Home Assistant MQTT discovery informations. */
+    bool                    m_isConnected;                  /**< Is MQTT broker connection established? */
 
     HomeAssistantMqtt(const HomeAssistantMqtt& ext);
     HomeAssistantMqtt& operator=(const HomeAssistantMqtt& ext);
