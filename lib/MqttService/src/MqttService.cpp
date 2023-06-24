@@ -367,8 +367,6 @@ void MqttService::rxCallback(char* topic, uint8_t* payload, uint32_t length)
 {
     SubscriberList::const_iterator it;
 
-    LOG_DEBUG("MQTT Rx: %s", topic);
-
     for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
     {
         if (nullptr != (*it))

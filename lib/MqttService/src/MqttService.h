@@ -215,7 +215,7 @@ private:
      * Max. MQTT client buffer size in byte.
      * Received MQTT messages greather than this will be skipped.
      */
-    static const size_t     MAX_BUFFER_SIZE             = 1024U;
+    static const size_t     MAX_BUFFER_SIZE             = 2048U;
 
     KeyValueString          m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
     String                  m_url;                  /**< URL of the MQTT broker */
