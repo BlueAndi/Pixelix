@@ -83,7 +83,7 @@ public:
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
         m_page(TEMPERATURE),
-        m_pageTime(10000U),
+        m_pageTime(DEFAULT_PAGE_TIME),
         m_timer(),
         m_mutex(),
         m_humidity(0.0F),
@@ -240,7 +240,12 @@ private:
     /**
      * Read sensor only every N milliseconds (currently 90 seconds)
      */
-    static const uint32_t       SENSOR_UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(90U);
+    static const uint32_t       SENSOR_UPDATE_PERIOD    = SIMPLE_TIMER_SECONDS(90U);
+
+    /**
+     * Default time in ms how long one page will be shown until the next page.
+     */
+    static const uint32_t       DEFAULT_PAGE_TIME       = SIMPLE_TIMER_SECONDS(10U);
 
     Fonts::FontType             m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup                 m_textCanvas;               /**< Canvas used for the text widget. */
