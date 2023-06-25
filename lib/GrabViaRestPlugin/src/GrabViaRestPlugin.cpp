@@ -36,7 +36,6 @@
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <MqttService.h>
 
 /******************************************************************************
  * Compiler Switches
