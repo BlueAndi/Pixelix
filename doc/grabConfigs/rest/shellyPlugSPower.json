@@ -1,0 +1,11 @@
+{
+    "method": "GET",
+    "url": "http://192.168.1.123/meter/0/",
+    "filter": {
+      "power": true
+    },
+    "iconPath": "/configuration/plug.bmp",
+    "format": "\\calign%0.1f W",
+    "multiplier": 1,
+    "offset": 0
+  }
