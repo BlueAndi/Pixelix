@@ -25,17 +25,18 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Github plugin
+ * @brief  Grab information via MQTT plugin
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "GithubPlugin.h"
+#include "GrabViaRestPlugin.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
+#include <MqttService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -57,22 +58,19 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize image path for standard icon. */
-const char* GithubPlugin::IMAGE_PATH_STD_ICON      = "/plugins/GithubPlugin/github.bmp";
-
 /* Initialize plugin topic. */
-const char* GithubPlugin::TOPIC_CONFIG             = "/github";
+const char* GrabViaRestPlugin::TOPIC_CONFIG = "/config";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void GithubPlugin::getTopics(JsonArray& topics) const
+void GrabViaRestPlugin::getTopics(JsonArray& topics) const
 {
     (void)topics.add(TOPIC_CONFIG);
 }
 
-bool GithubPlugin::getTopic(const String& topic, JsonObject& value) const
+bool GrabViaRestPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
@@ -85,17 +83,22 @@ bool GithubPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool GithubPlugin::setTopic(const String& topic, const JsonObject& value)
+bool GrabViaRestPlugin::setTopic(const String& topic, const JsonObject& value)
 {
     bool isSuccessful = false;
 
     if (0U != topic.equals(TOPIC_CONFIG))
     {
-        const size_t        JSON_DOC_SIZE           = 512U;
+        const size_t        JSON_DOC_SIZE           = 1024U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
-        JsonVariantConst    jsonUser                = value["user"];
-        JsonVariantConst    jsonRepository          = value["repository"];
+        JsonVariantConst    jsonMethod              = value["method"];
+        JsonVariantConst    jsonUrl                 = value["url"];
+        JsonVariantConst    jsonFilter              = value["filter"];
+        JsonVariantConst    jsonIconPath            = value["iconPath"];
+        JsonVariantConst    jsonFormat              = value["format"];
+        JsonVariantConst    jsonMultiplier          = value["multiplier"];
+        JsonVariantConst    jsonOffset              = value["offset"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -108,15 +111,64 @@ bool GithubPlugin::setTopic(const String& topic, const JsonObject& value)
          * The type check will follow in the setConfiguration().
          */
 
-        if (false == jsonUser.isNull())
+        if (false == jsonMethod.isNull())
         {
-            jsonCfg["user"] = jsonUser.as<String>();
+            jsonCfg["method"] = jsonMethod.as<String>();
             isSuccessful = true;
         }
 
-        if (false == jsonRepository.isNull())
+        if (false == jsonUrl.isNull())
         {
-            jsonCfg["repository"] = jsonRepository.as<String>();
+            jsonCfg["url"] = jsonUrl.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonFilter.isNull())
+        {
+            if (true == jsonFilter.is<JsonObjectConst>())
+            {
+                jsonCfg["filter"] = jsonFilter.as<JsonObjectConst>();
+                isSuccessful = true;
+            }
+            else if (true == jsonFilter.is<String>())
+            {
+                const size_t            JSON_DOC_FILTER_SIZE    = 256U;
+                DynamicJsonDocument     jsonDocFilter(JSON_DOC_SIZE);
+                DeserializationError    result = deserializeJson(jsonDocFilter, jsonFilter.as<String>());
+
+                if (DeserializationError::Ok == result)
+                {
+                    jsonCfg["filter"] = jsonDocFilter.as<JsonObjectConst>();
+                    isSuccessful = true;
+                }
+            }
+            else
+            {
+                ;
+            }
+        }
+
+        if (false == jsonIconPath.isNull())
+        {
+            jsonCfg["iconPath"] = jsonIconPath.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonFormat.isNull())
+        {
+            jsonCfg["format"] = jsonFormat.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonMultiplier.isNull())
+        {
+            jsonCfg["multiplier"] = jsonMultiplier.as<float>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonOffset.isNull())
+        {
+            jsonCfg["offset"] = jsonOffset.as<float>();
             isSuccessful = true;
         }
 
@@ -136,7 +188,7 @@ bool GithubPlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
-bool GithubPlugin::hasTopicChanged(const String& topic)
+bool GrabViaRestPlugin::hasTopicChanged(const String& topic)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
     bool                        hasTopicChanged = m_hasTopicChanged;
@@ -149,36 +201,37 @@ bool GithubPlugin::hasTopicChanged(const String& topic)
     return hasTopicChanged;
 }
 
-void GithubPlugin::start(uint16_t width, uint16_t height)
+void GrabViaRestPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_stdIconWidget);
-
-    /* Load all icons from filesystem now, to prevent filesystem
-     * access during active/inactive/update methods.
-     */
-    (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
+    m_layoutLeft.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
+    (void)m_layoutLeft.addWidget(m_iconWidget);
 
     /* The text canvas is left aligned to the icon canvas and it spans over
      * the whole display height.
      */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
+    m_layoutRight.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
+    (void)m_layoutRight.addWidget(m_textWidgetRight);
+
+    /* If only text is used, it will span over the whole display. */
+    m_layoutTextOnly.setPosAndSize(0, 0, width, height);
+    (void)m_layoutTextOnly.addWidget(m_textWidgetTextOnly);
 
     /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
+    m_textWidgetRight.setFont(Fonts::getFontByType(m_fontType));
+    m_textWidgetTextOnly.setFont(Fonts::getFontByType(m_fontType));
 
     /* The text widget inside the text canvas is left aligned on x-axis and
      * aligned to the center of y-axis.
      */
-    if (height > m_textWidget.getFont().getHeight())
+    if (height > m_textWidgetRight.getFont().getHeight())
     {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
+        uint16_t diffY = height - m_textWidgetRight.getFont().getHeight();
         uint16_t offsY = diffY / 2U;
 
-        m_textWidget.move(0, offsY);
+        m_textWidgetRight.move(0, offsY);
+        m_textWidgetTextOnly.move(0, offsY);
     }
 
     /* Try to load configuration. If there is no configuration available, a default configuration
@@ -199,12 +252,17 @@ void GithubPlugin::start(uint16_t width, uint16_t height)
         updateTimestampLastUpdate();
     }
 
+    if (false == m_iconPath.isEmpty())
+    {
+        (void)m_iconWidget.load(FILESYSTEM, m_iconPath);
+    }
+
     m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
     initHttpClient();
 }
 
-void GithubPlugin::stop()
+void GrabViaRestPlugin::stop()
 {
     String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
@@ -218,7 +276,7 @@ void GithubPlugin::stop()
     }
 }
 
-void GithubPlugin::process(bool isConnected)
+void GrabViaRestPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
@@ -269,8 +327,9 @@ void GithubPlugin::process(bool isConnected)
         {
             if (false == startHttpRequest())
             {
-                /* If a request fails, show standard icon and a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                /* If a request fails, a '?' will be shown. */
+                m_textWidgetRight.setFormatStr("\\calign?");
+                m_textWidgetTextOnly.setFormatStr("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -283,21 +342,22 @@ void GithubPlugin::process(bool isConnected)
     else
     {
         /* If the connection is lost, stop periodically requesting information
-         * via REST API.
-         */
+            * via REST API.
+            */
         if (false == isConnected)
         {
             m_requestTimer.stop();
         }
         /* Network connection is available and next request may be necessary for
-         * information update.
-         */
+            * information update.
+            */
         else if (true == m_requestTimer.isTimeout())
         {
             if (false == startHttpRequest())
             {
-                /* If a request fails, show standard icon and a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                /* If a request fails, a '?' will be shown. */
+                m_textWidgetRight.setFormatStr("\\calign?");
+                m_textWidgetTextOnly.setFormatStr("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -331,7 +391,8 @@ void GithubPlugin::process(bool isConnected)
             if (true == m_isConnectionError)
             {
                 /* If a request fails, show standard icon and a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                m_textWidgetRight.setFormatStr("\\calign?");
+                m_textWidgetTextOnly.setFormatStr("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -350,13 +411,22 @@ void GithubPlugin::process(bool isConnected)
     }
 }
 
-void GithubPlugin::update(YAGfx& gfx)
+void GrabViaRestPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
+
+    /* If a icon is available, the icon/text layout will be used otherwise the text only layout. */
+    if (false == m_iconPath.isEmpty())
+    {
+        m_layoutLeft.update(gfx);
+        m_layoutRight.update(gfx);
+    }
+    else
+    {
+        m_layoutTextOnly.update(gfx);
+    }
 }
 
 /******************************************************************************
@@ -367,44 +437,112 @@ void GithubPlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-void GithubPlugin::requestStoreToPersistentMemory()
+void GrabViaRestPlugin::requestStoreToPersistentMemory()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     m_storeConfigReq = true;
 }
 
-void GithubPlugin::getConfiguration(JsonObject& jsonCfg) const
+void GrabViaRestPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonCfg["user"]         = m_githubUser;
-    jsonCfg["repository"]   = m_githubRepository;
+    jsonCfg["method"]       = m_method;
+    jsonCfg["url"]          = m_url;
+    jsonCfg["filter"]       = m_filter;
+    jsonCfg["iconPath"]     = m_iconPath;
+    jsonCfg["format"]       = m_format;
+    jsonCfg["multiplier"]   = m_multiplier;
+    jsonCfg["offset"]       = m_offset;
 }
 
-bool GithubPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+bool GrabViaRestPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 {
     bool                status          = false;
-    JsonVariantConst    jsonUser        = jsonCfg["user"];
-    JsonVariantConst    jsonRepository  = jsonCfg["repository"];
+    JsonVariantConst    jsonMethod      = jsonCfg["method"];
+    JsonVariantConst    jsonUrl         = jsonCfg["url"];
+    JsonVariantConst    jsonFilter      = jsonCfg["filter"];
+    JsonVariantConst    jsonIconPath    = jsonCfg["iconPath"];
+    JsonVariantConst    jsonFormat      = jsonCfg["format"];
+    JsonVariantConst    jsonMultiplier  = jsonCfg["multiplier"];
+    JsonVariantConst    jsonOffset      = jsonCfg["offset"];
 
-    if (false == jsonUser.is<String>())
+    if (false == jsonMethod.is<String>())
     {
-        LOG_WARNING("JSON user not found or invalid type.");
+        LOG_WARNING("JSON method not found or invalid type.");
     }
-    else if (false == jsonRepository.is<String>())
+    else if (false == jsonUrl.is<String>())
     {
-        LOG_WARNING("JSON repository not found or invalid type.");
+        LOG_WARNING("JSON URL not found or invalid type.");
+    }
+    else if (false == jsonFilter.is<JsonObjectConst>())
+    {
+        LOG_WARNING("JSON filter not found or invalid type.");
+    }
+    else if (false == jsonIconPath.is<String>())
+    {
+        LOG_WARNING("JSON icon path not found or invalid type.");
+    }
+    else if (false == jsonFormat.is<String>())
+    {
+        LOG_WARNING("JSON format not found or invalid type.");
+    }
+    else if (false == jsonMultiplier.is<float>())
+    {
+        LOG_WARNING("JSON multiplier not found or invalid type.");
+    }
+    else if (false == jsonOffset.is<float>())
+    {
+        LOG_WARNING("JSON offset not found or invalid type.");
     }
     else
     {
-        MutexGuard<MutexRecursive> guard(m_mutex);
+        bool                        reqIcon = false;
+        MutexGuard<MutexRecursive>  guard(m_mutex);
 
-        m_githubUser        = jsonUser.as<String>();
-        m_githubRepository  = jsonRepository.as<String>();
+        if (m_iconPath != jsonIconPath.as<String>())
+        {
+            reqIcon = true;
+        }
+
+        m_method        = jsonMethod.as<String>();
+        m_url           = jsonUrl.as<String>();
+        m_filter        = jsonFilter.as<JsonObjectConst>();
+        m_iconPath      = jsonIconPath.as<String>();
+        m_format        = jsonFormat.as<String>();
+        m_multiplier    = jsonMultiplier.as<float>();
+        m_offset        = jsonOffset.as<float>();
 
         /* Force update on display */
         m_requestTimer.start(UPDATE_PERIOD_SHORT);
+
+        /* Load icon immediately */
+        if (true == reqIcon)
+        {
+            if (true == m_iconPath.endsWith(".sprite"))
+            {
+                String textureFileName = m_iconPath;
+
+                textureFileName.replace(".sprite", ".bmp");
+
+                if (false == m_iconWidget.loadSpriteSheet(FILESYSTEM, m_iconPath, textureFileName))
+                {
+                    LOG_WARNING("Failed to load animation %s / %s.", m_iconPath.c_str(), textureFileName.c_str());
+                }
+            }
+            else if (true == m_iconPath.endsWith(".bmp"))
+            {
+                if (false == m_iconWidget.load(FILESYSTEM, m_iconPath))
+                {
+                    LOG_WARNING("Failed to load bitmap %s.", m_iconPath.c_str());
+                }
+            }
+            else
+            {
+                m_iconWidget.clear(ColorDef::BLACK);
+            }
+        }
 
         m_hasTopicChanged = true;
 
@@ -414,24 +552,39 @@ bool GithubPlugin::setConfiguration(JsonObjectConst& jsonCfg)
     return status;
 }
 
-bool GithubPlugin::startHttpRequest()
+bool GrabViaRestPlugin::startHttpRequest()
 {
     bool status = false;
 
-    if ((false == m_githubUser.isEmpty()) &&
-        (false == m_githubRepository.isEmpty()))
+    if (false == m_url.isEmpty())
     {
-        String url = String("https://api.github.com/repos/") + m_githubUser + "/" + m_githubRepository;
-
-        if (true == m_client.begin(url))
+        if (true == m_client.begin(m_url))
         {
-            if (false == m_client.GET())
+            if (true == m_method.equalsIgnoreCase("GET"))
             {
-                LOG_WARNING("GET %s failed.", url.c_str());
+                if (false == m_client.GET())
+                {
+                    LOG_WARNING("GET %s failed.", m_url.c_str());
+                }
+                else
+                {
+                    status = true;
+                }
+            }
+            else if (true == m_method.equalsIgnoreCase("POST"))
+            {
+                if (false == m_client.POST())
+                {
+                    LOG_WARNING("POST %s failed.", m_url.c_str());
+                }
+                else
+                {
+                    status = true;
+                }
             }
             else
             {
-                status = true;
+                LOG_WARNING("Invalid HTTP method %s.", m_method.c_str());
             }
         }
     }
@@ -439,7 +592,7 @@ bool GithubPlugin::startHttpRequest()
     return status;
 }
 
-void GithubPlugin::initHttpClient()
+void GrabViaRestPlugin::initHttpClient()
 {
     /* Note: All registered callbacks are running in a different task context!
      *       Therefore it is not allowed to access a member here directly.
@@ -453,20 +606,17 @@ void GithubPlugin::initHttpClient()
 
             if (nullptr != jsonDoc)
             {
-                size_t                          payloadSize = 0U;
-                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-                const size_t                    FILTER_SIZE = 128U;
-                StaticJsonDocument<FILTER_SIZE> filter;
-                DeserializationError            error;
-
-                filter["stargazers_count"] = true;
+                size_t                  payloadSize = 0U;
+                const char*             payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const size_t            FILTER_SIZE = 128U;
+                DeserializationError    error;
                 
-                if (true == filter.overflowed())
+                if (true == m_filter.overflowed())
                 {
                     LOG_ERROR("Less memory for filter available.");
                 }
 
-                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
 
                 if (DeserializationError::Ok != error.code())
                 {
@@ -512,26 +662,66 @@ void GithubPlugin::initHttpClient()
     );
 }
 
-void GithubPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+void GrabViaRestPlugin::getJsonValueByFilter(JsonObjectConst src, JsonObjectConst filter, JsonVariantConst& value)
 {
-    JsonVariantConst jsonStargazersCount = jsonDoc["stargazers_count"];
-
-    if (false == jsonStargazersCount.is<uint32_t>())
+    for (JsonPairConst pair : filter)
     {
-        LOG_WARNING("JSON stargazers_count type mismatch or missing.");
-    }
-    else
-    {
-        uint32_t    stargazersCount = jsonStargazersCount.as<uint32_t>();
-        String      info            = "\\calign";
-        
-        info += stargazersCount;
+        if (true == pair.value().is<JsonObjectConst>())
+        {
+            getJsonValueByFilter(src[pair.key()], filter[pair.key()], value);
+        }
+        else
+        {
+            value = src[pair.key()];
+        }
 
-        m_textWidget.setFormatStr(info);
+        /* Break immediately as its assumed that the filter only contains one
+         * single object.
+         */
+        break;
     }
 }
 
-void GithubPlugin::clearQueue()
+void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
+{
+    JsonVariantConst jsonValue;
+
+    getJsonValueByFilter(jsonDoc.as<JsonObjectConst>(), m_filter.as<JsonObjectConst>(), jsonValue);
+
+    /* Is it a number? */
+    if (true == jsonValue.is<float>())
+    {
+        const size_t    BUFFER_SIZE = 128U;
+        char            buffer[BUFFER_SIZE];
+        float           value = jsonValue.as<float>();
+
+        value *= m_multiplier;
+        value += m_offset;
+
+        (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<String>().c_str());
+
+        m_textWidgetRight.setFormatStr(buffer);
+        m_textWidgetTextOnly.setFormatStr(buffer);
+    }
+    /* Is it a string? */
+    else if (true == jsonValue.is<String>())
+    {
+        const size_t    BUFFER_SIZE = 128U;
+        char            buffer[BUFFER_SIZE];
+
+        (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<String>().c_str());
+
+        m_textWidgetRight.setFormatStr(buffer);
+        m_textWidgetTextOnly.setFormatStr(buffer);
+    }
+    else
+    {
+        m_textWidgetRight.setFormatStr("\\calign-");
+        m_textWidgetTextOnly.setFormatStr("\\calign-");
+    }
+}
+
+void GrabViaRestPlugin::clearQueue()
 {
     Msg msg;
 

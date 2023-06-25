@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Github plugin
+ * @brief  Grab information via MQTT plugin
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup plugin
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef GITHUB_PLUGIN_H
-#define GITHUB_PLUGIN_H
+#ifndef GRAB_VIA_MQTT_PLUGIN_H
+#define GRAB_VIA_MQTT_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -63,9 +63,9 @@
  *****************************************************************************/
 
 /**
- * Shows the current number of stars, of the given github repository.
+ * Capture information from a remote server by using REST API.
  */
-class GithubPlugin : public Plugin, private PluginConfigFsHandler
+class GrabViaRestPlugin : public Plugin, private PluginConfigFsHandler
 {
 public:
 
@@ -75,19 +75,24 @@ public:
      * @param[in] name  Plugin name
      * @param[in] uid   Unique id
      */
-    GithubPlugin(const String& name, uint16_t uid) :
+    GrabViaRestPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
         PluginConfigFsHandler(uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_stdIconWidget(),
-        m_textWidget("\\calign?"),
-        m_githubUser("BlueAndi"),
-        m_githubRepository("esp-rgb-led-matrix"),
-        m_urlIcon(),
-        m_urlText(),
+        m_layoutRight(),
+        m_layoutLeft(),
+        m_layoutTextOnly(),
+        m_iconWidget(),
+        m_textWidgetRight("\\calign?"),
+        m_textWidgetTextOnly("\\calign?"),
+        m_method("GET"),
+        m_url(),
+        m_filter(1024U),
         m_client(),
+        m_iconPath(),
+        m_format("%s"),
+        m_multiplier(1.0f),
+        m_offset(0.0f),
         m_requestTimer(),
         m_mutex(),
         m_isConnectionError(false),
@@ -103,7 +108,7 @@ public:
     /**
      * Destroys the plugin.
      */
-    ~GithubPlugin()
+    ~GrabViaRestPlugin()
     {
         m_client.regOnResponse(nullptr);
         m_client.regOnClosed(nullptr);
@@ -129,7 +134,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new GithubPlugin(name, uid);
+        return new GrabViaRestPlugin(name, uid);
     }
 
     /**
@@ -261,20 +266,6 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /**
-     * Get github user name.
-     * 
-     * @return github user name
-     */
-    String getUser() const;
-
-    /**
-     * Set github user name.
-     * 
-     * @param[in] name  github user name
-     */
-    void setUser(const String& name);
-
 private:
 
     /**
@@ -288,11 +279,6 @@ private:
     static const uint16_t   ICON_HEIGHT         = 8U;
 
     /**
-     * Image path within the filesystem to standard icon.
-     */
-    static const char*      IMAGE_PATH_STD_ICON;
-
-    /**
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
@@ -301,7 +287,7 @@ private:
      * Period in ms for requesting data from server.
      * This is used in case the last request to the server was successful.
      */
-    static const uint32_t   UPDATE_PERIOD       = SIMPLE_TIMER_HOURS(4U);
+    static const uint32_t   UPDATE_PERIOD       = SIMPLE_TIMER_MINUTES(2U);
 
     /**
      * Short period in ms for requesting data from server.
@@ -316,23 +302,28 @@ private:
      */
     static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
 
-    Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_stdIconWidget;            /**< Bitmap widget, used to show the standard icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    String                  m_githubUser;               /**< The github user name */
-    String                  m_githubRepository;         /**< The github repository name */
-    String                  m_urlIcon;                  /**< REST API URL for updating the icon */
-    String                  m_urlText;                  /**< REST API URL for updating the text */
-    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer             m_requestTimer;             /**< Timer used for cyclic request of new data. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    bool                    m_isConnectionError;        /**< Is connection error happened? */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
-    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
+    Fonts::FontType         m_fontType;             /**< Font type which shall be used if there is no conflict with the layout. */
+    WidgetGroup             m_layoutRight;          /**< Canvas used for the text widget in a layout with icon on the left side. */
+    WidgetGroup             m_layoutLeft;           /**< Canvas used for the bitmap widget in a layout with text on the right side. */
+    WidgetGroup             m_layoutTextOnly;       /**< Canvas used in case only text is shown. */
+    BitmapWidget            m_iconWidget;           /**< Bitmap widget, used to show the icon. */
+    TextWidget              m_textWidgetRight;      /**< Text widget, used in layout with icon. */
+    TextWidget              m_textWidgetTextOnly;   /**< Text widget, used in layout without icon. */
+    String                  m_method;               /**< HTTP method. */
+    String                  m_url;                  /**< REST URL. */
+    DynamicJsonDocument     m_filter;               /**< Filter used for the response in JSON format. */
+    AsyncHttpClient         m_client;               /**< Asynchronous HTTP client. */
+    String                  m_iconPath;             /**< Icon filename with path. */
+    String                  m_format;               /**< Format used to embed the retrieved filtered value. */
+    float                   m_multiplier;           /**< If grabbed value is a number, it will be multiplied with the multiplier. */
+    float                   m_offset;               /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */
+    SimpleTimer             m_requestTimer;         /**< Timer used for cyclic request of new data. */
+    mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                    m_isConnectionError;    /**< Is connection error happened? */
+    SimpleTimer             m_cfgReloadTimer;       /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_storeConfigReq;       /**< Is requested to store the configuration in persistent memory? */
+    bool                    m_reloadConfigReq;      /**< Is requested to reload the configuration from persistent memory? */
+    bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -402,6 +393,15 @@ private:
     void initHttpClient(void);
 
     /**
+     * Get value from JSON source by the filter.
+     * 
+     * @param[in]   src     Source in JSON format
+     * @param[in]   filter  Filter in JSON format
+     * @param[out]  value   Value in JSON format
+     */
+    void getJsonValueByFilter(JsonObjectConst src, JsonObjectConst filter, JsonVariantConst& value);
+
+    /**
      * Handle a web response from the server.
      * 
      * @param[in] jsonDoc   Web response as JSON document
@@ -418,6 +418,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* GITHUB_PLUGIN_H */
+#endif  /* GRAB_VIA_MQTT_PLUGIN_H */
 
 /** @} */
