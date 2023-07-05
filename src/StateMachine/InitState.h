@@ -48,6 +48,13 @@
 #include <IPluginMaintenance.hpp>
 #include <SimpleTimer.hpp>
 
+#if CONFIG_RTC == 1
+#include "Rtc1307Drv.h"
+#else /* CONFIG_RTC == 1 */
+#include "RtcNoneDrv.h"
+#endif /* CONFIG_RTC == 1 */
+
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
@@ -109,6 +116,12 @@ private:
     bool        m_isQuiet;              /**< Is quite mode active? */
     bool        m_isApModeRequested;    /**< Is wifi AP mode requested? */
     SimpleTimer m_timer;                /**< Timer used to stay for a min. time in this state. */
+
+#if CONFIG_RTC == 1
+    Rtc1307Drv  m_rtcDrv;               /**< RTC driver */
+#else /* CONFIG_RTC == 1 */
+    RtcNoneDrv  m_rtcDrv;               /**< RTC driver without functionality. */
+#endif /* CONFIG_RTC == 1 */
 
     /**
      * Constructs the state.

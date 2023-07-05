@@ -42,6 +42,7 @@
 #include <Wire.h>
 
 #include "ButtonDrv.h"
+#include "ClockDrv.h"
 #include "DisplayMgr.h"
 #include "SysMsg.h"
 #include "Version.h"
@@ -174,6 +175,9 @@ void InitState::entry(StateMachine& sm)
     }
     else
     {
+        /* Initialize clock driver */
+        ClockDrv::getInstance().init(&m_rtcDrv);
+
         /* Initialize sensors */
         SensorDataProvider::getInstance().begin();
 

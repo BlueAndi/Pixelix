@@ -369,7 +369,7 @@ void CountdownPlugin::calculateDifferenceInDays()
 {
     tm currentTime;
 
-    if (false != ClockDrv::getInstance().getTime(&currentTime))
+    if (false != ClockDrv::getInstance().getTime(currentTime))
     {
         uint32_t    currentDateInDays   = 0U;
         uint32_t    targetDateInDays    = 0U;

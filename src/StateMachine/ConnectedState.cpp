@@ -36,7 +36,6 @@
 #include "SysMsg.h"
 #include "UpdateMgr.h"
 #include "MyWebServer.h"
-#include "ClockDrv.h"
 #include "DisplayMgr.h"
 #include "Services.h"
 
@@ -119,9 +118,6 @@ void ConnectedState::entry(StateMachine& sm)
     {
         const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
         const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
-
-        /* Start the ClockDriver */
-        ClockDrv::getInstance().init();
 
         /* Notify about successful network connection. */
         DisplayMgr::getInstance().setNetworkStatus(true);

@@ -1,5 +1,5 @@
 {
-    "name": "DateTimePlugin",
+    "name": "IRtc",
     "version": "0.1.0",
     "description": "....",
     "authors": [{
@@ -9,13 +9,7 @@
         "maintainer": true
     }],
     "license": "MIT",
-    "dependencies": [{
-        "name": "LittleFS"
-    }, {
-        "name": "Plugin"
-    }, {
-        "name": "IRtc"
-    }],
+    "dependencies": [],
     "frameworks": "*",
     "platforms": "*"
 }
