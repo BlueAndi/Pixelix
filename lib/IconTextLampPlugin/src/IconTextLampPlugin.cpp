@@ -170,11 +170,11 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
     if (0U != topic.equals(TOPIC_TEXT))
     {
         String              text;
-        JsonVariantConst    jsonShow    = value["text"];
+        JsonVariantConst    jsonText    = value["text"];
 
-        if (false == jsonShow.isNull())
+        if (false == jsonText.isNull())
         {
-            text = jsonShow.as<String>();
+            text = jsonText.as<String>();
             isSuccessful = true;
         }
 
