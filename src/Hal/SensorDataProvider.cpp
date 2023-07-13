@@ -68,70 +68,16 @@ const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME = "/configuration/sensors
 
 void SensorDataProvider::begin()
 {
-    uint8_t index   = 0U;
-    uint8_t cnt     = m_impl->getNumSensors();
-
     /* Initialize all sensor drivers. */
     m_impl->begin();
     
     /* Load calibration values. If they are not available, save it with the sensor defaults. */
     if (false == load())
     {
-        uint8_t                             defaultValues                   = 0U;
-        const SensorChannelDefaultValue*    sensorChannelDefaultValueList   = Sensors::getSensorChannelDefaultValues(defaultValues);
-
-        /* Use the default values. */
-        if (nullptr != sensorChannelDefaultValueList)
-        {
-            for(index = 0U; index < defaultValues; ++index)
-            {
-                const SensorChannelDefaultValue* value = &sensorChannelDefaultValueList[index];
-
-                if (nullptr != value)
-                {
-                    ISensor* sensor = getSensor(value->sensorId);
-
-                    if (nullptr == sensor)
-                    {
-                        LOG_ERROR("Sensor %u doesn't exists.", value->sensorId);
-                    }
-                    else
-                    {
-                        ISensorChannel* channel = sensor->getChannel(value->channelId);
-
-                        if (nullptr == channel)
-                        {
-                            LOG_ERROR("Sensor %u has no channel %u.", value->sensorId, value->channelId);
-                        }
-                        else
-                        {
-                            DynamicJsonDocument jsonDoc(256U);
-
-                            if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
-                            {
-                                channelOffsetFromJson(*channel, jsonDoc["offset"]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        (void)save();
+        createCalibrationFile();
     }
 
-    /* For debug purposes, show the sensor driver states. */
-    for(index = 0U; index < cnt; ++index)
-    {
-        ISensor* sensor = m_impl->getSensor(index);
-
-        if (nullptr != sensor)
-        {
-            bool isAvailable = sensor->isAvailable();
-
-            LOG_INFO("Sensor %s: %s", sensor->getName(), (false == isAvailable) ? "-" : "available" );
-        }
-    }
+    logSensorAvailability();
 }
 
 uint8_t SensorDataProvider::getNumSensors() const
@@ -317,6 +263,27 @@ SensorDataProvider::SensorDataProvider() :
 {
 }
 
+void SensorDataProvider::logSensorAvailability()
+{
+    uint8_t index   = 0U;
+    uint8_t cnt     = m_impl->getNumSensors();
+
+    /* For user information, show the sensor driver states. */
+    while(cnt > index)
+    {
+        ISensor* sensor = m_impl->getSensor(index);
+
+        if (nullptr != sensor)
+        {
+            bool isAvailable = sensor->isAvailable();
+
+            LOG_INFO("Sensor %s: %s", sensor->getName(), (false == isAvailable) ? "-" : "available" );
+        }
+
+        ++index;
+    }
+}
+
 void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISensorChannel& channel) const
 {
     switch(channel.getDataType())
@@ -431,6 +398,53 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
     default:
         break;
     }
+}
+
+void SensorDataProvider::createCalibrationFile()
+{
+    uint8_t                             defaultValues                   = 0U;
+    const SensorChannelDefaultValue*    sensorChannelDefaultValueList   = Sensors::getSensorChannelDefaultValues(defaultValues);
+
+    /* Use the default values. */
+    if (nullptr != sensorChannelDefaultValueList)
+    {
+        uint8_t index = 0U;
+
+        for(index = 0U; index < defaultValues; ++index)
+        {
+            const SensorChannelDefaultValue* value = &sensorChannelDefaultValueList[index];
+
+            if (nullptr != value)
+            {
+                ISensor* sensor = getSensor(value->sensorId);
+
+                if (nullptr == sensor)
+                {
+                    LOG_ERROR("Sensor %u doesn't exists.", value->sensorId);
+                }
+                else
+                {
+                    ISensorChannel* channel = sensor->getChannel(value->channelId);
+
+                    if (nullptr == channel)
+                    {
+                        LOG_ERROR("Sensor %u has no channel %u.", value->sensorId, value->channelId);
+                    }
+                    else
+                    {
+                        DynamicJsonDocument jsonDoc(256U);
+
+                        if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
+                        {
+                            channelOffsetFromJson(*channel, jsonDoc["offset"]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    (void)save();
 }
 
 /******************************************************************************

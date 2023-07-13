@@ -168,6 +168,11 @@ private:
     SensorDataProvider& operator=(const SensorDataProvider& instance);
 
     /**
+     * Log the sensor availability to the logging system as user information.
+     */
+    void logSensorAvailability();
+
+    /**
      * Add the channel offset value to the JSON array.
      * 
      * @param[out]  jsonOffset  JSON offset array
@@ -182,6 +187,11 @@ private:
      * @param[in]   jsonOffset  JSON offset value
      */
     void channelOffsetFromJson(ISensorChannel& channel, JsonVariantConst jsonOffset) const;
+
+    /**
+     * Create file with the default calibration values.
+     */
+    void createCalibrationFile();
 };
 
 /******************************************************************************
