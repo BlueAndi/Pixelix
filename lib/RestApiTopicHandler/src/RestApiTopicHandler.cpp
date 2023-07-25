@@ -185,7 +185,9 @@ void RestApiTopicHandler::registerTopic(IPluginMaintenance* plugin, const String
 void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, PluginTopic* pluginTopic)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    // CTA getRoutes and getStops responses can be pretty huge
+    const size_t        JSON_DOC_SIZE   = 10240U;
+    const size_t        JSON_PAR_DOC_SIZE = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj         = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
@@ -203,6 +205,12 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, PluginTo
             (ACCESS_READ_WRITE == pluginTopic->access)
         ))
     {
+
+        /* passing params with get requests for advanced web config uses */
+        DynamicJsonDocument jsonDocPar(JSON_PAR_DOC_SIZE);
+        par2Json(jsonDocPar, request);
+        dataObj["pars"] = jsonDocPar.as<JsonObject>();
+
         /* Topic data will be transported in the HTTP body as JSON. */
         if (false == pluginTopic->plugin->getTopic(pluginTopic->topic, dataObj))
         {
@@ -224,7 +232,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, PluginTo
             (ACCESS_WRITE_ONLY == pluginTopic->access)
         ))
     {
-        DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
+        DynamicJsonDocument jsonDocPar(JSON_PAR_DOC_SIZE);
         
         /* Topic data is in the HTTP parameters and needs to be converted to JSON. */
         par2Json(jsonDocPar, request);

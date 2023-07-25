@@ -1,0 +1,36 @@
+{
+  "name": "ChicagoBusTrackerPlugin",
+  "version": "0.1.0",
+  "description": "when is the bus coming?",
+  "authors": [
+    {
+      "name": "Julie Hill",
+      "email": "queenkjuul@pm.me",
+      "url": "https://github.com/queenkjuul",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "AsyncHttpClient"
+    },
+    {
+      "name": "LittleFS"
+    },
+    {
+      "name": "Os"
+    },
+    {
+      "name": "Plugin"
+    },
+    {
+      "name": "YAWidgets"
+    },
+    {
+      "name": "Utilities"
+    }
+  ],
+  "frameworks": "*",
+  "platforms": "*"
+}

@@ -1,0 +1,24 @@
+{
+  "name": "ChicagoIconTextPlugin",
+  "version": "0.1.0",
+  "description": "Chicago transit PSA to give you that real 'on the bus' feeling",
+  "authors": [
+    {
+      "name": "Julie Hill",
+      "email": "queenkjuul@pm.me",
+      "url": "https://github.com/queenkjuul",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "LittleFS"
+    },
+    {
+      "name": "Plugin"
+    }
+  ],
+  "frameworks": "*",
+  "platforms": "*"
+}

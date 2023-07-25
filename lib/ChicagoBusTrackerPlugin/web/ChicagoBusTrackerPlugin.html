@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- Styles -->
+    <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/style/sticky-footer-navbar.css"
+    />
+    <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+    <title>PIXELIX</title>
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+  </head>
+
+  <body class="d-flex flex-column h-100">
+    <header>
+      <!-- Fixed navbar -->
+      <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <a class="navbar-brand" href="/index.html">
+          <img src="/images/LogoSmall.png" alt="PIXELIX" />
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarCollapse"
+          aria-controls="navbarCollapse"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav mr-auto" id="menu"></ul>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Begin page content -->
+    <main role="main" class="flex-shrink-0">
+      <div class="container">
+        <h1 class="mt-5">ChicagoBusTrackerPlugin</h1>
+        <p><img src="screenshot.png" alt="Screenshot" /></p>
+        <p>Shows estimated arrival times for a given route+stop+direction</p>
+        <p>Times are updated at least every 2 minutes</p>
+        <h2 class="mt-1">REST API</h2>
+        <h3 class="mt-1">Get the Chicago Bus Tracker related configuration.</h3>
+        <pre
+          name="injectOrigin"
+          class="text-light"
+        ><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ctabus</code></pre>
+        <pre
+          name="injectOrigin"
+          class="text-light"
+        ><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/ctabus</code></pre>
+        <ul>
+          <li>PLUGIN-UID: The plugin unique id.</li>
+          <li>PLUGIN-ALIAS: The plugin alias name.</li>
+        </ul>
+        <h3 class="mt-1">Set ChicagoBusTracker related configuration.</h3>
+        <h3 class="mt-1">
+          (You probably dont want to do this as you'd have to look up the params
+          via the API manually)
+        </h3>
+        <pre
+          name="injectOrigin"
+          class="text-light"
+        ><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ctabus?apiKey=&lt;API-KEY&gt;&rte=&lt;ROUTE&gt;&dir=&lt;DIRECTION&gt;&stpid=&lt;STOP_ID&gt;&orig=&lt;ORIGIN&gt;&dest=&lt;DESTINATION&gt;&two=&lt;TWO_TIMES&gt;</code></pre>
+        <pre
+          name="injectOrigin"
+          class="text-light"
+        ><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/ctabus?apiKey=&lt;API-KEY&gt;&rte=&lt;ROUTE&gt;&dir=&lt;DIRECTION&gt;&stpid=&lt;STOP_ID&gt;&orig=&lt;ORIGIN&gt;&dest=&lt;DESTINATION&gt;&two=&lt;TWO_TIMES&gt;</code></pre>
+        <ul>
+          <li>PLUGIN-UID: The plugin unique id.</li>
+          <li>PLUGIN-ALIAS: The plugin alias name.</li>
+          <li>API-KEY: The CTA Bus Tracker api key. (required)</li>
+          <li>ROUTE: The bus route ID (such as 81, 151, X49) (required)</li>
+          <li>
+            DIRECTION: Direction of route (Northbound, Southbound...must be
+            exactly as CTA expects, validate against API) (required)
+          </li>
+          <li>
+            STOP_ID: Bus stop ID (CTA internal ID, validate against API)
+            (required)
+          </li>
+          <li>
+            ORIGIN: Whether to append origin (aka the selected station) to route
+            info (optional, default false)
+          </li>
+          <li>
+            DESTINATION: Whether to append destination to route info (optional,
+            default true)
+          </li>
+          <li>
+            TWO_TIMES: Whether to show one (default) or two upcoming arrivals
+            (if provided) (optional, default false)
+          </li>
+        </ul>
+        <h3 class="mt-2">Configuration</h3>
+        <form
+          id="myForm"
+          action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)"
+        >
+          <div class="form-group">
+            <label for="pluginUid">Plugin UID:</label>
+            <select
+              id="pluginUid"
+              size="1"
+              name="pluginUid"
+              onChange="handleChange('pluginUid')"
+            ></select>
+          </div>
+          <div class="form-group">
+            <label for="apiKey">API Key:</label>
+            <input type="text" id="apiKey" name="apiKey" value="Your API Key" />
+          </div>
+          <div class="form-group">
+            <label for="routes">Route:</label>
+            <select
+              id="routes"
+              size="1"
+              onchange="handleChange('routes')"
+            ></select>
+            <button class="btn btn-light" onclick="getRoutes()">
+              Reload Routes
+            </button>
+          </div>
+          <div class="form-group">
+            <label for="directions">Direction:</label>
+            <select
+              id="directions"
+              size="1"
+              oninput="handleChange('directions')"
+            ></select>
+            <button class="btn btn-light" onclick="getDirections()">
+              Reload Directions
+            </button>
+          </div>
+          <div class="form-group">
+            <label for="stops">Stop:</label>
+            <select
+              id="stops"
+              size="1"
+              onchange="handleChange('stops')"
+            ></select>
+            <button class="btn btn-light" onclick="getStops()">
+              Reload Stops
+            </button>
+          </div>
+          <div class="form-group">
+            <label for="origin">Show origin station name:</label>
+            <select id="origin" name="origin" size="1">
+              <option for="origin" id="origin-true" value="true">True</option>
+              <option for="origin" id="origin-false" value="false">
+                False
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dest">Show destination:</label>
+            <select id="dest" name="dest" size="1">
+              <option for="dest" id="dest-true" value="true">True</option>
+              <option for="dest" id="dest-false" value="false">False</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="two">Show two arrivals:</label>
+            <select id="two" name="two" size="1">
+              <option for="two" id="two-true" value="true">True</option>
+              <option for="two" id="two-false" value="false">False</option>
+            </select>
+          </div>
+          <input name="submit" type="submit" value="Update" />
+        </form>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3">
+      <div class="container">
+        <hr />
+        <span class="text-muted"
+          >(C) 2019 - 2021 Flavio (fcu-github@no-way.org)</span
+        ><br />
+        <span class="text-muted">(C) 2026 Julie Hill (queenkjuul@pm.me)</span
+        ><br />
+        <span class="text-muted"
+          ><a
+            href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE"
+            >MIT License</a
+          ></span
+        >
+      </div>
+    </footer>
+
+    <!-- jQuery, and Bootstrap JS bundle -->
+    <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+    <!-- Pixelix menu -->
+    <script type="text/javascript" src="/js/menu.js"></script>
+    <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+    <!-- Pixelix utilities -->
+    <script type="text/javascript" src="/js/utils.js"></script>
+    <!-- Pixelix REST API -->
+    <script type="text/javascript" src="/js/rest.js"></script>
+
+    <script>
+      var pluginName = "ChicagoBusTrackerPlugin"
+      var restClient = new pixelix.rest.Client()
+      var rootPluginId = ""
+      var selected = {
+        routes: "",
+        directions: "",
+        stops: "",
+      }
+
+      function enableUI() {
+        utils.enableForm("myForm", true)
+      }
+
+      function disableUI() {
+        utils.enableForm("myForm", false)
+      }
+
+      async function handleChange(elementId) {
+        const elem = document.getElementById(elementId)
+        const value = elem.value
+        selected[elementId] = value
+        switch (elementId) {
+          case "pluginUid":
+            await getConfig(value)
+            await getRoutes()
+            await getDirections()
+            await getStops()
+            return
+          case "routes":
+            await getDirections()
+            await getStops()
+            return
+          case "directions":
+            await getStops()
+        }
+      }
+
+      function generateOptions(
+        elementId,
+        values,
+        textproperty = null,
+        valueproperty = null
+      ) {
+        const element = document.getElementById(elementId)
+        if (!element || !values) {
+          return element
+        }
+
+        element.innerHTML = ""
+
+        const options = Array.from(element.options).map((o) => o.value)
+
+        values.forEach((value) => {
+          const optionValue = value[valueproperty] ?? value
+          const optionText = value[textproperty] ?? value
+          const option = document.createElement("option")
+          option.value = optionValue
+          option.text = optionText
+          element.appendChild(option)
+        })
+
+        return element
+      }
+
+      function selectSelectedProperty(element, value) {
+        const options = Array.from(element?.options ?? []).map((o) => o?.value)
+        var foundIndex = options.findIndex((v) => v == value)
+        if (foundIndex < 0) {
+          console.warn("Not Found: ", value, options)
+          foundIndex = 0
+        }
+        element.selectedIndex = foundIndex
+        selected[element.id] = element.value
+      }
+
+      function getPluginInstances() {
+        return restClient
+          .getPluginInstances()
+          .then(function (rsp) {
+            var slotIndex = 0
+            var cnt = 0
+            var $option = null
+            var optionText = ""
+
+            for (
+              slotIndex = 0;
+              slotIndex < rsp.data.slots.length;
+              ++slotIndex
+            ) {
+              if (rsp.data.slots[slotIndex].name === pluginName) {
+                optionText = rsp.data.slots[slotIndex].uid
+                optionText += " ("
+
+                if (0 === rsp.data.slots[slotIndex].alias.length) {
+                  optionText += "-"
+                } else {
+                  optionText += rsp.data.slots[slotIndex].alias
+                }
+
+                optionText += ")"
+
+                $option = $("<option>")
+                  .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                  .text(optionText)
+
+                $("#pluginUid").append($option)
+
+                ++cnt
+              }
+            }
+            return Promise.resolve(cnt)
+          })
+          .catch(function (rsp) {
+            alert("Internal error.")
+            console.log(rsp)
+            return Promise.resolve(0)
+          })
+      }
+
+      async function getConfig(pluginUid) {
+        disableUI()
+        rootPluginId = pluginUid
+
+        try {
+          const rsp = await utils.makeRequest({
+            method: "GET",
+            url: "/rest/api/v1/display/uid/" + pluginUid + "/ctabus",
+            isJsonResponse: true,
+          })
+
+          if (!rsp.data) {
+            return
+          }
+
+          const { apiKey, rte, stpid, dir, orig, dest, two } = rsp.data
+
+          $("#apiKey").val(apiKey)
+
+          selected.routes = rte
+          const routeselem = generateOptions("routes", [selected.routes])
+          selectSelectedProperty(routeselem, selected.routes)
+
+          selected.directions = dir
+          const direlem = generateOptions("directions", [selected.directions])
+          selectSelectedProperty(direlem, selected.directions)
+
+          selected.stops = stpid
+          const stpelem = generateOptions("stops", [selected.stops])
+          selectSelectedProperty(stpelem, [selected.stops])
+
+          const originelem = document.getElementById("origin")
+          selectSelectedProperty(originelem, orig.toString())
+
+          const destelem = document.getElementById("dest")
+          selectSelectedProperty(destelem, dest.toString())
+
+          const twoelem = document.getElementById("two")
+          selectSelectedProperty(twoelem, two.toString())
+        } catch (e) {
+          console.log("Internal error.")
+          console.log(e)
+        }
+        enableUI()
+      }
+
+      function setConfig(pluginUid) {
+        disableUI()
+        rootPluginId = pluginUid
+        const parameter = {
+          apiKey: $("#apiKey").val(),
+          rte: selected.routes,
+          dir: selected.directions,
+          stpid: selected.stops,
+          orig: $("#origin").val(),
+          dest: $("#dest").val(),
+          two: $("#two").val(),
+        }
+
+        return utils
+          .makeRequest({
+            method: "POST",
+            url: "/rest/api/v1/display/uid/" + pluginUid + "/ctabus",
+            isJsonResponse: true,
+            parameter,
+          })
+          .then(function (rsp) {
+            alert("Ok.")
+          })
+          .catch(function (rsp) {
+            alert("Failed.")
+          })
+          .finally(function () {
+            enableUI()
+          })
+      }
+
+      async function getRoutes() {
+        disableUI()
+
+        try {
+          const rsp = await utils.makeRequest({
+            method: "GET",
+            url: "/rest/api/v1/display/uid/" + rootPluginId + "/ctabusroutes",
+            isJsonResponse: true,
+          })
+          const routes = rsp?.data?.routes
+          if (!routes) {
+            return
+          }
+          values = routes?.map((route) => {
+            return {
+              value: route.rt,
+              text: route.rt + " - " + route.rtnm,
+            }
+          })
+          const routeselem = generateOptions("routes", values, "text", "value")
+          selectSelectedProperty(routeselem, selected["routes"])
+        } catch (e) {
+          console.error("Error getting routes: ", e)
+        }
+        enableUI()
+      }
+
+      async function getDirections() {
+        disableUI()
+
+        try {
+          const rsp = await utils.makeRequest({
+            method: "GET",
+            url:
+              "/rest/api/v1/display/uid/" +
+              rootPluginId +
+              "/ctabusdirections?rt=" +
+              selected.routes,
+            isJsonResponse: true,
+          })
+          const { dirs } = rsp?.data
+          if (!dirs) {
+            return
+          }
+          const direlem = generateOptions("directions", dirs)
+          selectSelectedProperty(direlem, selected.directions)
+        } catch (e) {
+          console.error("Error getting directions: ", e)
+        }
+        enableUI()
+      }
+
+      async function getStops() {
+        disableUI()
+
+        try {
+          const rsp = await utils.makeRequest({
+            method: "GET",
+            url:
+              "/rest/api/v1/display/uid/" +
+              rootPluginId +
+              "/ctabusstops?rt=" +
+              selected.routes +
+              "&dir=" +
+              selected.directions,
+            isJsonResponse: true,
+          })
+          const { stops } = rsp?.data
+          if (!stops) {
+            return
+          }
+          const stopsElem = generateOptions("stops", stops, "stpnm", "stpid")
+          selectSelectedProperty(stopsElem, selected.stops)
+        } catch (e) {
+          console.error("Error getting stops: ", e)
+        }
+        enableUI()
+      }
+
+      $(document).ready(function () {
+        menu.addSubMenu(menu.data, "Plugins", pluginSubMenu)
+        menu.create("menu", menu.data)
+
+        utils.injectOrigin("injectOrigin", "{{ORIGIN}}")
+
+        /* Disable all forms, until the plugin instances are loaded. */
+        disableUI()
+
+        /* Load all plugin instances. */
+        getPluginInstances()
+          .then(function (cnt) {
+            var select = document.getElementById("pluginUid")
+
+            if (0 < cnt) {
+              rootPluginId = select.options[select.selectedIndex].value
+              return getConfig(rootPluginId)
+            }
+          })
+          .then((cnt) => {
+            console.log("loading routes in readyfn")
+            getRoutes(rootPluginId)
+          })
+          .then((cnt) => {
+            if (selected["routes"]) {
+              console.log("loading dirs in readyfn")
+              getDirections(cnt)
+            }
+          })
+          .then((cnt) => {
+            if (selected["directions"]) {
+              console.log("loading stops in readyfn")
+              getStops()
+            }
+          })
+      })
+    </script>
+  </body>
+</html>
