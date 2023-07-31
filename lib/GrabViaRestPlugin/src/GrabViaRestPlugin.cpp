@@ -341,15 +341,15 @@ void GrabViaRestPlugin::process(bool isConnected)
     else
     {
         /* If the connection is lost, stop periodically requesting information
-            * via REST API.
-            */
+         * via REST API.
+         */
         if (false == isConnected)
         {
             m_requestTimer.stop();
         }
         /* Network connection is available and next request may be necessary for
-            * information update.
-            */
+         * information update.
+         */
         else if (true == m_requestTimer.isTimeout())
         {
             if (false == startHttpRequest())
