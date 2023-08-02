@@ -129,7 +129,8 @@ private:
     InitState() :
         m_isQuiet(false),
         m_isApModeRequested(false),
-        m_timer()
+        m_timer(),
+        m_rtcDrv()
     {
     }
 

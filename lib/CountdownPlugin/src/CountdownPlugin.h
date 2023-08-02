@@ -195,9 +195,9 @@ public:
         m_hasTopicChanged(false)
     {
         /* Example data, used to generate the very first configuration file. */
-        m_targetDate.day                    = 29;
-        m_targetDate.month                  = 8;
-        m_targetDate.year                   = 2019;
+        m_targetDate.day                    = 1U;
+        m_targetDate.month                  = 8U;
+        m_targetDate.year                   = 2023U;
         m_targetDateInformation.plural      = "DAYS";
         m_targetDateInformation.singular    = "DAY";
 
@@ -432,9 +432,10 @@ private:
     bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
-     * Calculates the difference between m_targetTime and m_currentTime in days.
+     * Calculates the remaining days between m_targetTime and m_currentTime in days and
+     * update m_remainingDays.
      */
-    void calculateDifferenceInDays(void);
+    void calculateRemainingDays(void);
 
     /**
      * Counts the number of leap years.

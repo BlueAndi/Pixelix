@@ -124,6 +124,11 @@ private:
     static const char*      TZ_UTC;
 
     /**
+     * Period for time synchronization by NTP in ms.
+     */
+    static const uint32_t   SYNC_TIME_BY_NTP_PERIOD = SIMPLE_TIMER_HOURS(12U);
+
+    /**
      * Period for time synchronization by RTC in ms.
      */
     static const int32_t    SYNC_TIME_BY_RTC_PERIOD = SIMPLE_TIMER_HOURS(1U);
@@ -142,6 +147,9 @@ private:
     /** newlib's internal timezone buffer. */
     char*       m_internalTimeZoneBuffer;
 
+    /** NTP server address, used by sntp. Don't remove it! */
+    String      m_ntpServerAddress;
+
     /** Real time clock */
     IRtc*       m_rtc;
 
@@ -158,6 +166,7 @@ private:
         m_isClockDrvInitialized(false),
         m_timeZone(TZ_UTC),
         m_internalTimeZoneBuffer(nullptr),
+        m_ntpServerAddress(),
         m_rtc(nullptr),
         m_syncTimeByRtcTimer(),
         m_syncRtcByNtpTimer()

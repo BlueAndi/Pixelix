@@ -71,10 +71,30 @@ const char* ClockDrv::TZ_UTC = "UTC+0";
 
 void ClockDrv::init(IRtc* rtc)
 {
-    String              ntpServerAddress;
-    struct tm           timeInfo            = { 0 };
     SettingsService&    settings            = SettingsService::getInstance();
     char                tzBuffer[TZ_MIN_SIZE];
+
+    /* Handle RTC */
+    m_rtc = rtc;
+
+    if (nullptr == m_rtc)
+    {
+        LOG_INFO("No RTC is available.");
+    }
+    else
+    {
+        /* Check whether RTC is available and initialize it. */
+        if (false == m_rtc->begin())
+        {
+            LOG_INFO("No RTC is available.");
+            m_rtc = nullptr;
+        }
+        else
+        {
+            LOG_INFO("RTC is available.");
+            syncTimeByRtc();
+        }
+    }
 
     /* Get the GMT offset, daylight saving enabled/disabled and NTP server address from persistent memory. */
     if (false == settings.open(true))
@@ -82,32 +102,17 @@ void ClockDrv::init(IRtc* rtc)
         LOG_WARNING("Use default values for NTP request.");
 
         m_timeZone          = settings.getTimezone().getDefault();
-        ntpServerAddress    = settings.getNTPServerAddress().getDefault();
+        m_ntpServerAddress  = settings.getNTPServerAddress().getDefault();
     }
     else
     {
         m_timeZone          = settings.getTimezone().getValue();
-        ntpServerAddress    = settings.getNTPServerAddress().getValue();
+        m_ntpServerAddress  = settings.getNTPServerAddress().getValue();
         settings.close();
     }
 
-    /* Initialize RTC use its time. */
-    m_rtc = rtc;
-
-    if (nullptr != m_rtc)
-    {
-        /* Check whether RTC is available and initialize it. */
-        if (false == m_rtc->begin())
-        {
-            LOG_INFO("No RTC is available.");
-        }
-        else
-        {
-            LOG_INFO("RTC is available.");
-            syncTimeByRtc();
-            sntp_set_time_sync_notification_cb(sntpCallback);
-        }
-    }
+    sntp_set_time_sync_notification_cb(sntpCallback);
+    sntp_set_sync_interval(SYNC_TIME_BY_NTP_PERIOD);
 
     /* Workaround part 1 to avoid memory leaks by calling setenv() of the newlib.
      * https://github.com/espressif/esp-idf/issues/3046
@@ -121,8 +126,11 @@ void ClockDrv::init(IRtc* rtc)
      * To modify the variable, set CONFIG_LWIP_SNTP_UPDATE_DELAY in project configuration.
      * https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/system/system_time.html
      * https://github.com/espressif/esp-idf/issues/4386
+     * 
+     * Important: The NTP server address is not copied by configTzTime(). It will access the
+     * string periodically, therefore its important to keep it as member variable!
      */
-    configTzTime(tzBuffer, ntpServerAddress.c_str());
+    configTzTime(tzBuffer, m_ntpServerAddress.c_str());
 
     /* Workaround part 2 to avoid memory leaks by calling setenv() of the newlib.
      * https://github.com/espressif/esp-idf/issues/3046
@@ -241,47 +249,53 @@ void ClockDrv::setRtcByTime()
 
 void ClockDrv::syncTimeByRtc()
 {
-    bool sync = false;
-
-    if (false == m_syncTimeByRtcTimer.isTimerRunning())
+    if (nullptr != m_rtc)
     {
-        m_syncTimeByRtcTimer.start(SYNC_TIME_BY_RTC_PERIOD);
-        sync = true;
-    }
-    else if (true == m_syncTimeByRtcTimer.isTimeout())
-    {
-        sync = true;
-    }
+        bool sync = false;
 
-    if (true == sync)
-    {
-        LOG_INFO("Sync time by RTC.");
+        if (false == m_syncTimeByRtcTimer.isTimerRunning())
+        {
+            m_syncTimeByRtcTimer.start(SYNC_TIME_BY_RTC_PERIOD);
+            sync = true;
+        }
+        else if (true == m_syncTimeByRtcTimer.isTimeout())
+        {
+            sync = true;
+        }
 
-        setTimeByRtc();
-        m_syncTimeByRtcTimer.restart();
+        if (true == sync)
+        {
+            LOG_INFO("Sync time by RTC.");
+
+            setTimeByRtc();
+            m_syncTimeByRtcTimer.restart();
+        }
     }
 }
 
 void ClockDrv::syncRtcByTime()
 {
-    bool sync = false;
-
-    if (false == m_syncRtcByNtpTimer.isTimerRunning())
+    if (nullptr != m_rtc)
     {
-        m_syncRtcByNtpTimer.start(SYNC_RTC_BY_TIME_PERIOD);
-        sync = true;
-    }
-    else if (true == m_syncRtcByNtpTimer.isTimeout())
-    {
-        sync = true;
-    }
+        bool sync = false;
 
-    if (true == sync)
-    {
-        LOG_INFO("Sync RTC by time.");
+        if (false == m_syncRtcByNtpTimer.isTimerRunning())
+        {
+            m_syncRtcByNtpTimer.start(SYNC_RTC_BY_TIME_PERIOD);
+            sync = true;
+        }
+        else if (true == m_syncRtcByNtpTimer.isTimeout())
+        {
+            sync = true;
+        }
 
-        setRtcByTime();
-        m_syncRtcByNtpTimer.restart();
+        if (true == sync)
+        {
+            LOG_INFO("Sync RTC by time.");
+
+            setRtcByTime();
+            m_syncRtcByNtpTimer.restart();
+        }
     }
 }
 
@@ -301,13 +315,16 @@ extern void sntpCallback(struct timeval *tv)
     
     (void)tv;
 
-    /* As long as updates from NTP are received, no synchronization from the RTC
-     * to the local timer shall be done.
-     */
-    clockDrv.m_syncTimeByRtcTimer.restart();
-    
-    /* Synchronize RTC by time. */
-    clockDrv.syncRtcByTime();
+    if (nullptr != clockDrv.m_rtc)
+    {
+        /* As long as updates from NTP are received, no synchronization from the RTC
+         * to the local timer shall be done.
+         */
+        clockDrv.m_syncTimeByRtcTimer.restart();
+        
+        /* Synchronize RTC by time. */
+        clockDrv.syncRtcByTime();
+    }
 }
 
 /******************************************************************************
