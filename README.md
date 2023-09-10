@@ -137,7 +137,7 @@ After configuration, restart again and voila, PIXELIX will be available in your 
 For changing whats displayed, go to its web interface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
 
 # User Interface
-* Pixelix can be controlled with buttons. Most of the development are supported with just one user button.
+* Pixelix can be controlled with buttons. Most of the development boards are supported with just one user button.
   * One button control:
     * 1 short pulse: Activates the next slot.
     * 2 short pulses: Activates the previous slot.
