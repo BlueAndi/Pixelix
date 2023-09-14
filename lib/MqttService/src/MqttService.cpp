@@ -438,7 +438,7 @@ void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
             /* Password not empty? */
             if (idx > (dividerIdx + 1))
             {
-                m_password = m_url.substring(dividerIdx + 1, idx - dividerIdx - 1);
+                m_password = m_url.substring(dividerIdx + 1, idx);
             }
         }
 
