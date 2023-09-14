@@ -45,12 +45,13 @@
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>PATH: MQTT topic path.</li>
-                    <li>FILTER: Filter to identify the value in the JSON response.</li>
+                    <li>FILTER: Filter to identify the value in the JSON response. See the details here: <a href="https://arduinojson.org/news/2020/03/22/version-6-15-0/" target="_blank">ArduinoJson 6.15: Filtering done right</a></li>
                     <li>ICON-PATH: Filename of the icon including the path.</li>
                     <li>FORMAT: Format specifier, e.g. "%s" for strings or "%f" for numbers.</li>
                     <li>MULTIPLIER: Number which is multiplied with a number value. Not used for string values.</li>
                     <li>OFFSET: Number which is added to a number value. Not used for string values.</li>
                 </ul>
+                <p><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/tree/Development/doc/grabConfigs/mqtt" target="_blank">Configuration examples</a> may help to configure.</p>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">User</h3>
                 <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">

@@ -47,10 +47,12 @@ The generic plugins allow the user to control the different UI elements describe
 ## GrabViaMqttPlugin
 The plugin can grab information in JSON format via MQTT and shows it on the display.
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.4.0#/GrabViaMqttPlugin).
+[Configuration examples](./grabConfigs/mqtt/) may help to configure.
 
 ## GrabViaRestPlugin
 The plugin can grab information in JSON format via REST API and shows it on the display.
 Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.4.0#/GrabViaRestPlugin).
+[Configuration examples](./grabConfigs/rest/) may help to configure.
 
 ## IconTextPlugin
 The IconTextPlugin shows an icon on left side, text on right side. If no text is set, the plugin will be skipped in the slot.\
