@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* GrabViaMqttPlugin::TOPIC_CONFIG = "/config";
+const char* GrabViaMqttPlugin::TOPIC_CONFIG = "/grabConfig";
 
 /******************************************************************************
  * Public Methods

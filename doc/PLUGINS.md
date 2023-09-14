@@ -42,11 +42,10 @@ Each plugin is identified by its unique UID.
 * [Contribution](#contribution)
 
 # Generic plugins
-The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.3.0).
+The generic plugins allow the user to control the different UI elements described in the plugin name via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.4.0).
 
 ## GrabViaMqttPlugin
 The plugin can grab information in JSON format via MQTT and shows it on the display.
-Each part can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.4.0#/GrabViaMqttPlugin).
 [Configuration examples](./grabConfigs/mqtt/) may help to configure.
 
 ## GrabViaRestPlugin

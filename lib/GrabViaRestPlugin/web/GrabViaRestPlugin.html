@@ -37,10 +37,10 @@
                 <p>The plugin can grab information in JSON format via REST API and shows it on the display.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get configuration</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig</code></pre>
                 <h3 class="mt-1">Set configuration</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconPath=&lt;ICON-PATH&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconPath=&lt;ICON-PATH&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconPath=&lt;ICON-PATH&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/grabConfig?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconPath=&lt;ICON-PATH&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -169,7 +169,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/grabConfig",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#method").val(rsp.data.method);
@@ -191,7 +191,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/grabConfig",
                     isJsonResponse: true,
                     parameter: {
                         method:  $("#method").val(),

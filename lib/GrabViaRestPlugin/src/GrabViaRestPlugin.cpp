@@ -58,7 +58,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* GrabViaRestPlugin::TOPIC_CONFIG = "/config";
+const char* GrabViaRestPlugin::TOPIC_CONFIG = "/grabConfig";
 
 /******************************************************************************
  * Public Methods
