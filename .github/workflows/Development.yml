@@ -103,7 +103,7 @@ jobs:
         pip install --upgrade platformio
 
     - name: Perform static checks on ${{ matrix.environment }}
-      run: platformio check --environment ${{ matrix.environment }}
+      run: platformio check --environment ${{ matrix.environment }} --fail-on-defect=medium --fail-on-defect=high
 
   # Perform tests
   test:
