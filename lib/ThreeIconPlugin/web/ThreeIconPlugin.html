@@ -67,21 +67,21 @@
                     <li>STATE: <code>true</code> or <code>false</code></li>
                 </ul>
                 <h3 class="mt-1">Control animation (Sprite Sheet required)</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;</code></pre>
-
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>ICON-ID: The id of the icon (starting with 0 from left).</li>
                     <li>STATE: <code>true</code> or <code>false</code></li>
+                    <li>ICON-FULL-PATH: Full path to the icon.</li>
+                    <li>SPRITESHEET-FULL-PATH: Full path to the sprite sheet.</li>
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
-                <h3 class="mt-1">Bitmap/Sprite sheet</h3>
-                <h4 class="mt-1">Set Icon</h4>
-                <form id="setIconForm" enctype="multipart/form-data" action="javascript:setIconByForm('setIconForm')">
+                <h3 class="mt-1">Icon</h3>
+                <form id="setIconForm" enctype="multipart/form-data" action="javascript:uploadIconByForm('setIconForm')">
                     <div class="form-group">
                         <label for="pluginUidBitmap">Plugin UID:</label>
                         <select id="pluginUidBitmap" name="pluginUid" size="1">
@@ -97,11 +97,32 @@
                     </div>
                     <div class="form-group">
                         <label for="bitmap">Icon:</label>
-                        <input id="fileBitmap" name="file" type="file" />    
+                        <input id="bitmap" name="bitmap" type="file" />    
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
-                <h4 class="mt-1">Clear Icon</h4>
+                <h3 class="mt-1">Sprite sheet</h3>
+                <form id="setSpriteSheetForm" enctype="multipart/form-data" action="javascript:uploadSpriteSheetByForm('setSpriteSheetForm')">
+                    <div class="form-group">
+                        <label for="pluginUidSpriteSheet">Plugin UID:</label>
+                        <select id="pluginUidSpriteSheet" name="pluginUid" size="1">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="spriteSheetPosBitmap">Sprite sheet position:</label>
+                        <select id="spriteSheetPosBitmap" name="spriteSheetPos" size="1">
+                            <option value="0" selected>Left</option>
+                            <option value="1">Middle</option>
+                            <option value="2">Right</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="spriteSheet">Sprite sheet:</label>
+                        <input id="spriteSheet" name="spriteSheet" type="file" />    
+                    </div>
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h4 class="mt-1">Clear Icon/Sprite sheet</h4>
                 <form id="clearIconForm" enctype="multipart/form-data" action="javascript:clearIconByForm('clearIconForm')">
                     <div class="form-group">
                         <label for="pluginUidClearIcon">Plugin UID:</label>
@@ -145,7 +166,15 @@
                         <select id="repeatAnimation" name="repeat" size="1">
                             <option>false</option>
                             <option>true</option>
-                        </select>    
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="iconFullPath">Icon full path:</label>
+                        <input type="text" id="iconFullPath" name="iconFullPath" value="" size="40" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="spriteSheetFullPath">Sprite sheet full path:</label>
+                        <input type="text" id="spriteSheetFullPath" name="spriteSheetFullPath" value="" size="40" />    
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
@@ -179,11 +208,13 @@
 
             function enableUI() {
                 utils.enableForm("setIconForm", true);
+                utils.enableForm("setSpriteSheetForm", true);
                 utils.enableForm("myFormAnimation", true);
             }
 
             function disableUI() {
                 utils.enableForm("setIconForm", false);
+                utils.enableForm("setSpriteSheetForm", false);
                 utils.enableForm("myFormAnimation", false);
             }
 
@@ -230,11 +261,11 @@
                 });
             };
 
-            function setIconByForm(formId) {
+            function uploadIconByForm(formId) {
                 var values = $("#" + formId).serializeAllArray();
                 var pluginUid = 0;
                 var index = 255;
-                var file = $("#fileBitmap").prop("files")[0]
+                var file = $("#bitmap").prop("files")[0]
                 
                 $.each(values, function(idx, field) {
                     if (field.name === "pluginUid") {
@@ -247,6 +278,25 @@
                 });
 
                 setIcon(pluginUid, file, index);
+            }
+
+            function uploadSpriteSheetByForm(formId) {
+                var values = $("#" + formId).serializeAllArray();
+                var pluginUid = 0;
+                var index = 255;
+                var file = $("#spriteSheet").prop("files")[0]
+                
+                $.each(values, function(idx, field) {
+                    if (field.name === "pluginUid") {
+                        pluginUid = field.value;
+                    } else if (field.name === "spriteSheetPos") {
+                        index = field.value;
+                    } else {
+                        /* Skip. */
+                    }
+                });
+
+                setSpriteSheet(pluginUid, file, index);
             }
 
             function setIcon(pluginUid, file, index) {
@@ -263,6 +313,30 @@
                         "X-File-Size": file.size
                     }
                 }).then(function(rsp) {
+                    updateForms();
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setSpriteSheet(pluginUid, file, index) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/spritesheet/" + index,
+                    isJsonResponse: true,
+                    parameter: {
+                        file: file
+                    },
+                    headers: {
+                        "X-File-Size": file.size
+                    }
+                }).then(function(rsp) {
+                    updateForms();
                     alert("Ok.");
                 }).catch(function(rsp) {
                     alert("Failed.");
@@ -294,12 +368,14 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
                     isJsonResponse: true,
                     parameter: {
-                        clear: true
+                        iconFullPath: "",
+                        spriteSheetFullPath: ""
                     }
                 }).then(function(rsp) {
+                    updateForms();
                     alert("Ok.");
                 }).catch(function(rsp) {
                     alert("Failed.");
@@ -335,6 +411,8 @@
                 }).then(function(rsp) {
                     var forwardElement = document.getElementById("forwardAnimation");
                     var repeatElement = document.getElementById("repeatAnimation");
+                    var iconFullPathInput = document.getElementById("iconFullPath");
+                    var spriteSheetFullPathInput = document.getElementById("spriteSheetFullPath");
 
                     if (false == rsp.data.forward) {
                         forwardElement.selectedIndex = 0;
@@ -347,6 +425,9 @@
                     } else {
                         repeatElement.selectedIndex = 1;
                     }
+
+                    iconFullPathInput.value = rsp.data.iconFullPath;
+                    spriteSheetFullPathInput.value = rsp.data.spriteSheetFullPath;
 
                 }).catch(function(rsp) {
                     alert("Internal error.");
@@ -361,6 +442,8 @@
                 var index = 255;
                 var isForward = false;
                 var isRepeat = false;
+                var iconFullPath = "";
+                var spriteSheetFullPath = "";
 
                 $.each(values, function(idx, field) {
                     if (field.name === "pluginUid") {
@@ -371,15 +454,19 @@
                         isForward = field.value;
                     } else if (field.name === "repeat") {
                         isRepeat = field.value;
+                    } else if (field.name === "icon") {
+                        iconFullPath = field.value;
+                    } else if (field.name === "spriteSheet") {
+                        spriteSheetFullPath = field.value;
                     } else {
                         /* Skip. */
                     }
                 });
 
-                setAnimation(pluginUid, isForward, isRepeat, index);
+                setAnimation(pluginUid, isForward, isRepeat, iconFullPath, spriteSheetFullPath, index);
             }
 
-            function setAnimation(pluginUid, isForward, isRepeat, index) {
+            function setAnimation(pluginUid, isForward, isRepeat, iconFullPath, spriteSheetFullPath, index) {
                 disableUI();
 
                 return utils.makeRequest({
@@ -388,7 +475,9 @@
                     isJsonResponse: true,
                     parameter: {
                         forward: isForward,
-                        repeat: isRepeat
+                        repeat: isRepeat,
+                        iconFullPath: iconFullPath,
+                        spriteSheetFullPath: spriteSheetFullPath
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -397,6 +486,15 @@
                 }).finally(function() {
                     enableUI();
                 });
+            }
+
+            function updateForms() {
+                var selectText = document.getElementById("pluginUidText");
+
+                if (0 <= selectText.selectedIndex) {
+
+                    return getAnimationByForm('myFormAnimation');
+                }
             }
 
             (function ($) {

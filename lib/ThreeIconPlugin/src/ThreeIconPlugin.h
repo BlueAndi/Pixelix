@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief Three icon plugin
+ * @brief  Three icon plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
  * @addtogroup plugin
@@ -74,8 +74,9 @@ public:
     ThreeIconPlugin(const String& name, uint16_t uid) :
         Plugin(name, uid),
         m_threeIconCanvas(),
-        m_bitmapWidget(),
-        m_isSpriteSheetAvailable{false},
+        m_bitmapWidgets(),
+        m_iconPaths(),
+        m_spriteSheetPaths(),
         m_isUploadError(false),
         m_mutex(),
         m_hasTopicChanged(false)
@@ -207,19 +208,26 @@ public:
     void update(YAGfx& gfx) final;
 
     /**
-     * Load bitmap or spritesheet from filesystem and show it on the icon position by
-     * icon id.
-     * 
-     * If a animation is required, upload first the bitmap and then the spritesheet.
-     * Because a bitmap upload will remove any spritesheet. This behaviour is necessary
-     * to show only bitmaps too.
+     * Load bitmap image from filesystem. If a sprite sheet is available, the
+     * bitmap will be automatically used as texture for animation.
      *
-     * @param[in] filename  Bitmap filename.
      * @param[in] iconId    The icon id.
+     * @param[in] filename  Bitmap image filename.
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadBitmap(const String& filename, uint8_t iconId);
+    bool loadBitmap(uint8_t iconId, const String& filename);
+
+    /**
+     * Load sprite sheet from filesystem. If a bitmap is available, it will
+     * be automatically used as texture for animation.
+     *
+     * @param[in] iconId    The icon id.
+     * @param[in] filename  Sprite sheet filename.
+     *
+     * @return If successul, it will return true otherwise false.
+     */
+    bool loadSpriteSheet(uint8_t iconId, const String& filename);
 
     /**
      * Get the state of the FORWARD control flag of an icon.
@@ -262,12 +270,40 @@ public:
      */
     void clearBitmap(uint8_t iconId);
 
+    /**
+     * Clear sprite sheet by icon id.
+     * 
+     * @param[in] iconId The icon id. 
+     */
+    void clearSpriteSheet(uint8_t iconId);
+
+    /**
+     * Get icon file path by icon id.
+     * 
+     * @param[in]   iconId      The icon id. 
+     * @param[out]  fullPath    Path to icon file.
+     */
+    void getIconFilePath(uint8_t iconId, String& fullPath) const;
+
+    /**
+     * Get sprite sheet file path by icon id.
+     * 
+     * @param[in]   iconId      The icon id. 
+     * @param[out]  fullPath    Path to sprite sheet file.
+     */
+    void getSpriteSheetFilePath(uint8_t iconId, String& fullPath) const;
+
 private:
 
     /**
      * Plugin topic, used for bitmap/spritesheet upload and control.
      */
     static const char*      TOPIC_BITMAP;
+
+    /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*      TOPIC_SPRITESHEET;
 
    /**
      * Plugin topic, used for only for animation control in case a spritesheet
@@ -301,12 +337,13 @@ private:
     static const char*      FILE_EXT_SPRITE_SHEET;
 
 
-    WidgetGroup             m_threeIconCanvas;                      /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidget[MAX_ICONS];              /**< Bitmap widget, used to show the icon. */
-    bool                    m_isSpriteSheetAvailable[MAX_ICONS];    /**< Flag to indicate whether a spritesheet is used or just a bitmap. */
-    bool                    m_isUploadError;                        /**< Flag to signal a upload error. */
-    mutable MutexRecursive  m_mutex;                                /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged;                      /**< Has the topic content changed? */
+    WidgetGroup             m_threeIconCanvas;              /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidgets[MAX_ICONS];     /**< Bitmap widgets, used to show the icon. */
+    String                  m_iconPaths[MAX_ICONS];         /**< Full path to icons. */
+    String                  m_spriteSheetPaths[MAX_ICONS];  /**< Full path to spritesheets. */
+    bool                    m_isUploadError;                /**< Flag to signal a upload error. */
+    mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged;              /**< Has the topic content changed? */
 
     /**
      * Get image filename with path.
