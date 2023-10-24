@@ -35,7 +35,7 @@ note over restApiTopicHandler,fs
     Read configuration via REST API.
 end note
 
--> restApiTopicHandler: GET /rest/api/v1/display/uid/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI>
+-> restApiTopicHandler: GET /rest/api/v1/display/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI>
     note over restApiTopicHandler
         The topic handler would be able to read the configuration
         from the filesystem. But this shall be avoided because of
@@ -50,7 +50,7 @@ note over restApiTopicHandler,fs
     Write configuration via REST API.
 end note
 
--> restApiTopicHandler: POST /rest/api/v1/display/uid/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI> with JSON
+-> restApiTopicHandler: POST /rest/api/v1/display/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI> with JSON
     note over plugin
         Don't write configuration to flash, because flash access is
         slow. It shall be written during plugin processing.

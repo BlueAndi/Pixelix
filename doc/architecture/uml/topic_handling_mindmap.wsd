@@ -8,12 +8,12 @@
 ++++ Base URI: http://<HOSTNAME>/rest/api/v1
 
 ++++ GET
-+++++ URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>
-+++++ URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>
++++++ URL: <BASE-URI>/display/<PLUGIN-UID>/<PLUGIN-TOPIC>
++++++ URL: <BASE-URI>/display/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>
 
 ++++ POST
-+++++ URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>
-+++++ URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>
++++++ URL: <BASE-URI>/display/<PLUGIN-UID>/<PLUGIN-TOPIC>
++++++ URL: <BASE-URI>/display/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>
 
 +++++ Parameters via HTTP arguments
 ******: key=value __converts to__
@@ -88,9 +88,9 @@
     "manufacturer": "BlueAndi & Friends",
     "sw_version": "v7.0.0"
   },
-  "state_topic": "pixelix-facfc834/uid/19583/text/state",
+  "state_topic": "pixelix-facfc834/19583/text/state",
   "value_template": "{{ value_json.text }}",
-  "command_topic": "pixelix-facfc834/uid/19583/text/set",
+  "command_topic": "pixelix-facfc834/19583/text/set",
   "command_template": "{\"text\": \"{{ value }}\" }"
 }
 </code>;
@@ -109,9 +109,9 @@
     "manufacturer": "BlueAndi & Friends",
     "sw_version": "v7.0.0"
   },
-  "state_topic": "pixelix-facfc834/alias/display/text/state",
+  "state_topic": "pixelix-facfc834/display/text/state",
   "value_template": "{{ value_json.text }}",
-  "command_topic": "pixelix-facfc834/alias/display/text/set",
+  "command_topic": "pixelix-facfc834/display/text/set",
   "command_template": "{\"text\": \"{{ value }}\" }"
 }
 </code>;
@@ -127,16 +127,16 @@
 ++++++ https://www.home-assistant.io/integrations/sensor.mqtt/
 
 ++++ Status
-+++++ MQTT topic: <HOSTNAME>/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/state
-+++++ MQTT topic: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/state
++++++ MQTT topic: <HOSTNAME>/<PLUGIN-UID>/<PLUGIN-TOPIC>/state
++++++ MQTT topic: <HOSTNAME>/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/state
 +++++ Direction: Pixelix --> Client(s)
 ++++ Command
-+++++ MQTT topic: <HOSTNAME>/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/set
-+++++ MQTT topic: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/set
++++++ MQTT topic: <HOSTNAME>/<PLUGIN-UID>/<PLUGIN-TOPIC>/set
++++++ MQTT topic: <HOSTNAME>/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/set
 +++++ Direction: Client(s) --> Pixelix
 ++++ Availability
-+++++ MQTT topic: <HOSTNAME>/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/available
-+++++ MQTT topic: <HOSTNAME>/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/available
++++++ MQTT topic: <HOSTNAME>/<PLUGIN-UID>/<PLUGIN-TOPIC>/available
++++++ MQTT topic: <HOSTNAME>/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/available
 +++++ Direction: Pixelix --> Client(s)
 +++++ "online"/"offline"
 +++++ Skipped for the moment. May be supported in future.

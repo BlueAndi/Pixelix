@@ -37,15 +37,15 @@
                 <p>The plugin shows the remaining days until a configured target date.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get target date and target day description.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/countdown</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/countdown</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/countdown</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set target day and target day desription.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&descPlural=&lt;PLURAL&gt;&descSingular=&lt;SINGULAR&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&descPlural=&lt;PLURAL&gt;&descSingular=&lt;SINGULAR&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&descPlural=&lt;PLURAL&gt;&descSingular=&lt;SINGULAR&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/countdown?day=&lt;DAY&gt;&month=&lt;MONTH&gt;&year=&lt;YEAR&gt;&descPlural=&lt;PLURAL&gt;&descSingular=&lt;SINGULAR&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -155,7 +155,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
+                    url: "/rest/api/v1/display/" + pluginUid + "/countdown",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var targetDateInput = document.getElementById("targetDate");
@@ -176,7 +176,7 @@
     
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/countdown",
+                    url: "/rest/api/v1/display/" + pluginUid + "/countdown",
                     isJsonResponse: true,
                     parameter: {
                         day: date.getDate(),

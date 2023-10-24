@@ -38,15 +38,15 @@
                 <p>Configure the time format in the plugin configuration JSON file. The format itself is according to <a href="https://cplusplus.com/reference/ctime/strftime/" target="_blank">strftime()</a>. For colorization text properties can be added.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get location</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/location</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/location</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/location</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/location</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set location</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/location?longitude=&lt;LONGITUDE&gt;&latitude=&lt;LATITUDE&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -149,7 +149,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/location",
+                    url: "/rest/api/v1/display/" + pluginUid + "/location",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#longitude").val(rsp.data.longitude);
@@ -165,7 +165,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/location",
+                    url: "/rest/api/v1/display/" + pluginUid + "/location",
                     isJsonResponse: true,
                     parameter: {
                         latitude: $("#latitude").val(),

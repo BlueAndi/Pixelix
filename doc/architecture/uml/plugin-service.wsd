@@ -162,8 +162,8 @@ note left of PluginMgr
     plugin topics.
 
     The REST API URL depends on the plugin UID or alias:
-    * <base-uri>/rest/api/v1/display/uid/<plugin-uid>
-    * <base-uri>/rest/api/v1/display/alias/<plugin-alias>
+    * <base-uri>/rest/api/v1/display/<plugin-uid>
+    * <base-uri>/rest/api/v1/display/<plugin-alias>
 end note
 
 class ESPAsyncWebserver

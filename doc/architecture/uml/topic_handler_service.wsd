@@ -33,7 +33,7 @@ loop for every plugin
                 topicHandlerService -> restApiTopicHandler: register plugin topic (plugin, topic, accessiblity, extra parameters)
 
                     note over restApiTopicHandler,httpServer
-                        URL: <BASE-URI>/display/uid/<PLUGIN-UID>/<TOPIC>
+                        URL: <BASE-URI>/display/<PLUGIN-UID>/<TOPIC>
                     end note
 
                     restApiTopicHandler -> httpServer: register REST URL by plugin UID
@@ -42,7 +42,7 @@ loop for every plugin
                     alt If plugin alias available
 
                         note over restApiTopicHandler,httpServer
-                            URL: <BASE-URI>/display/alias/<PLUGIN-ALIAS>/<TOPIC>
+                            URL: <BASE-URI>/display/<PLUGIN-ALIAS>/<TOPIC>
                         end note
 
                         restApiTopicHandler -> httpServer: register REST URL by plugin alias
@@ -64,8 +64,8 @@ loop for every plugin
                     alt If topic is readable
 
                         note over mqttApiTopicHandler,mqttClient
-                            path: <HOSTNAME>/display/uid/<PLUGIN-UID>/<TOPIC>/state
-                            path: <HOSTNAME>/display/alias/<PLUGIN-ALIAS>/<TOPIC>/state
+                            path: <HOSTNAME>/display/<PLUGIN-UID>/<TOPIC>/state
+                            path: <HOSTNAME>/display/<PLUGIN-ALIAS>/<TOPIC>/state
                         end note
 
                         mqttApiTopicHandler -> mqttApiTopicHandler: Store plugin topic in publisher queue
@@ -76,7 +76,7 @@ loop for every plugin
                     alt If topic is writeable
 
                         note over mqttApiTopicHandler,mqttClient
-                            path: <HOSTNAME>/display/uid/<PLUGIN-UID>/<TOPIC>/set
+                            path: <HOSTNAME>/display/<PLUGIN-UID>/<TOPIC>/set
                         end note
 
                         mqttApiTopicHandler -> mqttClient: Subscribe plugin topic path by plugin UID
@@ -85,7 +85,7 @@ loop for every plugin
                         alt If plugin alias available
 
                             note over mqttApiTopicHandler,mqttClient
-                                path: <HOSTNAME>/display/alias/<PLUGIN-ALIAS>/<TOPIC>/set
+                                path: <HOSTNAME>/display/<PLUGIN-ALIAS>/<TOPIC>/set
                             end note
 
                             mqttApiTopicHandler -> mqttClient: Subscribe plugin topic path by plugin alias

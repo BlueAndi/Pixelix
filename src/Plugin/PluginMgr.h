@@ -162,12 +162,14 @@ private:
     static const char*  MQTT_SPECIAL_CHARACTERS;
 
     PluginFactory   m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
+    String          m_deviceId;         /**< Device id, used for topic registration. */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
-        m_pluginFactory()
+        m_pluginFactory(),
+        m_deviceId()
     {
     }
 

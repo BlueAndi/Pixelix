@@ -343,18 +343,13 @@ void MqttService::disconnectedState()
 void MqttService::connectedState()
 {
     /* Connection with broker lost? */
-    if (false == m_mqttClient.connected())
+    if (false == m_mqttClient.loop())
     {
         LOG_INFO("Connection to MQTT broker disconnected.");
         m_state = STATE_DISCONNECTED;
 
         /* Try to reconnect later. */
         m_reconnectTimer.restart();
-    }
-    /* Connection to broker still established. */
-    else
-    {
-        (void)m_mqttClient.loop();
     }
 }
 

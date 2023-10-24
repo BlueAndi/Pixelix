@@ -74,6 +74,19 @@ const char* PluginMgr::MQTT_SPECIAL_CHARACTERS  = "+#*>$"; /* See MQTT specifica
 
 void PluginMgr::begin()
 {
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        m_deviceId = settings.getHostname().getDefault();
+    }
+    else
+    {
+        m_deviceId = settings.getHostname().getValue();
+
+        settings.close();
+    }
+
     createPluginConfigDirectory();
 }
 
@@ -108,7 +121,7 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
-            TopicHandlerService::getInstance().unregisterTopics(plugin);
+            TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
 
             m_pluginFactory.destroyPlugin(plugin);
         }
@@ -136,13 +149,13 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
         (true == isPluginAliasValid(alias)))
     {
         /* First remove current registered topics. */
-        TopicHandlerService::getInstance().unregisterTopics(plugin);
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
 
         /* Set new alias */
         plugin->setAlias(alias);
 
         /* Register web API, based on new alias. */
-        TopicHandlerService::getInstance().registerTopics(plugin);
+        TopicHandlerService::getInstance().registerTopics(m_deviceId, plugin);
 
         isSuccessful = true;
     }
@@ -378,7 +391,7 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (true == isSuccessful)
         {
-            TopicHandlerService::getInstance().registerTopics(plugin);
+            TopicHandlerService::getInstance().registerTopics(m_deviceId, plugin);
         }
     }
 

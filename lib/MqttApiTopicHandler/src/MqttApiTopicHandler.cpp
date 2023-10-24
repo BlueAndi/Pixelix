@@ -37,7 +37,6 @@
 
 #include <Logging.h>
 #include <MqttService.h>
-#include <SettingsService.h>
 #include <mbedtls/base64.h>
 
 /******************************************************************************
@@ -80,45 +79,137 @@ void MqttApiTopicHandler::stop()
     m_haExtension.stop();
 }
 
-void MqttApiTopicHandler::registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra)
+void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    if ((nullptr != plugin) &&
+    if ((false == deviceId.isEmpty()) &&
+        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
-        String baseUri;
+        String      mqttTopicNameBase   = deviceId + "/" + entityId + topic;
+        TopicState* topicState          = new(std::nothrow) TopicState();
 
-        /* If plugin has no alias, use the plugin UID for the base URI otherwise use the alias. */
-        if (false == plugin->getAlias().isEmpty())
-        {
-            baseUri = getBaseUriByAlias(plugin->getAlias());
-        }
-        else
-        {
-            baseUri = getBaseUriByUid(plugin->getUID());
-        }
+        LOG_INFO("[%s] Register: %s", entityId.c_str(), mqttTopicNameBase.c_str());
 
-        registerTopic(plugin, topic, access, extra, baseUri);
+        if (nullptr != topicState)
+        {
+            String  topicUriReadable;
+            String  topicUriWriteable;
+
+            topicState->deviceId        = deviceId;
+            topicState->entityId        = entityId;
+            topicState->topic           = topic;
+            topicState->getTopicFunc    = getTopicFunc;
+            topicState->setTopicFunc    = setTopicFunc;
+            topicState->uploadReqFunc   = uploadReqFunc;
+            topicState->isPublishReq    = false;
+
+            /* Is the topic readable? */
+            if (nullptr != getTopicFunc)
+            {
+                topicUriReadable = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
+
+                /* Publish initially. */
+                topicState->isPublishReq = true;
+            }
+
+            /* Is the topic writeable? */
+            if (nullptr != setTopicFunc)
+            {
+                MqttService&                mqttService = MqttService::getInstance();
+                MqttService::TopicCallback  setCallback =
+                    [this, topicState](const String& mqttTopic, const uint8_t* payload, size_t size)
+                    {
+                        if (0U != mqttTopic.endsWith(topicState->topic + MQTT_ENDPOINT_WRITE_ACCESS))
+                        {
+                            this->write(topicState->deviceId, topicState->entityId, topicState->topic, payload, size, topicState->setTopicFunc, topicState->uploadReqFunc);
+                        }
+                    };
+
+                topicUriWriteable = mqttTopicNameBase + MQTT_ENDPOINT_WRITE_ACCESS;
+
+                if (false == mqttService.subscribe(topicUriWriteable, setCallback))
+                {
+                    LOG_WARNING("[%s] Couldn't subscribe %s.", entityId.c_str(), topicUriWriteable.c_str());
+                }
+                else
+                {
+                    LOG_INFO("[%s] Subscribed: %s", entityId.c_str(), topicUriWriteable.c_str());
+                }
+            }
+
+            /* Handle Home Assistant extension */
+            {
+                String willTopic = deviceId + "/status";
+
+                m_haExtension.registerMqttDiscovery(deviceId, entityId, topicUriReadable, topicUriWriteable, willTopic, extra);
+            }
+
+            m_listOfTopicStates.push_back(topicState);
+        }
     }
 }
 
-void MqttApiTopicHandler::unregisterTopic(IPluginMaintenance* plugin, const String& topic)
+void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
 {
-    if ((nullptr != plugin) &&
+    if ((false == deviceId.isEmpty()) &&
+        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
-        String baseUri;
+        String                      mqttTopicNameBase   = deviceId + "/" + entityId + topic;
+        MqttService&                mqttService         = MqttService::getInstance();
+        ListOfTopicStates::iterator topicStateIt        = m_listOfTopicStates.begin();
 
-        /* If plugin has no alias, use the plugin UID for the base URI otherwise use the alias. */
-        if (false == plugin->getAlias().isEmpty())
-        {
-            baseUri = getBaseUriByAlias(plugin->getAlias());
-        }
-        else
-        {
-            baseUri = getBaseUriByUid(plugin->getUID());
-        }
+        LOG_INFO("[%s] Unregister: %s", entityId.c_str(), mqttTopicNameBase.c_str());
 
-        unregisterTopic(plugin, topic, baseUri);
+        while(m_listOfTopicStates.end() != topicStateIt)
+        {
+            TopicState* topicState = *topicStateIt;
+
+            if ((nullptr != topicState) &&
+                (deviceId == topicState->deviceId) &&
+                (entityId == topicState->entityId) &&
+                (topic == topicState->topic))
+            {
+                String topicUriReadable;
+                String topicUriWriteable;
+
+                if (nullptr != topicState->getTopicFunc)
+                {
+                    topicUriReadable = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
+
+                    /* Purge topic */
+                    if (false == mqttService.publish(topicUriReadable, ""))
+                    {
+                        LOG_WARNING("[%s] Failed to purge: %s", entityId.c_str(), topicUriReadable.c_str());
+                    }
+                    else
+                    {
+                        LOG_INFO("[%s] Purged: %s", entityId.c_str(), topicUriReadable.c_str());
+                    }
+                }
+                
+                if (nullptr != topicState->setTopicFunc)
+                {
+                    topicUriWriteable = mqttTopicNameBase + MQTT_ENDPOINT_WRITE_ACCESS;
+
+                    mqttService.unsubscribe(topicUriWriteable);
+
+                    LOG_INFO("[%s] Unsubscribed: %s", entityId.c_str(), topicUriWriteable.c_str());
+                }
+
+                /* Handle Home Assistant extension */
+                m_haExtension.unregisterMqttDiscovery(deviceId, entityId, topicUriReadable, topicUriWriteable);
+
+                topicStateIt = m_listOfTopicStates.erase(topicStateIt);
+
+                delete topicState;
+                topicState = nullptr;
+            }
+            else
+            {
+                ++topicStateIt;
+            }
+        }
     }
 }
 
@@ -158,16 +249,14 @@ void MqttApiTopicHandler::process()
             TopicState* topicState = *topicStateIt;
 
             if ((nullptr != topicState) &&
-                (nullptr != topicState->plugin) &&
-                (
-                    (ACCESS_READ_ONLY == topicState->access) ||
-                    (ACCESS_READ_WRITE == topicState->access)
-                ))
+                (false == topicState->deviceId.isEmpty()) &&
+                (false == topicState->entityId.isEmpty()) &&
+                (nullptr != topicState->getTopicFunc))
             {
                 if ((true == publishAll) ||
                     (true == topicState->isPublishReq))
                 {
-                    publish(topicState->topicUri, topicState->plugin, topicState->topic);
+                    publish(topicState->deviceId, topicState->entityId, topicState->topic, topicState->getTopicFunc);
 
                     topicState->isPublishReq = false;
                 }
@@ -181,9 +270,10 @@ void MqttApiTopicHandler::process()
     m_haExtension.process(m_isMqttConnected);
 }
 
-void MqttApiTopicHandler::notify(IPluginMaintenance* plugin, const String& topic)
+void MqttApiTopicHandler::notify(const String& deviceId, const String& entityId, const String& topic)
 {
-    if ((nullptr != plugin) &&
+    if ((false == deviceId.isEmpty()) &&
+        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         ListOfTopicStates::iterator topicStateIt = m_listOfTopicStates.begin();
@@ -193,7 +283,8 @@ void MqttApiTopicHandler::notify(IPluginMaintenance* plugin, const String& topic
             TopicState* topicState = *topicStateIt;
 
             if ((nullptr != topicState) &&
-                (plugin == topicState->plugin) &&
+                (deviceId == topicState->deviceId) &&
+                (entityId == topicState->entityId) &&
                 (topic == topicState->topic))
             {
                 topicState->isPublishReq = true;
@@ -212,141 +303,7 @@ void MqttApiTopicHandler::notify(IPluginMaintenance* plugin, const String& topic
  * Private Methods
  *****************************************************************************/
 
-String MqttApiTopicHandler::getBaseUriByUid(uint16_t uid)
-{
-    String  baseUri;
-
-    if (true == m_hostname.isEmpty())
-    {
-        SettingsService& settingsService = SettingsService::getInstance();
-
-        if (false == settingsService.open(true))
-        {
-            m_hostname = settingsService.getHostname().getDefault();
-        }
-        else
-        {
-            m_hostname = settingsService.getHostname().getValue();
-            settingsService.close();
-        }
-    }
-
-    if (false == m_hostname.isEmpty())
-    {
-        baseUri += m_hostname;
-        baseUri += "/";
-    }
-    
-    baseUri += "uid/";
-    baseUri += uid;
-
-    return baseUri;
-}
-
-String MqttApiTopicHandler::getBaseUriByAlias(const String& alias)
-{
-    String  baseUri;
-
-    if (true == m_hostname.isEmpty())
-    {
-        SettingsService& settingsService = SettingsService::getInstance();
-
-        if (false == settingsService.open(true))
-        {
-            m_hostname = settingsService.getHostname().getDefault();
-        }
-        else
-        {
-            m_hostname = settingsService.getHostname().getValue();
-            settingsService.close();
-        }
-    }
-
-    if (false == m_hostname.isEmpty())
-    {
-        baseUri += m_hostname;
-        baseUri += "/";
-    }
-
-    baseUri += "alias/";
-    baseUri += alias;
-
-    return baseUri;
-}
-
-void MqttApiTopicHandler::registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra, const String& baseUri)
-{
-    if (nullptr != plugin)
-    {
-        String      topicUri    = baseUri + topic;
-        TopicState* topicState  = new(std::nothrow) TopicState();
-
-        LOG_INFO("[%s][%u] Register: %s", plugin->getName(), plugin->getUID(), topicUri.c_str());
-
-        if (nullptr != topicState)
-        {
-            String  topicUriReadable;
-            String  topicUriWriteable;
-
-            topicState->plugin          = plugin;
-            topicState->topic           = topic;
-            topicState->access          = access;
-            topicState->topicUri        = topicUri;
-            topicState->isPublishReq    = false;
-
-            /* Is the topic readable? */
-            if ((ACCESS_READ_ONLY == access) ||
-                (ACCESS_READ_WRITE == access))
-            {
-                topicUriReadable = topicUri + MQTT_ENDPOINT_READ_ACCESS;
-
-                /* Publish initially. */
-                topicState->isPublishReq = true;
-            }
-
-            /* Is the topic writeable? */
-            if ((ACCESS_READ_WRITE == access) ||
-                (ACCESS_WRITE_ONLY == access))
-            {
-                MqttService&                mqttService = MqttService::getInstance();
-                MqttService::TopicCallback  setCallback = [this, plugin, topic](const String& topicUri, const uint8_t* payload, size_t size) {
-                    if (0U != topicUri.endsWith(topic + MQTT_ENDPOINT_WRITE_ACCESS))
-                    {
-                        this->write(plugin, topic, payload, size);
-                    }
-                };
-
-                topicUriWriteable = topicUri + MQTT_ENDPOINT_WRITE_ACCESS;
-
-                if (false == mqttService.subscribe(topicUriWriteable, setCallback))
-                {
-                    LOG_WARNING("Couldn't subscribe %s.", topicUriWriteable.c_str());
-                }
-                else
-                {
-                    LOG_INFO("[%u] Subscribed: %s", plugin->getUID(), topicUriWriteable.c_str());
-                }
-            }
-
-            /* Handle Home Assistant extension */
-            {
-                int dividerIdx  = baseUri.lastIndexOf("/");
-
-                if (0 <= dividerIdx)
-                {
-                    String  haObjectId   = baseUri.substring(dividerIdx + 1);
-                    String  willTopic    = m_hostname + "/status";
-
-                    m_haExtension.registerMqttDiscovery(m_hostname, haObjectId, topicUriReadable, topicUriWriteable, willTopic, extra);
-                }
-            }
-
-            m_listOfTopicStates.push_back(topicState);
-        }
-    }
-}
-
-void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic, const uint8_t* payload, size_t size)
+void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, const String& topic, const uint8_t* payload, size_t size, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
     const size_t            JSON_DOC_SIZE   = 1024U;
     DynamicJsonDocument     jsonDoc(JSON_DOC_SIZE);
@@ -368,9 +325,13 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
             String dstFullPath;
 
             /* Ask plugin, whether the upload is allowed or not. */
-            if (false == plugin->isUploadAccepted(topic, jsonFileName.as<String>(), dstFullPath))
+            if (nullptr == uploadReqFunc)
             {
-                LOG_WARNING("[%s][%u] Upload not supported.", plugin->getName(), plugin->getUID());
+                LOG_WARNING("[%s] Upload not supported.", entityId.c_str());
+            }
+            else if (false == uploadReqFunc(topic, jsonFileName.as<String>(), dstFullPath))
+            {
+                LOG_WARNING("[%s] Upload not supported.", entityId.c_str());
             }
             else
             {
@@ -380,12 +341,12 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
 
                 if (MBEDTLS_ERR_BASE64_INVALID_CHARACTER == decodeRet)
                 {
-                    LOG_WARNING("[%s][%u] File encoding contains invalid character.", plugin->getName(), plugin->getUID(), fileSize);
+                    LOG_WARNING("[%s] File encoding contains invalid character.", entityId.c_str(), fileSize);
                 }
                 else if ((MAX_FILE_SIZE < fileSize) ||
                          (0U == fileSize))
                 {
-                    LOG_WARNING("[%s][%u] File size %u not supported.", plugin->getName(), plugin->getUID(), fileSize);
+                    LOG_WARNING("[%s] File size %u not supported.", entityId.c_str(), fileSize);
                 }
                 else
                 {
@@ -399,7 +360,7 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
 
                         if (0U != decodeRet)
                         {
-                            LOG_WARNING("[%s][%u] File decode error: %d", plugin->getName(), plugin->getUID(), decodeRet);
+                            LOG_WARNING("[%s] File decode error: %d", entityId.c_str(), decodeRet);
                         }
                         else
                         {
@@ -408,7 +369,7 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
 
                             if (false == fd)
                             {
-                                LOG_ERROR("Couldn't create file: %s", dstFullPath.c_str());
+                                LOG_ERROR("[%s] Couldn't create file: %s", entityId.c_str(), dstFullPath.c_str());
                             }
                             else
                             {
@@ -428,112 +389,38 @@ void MqttApiTopicHandler::write(IPluginMaintenance* plugin, const String& topic,
             }
         }
 
-        if (false == plugin->setTopic(topic, jsonDoc.as<JsonObject>()))
+        if (false == setTopicFunc(topic, jsonDoc.as<JsonObject>()))
         {
-            LOG_WARNING("Plugin %u rejected payload.", plugin->getUID());
+            LOG_WARNING("[%s] Payload rejected.", entityId.c_str());
         }
     }
 }
 
-void MqttApiTopicHandler::unregisterTopic(IPluginMaintenance* plugin, const String& topic, const String& baseUri)
+void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId, const String& topic, GetTopicFunc getTopicFunc)
 {
-    if (nullptr != plugin)
+    if (nullptr != getTopicFunc)
     {
-        String                      topicUri        = baseUri + topic;
-        MqttService&                mqttService     = MqttService::getInstance();
-        ListOfTopicStates::iterator topicStateIt    = m_listOfTopicStates.begin();
-
-        LOG_INFO("[%s][%u] Unregister: %s", plugin->getName(), plugin->getUID(), topicUri.c_str());
-
-        while(m_listOfTopicStates.end() != topicStateIt)
-        {
-            TopicState* topicState = *topicStateIt;
-
-            if ((nullptr != topicState) &&
-                (plugin == topicState->plugin) &&
-                (topic == topicState->topic))
-            {
-                String topicUriReadable;
-                String topicUriWriteable;
-
-                if ((ACCESS_READ_ONLY == topicState->access) ||
-                    (ACCESS_READ_WRITE == topicState->access))
-                {
-                    topicUriReadable = topicUri + MQTT_ENDPOINT_READ_ACCESS;
-
-                    /* Purge topic */
-                    if (false == mqttService.publish(topicUriReadable, ""))
-                    {
-                        LOG_WARNING("[%u] Failed to purge: %s", plugin->getUID(), topicUriReadable.c_str());
-                    }
-                    else
-                    {
-                        LOG_INFO("[%u] Purged: %s", plugin->getUID(), topicUriReadable.c_str());
-                    }
-                }
-                
-                if ((ACCESS_READ_WRITE == topicState->access) ||
-                    (ACCESS_WRITE_ONLY == topicState->access))
-                {
-                    topicUriWriteable = topicUri + MQTT_ENDPOINT_WRITE_ACCESS;
-
-                    mqttService.unsubscribe(topicUriWriteable);
-
-                    LOG_INFO("[%u] Unsubscribed: %s", plugin->getUID(), topicUriWriteable.c_str());
-                }
-
-                /* Handle Home Assistant extension */
-                {
-                    /* The object id is the last directory of the base URI.
-                    * Its the plugin UID or the plugin alias.
-                    */
-                    int dividerIdx  = baseUri.lastIndexOf("/");
-
-                    if (0 <= dividerIdx)
-                    {
-                        String haObjectId = baseUri.substring(dividerIdx + 1);
-
-                        m_haExtension.unregisterMqttDiscovery(m_hostname, haObjectId, topicUriReadable, topicUriWriteable);
-                    }
-                }
-
-                topicStateIt = m_listOfTopicStates.erase(topicStateIt);
-
-                delete topicState;
-                topicState = nullptr;
-            }
-            else
-            {
-                ++topicStateIt;
-            }
-        }
-    }
-}
-
-void MqttApiTopicHandler::publish(const String& baseUri, IPluginMaintenance* plugin, const String& topic)
-{
-    if (nullptr != plugin)
-    {
-        const size_t        JSON_DOC_SIZE   = 1024U;
+        const size_t        JSON_DOC_SIZE       = 1024U;
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonObj         = jsonDoc.createNestedObject("data");
+        JsonObject          jsonObj             = jsonDoc.createNestedObject("data");
+        String              mqttTopicNameBase   = deviceId + "/" + entityId + topic;
 
-        if (true == plugin->getTopic(topic, jsonObj))
+        if (true == getTopicFunc(topic, jsonObj))
         {
             String topicContent;
 
             if (0U < serializeJson(jsonDoc["data"], topicContent))
             {
                 MqttService&    mqttService     = MqttService::getInstance();
-                String          topicStateUri   = baseUri + MQTT_ENDPOINT_READ_ACCESS;
+                String          topicStateUri   = mqttTopicNameBase + MQTT_ENDPOINT_READ_ACCESS;
 
                 if (false == mqttService.publish(topicStateUri, topicContent))
                 {
-                    LOG_WARNING("Couldn't publish %s.", topicStateUri.c_str());
+                    LOG_WARNING("[%s] Couldn't publish %s.", entityId.c_str(), topicStateUri.c_str());
                 }
                 else
                 {
-                    LOG_INFO("[%s][%u] Published: %s", plugin->getName(), plugin->getUID(), topicStateUri.c_str());
+                    LOG_INFO("[%s] Published: %s", entityId.c_str(), topicStateUri.c_str());
                 }
             }
         }
@@ -551,12 +438,12 @@ void MqttApiTopicHandler::clearTopicStates()
 
         if (nullptr != topicState)
         {
-            if ((ACCESS_READ_WRITE == topicState->access) ||
-                (ACCESS_WRITE_ONLY == topicState->access))
+            if (nullptr != topicState->setTopicFunc)
             {
-                String topicUri = topicState->topicUri + MQTT_ENDPOINT_WRITE_ACCESS;
+                String mqttTopicNameBase    = topicState->deviceId + "/" + topicState->entityId + topicState->topic;
+                String topicStateUri        = mqttTopicNameBase + MQTT_ENDPOINT_WRITE_ACCESS;
 
-                mqttService.unsubscribe(topicUri);
+                mqttService.unsubscribe(topicStateUri);
             }
 
             topicStateIt = m_listOfTopicStates.erase(topicStateIt);

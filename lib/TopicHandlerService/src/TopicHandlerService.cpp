@@ -57,6 +57,9 @@
  * Local Variables
  *****************************************************************************/
 
+/* Initialize static values. */
+const char* TopicHandlerService::DEFAULT_ACCESS = "rw";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -101,9 +104,10 @@ void TopicHandlerService::process()
     }
 }
 
-void TopicHandlerService::registerTopics(IPluginMaintenance* plugin)
+void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintenance* plugin)
 {
-    if (nullptr != plugin)
+    if ((false == deviceId.isEmpty()) &&
+        (nullptr != plugin))
     {
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
@@ -117,9 +121,13 @@ void TopicHandlerService::registerTopics(IPluginMaintenance* plugin)
         {
             for (JsonVariantConst jsonTopic : jsonTopics)
             {
-                String                  topicName;
-                ITopicHandler::Access   topicAccess = DEFAULT_ACCESS;
-                JsonObjectConst         extra;
+                String                          topicName;
+                String                          entityId;
+                JsonObjectConst                 extra;
+                String                          topicAccess     = DEFAULT_ACCESS;
+                ITopicHandler::GetTopicFunc     getTopicFunc    = nullptr;
+                ITopicHandler::SetTopicFunc     setTopicFunc    = nullptr;
+                ITopicHandler::UploadReqFunc    uploadReqFunc   = nullptr;
 
                 /* Topic specific parameter available? */
                 if (true == jsonTopic.is<JsonObjectConst>())
@@ -134,7 +142,7 @@ void TopicHandlerService::registerTopics(IPluginMaintenance* plugin)
 
                     if (true == jsonTopicAccess.is<String>())
                     {
-                        topicAccess = strToAccess(jsonTopicAccess.as<String>());
+                        topicAccess = jsonTopicAccess.as<String>();
                     }
 
                     extra = jsonTopic;
@@ -149,16 +157,33 @@ void TopicHandlerService::registerTopics(IPluginMaintenance* plugin)
                     /* Skip */
                     ;
                 }
-                
-                registerTopic(plugin, topicName, topicAccess, extra);
+
+                if (false == topicName.isEmpty())
+                {
+                    strToAccess(plugin, topicAccess, getTopicFunc, setTopicFunc, uploadReqFunc);
+                    
+                    /* Register plugin topic with plugin UID as entity id. */
+                    entityId = plugin->getUID();
+                    registerTopic(deviceId, entityId, topicName, extra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+
+                    /* Register plugin topic with plugin alias as entity id (if possible). */
+                    entityId = plugin->getAlias();
+                    if (false == entityId.isEmpty())
+                    {
+                        registerTopic(deviceId, entityId, topicName, extra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                    }
+
+                    addToPluginMetaDataList(deviceId, plugin, topicName);
+                }
             }
         }
     }
 }
 
-void TopicHandlerService::unregisterTopics(IPluginMaintenance* plugin)
+void TopicHandlerService::unregisterTopics(const String& deviceId, IPluginMaintenance* plugin)
 {
-    if (nullptr != plugin)
+    if ((false == deviceId.isEmpty()) &&
+        (nullptr != plugin))
     {
         const size_t        JSON_DOC_SIZE   = 512U;
         DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
@@ -173,6 +198,7 @@ void TopicHandlerService::unregisterTopics(IPluginMaintenance* plugin)
             for (JsonVariantConst jsonTopic : jsonTopics)
             {
                 String topicName;
+                String entityId;
 
                 /* Topic specific parameter available? */
                 if (true == jsonTopic.is<JsonObjectConst>())
@@ -194,57 +220,84 @@ void TopicHandlerService::unregisterTopics(IPluginMaintenance* plugin)
                     /* Skip */
                     ;
                 }
-                
-                unregisterTopic(plugin, topicName);
+
+                if (false == topicName.isEmpty())
+                {
+                    /* Unregister plugin topic with plugin UID as entity id. */
+                    entityId = plugin->getUID();
+                    unregisterTopic(deviceId, entityId, topicName);
+
+                    /* Unregister plugin topic with plugin UID as entity id (if possible). */
+                    entityId = plugin->getAlias();
+                    if (false == entityId.isEmpty())
+                    {
+                        unregisterTopic(deviceId, entityId, topicName);
+                    }
+
+                    removeFromPluginMetaDataList(deviceId, plugin);
+                }
             }
         }
     }
 }
 
-/******************************************************************************
- * Protected Methods
- *****************************************************************************/
-
-/******************************************************************************
- * Private Methods
- *****************************************************************************/
-
-void TopicHandlerService::registerTopic(IPluginMaintenance* plugin, const String& topic, ITopicHandler::Access access, JsonObjectConst& extra)
+void TopicHandlerService::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc)
 {
-    if ((nullptr != plugin) &&
+    if ((false == deviceId.isEmpty()) &&
+        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
-        uint8_t         idx                 = 0U;
-        uint8_t         count               = 0U;
-        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+        bool    isReadAccess    = false;
+        bool    isWriteAccess   = false;
 
-        /* Register topic by every known topic handler. */
-        while(count > idx)
+        /* Determine the kind of accessability. */
+        if (nullptr != getTopicFunc)
         {
-            ITopicHandler* handler = topicHandlerList[idx];
-
-            if (nullptr != handler)
-            {
-                handler->registerTopic(plugin, topic, access, extra);
-            }
-
-            ++idx;
+            isReadAccess = true;
         }
 
-        /* Store every readable topic in a list for automatic publishing
-         * on topic change.
-         */
-        if ((ITopicHandler::ACCESS_READ_ONLY == access) ||
-            (ITopicHandler::ACCESS_READ_WRITE == access))
+        if ((nullptr != setTopicFunc) &&
+            (nullptr != uploadReqFunc))
         {
-            addToList(plugin, topic);
+            isWriteAccess = true;
+        }
+
+        if ((true == isReadAccess) ||
+            (true == isWriteAccess))
+        {
+            uint8_t         idx                 = 0U;
+            uint8_t         count               = 0U;
+            ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
+
+            /* Register topic by every known topic handler. */
+            while(count > idx)
+            {
+                ITopicHandler* handler = topicHandlerList[idx];
+
+                if (nullptr != handler)
+                {
+                    handler->registerTopic(deviceId, entityId, topic, extra, getTopicFunc, setTopicFunc, uploadReqFunc);
+                }
+
+                ++idx;
+            }
+
+            /* Store every readable topic in a list for automatic publishing on topic change,
+             * except topics from plugins. They will be considered separately.
+             */
+            if ((true == isReadAccess) &&
+                (nullptr != hasChangedFunc))
+            {
+                addToTopicMetaDataList(deviceId, entityId, topic, hasChangedFunc);
+            }
         }
     }
 }
 
-void TopicHandlerService::unregisterTopic(IPluginMaintenance* plugin, const String& topic)
+void TopicHandlerService::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
 {
-    if ((nullptr != plugin) &&
+    if ((false == deviceId.isEmpty()) &&
+        (false == entityId.isEmpty()) &&
         (false == topic.isEmpty()))
     {
         uint8_t         idx                 = 0U;
@@ -258,98 +311,224 @@ void TopicHandlerService::unregisterTopic(IPluginMaintenance* plugin, const Stri
 
             if (nullptr != handler)
             {
-                handler->unregisterTopic(plugin, topic);
+                handler->unregisterTopic(deviceId, entityId, topic);
             }
 
             ++idx;
         }
 
         /* If topic is stored for automatic publishing, it will be removed. */
-        removeFromList(plugin, topic);
+        removeFromTopicMetaDataList(deviceId, entityId, topic);
     }
 }
 
-ITopicHandler::Access TopicHandlerService::strToAccess(const String& strAccess) const
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& strAccess, ITopicHandler::GetTopicFunc& getTopicFunc, ITopicHandler::SetTopicFunc& setTopicFunc, ITopicHandler::UploadReqFunc& uploadReqFunc) const
 {
-    ITopicHandler::Access access = ITopicHandler::ACCESS_READ_ONLY;
-
-    if (true == strAccess.equalsIgnoreCase("rw"))
+    if (nullptr != plugin)
     {
-        access = ITopicHandler::ACCESS_READ_WRITE;
-    }
-    else if (true == strAccess.equalsIgnoreCase("w"))
-    {
-        access = ITopicHandler::ACCESS_WRITE_ONLY;
-    }
-    else
-    {
-        /* Keep init value. */
-        ;
-    }
+        bool isReadAccess = false;
+        bool isWriteAccess = false;
 
-    return access;
-}
-
-void TopicHandlerService::addToList(IPluginMaintenance* plugin, const String& topic)
-{
-    if ((nullptr != plugin) &&
-        (false == topic.isEmpty()))
-    {
-        PluginTopic* pluginTopic = new(std::nothrow) PluginTopic();
-
-        if (nullptr != pluginTopic)
+        if (true == strAccess.equalsIgnoreCase("rw"))
         {
-            pluginTopic->plugin = plugin;
-            pluginTopic->topic  = topic;
+            /* Read/Write access */
+            isReadAccess    = true;
+            isWriteAccess   = true;
+        }
+        else if (true == strAccess.equalsIgnoreCase("w"))
+        {
+            /* Write only access */
+            isWriteAccess = true;
+        }
+        else
+        {
+            /* Read only access */
+            isReadAccess = true;
+        }
 
-            m_pluginTopicList.push_back(pluginTopic);
+        if (true == isReadAccess)
+        {
+            getTopicFunc =      [plugin](const String& topic, JsonObject& value) -> bool
+                                {
+                                    bool status = false;
+
+                                    if (nullptr != plugin)
+                                    {
+                                        status = plugin->getTopic(topic, value);
+                                    }
+
+                                    return status;
+                                };
+        }
+
+        if (true == isWriteAccess)
+        {
+            setTopicFunc  =     [plugin](const String& topic, const JsonObject& value) -> bool
+                                {
+                                    bool status = false;
+
+                                    if (nullptr != plugin)
+                                    {
+                                        status = plugin->setTopic(topic, value);
+                                    }
+
+                                    return status;
+                                };
+
+            uploadReqFunc =     [plugin](const String& topic, const String& srcFilename, String& dstFilename) -> bool
+                                {
+                                    bool status = false;
+
+                                    if (nullptr != plugin)
+                                    {
+                                        status = plugin->isUploadAccepted(topic, srcFilename, dstFilename);
+                                    }
+
+                                    return status;
+                                };
         }
     }
 }
 
-void TopicHandlerService::removeFromList(IPluginMaintenance* plugin, const String& topic)
+void TopicHandlerService::addToTopicMetaDataList(const String& deviceId, const String& entityId, const String& topic, HasChangedFunc hasChangedFunc)
 {
-    if ((nullptr != plugin) &&
+    if ((false == deviceId.isEmpty()) &&
+        (false == entityId.isEmpty()) &&
+        (false == topic.isEmpty()) &&
+        (nullptr != hasChangedFunc))
+    {
+        TopicMetaData* topicMetaData = new(std::nothrow) TopicMetaData();
+
+        if (nullptr != topicMetaData)
+        {
+            topicMetaData->deviceId         = deviceId;
+            topicMetaData->entityId         = entityId;
+            topicMetaData->topic            = topic;
+            topicMetaData->hasChangedFunc   = hasChangedFunc;
+
+            m_topicMetaDataList.push_back(topicMetaData);
+        }
+    }
+}
+
+void TopicHandlerService::removeFromTopicMetaDataList(const String& deviceId, const String& entityId, const String& topic)
+{
+    TopicMetaDataList::iterator topicMetaDataListIt = m_topicMetaDataList.begin();
+
+    while(m_topicMetaDataList.end() != topicMetaDataListIt)
+    {
+        TopicMetaData* topicMetaData = *topicMetaDataListIt;
+
+        if ((nullptr != topicMetaData) &&
+            (deviceId == topicMetaData->deviceId) &&
+            (entityId == topicMetaData->entityId) &&
+            (topic == topicMetaData->topic))
+        {
+            topicMetaDataListIt = m_topicMetaDataList.erase(topicMetaDataListIt);
+            
+            delete topicMetaData;
+            topicMetaData = nullptr;
+        }
+        else
+        {
+            ++topicMetaDataListIt;
+        }
+    }
+}
+
+void TopicHandlerService::addToPluginMetaDataList(const String& deviceId, IPluginMaintenance* plugin, const String& topic)
+{
+    if ((false == deviceId.isEmpty()) &&
+        (nullptr != plugin) &&
         (false == topic.isEmpty()))
     {
-        PluginTopicList::iterator pluginTopicListIt = m_pluginTopicList.begin();
+        PluginMetaData* pluginMetaData = new(std::nothrow) PluginMetaData();
 
-        while(m_pluginTopicList.end() != pluginTopicListIt)
+        if (nullptr != pluginMetaData)
         {
-            PluginTopic* pluginTopic = *pluginTopicListIt;
+            pluginMetaData->deviceId    = deviceId;
+            pluginMetaData->plugin      = plugin;
+            pluginMetaData->topic       = topic;
 
-            if ((nullptr != pluginTopic) &&
-                (plugin == pluginTopic->plugin) &&
-                (topic == pluginTopic->topic))
-            {
-                pluginTopicListIt = m_pluginTopicList.erase(pluginTopicListIt);
-                
-                delete pluginTopic;
-                pluginTopic = nullptr;
-            }
-            else
-            {
-                ++pluginTopicListIt;
-            }
+            m_pluginMetaDataList.push_back(pluginMetaData);
+        }
+    }
+}
+
+void TopicHandlerService::removeFromPluginMetaDataList(const String& deviceId, IPluginMaintenance* plugin)
+{
+    PluginMetaDataList::iterator pluginMetaDataListIt = m_pluginMetaDataList.begin();
+
+    while(m_pluginMetaDataList.end() != pluginMetaDataListIt)
+    {
+        PluginMetaData* pluginMetaData = *pluginMetaDataListIt;
+
+        if ((nullptr != pluginMetaData) &&
+            (deviceId == pluginMetaData->deviceId) &&
+            (plugin == pluginMetaData->plugin))
+        {
+            pluginMetaDataListIt = m_pluginMetaDataList.erase(pluginMetaDataListIt);
+            
+            delete pluginMetaData;
+            pluginMetaData = nullptr;
+        }
+        else
+        {
+            ++pluginMetaDataListIt;
         }
     }
 }
 
 void TopicHandlerService::processOnChange()
 {
-    PluginTopicList::iterator pluginTopicListIt = m_pluginTopicList.begin();
-
-    while(m_pluginTopicList.end() != pluginTopicListIt)
+    PluginMetaDataList::iterator    pluginMetaDataListIt    = m_pluginMetaDataList.begin();
+    TopicMetaDataList::iterator     topicMetaDataListIt     = m_topicMetaDataList.begin();
+    
+    /** Process all plugin related topics. */
+    while(m_pluginMetaDataList.end() != pluginMetaDataListIt)
     {
-        PluginTopic* pluginTopic = *pluginTopicListIt;
+        PluginMetaData* pluginMetaData = *pluginMetaDataListIt;
 
-        if ((nullptr != pluginTopic) &&
-            (true == pluginTopic->plugin->hasTopicChanged(pluginTopic->topic)))
+        if ((nullptr != pluginMetaData) &&
+            (nullptr != pluginMetaData->plugin) &&
+            (true == pluginMetaData->plugin->hasTopicChanged(pluginMetaData->topic)))
         {
-            notifyAllHandlers(pluginTopic->plugin, pluginTopic->topic);
+            String entityId;
+
+            entityId = pluginMetaData->plugin->getUID();
+            notifyAllHandlers(pluginMetaData->deviceId, entityId, pluginMetaData->topic);
+
+            entityId = pluginMetaData->plugin->getAlias();
+            if (false == entityId.isEmpty())
+            {
+                notifyAllHandlers(pluginMetaData->deviceId, entityId, pluginMetaData->topic);
+            }
         }
 
-        ++pluginTopicListIt;
+        ++pluginMetaDataListIt;
+    }
+
+    /** Proces all topics which are independent from plugins. */
+    while(m_topicMetaDataList.end() != topicMetaDataListIt)
+    {
+        TopicMetaData* topicMetaData = *topicMetaDataListIt;
+
+        if ((nullptr != topicMetaData) &&
+            (nullptr != topicMetaData->hasChangedFunc) &&
+            (true == topicMetaData->hasChangedFunc(topicMetaData->topic)))
+        {
+            notifyAllHandlers(topicMetaData->deviceId, topicMetaData->entityId, topicMetaData->topic);
+        }
+
+        ++topicMetaDataListIt;
     }
 }
 
@@ -410,10 +589,9 @@ void TopicHandlerService::processAllHandlers()
     }
 }
 
-void TopicHandlerService::notifyAllHandlers(IPluginMaintenance* plugin, const String& topic)
+void TopicHandlerService::notifyAllHandlers(const String& deviceId, const String& entityId, const String& topic)
 {
-    if ((nullptr != plugin) &&
-        (false == topic.isEmpty()))
+    if (false == topic.isEmpty())
     {
         uint8_t         idx                 = 0U;
         uint8_t         count               = 0U;
@@ -425,7 +603,7 @@ void TopicHandlerService::notifyAllHandlers(IPluginMaintenance* plugin, const St
 
             if (nullptr != handler)
             {
-                handler->notify(plugin, topic);
+                handler->notify(deviceId, entityId, topic);
             }
 
             ++idx;

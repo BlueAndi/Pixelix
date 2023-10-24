@@ -56,21 +56,21 @@
  *****************************************************************************/
 
 /**
- * The topic handler interface, used by the plugin manager to register/unregister
- * plugin topics.
+ * The abstract topic handler interface, which will be realized by different
+ * protocols.
  */
 class ITopicHandler
 {
 public:
 
-    /** Topic accessibility */
-    typedef enum
-    {
-        ACCESS_READ_ONLY = 0,   /**< Read only */
-        ACCESS_READ_WRITE,      /**< Read and write */
-        ACCESS_WRITE_ONLY       /**< Write only */
-    
-    } Access;
+    /** Function prototype to get topic content. */
+    typedef std::function<bool(const String& topic, JsonObject& value)> GetTopicFunc;
+
+    /** Function prototype to set topic content. */
+    typedef std::function<bool(const String& topic, const JsonObject& value)> SetTopicFunc;
+
+    /** Function prototype for file upload request. */
+    typedef std::function<bool(const String& topic, const String& srcFilename, String& dstFilename)> UploadReqFunc;
 
     /**
      * Destroy the interface.
@@ -90,22 +90,26 @@ public:
     virtual void stop() = 0;
 
     /**
-     * Register a single topic of the given plugin.
+     * Register the topic.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
-     * @param[in] topic     The topic name.
-     * @param[in] access    The topic accessibility.
-     * @param[in] extra     Extra parameters, which depend on the topic handler.
+     * @param[in] deviceId      The device id which represents the physical device.
+     * @param[in] entityId      The entity id which represents the entity of the device.
+     * @param[in] topic         The topic name.
+     * @param[in] extra         Extra parameters, which depend on the topic handler.
+     * @param[in] getTopicFunc  Function to get the topic content.
+     * @param[in] setTopicFunc  Function to set the topic content.
+     * @param[in] uploadReqFunc Function used for requesting whether an file upload is allowed.
      */
-    virtual void registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra) = 0;
+    virtual void registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc) = 0;
 
     /**
-     * Unregister the topic of the given plugin.
+     * Unregister the topic.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    virtual void unregisterTopic(IPluginMaintenance* plugin, const String& topic) = 0;
+    virtual void unregisterTopic(const String& deviceId, const String& entityId, const String& topic) = 0;
 
     /**
      * Process the topic handler.
@@ -115,10 +119,11 @@ public:
     /**
      * Notify that the topic has changed.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    virtual void notify(IPluginMaintenance* plugin, const String& topic) = 0;
+    virtual void notify(const String& deviceId, const String& entityId, const String& topic) = 0;
 
 protected:
 

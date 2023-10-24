@@ -42,16 +42,16 @@ After the successful connection establishment to the MQTT broker, Pixelix will s
 
 ## Plugin base URI
 The base URI to access plugin related topics can be setup with the plugin UID or the plugin alias:
-* &lt;HOSTNAME&gt;/uid/&lt;PLUGIN-UID&gt;/...
-* &lt;HOSTNAME&gt;/alias/&lt;PLUGIN-ALIAS&gt;/...
+* &lt;HOSTNAME&gt;/&lt;PLUGIN-UID&gt;/...
+* &lt;HOSTNAME&gt;/&lt;PLUGIN-ALIAS&gt;/...
 
 ## Topic name
 The complete topic name can be derived from the REST API documentation.
 
 Example: JustTextPlugin
 
-The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;
-1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/display part with &lt;HOSTNAME&gt; --> &lt;HOSTNAME&gt;/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;
+The REST API URL looks like the following: http://&lt;HOSTNAME&gt;/rest/api/v1/display/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;
+1. Replace the http://&lt;HOSTNAME&gt;/rest/api/v1/display part with &lt;HOSTNAME&gt; --> &lt;HOSTNAME&gt;/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;
 2. Every URL parameter, which is in this case show=&lt;TEXT&gt; must be sent in JSON format.
 
 ```json
