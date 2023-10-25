@@ -199,7 +199,7 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) override
+    bool setTopic(const String& topic, const JsonObjectConst& value) override
     {
         PLUGIN_NOT_USED(topic);
         PLUGIN_NOT_USED(value);

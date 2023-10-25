@@ -108,7 +108,7 @@ bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
+bool JustTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 

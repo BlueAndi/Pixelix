@@ -83,7 +83,7 @@ bool GrabViaMqttPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObject& value)
+bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 

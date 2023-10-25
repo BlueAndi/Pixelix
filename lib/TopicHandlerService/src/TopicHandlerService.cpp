@@ -371,7 +371,7 @@ void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& 
 
         if (true == isWriteAccess)
         {
-            setTopicFunc  =     [plugin](const String& topic, const JsonObject& value) -> bool
+            setTopicFunc  =     [plugin](const String& topic, const JsonObjectConst& value) -> bool
                                 {
                                     bool status = false;
 

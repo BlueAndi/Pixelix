@@ -173,7 +173,7 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    virtual bool setTopic(const String& topic, const JsonObject& value) = 0;
+    virtual bool setTopic(const String& topic, const JsonObjectConst& value) = 0;
 
     /**
      * Has the topic content changed since last time?

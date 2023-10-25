@@ -103,7 +103,7 @@ bool SoundReactivePlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool SoundReactivePlugin::setTopic(const String& topic, const JsonObject& value)
+bool SoundReactivePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 

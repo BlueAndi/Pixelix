@@ -315,8 +315,9 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
     }
     else
     {
-        JsonVariantConst jsonFileName   = jsonDoc["fileName"];
-        JsonVariantConst jsonFileBase64 = jsonDoc["file"];
+        JsonVariantConst    jsonFileName   = jsonDoc["fileName"];
+        JsonVariantConst    jsonFileBase64 = jsonDoc["file"];
+        JsonObjectConst     jsonValue;
 
         /* File transfer? */
         if ((true == jsonFileName.is<String>()) &&
@@ -389,7 +390,8 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
             }
         }
 
-        if (false == setTopicFunc(topic, jsonDoc.as<JsonObject>()))
+        jsonValue = jsonDoc.as<JsonObjectConst>();
+        if (false == setTopicFunc(topic, jsonValue))
         {
             LOG_WARNING("[%s] Payload rejected.", entityId.c_str());
         }

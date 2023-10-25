@@ -67,7 +67,7 @@ public:
     typedef std::function<bool(const String& topic, JsonObject& value)> GetTopicFunc;
 
     /** Function prototype to set topic content. */
-    typedef std::function<bool(const String& topic, const JsonObject& value)> SetTopicFunc;
+    typedef std::function<bool(const String& topic, const JsonObjectConst& value)> SetTopicFunc;
 
     /** Function prototype for file upload request. */
     typedef std::function<bool(const String& topic, const String& srcFilename, String& dstFilename)> UploadReqFunc;

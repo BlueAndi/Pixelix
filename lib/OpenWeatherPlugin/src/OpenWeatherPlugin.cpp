@@ -134,7 +134,7 @@ bool OpenWeatherPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObject& value)
+bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 

@@ -103,7 +103,7 @@ bool SignalDetectorPlugin::getTopic(const String& topic, JsonObject& value) cons
     return isSuccessful;
 }
 
-bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObject& value)
+bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 

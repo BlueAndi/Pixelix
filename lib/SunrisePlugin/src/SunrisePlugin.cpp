@@ -91,7 +91,7 @@ bool SunrisePlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
+bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 

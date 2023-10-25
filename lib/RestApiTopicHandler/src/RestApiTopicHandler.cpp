@@ -200,7 +200,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMet
              (nullptr != topicMetaData->setTopicFunc))
     {
         DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
-        JsonObject          jsonValue;
+        JsonObjectConst     jsonValue;
         
         /* Topic data is in the HTTP parameters and needs to be converted to JSON. */
         par2Json(jsonDocPar, request);
@@ -212,7 +212,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMet
             jsonDocPar["fullPath"] = topicMetaData->fullPath;
         }
 
-        jsonValue = jsonDocPar.as<JsonObject>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
+        jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
         if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
         {
             LOG_WARNING("[%s] Topic \"%s\" not supported or invalid data.", topicMetaData->entityId, topicMetaData->topic);
