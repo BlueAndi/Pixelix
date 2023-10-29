@@ -50,16 +50,16 @@
                 </ul>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Set icon</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/bitmap/&lt;ICON-ID&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;ICON-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;ICON-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;ICON-ID&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>ICON-ID: The id of the icon (starting with 0 from left).</li>
                 </ul>
                 <h3 class="mt-1">Clear icon</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/bitmap/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -67,10 +67,10 @@
                     <li>STATE: <code>true</code> or <code>false</code></li>
                 </ul>
                 <h3 class="mt-1">Control animation (Sprite Sheet required)</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -304,7 +304,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/" + pluginUid + "/bitmap/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap/" + index,
                     isJsonResponse: true,
                     parameter: {
                         file: file
@@ -327,7 +327,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/" + pluginUid + "/spritesheet/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/spritesheet/" + index,
                     isJsonResponse: true,
                     parameter: {
                         file: file
@@ -368,7 +368,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/" + pluginUid + "/animation/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
                     isJsonResponse: true,
                     parameter: {
                         iconFullPath: "",
@@ -406,7 +406,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/" + pluginUid + "/animation/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var forwardElement = document.getElementById("forwardAnimation");
@@ -471,7 +471,7 @@
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/" + pluginUid + "/animation/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
                     isJsonResponse: true,
                     parameter: {
                         forward: isForward,

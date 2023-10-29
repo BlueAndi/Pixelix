@@ -122,7 +122,6 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
             for (JsonVariantConst jsonTopic : jsonTopics)
             {
                 String                          topicName;
-                String                          entityId;
                 JsonObjectConst                 extra;
                 String                          topicAccess     = DEFAULT_ACCESS;
                 ITopicHandler::GetTopicFunc     getTopicFunc    = nullptr;
@@ -163,14 +162,12 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
                     strToAccess(plugin, topicAccess, getTopicFunc, setTopicFunc, uploadReqFunc);
                     
                     /* Register plugin topic with plugin UID as entity id. */
-                    entityId = plugin->getUID();
-                    registerTopic(deviceId, entityId, topicName, extra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                    registerTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName, extra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
 
                     /* Register plugin topic with plugin alias as entity id (if possible). */
-                    entityId = plugin->getAlias();
-                    if (false == entityId.isEmpty())
+                    if (false == plugin->getAlias().isEmpty())
                     {
-                        registerTopic(deviceId, entityId, topicName, extra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
+                        registerTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName, extra, getTopicFunc, nullptr, setTopicFunc, uploadReqFunc);
                     }
 
                     addToPluginMetaDataList(deviceId, plugin, topicName);
@@ -198,7 +195,6 @@ void TopicHandlerService::unregisterTopics(const String& deviceId, IPluginMainte
             for (JsonVariantConst jsonTopic : jsonTopics)
             {
                 String topicName;
-                String entityId;
 
                 /* Topic specific parameter available? */
                 if (true == jsonTopic.is<JsonObjectConst>())
@@ -224,14 +220,12 @@ void TopicHandlerService::unregisterTopics(const String& deviceId, IPluginMainte
                 if (false == topicName.isEmpty())
                 {
                     /* Unregister plugin topic with plugin UID as entity id. */
-                    entityId = plugin->getUID();
-                    unregisterTopic(deviceId, entityId, topicName);
+                    unregisterTopic(deviceId, getEntityIdByPluginUid(plugin->getUID()), topicName);
 
                     /* Unregister plugin topic with plugin UID as entity id (if possible). */
-                    entityId = plugin->getAlias();
-                    if (false == entityId.isEmpty())
+                    if (false == plugin->getAlias().isEmpty())
                     {
-                        unregisterTopic(deviceId, entityId, topicName);
+                        unregisterTopic(deviceId, getEntityIdByPluginAlias(plugin->getAlias()), topicName);
                     }
 
                     removeFromPluginMetaDataList(deviceId, plugin);
@@ -329,6 +323,16 @@ void TopicHandlerService::unregisterTopic(const String& deviceId, const String& 
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+String TopicHandlerService::getEntityIdByPluginUid(uint16_t uid)
+{
+    return String("display/uid/") + uid;
+}
+
+String TopicHandlerService::getEntityIdByPluginAlias(const String& alias)
+{
+    return String("display/alias/") + alias;
+}
 
 void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& strAccess, ITopicHandler::GetTopicFunc& getTopicFunc, ITopicHandler::SetTopicFunc& setTopicFunc, ITopicHandler::UploadReqFunc& uploadReqFunc) const
 {

@@ -88,7 +88,7 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
         String      mqttTopicNameBase   = deviceId + "/" + entityId + topic;
         TopicState* topicState          = new(std::nothrow) TopicState();
 
-        LOG_INFO("[%s] Register: %s", entityId.c_str(), mqttTopicNameBase.c_str());
+        LOG_INFO("Register: %s", mqttTopicNameBase.c_str());
 
         if (nullptr != topicState)
         {
@@ -129,11 +129,11 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
 
                 if (false == mqttService.subscribe(topicUriWriteable, setCallback))
                 {
-                    LOG_WARNING("[%s] Couldn't subscribe %s.", entityId.c_str(), topicUriWriteable.c_str());
+                    LOG_WARNING("Couldn't subscribe %s.", topicUriWriteable.c_str());
                 }
                 else
                 {
-                    LOG_INFO("[%s] Subscribed: %s", entityId.c_str(), topicUriWriteable.c_str());
+                    LOG_INFO("Subscribed: %s", topicUriWriteable.c_str());
                 }
             }
 
@@ -159,7 +159,7 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
         MqttService&                mqttService         = MqttService::getInstance();
         ListOfTopicStates::iterator topicStateIt        = m_listOfTopicStates.begin();
 
-        LOG_INFO("[%s] Unregister: %s", entityId.c_str(), mqttTopicNameBase.c_str());
+        LOG_INFO("Unregister: %s", mqttTopicNameBase.c_str());
 
         while(m_listOfTopicStates.end() != topicStateIt)
         {
@@ -180,11 +180,11 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                     /* Purge topic */
                     if (false == mqttService.publish(topicUriReadable, ""))
                     {
-                        LOG_WARNING("[%s] Failed to purge: %s", entityId.c_str(), topicUriReadable.c_str());
+                        LOG_WARNING("Failed to purge: %s", topicUriReadable.c_str());
                     }
                     else
                     {
-                        LOG_INFO("[%s] Purged: %s", entityId.c_str(), topicUriReadable.c_str());
+                        LOG_INFO("Purged: %s", topicUriReadable.c_str());
                     }
                 }
                 
@@ -192,9 +192,9 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
                 {
                     topicUriWriteable = mqttTopicNameBase + MQTT_ENDPOINT_WRITE_ACCESS;
 
-                    mqttService.unsubscribe(topicUriWriteable);
+                    LOG_INFO("Unsubscribe: %s", topicUriWriteable.c_str());
 
-                    LOG_INFO("[%s] Unsubscribed: %s", entityId.c_str(), topicUriWriteable.c_str());
+                    mqttService.unsubscribe(topicUriWriteable);
                 }
 
                 /* Handle Home Assistant extension */
@@ -326,13 +326,10 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
             String dstFullPath;
 
             /* Ask plugin, whether the upload is allowed or not. */
-            if (nullptr == uploadReqFunc)
+            if ((nullptr == uploadReqFunc) ||
+                (false == uploadReqFunc(topic, jsonFileName.as<String>(), dstFullPath)))
             {
-                LOG_WARNING("[%s] Upload not supported.", entityId.c_str());
-            }
-            else if (false == uploadReqFunc(topic, jsonFileName.as<String>(), dstFullPath))
-            {
-                LOG_WARNING("[%s] Upload not supported.", entityId.c_str());
+                LOG_WARNING("Upload not supported  by %s.", entityId.c_str());
             }
             else
             {
@@ -342,12 +339,12 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
 
                 if (MBEDTLS_ERR_BASE64_INVALID_CHARACTER == decodeRet)
                 {
-                    LOG_WARNING("[%s] File encoding contains invalid character.", entityId.c_str(), fileSize);
+                    LOG_WARNING("File encoding contains invalid character.");
                 }
                 else if ((MAX_FILE_SIZE < fileSize) ||
                          (0U == fileSize))
                 {
-                    LOG_WARNING("[%s] File size %u not supported.", entityId.c_str(), fileSize);
+                    LOG_WARNING("File size %u not supported.", fileSize);
                 }
                 else
                 {
@@ -361,7 +358,7 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
 
                         if (0U != decodeRet)
                         {
-                            LOG_WARNING("[%s] File decode error: %d", entityId.c_str(), decodeRet);
+                            LOG_WARNING("File decode error: %d", decodeRet);
                         }
                         else
                         {
@@ -370,7 +367,7 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
 
                             if (false == fd)
                             {
-                                LOG_ERROR("[%s] Couldn't create file: %s", entityId.c_str(), dstFullPath.c_str());
+                                LOG_ERROR("Couldn't create file: %s", dstFullPath.c_str());
                             }
                             else
                             {
@@ -393,7 +390,7 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
         jsonValue = jsonDoc.as<JsonObjectConst>();
         if (false == setTopicFunc(topic, jsonValue))
         {
-            LOG_WARNING("[%s] Payload rejected.", entityId.c_str());
+            LOG_WARNING("Payload rejected by %s.", entityId.c_str());
         }
     }
 }
@@ -418,11 +415,11 @@ void MqttApiTopicHandler::publish(const String& deviceId, const String& entityId
 
                 if (false == mqttService.publish(topicStateUri, topicContent))
                 {
-                    LOG_WARNING("[%s] Couldn't publish %s.", entityId.c_str(), topicStateUri.c_str());
+                    LOG_WARNING("Couldn't publish %s.", topicStateUri.c_str());
                 }
                 else
                 {
-                    LOG_INFO("[%s] Published: %s", entityId.c_str(), topicStateUri.c_str());
+                    LOG_INFO("Published: %s", topicStateUri.c_str());
                 }
             }
         }

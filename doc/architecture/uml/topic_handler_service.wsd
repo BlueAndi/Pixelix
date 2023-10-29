@@ -18,7 +18,7 @@ end note
 -> pluginMgr
 
 loop for every plugin
-    pluginMgr -> topicHandlerService: register plugin topics
+    pluginMgr -> topicHandlerService: register plugin topics with <DEVICE-ID>
 
         topicHandlerService -> plugin: get topics
         topicHandlerService <-- plugin: topics
@@ -30,29 +30,45 @@ loop for every plugin
 
             loop for every topic handler
 
-                topicHandlerService -> restApiTopicHandler: register plugin topic (plugin, topic, accessiblity, extra parameters)
+                note over topicHandlerService
+                    <ENTITY-ID> by plugin UID = "display/uid/<PLUGIN-UID>"
+                end note
+
+                topicHandlerService -> restApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
 
                     note over restApiTopicHandler,httpServer
-                        URL: <BASE-URI>/display/<PLUGIN-UID>/<TOPIC>
+                        URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
                     end note
 
-                    restApiTopicHandler -> httpServer: register REST URL by plugin UID
+                    restApiTopicHandler -> httpServer: register REST URL
                     restApiTopicHandler <-- httpServer
-
-                    alt If plugin alias available
-
-                        note over restApiTopicHandler,httpServer
-                            URL: <BASE-URI>/display/<PLUGIN-ALIAS>/<TOPIC>
-                        end note
-
-                        restApiTopicHandler -> httpServer: register REST URL by plugin alias
-                        restApiTopicHandler <-- httpServer
-
-                    end alt
 
                 topicHandlerService <-- restApiTopicHandler
 
-                topicHandlerService -> mqttApiTopicHandler: register plugin topic (plugin, topic, accessiblity, extra parameters)
+                alt If plugin alias available
+
+                    note over topicHandlerService
+                        <ENTITY-ID> by plugin alias = "display/alias/<PLUGIN-ALIAS>"
+                    end note
+
+                    topicHandlerService -> restApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
+
+                        note over restApiTopicHandler,httpServer
+                            URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
+                        end note
+
+                        restApiTopicHandler -> httpServer: register REST URL
+                        restApiTopicHandler <-- httpServer
+
+                    topicHandlerService <-- restApiTopicHandler
+
+                end alt
+
+                note over topicHandlerService
+                    <ENTITY-ID> by plugin UID = "display/uid/<PLUGIN-UID>"
+                end note
+
+                topicHandlerService -> mqttApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
 
                     note over mqttApiTopicHandler
                         Readable topics will be published during processing:
@@ -64,8 +80,8 @@ loop for every plugin
                     alt If topic is readable
 
                         note over mqttApiTopicHandler,mqttClient
-                            path: <HOSTNAME>/display/<PLUGIN-UID>/<TOPIC>/state
-                            path: <HOSTNAME>/display/<PLUGIN-ALIAS>/<TOPIC>/state
+                            path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/state
+                            path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/state
                         end note
 
                         mqttApiTopicHandler -> mqttApiTopicHandler: Store plugin topic in publisher queue
@@ -76,7 +92,7 @@ loop for every plugin
                     alt If topic is writeable
 
                         note over mqttApiTopicHandler,mqttClient
-                            path: <HOSTNAME>/display/<PLUGIN-UID>/<TOPIC>/set
+                            path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/set
                         end note
 
                         mqttApiTopicHandler -> mqttClient: Subscribe plugin topic path by plugin UID
@@ -85,7 +101,7 @@ loop for every plugin
                         alt If plugin alias available
 
                             note over mqttApiTopicHandler,mqttClient
-                                path: <HOSTNAME>/display/<PLUGIN-ALIAS>/<TOPIC>/set
+                                path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/set
                             end note
 
                             mqttApiTopicHandler -> mqttClient: Subscribe plugin topic path by plugin alias
@@ -96,6 +112,17 @@ loop for every plugin
                     end alt
 
                 topicHandlerService <-- mqttApiTopicHandler
+
+                alt If plugin alias available
+
+                    note over topicHandlerService
+                        <ENTITY-ID> by plugin alias = "display/alias/<PLUGIN-ALIAS>"
+                    end note
+
+                    topicHandlerService -> mqttApiTopicHandler: ...
+                    topicHandlerService <-- mqttApiTopicHandler
+
+                end alt
 
             end loop
 

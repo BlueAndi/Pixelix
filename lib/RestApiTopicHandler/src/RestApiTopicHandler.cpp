@@ -99,9 +99,9 @@ void RestApiTopicHandler::registerTopic(const String& deviceId, const String& en
 
             UTIL_NOT_USED(extra);
 
-            m_listOfTopicMetaData.push_back(topicMetaData);
+            LOG_INFO("Register: %s", topicMetaData->uri.c_str());
 
-            LOG_INFO("[%s] Registered: %s", entityId.c_str(), topicMetaData->uri.c_str());
+            m_listOfTopicMetaData.push_back(topicMetaData);
         }
     }
 }
@@ -125,11 +125,11 @@ void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
             {
                 if (false == MyWebServer::getInstance().removeHandler(topicMetaData->webHandler))
                 {
-                    LOG_WARNING("[%s] Failed to unregister: %s", topicMetaData->entityId.c_str(), topicMetaData->uri.c_str());
+                    LOG_WARNING("Failed to unregister: %s", topicMetaData->uri.c_str());
                 }
                 else
                 {
-                    LOG_INFO("[%s] Unregistered: %s", topicMetaData->entityId.c_str(), topicMetaData->uri.c_str());
+                    LOG_INFO("Unregister: %s", topicMetaData->uri.c_str());
                 }
 
                 topicMetaDataIt = m_listOfTopicMetaData.erase(topicMetaDataIt);
@@ -156,7 +156,7 @@ void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
 String RestApiTopicHandler::getBaseUri(const String& entityId)
 {
     String  baseUri = RestApi::BASE_URI;
-    baseUri += "/display/";
+    baseUri += "/";
     baseUri += entityId;
 
     return baseUri;
@@ -182,7 +182,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMet
         /* Topic data will be transported in the HTTP body as JSON. */
         if (false == topicMetaData->getTopicFunc(topicMetaData->topic, dataObj))
         {
-            LOG_WARNING("[%s] Topic \"%s\" not supported.", topicMetaData->entityId, topicMetaData->topic);
+            LOG_WARNING("Topic \"%s\" not supported by %s.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
 
             RestUtil::prepareRspError(jsonDoc, "Requested topic not supported.");
 
@@ -215,7 +215,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMet
         jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
         if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
         {
-            LOG_WARNING("[%s] Topic \"%s\" not supported or invalid data.", topicMetaData->entityId, topicMetaData->topic);
+            LOG_WARNING("Topic \"%s\" not supported by %s or invalid data.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
 
             RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
 
@@ -283,7 +283,7 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
             if ((nullptr == topicMetaData->uploadReqFunc) ||
                 (false == topicMetaData->uploadReqFunc(topicMetaData->topic, filename, topicMetaData->fullPath)))
             {
-                LOG_WARNING("[%s] Upload not supported.", topicMetaData->entityId.c_str());
+                LOG_WARNING("Upload not supported by %s.", topicMetaData->entityId.c_str());
                 topicMetaData->isUploadError = true;
                 topicMetaData->fullPath.clear();
             }

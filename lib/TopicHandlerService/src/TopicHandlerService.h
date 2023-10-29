@@ -222,6 +222,24 @@ private:
     TopicHandlerService& operator=(const TopicHandlerService& service);
 
     /**
+     * Get the entity id by plugin UID.
+     * 
+     * @param[in] uid   Plugin UID
+     * 
+     * @return Entity id
+     */
+    String getEntityIdByPluginUid(uint16_t uid);
+
+    /**
+     * Get the entity id by plugin alias.
+     * 
+     * @param[in] alias Plugin alias
+     * 
+     * @return Entity id
+     */
+    String getEntityIdByPluginAlias(const String& alias);
+
+    /**
      * Generates the access functions depended on the plugin accessibility.
      * 
      * @param[in]   plugin          The plugin which to consider.

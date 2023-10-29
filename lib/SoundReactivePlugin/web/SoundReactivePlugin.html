@@ -38,11 +38,11 @@
                 <p>Required: A digital microphone (INMP441) is required, connected to the I2S port.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get configuration about how many frequency bands are shown.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/config</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
                 <h3 class="mt-1">Set configuration about how many frequency bands shall be shown.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -147,7 +147,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/" + pluginUid + "/config",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     $("#freqBandLen").val(rsp.data.freqBandLen);
@@ -162,7 +162,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/" + pluginUid + "/config",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true,
                     parameter: {
                         freqBandLen: $("#freqBandLen").val()

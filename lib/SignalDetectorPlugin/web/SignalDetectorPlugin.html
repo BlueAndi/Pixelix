@@ -41,15 +41,15 @@
                 <p>Additional a push notification can be configured. By default a GET is triggered. Using "GET" or "POST" as prefix its configureable. Example: "POST http://..."</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get configuration</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/signalDetector</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/signalDetector</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/signalDetector</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/signalDetector</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set configuration</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-UID&gt;/signalDetector?text=&lt;TEXT&gt;&pushUrl=&lt;PUSH-URL&gt;&frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/&lt;PLUGIN-ALIAS&gt;/signalDetector?text=&lt;TEXT&gt;&pushUrl=&lt;PUSH-URL&gt;&frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/signalDetector?text=&lt;TEXT&gt;&pushUrl=&lt;PUSH-URL&gt;&frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/signalDetector?text=&lt;TEXT&gt;&pushUrl=&lt;PUSH-URL&gt;&frequency=&lt;FREQUENCY&gt;&minDuration=&lt;MIN-DURATON&gt;&threshold=&lt;THRESHOLD&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -190,7 +190,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/" + pluginUid + "/signalDetector",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/signalDetector",
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var index = 0;
@@ -215,7 +215,7 @@
                 disableUI();
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/" + pluginUid + "/signalDetector",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/signalDetector",
                     isJsonResponse: true,
                     parameter: {
                         text:  $("#text").val(),

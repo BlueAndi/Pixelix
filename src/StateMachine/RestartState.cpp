@@ -38,6 +38,7 @@
 #include "UpdateMgr.h"
 #include "FileSystem.h"
 #include "Services.h"
+#include "SensorDataProvider.h"
 
 #include <Board.h>
 #include <Display.h>
@@ -77,6 +78,7 @@ void RestartState::entry(StateMachine& sm)
 
     m_timer.start(WAIT_TILL_STOP_SVC);
 
+    SensorDataProvider::getInstance().end(); /* Stop before all services will be stopped. */
     Services::stopAll();
 }
 

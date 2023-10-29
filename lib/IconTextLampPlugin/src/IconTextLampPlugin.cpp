@@ -94,11 +94,12 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
 
     jsonText["name"]            = TOPIC_TEXT;
 
-    /* Home Assistant support of MQTT discovery */
-    jsonText["ha"]["component"]         = "text";
-    jsonText["ha"]["commandTemplate"]   = "{\"text\": \"{{ value }}\" }";
-    jsonText["ha"]["valueTemplate"]     = "{{ value_json.text }}";
-    jsonText["ha"]["icon"]              = "mdi:form-textbox";
+    /* Home Assistant support of MQTT discovery (https://www.home-assistant.io/integrations/mqtt) */
+    jsonText["ha"]["component"]             = "text";                           /* MQTT integration */
+    jsonText["ha"]["discovery"]["name"]     = "MQTT text";                      /* Application that is the origin the discovered MQTT. */
+    jsonText["ha"]["discovery"]["cmd_tpl"]  = "{\"text\": \"{{ value }}\" }";   /* Command template */
+    jsonText["ha"]["discovery"]["val_tpl"]  = "{{ value_json.text }}";          /* Value template */
+    jsonText["ha"]["discovery"]["ic"]       = "mdi:form-textbox";               /* Icon (MaterialDesignIcons.com) */
 
     jsonIcon["name"]            = TOPIC_ICON;
     jsonIcon["access"]          = "w"; /* Only icon upload is supported. */

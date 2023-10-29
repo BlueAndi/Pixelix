@@ -107,24 +107,24 @@ public:
      * It will not publish, just prepare the MQTT discovery information
      * and hold it internally.
      * 
-     * @param[in]   nodeId              ID of the node providing the topic.
-     * @param[in]   objectId            ID of the object to divide between topics.
+     * @param[in]   deviceId            Device id.
+     * @param[in]   entityId            Entity id.
      * @param[in]   stateTopic          The MQTT status topic.
      * @param[in]   cmdTopic            The MQTT command topic.
      * @param[in]   availabilityTopic   The MQTT availability topic.
      * @param[in]   extra               Extra parameters used by this extension.
      */
-    void registerMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic, const String& availabilityTopic, JsonObjectConst& extra);
+    void registerMqttDiscovery(const String& deviceId, const String& entityId, const String& stateTopic, const String& cmdTopic, const String& availabilityTopic, JsonObjectConst& extra);
 
     /**
      * Unregister Home Assistant MQTT discovery.
      * 
-     * @param[in]   nodeId      ID of the node providing the topic.
-     * @param[in]   objectId    ID of the object to divide between topics.
+     * @param[in]   deviceId    Device id.
+     * @param[in]   entityId    Entity id.
      * @param[in]   stateTopic  The MQTT status topic.
      * @param[in]   cmdTopic    The MQTT command topic.
      */
-    void unregisterMqttDiscovery(const String& nodeId, const String& objectId, const String& stateTopic, const String& cmdTopic);
+    void unregisterMqttDiscovery(const String& deviceId, const String& entityId, const String& stateTopic, const String& cmdTopic);
 
 private:
 
@@ -155,28 +155,18 @@ private:
     /** Information necessary for Home Assistant MQTT discovery. */
     struct MqttDiscoveryInfo
     {
-        String  component;          /**< Home Assistant component */
-        String  nodeId;             /**< Home Assistant node id */
-        String  objectId;           /**< Home Assistant object id */
-        String  stateTopic;         /**< Status topic */
-        String  valueTemplate;      /**< Value template to extract the text state value */
-        String  commandTopic;       /**< Command topic */
-        String  commandTemplate;    /**< Command template to generate payload to send to command topic */
-        String  availabilityTopic;  /**< Availability topic */
-        String  icon;               /**< Icon name from MaterialDesignIcons.com */
-        bool    isReqToPublish;     /**< Is requested to publish this discovery info? */
+        String              component;          /**< Home Assistant component */
+        String              nodeId;             /**< Home Assistant node id */
+        String              objectId;           /**< Home Assistant object id */
+        DynamicJsonDocument discoveryDetails;   /**< Additional discovery information. */
+        bool                isReqToPublish;     /**< Is requested to publish this discovery info? */
 
         /** Construct Home Assistant MQTT discovery information. */
         MqttDiscoveryInfo() :
             component(),
             nodeId(),
             objectId(),
-            stateTopic(),
-            valueTemplate(),
-            commandTopic(),
-            commandTemplate(),
-            availabilityTopic(),
-            icon(),
+            discoveryDetails(368U),
             isReqToPublish(true)
         {
         }
@@ -194,6 +184,15 @@ private:
 
     HomeAssistantMqtt(const HomeAssistantMqtt& ext);
     HomeAssistantMqtt& operator=(const HomeAssistantMqtt& ext);
+
+    /**
+     * Get the object id from the entity id.
+     * 
+     * @param[in] entityId  The entity id.
+     * 
+     * @return Object id
+     */
+    String getObjectId(const String& entityId);
 
     /**
      * Clear MQTT discovery info list.
