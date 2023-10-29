@@ -727,8 +727,6 @@ void AsyncHttpClient::onData(const uint8_t* data, size_t len)
      *                [ message-body ]
      */
 
-    LOG_DEBUG("onData(): len = %u", len);
-
     while((len > index) && (false == isError))
     {
         switch(m_rspPart)
