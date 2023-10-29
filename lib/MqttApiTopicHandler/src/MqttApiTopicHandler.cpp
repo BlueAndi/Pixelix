@@ -127,13 +127,10 @@ void MqttApiTopicHandler::registerTopic(const String& deviceId, const String& en
 
                 topicUriWriteable = mqttTopicNameBase + MQTT_ENDPOINT_WRITE_ACCESS;
 
+                LOG_INFO("Subscribe: %s", topicUriWriteable.c_str());
                 if (false == mqttService.subscribe(topicUriWriteable, setCallback))
                 {
                     LOG_WARNING("Couldn't subscribe %s.", topicUriWriteable.c_str());
-                }
-                else
-                {
-                    LOG_INFO("Subscribed: %s", topicUriWriteable.c_str());
                 }
             }
 
@@ -317,7 +314,6 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
     {
         JsonVariantConst    jsonFileName   = jsonDoc["fileName"];
         JsonVariantConst    jsonFileBase64 = jsonDoc["file"];
-        JsonObjectConst     jsonValue;
 
         /* File transfer? */
         if ((true == jsonFileName.is<String>()) &&
@@ -387,8 +383,7 @@ void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, 
             }
         }
 
-        jsonValue = jsonDoc.as<JsonObjectConst>();
-        if (false == setTopicFunc(topic, jsonValue))
+        if (false == setTopicFunc(topic, jsonDoc.as<JsonObjectConst>()))
         {
             LOG_WARNING("Payload rejected by %s.", entityId.c_str());
         }

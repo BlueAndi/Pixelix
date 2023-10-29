@@ -362,14 +362,8 @@ void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& 
         {
             getTopicFunc =      [plugin](const String& topic, JsonObject& value) -> bool
                                 {
-                                    bool status = false;
-
-                                    if (nullptr != plugin)
-                                    {
-                                        status = plugin->getTopic(topic, value);
-                                    }
-
-                                    return status;
+                                    LOG_INFO("Get %s of plugin %u.", topic.c_str(), plugin->getUID());
+                                    return plugin->getTopic(topic, value);
                                 };
         }
 
@@ -377,26 +371,13 @@ void TopicHandlerService::strToAccess(IPluginMaintenance* plugin, const String& 
         {
             setTopicFunc  =     [plugin](const String& topic, const JsonObjectConst& value) -> bool
                                 {
-                                    bool status = false;
-
-                                    if (nullptr != plugin)
-                                    {
-                                        status = plugin->setTopic(topic, value);
-                                    }
-
-                                    return status;
+                                    LOG_INFO("Set %s of plugin %u.", topic.c_str(), plugin->getUID());
+                                    return plugin->setTopic(topic, value);
                                 };
 
             uploadReqFunc =     [plugin](const String& topic, const String& srcFilename, String& dstFilename) -> bool
                                 {
-                                    bool status = false;
-
-                                    if (nullptr != plugin)
-                                    {
-                                        status = plugin->isUploadAccepted(topic, srcFilename, dstFilename);
-                                    }
-
-                                    return status;
+                                    return plugin->isUploadAccepted(topic, srcFilename, dstFilename);
                                 };
         }
     }
@@ -505,15 +486,11 @@ void TopicHandlerService::processOnChange()
             (nullptr != pluginMetaData->plugin) &&
             (true == pluginMetaData->plugin->hasTopicChanged(pluginMetaData->topic)))
         {
-            String entityId;
+            notifyAllHandlers(pluginMetaData->deviceId, getEntityIdByPluginUid(pluginMetaData->plugin->getUID()), pluginMetaData->topic);
 
-            entityId = pluginMetaData->plugin->getUID();
-            notifyAllHandlers(pluginMetaData->deviceId, entityId, pluginMetaData->topic);
-
-            entityId = pluginMetaData->plugin->getAlias();
-            if (false == entityId.isEmpty())
+            if (false == pluginMetaData->plugin->getAlias().isEmpty())
             {
-                notifyAllHandlers(pluginMetaData->deviceId, entityId, pluginMetaData->topic);
+                notifyAllHandlers(pluginMetaData->deviceId, getEntityIdByPluginAlias(pluginMetaData->plugin->getAlias()), pluginMetaData->topic);
             }
         }
 
