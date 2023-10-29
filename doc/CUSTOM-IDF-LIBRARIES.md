@@ -5,12 +5,12 @@
 
 # Building ESP-IDF Libraries for Arduino using custom sdkconfig options
 
-- [Building ESP-IDF Libraries](#Building-ESP-ID-Libraries)
-- [Purpose](#purpose)
-- [Instructions](#instructions)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Building ESP-IDF Libraries for Arduino using custom sdkconfig options](#building-esp-idf-libraries-for-arduino-using-custom-sdkconfig-options)
+* [Purpose](#purpose)
+* [Instructions](#instructions)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Purpose
 

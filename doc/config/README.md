@@ -5,17 +5,17 @@
 
 # SW Configuration Management  <!-- omit in toc -->
 
-- [Purpose](#purpose)
-- [Scope](#scope)
-- [PlatformIO](#platformio)
-  - [Logical Configuration Hierarchy And Dependencies](#logical-configuration-hierarchy-and-dependencies)
-- [Version Numbers](#version-numbers)
-- [Development Strategy](#development-strategy)
-- [Work Instructions](#work-instructions)
-  - [How to release?](#how-to-release)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Purpose](#purpose)
+* [Scope](#scope)
+* [PlatformIO](#platformio)
+  * [Logical Configuration Hierarchy And Dependencies](#logical-configuration-hierarchy-and-dependencies)
+* [Version Numbers](#version-numbers)
+* [Development Strategy](#development-strategy)
+* [Work Instructions](#work-instructions)
+  * [How to release?](#how-to-release)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Purpose
 The SW configuration management document provides a general overview about what is configured and how it is done.

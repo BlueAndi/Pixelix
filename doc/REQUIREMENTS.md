@@ -5,19 +5,19 @@
 
 # Requirements <!-- omit in toc -->
 
-- [General](#general)
-- [Communication](#communication)
-- [User Interaction](#user-interaction)
-  - [Wifi](#wifi)
-  - [REST](#rest)
-  - [Websocket](#websocket)
-- [Firmware update](#firmware-update)
-- [TCP/IP Server](#tcpip-server)
-- [Brightness Control](#brightness-control)
-- [Real Time Clock](#real-time-clock)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [General](#general)
+* [Communication](#communication)
+* [User Interaction](#user-interaction)
+  * [Wifi](#wifi)
+  * [REST](#rest)
+  * [Websocket](#websocket)
+* [Firmware update](#firmware-update)
+* [TCP/IP Server](#tcpip-server)
+* [Brightness Control](#brightness-control)
+* [Real Time Clock](#real-time-clock)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 Next available REQ id: 21
 

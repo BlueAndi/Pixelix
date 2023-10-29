@@ -5,18 +5,18 @@
 
 # Toolchain Installation <!-- omit in toc -->
 
-- [Purpose](#purpose)
-- [Installation Of VSCode](#installation-of-vscode)
-- [Installation Of git](#installation-of-git)
-  - [Linux (Debian, Ubuntu)](#linux-debian-ubuntu)
-  - [Windows](#windows)
-- [Installation Of Test Environment](#installation-of-test-environment)
-  - [Linux (Debian, Ubuntu)](#linux-debian-ubuntu-1)
-  - [Windows](#windows-1)
-- [Next Step](#next-step)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Purpose](#purpose)
+* [Installation Of VSCode](#installation-of-vscode)
+* [Installation Of git](#installation-of-git)
+  * [Linux (Debian, Ubuntu)](#linux-debian-ubuntu)
+  * [Windows](#windows)
+* [Installation Of Test Environment](#installation-of-test-environment)
+  * [Linux (Debian, Ubuntu)](#linux-debian-ubuntu-1)
+  * [Windows](#windows-1)
+* [Next Step](#next-step)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Purpose
 

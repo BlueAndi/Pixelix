@@ -5,12 +5,12 @@
 
 # Build The Software <!-- omit in toc -->
 
-- [Retrieve The Project](#retrieve-the-project)
-- [Build Project](#build-project)
-- [Next Step](#next-step)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Retrieve The Project](#retrieve-the-project)
+* [Build Project](#build-project)
+* [Next Step](#next-step)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Retrieve The Project
 
