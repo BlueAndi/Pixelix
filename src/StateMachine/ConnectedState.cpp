@@ -38,6 +38,7 @@
 #include "MyWebServer.h"
 #include "DisplayMgr.h"
 #include "Services.h"
+#include "SensorDataProvider.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -182,10 +183,20 @@ void ConnectedState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
-    /* Disconnect all connections */
-    (void)WiFi.disconnect();
+    /* User requested (power off / restart after update) to disconnect? */
+    if (true == WiFi.isConnected())
+    {
+        /* Purge sensor topics (MQTT) */
+        SensorDataProvider::getInstance().end();
 
-    /* Notify about lost network connection. */
+        /* Purge plugin topics (MQTT) */
+        /* TODO */
+
+        /* Disconnect all connections */
+        (void)WiFi.disconnect();
+    }
+
+    /* Notify about no network connection. */
     DisplayMgr::getInstance().setNetworkStatus(false);
 }
 
