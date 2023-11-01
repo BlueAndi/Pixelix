@@ -382,7 +382,7 @@ bool IconTextPlugin::loadBitmap(const String& filename)
 
     if (false == m_spriteSheetPath.isEmpty())
     {
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_iconPath, m_spriteSheetPath);
+        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
     }
     
     if (false == status)
@@ -407,7 +407,7 @@ bool IconTextPlugin::loadSpriteSheet(const String& filename)
 
     if (false == m_iconPath.isEmpty())
     {
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_iconPath, m_spriteSheetPath);
+        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
     }
 
     return status;

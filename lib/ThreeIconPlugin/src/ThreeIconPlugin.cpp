@@ -422,7 +422,7 @@ bool ThreeIconPlugin::loadBitmap(uint8_t iconId, const String& filename)
 
         if (false == m_spriteSheetPaths->isEmpty())
         {
-            status = m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, m_iconPaths[iconId], m_spriteSheetPaths[iconId]);
+            status = m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, m_spriteSheetPaths[iconId], m_iconPaths[iconId]);
         }
 
         if (false == status)
@@ -450,7 +450,7 @@ bool ThreeIconPlugin::loadSpriteSheet(uint8_t iconId, const String& filename)
 
         if (false == m_iconPaths[iconId].isEmpty())
         {
-            status = m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, m_iconPaths[iconId], m_spriteSheetPaths[iconId]);
+            status = m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, m_spriteSheetPaths[iconId], m_iconPaths[iconId]);
         }
     }
 
