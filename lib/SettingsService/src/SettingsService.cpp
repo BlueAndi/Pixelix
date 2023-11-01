@@ -332,7 +332,7 @@ bool SettingsService::start()
 
 void SettingsService::stop()
 {
-    /* Nothing to do. */
+    LOG_INFO("Settings service stopped.");
 }
 
 void SettingsService::process()

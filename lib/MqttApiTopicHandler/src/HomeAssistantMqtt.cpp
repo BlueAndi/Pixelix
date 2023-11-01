@@ -207,13 +207,55 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
 
         while(m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
         {
-            MqttDiscoveryInfo* mqttDiscoveryInfo = *listOfMqttDiscoveryInfoIt;
+            MqttDiscoveryInfo*  mqttDiscoveryInfo   = *listOfMqttDiscoveryInfoIt;
+            bool                found               = false;
             
             if ((nullptr != mqttDiscoveryInfo) &&
                 (deviceId == mqttDiscoveryInfo->nodeId) &&
-                (objectId == mqttDiscoveryInfo->objectId) &&
-                (stateTopic == mqttDiscoveryInfo->discoveryDetails["stat_t"].as<String>()) &&
-                (cmdTopic == mqttDiscoveryInfo->discoveryDetails["cmd_t"].as<String>()))
+                (objectId == mqttDiscoveryInfo->objectId))
+            {
+                JsonVariantConst    jsonStateTopic  = mqttDiscoveryInfo->discoveryDetails["stat_t"];
+                JsonVariantConst    jsonCmdTopic    = mqttDiscoveryInfo->discoveryDetails["cmd_t"];
+                
+                /* Topic only readable? */
+                if ((false == jsonStateTopic.isNull()) &&
+                    (true == jsonCmdTopic.isNull()))
+                {
+                    if (stateTopic == jsonStateTopic.as<String>())
+                    {
+                        found = true;
+                    }
+                }
+                /* Topic only writeable? */
+                else if ((true == jsonStateTopic.isNull()) &&
+                         (false == jsonCmdTopic.isNull()))
+                {
+                    if (cmdTopic == jsonCmdTopic.as<String>())
+                    {
+                        found = true;
+                    }
+                }
+                /* Topic is read- and writeable? */
+                else if ((false == jsonStateTopic.isNull()) &&
+                         (false == jsonCmdTopic.isNull()))
+                {
+                    if ((stateTopic == jsonStateTopic.as<String>()) &&
+                        (cmdTopic == jsonCmdTopic.as<String>()))
+                    {
+                        found = true;
+                    }
+                }
+                else
+                {
+                    ;
+                }
+            }
+
+            if (false == found)
+            {
+                ++listOfMqttDiscoveryInfoIt;
+            }
+            else
             {
                 MqttService&    mqttService = MqttService::getInstance();
                 String          mqttTopic;
@@ -234,10 +276,6 @@ void HomeAssistantMqtt::unregisterMqttDiscovery(const String& deviceId, const St
 
                 delete mqttDiscoveryInfo;
                 mqttDiscoveryInfo = nullptr;
-            }
-            else
-            {
-                ++listOfMqttDiscoveryInfoIt;
             }
         }
     }

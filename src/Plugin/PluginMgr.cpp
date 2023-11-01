@@ -163,6 +163,19 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
     return isSuccessful;
 }
 
+void PluginMgr::unregisterAllPluginTopics()
+{
+    uint8_t maxSlots    = DisplayMgr::getInstance().getMaxSlots();
+    uint8_t slotId      = 0U;
+
+    for(slotId = 0U; slotId < maxSlots; ++slotId)
+    {
+        IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
+
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
+    }
+}
+
 bool PluginMgr::load()
 {
     bool                isSuccessful            = true;

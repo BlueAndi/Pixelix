@@ -39,6 +39,7 @@
 #include "DisplayMgr.h"
 #include "Services.h"
 #include "SensorDataProvider.h"
+#include "PluginMgr.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -86,7 +87,7 @@ void ConnectedState::entry(StateMachine& sm)
 
     LOG_INFO("Connected.");
 
-    /* Get hostname and notifyURL. */
+    /* Get some settings. */
     if (false == settings.open(true))
     {
         LOG_WARNING("Use default hostname.");
@@ -139,23 +140,6 @@ void ConnectedState::entry(StateMachine& sm)
     }
 }
 
-void ConnectedState::initHttpClient()
-{
-    m_client.regOnResponse([](const HttpResponse& rsp){
-        uint16_t statusCode = rsp.getStatusCode();
-
-        if (HttpStatus::STATUS_CODE_OK == statusCode)
-        {
-            LOG_INFO("Online state reported.");
-        }
-
-    });
-
-    m_client.regOnError([]() {
-        LOG_WARNING("Connection error happened.");
-   });
-}
-
 void ConnectedState::process(StateMachine& sm)
 {
     /* Handle update, there may be one in the background. */
@@ -189,10 +173,15 @@ void ConnectedState::exit(StateMachine& sm)
         /* Purge sensor topics (MQTT) */
         SensorDataProvider::getInstance().end();
 
-        /* Purge plugin topics (MQTT) */
-        /* TODO */
+        /* Unregister all plugins, which will purge all of their topics (MQTT). */
+        PluginMgr::getInstance().unregisterAllPluginTopics();
 
-        /* Disconnect all connections */
+        /* Stop all services now to allow them having graceful disconnection from
+         * servers until the wifi will be disconnected.
+         */
+        Services::stopAll();
+
+        /* Disconnect wifi connection. */
         (void)WiFi.disconnect();
     }
 
@@ -207,6 +196,23 @@ void ConnectedState::exit(StateMachine& sm)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void ConnectedState::initHttpClient()
+{
+    m_client.regOnResponse([](const HttpResponse& rsp){
+        uint16_t statusCode = rsp.getStatusCode();
+
+        if (HttpStatus::STATUS_CODE_OK == statusCode)
+        {
+            LOG_INFO("Online state reported.");
+        }
+
+    });
+
+    m_client.regOnError([]() {
+        LOG_WARNING("Connection error happened.");
+   });
+}
 
 void ConnectedState::pushUrl(const String& pushUrl)
 {

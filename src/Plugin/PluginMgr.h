@@ -136,6 +136,12 @@ public:
     bool setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
 
     /**
+     * Unregister all plugin topics from the topic handler service.
+     * The plugins will still be installed, but won't get any update from outside.
+     */
+    void unregisterAllPluginTopics();
+
+    /**
      * Load plugin installation from persistent memory.
      * It will automatically enable the installed plugins.
      * 
