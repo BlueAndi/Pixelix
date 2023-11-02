@@ -84,11 +84,13 @@ void WsCmdAlias::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             (void)DisplayMgr::getInstance().setPluginAliasName(m_pluginUid, m_alias);
         }
 
-        msg = "\"";
+        preparePositiveResponse(msg);
+
+        msg += "\"";
         msg += DisplayMgr::getInstance().getPluginAliasName(m_pluginUid);
         msg += "\"";
 
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
 
     m_isError = false;

@@ -80,6 +80,8 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         uint8_t     cnt         = 0U;
         const char* pluginName  = PluginMgr::getInstance().findFirst();
 
+        preparePositiveResponse(msg);
+
         while(nullptr != pluginName)
         {
             if (0 < cnt)
@@ -96,7 +98,7 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             ++cnt;
         }
 
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
 
     m_isError = false;

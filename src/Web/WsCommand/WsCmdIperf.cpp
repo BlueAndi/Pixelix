@@ -81,16 +81,18 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     {
         String msg;
 
+        preparePositiveResponse(msg);
+
         if (false == m_isIperfRunning)
         {
-            msg = "0";
+            msg += "0";
         }
         else
         {
-            msg = "1";
+            msg += "1";
         }
         
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
     /* Start iperf? */
     else if (CMD_START == m_cmd)
@@ -101,7 +103,11 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         }
         else
         {
-            String msg = "1";
+            String msg;
+            
+            preparePositiveResponse(msg);
+
+            msg += "1";
 
             LOG_INFO("iperf started: mode = %s-%s sip = %u.%u.%u.%u:%u, interval = %us, time = %us",
                 (m_cfg.flag & IPERF_FLAG_TCP) ? "tcp" : "udp",
@@ -109,7 +115,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
                 m_cfg.sip & 0xffU, (m_cfg.sip >> 8) & 0xffU, (m_cfg.sip >> 16) & 0xffU, (m_cfg.sip >>24) & 0xffU, m_cfg.sport,
                 m_cfg.interval, m_cfg.time);
 
-            sendPositiveResponse(server, client, msg);
+            sendResponse(server, client, msg);
         }
     }
     /* Stop iperf? */
@@ -121,11 +127,15 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         }
         else
         {
-            String msg = "0";
+            String msg;
+            
+            preparePositiveResponse(msg);
+            
+            msg += "0";
 
             LOG_INFO("iperf stopped.");
 
-            sendPositiveResponse(server, client, msg);
+            sendResponse(server, client, msg);
         }
     }
     else
