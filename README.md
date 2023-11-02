@@ -115,7 +115,7 @@ If the device starts the very first time, the wifi station SSID and passphrase s
 2. Using a terminal connecting via usb.
 
 ## Variant 1: Configure wifi station SSID and passphrase with the browser
-Restart the device and keep the button pressed until it shows the SSID of the wifi access point, spawned by PIXELIX. Search for it with your mobile device and connect.
+Restart the device and **keep the button pressed** until it shows the SSID of the wifi access point, spawned by PIXELIX. Search for it with your mobile device and connect.
 * SSID: **pixelix-&lt;DEVICE-ID&gt;**
 * Passphrase: **Luke, I am your father.**
 
