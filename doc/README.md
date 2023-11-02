@@ -5,16 +5,11 @@
 
 # Documentation  <!-- omit in toc -->
 
-* [Requirements](#requirements)
 * [Hardware](#hardware)
 * [Software](#software)
 * [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 * [License](#license)
 * [Contribution](#contribution)
-
-# Requirements
-
-* [Requirements](REQUIREMENTS.md)
 
 # Hardware
 
