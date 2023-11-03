@@ -114,7 +114,7 @@ protected:
         }
         else if (tButtonOk == buttonId)
         {
-            action = BUTTON_ACTION_ID_SWITCH_OFF;
+            action = BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON;
         }
         else if (tButtonRight == buttonId)
         {

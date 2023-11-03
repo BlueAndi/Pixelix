@@ -95,24 +95,7 @@ public:
      * Show framebuffer on physical display. This may be synchronous
      * or asynchronous.
      */
-    void show() final
-    {
-        int16_t x = 0;
-        int16_t y = 0;
-
-        for(y = 0; y < m_ledMatrix.getHeight(); ++y)
-        {
-            for(x = 0; x < m_ledMatrix.getWidth(); ++x)
-            {
-                HtmlColor htmlColor = static_cast<uint32_t>(m_ledMatrix.getColor(x, y));
-
-                m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
-            }
-        }
-
-        m_strip.Show();
-        return;
-    }
+    void show() final;
 
     /**
      * The display is ready, when the last physical pixel update is finished.
@@ -140,7 +123,6 @@ public:
             (Board::LedMatrix::maxCurrentPerLed * Board::LedMatrix::width *Board::LedMatrix::height);
 
         m_strip.SetLuminance(SAFE_LUMINANCE);
-        return;
     }
 
     /**
@@ -198,6 +180,23 @@ public:
         return m_ledMatrix.getColor(x, y);
     }
 
+    /**
+     * Power display off.
+     */
+    void off() final;
+
+    /**
+     * Power display on.
+     */
+    void on() final;
+
+    /**
+     * Is display powered on?
+     * 
+     * @return If display is powered on, it will return true otherwise false.
+     */
+    bool isOn() const final;
+
 private:
 
     /**
@@ -213,6 +212,11 @@ private:
      * This is the drawback for the direct color manipulation via getColor().
      */
     YAGfxStaticBitmap<Board::LedMatrix::width, Board::LedMatrix::height>    m_ledMatrix;
+
+    /**
+     * Is display on?
+     */
+    bool                                                                    m_isOn;
 
     /**
      * Construct display.

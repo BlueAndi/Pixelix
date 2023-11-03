@@ -119,7 +119,7 @@ protected:
             /* 2 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
             /* 3 */ BUTTON_ACTION_ID_NEXT_FADE_EFFECT,
             /* 4 */ BUTTON_ACTION_ID_SHOW_IP_ADDRESS,
-            /* 5 */ BUTTON_ACTION_ID_SWITCH_OFF
+            /* 5 */ BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON
         };
         const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
 

@@ -70,12 +70,82 @@ Display::Display() :
     IDisplay(),
     m_tft(),
     m_ledMatrix(),
-    m_brightness(DEFAULT_BRIGHTNESS)
+    m_brightness(DEFAULT_BRIGHTNESS),
+    m_isOn(false)
 {
 }
 
 Display::~Display()
 {
+}
+
+void Display::show()
+{
+    int32_t x = 0;
+    int32_t y = 0;
+
+    for(y = 0; y < MATRIX_HEIGHT; ++y)
+    {
+        for(x = 0; x < MATRIX_WIDTH; ++x)
+        {
+            Color       brightnessAdjustedColor = m_ledMatrix.getColor(x, y);
+            uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
+            int32_t     xNative                 = y * (PIXEL_HEIGHT + PiXEL_DISTANCE) + BORDER_Y;
+            int32_t     yNative                 = TFT_HEIGHT - (x * (PIXEL_WIDTH  + PiXEL_DISTANCE) + BORDER_X) - 1;
+
+            intensity *= (static_cast<uint16_t>(m_brightness) + 1U);
+            intensity /= 256U;
+            brightnessAdjustedColor.setIntensity(static_cast<uint8_t>(intensity));
+
+            m_tft.fillRect( xNative,
+                            yNative,
+                            PIXEL_HEIGHT,
+                            PIXEL_WIDTH,
+                            brightnessAdjustedColor.to565());
+        }
+    }
+}
+
+void Display::off()
+{
+    m_tft.writecommand(TFT_DISPOFF);
+
+#if defined (TFT_BL) && defined (TFT_BACKLIGHT_ON)
+
+#if (LOW == TFT_BACKLIGHT_ON)
+
+    /* Turn off the back-light LED */
+    Board::tftBackLightOut.write(HIGH);
+
+#else   /* (LOW == TFT_BACKLIGHT_ON) */
+
+    /* Turn off the back-light LED */
+    Board::tftBackLightOut.write(LOW);
+
+#endif  /* (LOW == TFT_BACKLIGHT_ON) */
+
+#endif /* defined (TFT_BL) && defined (TFT_BACKLIGHT_ON) */
+
+    m_isOn = false;
+}
+
+void Display::on()
+{
+    m_tft.writecommand(TFT_DISPON);
+
+#if defined (TFT_BL) && defined (TFT_BACKLIGHT_ON)
+
+    /* Turn off the back-light LED */
+    Board::tftBackLightOut.write(TFT_BACKLIGHT_ON);
+
+#endif /* defined (TFT_BL) && defined (TFT_BACKLIGHT_ON) */
+
+    m_isOn = true;
+}
+
+bool Display::isOn() const
+{
+    return m_isOn;
 }
 
 /******************************************************************************

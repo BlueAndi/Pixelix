@@ -191,16 +191,6 @@ public:
         }
     }
 
-    /**
-     * Is switch off requested?
-     * 
-     * @return If switch off is requested, it will return true otherwise false.
-     */
-    bool isSwitchOffRequested()
-    {
-        return ButtonActions::isSwitchOffRequested();
-    }
-
 private:
 
     /** Length of the button info queue. */

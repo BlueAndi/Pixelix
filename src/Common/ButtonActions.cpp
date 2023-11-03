@@ -90,8 +90,8 @@ void ButtonActions::executeAction(ButtonActionId id)
         showIpAddress();
         break;
 
-    case BUTTON_ACTION_ID_SWITCH_OFF:
-        switchOff();
+    case BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON:
+        toggleDisplayOffOn();
         break;
 
     case BUTTON_ACTION_ID_SWEEP_BRIGHTNESS:
@@ -234,9 +234,18 @@ void ButtonActions::showIpAddress() const
     SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 }
 
-void ButtonActions::switchOff()
+void ButtonActions::toggleDisplayOffOn()
 {
-    m_isSwitchOffRequested = true;
+    DisplayMgr& displayMgr = DisplayMgr::getInstance();
+
+    if (false == displayMgr.isDisplayOn())
+    {
+        displayMgr.displayOn();
+    }
+    else
+    {
+        displayMgr.displayOff();
+    }
 }
 
 /******************************************************************************

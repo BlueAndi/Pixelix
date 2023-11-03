@@ -70,12 +70,53 @@ Display::Display() :
     IDisplay(),
     m_strip(Board::LedMatrix::width * Board::LedMatrix::height, Board::Pin::ledMatrixDataOutPinNo),
     m_topo(Board::LedMatrix::width, Board::LedMatrix::height),
-    m_ledMatrix()
+    m_ledMatrix(),
+    m_isOn(true)
 {
 }
 
 Display::~Display()
 {
+}
+
+void Display::show()
+{
+    if (true == m_isOn)
+    {
+        int16_t x = 0;
+        int16_t y = 0;
+
+        for(y = 0; y < m_ledMatrix.getHeight(); ++y)
+        {
+            for(x = 0; x < m_ledMatrix.getWidth(); ++x)
+            {
+                HtmlColor htmlColor = static_cast<uint32_t>(m_ledMatrix.getColor(x, y));
+
+                m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
+            }
+        }
+
+        m_strip.Show();
+    }
+}
+
+void Display::off()
+{
+    m_isOn = false;
+
+    /* Simulate powered off display. */
+    m_strip.ClearTo(ColorDef::BLACK);
+    m_strip.Show();
+}
+
+void Display::on()
+{
+    m_isOn = true;
+}
+
+bool Display::isOn() const
+{
+    return m_isOn;
 }
 
 /******************************************************************************

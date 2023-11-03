@@ -329,6 +329,23 @@ public:
      */
     void setNetworkStatus(bool isConnected);
 
+    /**
+     * Power display off.
+     */
+    void displayOff();
+
+    /**
+     * Power display on.
+     */
+    void displayOn();
+
+    /**
+     * Is the display powered on?
+     * 
+     * @return If the display is powered on, it will return true otherwise false.
+     */
+    bool isDisplayOn() const;
+
 private:
 
     /** The process task stack size in bytes */
@@ -359,7 +376,7 @@ private:
     mutable MutexRecursive      m_mutexInterf;
 
     /** Mutex to protect the display update against concurrent access. */
-    MutexRecursive              m_mutexUpdate;
+    mutable MutexRecursive      m_mutexUpdate;
 
     /** Process task handle */
     TaskHandle_t                m_processTaskHandle;

@@ -143,12 +143,12 @@ For changing whats displayed, go to its web interface. Use the same credentials 
     * 2 short pulses: Activates the previous slot.
     * 3 short pulses: Activates next fade effect.
     * 4 short pulses: IP address is shown.
-    * 5 short pulses: Switch device off.
+    * 5 short pulses: Toggle display power on/off.
     * Long pressed: Increases the display brightness until maximum and then decreases until minimum. After that it will again increases it and so on.
   * Two button control (LILYGO&reg; T-Display ESP32-S3):
     * Left button:
       * 1 short pulses: Activates the previous slot.
-      * 2 short pulses: Switch device off.
+      * 2 short pulses: Toggle display power on/off.
       * Long pressed: Decreases the display brightness until minimum. 
     * Right button
       * 1 short pulse: Activates the next slot.
@@ -162,7 +162,7 @@ For changing whats displayed, go to its web interface. Use the same credentials 
     * Ok button:
       * 1 short pulses: Activates next fade effect.
       * 2 short pulses: IP address is shown.
-      * Long pressed: Switch device off.
+      * Long pressed: Toggle display power on/off.
     * Right button
       * 1 short pulse: Activates the next slot.
       * Long pressed: Increases the display brightness until maximum. 
