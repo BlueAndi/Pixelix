@@ -83,16 +83,19 @@ void Display::show()
 {
     if (true == m_isOn)
     {
-        int16_t x = 0;
-        int16_t y = 0;
+        const int16_t height = m_ledMatrix.getHeight();
+        const int16_t width = m_ledMatrix.getWidth();
 
-        for(y = 0; y < m_ledMatrix.getHeight(); ++y)
+        for (int16_t y = 0; y < height; ++y)
         {
-            for(x = 0; x < m_ledMatrix.getWidth(); ++x)
+            for (int16_t x = 0; x < width; ++x)
             {
                 HtmlColor htmlColor = static_cast<uint32_t>(m_ledMatrix.getColor(x, y));
-
+#if CONFIG_DISPLAY_ROTATE180 != 0
+                m_strip.SetPixelColor(m_topo.Map(width - x - 1, height - y - 1), htmlColor);
+#else
                 m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
+#endif
             }
         }
 
