@@ -88,8 +88,12 @@ void Display::show()
     {
         for(x = 0; x < MATRIX_WIDTH; ++x)
         {
+#if CONFIG_DISPLAY_ROTATE180 != 0
+            Color       brightnessAdjustedColor = m_ledMatrix.getColor(MATRIX_WIDTH - x - 1, MATRIX_HEIGHT - y - 1);
+#else
             Color       brightnessAdjustedColor = m_ledMatrix.getColor(x, y);
-            uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
+#endif           
+    	    uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
             int32_t     xNative                 = y * (PIXEL_HEIGHT + PiXEL_DISTANCE) + BORDER_Y;
             int32_t     yNative                 = TFT_HEIGHT - (x * (PIXEL_WIDTH  + PiXEL_DISTANCE) + BORDER_X) - 1;
 
