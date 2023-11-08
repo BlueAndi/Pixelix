@@ -281,6 +281,16 @@ To handle there are several .ini files in the ```./config``` folder:
 
 Update the one you use for your needs by commenting in or out.
 
+## Is there an easy way to rotate the display by 180° ? I need to turn the display when putting it into a housing.
+Change option CONFIG_DISPLAY_ROTATE180 in ```config/display.ini``` to 1 as shown below and rebuild.
+
+Example:
+```ini
+[display:common]
+build_flags =
+    -D CONFIG_DISPLAY_ROTATE180=1
+```
+
 # Used Libraries
 
 | Library | Description | License |
