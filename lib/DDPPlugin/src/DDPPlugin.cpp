@@ -131,29 +131,42 @@ void DDPPlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-void DDPPlugin::onData(DDPServer::Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal)
+void DDPPlugin::onData(DDPServer::Format format, uint32_t offset, uint8_t bitsPerPixelElement, uint8_t* payload, uint16_t payloadSize, bool isFinal)
 {
     MutexGuard<Mutex> guard(m_mutex);
 
-    /* xlights <= v202301 sends FORMAT_UNDEFINED with 1-bit per pixel which is
-     * necessary to be interpreted as FORMAT_RGB with 24-bit per pixel.
+    /* xlights <= v202301 sends FORMAT_UNDEFINED with 1-bit per pixel element which is
+     * necessary to be interpreted as FORMAT_RGB with 8-bit per pixel element.
      */
     if ((DDPServer::FORMAT_UNDEFINED == format) &&
-        (1U == bitsPerPixel))
+        (1U == bitsPerPixelElement))
     {
         /* Workaround! */
-        format          = DDPServer::FORMAT_RGB;
-        bitsPerPixel    = 24U;
+        format              = DDPServer::FORMAT_RGB;
+        bitsPerPixelElement = 8U;
+    }
+    /* If the format is FORMAT_UNDEFINED and the bit per pixel element is undefined,
+     * we assume its 8-bit per pixel element.
+     */
+    else if ((DDPServer::FORMAT_UNDEFINED == format) &&
+             (0U == bitsPerPixelElement))
+    {
+        format              = DDPServer::FORMAT_RGB;
+        bitsPerPixelElement = 8U;
+    }
+    else
+    {
+        ;
     }
 
     if ((nullptr != payload) &&
         (DDPServer::FORMAT_RGB == format) &&
-        (24U == bitsPerPixel))
+        (8U == bitsPerPixelElement))
     {
         uint16_t    srcIdx          = 0U;
         int16_t     x               = (offset % m_framebuffer.getWidth());
         int16_t     y               = (offset / m_framebuffer.getWidth());
-        uint8_t     bytePerPixel    = bitsPerPixel / 8U;
+        uint8_t     bytePerPixel    = (bitsPerPixelElement * 3U) / 8U; /* RGB = 3 base colors */
 
         while((payloadSize > srcIdx) && (m_framebuffer.getHeight() > y))
         {
@@ -184,6 +197,10 @@ void DDPPlugin::onData(DDPServer::Format format, uint32_t offset, uint8_t bitsPe
         }
 
         m_isUpdated = isFinal;
+    }
+    else
+    {
+        LOG_WARNING("Unsupported DDP frame with format %d and bits per pixel element %u.", format, bitsPerPixelElement);
     }
 }
 
