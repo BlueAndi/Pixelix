@@ -319,7 +319,7 @@ uint8_t SlotList::getStickySlot() const
  * 
  * If slot is empty or the plugin is disabled, it will fail.
  * 
- * @param[in]   slotId  The id of the slot which to set sticky.
+ * @param[in] slotId    The id of the slot which to set sticky.
  * 
  * @return If successful it will return true otherwise false.
  */

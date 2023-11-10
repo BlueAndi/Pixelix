@@ -368,8 +368,6 @@ public:
      * @param[in] x         x-coordinate of upper left point
      * @param[in] y         y-coordinate of upper left point
      * @param[in] bitmap    Bitmap pixel buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
      */
     void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap)
     {

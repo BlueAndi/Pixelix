@@ -146,7 +146,7 @@ public:
     /**
      * Set canvas graphic operations.
      * 
-     * @param[in] bitmap    Bitmap which to set
+     * @param[in] gfx   Graphic functions
      */
     void setGfx(BaseGfx<TColor>& gfx)
     {

@@ -432,10 +432,12 @@ private:
     /**
      * Handles the keyword for color changes.
      *
-     * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
-     * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
-     * @param[in] formatStr String which may contain keywords.
-     * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
+     * @param[in] gfx           Graphics interface, only necessary if actions shall take place.
+     * @param[in] gfxText       The text to handle with the keyword.
+     * @param[in] noAction      The handler shall take no action. This is only used to get rid of the keywords in the text.
+     * @param[in] formatStr     String which may contain keywords.
+     * @param[in] isScrolling   Is scrolling active?
+     * @param[out] overstep     Number of characters, which must be overstepped before the next normal character comes.
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
@@ -444,10 +446,12 @@ private:
     /**
      * Handles the keyword for alignment changes.
      *
-     * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
-     * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
-     * @param[in] formatStr String which may contain keywords.
-     * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
+     * @param[in] gfx           Graphics interface, only necessary if actions shall take place.
+     * @param[in] gfxText       The text to handle with the keyword.
+     * @param[in] noAction      The handler shall take no action. This is only used to get rid of the keywords in the text.
+     * @param[in] formatStr     String which may contain keywords.
+     * @param[in] isScrolling   Is scrolling active?
+     * @param[out] overstep     Number of characters, which must be overstepped before the next normal character comes.
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */
@@ -456,10 +460,12 @@ private:
     /**
      * Handles the keyword for character code.
      *
-     * @param[in] gfx       Graphics interface, only necessary if actions shall take place.
-     * @param[in] noAction  The handler shall take no action. This is only used to get rid of the keywords in the text.
-     * @param[in] formatStr String which may contain keywords.
-     * @param[out] overstep Number of characters, which must be overstepped before the next normal character comes.
+     * @param[in] gfx           Graphics interface, only necessary if actions shall take place.
+     * @param[in] gfxText       The text to handle with the keyword.
+     * @param[in] noAction      The handler shall take no action. This is only used to get rid of the keywords in the text.
+     * @param[in] formatStr     String which may contain keywords.
+     * @param[in] isScrolling   Is scrolling active?
+     * @param[out] overstep     Number of characters, which must be overstepped before the next normal character comes.
      *
      * @return If keyword is handled successful, it returns true otherwise false.
      */

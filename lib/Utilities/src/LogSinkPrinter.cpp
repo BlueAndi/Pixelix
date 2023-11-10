@@ -107,11 +107,11 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
  * Private Methods
  *****************************************************************************/
 
-const char* LogSinkPrinter::logLevelToString(const Logging::LogLevel LogLevel) const
+const char* LogSinkPrinter::logLevelToString(const Logging::LogLevel logLevel) const
 {
     const char* logLevelString = nullptr;
 
-    switch (LogLevel)
+    switch (logLevel)
     {
         case Logging::LOG_LEVEL_FATAL:
             logLevelString = "FATAL  ";

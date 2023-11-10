@@ -94,7 +94,7 @@ private:
 
     SimpleTimer     m_timer;                /**< Timer used for cyclic processing. */
     RESET_REASON    m_resetReasonAppCpu;    /**< The reset reason of the APP cpu. */
-    RESET_REASON    m_resetReasonProCpu;    /**< The reset reason of the PRO cpu.
+    RESET_REASON    m_resetReasonProCpu;    /**< The reset reason of the PRO cpu. */
 
     /**
      * Constructs the reset monitor.

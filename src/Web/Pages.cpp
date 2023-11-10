@@ -261,11 +261,6 @@ void Pages::init(AsyncWebServer& srv)
     }
 }
 
-/**
- * Error web page used in case a requested path was not found.
- *
- * @param[in] request   HTTP request
- */
 void Pages::error(AsyncWebServerRequest* request)
 {
     if (nullptr == request)

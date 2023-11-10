@@ -27,6 +27,8 @@
 /**
  * @brief  Topic handlers
  * @author Andreas Merkle <web@blue-andi.de>
+ * 
+ * @{
  */
 
 /******************************************************************************
