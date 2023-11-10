@@ -697,7 +697,7 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         value *= m_multiplier;
         value += m_offset;
 
-        (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<String>().c_str());
+        (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), value);
 
         m_textWidgetRight.setFormatStr(buffer);
         m_textWidgetTextOnly.setFormatStr(buffer);
