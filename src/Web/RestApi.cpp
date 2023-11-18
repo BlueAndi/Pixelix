@@ -1484,15 +1484,14 @@ static void handleFilePost(AsyncWebServerRequest* request)
  */
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-    static File fd;
-    bool        isError = false;
+    bool isError = false;
 
     /* Begin of upload? */
     if (0 == index)
     {
-        fd = FILESYSTEM.open(filename, "w");
+        request->_tempFile = FILESYSTEM.open(filename, "w");
 
-        if (false == fd)
+        if (false == request->_tempFile)
         {
             isError = true;
         }
@@ -1502,9 +1501,9 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         }
     }
 
-    if (true == fd)
+    if (true == request->_tempFile)
     {
-        (void)fd.write(data, len);
+        (void)request->_tempFile.write(data, len);
     }
 
     if ((true == final) &&
@@ -1512,13 +1511,13 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     {        
         LOG_INFO("File %s successful written.", filename.c_str());
 
-        fd.close();
+        request->_tempFile.close();
     }
     else if (true == isError)
     {
         LOG_INFO("File %s upload aborted.", filename.c_str());
 
-        fd.close();
+        request->_tempFile.close();
     }
 
     if (true == isError)

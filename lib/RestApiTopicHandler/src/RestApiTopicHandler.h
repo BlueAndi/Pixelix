@@ -158,7 +158,6 @@ private:
         String                      uri;            /**< URI where the handler is registered. */
         bool                        isUploadError;  /**< If upload error happened, it will be true otherwise false. */
         String                      fullPath;       /**< Full path of uploaded file. If empty, there is no file available. */
-        File                        fd;             /**< Upload file descriptor */
 
         /**
          * Initialize topic meta data.
@@ -173,8 +172,7 @@ private:
             webHandler(nullptr),
             uri(),
             isUploadError(false),
-            fullPath(),
-            fd()
+            fullPath()
         {
         }
     };

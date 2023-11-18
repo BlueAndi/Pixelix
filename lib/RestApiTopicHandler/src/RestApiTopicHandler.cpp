@@ -290,9 +290,9 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
             else
             {
                 /* Create a new file and overwrite a existing one. */
-                topicMetaData->fd = FILESYSTEM.open(topicMetaData->fullPath, "w");
+                request->_tempFile = FILESYSTEM.open(topicMetaData->fullPath, "w");
 
-                if (false == topicMetaData->fd)
+                if (false == request->_tempFile)
                 {
                     LOG_ERROR("Couldn't create file: %s", topicMetaData->fullPath.c_str());
                     topicMetaData->isUploadError = true;
@@ -305,14 +305,14 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
     if (false == topicMetaData->isUploadError)
     {
         /* If file is open, write data to it. */
-        if (true == topicMetaData->fd)
+        if (true == request->_tempFile)
         {
-            if (len != topicMetaData->fd.write(data, len))
+            if (len != request->_tempFile.write(data, len))
             {
                 LOG_ERROR("Less data written, upload aborted.");
                 topicMetaData->isUploadError = true;
                 topicMetaData->fullPath.clear();
-                topicMetaData->fd.close();
+                request->_tempFile.close();
             }
         }
 
@@ -321,7 +321,7 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
         {
             LOG_INFO("Upload of %s finished.", filename.c_str());
 
-            topicMetaData->fd.close();
+            request->_tempFile.close();
         }
     }
 }
