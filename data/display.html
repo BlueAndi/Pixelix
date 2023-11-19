@@ -157,11 +157,22 @@
 
                     $("#slotId").text(rsp.slotId);
 
+                    /* If necessary, resize the canvas. */
+                    var $canvas = $("#canvas");
+                    var ctx = $canvas[0].getContext('2d');
+                    var width = rsp.width * pixelWidth + rsp.width + 1;
+                    var height = rsp.height * pixelWidth + rsp.height + 1;
+
+                    if ((ctx.canvas.width != width) || (ctx.canvas.height != height)) {
+                        ctx.canvas.width = width;
+                        ctx.canvas.height = height;
+                    }
+
                     /* Handle display data */
                     for(y = 0; y < rsp.height; ++y) {
                         for(x = 0; x < rsp.width; ++x) {
                             if (rsp.data.length > index) {
-                                color   = parseInt(rsp.data[index]);
+                                color   = rsp.data[index];
                                 red     = (color & 0xff0000) >> 16;
                                 green   = (color & 0x00ff00) >> 8;
                                 blue    = (color & 0x0000ff) >> 0;
