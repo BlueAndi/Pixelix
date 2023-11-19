@@ -37,6 +37,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   * [Is it possible to use a font with 8px height?](#is-it-possible-to-use-a-font-with-8px-height)
   * [How to configure the date/time format?](#how-to-configure-the-datetime-format)
   * [How to configure my own list of plugins?](#how-to-configure-my-own-list-of-plugins)
+  * [Is there an easy way to rotate the display by 180° ? I need to turn the display when putting it into a housing.](#is-there-an-easy-way-to-rotate-the-display-by-180--i-need-to-turn-the-display-when-putting-it-into-a-housing)
 * [Used Libraries](#used-libraries)
 * [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 * [License](#license)
