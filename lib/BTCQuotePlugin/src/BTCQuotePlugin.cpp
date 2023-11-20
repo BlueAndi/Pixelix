@@ -235,8 +235,8 @@ void BTCQuotePlugin::initHttpClient()
                 StaticJsonDocument<FILTER_SIZE> filter;
                 DeserializationError            error;
 
-                filter["bpi"]["USD"]["rate_float"]      = true;
-                filter["bpi"]["USD"]["rate"]            = true;
+                filter["bpi"]["USD"]["rate_float"]  = true;
+                filter["bpi"]["USD"]["rate"]        = true;
 
                 if (true == filter.overflowed())
                 {
@@ -269,12 +269,19 @@ void BTCQuotePlugin::initHttpClient()
 
 void BTCQuotePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    m_relevantResponsePart = jsonDoc["bpi"]["USD"]["rate"].as<String>() + " $/BTC";
-    m_relevantResponsePart.replace(",", "'");               // beautify to european(?) standard formatting ' for 1000s
-    
-    LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
+    JsonVariantConst    jsonBpi     = jsonDoc["bpi"];
+    JsonVariantConst    jsonUsd     = jsonBpi["USD"];
+    JsonVariantConst    jsonRate    = jsonUsd["rate"];
 
-    m_textWidget.setFormatStr(m_relevantResponsePart);
+    if (false == jsonRate.isNull())
+    {
+        m_relevantResponsePart = jsonRate.as<String>() + " $/BTC";
+        m_relevantResponsePart.replace(",", "'");  /* Beautify to european(?) standard formatting ' for 1000s */
+        
+        LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
+
+        m_textWidget.setFormatStr(m_relevantResponsePart);
+    }
 }
 
 void BTCQuotePlugin::clearQueue()
