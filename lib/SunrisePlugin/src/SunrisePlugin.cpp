@@ -102,6 +102,7 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
         JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonLongitude           = value["longitude"];
         JsonVariantConst    jsonLatitude            = value["latitude"];
+        JsonVariantConst    jsonTimeFormat          = value["timeFormat"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -123,6 +124,12 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
         if (false == jsonLatitude.isNull())
         {
             jsonCfg["latitude"] = jsonLatitude.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonTimeFormat.isNull())
+        {
+            jsonCfg["timeFormat"] = jsonTimeFormat.as<String>();
             isSuccessful = true;
         }
 
