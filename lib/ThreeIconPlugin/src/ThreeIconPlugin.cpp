@@ -196,7 +196,7 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
             JsonVariantConst    jsonIsForward           = value["forward"];
             JsonVariantConst    jsonIsRepeat            = value["repeat"];
             JsonVariantConst    jsonIconFullPath        = value["iconFullPath"];
-            JsonVariantConst    jsonSpriteSheetFullPath = value["spritesheetFullPath"];
+            JsonVariantConst    jsonSpriteSheetFullPath = value["spriteSheetFullPath"];
 
             if (false == jsonIsForward.isNull())
             {
