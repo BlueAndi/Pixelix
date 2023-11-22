@@ -193,7 +193,7 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
     {
     /* Client connected */
     case WS_EVT_CONNECT:
-        getInstance().onConnect(server, client, reinterpret_cast<AsyncWebServerRequest*>(arg));
+        getInstance().onConnect(server, client, static_cast<AsyncWebServerRequest*>(arg));
         break;
 
     /* Client disconnected */
@@ -208,12 +208,12 @@ void WebSocketSrv::onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client,
 
     /* Remote error */
     case WS_EVT_ERROR:
-        getInstance().onError(server, client, *reinterpret_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
+        getInstance().onError(server, client, *static_cast<uint16_t*>(arg), reinterpret_cast<const char*>(data), len);
         break;
 
     /* Data */
     case WS_EVT_DATA:
-        getInstance().onData(server, client, reinterpret_cast<AwsFrameInfo*>(arg), data, len);
+        getInstance().onData(server, client, static_cast<AwsFrameInfo*>(arg), data, len);
         break;
 
     default:

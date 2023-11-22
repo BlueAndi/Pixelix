@@ -177,7 +177,7 @@ void AudioDrv::stop()
 
 void AudioDrv::processTask(void* parameters)
 {
-    AudioDrv* tthis = reinterpret_cast<AudioDrv*>(parameters);
+    AudioDrv* tthis = static_cast<AudioDrv*>(parameters);
 
     if ((nullptr != tthis) &&
         (nullptr != tthis->m_xSemaphore))

@@ -70,6 +70,17 @@ class OpenWeatherPlugin : public Plugin, private PluginConfigFsHandler
 public:
 
     /**
+     * Enumeration to choose an additional weather information to be displayed.
+     */
+    enum OtherWeatherInformation
+    {
+        OTHER_WEATHER_INFO_UVI = 0,     /**< Display UV Index as additional information. */
+        OTHER_WEATHER_INFO_HUMIDITY,    /**< Display humidity in % as additional information. */
+        OTHER_WEATHER_INFO_WIND,        /**< Display windspeed in m/s as additional information. */
+        OTHER_WEATHER_INFO_OFF          /**< Display only general weather information. */
+    };
+
+    /**
      * Constructs the plugin.
      *
      * @param[in] name  Plugin name
@@ -111,17 +122,6 @@ public:
     {
         (void)m_mutex.create();
     }
-
-    /**
-     * Enumeration to choose an additional weather information to be displayed.
-     */
-    enum OtherWeatherInformation
-    {
-        OTHER_WEATHER_INFO_UVI = 0,     /**< Display UV Index as additional information. */
-        OTHER_WEATHER_INFO_HUMIDITY,    /**< Display humidity in % as additional information. */
-        OTHER_WEATHER_INFO_WIND,        /**< Display windspeed in m/s as additional information. */
-        OTHER_WEATHER_INFO_OFF          /**< Display only general weather information. */
-    };
 
     /**
      * Destroys the plugin.

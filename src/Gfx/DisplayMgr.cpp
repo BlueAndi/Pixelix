@@ -1339,7 +1339,7 @@ void DisplayMgr::destroyUpdateTask()
 
 void DisplayMgr::processTask(void* parameters)
 {
-    DisplayMgr* tthis = reinterpret_cast<DisplayMgr*>(parameters);
+    DisplayMgr* tthis = static_cast<DisplayMgr*>(parameters);
 
     if ((nullptr != tthis) &&
         (nullptr != tthis->m_processTaskSemaphore))
@@ -1376,7 +1376,7 @@ void DisplayMgr::processTask(void* parameters)
 
 void DisplayMgr::updateTask(void* parameters)
 {
-    DisplayMgr* tthis = reinterpret_cast<DisplayMgr*>(parameters);
+    DisplayMgr* tthis = static_cast<DisplayMgr*>(parameters);
 
     if ((nullptr != tthis) &&
         (nullptr != tthis->m_updateTaskSemaphore))

@@ -285,7 +285,7 @@ void ButtonDrv::setState(ButtonId buttonId, ButtonState state)
 
 void ButtonDrv::buttonTask(void *parameters)
 {
-    ButtonDrv*  buttonDrv   = reinterpret_cast<ButtonDrv*>(parameters);
+    ButtonDrv*  buttonDrv   = static_cast<ButtonDrv*>(parameters);
     uint8_t     buttonIdx   = 0U;
 
     /* The ISR shall notify about on change to determine whether the
@@ -409,7 +409,7 @@ void ButtonDrv::buttonTaskMainLoop()
  */
 static void IRAM_ATTR isrButton(void* arg)
 {
-    ButtonId        buttonId                    = *reinterpret_cast<ButtonId*>(arg);
+    ButtonId        buttonId                    = *static_cast<ButtonId*>(arg);
     BaseType_t      xHigherPriorityTaskWoken    = pdFALSE;
 
     (void)xQueueSendFromISR(gxQueue, &buttonId, &xHigherPriorityTaskWoken );

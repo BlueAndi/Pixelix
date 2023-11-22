@@ -198,7 +198,7 @@ bool DDPServer::begin(const String& deviceManufacturer, const String& deviceMode
     {
         m_udpServer.onPacket([](void* arg, AsyncUDPPacket& packet)
         {
-            DDPServer*  tthis = reinterpret_cast<DDPServer*>(arg);
+            DDPServer*  tthis = static_cast<DDPServer*>(arg);
 
             if (nullptr != tthis)
             {

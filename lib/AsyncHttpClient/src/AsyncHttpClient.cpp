@@ -562,7 +562,7 @@ void AsyncHttpClient::clearEvtQueue()
 
 void AsyncHttpClient::processTask(void* parameters)
 {
-    AsyncHttpClient* tthis = reinterpret_cast<AsyncHttpClient*>(parameters);
+    AsyncHttpClient* tthis = static_cast<AsyncHttpClient*>(parameters);
 
     if ((nullptr != tthis) &&
         (nullptr != tthis->m_processTaskSemaphore))
@@ -716,7 +716,8 @@ void AsyncHttpClient::onError(int8_t error)
 void AsyncHttpClient::onData(const uint8_t* data, size_t len)
 {
     size_t      index       = 0U;
-    const char* asciiData   = reinterpret_cast<const char*>(data);
+    const void* vData       = data;
+    const char* asciiData   = static_cast<const char*>(vData);
     bool        isError     = false;
 
     /* RFC2616 - Response = Status-Line
@@ -1311,7 +1312,8 @@ bool AsyncHttpClient::parseChunkedResponseTrailer(const char* data, size_t len, 
 
 bool AsyncHttpClient::parseChunkedResponse(const uint8_t* data, size_t len, size_t& index)
 {
-    const char* asciiData   = reinterpret_cast<const char*>(data);
+    const void* vData       = data;
+    const char* asciiData   = static_cast<const char*>(vData);
     bool        isChunkEOF  = false;
 
     /*

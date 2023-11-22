@@ -448,7 +448,8 @@ void SunrisePlugin::initHttpClient()
             if (nullptr != jsonDoc)
             {
                 size_t                          payloadSize = 0U;
-                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const void*                     vPayload    = rsp.getPayload(payloadSize);
+                const char*                     payload     = static_cast<const char*>(vPayload);
                 const size_t                    FILTER_SIZE = 128U;
                 StaticJsonDocument<FILTER_SIZE> filter;
                 DeserializationError            error;

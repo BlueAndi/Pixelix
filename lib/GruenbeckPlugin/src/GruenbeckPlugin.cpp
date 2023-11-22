@@ -478,7 +478,8 @@ void GruenbeckPlugin::initHttpClient()
                 const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
 
                 size_t          payloadSize                     = 0U;
-                const char*     payload                         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
+                const void*     vPayload                        = rsp.getPayload(payloadSize);
+                const char*     payload                         = static_cast<const char*>(vPayload);
                 char            restCapacity[RELEVANT_DATA_LENGTH + 1];
                 Msg             msg;
 
