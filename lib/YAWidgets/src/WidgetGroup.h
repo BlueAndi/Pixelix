@@ -45,8 +45,8 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <WString.h>
-#include <LinkedList.hpp>
 #include <Widget.hpp>
+#include <DynamicListInf.hpp>
 
 /******************************************************************************
  * Macros
@@ -62,6 +62,9 @@
 class WidgetGroup : public Widget, private YAGfx
 {
 public:
+
+    /** List of widgets. */
+    typedef DynamicListInf<Widget*>  WigetList;
 
     /**
      * Constructs a empty widget group.
@@ -247,14 +250,13 @@ public:
      */
     bool removeWidget(const Widget& widget)
     {
-        bool                            status = false;
-        DLinkedListIterator<Widget*>    it(m_widgets);
+        bool                status  = false;
+        const Widget*       ptr     = &widget;
+        WigetList::Iterator it      = m_widgets.find(ptr);
 
-        /* Find widget in the list */
-        if (true == it.find(&const_cast<Widget&>(widget)))
+        if (true == it)
         {
-            /* Remove widget */
-            it.remove();
+            (void)m_widgets.erase(it);
             status = true;
         }
 
@@ -266,7 +268,7 @@ public:
      *
      * @return Children
      */
-    const DLinkedList<Widget*>& children() const
+    const WigetList& children() const
     {
         return m_widgets;
     }
@@ -290,16 +292,28 @@ public:
         /* If its not the group itself, continue searching in the widget list. */
         if (nullptr == widget)
         {
-            DLinkedListIterator<Widget*> it(m_widgets);
-
-            if (true == it.first())
-            {
-                do
+            WigetList::Iterator it;
+            WigetList::FindFunc findFunc =
+                [name](Widget* const & currentWidget) -> bool
                 {
-                    widget = (*it.current())->find(name);
-                }
-                while(  (nullptr == widget) &&
-                        (true == it.next()));
+                    bool isEqual = false;
+
+                    if (nullptr != currentWidget)
+                    {
+                        if (currentWidget->getName() == name)
+                        {
+                            isEqual = true;
+                        }
+                    }
+
+                    return isEqual;
+                };
+            
+            it = m_widgets.find(findFunc);
+
+            if (true == it)
+            {
+                widget = *it;
             }
         }
 
@@ -311,10 +325,10 @@ public:
 
 private:
 
-    uint16_t                m_width;    /**< Canvas width in pixels */
-    uint16_t                m_height;   /**< Canvas height in pixels */
-    DLinkedList<Widget*>    m_widgets;  /**< Widgets in the group */
-    YAGfx*                  m_gfx;      /**< Graphics interface of the underlying layer */
+    uint16_t    m_width;    /**< Canvas width in pixels */
+    uint16_t    m_height;   /**< Canvas height in pixels */
+    WigetList   m_widgets;  /**< Widgets in the group */
+    YAGfx*      m_gfx;      /**< Graphics interface of the underlying layer */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -323,20 +337,16 @@ private:
      */
     void paint(YAGfx& gfx) override
     {
-        DLinkedListIterator<Widget*> it(m_widgets);
+        WigetList::Iterator it;
 
         m_gfx = &gfx;
 
         /* Walk through all widgets and draw them in the priority as
          * they were added.
          */
-        if (true == it.first())
+        for(it = m_widgets.begin(); it != m_widgets.end(); ++it)
         {
-            do
-            {
-                (*it.current())->update(*this);
-            }
-            while(true == it.next());
+            (*it)->update(*this);
         }
 
         m_gfx = nullptr;

@@ -34,6 +34,8 @@
  *****************************************************************************/
 #include <unity.h>
 #include <LinkedList.hpp>
+#include <StaticList.hpp>
+#include <DynamicList.hpp>
 #include <Util.h>
 
 /******************************************************************************
@@ -53,6 +55,10 @@
  *****************************************************************************/
 
 static void testDoublyLinkedList();
+static void testStaticList();
+static void testStaticListConst();
+static void testDynamicList();
+static void testDynamicListConst();
 
 /******************************************************************************
  * Local Variables
@@ -87,7 +93,11 @@ extern int main(int argc, char **argv)
 
     UNITY_BEGIN();
 
-    RUN_TEST(testDoublyLinkedList);
+	RUN_TEST(testDoublyLinkedList);
+    RUN_TEST(testStaticList);
+    RUN_TEST(testStaticListConst);
+    RUN_TEST(testDynamicList);
+    RUN_TEST(testDynamicListConst);
 
     return UNITY_END();
 }
@@ -269,4 +279,402 @@ static void testDoublyLinkedList()
     TEST_ASSERT_EQUAL(max, *it.current());
 
     return;
+}
+
+/**
+ * Static doubly linked list tests with standard iterator.
+ */
+static void testStaticList()
+{
+    const uint32_t                                          LIST_MAX_ELEMENTS   = 10U;
+    StaticList<uint32_t, LIST_MAX_ELEMENTS>                 list;
+    StaticList<uint32_t, LIST_MAX_ELEMENTS>::Iterator       it;
+    StaticList<uint32_t, LIST_MAX_ELEMENTS>::CompareFunc    compareFunc =
+        [](const int& current, const int& toFind) -> bool
+        {
+            bool isFound = false;
+
+            if (current == toFind)
+            {
+                isFound = true;
+            }
+
+            return isFound;
+        };
+    uint32_t                                                value               = 1U;
+    uint32_t                                                index               = 0U;
+    const uint32_t                                          MAX                 = 3U;
+
+    /* List is empty. */
+    it = list.begin();
+    TEST_ASSERT_TRUE(list.end() == it);
+    TEST_ASSERT_TRUE(list.rend() == it);
+    TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
+
+    /* Add one element. */
+    TEST_ASSERT_TRUE(list.append(value));
+    it = list.begin();
+    TEST_ASSERT_TRUE(list.begin() == it);
+    TEST_ASSERT_TRUE(list.rbegin() == it);
+    TEST_ASSERT_FALSE(list.end() == it);
+    TEST_ASSERT_FALSE(list.rend() == it);
+    TEST_ASSERT_EQUAL_UINT32(1u, list.getNumOfElements());
+
+    it = list.begin();
+    TEST_ASSERT_EQUAL_INT(value, *it);
+
+    it = list.rbegin();
+    TEST_ASSERT_EQUAL_INT(value, *it);
+
+    /* Remove element from list. List is now empty. */
+    it = list.remove(it);
+    TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
+
+    /* Add more elements */
+    for(index = value; index <= MAX; ++index)
+    {
+        TEST_ASSERT_TRUE(list.append(index));
+        TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
+
+        it = list.begin();
+        TEST_ASSERT_EQUAL_INT(value, *it);
+
+        it = list.rbegin();
+        TEST_ASSERT_EQUAL_INT(index, *it);
+    }
+
+    /* Select element for element, from head to tail. */
+    index = value;
+    for(it = list.begin(); it != list.end(); ++it)
+    {
+        TEST_ASSERT_EQUAL_INT(index, *it);
+        ++index;
+    }
+
+    /* Select element for element, from tail to head. */
+    index = MAX;
+    for(it = list.rbegin(); it != list.rend(); --it)
+    {
+        TEST_ASSERT_EQUAL_INT(index, *it);
+        --index;
+    }
+
+    /* Remove all elements */
+    index = 1U;
+    it = list.begin();
+    while(it != list.end())
+    {
+        it = list.remove(it);
+        TEST_ASSERT_EQUAL_UINT32(MAX - index, list.getNumOfElements());
+        ++index;
+    }
+
+    TEST_ASSERT_EQUAL_INT(0, list.getNumOfElements());
+
+    /* Insert elements again */
+    for(index = 1U; index <= MAX; ++index)
+    {
+        TEST_ASSERT_TRUE(list.append(index));
+        TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
+    }
+
+    /* Find not existing element */
+    it = list.find(MAX + 1, compareFunc);
+    TEST_ASSERT_TRUE(it == list.end());
+
+    /* Find existing element */
+    it = list.find(1, compareFunc);
+    TEST_ASSERT_TRUE(it == list.begin());
+    TEST_ASSERT_TRUE(it != list.end());
+
+    it = list.find(MAX, compareFunc);
+    TEST_ASSERT_TRUE(it == list.rbegin());
+    TEST_ASSERT_TRUE(it != list.end());
+}
+
+/**
+ * Static doubly linked list tests with const iterator.
+ */
+static void testStaticListConst()
+{
+    const uint32_t                                          LIST_MAX_ELEMENTS   = 10U;
+    StaticList<uint32_t, LIST_MAX_ELEMENTS>                 list;
+    StaticList<uint32_t, LIST_MAX_ELEMENTS>::ConstIterator  it;
+    StaticList<uint32_t, LIST_MAX_ELEMENTS>::CompareFunc    compareFunc =
+        [](const int& current, const int& toFind) -> bool
+        {
+            bool isFound = false;
+
+            if (current == toFind)
+            {
+                isFound = true;
+            }
+
+            return isFound;
+        };
+    uint32_t                                                value               = 1U;
+    uint32_t                                                index               = 0U;
+    const uint32_t                                          MAX                 = 3U;
+
+    /* List is empty. */
+    it = list.begin();
+    TEST_ASSERT_TRUE(list.end() == it);
+    TEST_ASSERT_TRUE(list.rend() == it);
+    TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
+
+    /* Add one element. */
+    TEST_ASSERT_TRUE(list.append(value));
+    it = list.begin();
+    TEST_ASSERT_TRUE(list.begin() == it);
+    TEST_ASSERT_TRUE(list.rbegin() == it);
+    TEST_ASSERT_FALSE(list.end() == it);
+    TEST_ASSERT_FALSE(list.rend() == it);
+    TEST_ASSERT_EQUAL_UINT32(1u, list.getNumOfElements());
+
+    it = list.begin();
+    TEST_ASSERT_EQUAL_INT(value, *it);
+
+    it = list.rbegin();
+    TEST_ASSERT_EQUAL_INT(value, *it);
+
+    /* Add more elements */
+    for(index = value + 1; index <= MAX; ++index)
+    {
+        TEST_ASSERT_TRUE(list.append(index));
+        TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
+
+        it = list.begin();
+        TEST_ASSERT_EQUAL_INT(value, *it);
+
+        it = list.rbegin();
+        TEST_ASSERT_EQUAL_INT(index, *it);
+    }
+
+    /* Select element for element, from head to tail. */
+    index = value;
+    for(it = list.begin(); it != list.end(); ++it)
+    {
+        TEST_ASSERT_EQUAL_INT(index, *it);
+        ++index;
+    }
+
+    /* Select element for element, from tail to head. */
+    index = MAX;
+    for(it = list.rbegin(); it != list.rend(); --it)
+    {
+        TEST_ASSERT_EQUAL_INT(index, *it);
+        --index;
+    }
+
+    /* Find not existing element */
+    it = list.find(MAX + 1, compareFunc);
+    TEST_ASSERT_TRUE(it == list.end());
+
+    /* Find existing element */
+    it = list.find(1, compareFunc);
+    TEST_ASSERT_TRUE(it == list.begin());
+    TEST_ASSERT_TRUE(it != list.end());
+
+    it = list.find(MAX, compareFunc);
+    TEST_ASSERT_TRUE(it == list.rbegin());
+    TEST_ASSERT_TRUE(it != list.end());
+}
+
+/**
+ * Dynamic doubly linked list tests with standard iterator.
+ */
+static void testDynamicList()
+{
+    const uint32_t                      LIST_MAX_ELEMENTS   = 10U;
+    DynamicList<uint32_t>               list(LIST_MAX_ELEMENTS);
+    DynamicList<uint32_t>::Iterator     it;
+    DynamicList<uint32_t>::CompareFunc  compareFunc =
+        [](const int& current, const int& toFind) -> bool
+        {
+            bool isFound = false;
+
+            if (current == toFind)
+            {
+                isFound = true;
+            }
+
+            return isFound;
+        };
+    uint32_t                            value               = 1U;
+    uint32_t                            index               = 0U;
+    const uint32_t                      MAX                 = 3U;
+
+    /* List is empty. */
+    it = list.begin();
+    TEST_ASSERT_TRUE(list.end() == it);
+    TEST_ASSERT_TRUE(list.rend() == it);
+    TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
+
+    /* Add one element. */
+    TEST_ASSERT_TRUE(list.append(value));
+    it = list.begin();
+    TEST_ASSERT_TRUE(list.begin() == it);
+    TEST_ASSERT_TRUE(list.rbegin() == it);
+    TEST_ASSERT_FALSE(list.end() == it);
+    TEST_ASSERT_FALSE(list.rend() == it);
+    TEST_ASSERT_EQUAL_UINT32(1u, list.getNumOfElements());
+
+    it = list.begin();
+    TEST_ASSERT_EQUAL_INT(value, *it);
+
+    it = list.rbegin();
+    TEST_ASSERT_EQUAL_INT(value, *it);
+
+    /* Remove element from list. List is now empty. */
+    it = list.remove(it);
+    TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
+
+    /* Add more elements */
+    for(index = value; index <= MAX; ++index)
+    {
+        TEST_ASSERT_TRUE(list.append(index));
+        TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
+
+        it = list.begin();
+        TEST_ASSERT_EQUAL_INT(value, *it);
+
+        it = list.rbegin();
+        TEST_ASSERT_EQUAL_INT(index, *it);
+    }
+
+    /* Select element for element, from head to tail. */
+    index = value;
+    for(it = list.begin(); it != list.end(); ++it)
+    {
+        TEST_ASSERT_EQUAL_INT(index, *it);
+        ++index;
+    }
+
+    /* Select element for element, from tail to head. */
+    index = MAX;
+    for(it = list.rbegin(); it != list.rend(); --it)
+    {
+        TEST_ASSERT_EQUAL_INT(index, *it);
+        --index;
+    }
+
+    /* Remove all elements */
+    index = 1U;
+    it = list.begin();
+    while(it != list.end())
+    {
+        it = list.remove(it);
+        TEST_ASSERT_EQUAL_UINT32(MAX - index, list.getNumOfElements());
+        ++index;
+    }
+
+    TEST_ASSERT_EQUAL_INT(0, list.getNumOfElements());
+
+    /* Insert elements again */
+    for(index = 1U; index <= MAX; ++index)
+    {
+        TEST_ASSERT_TRUE(list.append(index));
+        TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
+    }
+
+    /* Find not existing element */
+    it = list.find(MAX + 1, compareFunc);
+    TEST_ASSERT_TRUE(it == list.end());
+
+    /* Find existing element */
+    it = list.find(1, compareFunc);
+    TEST_ASSERT_TRUE(it == list.begin());
+    TEST_ASSERT_TRUE(it != list.end());
+
+    it = list.find(MAX, compareFunc);
+    TEST_ASSERT_TRUE(it == list.rbegin());
+    TEST_ASSERT_TRUE(it != list.end());
+}
+
+/**
+ * Dynamic doubly linked list tests with const iterator.
+ */
+static void testDynamicListConst()
+{
+    const uint32_t                      LIST_MAX_ELEMENTS   = 10U;
+    DynamicList<uint32_t>               list(LIST_MAX_ELEMENTS);
+    DynamicList<uint32_t>::Iterator     it;
+    DynamicList<uint32_t>::CompareFunc  compareFunc =
+        [](const int& current, const int& toFind) -> bool
+        {
+            bool isFound = false;
+
+            if (current == toFind)
+            {
+                isFound = true;
+            }
+
+            return isFound;
+        };
+    uint32_t                            value               = 1U;
+    uint32_t                            index               = 0U;
+    const uint32_t                      MAX                 = 3U;
+
+    /* List is empty. */
+    it = list.begin();
+    TEST_ASSERT_TRUE(list.end() == it);
+    TEST_ASSERT_TRUE(list.rend() == it);
+    TEST_ASSERT_EQUAL_UINT32(0u, list.getNumOfElements());
+
+    /* Add one element. */
+    TEST_ASSERT_TRUE(list.append(value));
+    it = list.begin();
+    TEST_ASSERT_TRUE(list.begin() == it);
+    TEST_ASSERT_TRUE(list.rbegin() == it);
+    TEST_ASSERT_FALSE(list.end() == it);
+    TEST_ASSERT_FALSE(list.rend() == it);
+    TEST_ASSERT_EQUAL_UINT32(1u, list.getNumOfElements());
+
+    it = list.begin();
+    TEST_ASSERT_EQUAL_INT(value, *it);
+
+    it = list.rbegin();
+    TEST_ASSERT_EQUAL_INT(value, *it);
+
+    /* Add more elements */
+    for(index = value + 1; index <= MAX; ++index)
+    {
+        TEST_ASSERT_TRUE(list.append(index));
+        TEST_ASSERT_EQUAL_UINT32(index, list.getNumOfElements());
+
+        it = list.begin();
+        TEST_ASSERT_EQUAL_INT(value, *it);
+
+        it = list.rbegin();
+        TEST_ASSERT_EQUAL_INT(index, *it);
+    }
+
+    /* Select element for element, from head to tail. */
+    index = value;
+    for(it = list.begin(); it != list.end(); ++it)
+    {
+        TEST_ASSERT_EQUAL_INT(index, *it);
+        ++index;
+    }
+
+    /* Select element for element, from tail to head. */
+    index = MAX;
+    for(it = list.rbegin(); it != list.rend(); --it)
+    {
+        TEST_ASSERT_EQUAL_INT(index, *it);
+        --index;
+    }
+
+    /* Find not existing element */
+    it = list.find(MAX + 1, compareFunc);
+    TEST_ASSERT_TRUE(it == list.end());
+
+    /* Find existing element */
+    it = list.find(1, compareFunc);
+    TEST_ASSERT_TRUE(it == list.begin());
+    TEST_ASSERT_TRUE(it != list.end());
+
+    it = list.find(MAX, compareFunc);
+    TEST_ASSERT_TRUE(it == list.rbegin());
+    TEST_ASSERT_TRUE(it != list.end());
 }
