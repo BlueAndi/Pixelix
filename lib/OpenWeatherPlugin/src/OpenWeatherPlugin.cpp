@@ -875,7 +875,7 @@ void OpenWeatherPlugin::initHttpClient()
     );
 }
 
-void OpenWeatherPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
+void OpenWeatherPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
     if (nullptr != m_source)
     {
@@ -888,13 +888,11 @@ void OpenWeatherPlugin::prepareDataToShow()
 {
     if (nullptr != m_source)
     {
-        float   temperature             = m_source->getTemperature();
-        String  weatherIconId           = m_source->getWeatherIconId();
-        float   uvIndex                 = m_source->getUvIndex();
-        int     humidity                = m_source->getHumidity();
-        float   windSpeed               = m_source->getWindSpeed();
-        char    tempReducedPrecison[6]  = { 0 };
-        char    windReducedPrecison[5]  = { 0 };
+        float   temperature                     = m_source->getTemperature();
+        String  weatherIconId                   = m_source->getWeatherIconId();
+        float   uvIndex                         = m_source->getUvIndex();
+        int     humidity                        = m_source->getHumidity();
+        float   windSpeed                       = m_source->getWindSpeed();
         String  weatherConditionIconFullPath;
 
         /* Generate UV-Index string and adapt color of string accordingly. */
@@ -915,7 +913,8 @@ void OpenWeatherPlugin::prepareDataToShow()
         }
         else
         {
-            const char* reducePrecision = (temperature < -9.9F) ? "%.0f" : "%.1f";
+            const char* reducePrecision         = (temperature < -9.9F) ? "%.0f" : "%.1f";
+            char        tempReducedPrecison[6]  = { 0 };
 
             /* Generate temperature string with reduced precision and add unit °C/°F. */
             (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
@@ -938,6 +937,8 @@ void OpenWeatherPlugin::prepareDataToShow()
         }
         else
         {
+            char windReducedPrecison[5] = { 0 };
+
             (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
 
             m_currentWindspeed = "\\calign";

@@ -592,7 +592,7 @@ private:
      * 
      * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    void handleWebResponse(const DynamicJsonDocument& jsonDoc);
 
     /**
      * Prepares the data to show from the OpenWeather source data.
