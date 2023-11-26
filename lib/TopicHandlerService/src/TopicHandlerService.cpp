@@ -66,22 +66,13 @@ const char* TopicHandlerService::DEFAULT_ACCESS = "rw";
 
 bool TopicHandlerService::start()
 {
-    bool isSuccessful = true;
-
     startAllHandlers();
 
     m_onChangeTimer.start(ON_CHANGE_PERIOD);
 
-    if (false == isSuccessful)
-    {
-        stop();
-    }
-    else
-    {
-        LOG_INFO("Topic handler service started.");
-    }
+    LOG_INFO("Topic handler service started.");
 
-    return isSuccessful;
+    return true;
 }
 
 void TopicHandlerService::stop()
