@@ -126,7 +126,7 @@ bool GrabViaMqttPlugin::setTopic(const String& topic, const JsonObjectConst& val
             else if (true == jsonFilter.is<String>())
             {
                 const size_t            JSON_DOC_FILTER_SIZE    = 256U;
-                DynamicJsonDocument     jsonDocFilter(JSON_DOC_SIZE);
+                DynamicJsonDocument     jsonDocFilter(JSON_DOC_FILTER_SIZE);
                 DeserializationError    result = deserializeJson(jsonDocFilter, jsonFilter.as<String>());
 
                 if (DeserializationError::Ok == result)
