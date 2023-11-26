@@ -69,7 +69,7 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
 
         written = snprintf( buffer,
                             LOG_MESSAGE_BUFFER_SIZE - STR_CUT_OFF_SEQ_LEN + 1U, /* + 1U for cut off detection. */
-                            "%*u %*s %*s:%*d %s\n",
+                            "%*u %*s %*s:%.*d %s\n",
                             TIMESTAMP_LEN,
                             msg.timestamp,
                             LOG_LEVEL_LEN,

@@ -129,6 +129,7 @@ static void testLogging()
     const char*     LOG_MODULE      = strrchr(__FILE__, '\\'); /* Windows backslash */
     const char*     TEST_STRING_1   = "TestMessage";
     const String    TEST_STRING_2   = "TestMessageAsString";
+    const char*     LOG_FORMAT      = "%*s %*s:%.*d %s\n";
     char            expectedLogMessage[128];
     int             lineNo          = 0;
 
@@ -167,7 +168,7 @@ static void testLogging()
 
     /* Check expected error log output, with type const char* string. */
     LOG_ERROR(TEST_STRING_1); lineNo = __LINE__;
-    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "%*s %*s:%*d %s\n",
+    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), LOG_FORMAT,
         LogSinkPrinter::LOG_LEVEL_LEN,
         "ERROR  ",
         LogSinkPrinter::FILENAME_LEN,
@@ -184,7 +185,7 @@ static void testLogging()
 
     /* Check expected error log output, with type const String string. */
     LOG_ERROR(TEST_STRING_2);  lineNo = __LINE__;
-    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), "%*s %*s:%*d %s\n",
+    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), LOG_FORMAT,
         LogSinkPrinter::LOG_LEVEL_LEN,
         "ERROR  ",
         LogSinkPrinter::FILENAME_LEN,
