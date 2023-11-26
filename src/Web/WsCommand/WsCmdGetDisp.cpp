@@ -84,7 +84,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         if (nullptr == framebuffer)
         {
-            m_isError = true;
+            sendNegativeResponse(server, client, "\"Internal error.\"");
         }
         else
         {
