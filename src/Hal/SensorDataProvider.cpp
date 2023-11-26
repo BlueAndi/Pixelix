@@ -283,11 +283,12 @@ bool SensorDataProvider::load()
     JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint8_t             sensorIdx               = 0U;
-    const uint8_t       SENSOR_CNT              = m_impl->getNumSensors();
 
     if (true == jsonFile.load(SENSOR_CALIB_FILE_NAME, jsonDoc))
     {
+        uint8_t         sensorIdx   = 0U;
+        const uint8_t   SENSOR_CNT  = m_impl->getNumSensors();
+
         while(SENSOR_CNT > sensorIdx)
         {
             ISensor* sensor = m_impl->getSensor(sensorIdx);
@@ -416,14 +417,7 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
         {
             const SensorChannelUInt32* uint32Channel = reinterpret_cast<const SensorChannelUInt32*>(&channel);
 
-            if (nullptr == uint32Channel)
-            {
-                jsonOffset.add("NaN");
-            }
-            else
-            {
-                jsonOffset.add(uint32Channel->getOffset());
-            }
+            jsonOffset.add(uint32Channel->getOffset());
         }
         break;
 
@@ -431,15 +425,7 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
         {
             const SensorChannelInt32* int32Channel = reinterpret_cast<const SensorChannelInt32*>(&channel);
 
-            if (nullptr == int32Channel)
-            {
-                jsonOffset.add("NaN");
-            }
-            else
-            {
-                jsonOffset.add(int32Channel->getOffset());
-            }
-
+            jsonOffset.add(int32Channel->getOffset());
         }
         break;
 
@@ -447,14 +433,7 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
         {
             const SensorChannelFloat32* float32Channel = reinterpret_cast<const SensorChannelFloat32*>(&channel);
 
-            if (nullptr == float32Channel)
-            {
-                jsonOffset.add("NaN");
-            }
-            else
-            {
-                jsonOffset.add(float32Channel->getOffset());
-            }
+            jsonOffset.add(float32Channel->getOffset());
         }
         break;
 
@@ -479,8 +458,7 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
         {
             SensorChannelUInt32* uint32Channel = reinterpret_cast<SensorChannelUInt32*>(&channel);
 
-            if ((nullptr != uint32Channel) &&
-                (true == jsonOffset.is<uint32_t>()))
+            if (true == jsonOffset.is<uint32_t>())
             {
                 uint32Channel->setOffset(jsonOffset.as<uint32_t>());
             }
@@ -491,8 +469,7 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
         {
             SensorChannelInt32* int32Channel = reinterpret_cast<SensorChannelInt32*>(&channel);
 
-            if ((nullptr != int32Channel) &&
-                (true == jsonOffset.is<int32_t>()))
+            if (true == jsonOffset.is<int32_t>())
             {
                 int32Channel->setOffset(jsonOffset.as<int32_t>());
             }
@@ -503,8 +480,7 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
         {
             SensorChannelFloat32* float32Channel = reinterpret_cast<SensorChannelFloat32*>(&channel);
 
-            if ((nullptr != float32Channel) &&
-                (true == jsonOffset.is<float>()))
+            if (true == jsonOffset.is<float>())
             {
                 float32Channel->setOffset(jsonOffset.as<float>());
             }
@@ -516,6 +492,7 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
         break;
 
     default:
+        /* Not supported. */
         break;
     }
 }
@@ -532,32 +509,28 @@ void SensorDataProvider::createCalibrationFile()
 
         for(index = 0U; index < defaultValues; ++index)
         {
-            const SensorChannelDefaultValue* value = &sensorChannelDefaultValueList[index];
+            const SensorChannelDefaultValue*    value   = &sensorChannelDefaultValueList[index];
+            ISensor*                            sensor  = getSensor(value->sensorId);
 
-            if (nullptr != value)
+            if (nullptr == sensor)
             {
-                ISensor* sensor = getSensor(value->sensorId);
+                LOG_ERROR("Sensor %u doesn't exists.", value->sensorId);
+            }
+            else
+            {
+                ISensorChannel* channel = sensor->getChannel(value->channelId);
 
-                if (nullptr == sensor)
+                if (nullptr == channel)
                 {
-                    LOG_ERROR("Sensor %u doesn't exists.", value->sensorId);
+                    LOG_ERROR("Sensor %u has no channel %u.", value->sensorId, value->channelId);
                 }
                 else
                 {
-                    ISensorChannel* channel = sensor->getChannel(value->channelId);
+                    DynamicJsonDocument jsonDoc(256U);
 
-                    if (nullptr == channel)
+                    if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
                     {
-                        LOG_ERROR("Sensor %u has no channel %u.", value->sensorId, value->channelId);
-                    }
-                    else
-                    {
-                        DynamicJsonDocument jsonDoc(256U);
-
-                        if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
-                        {
-                            channelOffsetFromJson(*channel, jsonDoc["offset"]);
-                        }
+                        channelOffsetFromJson(*channel, jsonDoc["offset"]);
                     }
                 }
             }
