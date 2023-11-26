@@ -147,6 +147,7 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
         DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonSourceId            = value["sourceId"];
+        JsonVariantConst    jsonUpdatePeriod        = value["updatePeriod"];
         JsonVariantConst    jsonApiKey              = value["apiKey"];
         JsonVariantConst    jsonLatitude            = value["latitude"];
         JsonVariantConst    jsonLongitude           = value["longitude"];
@@ -167,6 +168,12 @@ bool OpenWeatherPlugin::setTopic(const String& topic, const JsonObjectConst& val
         if (false == jsonSourceId.isNull())
         {
             jsonCfg["sourceId"] = jsonSourceId.as<int>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonUpdatePeriod.isNull())
+        {
+            jsonCfg["updatePeriod"] = jsonUpdatePeriod.as<uint32_t>();
             isSuccessful = true;
         }
 
@@ -357,7 +364,7 @@ void OpenWeatherPlugin::process(bool isConnected)
             }
             else
             {
-                m_requestTimer.start(UPDATE_PERIOD);
+                m_requestTimer.start(m_updatePeriod);
             }
         }
     }
@@ -383,7 +390,7 @@ void OpenWeatherPlugin::process(bool isConnected)
             }
             else
             {
-                m_requestTimer.start(UPDATE_PERIOD);
+                m_requestTimer.start(m_updatePeriod);
             }
         }
     }
@@ -532,6 +539,7 @@ void OpenWeatherPlugin::getConfiguration(JsonObject& jsonCfg) const
     else
     {
         jsonCfg["sourceId"]     = static_cast<int>(m_sourceId);
+        jsonCfg["updatePeriod"] = m_updatePeriod / (60U * 1000U); /* Conversion from ms to minutes. */
         jsonCfg["apiKey"]       = m_source->getApiKey();
         jsonCfg["latitude"]     = m_source->getLatitude();
         jsonCfg["longitude"]    = m_source->getLongitude();
@@ -542,17 +550,25 @@ void OpenWeatherPlugin::getConfiguration(JsonObject& jsonCfg) const
 
 bool OpenWeatherPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 {
-    bool                status          = false;
-    JsonVariantConst	jsonSourceId    = jsonCfg["sourceId"];
-    JsonVariantConst    jsonApiKey      = jsonCfg["apiKey"];
-    JsonVariantConst    jsonLatitude    = jsonCfg["latitude"];
-    JsonVariantConst    jsonLongitude   = jsonCfg["longitude"];
-    JsonVariantConst    jsonOther       = jsonCfg["other"];
-    JsonVariantConst    jsonUnits       = jsonCfg["units"];
+    bool                status              = false;
+    JsonVariantConst	jsonSourceId        = jsonCfg["sourceId"];
+    JsonVariantConst    jsonUpdatePeriod    = jsonCfg["updatePeriod"];
+    JsonVariantConst    jsonApiKey          = jsonCfg["apiKey"];
+    JsonVariantConst    jsonLatitude        = jsonCfg["latitude"];
+    JsonVariantConst    jsonLongitude       = jsonCfg["longitude"];
+    JsonVariantConst    jsonOther           = jsonCfg["other"];
+    JsonVariantConst    jsonUnits           = jsonCfg["units"];
+
+    const uint32_t      UPDATE_PERIOD_LOWER_LIMIT   = 1U;   /* minutes */
+    const uint32_t      UPDATE_PERIOD_UPPER_LIMIT   = 120U; /* minutes */
 
     if (false == jsonSourceId.is<int>())
     {
         LOG_WARNING("Source id not found or invalid type.");
+    }
+    else if (false == jsonUpdatePeriod.is<uint32_t>())
+    {
+        LOG_WARNING("Update period not found or invalid type.");
     }
     else if (false == jsonApiKey.is<String>())
     {
@@ -584,6 +600,18 @@ bool OpenWeatherPlugin::setConfiguration(JsonObjectConst& jsonCfg)
             destroyOpenWeatherSource();
             m_sourceId = sourceId;
             createOpenWeatherSource(m_sourceId);
+        }
+
+        m_updatePeriod = jsonUpdatePeriod.as<uint32_t>();
+
+        if ((UPDATE_PERIOD_LOWER_LIMIT > m_updatePeriod) ||
+            (UPDATE_PERIOD_UPPER_LIMIT < m_updatePeriod))
+        {
+            m_updatePeriod = UPDATE_PERIOD;
+        }
+        else
+        {
+            m_updatePeriod = SIMPLE_TIMER_MINUTES(m_updatePeriod);
         }
 
         if (nullptr == m_source)

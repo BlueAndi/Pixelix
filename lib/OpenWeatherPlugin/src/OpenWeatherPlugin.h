@@ -106,6 +106,7 @@ public:
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
         m_sourceId(OPENWEATHER_SOURCE_ONE_CALL_25),
+        m_updatePeriod(UPDATE_PERIOD),
         m_source(nullptr),
         m_additionalInformation(OTHER_WEATHER_INFO_OFF),
         m_configurationFilename(),
@@ -474,6 +475,7 @@ private:
     BitmapWidget                m_bitmapWidget;                 /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;                   /**< Text widget, used for showing the text. */
     OpenWeatherSource           m_sourceId;                     /**< OpenWeather source id. */
+    uint32_t                    m_updatePeriod;                 /**< Period in ms for requesting data from server. This is used in case the last request to the server was successful. */
     IOpenWeatherSource*         m_source;                       /**< OpenWeather source to use to retrieve weather information. */
     OtherWeatherInformation     m_additionalInformation;        /**< The configured additional weather information. */
     String                      m_configurationFilename;        /**< String used for specifying the configuration filename. */
