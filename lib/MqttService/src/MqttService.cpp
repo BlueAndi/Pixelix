@@ -324,8 +324,6 @@ void MqttService::disconnectedState()
             /* Connection to broker successful. */
             else
             {
-                String willTopic = m_hostname + "/status";
-
                 LOG_INFO("Connection to MQTT broker established.");
 
                 m_state = STATE_CONNECTED;
