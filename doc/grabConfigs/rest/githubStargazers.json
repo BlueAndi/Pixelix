@@ -5,7 +5,7 @@
       "stargazers_count": true
     },
     "iconPath": "/configuration/github.bmp",
-    "format": "\\calign%s",
+    "format": "\\calign%.0f",
     "multiplier": 1,
     "offset": 0
   }

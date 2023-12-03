@@ -515,7 +515,8 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
         getJsonValueByFilter(jsonDoc.as<JsonObjectConst>(), m_filter.as<JsonObjectConst>(), jsonValue);
 
         /* Is it a number? */
-        if (true == jsonValue.is<float>())
+        if ((true == jsonValue.is<float>()) &&
+            (0 > m_format.indexOf("%s"))) /* Prevent mistake which may cause a LoadProhibited core panic by snprintf. */
         {
             const size_t    BUFFER_SIZE = 128U;
             char            buffer[BUFFER_SIZE];
