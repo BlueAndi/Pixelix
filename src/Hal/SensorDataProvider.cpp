@@ -615,7 +615,6 @@ void SensorDataProvider::registerSensorTopics()
     }
 }
 
-
 void SensorDataProvider::unregisterSensorTopics()
 {
     uint8_t                 index                   = 0U;
