@@ -395,6 +395,14 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle asynchronous web response from the server.
+     * This will be called in LwIP context! Don't modify any member here directly!
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleAsyncWebResponse(const HttpResponse& rsp);
+
+    /**
      * Handle a web response from the server.
      * 
      * @param[in] jsonDoc   Web response as JSON document

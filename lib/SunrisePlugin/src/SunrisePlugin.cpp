@@ -39,6 +39,7 @@
 
 #include <ArduinoJson.h>
 #include <Logging.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -441,68 +442,75 @@ void SunrisePlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
+            handleAsyncWebResponse(rsp);
+        }
+    );
+}
 
-            const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+void SunrisePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        const size_t            JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
-            if (nullptr != jsonDoc)
+        if (nullptr != jsonDoc)
+        {
+            size_t                          payloadSize = 0U;
+            const void*                     vPayload    = rsp.getPayload(payloadSize);
+            const char*                     payload     = static_cast<const char*>(vPayload);
+            const size_t                    FILTER_SIZE = 128U;
+            StaticJsonDocument<FILTER_SIZE> filter;
+            DeserializationError            error;
+
+            /* Example:
+            * {
+            *   "results":
+            *   {
+            *     "sunrise":"2015-05-21T05:05:35+00:00",
+            *     "sunset":"2015-05-21T19:22:59+00:00",
+            *     "solar_noon":"2015-05-21T12:14:17+00:00",
+            *     "day_length":51444,
+            *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
+            *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
+            *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
+            *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
+            *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
+            *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
+            *   },
+            *    "status":"OK"
+            * }
+            */
+
+            filter["results"]["sunrise"]    = true;
+            filter["results"]["sunset"]     = true;
+
+            if (true == filter.overflowed())
             {
-                size_t                          payloadSize = 0U;
-                const void*                     vPayload    = rsp.getPayload(payloadSize);
-                const char*                     payload     = static_cast<const char*>(vPayload);
-                const size_t                    FILTER_SIZE = 128U;
-                StaticJsonDocument<FILTER_SIZE> filter;
-                DeserializationError            error;
+                LOG_ERROR("Less memory for filter available.");
+            }
 
-                /* Example:
-                * {
-                *   "results":
-                *   {
-                *     "sunrise":"2015-05-21T05:05:35+00:00",
-                *     "sunset":"2015-05-21T19:22:59+00:00",
-                *     "solar_noon":"2015-05-21T12:14:17+00:00",
-                *     "day_length":51444,
-                *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
-                *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
-                *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
-                *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
-                *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
-                *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
-                *   },
-                *    "status":"OK"
-                * }
-                */
+            error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
 
-                filter["results"]["sunrise"]    = true;
-                filter["results"]["sunset"]     = true;
+            if (DeserializationError::Ok != error.code())
+            {
+                LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+            }
+            else
+            {
+                Msg msg;
 
-                if (true == filter.overflowed())
+                msg.type    = MSG_TYPE_RSP;
+                msg.rsp     = jsonDoc;
+
+                if (false == this->m_taskProxy.send(msg))
                 {
-                    LOG_ERROR("Less memory for filter available.");
-                }
-
-                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-                if (DeserializationError::Ok != error.code())
-                {
-                    LOG_ERROR("Invalid JSON message received: %s", error.c_str());
-                }
-                else
-                {
-                    Msg msg;
-
-                    msg.type    = MSG_TYPE_RSP;
-                    msg.rsp     = jsonDoc;
-
-                    if (false == this->m_taskProxy.send(msg))
-                    {
-                        delete jsonDoc;
-                        jsonDoc = nullptr;
-                    }
+                    delete jsonDoc;
+                    jsonDoc = nullptr;
                 }
             }
         }
-    );
+    }
 }
 
 void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)

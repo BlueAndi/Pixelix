@@ -36,6 +36,7 @@
 
 #include <Logging.h>
 #include <ArduinoJson.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -600,42 +601,7 @@ void GrabViaRestPlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
-            const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
-
-            if (nullptr != jsonDoc)
-            {
-                size_t                  payloadSize = 0U;
-                const void*             vPayload    = rsp.getPayload(payloadSize);
-                const char*             payload     = static_cast<const char*>(vPayload);
-                const size_t            FILTER_SIZE = 128U;
-                DeserializationError    error;
-                
-                if (true == m_filter.overflowed())
-                {
-                    LOG_ERROR("Less memory for filter available.");
-                }
-
-                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
-
-                if (DeserializationError::Ok != error.code())
-                {
-                    LOG_WARNING("JSON parse error: %s", error.c_str());
-                }
-                else
-                {
-                    Msg msg;
-
-                    msg.type    = MSG_TYPE_RSP;
-                    msg.rsp     = jsonDoc;
-
-                    if (false == this->m_taskProxy.send(msg))
-                    {
-                        delete jsonDoc;
-                        jsonDoc = nullptr;
-                    }
-                }
-            }
+            handleAsyncWebResponse(rsp);
         }
     );
 
@@ -660,6 +626,49 @@ void GrabViaRestPlugin::initHttpClient()
             (void)this->m_taskProxy.send(msg);
         }
     );
+}
+
+void GrabViaRestPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        const size_t            JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+
+        if (nullptr != jsonDoc)
+        {
+            size_t                  payloadSize = 0U;
+            const void*             vPayload    = rsp.getPayload(payloadSize);
+            const char*             payload     = static_cast<const char*>(vPayload);
+            const size_t            FILTER_SIZE = 128U;
+            DeserializationError    error;
+            
+            if (true == m_filter.overflowed())
+            {
+                LOG_ERROR("Less memory for filter available.");
+            }
+
+            error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
+
+            if (DeserializationError::Ok != error.code())
+            {
+                LOG_WARNING("JSON parse error: %s", error.c_str());
+            }
+            else
+            {
+                Msg msg;
+
+                msg.type    = MSG_TYPE_RSP;
+                msg.rsp     = jsonDoc;
+
+                if (false == this->m_taskProxy.send(msg))
+                {
+                    delete jsonDoc;
+                    jsonDoc = nullptr;
+                }
+            }
+        }
+    }
 }
 
 void GrabViaRestPlugin::getJsonValueByFilter(JsonObjectConst src, JsonObjectConst filter, JsonVariantConst& value)

@@ -40,6 +40,7 @@
 #include <ArduinoJson.h>
 #include <Util.h>
 #include <math.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -835,48 +836,7 @@ void OpenWeatherPlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
-            if (nullptr != m_source)
-            {
-                const size_t            JSON_DOC_SIZE   = 256U;
-                DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
-
-                if (nullptr != jsonDoc)
-                {
-                    size_t                          payloadSize     = 0U;
-                    const void*                     vPayload        = rsp.getPayload(payloadSize);
-                    const char*                     payload         = static_cast<const char*>(vPayload);
-                    const size_t                    FILTER_SIZE     = 128U;
-                    StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
-                    DeserializationError            error;
-
-                    m_source->getFilter(jsonFilterDoc);
-
-                    if (true == jsonFilterDoc.overflowed())
-                    {
-                        LOG_ERROR("Less memory for filter available.");
-                    }
-
-                    error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
-
-                    if (DeserializationError::Ok != error.code())
-                    {
-                        LOG_WARNING("JSON parse error: %s", error.c_str());
-                    }
-                    else
-                    {
-                        Msg msg;
-
-                        msg.type    = MSG_TYPE_RSP;
-                        msg.rsp     = jsonDoc;
-
-                        if (false == this->m_taskProxy.send(msg))
-                        {
-                            delete jsonDoc;
-                            jsonDoc = nullptr;
-                        }
-                    }
-                }
-            }
+            handleAsyncWebResponse(rsp);
         }
     );
 
@@ -901,6 +861,55 @@ void OpenWeatherPlugin::initHttpClient()
             (void)this->m_taskProxy.send(msg);
         }
     );
+}
+
+void OpenWeatherPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        if (nullptr != m_source)
+        {
+            const size_t            JSON_DOC_SIZE   = 256U;
+            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+
+            if (nullptr != jsonDoc)
+            {
+                size_t                          payloadSize     = 0U;
+                const void*                     vPayload        = rsp.getPayload(payloadSize);
+                const char*                     payload         = static_cast<const char*>(vPayload);
+                const size_t                    FILTER_SIZE     = 128U;
+                StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
+                DeserializationError            error;
+
+                m_source->getFilter(jsonFilterDoc);
+
+                if (true == jsonFilterDoc.overflowed())
+                {
+                    LOG_ERROR("Less memory for filter available.");
+                }
+
+                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_WARNING("JSON parse error: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void OpenWeatherPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
