@@ -90,7 +90,7 @@
                     </div>
                     <div class="form-group">
                         <label for="icon">Icon:</label>
-                        <input id="icon" type="file" />    
+                        <input id="icon" type="file" accept=".bmp" />    
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
@@ -103,7 +103,7 @@
                     </div>
                     <div class="form-group">
                         <label for="spriteSheet">Sprite sheet:</label>
-                        <input id="spriteSheet" type="file" />
+                        <input id="spriteSheet" type="file" accept=".sprite"/>
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
@@ -228,7 +228,11 @@
                     updateForms();
                     alert("Ok.");
                 }).catch(function(rsp) {
-                    alert("Failed.");
+                    if (("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
+                        alert("Error: " + rsp.error.msg);
+                    } else {
+                        alert("Failed.");
+                    }
                 }).finally(function() {
                     enableUI();
                 });
@@ -251,7 +255,11 @@
                     updateForms();
                     alert("Ok.");
                 }).catch(function(rsp) {
-                    alert("Failed.");
+                    if (("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
+                        alert("Error: " + rsp.error.msg);
+                    } else {
+                        alert("Failed.");
+                    }
                 }).finally(function() {
                     enableUI();
                 });
