@@ -6,7 +6,7 @@ dialog._show = function(title, message) {
         $("#dialogTitle").text(title);
         $("#dialogBody").html(message);
 
-        $("#modalDialog").on("shown.bs.modal", function() { 
+        $("#modalDialog").on("shown.bs.modal", function() {
             $("#modalDialog").off("shown.bs.modal");
             resolve();
         });
@@ -18,7 +18,7 @@ dialog._show = function(title, message) {
 dialog.hide = function() {
     return new Promise(function(resolve, reject) {
 
-        $("#modalDialog").on("hidden.bs.modal", function() { 
+        $("#modalDialog").on("hidden.bs.modal", function() {
             $("#modalDialog").off("hidden.bs.modal");
             resolve();
         });

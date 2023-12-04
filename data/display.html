@@ -78,7 +78,7 @@
                 </p>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
@@ -131,7 +131,7 @@
             /* If websocket connection is unexpectedly closed, clean up. */
             function wsOnClosed() {
                 disableUI();
-                
+
                 window.clearTimeout(timerId);
 
                 if (false === isPageUnload) {
@@ -244,7 +244,7 @@
                 }).finally(function() {
                 });
             }
-            
+
             function updateFadeEffect() {
                 /* Update label accordingly. */
                 if (1 === currentFadeEffect) {
@@ -382,7 +382,7 @@
                             } else {
                                 $divSlot.attr("class", "divSlot sticky");
                             }
-                            
+
                             $divSlot.attr("ondragover", "allowDrop(event)");
                             $divSlot.attr("ondrop", "drop(event)");
                         } else {
@@ -395,7 +395,7 @@
                         }
 
                         $divSlot.attr("id", index);
-                        
+
                         $header = $("<header>");
                         $header.append("Slot " + index + "<br />");
 
@@ -406,7 +406,7 @@
                             .attr("min", "1")
                             .attr("max", "3600")
                             .attr("onchange", "setDuration(" + index + ")");
-                        
+
                         $header.append($inputDuration);
                         $header.append("[s]");
 
@@ -457,12 +457,12 @@
                         .attr("ondragover", "allowDrop(event)")
                         .attr("ondrop", "drop(event)")
                         .attr("id", "uninstall");
-                    
+
                     $header = $("<header>")
                         .text("Uninstall");
-                    
+
                     $divSlot.append($header);
-                    
+
                     $divSlots.append($divSlot);
                 });
             }

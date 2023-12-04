@@ -71,11 +71,11 @@ utils.makeRequest = function(options) {
                     xhr.setRequestHeader(key, options.headers[key]);
                 });
             }
-            
+
             if ("function" === typeof options.onProgress) {
                 xhr.upload.onprogress = options.onProgress;
             }
-            
+
             xhr.onload = function() {
                 var jsonRsp = null;
 

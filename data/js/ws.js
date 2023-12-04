@@ -30,7 +30,7 @@ pixelix.ws.getLogLevelStr = function(logLevel) {
     case 5:
         str = "TRACE";
         break;
-    
+
     default:
         str = "UNKNWON";
         break;
