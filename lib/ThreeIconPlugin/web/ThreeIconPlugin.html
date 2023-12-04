@@ -302,21 +302,25 @@
             function setIcon(pluginUid, file, index) {
                 disableUI();
 
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap/" + index,
-                    isJsonResponse: true,
-                    parameter: {
-                        file: file
-                    },
-                    headers: {
-                        "X-File-Size": file.size
-                    }
+                return utils.checkBMPFile(file).then(function() {
+                    return utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap/" + index,
+                        isJsonResponse: true,
+                        parameter: {
+                            file: file
+                        },
+                        headers: {
+                            "X-File-Size": file.size
+                        }
+                    });
                 }).then(function(rsp) {
                     updateForms();
                     alert("Ok.");
                 }).catch(function(rsp) {
-                    if (("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
+                    if ("string" === typeof rsp) {
+                        alert("Error: " + rsp);
+                    } else if (("undefined" !== typeof rsp) && ("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
                         alert("Error: " + rsp.error.msg);
                     } else {
                         alert("Failed.");

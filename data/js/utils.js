@@ -33,6 +33,7 @@ utils.makeRequest = function(options) {
             var urlEncodedPar   = "";
             var isJsonResponse  = false;
             var isFirst         = true;
+            var key;
 
             if ("object" === typeof options.formData) {
                 formData = options.formData;
@@ -41,7 +42,7 @@ utils.makeRequest = function(options) {
                 if ("get" === options.method.toLowerCase()) {
                     urlEncodedPar += "?";
 
-                    for(var key in options.parameter) {
+                    for(key in options.parameter) {
                         if (true === isFirst) {
                             isFirst = false;
                         } else {
@@ -54,7 +55,7 @@ utils.makeRequest = function(options) {
                 } else {
                     formData = new FormData();
 
-                    for(var key in options.parameter) {
+                    for(key in options.parameter) {
                         formData.append(key, options.parameter[key]);
                     }
                 }
@@ -126,5 +127,41 @@ utils.readJsonFile = function(file) {
             }
         }
         rawFile.send(null);
+    });
+};
+
+utils.checkBMPFile = function(file) {
+    return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+            resolve(e.target.result);
+        };
+
+        reader.readAsArrayBuffer(file);
+    }).then(function(buffer) {
+        var bitmapHeaderSize = 54;
+        var header = new Uint8Array(buffer, 0, bitmapHeaderSize);
+        var planes = (header[27] << 8) | (header[26] << 0);
+        var bitsPerPixel = (header[29] << 8) | (header[28] << 0);
+        var compression = (header[33] << 24) | (header[32] << 16) | (header[31] << 8) | (header[30] << 0);
+        var paletteColors = (header[49] << 24) | (header[48] << 16) | (header[47] << 8) | (header[46] << 0);
+        var promise = null;
+
+        if ("BM" !== String.fromCharCode.apply(null, header.subarray(0, 2))) {
+            promise = Promise.reject("No bitmap file.");
+        } else if (1 !== planes) {
+            promise = Promise.reject("Only 1 plane is supported.");
+        } else if ((24 !== bitsPerPixel) && (32 !== bitsPerPixel)) {
+            promise = Promise.reject("Only 24 or 32 bpp are supported.");
+        } else if (0 !== compression) {
+            promise = Promise.reject("No compression is supported.");
+        } else if (0 !== paletteColors) {
+            promise = Promise.reject("Color palette not supported.");
+        } else {
+            promise = Promise.resolve();
+        }
+
+        return promise;
     });
 };
