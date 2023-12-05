@@ -69,10 +69,7 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
         m_statusCode    = rsp.m_statusCode;
         m_reasonPhrase  = rsp.m_reasonPhrase;
 
-        if (nullptr != m_payload)
-        {
-            delete[] m_payload;
-        }
+        clearPayload();
 
         if (nullptr != rsp.m_payload)
         {
@@ -90,6 +87,8 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& rsp)
                 m_wrIndex = rsp.m_wrIndex;
             }
         }
+
+        clearHeaders();
 
         if (true == it.first())
         {
