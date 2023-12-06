@@ -64,9 +64,9 @@ typedef struct _BmpFileHeader
 } __attribute__ ((packed)) BmpFileHeader;
 
 /**
- * Device independent header (DIB): The bitmap v5 header.
+ * Device independent header (DIB): The bitmap info header (size: 40 bytes).
  */
-typedef struct _BmpV5Header
+typedef struct _BmpInfoHeader
 {
     uint32_t    headerSize;     /**< The size of this header. */
     int32_t     imageWidth;     /**< The bitmap width in pixels. */
@@ -79,6 +79,28 @@ typedef struct _BmpV5Header
     uint32_t	verticalRes;    /**< The vertical resolution of the image. (pixel per metre, signed integer) */
     uint32_t    paletteColors;  /**< The number of colors in the color palette, or 0 to default to 2^n */
     uint32_t    importantColors;/**< The number of important colors used, or 0 when every color is important; generally ignored. */
+
+} __attribute__ ((packed)) BmpInfoHeader;
+
+/**
+ * Device independent header (DIB): The bitmap v5 header (size: 124 bytes).
+ */
+typedef struct _BmpV5Header
+{
+    BmpInfoHeader   infoHeader;             /**< Bitmap info header. */
+    uint32_t        redChannelBitmask;      /**< Read channel bitmask. */
+    uint32_t        greenChannelBitmask;    /**< Read channel bitmask. */
+    uint32_t        blueChannelBitmask;     /**< Read channel bitmask. */
+    uint32_t        alphaChannelBitmask;    /**< Alpha channel bitmask. */
+    uint32_t        colorSpaceType;         /**< Color space type. */
+    uint32_t        colorSpaceEndpoints;    /**< Color space endpoints. */
+    uint32_t        gammaRedChannel;        /**< Gamma for red channel. */
+    uint32_t        gammaGreenChannel;      /**< Gamma for green channel. */
+    uint32_t        gammaBlueChannel;       /**< Gamma for blue channel. */
+    uint32_t        intent;                 /**< Intent. */
+    uint32_t        iccProfileData;         /**< ICC profile data. */
+    uint32_t        iccProfileSize;         /**< ICC profile size. */
+    uint32_t        reserved;               /**< Reserved. */
 
 } __attribute__ ((packed)) BmpV5Header;
 
@@ -136,30 +158,28 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
         {
             ret = RET_FILE_FORMAT_INVALID;
         }
-        /* Contains the bitmap file the supported DIB header?
-         * Planes must be 1.
+        /* Planes must be 1.
          * Compression is not supported.
          * Palette colors are not supported.
          * 24 and 32 bits per pixel are supported.
          */
-        else if ((sizeof(dibHeader) != dibHeader.headerSize) ||
-                 (1 != dibHeader.planes) ||
-                 (COMPRESSION_METHOD_RGB != dibHeader.compression) ||
-                 (0 < dibHeader.paletteColors) ||
-                 ((24 != dibHeader.bpp) && (32 != dibHeader.bpp)))
+        else if ((1U != dibHeader.infoHeader.planes) ||
+                 (COMPRESSION_METHOD_RGB != dibHeader.infoHeader.compression) ||
+                 (0U < dibHeader.infoHeader.paletteColors) ||
+                 ((24U != dibHeader.infoHeader.bpp) && (32U != dibHeader.infoHeader.bpp)))
         {
             ret = RET_FILE_FORMAT_UNSUPPORTED;
         }
         /* Supported image size is limited. */
-        else if ((UINT16_MAX < dibHeader.imageWidth) ||
-                 (UINT16_MAX < dibHeader.imageHeight))
+        else if ((UINT16_MAX < dibHeader.infoHeader.imageWidth) ||
+                 (UINT16_MAX < dibHeader.infoHeader.imageHeight))
         {
             ret = RET_IMG_TOO_BIG;
         }
         else
         {
-            uint16_t width  = abs(dibHeader.imageWidth);
-            uint16_t height = abs(dibHeader.imageHeight);
+            uint16_t width  = abs(dibHeader.infoHeader.imageWidth);
+            uint16_t height = abs(dibHeader.infoHeader.imageHeight);
 
             bitmap.release();
 
@@ -173,16 +193,16 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
                 uint32_t    rowSize         = 0;
                 int16_t     y               = 0;
                 bool        isTopToBottom   = false;
-                uint16_t    bytePerPixel    = dibHeader.bpp / 8;
+                uint16_t    bytePerPixel    = dibHeader.infoHeader.bpp / 8;
 
                 /* The bits representing the bitmap pixels are packed in rows.
                  * The size of each row is rounded up to a multiple of 4 bytes
                  * (a 32-bit DWORD) by padding.
                  */
-                rowSize =  (dibHeader.bpp * bitmap.getWidth() + 31) / 32 * 4;
+                rowSize =  (dibHeader.infoHeader.bpp * bitmap.getWidth() + 31) / 32 * 4;
 
                 /* ImageHeight is expressed as a negative number for top-down images. */
-                if (0 > dibHeader.imageHeight)
+                if (0 > dibHeader.infoHeader.imageHeight)
                 {
                     isTopToBottom = true;
                 }
@@ -248,9 +268,11 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
 
 bool BmpImgLoader::loadBmpFileHeader(File& fd, BmpFileHeader& header)
 {
-    bool isSuccessful = true;
+    bool        isSuccessful    = true;
+    void*       vHeader         = &header;
+    uint8_t*    u8Header        = static_cast<uint8_t*>(vHeader);
 
-    if (sizeof(header) != fd.read(reinterpret_cast<uint8_t*>(&header), sizeof(header)))
+    if (sizeof(header) != fd.read(u8Header, sizeof(header)))
     {
         isSuccessful = false;
     }
@@ -260,11 +282,45 @@ bool BmpImgLoader::loadBmpFileHeader(File& fd, BmpFileHeader& header)
 
 bool BmpImgLoader::loadDibHeader(File& fd, BmpV5Header& header)
 {
-    bool isSuccessful = true;
+    bool        isSuccessful    = true;
+    uint32_t    dibHeaderSize   = 0U;
+    void*       vDibHeaderSize  = &dibHeaderSize;
+    uint8_t*    u8DibHeaderSize = static_cast<uint8_t*>(vDibHeaderSize);
 
-    if (sizeof(header) != fd.read(reinterpret_cast<uint8_t*>(&header), sizeof(header)))
+    memset(&header, 0, sizeof(header));
+
+    if (sizeof(dibHeaderSize) != fd.read(u8DibHeaderSize, sizeof(dibHeaderSize)))
     {
         isSuccessful = false;
+    }
+    else
+    {
+        const uint32_t  DIB_HEADER_SIZE     = sizeof(BmpInfoHeader);
+        const uint32_t  DIB_HEADER_V5_SIZE  = 124U;
+        void*           vHeader             = &header;
+        uint8_t*        u8Header            = static_cast<uint8_t*>(vHeader);
+
+        if (false == fd.seek(fd.position() - sizeof(dibHeaderSize), SeekSet))
+        {
+            isSuccessful = false;
+        }
+        else if ((DIB_HEADER_SIZE != dibHeaderSize) &&
+                 (DIB_HEADER_V5_SIZE != dibHeaderSize))
+        {
+            isSuccessful = false;
+        }
+        else
+        {
+            if (DIB_HEADER_V5_SIZE == dibHeaderSize)
+            {
+                dibHeaderSize = sizeof(BmpV5Header);
+            }
+
+            if (dibHeaderSize != fd.read(u8Header, dibHeaderSize))
+            {
+                isSuccessful = false;
+            }
+        }
     }
 
     return isSuccessful;
