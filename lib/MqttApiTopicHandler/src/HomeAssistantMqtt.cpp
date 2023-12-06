@@ -129,14 +129,15 @@ void HomeAssistantMqtt::process(bool isConnected)
     {
         if (true == isConnected)
         {
+            /* Connection to broker re-estiablished?
+             * All automatic discovery info's need to be published again.
+             */
             if (false == m_isConnected)
             {
-                publishAllAutoDiscoveryInfo(true);
+                requestToPublishAllAutoDiscoveryInfos();
             }
-            else
-            {
-                publishAllAutoDiscoveryInfo(false);
-            }
+
+            publishAutoDiscoveryInfosOnDemand();
         }
     }
 
@@ -377,11 +378,9 @@ void HomeAssistantMqtt::publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscover
             LOG_INFO("HA discovery info of %s published.", mqttDiscoveryInfo.objectId.c_str());
         }
     }
-
-    mqttDiscoveryInfo.isReqToPublish = false;
 }
 
-void HomeAssistantMqtt::publishAllAutoDiscoveryInfo(bool force)
+void HomeAssistantMqtt::requestToPublishAllAutoDiscoveryInfos()
 {
     ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
 
@@ -391,10 +390,31 @@ void HomeAssistantMqtt::publishAllAutoDiscoveryInfo(bool force)
 
         if (nullptr != mqttDiscoveryInfo)
         {
-            if ((true == force) ||
-                (true == mqttDiscoveryInfo->isReqToPublish))
+            mqttDiscoveryInfo->isReqToPublish = true;
+        }
+
+        ++listOfMqttDiscoveryInfoIt;
+    }
+}
+
+void HomeAssistantMqtt::publishAutoDiscoveryInfosOnDemand()
+{
+    ListOfMqttDiscoveryInfo::iterator listOfMqttDiscoveryInfoIt = m_mqttDiscoveryInfoList.begin();
+
+    while(m_mqttDiscoveryInfoList.end() != listOfMqttDiscoveryInfoIt)
+    {
+        MqttDiscoveryInfo*  mqttDiscoveryInfo   = *listOfMqttDiscoveryInfoIt;
+
+        if (nullptr != mqttDiscoveryInfo)
+        {
+            if (true == mqttDiscoveryInfo->isReqToPublish)
             {
                 publishAutoDiscoveryInfo(*mqttDiscoveryInfo);
+
+                mqttDiscoveryInfo->isReqToPublish = false;
+
+                /* Continue with next call cycle. */
+                break;
             }
         }
 

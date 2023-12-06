@@ -215,11 +215,17 @@ private:
     void publishAutoDiscoveryInfo(MqttDiscoveryInfo& mqttDiscoveryInfo);
 
     /**
-     * Publish all MQTT auto discovery informations, which are requested.
-     * 
-     * @param[in] force If set to true, all will be published independed whether requested or not.
+     * Request to publish all automatic discovery info's.
      */
-    void publishAllAutoDiscoveryInfo(bool force);
+    void requestToPublishAllAutoDiscoveryInfos();
+
+    /**
+     * Publish MQTT auto discovery informations, which are requested.
+     * 
+     * Note: Need to be called continously and will only publish one info per
+     *       call cycle.
+     */
+    void publishAutoDiscoveryInfosOnDemand();
 };
 
 /******************************************************************************

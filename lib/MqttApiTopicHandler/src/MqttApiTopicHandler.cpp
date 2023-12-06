@@ -212,10 +212,8 @@ void MqttApiTopicHandler::unregisterTopic(const String& deviceId, const String& 
 
 void MqttApiTopicHandler::process()
 {
-    MqttService&                mqttService     = MqttService::getInstance();
-    bool                        publishAll      = false;
-    ListOfTopicStates::iterator topicStateIt    = m_listOfTopicStates.begin();
-
+    MqttService& mqttService = MqttService::getInstance();
+    
     /* If connection to MQTT broker is the first time established or reconnected,
      * all topics will be published to be up-to-date.
      */
@@ -226,7 +224,7 @@ void MqttApiTopicHandler::process()
         m_isMqttConnected = true;
         
         /* Publish after connection establishment. */
-        publishAll = true;
+        requestToPublishAllTopicStates();
     }
     else if ((true == m_isMqttConnected) &&
              (MqttService::STATE_CONNECTED != mqttService.getState()))
@@ -240,27 +238,14 @@ void MqttApiTopicHandler::process()
 
     if (true == m_isMqttConnected)
     {
-        /* If necessary, the topic state will be published. */
-        while(m_listOfTopicStates.end() != topicStateIt)
-        {
-            TopicState* topicState = *topicStateIt;
-
-            if ((nullptr != topicState) &&
-                (false == topicState->deviceId.isEmpty()) &&
-                (false == topicState->entityId.isEmpty()) &&
-                (nullptr != topicState->getTopicFunc))
-            {
-                if ((true == publishAll) ||
-                    (true == topicState->isPublishReq))
-                {
-                    publish(topicState->deviceId, topicState->entityId, topicState->topic, topicState->getTopicFunc);
-
-                    topicState->isPublishReq = false;
-                }
-            }
-
-            ++topicStateIt;
-        }
+        /* If necessary, a topic state will be published.
+         *
+         * Don't publish all of them at once, only one per process cycle.
+         * This has the advantage to detect lost MQTT connection, because remember
+         * its cooperative! As long as the MQTT service is not called, no update
+         * about the connection status will appear.
+         */
+        publishTopicStatesOnDemand();
     }
 
     /* Process Home Assistant extension. */
@@ -299,6 +284,55 @@ void MqttApiTopicHandler::notify(const String& deviceId, const String& entityId,
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void MqttApiTopicHandler::requestToPublishAllTopicStates()
+{
+    ListOfTopicStates::iterator topicStateIt = m_listOfTopicStates.begin();
+
+    /* Set the publish request flag for all topic states. */
+    while(m_listOfTopicStates.end() != topicStateIt)
+    {
+        TopicState* topicState = *topicStateIt;
+
+        if ((nullptr != topicState) &&
+            (false == topicState->deviceId.isEmpty()) &&
+            (false == topicState->entityId.isEmpty()) &&
+            (nullptr != topicState->getTopicFunc))
+        {
+            topicState->isPublishReq = true;
+        }
+
+        ++topicStateIt;
+    }
+}
+
+void MqttApiTopicHandler::publishTopicStatesOnDemand()
+{
+    ListOfTopicStates::iterator topicStateIt = m_listOfTopicStates.begin();
+
+    while(m_listOfTopicStates.end() != topicStateIt)
+    {
+        TopicState* topicState = *topicStateIt;
+
+        if ((nullptr != topicState) &&
+            (false == topicState->deviceId.isEmpty()) &&
+            (false == topicState->entityId.isEmpty()) &&
+            (nullptr != topicState->getTopicFunc))
+        {
+            if (true == topicState->isPublishReq)
+            {
+                publish(topicState->deviceId, topicState->entityId, topicState->topic, topicState->getTopicFunc);
+
+                topicState->isPublishReq = false;
+
+                /* Continue next process cycle. */
+                break;
+            }
+        }
+
+        ++topicStateIt;
+    }
+}
 
 void MqttApiTopicHandler::write(const String& deviceId, const String& entityId, const String& topic, const uint8_t* payload, size_t size, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {

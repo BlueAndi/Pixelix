@@ -177,6 +177,19 @@ private:
     MqttApiTopicHandler& operator=(const MqttApiTopicHandler& adapter);
 
     /**
+     * Request to publish all topic states.
+     */
+    void requestToPublishAllTopicStates();
+
+    /**
+     * Publish topic states, which are requested.
+     * 
+     * Note: Need to be called continously and will only publish one info per
+     *       call cycle.
+     */
+    void publishTopicStatesOnDemand();
+
+    /**
      * Write topic data.
      * 
      * @param[in] deviceId      The device id which represents the physical device.
