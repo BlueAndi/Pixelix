@@ -123,7 +123,11 @@ public:
         return seek(pos, SeekSet);
     }
 
-    size_t position() const;
+    size_t position() const
+    {
+        return ftell(m_fd);
+    }
+
     size_t size() const;
 
     void close()

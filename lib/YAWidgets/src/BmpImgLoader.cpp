@@ -156,7 +156,7 @@ BmpImgLoader::Ret BmpImgLoader::load(FS& fs, const String& fileName, YAGfxDynami
         }
         else if (false == loadDibHeader(fd, dibHeader))
         {
-            ret = RET_FILE_FORMAT_INVALID;
+            ret = RET_FILE_FORMAT_UNSUPPORTED;
         }
         /* Planes must be 1.
          * Compression is not supported.
