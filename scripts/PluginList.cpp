@@ -25,110 +25,72 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin factory
+ * @brief  Plugin List
  * @author Andreas Merkle <web@blue-andi.de>
- *
- * @addtogroup plugin
- *
+ * 
  * @{
  */
-
-#ifndef PLUGINFACTORY_H
-#define PLUGINFACTORY_H
-
-/******************************************************************************
- * Compile Switches
- *****************************************************************************/
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "IPluginMaintenance.hpp"
+#include "PluginList.h"
 
-#include <LinkedList.hpp>
+$INCLUDES
+
+/******************************************************************************
+ * Compiler Switches
+ *****************************************************************************/
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
 /******************************************************************************
- * Types and Classes
+ * Types and classes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Prototypes
+ *****************************************************************************/
+
+/******************************************************************************
+ * Local Variables
  *****************************************************************************/
 
 /**
- * The plugin factory produces plugin object of a given type.
- * All plugin types, which shall be produced, must be registered
- * at runtime.
+ * List of plugins.
  */
-class PluginFactory
+static const PluginList::Element gPluginList[] =
 {
-public:
-
-    /**
-     * Constructs the plugin factory.
-     */
-    PluginFactory() :
-        m_plugins()
-    {
-    }
-
-    /**
-     * Destroys the plugin factory.
-     * Please note, that if the factory is destroyed, all produced plugin objects
-     * will survive. This is a feature where a factory could live shorter than its
-     * produced plugin objects.
-     */
-    ~PluginFactory()
-    {
-    }
-
-    /**
-     * Create a plugin by name.
-     * The plugin UID is automatically generated.
-     * 
-     * @param[in] name  Plugin type name
-     * 
-     * @return If successful, it will return the plugin object pointer otherwise nullptr.
-     */
-    IPluginMaintenance* createPlugin(const String& name);
-
-    /**
-     * Create a plugin by name with given UID.
-     * 
-     * @param[in] name  Plugin type name
-     * @param[in] uid   Plugin UID
-     * 
-     * @return If successful, it will return the plugin object pointer otherwise nullptr.
-     */
-    IPluginMaintenance* createPlugin(const String& name, uint16_t uid);
-
-    /**
-     * Destroy plugin object.
-     * 
-     * @param[in] plugin    The plugin object pointer.
-     */
-    void destroyPlugin(IPluginMaintenance* plugin);
-
-private:
-
-    DLinkedList<IPluginMaintenance*>    m_plugins;  /**< List with all produced plugin objects. */
-
-    PluginFactory(const PluginFactory& factory);
-    PluginFactory& operator=(const PluginFactory& factory);
-
-    /**
-     * Generate a 16-bit unique id, for a plugin instance.
-     *
-     * @return Unique id
-     */
-    uint16_t generateUID();
+$LIST_ENTRIES
 };
 
 /******************************************************************************
- * Functions
+ * Public Methods
  *****************************************************************************/
 
-#endif  /* PLUGINFACTORY_H */
+/******************************************************************************
+ * Protected Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * Private Methods
+ *****************************************************************************/
+
+/******************************************************************************
+ * External Functions
+ *****************************************************************************/
+
+const PluginList::Element* PluginList::getList(uint8_t& length)
+{
+    length = sizeof(gPluginList) / sizeof(gPluginList[0]);
+
+    return gPluginList;
+}
+
+/******************************************************************************
+ * Local Functions
+ *****************************************************************************/
 
 /** @} */

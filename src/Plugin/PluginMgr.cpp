@@ -90,11 +90,6 @@ void PluginMgr::begin()
     createPluginConfigDirectory();
 }
 
-void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
-{
-    m_pluginFactory.registerPlugin(name, createFunc);
-}
-
 IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
 {
     IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name);
@@ -128,16 +123,6 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
     }
 
     return status;
-}
-
-const char* PluginMgr::findFirst()
-{
-    return m_pluginFactory.findFirst();
-}
-
-const char* PluginMgr::findNext()
-{
-    return m_pluginFactory.findNext();
 }
 
 bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)

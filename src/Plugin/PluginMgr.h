@@ -84,14 +84,6 @@ public:
     void begin();
 
     /**
-     * Register a plugin.
-     *
-     * @param[in] name          Plugin name
-     * @param[in] createFunc    The plugin creation function.
-     */
-    void registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc);
-
-    /**
      * Install plugin.
      * If no slot id is given, the plugin will be installed in the next available slot.
      *
@@ -110,20 +102,6 @@ public:
      * @return If successful uninstalled, it will return true otherwise false.
      */
     bool uninstall(IPluginMaintenance* plugin);
-
-    /**
-     * Find first plugin.
-     *
-     * @return If plugin found, it will return its name otherwise nullptr.
-     */
-    const char* findFirst();
-
-    /**
-     * Find next plugin.
-     *
-     * @return If plugin found, it will return its name otherwise nullptr.
-     */
-    const char* findNext();
 
     /**
      * Set the alias name of a plugin.

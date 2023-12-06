@@ -33,7 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "WsCmdPlugins.h"
-#include "PluginMgr.h"
+#include "PluginList.h"
 
 #include <Util.h>
 
@@ -76,26 +76,25 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
     else
     {
-        String      msg;
-        uint8_t     cnt         = 0U;
-        const char* pluginName  = PluginMgr::getInstance().findFirst();
+        String                      msg;
+        uint8_t                     pluginTypeListLength    = 0U;
+        const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
+        uint8_t                     idx                     = 0U;
 
         preparePositiveResponse(msg);
 
-        while(nullptr != pluginName)
+        while(pluginTypeListLength > idx)
         {
-            if (0 < cnt)
+            if (0 < idx)
             {
                 msg += DELIMITER;
             }
 
             msg += "\"";
-            msg += pluginName;
+            msg += pluginTypeList[idx].name;
             msg += "\"";
 
-            pluginName = PluginMgr::getInstance().findNext();
-
-            ++cnt;
+            ++idx;
         }
 
         sendResponse(server, client, msg);

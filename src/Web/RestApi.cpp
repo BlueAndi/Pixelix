@@ -37,6 +37,7 @@
 #include "DisplayMgr.h"
 #include "Version.h"
 #include "PluginMgr.h"
+#include "PluginList.h"
 #include "WiFiUtil.h"
 #include "FileSystem.h"
 #include "RestUtil.h"
@@ -611,14 +612,17 @@ static void handlePlugins(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant dataObj     = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray   pluginArray = dataObj.createNestedArray("plugins");
-        const char* pluginName  = PluginMgr::getInstance().findFirst();
+        JsonVariant                 dataObj                 = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray                   pluginArray             = dataObj.createNestedArray("plugins");
+        uint8_t                     pluginTypeListLength    = 0U;
+        const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
+        uint8_t                     idx                     = 0U;
 
-        while(nullptr != pluginName)
+        while(pluginTypeListLength > idx)
         {
-            pluginArray.add(pluginName);
-            pluginName = PluginMgr::getInstance().findNext();
+            pluginArray.add(pluginTypeList[idx].name);
+            
+            ++idx;
         }
 
         httpStatusCode = HttpStatus::STATUS_CODE_OK;

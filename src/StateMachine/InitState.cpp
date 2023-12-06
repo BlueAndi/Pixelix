@@ -40,6 +40,7 @@
 #include <Display.h>
 #include <SensorDataProvider.h>
 #include <Wire.h>
+#include <IconTextPlugin.h>
 
 #include "ButtonDrv.h"
 #include "ClockDrv.h"
@@ -54,7 +55,6 @@
 #include "JsonFile.h"
 #include "Version.h"
 #include "Services.h"
-#include "PluginList.hpp"
 #include "WiFiUtil.h"
 
 #include "APState.h"
@@ -183,9 +183,6 @@ void InitState::entry(StateMachine& sm)
 
         /* Prepare everything for the plugins. */
         PluginMgr::getInstance().begin();
-
-        /* Register plugins. This must be done before system message handler is initialized! */
-        PluginList::registerAll();
     }
 
     /* Continue only if there is no error yet. */

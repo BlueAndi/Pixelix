@@ -39,7 +39,7 @@
 #include "UpdateMgr.h"
 #include "DisplayMgr.h"
 #include "RestApi.h"
-#include "PluginMgr.h"
+#include "PluginList.h"
 #include "FileSystem.h"
 
 #include <WiFi.h>
@@ -171,10 +171,12 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
 
 void Pages::init(AsyncWebServer& srv)
 {
-    const char*         pluginName          = nullptr;
-    String              webLoginUser;
-    String              webLoginPassword;
-    SettingsService&    settings            = SettingsService::getInstance();
+    uint8_t                     pluginTypeListLength    = 0U;
+    const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
+    uint8_t                     idx                     = 0U;
+    String                      webLoginUser;
+    String                      webLoginPassword;
+    SettingsService&            settings                = SettingsService::getInstance();
 
     if (false == settings.open(true))
     {
@@ -232,10 +234,10 @@ void Pages::init(AsyncWebServer& srv)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     /* Add one page per plugin. */
-    pluginName = PluginMgr::getInstance().findFirst();
-    while(nullptr != pluginName)
+    while(pluginTypeListLength > idx)
     {
-        String uri = PLUGIN_PAGE_PATH + pluginName;
+        const PluginList::Element*  elem    = &pluginTypeList[idx];
+        String                      uri     = PLUGIN_PAGE_PATH + elem->name;
         
         (void)srv.on(   uri.c_str(),
                         HTTP_GET,
@@ -257,7 +259,7 @@ void Pages::init(AsyncWebServer& srv)
 
                         }).setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());;
 
-        pluginName = PluginMgr::getInstance().findNext();
+        ++idx;
     }
 }
 

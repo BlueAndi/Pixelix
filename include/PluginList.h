@@ -43,9 +43,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "PluginMgr.h"
+#include "IPluginMaintenance.hpp"
 
-$INCLUDES
+/** List with all compiled-in plugins. */
+namespace PluginList
+{
 
 /******************************************************************************
  * Macros
@@ -55,25 +57,28 @@ $INCLUDES
  * Types and Classes
  *****************************************************************************/
 
+/**
+ * Plugin list element.
+ */
+typedef struct
+{
+    const char*                     name;       /**< Name of plugin type. */
+    IPluginMaintenance::CreateFunc  createFunc; /**< Plugin creation function */
+
+} Element;
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-/** List with all compiled-in plugins. */
-namespace PluginList
-{
-
 /**
- * Registers all plugins by the plugin manager.
+ * Get list of provided plugins and their creation function.
  * 
+ * @param[out] length   Length of list.
+ * 
+ * @return List of plugins.
  */
-static void registerAll()
-{
-    PluginMgr&  pluginMgr = PluginMgr::getInstance();
-
-$REGISTER
-
-}
+const Element* getList(uint8_t& length);
 
 };
 
