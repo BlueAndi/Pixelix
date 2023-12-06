@@ -869,7 +869,7 @@ void OpenWeatherPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
     {
         if (nullptr != m_source)
         {
-            const size_t            JSON_DOC_SIZE   = 256U;
+            const size_t            JSON_DOC_SIZE   = 512U;
             DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
             if (nullptr != jsonDoc)
