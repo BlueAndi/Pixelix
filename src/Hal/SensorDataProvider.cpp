@@ -572,7 +572,7 @@ void SensorDataProvider::registerSensorTopics()
             entityId += index;
 
             ITopicHandler::GetTopicFunc         getTopicFunc    =
-                [sensorTopic, sensorChannel](const String &topic, ArduinoJson::V6213PB2::JsonObject &value) -> bool
+                [sensorTopic, sensorChannel](const String& topic, JsonObject& value) -> bool
                 {
                     const uint32_t VALUE_PRECISION = 2U; /* 2 digits after the . */
 
@@ -583,7 +583,7 @@ void SensorDataProvider::registerSensorTopics()
                     return true;
                 };
             TopicHandlerService::HasChangedFunc hasChangedFunc  =
-                [sensorTopic, sensorChannel, sensorTopicRunData](const String &topic) -> bool
+                [sensorTopic, sensorChannel, sensorTopicRunData](const String& topic) -> bool
                 {
                     bool hasChanged = false;
 
