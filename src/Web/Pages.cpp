@@ -148,6 +148,7 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "SW_BRANCH",            []() -> String { return Version::SOFTWARE_BRANCH; },
     "SW_REVISION",          []() -> String { return Version::SOFTWARE_REV; },
     "SW_VERSION",           []() -> String { return Version::SOFTWARE_VER; },
+    "TARGET",               []() -> String { return Version::TARGET; },
     "WS_ENDPOINT",          []() -> String { return WebConfig::WEBSOCKET_PATH; },
     "WS_PORT",              []() -> String { return String(WebConfig::WEBSOCKET_PORT); },
     "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; }
