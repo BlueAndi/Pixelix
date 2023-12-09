@@ -60,7 +60,9 @@
                     <li>Red/Yellow shaded: Slot is sticky and locked.</li>
                 </ul>
                 <p>
+                    <button class="btn btn-light" type="button" onclick="prevSlot()" disabled>Previous slot</button>
                     <button class="btn btn-light" type="button" onclick="nextSlot()" disabled>Next slot</button>
+                    <button id="updateDisplayButton" class="btn btn-light" type="button" onclick="updateDisplay()" disabled>Enable auto. display update</button>
                 </p>
                 <p>Currently active fade effect: <span id="lableFadeEffect"> Linear</span></p>
                 <p><button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button></p>
@@ -261,10 +263,11 @@
                 }
             }
 
-            function nextSlot() {
+            function prevSlot() {
+                var buttonActionIdPrevSlot = 2; /* See ButtonActionId */
                 disableUI();
 
-                return wsClient.triggerButton().then(function(rsp) {
+                return wsClient.triggerButton({"actionId": buttonActionIdPrevSlot}).then(function(rsp) {
                     /* Nothing to do */
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
@@ -274,6 +277,38 @@
                 }).finally(function() {
                     enableUI();
                 });
+            }
+
+            function nextSlot() {
+                var buttonActionIdNextSlot = 1; /* See ButtonActionId */
+                disableUI();
+
+                return wsClient.triggerButton({"actionId": buttonActionIdNextSlot}).then(function(rsp) {
+                    /* Nothing to do */
+                }).catch(function(err) {
+                    if ("undefined" !== typeof err) {
+                        console.error(err);
+                    }
+                    return dialog.showError("<p>Failed.</p>");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function updateDisplay() {
+                disableUI();
+
+                /* Currently off? */
+                if (0 === timerId) {
+                    timerId = window.setTimeout(getDisplayContent, period);
+                    $("#updateDisplayButton").text("Disable auto. display update");
+                } else {
+                    window.clearTimeout(timerId);
+                    timerId = 0;
+                    $("#updateDisplayButton").text("Enable auto. display update");
+                }
+
+                enableUI();
             }
 
             function move(uid, slotId) {
@@ -566,9 +601,6 @@
                     currentFadeEffect = rsp.fadeEffect;
                     updateFadeEffect();
                 }).then(function(rsp) {
-                    /* Request display content periodically. */
-                    timerId = window.setTimeout(getDisplayContent, period);
-
                     /* UI is enabled at least. */
                     enableUI();
                 }).catch(function(err) {

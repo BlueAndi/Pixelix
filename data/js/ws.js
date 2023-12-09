@@ -557,14 +557,21 @@ pixelix.ws.Client.prototype.stopIperf = function(options) {
     }.bind(this));
 };
 
-pixelix.ws.Client.prototype.triggerButton = function() {
+pixelix.ws.Client.prototype.triggerButton = function(options) {
     return new Promise(function(resolve, reject) {
+        var par = null;
+
         if (null === this._socket) {
             reject();
         } else {
+
+            if ("number" === typeof options.actionId) {
+                par = options.actionId.toString();
+            }
+
             this._sendCmd({
                 name: "BUTTON",
-                par: null,
+                par: par,
                 resolve: resolve,
                 reject: reject
             });

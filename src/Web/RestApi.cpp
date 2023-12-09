@@ -42,6 +42,7 @@
 #include "FileSystem.h"
 #include "RestUtil.h"
 #include "SlotList.h"
+#include "ButtonActions.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -70,6 +71,42 @@ typedef struct
     const char* contentType;    /**< Content type */
 
 } ContentTypeElem;
+
+/**
+ * Virtual button which can be triggered via REST API.
+ */
+class RestApiButton : public ButtonActions
+{
+public:
+
+    /**
+     * Construct virtual button instance.
+     */
+    RestApiButton() :
+        ButtonActions()
+    {
+    }
+
+    /**
+     * Destroy virtual button instance.
+     */
+    virtual ~RestApiButton()
+    {
+    }
+
+    /**
+     * Execute action by button action id.
+     * 
+     * @param[in] id    Button action id
+     */
+    void executeAction(ButtonActionId id)
+    {
+        ButtonActions::executeAction(id);
+    }
+
+private:
+
+};
 
 /******************************************************************************
  * Prototypes
@@ -201,10 +238,38 @@ static void handleButton(AsyncWebServerRequest* request)
     }
     else
     {
-        DisplayMgr::getInstance().activateNextSlot();
- 
-        (void)RestUtil::prepareRspSuccess(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+        ButtonActionId  actionId        = BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT; /* Default */
+        bool            isSuccessful    = true;
+
+        if (true == request->hasArg("actionId"))
+        {
+            int32_t i32ActionId = request->arg("actionId").toInt();
+
+            if ((0 > i32ActionId) ||
+                (BUTTON_ACTION_ID_MAX <= i32ActionId))
+            {
+                isSuccessful = false;
+            }
+            else
+            {
+                actionId = static_cast<ButtonActionId>(i32ActionId);
+            }
+        }
+
+        if (false == isSuccessful)
+        {
+            RestUtil::prepareRspError(jsonDoc, "Invalid action id.");
+            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+        }
+        else
+        {
+            RestApiButton buttonActions;
+
+            buttonActions.executeAction(actionId);
+
+            (void)RestUtil::prepareRspSuccess(jsonDoc);
+            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+        } 
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);

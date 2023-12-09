@@ -66,7 +66,9 @@ enum ButtonActionId
     BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON, /**< Toggle the display off/on */
     BUTTON_ACTION_ID_SWEEP_BRIGHTNESS,      /**< Sweep brightness from dark to bright and reverse */
     BUTTON_ACTION_ID_INC_BRIGHTNESS,        /**< Increase display brightness till maximum. */
-    BUTTON_ACTION_ID_DEC_BRIGHTNESS         /**< Decrease display brightness till minimum. */
+    BUTTON_ACTION_ID_DEC_BRIGHTNESS,        /**< Decrease display brightness till minimum. */
+    
+    BUTTON_ACTION_ID_MAX                    /**< Max. action id (always the last one) */
 };
 
 /**
