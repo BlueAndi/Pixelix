@@ -82,7 +82,7 @@ public:
      * 
      * @return Command string
      */
-    const String& getCmd() const
+    const char* getCmd() const
     {
         return m_cmd;
     }
@@ -178,7 +178,7 @@ protected:
 
 private:
 
-    String  m_cmd;  /**< Command */
+    const char* m_cmd;  /**< Command */
 
     WsCmd();
     WsCmd(const WsCmd& cmd);

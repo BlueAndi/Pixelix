@@ -287,7 +287,10 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
         /* Handle text message */
         else
         {
-            handleMsg(server, client, reinterpret_cast<const char*>(data), len);
+            const void* vData   = data;
+            const char* cData   = static_cast<const char*>(vData);
+
+            handleMsg(server, client, cData, len);
         }
     }
     /* Message is comprised of multiple frames or the frame is split into multiple packets */
@@ -301,8 +304,8 @@ void WebSocketSrv::onData(AsyncWebSocket* server, AsyncWebSocketClient* client, 
 void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg, size_t msgLen)
 {
     size_t      msgIndex    = 0U;
-    String      cmd;
-    String      par;
+    const char* cmd         = nullptr;
+    size_t      cmdLength   = 0U;
     WsCmd*      wsCmd       = nullptr;
     const char  DELIMITER   = ';';
 
@@ -321,21 +324,23 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
     }
 
     /* Get command string */
+    cmd = &msg[msgIndex];
     while((msgLen > msgIndex) && (DELIMITER != msg[msgIndex]))
     {
-        cmd += msg[msgIndex];
+        ++cmdLength;
         ++msgIndex;
     }
 
     /* Command string not empty? */
-    if (0 < cmd.length())
+    if (0 < cmdLength)
     {
         uint8_t index = 0U;
 
         /* Find command object */
         while((nullptr == wsCmd) && (index < UTIL_ARRAY_NUM(gWsCommands)))
         {
-            if (cmd == gWsCommands[index]->getCmd())
+            /* Note, cmd is NOT terminated! */
+            if (0 == strncmp(gWsCommands[index]->getCmd(), cmd, cmdLength))
             {
                 wsCmd = gWsCommands[index];
             }
@@ -354,28 +359,39 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
             if ((msgLen > msgIndex) &&
                 (DELIMITER == msg[msgIndex]))
             {
+                const char* par;
+                size_t      parLength;
+                String      parStr;
+
                 /* Overstep delimiter */
                 ++msgIndex;
 
+                par = &msg[msgIndex];
+                parLength = 0U;
                 while(msgLen > msgIndex)
                 {
                     if (DELIMITER == msg[msgIndex])
                     {
-                        wsCmd->setPar(par.c_str());
-                        par.clear();
+                        parStr = String(par, parLength);
+
+                        wsCmd->setPar(parStr.c_str());
+
+                        par = &msg[msgIndex + 1U];
+                        parLength = 0U;
                     }
                     else
                     {
-                        par += msg[msgIndex];
+                        ++parLength;
                     }
 
                     ++msgIndex;
                 }
 
-                wsCmd->setPar(par.c_str());
+                parStr = String(par, parLength);
+                wsCmd->setPar(parStr.c_str());
             }
 
-            /* Execute command */
+            /* Execute command (attention, its called in callback context). */
             wsCmd->execute(server, client);
         }
     }
