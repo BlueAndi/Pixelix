@@ -322,18 +322,20 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
 
 void IconTextPlugin::stop()
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    String                      bitmapFullPath       = getFileName(FILE_EXT_BITMAP);
+    String                      spriteSheetFullPath  = getFileName(FILE_EXT_SPRITE_SHEET);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     /* Remove icon which is specific for the plugin instance. */
-    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_BITMAP)))
+    if (false != FILESYSTEM.remove(bitmapFullPath))
     {
-        LOG_INFO("File %s removed", getFileName(FILE_EXT_BITMAP).c_str());
+        LOG_INFO("File %s removed", bitmapFullPath.c_str());
     }
 
     /* Remove spritesheet which is specific for the plugin instance. */
-    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_SPRITE_SHEET)))
+    if (false != FILESYSTEM.remove(spriteSheetFullPath))
     {
-        LOG_INFO("File %s removed", getFileName(FILE_EXT_SPRITE_SHEET).c_str());
+        LOG_INFO("File %s removed", spriteSheetFullPath.c_str());
     }
 }
 
