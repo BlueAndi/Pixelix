@@ -352,7 +352,9 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
 
     for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
     { 
-        int16_t x = (ICON_WIDTH + DISTANCE) * iconId + DISTANCE;
+        int16_t x                   = (ICON_WIDTH + DISTANCE) * iconId + DISTANCE;
+        String bitmapFullPath       = getFileName(iconId, FILE_EXT_BITMAP);
+        String spriteSheetFullPath  = getFileName(iconId, FILE_EXT_SPRITE_SHEET);
 
         (void)m_threeIconCanvas.addWidget(m_bitmapWidgets[iconId]);
         m_bitmapWidgets[iconId].move(x, 0);
@@ -364,17 +366,17 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
         m_iconPaths[iconId].clear();
         m_spriteSheetPaths[iconId].clear();
 
-        if (false == m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, getFileName(iconId, FILE_EXT_SPRITE_SHEET), getFileName(iconId, FILE_EXT_BITMAP)))
+        if (false == m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
         {
-            if (true == m_bitmapWidgets[iconId].load(FILESYSTEM, getFileName(iconId, FILE_EXT_BITMAP)))
+            if (true == m_bitmapWidgets[iconId].load(FILESYSTEM, bitmapFullPath))
             {
-                m_iconPaths[iconId] = getFileName(iconId, FILE_EXT_BITMAP);
+                m_iconPaths[iconId] = bitmapFullPath;
             }
         }
         else
         {
-            m_iconPaths[iconId]         = getFileName(iconId, FILE_EXT_BITMAP);
-            m_spriteSheetPaths[iconId]  = getFileName(iconId, FILE_EXT_SPRITE_SHEET);
+            m_iconPaths[iconId]         = bitmapFullPath;
+            m_spriteSheetPaths[iconId]  = spriteSheetFullPath;
         }
     }
 }
@@ -385,15 +387,18 @@ void ThreeIconPlugin::stop()
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
-    { 
-        if (false != FILESYSTEM.remove(getFileName(iconId, FILE_EXT_BITMAP)))
+    {
+        String bitmapFullPath       = getFileName(iconId, FILE_EXT_BITMAP);
+        String spriteSheetFullPath  = getFileName(iconId, FILE_EXT_SPRITE_SHEET);
+
+        if (false != FILESYSTEM.remove(bitmapFullPath))
         {
-            LOG_INFO("File %s removed", getFileName(iconId, FILE_EXT_BITMAP).c_str());
+            LOG_INFO("File %s removed", bitmapFullPath.c_str());
         }
 
-        if (false != FILESYSTEM.remove(getFileName(iconId, FILE_EXT_SPRITE_SHEET)))
+        if (false != FILESYSTEM.remove(spriteSheetFullPath))
         {
-            LOG_INFO("File %s removed", getFileName(iconId, FILE_EXT_SPRITE_SHEET).c_str());
+            LOG_INFO("File %s removed", spriteSheetFullPath.c_str());
         }
     }
 }

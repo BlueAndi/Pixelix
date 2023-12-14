@@ -373,12 +373,14 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    uint16_t                    tcHeight        = 0U;
-    uint16_t                    lampWidth       = 0U;
-    uint16_t                    lampDistance    = 0U;
-    const uint16_t              minDistance     = 1U;   /* Min. distance between lamps. */
-    const uint16_t              minBorder       = 1U;   /* Min. border left and right of all lamps. */
-    const uint16_t              canvasWidth     = width - ICON_WIDTH;
+    uint16_t                    tcHeight            = 0U;
+    uint16_t                    lampWidth           = 0U;
+    uint16_t                    lampDistance        = 0U;
+    const uint16_t              minDistance         = 1U;   /* Min. distance between lamps. */
+    const uint16_t              minBorder           = 1U;   /* Min. border left and right of all lamps. */
+    const uint16_t              canvasWidth         = width - ICON_WIDTH;
+    String                      bitmapFullPath      = getFileName(FILE_EXT_BITMAP);
+    String                      spriteSheetFullPath = getFileName(FILE_EXT_SPRITE_SHEET);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
@@ -391,17 +393,17 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
     m_iconPath.clear();
     m_spriteSheetPath.clear();
 
-    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
+    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
     {
-        if (true == m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP)))
+        if (true == m_bitmapWidget.load(FILESYSTEM, bitmapFullPath))
         {
-            m_iconPath = getFileName(FILE_EXT_BITMAP);
+            m_iconPath = bitmapFullPath;
         }
     }
     else
     {
-        m_iconPath          = getFileName(FILE_EXT_BITMAP);
-        m_spriteSheetPath   = getFileName(FILE_EXT_SPRITE_SHEET);
+        m_iconPath          = bitmapFullPath;
+        m_spriteSheetPath   = spriteSheetFullPath;
     }
 
     /* The text canvas is left aligned to the icon canvas and aligned to the
@@ -445,18 +447,20 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 
 void IconTextLampPlugin::stop()
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    String                      bitmapFullPath       = getFileName(FILE_EXT_BITMAP);
+    String                      spriteSheetFullPath  = getFileName(FILE_EXT_SPRITE_SHEET);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
     /* Remove icon which is specific for the plugin instance. */
-    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_BITMAP)))
+    if (false != FILESYSTEM.remove(bitmapFullPath))
     {
-        LOG_INFO("File %s removed", getFileName(FILE_EXT_BITMAP).c_str());
+        LOG_INFO("File %s removed", bitmapFullPath.c_str());
     }
 
     /* Remove spritesheet which is specific for the plugin instance. */
-    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_SPRITE_SHEET)))
+    if (false != FILESYSTEM.remove(spriteSheetFullPath))
     {
-        LOG_INFO("File %s removed", getFileName(FILE_EXT_SPRITE_SHEET).c_str());
+        LOG_INFO("File %s removed", spriteSheetFullPath.c_str());
     }
 }
 
