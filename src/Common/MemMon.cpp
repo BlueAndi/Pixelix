@@ -77,17 +77,23 @@ void MemMon::process()
 
     if (true == isProcessingTime)
     {
-        uint32_t minFreeHeap        = ESP.getMinFreeHeap();
-        uint32_t minFreeHeapBlock   = ESP.getMaxAllocHeap();
+        uint32_t availableHeap          = ESP.getFreeHeap();        /* Current available heap memory. */
+        uint32_t lowestAvailableHeap    = ESP.getMinFreeHeap();     /* Lowest level of available heap since boot. */
+        uint32_t largestHeapBlock       = ESP.getMaxAllocHeap();    /* Largest block of heap that can be allocated at once. */
 
-        if (MIN_HEAP_MEMORY >= minFreeHeap)
+        if (MIN_HEAP_MEMORY >= availableHeap)
         {
-            LOG_WARNING("Min. free heap is %u byte.", minFreeHeap);
+            LOG_WARNING("Current available heap: %u byte.", availableHeap);
         }
 
-        if (MIN_HEAP_BLOCK_MEMORY > minFreeHeapBlock)
+        if (LOWEST_HEAP_MEMORY >= lowestAvailableHeap)
         {
-            LOG_WARNING("Largest heap block which can be allocated is %u byte.", minFreeHeapBlock);
+            LOG_WARNING("Lowest available heap: %u byte.", lowestAvailableHeap);
+        }
+
+        if (LARGEST_HEAP_BLOCK_MEMORY > largestHeapBlock)
+        {
+            LOG_WARNING("Largest heap block which can be allocated: %u byte.", largestHeapBlock);
         }
 
         /* Any heap corrupt? */
