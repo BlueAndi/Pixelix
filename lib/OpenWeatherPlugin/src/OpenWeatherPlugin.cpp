@@ -499,15 +499,15 @@ void OpenWeatherPlugin::createOpenWeatherSource(OpenWeatherSource id)
     switch(id)
     {
     case OPENWEATHER_SOURCE_CURRENT:
-        m_source = new (std::nothrow) OpenWeatherCurrent();
+        m_source = new(std::nothrow) OpenWeatherCurrent();
         break;
 
     case OPENWEATHER_SOURCE_ONE_CALL_25:
-        m_source = new (std::nothrow) OpenWeatherOneCall("2.5");
+        m_source = new(std::nothrow) OpenWeatherOneCall("2.5");
         break;
 
     case OPENWEATHER_SOURCE_ONE_CALL_30:
-        m_source = new (std::nothrow) OpenWeatherOneCall("3.0");
+        m_source = new(std::nothrow) OpenWeatherOneCall("3.0");
         break;
 
     default:

@@ -130,7 +130,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new GruenbeckPlugin(name, uid);
+        return new(std::nothrow)GruenbeckPlugin(name, uid);
     }
 
     /**

@@ -108,7 +108,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new IconTextPlugin(name, uid);
+        return new(std::nothrow)IconTextPlugin(name, uid);
     }
 
     /**

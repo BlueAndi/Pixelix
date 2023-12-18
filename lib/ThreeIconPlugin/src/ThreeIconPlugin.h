@@ -102,7 +102,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new ThreeIconPlugin(name, uid);
+        return new(std::nothrow)ThreeIconPlugin(name, uid);
     }
 
     /**

@@ -98,7 +98,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new DDPPlugin(name, uid);
+        return new(std::nothrow) DDPPlugin(name, uid);
     }
 
     /**

@@ -104,7 +104,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new WormPlugin(name, uid);
+        return new(std::nothrow)WormPlugin(name, uid);
     }
 
     /**

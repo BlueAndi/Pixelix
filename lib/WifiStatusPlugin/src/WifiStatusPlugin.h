@@ -99,7 +99,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new WifiStatusPlugin(name, uid);
+        return new(std::nothrow)WifiStatusPlugin(name, uid);
     }
 
     /**

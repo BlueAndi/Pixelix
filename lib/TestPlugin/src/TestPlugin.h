@@ -96,7 +96,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new TestPlugin(name, uid);
+        return new(std::nothrow)TestPlugin(name, uid);
     }
 
     /**

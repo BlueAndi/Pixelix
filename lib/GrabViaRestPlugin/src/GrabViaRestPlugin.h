@@ -134,7 +134,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new GrabViaRestPlugin(name, uid);
+        return new(std::nothrow)GrabViaRestPlugin(name, uid);
     }
 
     /**

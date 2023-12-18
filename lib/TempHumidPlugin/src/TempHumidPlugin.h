@@ -124,7 +124,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new TempHumidPlugin(name, uid);
+        return new(std::nothrow)TempHumidPlugin(name, uid);
     }
 
     /**

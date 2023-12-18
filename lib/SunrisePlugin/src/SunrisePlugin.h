@@ -135,7 +135,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new SunrisePlugin(name, uid);
+        return new(std::nothrow)SunrisePlugin(name, uid);
     }
 
     /**

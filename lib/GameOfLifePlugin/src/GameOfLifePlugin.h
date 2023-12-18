@@ -119,7 +119,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new GameOfLifePlugin(name, uid);
+        return new(std::nothrow)GameOfLifePlugin(name, uid);
     }
 
     /**

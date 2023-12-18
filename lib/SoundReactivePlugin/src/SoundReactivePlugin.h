@@ -123,7 +123,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new SoundReactivePlugin(name, uid);
+        return new(std::nothrow)SoundReactivePlugin(name, uid);
     }
 
     /**

@@ -133,7 +133,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new SensorPlugin(name, uid);
+        return new(std::nothrow)SensorPlugin(name, uid);
     }
 
     /**

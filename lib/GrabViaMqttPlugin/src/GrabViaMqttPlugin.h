@@ -116,7 +116,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new GrabViaMqttPlugin(name, uid);
+        return new(std::nothrow)GrabViaMqttPlugin(name, uid);
     }
 
     /**

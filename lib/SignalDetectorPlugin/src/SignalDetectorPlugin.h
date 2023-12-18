@@ -113,7 +113,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new SignalDetectorPlugin(name, uid);
+        return new(std::nothrow)SignalDetectorPlugin(name, uid);
     }
 
     /**
