@@ -640,7 +640,6 @@ void GrabViaRestPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             size_t                  payloadSize = 0U;
             const void*             vPayload    = rsp.getPayload(payloadSize);
             const char*             payload     = static_cast<const char*>(vPayload);
-            const size_t            FILTER_SIZE = 128U;
             DeserializationError    error;
             
             if (true == m_filter.overflowed())
