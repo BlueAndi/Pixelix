@@ -70,6 +70,11 @@ const char* SunrisePlugin::TOPIC_CONFIG         = "/location";
 /* Initialize time format. */
 const char* SunrisePlugin::TIME_FORMAT_DEFAULT  = "%I:%M %p";
 
+/* Initialize sunset and sunrise times API base URI.
+ * Use http:// instead of https:// for less required heap memory for SSL connection.
+ */
+const char* SunrisePlugin::BASE_URI             = "http://api.sunrise-sunset.org";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -415,7 +420,7 @@ bool SunrisePlugin::startHttpRequest()
     if ((false == m_latitude.isEmpty()) &&
         (false == m_longitude.isEmpty()))
     {
-        String url = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+        String url = String(BASE_URI) + "/json?lat=" + m_latitude + "&lng=" + m_longitude + "&formatted=0";
 
         if (true == m_client.begin(url))
         {

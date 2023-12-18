@@ -95,8 +95,10 @@ const char* OpenWeatherPlugin::IMAGE_PATH_WIND_ICON     = "/plugins/OpenWeatherP
 /* Initialize image path for the weather condition icons. */
 const char* OpenWeatherPlugin::IMAGE_PATH               = "/plugins/OpenWeatherPlugin/";
 
-/* Initialize OpenWeather base URI */
-const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "https://api.openweathermap.org";
+/* Initialize OpenWeather base URI.
+ * Use http:// instead of https:// for less required heap memory for SSL connection.
+ */
+const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "http://api.openweathermap.org";
 
 /* Initialize plugin topic. */
 const char* OpenWeatherPlugin::TOPIC_CONFIG             = "/weather";

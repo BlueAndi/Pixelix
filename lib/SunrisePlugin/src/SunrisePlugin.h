@@ -290,6 +290,11 @@ private:
     static const char*      TOPIC_CONFIG;
 
     /**
+     * Sunset and sunrise times API base URI.
+     */
+    static const char*      BASE_URI;
+
+    /**
      * Period in ms for requesting sunset/sunrise from server.
      * This is used in case the last request to the server was successful.
      */
