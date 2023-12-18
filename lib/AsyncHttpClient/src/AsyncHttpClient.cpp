@@ -58,6 +58,15 @@
  * Local Variables
  *****************************************************************************/
 
+/** Mutex buffer required for counting semaphore. */
+static StaticSemaphore_t    gxMutexBuffer;
+
+/**
+ * Counting semaphore to serialize all asynchronous HTTP client requests.
+ *  This is necessary, because a secure connection needs about 50k of heap.
+ */
+static SemaphoreHandle_t    ghMutex         = xSemaphoreCreateMutexStatic(&gxMutexBuffer);
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -70,6 +79,7 @@ AsyncHttpClient::AsyncHttpClient() :
     m_cmdQueue(),
     m_evtQueue(),
     m_mutex(),
+    m_hasGlobalMutex(false),
     m_isConnected(false),
     m_isReqOpen(false),
     m_onRspCallback(nullptr),
@@ -150,10 +160,12 @@ AsyncHttpClient::AsyncHttpClient() :
 
                             memset(&evt, 0, sizeof(evt));
                             evt.id          = EVENT_ID_DATA;
-                            evt.u.data.data = new uint8_t[len];
+                            evt.u.data.data = new (std::nothrow) uint8_t[len];
 
                             if (nullptr == evt.u.data.data)
                             {
+                                LOG_ERROR("Couldn't allocate %u memory.", len);
+                                
                                 evt.u.data.size = 0U;
                             }
                             else
@@ -189,9 +201,10 @@ AsyncHttpClient::~AsyncHttpClient()
     m_tcpClient.onError(nullptr);
     m_tcpClient.onData(nullptr);
     m_tcpClient.onTimeout(nullptr);
+    end();
+
+    /* Destroy at the end. */
     m_mutex.destroy();
-    clearEvtQueue();
-    clearCmdQueue();
     m_evtQueue.destroy();
     m_cmdQueue.destroy();
 }
@@ -355,6 +368,7 @@ void AsyncHttpClient::end()
     clearCmdQueue();
     clearEvtQueue();
     clear();
+    giveGlobalMutex();
 }
 
 bool AsyncHttpClient::isConnected()
@@ -362,7 +376,7 @@ bool AsyncHttpClient::isConnected()
     MutexGuard<Mutex>   guard(m_mutex);
     bool                isConnected = m_isConnected;
 
-    return m_isConnected;
+    return isConnected;
 }
 
 void AsyncHttpClient::setHttpVersion(bool useHttp10)
@@ -588,23 +602,36 @@ void AsyncHttpClient::processTask(void* parameters)
 
 void AsyncHttpClient::processCmdQueue()
 {
-    Cmd cmd;
-
-    while(true == m_cmdQueue.receive(&cmd, 0U))
+    if (true == takeGlobalMutex())
     {
-        switch(cmd.id)
+        Cmd cmd;
+
+        if (true == m_cmdQueue.receive(&cmd, 0U))
         {
-        case CMD_ID_GET:
-            (void)getRequest();
-            break;
+            switch(cmd.id)
+            {
+            case CMD_ID_GET:
+                if (false == getRequest())
+                {
+                    giveGlobalMutex();
+                }
+                break;
 
-        case CMD_ID_POST:
-            (void)postRequest(cmd.u.data.data, cmd.u.data.size);
-            break;
+            case CMD_ID_POST:
+                if (false == postRequest(cmd.u.data.data, cmd.u.data.size))
+                {
+                    giveGlobalMutex();
+                }
+                break;
 
-        default:
-            break;
-        };
+            default:
+                break;
+            };
+        }
+        else
+        {
+            giveGlobalMutex();
+        }
     }
 }
 
@@ -653,7 +680,8 @@ void AsyncHttpClient::onConnect()
 {
     bool isReqOpen = false;
 
-    LOG_INFO("Connected.");
+    LOG_INFO("Connected to %s:%u%s.", m_hostname.c_str(), m_port, m_uri.c_str());
+    LOG_DEBUG("Available heap: %u", ESP.getFreeHeap());
 
     /* Protect against concurrent access. */
     {
@@ -676,7 +704,8 @@ void AsyncHttpClient::onConnect()
 
 void AsyncHttpClient::onDisconnect()
 {
-    LOG_INFO("Disconnected.");
+    LOG_INFO("Disconnected from %s:%u%s.", m_hostname.c_str(), m_port, m_uri.c_str());
+    LOG_DEBUG("Available heap: %u", ESP.getFreeHeap());
 
     /* Protect against concurrent access. */
     {
@@ -687,6 +716,8 @@ void AsyncHttpClient::onDisconnect()
 
     clear();
     notifyClosed();
+
+    giveGlobalMutex();
 }
 
 void AsyncHttpClient::onError(int8_t error)
@@ -826,13 +857,14 @@ void AsyncHttpClient::onTimeout(uint32_t timeout)
 {
     UTIL_NOT_USED(timeout);
 
-    LOG_WARNING("Timeout.");
+    LOG_WARNING("Connection timeout of %s:%u%s.", m_hostname.c_str(), m_port, m_uri.c_str());
     m_tcpClient.close();
 }
 
 bool AsyncHttpClient::connect()
 {
-    LOG_INFO("Connecting to %s:%u ...", m_hostname.c_str(), m_port);
+    LOG_INFO("Connecting to %s:%u%s.", m_hostname.c_str(), m_port, m_uri.c_str());
+    LOG_DEBUG("Available heap: %u", ESP.getFreeHeap());
 
     return m_tcpClient.connect(m_hostname.c_str(), m_port, m_isSecure);
 }
@@ -841,7 +873,7 @@ void AsyncHttpClient::disconnect()
 {
     if (true == m_tcpClient.connected())
     {
-        LOG_INFO("Disconnecting ...");
+        LOG_INFO("Disconnecting from %s:%u%s.", m_hostname.c_str(), m_port, m_uri.c_str());
         m_tcpClient.close();
     }
 }
@@ -850,7 +882,7 @@ void AsyncHttpClient::abort()
 {
     if (true == m_tcpClient.connected())
     {
-        LOG_INFO("Aborting ...");
+        LOG_INFO("Aborting connection to %s:%u%s.", m_hostname.c_str(), m_port, m_uri.c_str());
         m_tcpClient.abort();
     }
 }
@@ -1604,6 +1636,34 @@ const char* AsyncHttpClient::errorToStr(int8_t error)
     }
 
     return errorDescription;
+}
+
+bool AsyncHttpClient::takeGlobalMutex()
+{
+    bool isTaken = false;
+
+    if (false == m_hasGlobalMutex)
+    {
+        const uint32_t MAX_WAIT_TIME = 100U; /* ms */
+
+        if (pdTRUE == xSemaphoreTake(ghMutex, MAX_WAIT_TIME * portTICK_PERIOD_MS))
+        {
+            m_hasGlobalMutex = true;
+
+            isTaken = true;
+        }
+    }
+    
+    return isTaken;
+}
+
+void AsyncHttpClient::giveGlobalMutex()
+{
+    if (true == m_hasGlobalMutex)
+    {
+        (void)xSemaphoreGive(ghMutex);
+        m_hasGlobalMutex = false;
+    }
 }
 
 /******************************************************************************
