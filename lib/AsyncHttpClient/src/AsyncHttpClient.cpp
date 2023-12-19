@@ -160,12 +160,12 @@ AsyncHttpClient::AsyncHttpClient() :
 
                             memset(&evt, 0, sizeof(evt));
                             evt.id          = EVENT_ID_DATA;
-                            evt.u.data.data = new (std::nothrow) uint8_t[len];
+                            evt.u.data.data = new(std::nothrow) uint8_t[len];
 
                             if (nullptr == evt.u.data.data)
                             {
                                 LOG_ERROR("Couldn't allocate %u memory.", len);
-                                
+
                                 evt.u.data.size = 0U;
                             }
                             else

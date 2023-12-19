@@ -640,30 +640,36 @@ void GrabViaRestPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             size_t                  payloadSize = 0U;
             const void*             vPayload    = rsp.getPayload(payloadSize);
             const char*             payload     = static_cast<const char*>(vPayload);
-            DeserializationError    error;
             
             if (true == m_filter.overflowed())
             {
                 LOG_ERROR("Less memory for filter available.");
             }
-
-            error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
-
-            if (DeserializationError::Ok != error.code())
+            else if ((nullptr == payload) ||
+                     (0U == payloadSize))
             {
-                LOG_WARNING("JSON parse error: %s", error.c_str());
+                LOG_ERROR("No payload.");
             }
             else
             {
-                Msg msg;
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(m_filter));
 
-                msg.type    = MSG_TYPE_RSP;
-                msg.rsp     = jsonDoc;
-
-                if (false == this->m_taskProxy.send(msg))
+                if (DeserializationError::Ok != error.code())
                 {
-                    delete jsonDoc;
-                    jsonDoc = nullptr;
+                    LOG_WARNING("JSON parse error: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
                 }
             }
         }

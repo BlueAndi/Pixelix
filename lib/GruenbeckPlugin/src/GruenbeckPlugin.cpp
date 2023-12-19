@@ -515,7 +515,8 @@ void GruenbeckPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             char            restCapacity[RELEVANT_DATA_LENGTH + 1];
             Msg             msg;
 
-            if (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
+            if ((nullptr != payload) &&
+                (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH)))
             {
                 memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
                 restCapacity[RELEVANT_DATA_LENGTH] = '\0';

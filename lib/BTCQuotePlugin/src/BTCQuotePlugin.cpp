@@ -244,7 +244,6 @@ void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             const char*                     payload     = static_cast<const char*>(vPayload);
             const size_t                    FILTER_SIZE = 128U;
             StaticJsonDocument<FILTER_SIZE> filter;
-            DeserializationError            error;
 
             filter["bpi"]["USD"]["rate_float"]  = true;
             filter["bpi"]["USD"]["rate"]        = true;
@@ -253,24 +252,31 @@ void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             {
                 LOG_ERROR("Less memory for filter available.");
             }
-
-            error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-            if (DeserializationError::Ok != error.code())
+            else if ((nullptr == payload) ||
+                     (0U == payloadSize))
             {
-                LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+                LOG_ERROR("No payload.");
             }
             else
             {
-                Msg msg;
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
 
-                msg.type    = MSG_TYPE_RSP;
-                msg.rsp     = jsonDoc;
-
-                if (false == this->m_taskProxy.send(msg))
+                if (DeserializationError::Ok != error.code())
                 {
-                    delete jsonDoc;
-                    jsonDoc = nullptr;
+                    LOG_ERROR("Invalid JSON message received: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
                 }
             }
         }
