@@ -51,6 +51,8 @@
 #include <lwip/init.h>
 #include <SettingsService.h>
 
+#include <mbedtls/version.h>
+
 /******************************************************************************
  * Compiler Switches
  *****************************************************************************/
@@ -137,6 +139,7 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "FS_SIZE_USED",         []() -> String { return String(FILESYSTEM.usedBytes()); },
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
     "HEAP_SIZE_AVAILABLE",  []() -> String { return String(ESP.getFreeHeap()); },
+    "MBED_TLS_VERSION",     []() -> String { return String(MBEDTLS_VERSION_STRING); },
     "PSRAM_SIZE",           []() -> String { return String(ESP.getPsramSize()); },
     "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); },
     "HOSTNAME",             tmpl::getHostname,
