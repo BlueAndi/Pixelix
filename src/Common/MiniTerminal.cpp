@@ -38,6 +38,7 @@
 #include <Util.h>
 #include <SettingsService.h>
 #include <StateMachine.hpp>
+#include <WiFi.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -82,6 +83,12 @@ static const char*     WRITE_WIFI_SSID              = "write wifi ssid ";
 
 /** Command length: write wifi ssid */
 static const size_t    WRITE_WIFI_SSID_LEN 	        = strlen(WRITE_WIFI_SSID);
+
+/** Command: get ip */
+static const char*     GET_IP                       = "get ip";
+
+/** Command length: get ipaddress */
+static const size_t    GET_IP_LEN 	                = strlen(GET_IP);
 
 /******************************************************************************
  * Public Methods
@@ -204,6 +211,10 @@ void MiniTerminal::executeCommand(const char* cmdLine)
     {
         cmdWriteWifiSSID(&cmdLine[WRITE_WIFI_SSID_LEN]);
     }
+    else if (0 == strncmp(cmdLine, GET_IP, GET_IP_LEN))
+    {
+        cmdGetIPAddress(&cmdLine[GET_IP_LEN]);
+    }
     else
     {
         writeError("Unknown command.\n");
@@ -264,6 +275,27 @@ void MiniTerminal::cmdWriteWifiSSID(const char* par)
 
             writeSuccessful();
         }
+    }
+}
+
+void MiniTerminal::cmdGetIPAddress(const char* par)
+{
+    if (nullptr != par)
+    {
+        String result;
+
+        if (WIFI_MODE_AP == WiFi.getMode())
+        {
+            result = WiFi.softAPIP().toString();
+        }
+        else
+        {
+            result = WiFi.localIP().toString();
+        }
+
+        result += "\n";
+
+        writeSuccessful(result.c_str());
     }
 }
 
