@@ -79,7 +79,7 @@ public:
         m_spriteSheetPaths(),
         m_isUploadError(false),
         m_mutex(),
-        m_hasTopicChanged(false)
+        m_hasTopicChanged()
     {
         (void)m_mutex.create();
     }
@@ -343,7 +343,7 @@ private:
     String                  m_spriteSheetPaths[MAX_ICONS];  /**< Full path to spritesheets. */
     bool                    m_isUploadError;                /**< Flag to signal a upload error. */
     mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged;              /**< Has the topic content changed? */
+    bool                    m_hasTopicChanged[MAX_ICONS];  /**< Has the topic content changed? */
 
     /**
      * Get image filename with path.
