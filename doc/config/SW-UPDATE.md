@@ -115,6 +115,8 @@ Example:
 
 ![VSCodeUpdate](../images/VSCodeUpdate.png)
 
+Note: Sometimes it happens that the _Platform_ sub-menu in the PlatformIO Project Tasks is missing. In this case restart VSCode and it should appear.
+
 # Use the browser
 Preconditions:
 * PIXELIX runs already on the target.
