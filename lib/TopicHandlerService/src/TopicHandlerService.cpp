@@ -100,12 +100,17 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
     if ((false == deviceId.isEmpty()) &&
         (nullptr != plugin))
     {
-        const size_t        JSON_DOC_SIZE   = 512U;
+        const size_t        JSON_DOC_SIZE   = 1024U;
         DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
         JsonArray           jsonTopics      = topicsDoc.createNestedArray("topics");
 
         /* Get topics from plugin. */
         plugin->getTopics(jsonTopics);
+
+        if (true == topicsDoc.overflowed())
+        {
+            LOG_ERROR("JSON document has less memory available.");
+        }
 
         /* Handle each topic */
         if (0U < jsonTopics.size())
