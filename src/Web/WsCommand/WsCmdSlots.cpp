@@ -82,7 +82,9 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         uint8_t     slotId      = SlotList::SLOT_ID_INVALID;
         uint8_t     stickySlot  = displayMgr.getStickySlot();
 
-        msg = displayMgr.getMaxSlots();
+        preparePositiveResponse(msg);
+
+        msg += displayMgr.getMaxSlots();
 
         /* Provides for every slot:
          * - Name of plugin.
@@ -120,7 +122,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             msg += duration;
         }
 
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
 
     m_isError = false;

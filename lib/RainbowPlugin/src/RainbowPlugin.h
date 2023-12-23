@@ -90,7 +90,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new RainbowPlugin(name, uid);
+        return new(std::nothrow)RainbowPlugin(name, uid);
     }
 
     /**

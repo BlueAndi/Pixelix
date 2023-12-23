@@ -194,7 +194,7 @@ static const char*      DEFAULT_WEB_LOGIN_PASSWORD      = "skywalker";
 static const char*      DEFAULT_HOSTNAME                = "pixelix";
 
 /** Brightness default value in % */
-static const uint8_t    DEFAULT_BRIGHTNESS              = 20U; /* If powered via USB, keep this at 20% to avoid damage. */
+static const uint8_t    DEFAULT_BRIGHTNESS              = 25U; /* If powered via USB, keep this at 25% to avoid damage. */
 
 /** Automatic brightness control default value */
 static const bool       DEFAULT_AUTO_BRIGHTNESS_CTRL    = false;
@@ -332,7 +332,7 @@ bool SettingsService::start()
 
 void SettingsService::stop()
 {
-    /* Nothing to do. */
+    LOG_INFO("Settings service stopped.");
 }
 
 void SettingsService::process()

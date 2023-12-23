@@ -1,0 +1,11 @@
+{
+    "method": "GET",
+    "url": "https://api.github.com/repos/BlueAndi/esp-rgb-led-matrix",
+    "filter": {
+      "stargazers_count": true
+    },
+    "iconPath": "/configuration/github.bmp",
+    "format": "\\calign%.0f",
+    "multiplier": 1,
+    "offset": 0
+  }

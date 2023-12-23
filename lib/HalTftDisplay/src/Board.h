@@ -105,6 +105,9 @@ namespace Pin
 
     /** Pin number of buzzer out */
     constexpr uint8_t   buzzerOutPinNo          = CONFIG_PIN_BUZZER_OUT;
+
+    /** Pin number of TFT display backlight LED switch. */
+    constexpr uint8_t   tftBackLightPinNo       = TFT_BL;
 };
 
 /* Digital output pin: Onboard LED */
@@ -133,6 +136,9 @@ extern const AnalogPin<Pin::batteryInPinNo>                 batteryVoltageIn;
 
 /* Digital output pin: Buzzer */
 extern const DOutPin<Pin::buzzerOutPinNo>                   buzzerOut;
+
+/* Digital output pin: TFT display backlight switch */
+extern const DOutPin<Pin::tftBackLightPinNo>                tftBackLightOut;
 
 /** ADC resolution in digits */
 constexpr uint16_t  adcResolution               = 4096U;

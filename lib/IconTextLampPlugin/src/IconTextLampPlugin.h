@@ -83,6 +83,8 @@ public:
         m_lampCanvas(),
         m_bitmapWidget(),
         m_textWidget(),
+        m_iconPath(),
+        m_spriteSheetPath(),
         m_lampWidgets(),
         m_mutex(),
         m_hasTopicTextChanged(false),
@@ -110,7 +112,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new IconTextLampPlugin(name, uid);
+        return new(std::nothrow)IconTextLampPlugin(name, uid);
     }
 
     /**
@@ -163,7 +165,7 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
     /**
      * Is the topic content changed since last time?
@@ -230,17 +232,48 @@ public:
     void setText(const String& formatText);
 
     /**
-     * Load bitmap image / sprite sheet from filesystem.
-     * If a bitmap image is loaded, it will remove a corresponding sprite
-     * sheet file from filesystem.
-     * If a sprite sheet is loaded, it will load the texture file from
-     * filesystem. This assumes that the texture file was uploaded before!
+     * Load bitmap image from filesystem. If a sprite sheet is available, the
+     * bitmap will be automatically used as texture for animation.
      *
-     * @param[in] filename  Bitmap image / Sprite sheet filename
+     * @param[in] filename  Bitmap image filename
      *
      * @return If successul, it will return true otherwise false.
      */
     bool loadBitmap(const String& filename);
+
+    /**
+     * Load sprite sheet from filesystem. If a bitmap is available, it will
+     * be automatically used as texture for animation.
+     *
+     * @param[in] filename  Sprite sheet filename
+     *
+     * @return If successul, it will return true otherwise false.
+     */
+    bool loadSpriteSheet(const String& filename);
+
+    /**
+     * Clear bitmap icon.
+     */
+    void clearBitmap();
+
+    /**
+     * Clear sprite sheet.
+     */
+    void clearSpriteSheet();
+
+    /**
+     * Get icon file path.
+     * 
+     * @param[out] Path to icon file.
+     */
+    void getIconFilePath(String& fullPath) const;
+
+    /**
+     * Get sprite sheet file path.
+     * 
+     * @param[out] Path to sprite sheet file.
+     */
+    void getSpriteSheetFilePath(String& fullPath) const;
 
     /**
      * Get lamp state (true = on / false = off).
@@ -282,6 +315,11 @@ private:
     static const char*      TOPIC_ICON;
 
     /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*      TOPIC_SPRITESHEET;
+
+    /**
      * Icon width in pixels.
      */
     static const uint16_t   ICON_WIDTH  = 8U;
@@ -311,6 +349,8 @@ private:
     WidgetGroup             m_lampCanvas;                       /**< Canvas used for the lamp widget. */
     BitmapWidget            m_bitmapWidget;                     /**< Bitmap widget, used to show the icon. */
     TextWidget              m_textWidget;                       /**< Text widget, used for showing the text. */
+    String                  m_iconPath;                         /**< Full path to icon. */
+    String                  m_spriteSheetPath;                  /**< Full path to spritesheet. */
     LampWidget              m_lampWidgets[MAX_LAMPS];           /**< Lamp widgets, used to signal different things. */
     mutable MutexRecursive  m_mutex;                            /**< Mutex to protect against concurrent access. */
     bool                    m_hasTopicTextChanged;              /**< Has the topic text content changed? */

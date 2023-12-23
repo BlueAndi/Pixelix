@@ -232,7 +232,7 @@ public:
     /**
      * Get font.
      *
-     * @return font
+     * @return Font which is used.
      */
     BaseFont<TColor>& getFont()
     {
@@ -240,9 +240,9 @@ public:
     }
 
     /**
-     * Set GFXfont.
+     * Set font.
      *
-     * @param[in] gfxFont   GFXfont
+     * @param[in] font  New font to set.
      */
     void setFont(const BaseFont<TColor>& font)
     {

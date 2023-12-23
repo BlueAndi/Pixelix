@@ -164,30 +164,30 @@ public:
     bool loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName);
 
     /**
-     * Get the animation control flag FORWARD of a sprite sheet 
+     * Get the animation control flag FORWARD of a sprite sheet.
      * 
      * @return If forward, it will return true otherwise false.
      */
     bool isSpriteSheetForward() const;
 
     /**
-     * Set the animation control flag FORWARD of a sprite sheet 
+     * Set the animation control flag FORWARD of a sprite sheet.
      * 
      * @param[in] forward The state to be set.
      */
     void setSpriteSheetForward(bool forward);
 
     /**
-     * Get the animation control flag REPEAT of a sprite sheet 
+     * Get the animation control flag REPEAT of a sprite sheet.
      * 
      * @return If its repeated, it will return true otherwise false.
      */
     bool isSpriteSheetRepeatInfinite() const;
 
     /**
-     * Set the animation control flag REPEAT of a sprite sheet 
+     * Set the animation control flag REPEAT of a sprite sheet.
      * 
-     * @param[in] isRepeat The state to be set.
+     * @param[in] repeat The repeat flat to be set.
      */
     void setSpriteSheetRepeatInfinite(bool repeat);
     

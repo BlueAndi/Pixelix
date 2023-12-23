@@ -4,18 +4,18 @@
 
 # Home Assistant <!-- omit in toc -->
 
-- [Purpose](#purpose)
-- [REST API](#rest-api)
-  - [Installation](#installation)
-  - [Setting up REST command](#setting-up-rest-command)
-  - [Import Blueprint](#import-blueprint)
-  - [Generate an automation](#generate-an-automation)
-- [MQTT](#mqtt)
-  - [Installation](#installation-1)
-  - [MQTT Discovery](#mqtt-discovery)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Purpose](#purpose)
+* [REST API](#rest-api)
+  * [Installation](#installation)
+  * [Setting up REST command](#setting-up-rest-command)
+  * [Import Blueprint](#import-blueprint)
+  * [Generate an automation](#generate-an-automation)
+* [MQTT](#mqtt)
+  * [Installation](#installation-1)
+  * [MQTT Discovery](#mqtt-discovery)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Purpose
 To display e.g. sensor data from your [Home Assistant](https://www.home-assistant.io/) instance, there are two possibilitis. Using the REST API or MQTT.

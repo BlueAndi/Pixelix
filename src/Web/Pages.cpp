@@ -39,7 +39,7 @@
 #include "UpdateMgr.h"
 #include "DisplayMgr.h"
 #include "RestApi.h"
-#include "PluginMgr.h"
+#include "PluginList.h"
 #include "FileSystem.h"
 
 #include <WiFi.h>
@@ -50,6 +50,8 @@
 #include <ArduinoJson.h>
 #include <lwip/init.h>
 #include <SettingsService.h>
+
+#include <mbedtls/version.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -137,6 +139,7 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "FS_SIZE_USED",         []() -> String { return String(FILESYSTEM.usedBytes()); },
     "HEAP_SIZE",            []() -> String { return String(ESP.getHeapSize()); },
     "HEAP_SIZE_AVAILABLE",  []() -> String { return String(ESP.getFreeHeap()); },
+    "MBED_TLS_VERSION",     []() -> String { return String(MBEDTLS_VERSION_STRING); },
     "PSRAM_SIZE",           []() -> String { return String(ESP.getPsramSize()); },
     "PSRAM_SIZE_AVAILABLE", []() -> String { return String(ESP.getFreePsram()); },
     "HOSTNAME",             tmpl::getHostname,
@@ -148,6 +151,7 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
     "SW_BRANCH",            []() -> String { return Version::SOFTWARE_BRANCH; },
     "SW_REVISION",          []() -> String { return Version::SOFTWARE_REV; },
     "SW_VERSION",           []() -> String { return Version::SOFTWARE_VER; },
+    "TARGET",               []() -> String { return Version::TARGET; },
     "WS_ENDPOINT",          []() -> String { return WebConfig::WEBSOCKET_PATH; },
     "WS_PORT",              []() -> String { return String(WebConfig::WEBSOCKET_PORT); },
     "WS_PROTOCOL",          []() -> String { return WebConfig::WEBSOCKET_PROTOCOL; }
@@ -171,10 +175,12 @@ static TmplKeyWordFunc  gTmplKeyWordToFunc[]            =
 
 void Pages::init(AsyncWebServer& srv)
 {
-    const char*         pluginName          = nullptr;
-    String              webLoginUser;
-    String              webLoginPassword;
-    SettingsService&    settings            = SettingsService::getInstance();
+    uint8_t                     pluginTypeListLength    = 0U;
+    const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
+    uint8_t                     idx                     = 0U;
+    String                      webLoginUser;
+    String                      webLoginPassword;
+    SettingsService&            settings                = SettingsService::getInstance();
 
     if (false == settings.open(true))
     {
@@ -232,10 +238,10 @@ void Pages::init(AsyncWebServer& srv)
         .setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());
 
     /* Add one page per plugin. */
-    pluginName = PluginMgr::getInstance().findFirst();
-    while(nullptr != pluginName)
+    while(pluginTypeListLength > idx)
     {
-        String uri = PLUGIN_PAGE_PATH + pluginName;
+        const PluginList::Element*  elem    = &pluginTypeList[idx];
+        String                      uri     = PLUGIN_PAGE_PATH + elem->name;
         
         (void)srv.on(   uri.c_str(),
                         HTTP_GET,
@@ -257,15 +263,10 @@ void Pages::init(AsyncWebServer& srv)
 
                         }).setAuthentication(webLoginUser.c_str(), webLoginPassword.c_str());;
 
-        pluginName = PluginMgr::getInstance().findNext();
+        ++idx;
     }
 }
 
-/**
- * Error web page used in case a requested path was not found.
- *
- * @param[in] request   HTTP request
- */
 void Pages::error(AsyncWebServerRequest* request)
 {
     if (nullptr == request)

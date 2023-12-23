@@ -65,6 +65,9 @@ class TopicHandlerService : public IService
 {
 public:
 
+    /** Function prototype to check whether the topic content changed since last time. */
+    typedef std::function<bool(const String& topic)> HasChangedFunc;
+
     /**
      * Get the topic handler service instance.
      * 
@@ -95,37 +98,91 @@ public:
     /**
      * Register all topics of the given plugin.
      * 
+     * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] plugin    The plugin, which topics shall be registered.
      */
-    void registerTopics(IPluginMaintenance* plugin);
+    void registerTopics(const String& deviceId, IPluginMaintenance* plugin);
 
     /**
      * Unregister all topics of the given plugin.
      * 
+     * @param[in] deviceId  The device id which represents the physical device.
      * @param[in] plugin    The plugin, which topics to unregister.
      */
-    void unregisterTopics(IPluginMaintenance* plugin);
+    void unregisterTopics(const String& deviceId, IPluginMaintenance* plugin);
+
+    /**
+     * Register a topic.
+     * 
+     * @param[in] deviceId          The device id which represents the physical device.
+     * @param[in] entityId          The entity id which represents the entity of the device.
+     * @param[in] topic             The topic which to register.
+     * @param[in] extra             Extra JSON parameters for concrete topic handlers, which are pushed through.
+     * @param[in] getTopicFunc      Function which is called to read the topic.
+     * @param[in] hasChangedFunc    Function which is periodically called to check whether the topic has changed.
+     * @param[in] setTopicFunc      Function which is called to set the topic.
+     * @param[in] uploadReqFunc     Function which is called to accept a file upload or not.
+     */
+    void registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, ITopicHandler::GetTopicFunc getTopicFunc, HasChangedFunc hasChangedFunc, ITopicHandler::SetTopicFunc setTopicFunc, ITopicHandler::UploadReqFunc uploadReqFunc);
+
+    /**
+     * Unregister a topic.
+     * 
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
+     * @param[in] topic     The topic which to unregister.
+     */
+    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic);
 
 private:
 
     /** Default topic accessibility. */
-    static const ITopicHandler::Access  DEFAULT_ACCESS      = ITopicHandler::ACCESS_READ_WRITE;
+    static const char*      DEFAULT_ACCESS;
 
     /** Period in ms to check for changed topics. */
-    static const uint32_t               ON_CHANGE_PERIOD    = 500U;
+    static const uint32_t   ON_CHANGE_PERIOD    = 500U;
 
     /**
-     * Plugin topic data, used for automatic publishing.
+     * Topic meta data, used for automatic publishing.
      */
-    struct PluginTopic
+    struct TopicMetaData
     {
-        IPluginMaintenance* plugin; /**< The plugin */
-        String              topic;  /**< The plugin topic */
+        String          deviceId;       /**< Id of the device this data is related to. */
+        String          entityId;       /**< Id of the entity this data is related to. */
+        String          topic;          /**< The topic this data is related to. */
+        HasChangedFunc  hasChangedFunc; /**< Function to check whether the topic content has changed. */
 
         /**
-         * Construct plugin topic data instance.
+         * Construct topic meta data instance.
          */
-        PluginTopic() :
+        TopicMetaData() :
+            deviceId(),
+            entityId(),
+            topic(),
+            hasChangedFunc(nullptr)
+        {
+        }
+    };
+
+    /**
+     * List of topic meta data.
+     */
+    typedef std::vector<TopicMetaData*>   TopicMetaDataList;
+
+    /**
+     * Plugin meta data, used to determine whether publishing
+     * of a topic shall take place or not.
+     */
+    struct PluginMetaData
+    {
+        String              deviceId;   /**< Id of the device this data is related to. */
+        IPluginMaintenance* plugin;     /**< Plugin which topics are handled. */
+        String              topic;      /**< The topic this data is related to. */
+
+        /**
+         * Construct topic meta data instance.
+         */
+        PluginMetaData() :
             plugin(nullptr),
             topic()
         {
@@ -133,19 +190,21 @@ private:
     };
 
     /**
-     * List of plugin topics.
+     * List of plugin meta data.
      */
-    typedef std::vector<PluginTopic*>   PluginTopicList;
+    typedef std::vector<PluginMetaData*>    PluginMetaDataList;
 
-    PluginTopicList m_pluginTopicList;  /**< List of readable plugin topics. */
-    SimpleTimer     m_onChangeTimer;    /**< Timer for on change processing period. */
+    TopicMetaDataList   m_topicMetaDataList;    /**< List of readable topics and the required meta data. */
+    PluginMetaDataList  m_pluginMetaDataList;   /**< List of plugins, which topics are handled. */
+    SimpleTimer         m_onChangeTimer;        /**< Timer for on change processing period. */
 
     /**
      * Constructs the service instance.
      */
     TopicHandlerService() :
         IService(),
-        m_pluginTopicList(),
+        m_topicMetaDataList(),
+        m_pluginMetaDataList(),
         m_onChangeTimer()
     {
     }
@@ -163,47 +222,69 @@ private:
     TopicHandlerService& operator=(const TopicHandlerService& service);
 
     /**
-     * Converts the topic access in string form to the enumeration form.
+     * Get the entity id by plugin UID.
      * 
-     * @param[in] strAccess Topic accessibility as string (r, rw, w)
+     * @param[in] uid   Plugin UID
      * 
-     * @return Topic accessibility
+     * @return Entity id
      */
-   ITopicHandler::Access strToAccess(const String& strAccess) const;
+    String getEntityIdByPluginUid(uint16_t uid);
 
     /**
-     * Register a single topic of the given plugin.
+     * Get the entity id by plugin alias.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
-     * @param[in] topic     The topic name.
-     * @param[in] access    The topic accessibility.
-     * @param[in] extra     Extra parameters, which depend on the topic handler.
+     * @param[in] alias Plugin alias
+     * 
+     * @return Entity id
      */
-    void registerTopic(IPluginMaintenance* plugin, const String& topic, ITopicHandler::Access access, JsonObjectConst& extra);
+    String getEntityIdByPluginAlias(const String& alias);
 
     /**
-     * Unregister the topic of the given plugin.
+     * Generates the access functions depended on the plugin accessibility.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
-     * @param[in] topic     The topic name.
+     * @param[in]   plugin          The plugin which to consider.
+     * @param[in]   strAccess       Topic accessibility as string (r, rw, w).
+     * @param[out]  getTopicFunc    Function to get the topic content.
+     * @param[out]  setTopicFunc    Function to set the topic content.
+     * @param[out]  uploadReqFunc   Function used for requesting whether an file upload is allowed.
      */
-    void unregisterTopic(IPluginMaintenance* plugin, const String& topic);
+   void strToAccess(IPluginMaintenance* plugin, const String& strAccess, ITopicHandler::GetTopicFunc& getTopicFunc, ITopicHandler::SetTopicFunc& setTopicFunc, ITopicHandler::UploadReqFunc& uploadReqFunc) const;
 
     /**
-     * Add plugin topic to list of automatic publishing on change.
+     * Add topic meta data to list of automatic publishing on change.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
-     * @param[in] topic     The topic name.
+     * @param[in] deviceId          The device id which represents the physical device.
+     * @param[in] entityId          The entity id which represents the entity of the device.
+     * @param[in] topic             The topic name.
+     * @param[in] hasChangedFunc    Function to retrieve whether the topic changes since last time.
      */
-    void addToList(IPluginMaintenance* plugin, const String& topic);
+    void addToTopicMetaDataList(const String& deviceId, const String& entityId, const String& topic, HasChangedFunc hasChangedFunc);
 
     /**
-     * Remove plugin topic from list of automatic publishing on change.
+     * Remove topic meta data from list of automatic publishing on change.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    void removeFromList(IPluginMaintenance* plugin, const String& topic);
+    void removeFromTopicMetaDataList(const String& deviceId, const String& entityId, const String& topic);
+
+    /**
+     * Add plugin meta data to list of automatic publishing on change.
+     * 
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The related plugin.
+     * @param[in] topic     The topic name.
+     */
+    void addToPluginMetaDataList(const String& deviceId, IPluginMaintenance* plugin, const String& topic);
+
+    /**
+     * Remove plugin meta data from list of automatic publishing on change.
+     * 
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] plugin    The related plugin.
+     */
+    void removeFromPluginMetaDataList(const String& deviceId, IPluginMaintenance* plugin);
 
     /**
      * Process all plugin topics to check which one has changed.
@@ -229,10 +310,11 @@ private:
     /**
      * Notify all topic handlers about changed topic.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    void notifyAllHandlers(IPluginMaintenance* plugin, const String& topic);
+    void notifyAllHandlers(const String& deviceId, const String& entityId, const String& topic);
 };
 
 /******************************************************************************

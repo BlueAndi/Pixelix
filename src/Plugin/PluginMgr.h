@@ -84,14 +84,6 @@ public:
     void begin();
 
     /**
-     * Register a plugin.
-     *
-     * @param[in] name          Plugin name
-     * @param[in] createFunc    The plugin creation function.
-     */
-    void registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc);
-
-    /**
      * Install plugin.
      * If no slot id is given, the plugin will be installed in the next available slot.
      *
@@ -112,20 +104,6 @@ public:
     bool uninstall(IPluginMaintenance* plugin);
 
     /**
-     * Find first plugin.
-     *
-     * @return If plugin found, it will return its name otherwise nullptr.
-     */
-    const char* findFirst();
-
-    /**
-     * Find next plugin.
-     *
-     * @return If plugin found, it will return its name otherwise nullptr.
-     */
-    const char* findNext();
-
-    /**
      * Set the alias name of a plugin.
      * If the plugin has registered a topic handler, the corresponding URIs will be updated.
      * 
@@ -134,6 +112,12 @@ public:
      * @return If successful, it will return true otherwise false.
      */
     bool setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
+
+    /**
+     * Unregister all plugin topics from the topic handler service.
+     * The plugins will still be installed, but won't get any update from outside.
+     */
+    void unregisterAllPluginTopics();
 
     /**
      * Load plugin installation from persistent memory.
@@ -162,12 +146,14 @@ private:
     static const char*  MQTT_SPECIAL_CHARACTERS;
 
     PluginFactory   m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
+    String          m_deviceId;         /**< Device id, used for topic registration. */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
-        m_pluginFactory()
+        m_pluginFactory(),
+        m_deviceId()
     {
     }
 

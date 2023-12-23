@@ -5,12 +5,12 @@
 
 # Sprite Sheet <!-- omit in toc -->
 
-- [Purpose](#purpose)
-- [Tools And Scripts](#tools-and-scripts)
-- [Limitations](#limitations)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Purpose](#purpose)
+* [Tools And Scripts](#tools-and-scripts)
+* [Limitations](#limitations)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Purpose
 Use a sprite sheet for 2d animations.

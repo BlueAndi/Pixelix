@@ -99,7 +99,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new JustTextPlugin(name, uid);
+        return new(std::nothrow)JustTextPlugin(name, uid);
     }
 
     /**
@@ -184,7 +184,7 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
     /**
      * Is the topic content changed since last time?

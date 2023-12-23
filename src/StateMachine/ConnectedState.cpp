@@ -36,9 +36,10 @@
 #include "SysMsg.h"
 #include "UpdateMgr.h"
 #include "MyWebServer.h"
-#include "ClockDrv.h"
 #include "DisplayMgr.h"
 #include "Services.h"
+#include "SensorDataProvider.h"
+#include "PluginMgr.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -86,7 +87,7 @@ void ConnectedState::entry(StateMachine& sm)
 
     LOG_INFO("Connected.");
 
-    /* Get hostname and notifyURL. */
+    /* Get some settings. */
     if (false == settings.open(true))
     {
         LOG_WARNING("Use default hostname.");
@@ -120,9 +121,6 @@ void ConnectedState::entry(StateMachine& sm)
         const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
         const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
 
-        /* Start the ClockDriver */
-        ClockDrv::getInstance().init();
-
         /* Notify about successful network connection. */
         DisplayMgr::getInstance().setNetworkStatus(true);
 
@@ -138,61 +136,8 @@ void ConnectedState::entry(StateMachine& sm)
             SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
         }
 
-        /* If a push URL is set, notify about the online status. */
-        if (false == notifyURL.isEmpty())
-        {
-            String      url         = notifyURL;
-            const char* GET_CMD     = "get ";
-            const char* POST_CMD    = "post ";
-            bool        isGet       = true;
-
-            /* URL prefix might indicate the kind of request. */
-            url.toLowerCase();
-            if (0U != url.startsWith(GET_CMD))
-            {
-                url = url.substring(strlen(GET_CMD));
-                isGet = true;
-            }
-            else if (0U != url.startsWith(POST_CMD))
-            {
-                url = url.substring(strlen(POST_CMD));
-                isGet = false;
-            }
-            else
-            {
-                ;
-            }
-
-            if (true == m_client.begin(url))
-            {
-                if (false == m_client.GET())
-                {
-                    LOG_WARNING("GET %s failed.", url.c_str());
-                }
-                else
-                {
-                    LOG_INFO("Notification triggered.");
-                }
-            }
-        }
+        pushUrl(notifyURL);
     }
-}
-
-void ConnectedState::initHttpClient()
-{
-    m_client.regOnResponse([](const HttpResponse& rsp){
-        uint16_t statusCode = rsp.getStatusCode();
-
-        if (HttpStatus::STATUS_CODE_OK == statusCode)
-        {
-            LOG_INFO("Online state reported.");
-        }
-
-    });
-
-    m_client.regOnError([]() {
-        LOG_WARNING("Connection error happened.");
-   });
 }
 
 void ConnectedState::process(StateMachine& sm)
@@ -222,10 +167,25 @@ void ConnectedState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
-    /* Disconnect all connections */
-    (void)WiFi.disconnect();
+    /* User requested (power off / restart after update) to disconnect? */
+    if (true == WiFi.isConnected())
+    {
+        /* Purge sensor topics (MQTT) */
+        SensorDataProvider::getInstance().end();
 
-    /* Notify about lost network connection. */
+        /* Unregister all plugins, which will purge all of their topics (MQTT). */
+        PluginMgr::getInstance().unregisterAllPluginTopics();
+
+        /* Stop all services now to allow them having graceful disconnection from
+         * servers until the wifi will be disconnected.
+         */
+        Services::stopAll();
+
+        /* Disconnect wifi connection. */
+        (void)WiFi.disconnect();
+    }
+
+    /* Notify about no network connection. */
     DisplayMgr::getInstance().setNetworkStatus(false);
 }
 
@@ -236,6 +196,64 @@ void ConnectedState::exit(StateMachine& sm)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void ConnectedState::initHttpClient()
+{
+    m_client.regOnResponse([](const HttpResponse& rsp){
+        uint16_t statusCode = rsp.getStatusCode();
+
+        if (HttpStatus::STATUS_CODE_OK == statusCode)
+        {
+            LOG_INFO("Online state reported.");
+        }
+
+    });
+
+    m_client.regOnError([]() {
+        LOG_WARNING("Connection error happened.");
+   });
+}
+
+void ConnectedState::pushUrl(const String& pushUrl)
+{
+    /* If a push URL is set, notify about the online status. */
+    if (false == pushUrl.isEmpty())
+    {
+        String      url         = pushUrl;
+        const char* GET_CMD     = "get ";
+        const char* POST_CMD    = "post ";
+        bool        isGet       = true;
+
+        /* URL prefix might indicate the kind of request. */
+        url.toLowerCase();
+        if (0U != url.startsWith(GET_CMD))
+        {
+            url = url.substring(strlen(GET_CMD));
+            isGet = true;
+        }
+        else if (0U != url.startsWith(POST_CMD))
+        {
+            url = url.substring(strlen(POST_CMD));
+            isGet = false;
+        }
+        else
+        {
+            ;
+        }
+
+        if (true == m_client.begin(url))
+        {
+            if (false == m_client.GET())
+            {
+                LOG_WARNING("GET %s failed.", url.c_str());
+            }
+            else
+            {
+                LOG_INFO("Notification triggered.");
+            }
+        }
+    }
+}
 
 /******************************************************************************
  * External Functions

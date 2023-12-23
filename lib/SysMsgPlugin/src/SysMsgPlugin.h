@@ -103,7 +103,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new SysMsgPlugin(name, uid);
+        return new(std::nothrow)SysMsgPlugin(name, uid);
     }
 
     /**

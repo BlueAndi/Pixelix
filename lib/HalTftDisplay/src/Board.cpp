@@ -83,6 +83,9 @@ const AnalogPin<Pin::batteryInPinNo>                Board::batteryVoltageIn;
 /** Digital output pin: Buzzer */
 const DOutPin<Pin::buzzerOutPinNo>                  Board::buzzerOut;
 
+/** Digital output pin: TFT display backlight switch */
+const DOutPin<Pin::tftBackLightPinNo>               Board::tftBackLightOut;
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -97,7 +100,8 @@ static const IoPin* ioPinList[] =
     &ldrIn,
     &dhtIn,
     &batteryVoltageIn,
-    &buzzerOut
+    &buzzerOut,
+    &tftBackLightOut
 };
 
 /******************************************************************************

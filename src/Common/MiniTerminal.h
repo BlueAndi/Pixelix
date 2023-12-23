@@ -169,6 +169,13 @@ private:
      * @param[in] par   Parameter
      */
     void cmdWriteWifiSSID(const char* par);
+
+    /**
+     * Get the IP-address.
+     * 
+     * @param[in] par   Parameter
+     */
+    void cmdGetIPAddress(const char* par);
 };
 
 /******************************************************************************

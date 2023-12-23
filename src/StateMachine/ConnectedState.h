@@ -125,6 +125,12 @@ private:
      */
     void initHttpClient(void);
     
+    /**
+     * Notify via URL that the system is online.
+     * 
+     * @param[in] pushUrl   Push URL
+     */
+    void pushUrl(const String& pushUrl);
 };
 
 /******************************************************************************

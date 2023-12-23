@@ -86,7 +86,9 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         }
         else
         {
-            msg  = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
+            preparePositiveResponse(msg);
+
+            msg += DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
             msg += DELIMITER;
             msg += plugin->getUID();
 
@@ -94,9 +96,9 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
             /* Save current installed plugins to persistent memory. */
             PluginMgr::getInstance().save();
-        }
 
-        sendPositiveResponse(server, client, msg);
+            sendResponse(server, client, msg);
+        }
     }
 
     m_isError = false;

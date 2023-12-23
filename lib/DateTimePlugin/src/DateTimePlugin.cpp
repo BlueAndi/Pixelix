@@ -95,7 +95,7 @@ bool DateTimePlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool DateTimePlugin::setTopic(const String& topic, const JsonObject& value)
+bool DateTimePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
@@ -460,11 +460,11 @@ void DateTimePlugin::updateDateTime(bool force)
     /* If not other timezone is given, the local time shall be used. */
     if (true == m_timeZone.isEmpty())
     {
-        isClockAvailable = clockDrv.getTime(&timeInfo);
+        isClockAvailable = clockDrv.getTime(timeInfo);
     }
     else
     {
-        isClockAvailable = clockDrv.getTzTime(m_timeZone.c_str(), &timeInfo);
+        isClockAvailable = clockDrv.getTzTime(m_timeZone.c_str(), timeInfo);
     }
     
     if (true == isClockAvailable)
@@ -680,7 +680,7 @@ bool DateTimePlugin::getTimeAsString(String& time, const String& format, const t
     {
         timeStructPtr = &timeStruct;
 
-        if (false == ClockDrv::getInstance().getTime(&timeStruct))
+        if (false == ClockDrv::getInstance().getTime(timeStruct))
         {
             timeStructPtr = nullptr;
         }

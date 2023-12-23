@@ -101,6 +101,23 @@ public:
      */
     virtual void clear() = 0;
 
+    /**
+     * Power display off.
+     */
+    virtual void off() = 0;
+
+    /**
+     * Power display on.
+     */
+    virtual void on() = 0;
+
+    /**
+     * Is display powered on?
+     * 
+     * @return If display is powered on, it will return true otherwise false.
+     */
+    virtual bool isOn() const = 0;
+
 protected:
 
     /**

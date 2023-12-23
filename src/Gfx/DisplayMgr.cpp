@@ -714,6 +714,33 @@ void DisplayMgr::setNetworkStatus(bool isConnected)
     m_isNetworkConnected = isConnected;
 }
 
+void DisplayMgr::displayOff()
+{
+    MutexGuard<MutexRecursive>  guard1(m_mutexInterf);
+    MutexGuard<MutexRecursive>  guard2(m_mutexUpdate);
+    
+    Display::getInstance().off();
+}
+
+void DisplayMgr::displayOn()
+{
+    MutexGuard<MutexRecursive>  guard1(m_mutexInterf);
+    MutexGuard<MutexRecursive>  guard2(m_mutexUpdate);
+
+    Display::getInstance().on();
+}
+
+bool DisplayMgr::isDisplayOn() const
+{
+    bool                        isDisplayOn             = false;
+    MutexGuard<MutexRecursive>  guard1(m_mutexInterf);
+    MutexGuard<MutexRecursive>  guard2(m_mutexUpdate);
+
+    isDisplayOn = Display::getInstance().isOn();
+
+    return isDisplayOn;
+}
+
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -1312,7 +1339,7 @@ void DisplayMgr::destroyUpdateTask()
 
 void DisplayMgr::processTask(void* parameters)
 {
-    DisplayMgr* tthis = reinterpret_cast<DisplayMgr*>(parameters);
+    DisplayMgr* tthis = static_cast<DisplayMgr*>(parameters);
 
     if ((nullptr != tthis) &&
         (nullptr != tthis->m_processTaskSemaphore))
@@ -1349,7 +1376,7 @@ void DisplayMgr::processTask(void* parameters)
 
 void DisplayMgr::updateTask(void* parameters)
 {
-    DisplayMgr* tthis = reinterpret_cast<DisplayMgr*>(parameters);
+    DisplayMgr* tthis = static_cast<DisplayMgr*>(parameters);
 
     if ((nullptr != tthis) &&
         (nullptr != tthis->m_updateTaskSemaphore))

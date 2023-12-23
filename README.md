@@ -6,7 +6,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](http://choosealicense.com/licenses/mit/)
 [![Repo Status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![Release](https://img.shields.io/github/release/BlueAndi/esp-rgb-led-matrix.svg)](https://github.com/BlueAndi/esp-rgb-led-matrix/releases)
-[![Build Status](https://github.com/BlueAndi/esp-rgb-led-matrix/workflows/PlatformIO%20CI/badge.svg?branch=master)](https://github.com/BlueAndi/esp-rgb-led-matrix/actions?query=workflow%3A%22PlatformIO+CI%22)
+[![Build Status](https://github.com/BlueAndi/esp-rgb-led-matrix/actions/workflows/main.yml/badge.svg)](https://github.com/BlueAndi/esp-rgb-led-matrix/actions/workflows/main.yml)
 
 [![pixelix](https://img.youtube.com/vi/dik8Rm6f3o0/0.jpg)](https://www.youtube.com/watch?v=dik8Rm6f3o0 "Pixelix")
 [![pixelix](https://img.youtube.com/vi/UCjJCI5JShY/0.jpg)](https://www.youtube.com/watch?v=UCjJCI5JShY "Pixelix - Remote Button")
@@ -37,6 +37,7 @@ Full RGB LED matrix, based on an ESP32 and WS2812B LEDs.
   * [Is it possible to use a font with 8px height?](#is-it-possible-to-use-a-font-with-8px-height)
   * [How to configure the date/time format?](#how-to-configure-the-datetime-format)
   * [How to configure my own list of plugins?](#how-to-configure-my-own-list-of-plugins)
+  * [Is there an easy way to rotate the display by 180° ? I need to turn the display when putting it into a housing.](#is-there-an-easy-way-to-rotate-the-display-by-180--i-need-to-turn-the-display-when-putting-it-into-a-housing)
 * [Used Libraries](#used-libraries)
 * [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
 * [License](#license)
@@ -55,7 +56,7 @@ The PIXELIX firmware is for ESP32 boards that controls a RGB LED matrix. It can 
 * Supports REST API and MQTT for remote control and integration with other systems, like [Home Assistant](https://www.home-assistant.io/).
 * Can be extended with custom effects and animations. See list of [plugins](./doc/PLUGINS.md).
 
-Please note, that not every feature might be available for all kind of development boards. E.g. for MQTT support you need 8 a development board with 8 MB flash or more. See the `config<variant>.ini` configuration files in [./config](./config) folder.
+Please note, that not every feature might be available for all kind of development boards. E.g. for MQTT support you need a development board with 8 MB flash or more. See the `config<variant>.ini` configuration files in [./config](./config) folder.
 
 | Some impressions |   |
 | - | - |
@@ -115,7 +116,7 @@ If the device starts the very first time, the wifi station SSID and passphrase s
 2. Using a terminal connecting via usb.
 
 ## Variant 1: Configure wifi station SSID and passphrase with the browser
-Restart the device and keep the button pressed until it shows the SSID of the wifi access point, spawned by PIXELIX. Search for it with your mobile device and connect.
+Restart the device and **keep the button pressed** until it shows the SSID of the wifi access point, spawned by PIXELIX. Search for it with your mobile device and connect.
 * SSID: **pixelix-&lt;DEVICE-ID&gt;**
 * Passphrase: **Luke, I am your father.**
 
@@ -127,9 +128,11 @@ Use the following default credentials to get access to the PIXELIX web interface
 
 ## Variant 2: Configure wifi station SSID and passphrase with the terminal
 Connect PIXELIX with your PC via usb and start a terminal. Use the following commands to set the wifi SSID and passphrase of your home wifi network:
+* Test: ```ping```
 * Write wifi passphrase: ```write wifi passphrase <your-passphrase>```
 * Write wifi SSID: ```write wifi ssid <your-ssid>```
 * Restart PIXELIX: ```reset```
+* Get IP-address: ```get ip```
 
 ## PIXELIX Is Ready
 After configuration, restart again and voila, PIXELIX will be available in your wifi network.
@@ -137,18 +140,18 @@ After configuration, restart again and voila, PIXELIX will be available in your 
 For changing whats displayed, go to its web interface. Use the same credentials than for the captive portal in variant 1. In the "Display" page you can change it according to your needs.
 
 # User Interface
-* Pixelix can be controlled with buttons. Most of the development are supported with just one user button.
+* Pixelix can be controlled with buttons. Most of the development boards are supported with just one user button.
   * One button control:
     * 1 short pulse: Activates the next slot.
     * 2 short pulses: Activates the previous slot.
     * 3 short pulses: Activates next fade effect.
     * 4 short pulses: IP address is shown.
-    * 5 short pulses: Switch device off.
+    * 5 short pulses: Toggle display power on/off.
     * Long pressed: Increases the display brightness until maximum and then decreases until minimum. After that it will again increases it and so on.
   * Two button control (LILYGO&reg; T-Display ESP32-S3):
     * Left button:
       * 1 short pulses: Activates the previous slot.
-      * 2 short pulses: Switch device off.
+      * 2 short pulses: Toggle display power on/off.
       * Long pressed: Decreases the display brightness until minimum. 
     * Right button
       * 1 short pulse: Activates the next slot.
@@ -162,7 +165,7 @@ For changing whats displayed, go to its web interface. Use the same credentials 
     * Ok button:
       * 1 short pulses: Activates next fade effect.
       * 2 short pulses: IP address is shown.
-      * Long pressed: Switch device off.
+      * Long pressed: Toggle display power on/off.
     * Right button
       * 1 short pulse: Activates the next slot.
       * Long pressed: Increases the display brightness until maximum. 
@@ -280,6 +283,16 @@ To handle there are several .ini files in the ```./config``` folder:
 * configSmallNoI2s.ini: Used for boards with 4 MB flash and less mcu power.
 
 Update the one you use for your needs by commenting in or out.
+
+## Is there an easy way to rotate the display by 180° ? I need to turn the display when putting it into a housing.
+Change option CONFIG_DISPLAY_ROTATE180 in ```config/display.ini``` to 1 as shown below and rebuild.
+
+Example:
+```ini
+[display:common]
+build_flags =
+    -D CONFIG_DISPLAY_ROTATE180=1
+```
 
 # Used Libraries
 

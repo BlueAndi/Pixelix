@@ -29,34 +29,23 @@ ErrorState: /do: Wait for manual reset.
 RestartState: /entry: Unmount filesystem
 RestartState: /do: Restart
 
-OffState: /entry: Set user button as wakeup source
-OffState: /do: Clear display
-OffState: /do: Enter sleep mode
-
 [*] --> InitState: Power up
 InitState --> APState: [Button pressed]\nSet wifi access point mode
 InitState -> ConnectingState: [Button released]\nSet wifi station mode
 
 APState --> ErrorState: [Failed to start\nwifi access point]
 APState --> RestartState: [Update received]
-APState --> OffState: [Switch off requested]
 
 ConnectingState --> IdleState: [Remote wifi SSID or\npassword missing]
 ConnectingState --> ConnectedState: [Connection successful established]
-ConnectingState --> OffState: [Switch off requested]
 
 ConnectedState --> ConnectingState: [Connection lost]
 ConnectedState --> RestartState: [Update finished]
-ConnectedState --> OffState: [Switch off requested]
 
 ErrorState --> [*]: [Restart]
-ErrorState --> OffState: [Switch off requested]
 
 IdleState --> [*]: [Restart]
-IdleState --> OffState: [Switch off requested]
 
 RestartState --> [*]: [Restart]
-
-OffState --> RestartState: [Wakeup]
 
 @enduml

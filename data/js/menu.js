@@ -72,7 +72,7 @@ menu._createMenuItem = function(ulId, menuItem) {
                     .attr("class", "nav-link")
                     .attr("href", menuItem.hyperRef)
                     .text(menuItem.title);
-    
+
     if (location.pathname === menuItem.hyperRef) {
         $(anchor).addClass("active");
     }
@@ -114,7 +114,7 @@ menu._createSubMenuItem = function($div, subMenuItem) {
                     .attr("href", subMenuItem.hyperRef)
                     .text(subMenuItem.title);
     var isActive    = false;
-    
+
     $($div).append(anchor);
 
     if (location.pathname === subMenuItem.hyperRef) {

@@ -72,13 +72,6 @@
  * External Functions
  *****************************************************************************/
 
-/**
- * Prepare JSON document for success response.
- * 
- * @param[out]  jsonDoc JSON document
- * 
- * @return JSON object where to add additional data.
- */
 JsonVariant RestUtil::prepareRspSuccess(JsonDocument& jsonDoc)
 {
     JsonObject dataObj = jsonDoc.createNestedObject("data");
@@ -88,12 +81,6 @@ JsonVariant RestUtil::prepareRspSuccess(JsonDocument& jsonDoc)
     return dataObj;
 }
 
-/**
- * Prepare JSON document for error response.
- * 
- * @param[out]  jsonDoc JSON document where to add error response.
- * @param[in]   msg     Error message
- */
 void RestUtil::prepareRspError(JsonDocument& jsonDoc, const char* msg)
 {
     JsonObject errorObj = jsonDoc.createNestedObject("error");
@@ -102,23 +89,11 @@ void RestUtil::prepareRspError(JsonDocument& jsonDoc, const char* msg)
     jsonDoc["status"]   = "error";
 }
 
-/**
- * Prepare JSON document for concrete error response: HTTP method not supported.
- * 
- * @param[out]  jsonDoc JSON document where to add error response.
- */
 void RestUtil::prepareRspErrorHttpMethodNotSupported(JsonDocument& jsonDoc)
 {
     prepareRspError(jsonDoc, "HTTP method not supported.");
 }
 
-/**
- * Send a application/json response to the client back.
- * 
- * @param[in] request           Client request
- * @param[in] jsonDoc           JSON response document
- * @param[in] httpStatusCode    HTTP status code
- */
 void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& jsonDoc, uint32_t httpStatusCode)
 {
     if (true == jsonDoc.overflowed())

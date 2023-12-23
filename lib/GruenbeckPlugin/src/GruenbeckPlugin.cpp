@@ -37,6 +37,7 @@
 
 #include <ArduinoJson.h>
 #include <Logging.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -86,7 +87,7 @@ bool GruenbeckPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
+bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
@@ -457,53 +458,7 @@ void GruenbeckPlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
-            const size_t            JSON_DOC_SIZE   = 256U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
-
-            if (nullptr != jsonDoc)
-            {
-                /* Structure of response-payload for requesting D_Y_10_1
-                *
-                * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
-                *
-                * <data><code>ok</code><D_Y_10_1>  = 31 bytes
-                * XYZ                              = 3 byte (relevant data)
-                * </D_Y_10_1></data>               = 18 bytes
-                */
-
-                /* Start index of relevant data */
-                const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
-
-                /* Length of relevant data */
-                const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
-
-                size_t          payloadSize                     = 0U;
-                const char*     payload                         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-                char            restCapacity[RELEVANT_DATA_LENGTH + 1];
-                Msg             msg;
-
-                if (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
-                {
-                    memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
-                    restCapacity[RELEVANT_DATA_LENGTH] = '\0';
-                }
-                else
-                {
-                    restCapacity[0] = '?';
-                    restCapacity[1] = '\0';
-                }
-
-                (*jsonDoc)["restCapacity"] = restCapacity;
-
-                msg.type    = MSG_TYPE_RSP;
-                msg.rsp     = jsonDoc;
-
-                if (false == this->m_taskProxy.send(msg))
-                {
-                    delete jsonDoc;
-                    jsonDoc = nullptr;
-                }
-            }
+            handleAsyncWebResponse(rsp);
         }
     );
 
@@ -528,6 +483,62 @@ void GruenbeckPlugin::initHttpClient()
             (void)this->m_taskProxy.send(msg);
         }
     );
+}
+
+void GruenbeckPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        const size_t            JSON_DOC_SIZE   = 256U;
+        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+
+        if (nullptr != jsonDoc)
+        {
+            /* Structure of response-payload for requesting D_Y_10_1
+            *
+            * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
+            *
+            * <data><code>ok</code><D_Y_10_1>  = 31 bytes
+            * XYZ                              = 3 byte (relevant data)
+            * </D_Y_10_1></data>               = 18 bytes
+            */
+
+            /* Start index of relevant data */
+            const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
+
+            /* Length of relevant data */
+            const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
+
+            size_t          payloadSize                     = 0U;
+            const void*     vPayload                        = rsp.getPayload(payloadSize);
+            const char*     payload                         = static_cast<const char*>(vPayload);
+            char            restCapacity[RELEVANT_DATA_LENGTH + 1];
+            Msg             msg;
+
+            if ((nullptr != payload) &&
+                (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH)))
+            {
+                memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
+                restCapacity[RELEVANT_DATA_LENGTH] = '\0';
+            }
+            else
+            {
+                restCapacity[0] = '?';
+                restCapacity[1] = '\0';
+            }
+
+            (*jsonDoc)["restCapacity"] = restCapacity;
+
+            msg.type    = MSG_TYPE_RSP;
+            msg.rsp     = jsonDoc;
+
+            if (false == this->m_taskProxy.send(msg))
+            {
+                delete jsonDoc;
+                jsonDoc = nullptr;
+            }
+        }
+    }
 }
 
 void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)

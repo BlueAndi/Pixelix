@@ -39,6 +39,7 @@
 
 #include <ArduinoJson.h>
 #include <Logging.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -69,6 +70,11 @@ const char* SunrisePlugin::TOPIC_CONFIG         = "/location";
 /* Initialize time format. */
 const char* SunrisePlugin::TIME_FORMAT_DEFAULT  = "%I:%M %p";
 
+/* Initialize sunset and sunrise times API base URI.
+ * Use http:// instead of https:// for less required heap memory for SSL connection.
+ */
+const char* SunrisePlugin::BASE_URI             = "http://api.sunrise-sunset.org";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -91,7 +97,7 @@ bool SunrisePlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
+bool SunrisePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
@@ -102,6 +108,7 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
         JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
         JsonVariantConst    jsonLongitude           = value["longitude"];
         JsonVariantConst    jsonLatitude            = value["latitude"];
+        JsonVariantConst    jsonTimeFormat          = value["timeFormat"];
 
         /* The received configuration may not contain all single key/value pair.
          * Therefore read first the complete internal configuration and
@@ -123,6 +130,12 @@ bool SunrisePlugin::setTopic(const String& topic, const JsonObject& value)
         if (false == jsonLatitude.isNull())
         {
             jsonCfg["latitude"] = jsonLatitude.as<String>();
+            isSuccessful = true;
+        }
+
+        if (false == jsonTimeFormat.isNull())
+        {
+            jsonCfg["timeFormat"] = jsonTimeFormat.as<String>();
             isSuccessful = true;
         }
 
@@ -407,7 +420,7 @@ bool SunrisePlugin::startHttpRequest()
     if ((false == m_latitude.isEmpty()) &&
         (false == m_longitude.isEmpty()))
     {
-        String url = String("http://api.sunrise-sunset.org/json?lat=") + m_latitude + "&lng=" + m_longitude + "&formatted=0";
+        String url = String(BASE_URI) + "/json?lat=" + m_latitude + "&lng=" + m_longitude + "&formatted=0";
 
         if (true == m_client.begin(url))
         {
@@ -434,46 +447,60 @@ void SunrisePlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
+            handleAsyncWebResponse(rsp);
+        }
+    );
+}
 
-            const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+void SunrisePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        const size_t            JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
 
-            if (nullptr != jsonDoc)
+        if (nullptr != jsonDoc)
+        {
+            size_t                          payloadSize = 0U;
+            const void*                     vPayload    = rsp.getPayload(payloadSize);
+            const char*                     payload     = static_cast<const char*>(vPayload);
+            const size_t                    FILTER_SIZE = 128U;
+            StaticJsonDocument<FILTER_SIZE> filter;
+
+            /* Example:
+            * {
+            *   "results":
+            *   {
+            *     "sunrise":"2015-05-21T05:05:35+00:00",
+            *     "sunset":"2015-05-21T19:22:59+00:00",
+            *     "solar_noon":"2015-05-21T12:14:17+00:00",
+            *     "day_length":51444,
+            *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
+            *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
+            *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
+            *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
+            *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
+            *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
+            *   },
+            *    "status":"OK"
+            * }
+            */
+
+            filter["results"]["sunrise"]    = true;
+            filter["results"]["sunset"]     = true;
+
+            if (true == filter.overflowed())
             {
-                size_t                          payloadSize = 0U;
-                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-                const size_t                    FILTER_SIZE = 128U;
-                StaticJsonDocument<FILTER_SIZE> filter;
-                DeserializationError            error;
-
-                /* Example:
-                * {
-                *   "results":
-                *   {
-                *     "sunrise":"2015-05-21T05:05:35+00:00",
-                *     "sunset":"2015-05-21T19:22:59+00:00",
-                *     "solar_noon":"2015-05-21T12:14:17+00:00",
-                *     "day_length":51444,
-                *     "civil_twilight_begin":"2015-05-21T04:36:17+00:00",
-                *     "civil_twilight_end":"2015-05-21T19:52:17+00:00",
-                *     "nautical_twilight_begin":"2015-05-21T04:00:13+00:00",
-                *     "nautical_twilight_end":"2015-05-21T20:28:21+00:00",
-                *     "astronomical_twilight_begin":"2015-05-21T03:20:49+00:00",
-                *     "astronomical_twilight_end":"2015-05-21T21:07:45+00:00"
-                *   },
-                *    "status":"OK"
-                * }
-                */
-
-                filter["results"]["sunrise"]    = true;
-                filter["results"]["sunset"]     = true;
-
-                if (true == filter.overflowed())
-                {
-                    LOG_ERROR("Less memory for filter available.");
-                }
-
-                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+                LOG_ERROR("Less memory for filter available.");
+            }
+            else if ((nullptr == payload) ||
+                     (0U == payloadSize))
+            {
+                LOG_ERROR("No payload.");
+            }
+            else
+            {
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
 
                 if (DeserializationError::Ok != error.code())
                 {
@@ -494,7 +521,7 @@ void SunrisePlugin::initHttpClient()
                 }
             }
         }
-    );
+    }
 }
 
 void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)

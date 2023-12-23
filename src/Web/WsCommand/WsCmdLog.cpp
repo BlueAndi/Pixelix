@@ -94,17 +94,19 @@ void WsCmdLog::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         selectedSink = Logging::getInstance().getSelectedSink();
 
+        preparePositiveResponse(msg);
+
         if ((nullptr == selectedSink) ||
             (selectedSink->getName() != "Websocket"))
         {
-            msg = "0";
+            msg += "0";
         }
         else
         {
-            msg = "1";
+            msg += "1";
         }
 
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
 
     m_cnt       = 0U;

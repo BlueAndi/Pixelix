@@ -82,7 +82,7 @@ public:
      * 
      * @return Command string
      */
-    const String& getCmd() const
+    const char* getCmd() const
     {
         return m_cmd;
     }
@@ -114,13 +114,49 @@ protected:
     static const char*    NACK;
 
     /**
+     * Prepare a positive response message.
+     * The last added element will always be a delimiter.
+     * 
+     * @param[out] msg  Message to prepare
+     */
+    void preparePositiveResponse(String& msg)
+    {
+        msg = ACK;
+        msg += DELIMITER;
+    }
+
+    /**
+     * Prepare a negative response message.
+     * The last added element will always be a delimiter.
+     * 
+     * @param[out] msg  Message to prepare
+     */
+    void prepareNegativeResponse(String& msg)
+    {
+        msg = NACK;
+        msg += DELIMITER;
+    }
+
+    /**
+     * Send a response to the client.
+     * 
+     * @param[in] server    Websocket server which is used to send a message to the client.
+     * @param[in] client    The client the message belongs to.
+     * @param[in] msg       The response messsage.
+     */
+    void sendResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg)
+    {
+        server->text(client->id(), msg);
+    }
+
+    /**
      * Send positive response to the client.
      * 
      * @param[in] server    Websocket server which is used to send a message to the client.
      * @param[in] client    The client the message belongs to.
      * @param[in] msg       The negative response messsage.
      */
-    void sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg);
+    void sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg);
 
     /**
      * Send negative response to the client.
@@ -138,11 +174,11 @@ protected:
      * @param[in] client    The client the message belongs to.
      * @param[in] msg       The negative response messsage.
      */
-    void sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg);
+    void sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg);
 
 private:
 
-    String  m_cmd;  /**< Command */
+    const char* m_cmd;  /**< Command */
 
     WsCmd();
     WsCmd(const WsCmd& cmd);

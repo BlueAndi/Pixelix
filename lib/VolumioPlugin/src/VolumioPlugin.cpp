@@ -36,6 +36,7 @@
 
 #include <Logging.h>
 #include <ArduinoJson.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -94,7 +95,7 @@ bool VolumioPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
+bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
@@ -529,49 +530,7 @@ void VolumioPlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
-            const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
-
-            if (nullptr != jsonDoc)
-            {
-                size_t                          payloadSize = 0U;
-                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-                const size_t                    FILTER_SIZE = 128U;
-                StaticJsonDocument<FILTER_SIZE> filter;
-                DeserializationError            error;
-
-                filter["artist"]    = true;
-                filter["duration"]  = true;
-                filter["seek"]      = true;
-                filter["service"]   = true;
-                filter["status"]    = true;
-                filter["title"]     = true;
-                
-                if (true == filter.overflowed())
-                {
-                    LOG_ERROR("Less memory for filter available.");
-                }
-
-                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-                if (DeserializationError::Ok != error.code())
-                {
-                    LOG_WARNING("JSON parse error: %s", error.c_str());
-                }
-                else
-                {
-                    Msg msg;
-
-                    msg.type    = MSG_TYPE_RSP;
-                    msg.rsp     = jsonDoc;
-
-                    if (false == this->m_taskProxy.send(msg))
-                    {
-                        delete jsonDoc;
-                        jsonDoc = nullptr;
-                    }
-                }
-            }
+            handleAsyncWebResponse(rsp);
         }
     );
 
@@ -596,6 +555,63 @@ void VolumioPlugin::initHttpClient()
             (void)this->m_taskProxy.send(msg);
         }
     );
+}
+
+void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        const size_t            JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+
+        if (nullptr != jsonDoc)
+        {
+            size_t                          payloadSize = 0U;
+            const void*                     vPayload    = rsp.getPayload(payloadSize);
+            const char*                     payload     = static_cast<const char*>(vPayload);
+            const size_t                    FILTER_SIZE = 128U;
+            StaticJsonDocument<FILTER_SIZE> filter;
+
+            filter["artist"]    = true;
+            filter["duration"]  = true;
+            filter["seek"]      = true;
+            filter["service"]   = true;
+            filter["status"]    = true;
+            filter["title"]     = true;
+            
+            if (true == filter.overflowed())
+            {
+                LOG_ERROR("Less memory for filter available.");
+            }
+            else if ((nullptr == payload) ||
+                     (0U == payloadSize))
+            {
+                LOG_ERROR("No payload.");
+            }
+            else
+            {
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_WARNING("JSON parse error: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)

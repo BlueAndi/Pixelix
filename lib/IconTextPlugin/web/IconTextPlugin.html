@@ -57,23 +57,32 @@
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set text</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?text=&lt;TEXT&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?text=&lt;TEXT&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>TEXT: The text to show on the display.</li>
+                    <li>ICON-FULL-PATH: Full path to the icon.</li>
+                    <li>SPRITESHEET-FULL-PATH: Full path to the sprite sheet.</li>
                 </ul>
-                <h3 class="mt-1">Set icon</h3>
+                <h3 class="mt-1">Upload icon</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
+                <h3 class="mt-1">Upload sprite sheet</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/spritesheet</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/spritesheet</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Icon</h3>
-                <form id="myFormIcon" enctype="multipart/form-data" action="javascript:setIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
+                <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
                     <div class="form-group">
                         <label for="pluginUid">Plugin UID:</label>
                         <select id="pluginUidIcon" name="pluginUid" size="1">
@@ -81,20 +90,41 @@
                     </div>
                     <div class="form-group">
                         <label for="icon">Icon:</label>
-                        <input id="icon" type="file" />    
+                        <input id="icon" type="file" accept=".bmp" />    
+                    </div>
+                    <input name="submit" type="submit" value="Update"/>
+                </form>
+                <h3 class="mt-1">Sprite sheet</h3>
+                <form id="myFormSpriteSheet" enctype="multipart/form-data" action="javascript:uploadSpriteSheet(pluginUidSpriteSheet.options[pluginUidSpriteSheet.selectedIndex].value, spriteSheet.files[0])">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUidSpriteSheet" name="pluginUid" size="1">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="spriteSheet">Sprite sheet:</label>
+                        <input id="spriteSheet" type="file" accept=".sprite"/>
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h3 class="mt-1">Text</h3>
-                <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
+                <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value, iconFullPath.value, spriteSheetFullPath.value)">
                     <div class="form-group">
                         <label for="pluginUidText">Plugin UID:</label>
-                        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
+                        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText', 'iconFullPath', 'spriteSheetFullPath')">
                         </select>    
                     </div>
                     <div class="form-group">
                         <label for="justText">Text:</label>
-                        <input type="text" id="justText" name="justText" value="" size="20" />    
+                        <input type="text" id="justText" name="justText" value="" size="20" />
+                    </div>
+                    <div class="form-group">
+                        <label for="iconFullPath">Icon full path:</label>
+                        <input type="text" id="iconFullPath" name="iconFullPath" value="" size="40" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="spriteSheetFullPath">Sprite sheet full path:</label>
+                        <input type="text" id="spriteSheetFullPath" name="spriteSheetFullPath" value="" size="40" />    
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>                      
@@ -128,11 +158,13 @@
 
             function enableUI() {
                 utils.enableForm("myFormIcon", true);
+                utils.enableForm("myFormSpriteSheet", true);
                 utils.enableForm("myFormText", true);
             }
 
             function disableUI() {
                 utils.enableForm("myFormIcon", false);
+                utils.enableForm("myFormSpriteSheet", false);
                 utils.enableForm("myFormText", false);
             }
 
@@ -179,12 +211,43 @@
                 });
             };
 
-            function setIcon(pluginUid, file) {
+            function uploadIcon(pluginUid, file) {
+                disableUI();
+
+                return utils.checkBMPFile(file).then(function() {
+                    return utils.makeRequest({
+                        method: "POST",
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
+                        isJsonResponse: true,
+                        parameter: {
+                            file: file
+                        },
+                        headers: {
+                            "X-File-Size": file.size
+                        }
+                    });
+                }).then(function(rsp) {
+                    updateForms();
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    if ("string" === typeof rsp) {
+                        alert("Error: " + rsp);
+                    } else if (("undefined" !== typeof rsp) && ("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
+                        alert("Error: " + rsp.error.msg);
+                    } else {
+                        alert("Failed.");
+                    }
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function uploadSpriteSheet(pluginUid, file) {
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/spritesheet",
                     isJsonResponse: true,
                     parameter: {
                         file: file
@@ -193,15 +256,20 @@
                         "X-File-Size": file.size
                     }
                 }).then(function(rsp) {
+                    updateForms();
                     alert("Ok.");
                 }).catch(function(rsp) {
-                    alert("Failed.");
+                    if (("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
+                        alert("Error: " + rsp.error.msg);
+                    } else {
+                        alert("Failed.");
+                    }
                 }).finally(function() {
                     enableUI();
                 });
             }
 
-            function getText(pluginUid, justTextId) {
+            function getText(pluginUid, justTextId, iconFullPathId, spriteSheetFullPathId) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
@@ -209,8 +277,12 @@
                     isJsonResponse: true
                 }).then(function(rsp) {
                     var justTextInput = document.getElementById(justTextId);
+                    var iconFullPathInput = document.getElementById(iconFullPathId);
+                    var spriteSheetFullPathInput = document.getElementById(spriteSheetFullPathId);
 
                     justTextInput.value = rsp.data.text;
+                    iconFullPathInput.value = rsp.data.iconFullPath;
+                    spriteSheetFullPathInput.value = rsp.data.spriteSheetFullPath;
 
                 }).catch(function(rsp) {
                     alert("Internal error.");
@@ -219,7 +291,7 @@
                 });
             }
 
-            function setText(pluginUid, justText) {
+            function setText(pluginUid, justText, iconFullPath, spriteSheetFullPath) {
                 disableUI();
 
                 return utils.makeRequest({
@@ -227,7 +299,9 @@
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
                     isJsonResponse: true,
                     parameter: {
-                        text: justText
+                        text: justText,
+                        iconFullPath: iconFullPath,
+                        spriteSheetFullPath: spriteSheetFullPath
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -236,6 +310,20 @@
                 }).finally(function() {
                     enableUI();
                 });
+            }
+
+            function updateForms() {
+                var selectText = document.getElementById("pluginUidText");
+
+                if (0 <= selectText.selectedIndex) {
+
+                    return getText(
+                        selectText.options[selectText.selectedIndex].value,
+                        "justText",
+                        "iconFullPath",
+                        "spriteSheetFullPath"
+                    );
+                }
             }
 
             $(document).ready(function() {
@@ -249,15 +337,7 @@
     
                 /* Load all plugin instances. */
                 getPluginInstances().then(function(cnt) {
-                    var selectText = document.getElementById("pluginUidText");
-
-                    if (0 < cnt) {
-
-                        return getText(
-                            selectText.options[selectText.selectedIndex].value,
-                            "justText"
-                        );
-                    }
+                    return updateForms();
                 });
             });
         </script>

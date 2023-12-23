@@ -195,9 +195,9 @@ public:
         m_hasTopicChanged(false)
     {
         /* Example data, used to generate the very first configuration file. */
-        m_targetDate.day                    = 29;
-        m_targetDate.month                  = 8;
-        m_targetDate.year                   = 2019;
+        m_targetDate.day                    = 1U;
+        m_targetDate.month                  = 8U;
+        m_targetDate.year                   = 2023U;
         m_targetDateInformation.plural      = "DAYS";
         m_targetDateInformation.singular    = "DAY";
 
@@ -222,7 +222,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new CountdownPlugin(name, uid);
+        return new(std::nothrow) CountdownPlugin(name, uid);
     }
 
     /**
@@ -300,7 +300,7 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
     /**
      * Is the topic content changed since last time?
@@ -432,9 +432,10 @@ private:
     bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
-     * Calculates the difference between m_targetTime and m_currentTime in days.
+     * Calculates the remaining days between m_targetTime and m_currentTime in days and
+     * update m_remainingDays.
      */
-    void calculateDifferenceInDays(void);
+    void calculateRemainingDays(void);
 
     /**
      * Counts the number of leap years.

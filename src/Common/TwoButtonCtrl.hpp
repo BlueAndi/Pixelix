@@ -133,7 +133,7 @@ protected:
         {
             /* 0 */ BUTTON_ACTION_ID_NO_ACTION,
             /* 1 */ BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,
-            /* 2 */ BUTTON_ACTION_ID_SWITCH_OFF
+            /* 2 */ BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON
         };
         const size_t            TABLE_NUM_ELEMENTS  = sizeof(ACTION_TABLE) / sizeof(ACTION_TABLE[0]);
 

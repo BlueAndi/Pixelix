@@ -41,7 +41,6 @@
 
 #include "InitState.h"
 #include "RestartState.h"
-#include "OffState.h"
 #include "TaskMon.h"
 #include "MemMon.h"
 #include "ResetMon.h"
@@ -222,19 +221,12 @@ void loop()
 
     /* Handle button actions only if
      * - No update is running.
-     * - Not in OffState.
      * - Not in RestartState.
      */
     if ((false == UpdateMgr::getInstance().isUpdateRunning()) &&
-        (&OffState::getInstance() != gSysStateMachine.getState()) &&
         (&RestartState::getInstance() != gSysStateMachine.getState()))
     {
         gButtonHandler.process();
-
-        if (true == gButtonHandler.isSwitchOffRequested())
-        {
-            gSysStateMachine.setState(OffState::getInstance());
-        }
     }
 
     /* Schedule other tasks with same or lower priority. */

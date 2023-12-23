@@ -68,7 +68,7 @@
                             </div>
                             <div class="input-group-append" style="padding-left: 10px">
                                 <label for="directory">Directory:</label>
-                                <input type="text" id="directory" name="directory" value="/configuration" size="40" />                            
+                                <input type="text" id="directory" name="directory" value="/configuration" size="40" />
                             </div>
                             <div class="input-group-append">
                                 <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
@@ -285,7 +285,7 @@
                 $("#editor").collapse("show");
                 $("#preview").collapse("hide");
                 $("#fileName").text(loadedFile);
-                
+
                 return dialog.show("Loading file", "<p>Please wait, its loading.</p>")
                 .then(function() {
                     return restClient.readFile(filename);
@@ -398,7 +398,7 @@
 
                 $.fn.extend({
                     treed: function (o) {
-                    
+
                         //initialize each of the top levels
                         var tree = $(this);
                         tree.addClass("tree");
@@ -415,7 +415,7 @@
                             });
                             branch.children().not("i").children().toggle();
                         });
-                        
+
                         //fire event from the dynamically added icon
                         tree.find('.branch .indicator').each(function(){
                             $(this).on('click', function () {

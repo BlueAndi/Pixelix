@@ -63,10 +63,12 @@ enum ButtonActionId
     BUTTON_ACTION_ID_ACTIVATE_PREV_SLOT,    /**< Activate previous slot */
     BUTTON_ACTION_ID_NEXT_FADE_EFFECT,      /**< Select next fade effect */
     BUTTON_ACTION_ID_SHOW_IP_ADDRESS,       /**< Show IP address on display */
-    BUTTON_ACTION_ID_SWITCH_OFF,            /**< Switch device off */
+    BUTTON_ACTION_ID_TOGGLE_DISPLAY_OFF_ON, /**< Toggle the display off/on */
     BUTTON_ACTION_ID_SWEEP_BRIGHTNESS,      /**< Sweep brightness from dark to bright and reverse */
     BUTTON_ACTION_ID_INC_BRIGHTNESS,        /**< Increase display brightness till maximum. */
-    BUTTON_ACTION_ID_DEC_BRIGHTNESS         /**< Decrease display brightness till minimum. */
+    BUTTON_ACTION_ID_DEC_BRIGHTNESS,        /**< Decrease display brightness till minimum. */
+    
+    BUTTON_ACTION_ID_MAX                    /**< Max. action id (always the last one) */
 };
 
 /**
@@ -160,9 +162,9 @@ private:
     void showIpAddress() const;
 
     /**
-     * Trigger action: Switch device off.
+     * Trigger action: Toggle display on/off.
      */
-    void switchOff();
+    void toggleDisplayOffOn();
 };
 
 /******************************************************************************

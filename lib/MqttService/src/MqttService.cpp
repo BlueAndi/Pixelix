@@ -324,8 +324,6 @@ void MqttService::disconnectedState()
             /* Connection to broker successful. */
             else
             {
-                String willTopic = m_hostname + "/status";
-
                 LOG_INFO("Connection to MQTT broker established.");
 
                 m_state = STATE_CONNECTED;
@@ -343,18 +341,13 @@ void MqttService::disconnectedState()
 void MqttService::connectedState()
 {
     /* Connection with broker lost? */
-    if (false == m_mqttClient.connected())
+    if (false == m_mqttClient.loop())
     {
         LOG_INFO("Connection to MQTT broker disconnected.");
         m_state = STATE_DISCONNECTED;
 
         /* Try to reconnect later. */
         m_reconnectTimer.restart();
-    }
-    /* Connection to broker still established. */
-    else
-    {
-        (void)m_mqttClient.loop();
     }
 }
 
@@ -366,8 +359,6 @@ void MqttService::idleState()
 void MqttService::rxCallback(char* topic, uint8_t* payload, uint32_t length)
 {
     SubscriberList::const_iterator it;
-
-    LOG_DEBUG("MQTT Rx: %s", topic);
 
     for(it = m_subscriberList.begin(); it != m_subscriberList.end(); ++it)
     {
@@ -440,7 +431,7 @@ void MqttService::parseMqttBrokerUrl(const String& mqttBrokerUrl)
             /* Password not empty? */
             if (idx > (dividerIdx + 1))
             {
-                m_password = m_url.substring(dividerIdx + 1, idx - dividerIdx - 1);
+                m_password = m_url.substring(dividerIdx + 1, idx);
             }
         }
 

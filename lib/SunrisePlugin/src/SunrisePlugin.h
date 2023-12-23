@@ -135,7 +135,7 @@ public:
      */
     static IPluginMaintenance* create(const String& name, uint16_t uid)
     {
-        return new SunrisePlugin(name, uid);
+        return new(std::nothrow)SunrisePlugin(name, uid);
     }
 
     /**
@@ -213,7 +213,7 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
     /**
      * Is the topic content changed since last time?
@@ -288,6 +288,11 @@ private:
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
+
+    /**
+     * Sunset and sunrise times API base URI.
+     */
+    static const char*      BASE_URI;
 
     /**
      * Period in ms for requesting sunset/sunrise from server.
@@ -393,6 +398,14 @@ private:
      * Register callback function on response reception.
      */
     void initHttpClient(void);
+
+    /**
+     * Handle asynchronous web response from the server.
+     * This will be called in LwIP context! Don't modify any member here directly!
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleAsyncWebResponse(const HttpResponse& rsp);
 
     /**
      * Handle a web response from the server.

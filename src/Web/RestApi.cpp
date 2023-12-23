@@ -37,10 +37,12 @@
 #include "DisplayMgr.h"
 #include "Version.h"
 #include "PluginMgr.h"
+#include "PluginList.h"
 #include "WiFiUtil.h"
 #include "FileSystem.h"
 #include "RestUtil.h"
 #include "SlotList.h"
+#include "ButtonActions.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -69,6 +71,42 @@ typedef struct
     const char* contentType;    /**< Content type */
 
 } ContentTypeElem;
+
+/**
+ * Virtual button which can be triggered via REST API.
+ */
+class RestApiButton : public ButtonActions
+{
+public:
+
+    /**
+     * Construct virtual button instance.
+     */
+    RestApiButton() :
+        ButtonActions()
+    {
+    }
+
+    /**
+     * Destroy virtual button instance.
+     */
+    virtual ~RestApiButton()
+    {
+    }
+
+    /**
+     * Execute action by button action id.
+     * 
+     * @param[in] id    Button action id
+     */
+    void executeAction(ButtonActionId id)
+    {
+        ButtonActions::executeAction(id);
+    }
+
+private:
+
+};
 
 /******************************************************************************
  * Prototypes
@@ -200,10 +238,38 @@ static void handleButton(AsyncWebServerRequest* request)
     }
     else
     {
-        DisplayMgr::getInstance().activateNextSlot();
- 
-        (void)RestUtil::prepareRspSuccess(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+        ButtonActionId  actionId        = BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT; /* Default */
+        bool            isSuccessful    = true;
+
+        if (true == request->hasArg("actionId"))
+        {
+            int32_t i32ActionId = request->arg("actionId").toInt();
+
+            if ((0 > i32ActionId) ||
+                (BUTTON_ACTION_ID_MAX <= i32ActionId))
+            {
+                isSuccessful = false;
+            }
+            else
+            {
+                actionId = static_cast<ButtonActionId>(i32ActionId);
+            }
+        }
+
+        if (false == isSuccessful)
+        {
+            RestUtil::prepareRspError(jsonDoc, "Invalid action id.");
+            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+        }
+        else
+        {
+            RestApiButton buttonActions;
+
+            buttonActions.executeAction(actionId);
+
+            (void)RestUtil::prepareRspSuccess(jsonDoc);
+            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+        } 
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -611,14 +677,17 @@ static void handlePlugins(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant dataObj     = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray   pluginArray = dataObj.createNestedArray("plugins");
-        const char* pluginName  = PluginMgr::getInstance().findFirst();
+        JsonVariant                 dataObj                 = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray                   pluginArray             = dataObj.createNestedArray("plugins");
+        uint8_t                     pluginTypeListLength    = 0U;
+        const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
+        uint8_t                     idx                     = 0U;
 
-        while(nullptr != pluginName)
+        while(pluginTypeListLength > idx)
         {
-            pluginArray.add(pluginName);
-            pluginName = PluginMgr::getInstance().findNext();
+            pluginArray.add(pluginTypeList[idx].name);
+            
+            ++idx;
         }
 
         httpStatusCode = HttpStatus::STATUS_CODE_OK;
@@ -1484,15 +1553,14 @@ static void handleFilePost(AsyncWebServerRequest* request)
  */
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-    static File fd;
-    bool        isError = false;
+    bool isError = false;
 
     /* Begin of upload? */
     if (0 == index)
     {
-        fd = FILESYSTEM.open(filename, "w");
+        request->_tempFile = FILESYSTEM.open(filename, "w");
 
-        if (false == fd)
+        if (false == request->_tempFile)
         {
             isError = true;
         }
@@ -1502,9 +1570,9 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         }
     }
 
-    if (true == fd)
+    if (true == request->_tempFile)
     {
-        (void)fd.write(data, len);
+        (void)request->_tempFile.write(data, len);
     }
 
     if ((true == final) &&
@@ -1512,13 +1580,13 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     {        
         LOG_INFO("File %s successful written.", filename.c_str());
 
-        fd.close();
+        request->_tempFile.close();
     }
     else if (true == isError)
     {
         LOG_INFO("File %s upload aborted.", filename.c_str());
 
-        fd.close();
+        request->_tempFile.close();
     }
 
     if (true == isError)

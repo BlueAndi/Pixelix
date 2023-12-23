@@ -38,6 +38,9 @@
 #include <JsonFile.h>
 #include <FileSystem.h>
 #include <SensorChannelType.hpp>
+#include <Util.h>
+#include <TopicHandlerService.h>
+#include <SettingsService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -47,9 +50,28 @@
  * Macros
  *****************************************************************************/
 
+#define SENSOR_TOPICS_COUNT (4U)
+
 /******************************************************************************
  * Types and classes
  *****************************************************************************/
+
+/** This type defines the required data to publish sensor values as topics. */
+typedef struct
+{
+    ISensorChannel::Type    sensorChannelType;  /**< Sensor channel type. */
+    const char*             extra;              /**< Extra data as JSON string, e.g. for homeassistant extension. */
+    uint32_t                updatePeriod;       /**< Max. sensor data update period in ms regarding publishing. */
+
+} SensorTopic;
+
+/** This type defines the runtime data for a sensor topic, required for publishing. */
+typedef struct
+{
+    String      lastValue;      /**< Last published sensor value. */
+    uint32_t    lastTimestamp;  /**< Last timestamp of publishing, used to limit the update period. */
+
+} SensorTopicRunData;
 
 /******************************************************************************
  * Prototypes
@@ -62,14 +84,102 @@
 /* Initialize file name where to find the sensor calibration values. */
 const char* SensorDataProvider::SENSOR_CALIB_FILE_NAME = "/configuration/sensors.json";
 
+/** The provided sensor topics. */
+static const SensorTopic gSensorTopics[SENSOR_TOPICS_COUNT] =
+{
+    {
+        ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS,
+        "{"                                                     \
+            "\"ha\": {"                                         \
+                "\"component\": \"sensor\","                    \
+                "\"discovery\": {"                              \
+                    "\"name\": \"Temperature\","                \
+                    "\"unit_of_meas\": \"°C\","                 \
+                    "\"ic\": \"mdi:thermometer\","              \
+                    "\"dev_cla\": \"temperature\","             \
+                    "\"val_tpl\": \"{{ value_json.value }}\""   \
+                "}"                                             \
+            "}"                                                 \
+        "}",
+        30000U
+    },
+    {
+        ISensorChannel::TYPE_HUMIDITY_PERCENT,
+        "{"                                                     \
+            "\"ha\": {"                                         \
+                "\"component\": \"sensor\","                    \
+                "\"discovery\": {"                              \
+                    "\"name\": \"Humidity\","                   \
+                    "\"unit_of_meas\": \"%\","                  \
+                    "\"ic\": \"mdi:water-percent\","            \
+                    "\"dev_cla\": \"humidity\","                \
+                    "\"val_tpl\": \"{{ value_json.value }}\""   \
+                "}"                                             \
+            "}"                                                 \
+        "}",
+        30000U
+    },
+    {
+        ISensorChannel::TYPE_ILLUMINANCE_LUX,
+        "{"                                                     \
+            "\"ha\": {"                                         \
+                "\"component\": \"sensor\","                    \
+                "\"discovery\": {"                              \
+                    "\"name\": \"Illuminance\","                \
+                    "\"unit_of_meas\": \"lx\","                 \
+                    "\"ic\": \"mdi:sun-wireless\","             \
+                    "\"dev_cla\": \"illuminance\","             \
+                    "\"val_tpl\": \"{{ value_json.value }}\""   \
+                "}"                                             \
+            "}"                                                 \
+        "}",
+        10000U
+    },
+    {
+        ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT,
+        "{"                                                     \
+            "\"ha\": {"                                         \
+                "\"component\": \"sensor\","                    \
+                "\"discovery\": {"                              \
+                    "\"name\": \"Battery\","                    \
+                    "\"unit_of_meas\": \"%\","                  \
+                    "\"ic\": \"mdi:battery-90\","               \
+                    "\"dev_cla\": \"battery\","                 \
+                    "\"val_tpl\": \"{{ value_json.value }}\""   \
+                "}"                                             \
+            "}"                                                 \
+        "}",
+        10000U
+    }
+};
+
+/** The runtime sensor topic data. */
+static SensorTopicRunData gSensorLastValue[SENSOR_TOPICS_COUNT] =
+{
+    {   String(), 0U    },
+    {   String(), 0U    },
+    {   String(), 0U    },
+    {   String(), 0U    }
+};
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
 void SensorDataProvider::begin()
 {
-    uint8_t index   = 0U;
-    uint8_t cnt     = m_impl->getNumSensors();
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        m_deviceId = settings.getHostname().getDefault();
+    }
+    else
+    {
+        m_deviceId = settings.getHostname().getValue();
+
+        settings.close();
+    }
 
     /* Initialize all sensor drivers. */
     m_impl->begin();
@@ -77,61 +187,16 @@ void SensorDataProvider::begin()
     /* Load calibration values. If they are not available, save it with the sensor defaults. */
     if (false == load())
     {
-        uint8_t                             defaultValues                   = 0U;
-        const SensorChannelDefaultValue*    sensorChannelDefaultValueList   = Sensors::getSensorChannelDefaultValues(defaultValues);
-
-        /* Use the default values. */
-        if (nullptr != sensorChannelDefaultValueList)
-        {
-            for(index = 0U; index < defaultValues; ++index)
-            {
-                const SensorChannelDefaultValue* value = &sensorChannelDefaultValueList[index];
-
-                if (nullptr != value)
-                {
-                    ISensor* sensor = getSensor(value->sensorId);
-
-                    if (nullptr == sensor)
-                    {
-                        LOG_ERROR("Sensor %u doesn't exists.", value->sensorId);
-                    }
-                    else
-                    {
-                        ISensorChannel* channel = sensor->getChannel(value->channelId);
-
-                        if (nullptr == channel)
-                        {
-                            LOG_ERROR("Sensor %u has no channel %u.", value->sensorId, value->channelId);
-                        }
-                        else
-                        {
-                            DynamicJsonDocument jsonDoc(256U);
-
-                            if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
-                            {
-                                channelOffsetFromJson(*channel, jsonDoc["offset"]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        (void)save();
+        createCalibrationFile();
     }
 
-    /* For debug purposes, show the sensor driver states. */
-    for(index = 0U; index < cnt; ++index)
-    {
-        ISensor* sensor = m_impl->getSensor(index);
+    logSensorAvailability();
+    registerSensorTopics();
+}
 
-        if (nullptr != sensor)
-        {
-            bool isAvailable = sensor->isAvailable();
-
-            LOG_INFO("Sensor %s: %s", sensor->getName(), (false == isAvailable) ? "-" : "available" );
-        }
-    }
+void SensorDataProvider::end()
+{
+    unregisterSensorTopics();
 }
 
 uint8_t SensorDataProvider::getNumSensors() const
@@ -218,11 +283,12 @@ bool SensorDataProvider::load()
     JsonFile            jsonFile(FILESYSTEM);
     const size_t        JSON_DOC_SIZE           = 512U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    uint8_t             sensorIdx               = 0U;
-    const uint8_t       SENSOR_CNT              = m_impl->getNumSensors();
 
     if (true == jsonFile.load(SENSOR_CALIB_FILE_NAME, jsonDoc))
     {
+        uint8_t         sensorIdx   = 0U;
+        const uint8_t   SENSOR_CNT  = m_impl->getNumSensors();
+
         while(SENSOR_CNT > sensorIdx)
         {
             ISensor* sensor = m_impl->getSensor(sensorIdx);
@@ -313,8 +379,30 @@ bool SensorDataProvider::save()
  *****************************************************************************/
 
 SensorDataProvider::SensorDataProvider() :
-    m_impl(Sensors::getSensorDataProviderImpl())
+    m_impl(Sensors::getSensorDataProviderImpl()),
+    m_deviceId()
 {
+}
+
+void SensorDataProvider::logSensorAvailability()
+{
+    uint8_t index   = 0U;
+    uint8_t cnt     = m_impl->getNumSensors();
+
+    /* For user information, show the sensor driver states. */
+    while(cnt > index)
+    {
+        ISensor* sensor = m_impl->getSensor(index);
+
+        if (nullptr != sensor)
+        {
+            bool isAvailable = sensor->isAvailable();
+
+            LOG_INFO("Sensor %s: %s", sensor->getName(), (false == isAvailable) ? "-" : "available" );
+        }
+
+        ++index;
+    }
 }
 
 void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISensorChannel& channel) const
@@ -329,14 +417,7 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
         {
             const SensorChannelUInt32* uint32Channel = reinterpret_cast<const SensorChannelUInt32*>(&channel);
 
-            if (nullptr == uint32Channel)
-            {
-                jsonOffset.add("NaN");
-            }
-            else
-            {
-                jsonOffset.add(uint32Channel->getOffset());
-            }
+            jsonOffset.add(uint32Channel->getOffset());
         }
         break;
 
@@ -344,15 +425,7 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
         {
             const SensorChannelInt32* int32Channel = reinterpret_cast<const SensorChannelInt32*>(&channel);
 
-            if (nullptr == int32Channel)
-            {
-                jsonOffset.add("NaN");
-            }
-            else
-            {
-                jsonOffset.add(int32Channel->getOffset());
-            }
-
+            jsonOffset.add(int32Channel->getOffset());
         }
         break;
 
@@ -360,14 +433,7 @@ void SensorDataProvider::channelOffsetToJson(JsonArray& jsonOffset, const ISenso
         {
             const SensorChannelFloat32* float32Channel = reinterpret_cast<const SensorChannelFloat32*>(&channel);
 
-            if (nullptr == float32Channel)
-            {
-                jsonOffset.add("NaN");
-            }
-            else
-            {
-                jsonOffset.add(float32Channel->getOffset());
-            }
+            jsonOffset.add(float32Channel->getOffset());
         }
         break;
 
@@ -392,8 +458,7 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
         {
             SensorChannelUInt32* uint32Channel = reinterpret_cast<SensorChannelUInt32*>(&channel);
 
-            if ((nullptr != uint32Channel) &&
-                (true == jsonOffset.is<uint32_t>()))
+            if (true == jsonOffset.is<uint32_t>())
             {
                 uint32Channel->setOffset(jsonOffset.as<uint32_t>());
             }
@@ -404,8 +469,7 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
         {
             SensorChannelInt32* int32Channel = reinterpret_cast<SensorChannelInt32*>(&channel);
 
-            if ((nullptr != int32Channel) &&
-                (true == jsonOffset.is<int32_t>()))
+            if (true == jsonOffset.is<int32_t>())
             {
                 int32Channel->setOffset(jsonOffset.as<int32_t>());
             }
@@ -416,8 +480,7 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
         {
             SensorChannelFloat32* float32Channel = reinterpret_cast<SensorChannelFloat32*>(&channel);
 
-            if ((nullptr != float32Channel) &&
-                (true == jsonOffset.is<float>()))
+            if (true == jsonOffset.is<float>())
             {
                 float32Channel->setOffset(jsonOffset.as<float>());
             }
@@ -429,7 +492,143 @@ void SensorDataProvider::channelOffsetFromJson(ISensorChannel& channel, JsonVari
         break;
 
     default:
+        /* Not supported. */
         break;
+    }
+}
+
+void SensorDataProvider::createCalibrationFile()
+{
+    uint8_t                             defaultValues                   = 0U;
+    const SensorChannelDefaultValue*    sensorChannelDefaultValueList   = Sensors::getSensorChannelDefaultValues(defaultValues);
+
+    /* Use the default values. */
+    if (nullptr != sensorChannelDefaultValueList)
+    {
+        uint8_t index = 0U;
+
+        for(index = 0U; index < defaultValues; ++index)
+        {
+            const SensorChannelDefaultValue*    value   = &sensorChannelDefaultValueList[index];
+            ISensor*                            sensor  = getSensor(value->sensorId);
+
+            if (nullptr == sensor)
+            {
+                LOG_ERROR("Sensor %u doesn't exists.", value->sensorId);
+            }
+            else
+            {
+                ISensorChannel* channel = sensor->getChannel(value->channelId);
+
+                if (nullptr == channel)
+                {
+                    LOG_ERROR("Sensor %u has no channel %u.", value->sensorId, value->channelId);
+                }
+                else
+                {
+                    DynamicJsonDocument jsonDoc(256U);
+
+                    if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
+                    {
+                        channelOffsetFromJson(*channel, jsonDoc["offset"]);
+                    }
+                }
+            }
+        }
+    }
+
+    (void)save();
+}
+
+void SensorDataProvider::registerSensorTopics()
+{
+    uint8_t                 index                   = 0U;
+    TopicHandlerService&    topicHandlerService     = TopicHandlerService::getInstance();
+
+    for(index = 0U; index < UTIL_ARRAY_NUM(gSensorTopics); ++index)
+    {
+        const SensorTopic*  sensorTopic             = &gSensorTopics[index];
+        SensorTopicRunData* sensorTopicRunData      = &gSensorLastValue[index];
+        DynamicJsonDocument jsonDoc(512U);
+        JsonObjectConst     extra;
+        uint8_t             sensorIndex             = 0U;
+        uint8_t             channelIndex            = 0U;
+
+        if (DeserializationError::Ok != deserializeJson(jsonDoc, sensorTopic->extra))
+        {
+            LOG_ERROR("Sensor/Channel %u discovery details error.", index);
+        }
+
+        extra = jsonDoc.as<JsonObjectConst>();
+
+        /* Try to find a sensor channel which provides the required information. */
+        if (true == find(sensorIndex, channelIndex, sensorTopic->sensorChannelType))
+        {
+            ISensor*        sensor          = this->getSensor(sensorIndex);
+            ISensorChannel* sensorChannel   = sensor->getChannel(channelIndex);
+            String          channelName     = "/" + ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
+            String          entityId        = "sensors/";
+
+            entityId += index;
+
+            ITopicHandler::GetTopicFunc         getTopicFunc    =
+                [sensorTopic, sensorChannel](const String& topic, JsonObject& value) -> bool
+                {
+                    const uint32_t VALUE_PRECISION = 2U; /* 2 digits after the . */
+
+                    UTIL_NOT_USED(topic);
+
+                    value["value"] = sensorChannel->getValueAsString(VALUE_PRECISION);
+
+                    return true;
+                };
+            TopicHandlerService::HasChangedFunc hasChangedFunc  =
+                [sensorTopic, sensorChannel, sensorTopicRunData](const String& topic) -> bool
+                {
+                    bool hasChanged = false;
+
+                    UTIL_NOT_USED(topic);
+
+                    if ((nullptr != sensorTopic) &&
+                        (nullptr != sensorChannel) &&
+                        (nullptr != sensorTopicRunData))
+                    {
+                        String      value       = sensorChannel->getValueAsString(2U);
+                        uint32_t    timestamp   = millis();
+                        uint32_t    delta       = timestamp - sensorTopicRunData->lastTimestamp;
+
+                        if ((sensorTopicRunData->lastValue != value) &&
+                            (sensorTopic->updatePeriod <= delta))
+                        {
+                            sensorTopicRunData->lastValue       = value;
+                            sensorTopicRunData->lastTimestamp   = timestamp;
+
+                            hasChanged = true;
+                        }
+                    }
+
+                    return hasChanged;
+                };
+
+            topicHandlerService.registerTopic(m_deviceId, entityId, channelName, extra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
+        }
+    }
+}
+
+void SensorDataProvider::unregisterSensorTopics()
+{
+    uint8_t                 index                   = 0U;
+    TopicHandlerService&    topicHandlerService     = TopicHandlerService::getInstance();
+
+    for(index = 0U; index < UTIL_ARRAY_NUM(gSensorTopics); ++index)
+    {
+        const SensorTopic*  sensorTopic = &gSensorTopics[index];
+        String              channelName = "/" + ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
+        String              entityId    = "sensors/";
+
+        entityId += index;
+        
+        topicHandlerService.unregisterTopic(m_deviceId, entityId, channelName);
     }
 }
 

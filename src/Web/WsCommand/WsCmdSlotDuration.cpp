@@ -89,9 +89,11 @@ void WsCmdSlotDuration::execute(AsyncWebSocket* server, AsyncWebSocketClient* cl
             }
         }
 
-        msg = DisplayMgr::getInstance().getSlotDuration(m_slotId);
+        preparePositiveResponse(msg);
 
-        sendPositiveResponse(server, client, msg);
+        msg += DisplayMgr::getInstance().getSlotDuration(m_slotId);
+
+        sendResponse(server, client, msg);
     }
 
     m_isError = false;

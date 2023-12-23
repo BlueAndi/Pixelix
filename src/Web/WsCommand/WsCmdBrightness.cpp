@@ -93,11 +93,13 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
             ;
         }
 
-        msg  = DisplayMgr::getInstance().getBrightness();
+        preparePositiveResponse(msg);
+
+        msg += DisplayMgr::getInstance().getBrightness();
         msg += DELIMITER;
         msg += (true == DisplayMgr::getInstance().getAutoBrightnessAdjustment()) ? 1 : 0;
 
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
 
     m_isError = false;

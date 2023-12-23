@@ -87,7 +87,7 @@ bool CountdownPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
+bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
@@ -221,7 +221,7 @@ void CountdownPlugin::start(uint16_t width, uint16_t height)
 
     m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
 
-    calculateDifferenceInDays();
+    calculateRemainingDays();
 }
 
 void CountdownPlugin::stop()
@@ -279,6 +279,8 @@ void CountdownPlugin::process(bool isConnected)
     {
         ;
     }
+
+    calculateRemainingDays();
 }
 
 void CountdownPlugin::update(YAGfx& gfx)
@@ -355,8 +357,6 @@ bool CountdownPlugin::setConfiguration(JsonObjectConst& jsonCfg)
         m_targetDateInformation.plural      = jsonDescPlural.as<String>();
         m_targetDateInformation.singular    = jsonDescSingular.as<String>();
 
-        calculateDifferenceInDays();
-
         m_hasTopicChanged = true;
 
         status = true;
@@ -365,11 +365,11 @@ bool CountdownPlugin::setConfiguration(JsonObjectConst& jsonCfg)
     return status;
 }
 
-void CountdownPlugin::calculateDifferenceInDays()
+void CountdownPlugin::calculateRemainingDays()
 {
     tm currentTime;
 
-    if (false != ClockDrv::getInstance().getTime(&currentTime))
+    if (true == ClockDrv::getInstance().getTime(currentTime))
     {
         uint32_t    currentDateInDays   = 0U;
         uint32_t    targetDateInDays    = 0U;
@@ -387,7 +387,7 @@ void CountdownPlugin::calculateDifferenceInDays()
 
         numberOfDays = targetDateInDays - currentDateInDays;
 
-        if( numberOfDays > 0)
+        if (0 < numberOfDays)
         {
             char remaining[10] = "";
 

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+        <!-- Styles -->
+        <link rel="stylesheet" type="text/css" href="/style/bootstrap.min.css" />
+        <link rel="stylesheet" type="text/css" href="/style/sticky-footer-navbar.css" />
+        <link rel="stylesheet" type="text/css" href="/style/style.css" />
+
+        <title>PIXELIX</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    </head>
+    <body class="d-flex flex-column h-100">
+        <header>
+            <!-- Fixed navbar -->
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+                <a class="navbar-brand" href="/index.html">
+                    <img src="/images/LogoSmall.png" alt="PIXELIX" />
+                </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <ul class="navbar-nav mr-auto" id="menu">
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Begin page content -->
+        <main role="main" class="flex-shrink-0">
+            <div class="container">
+                <h1 class="mt-5">GrabViaRestPlugin</h1>
+                <p><img src="GrabViaRestPlugin.jpg" alt="Screenshot" /></p>
+                <p>The plugin can grab information in JSON format via REST API and shows it on the display.</p>
+                <h2 class="mt-1">REST API</h2>
+                <h3 class="mt-1">Get configuration</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig</code></pre>
+                <h3 class="mt-1">Set configuration</h3>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/grabConfig?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconPath=&lt;ICON-PATH&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/grabConfig?method=&lt;METHOD&gt;&url=&lt;URL&gt;&filter=&lt;FILTER&gt;&iconPath=&lt;ICON-PATH&gt;&format=&lt;FORMAT&gt;&MULTIPLIER=&lt;MULTIPLIER&gt;&OFFSET=&lt;OFFSET&gt;</code></pre>
+                <ul>
+                    <li>PLUGIN-UID: The plugin unique id.</li>
+                    <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>METHOD: HTTP method, supported are "GET" and "POST".</li>
+                    <li>URL: REST API URL.</li>
+                    <li>FILTER: Filter to identify the value in the JSON response. See the details here: <a href="https://arduinojson.org/news/2020/03/22/version-6-15-0/" target="_blank">ArduinoJson 6.15: Filtering done right</a></li>
+                    <li>ICON-PATH: Filename of the icon including the path.</li>
+                    <li>FORMAT: Format specifier, e.g. "%s" for strings or "%f" for numbers.</li>
+                    <li>MULTIPLIER: Number which is multiplied with a number value. Not used for string values.</li>
+                    <li>OFFSET: Number which is added to a number value. Not used for string values.</li>
+                </ul>
+                <p><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/tree/Development/doc/grabConfigs/rest" target="_blank">Configuration examples</a> may help to configure.</p>
+                <h2 class="mt-2">Configuration</h2>
+                <h3 class="mt-1">User</h3>
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="method">Method:</label>
+                        <input type="text" id="method" name="method" value="GET" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="url">URL:</label>
+                        <input type="text" id="url" name="url" value="" size="80" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="filter">Filter:</label>
+                        <input type="text" id="filter" name="filter" value="null" size="80" />
+                    </div>
+                    <div class="form-group">
+                        <label for="iconPath">ICON path:</label>
+                        <input type="text" id="iconPath" name="iconPath" value="" size="80"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="format">Format:</label>
+                        <input type="text" id="format" name="format" value="%s" maxlength="40" />
+                    </div>
+                    <div class="form-group">
+                        <label for="multiplier">Multiplier:</label>
+                        <input type="number" id="multiplier" name="multiplier" value="1" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="offset">Offset:</label>
+                        <input type="number" id="offset" name="offset" value="0" />    
+                    </div>
+                    <input name="submit" type="submit" value="Update"/>
+                </form> 
+            </div>
+        </main>
+  
+        <!-- Footer -->
+        <footer class="footer mt-auto py-3">
+            <div class="container">
+                <hr />
+                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+            </div>
+        </footer>
+
+        <!-- jQuery, and Bootstrap JS bundle -->
+        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
+        <!-- Pixelix menu -->
+        <script type="text/javascript" src="/js/menu.js"></script>
+        <script type="text/javascript" src="/js/pluginsSubMenu.js"></script>
+        <!-- Pixelix utilities -->
+        <script type="text/javascript" src="/js/utils.js"></script>
+        <!-- Pixelix REST API -->
+        <script type="text/javascript" src="/js/rest.js"></script>
+
+        <script>
+
+            var pluginName  = "GrabViaRestPlugin";
+            var restClient  = new pixelix.rest.Client();
+    
+            function enableUI() {
+                utils.enableForm("myForm", true);
+            }
+    
+            function disableUI() {
+                utils.enableForm("myForm", false);
+            }
+    
+            function getPluginInstances() {
+                return restClient.getPluginInstances().then(function(rsp) {
+                    var slotIndex   = 0;
+                    var cnt         = 0;
+                    var $option     = null;
+                    var optionText  = ""
+
+                    for(slotIndex = 0; slotIndex < rsp.data.slots.length; ++slotIndex) {
+                        if (rsp.data.slots[slotIndex].name === pluginName) {
+
+                            optionText = rsp.data.slots[slotIndex].uid;
+                            optionText += " (";
+                            
+                            if (0 === rsp.data.slots[slotIndex].alias.length) {
+                                optionText += "-"
+                            } else {
+                                optionText += rsp.data.slots[slotIndex].alias
+                            }
+
+                            optionText += ")";
+
+                            $option = $("<option>")
+                                        .attr("value", "" + rsp.data.slots[slotIndex].uid)
+                                        .text(optionText);
+                            
+                            $("#pluginUid").append($option);
+
+                            ++cnt;
+                        }
+                    }
+
+                    return Promise.resolve(cnt);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                    return Promise.resolve(0);
+                });
+            };
+    
+            function getConfig(pluginUid) {
+                disableUI();
+                return utils.makeRequest({
+                    method: "GET",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/grabConfig",
+                    isJsonResponse: true
+                }).then(function(rsp) {
+                    $("#method").val(rsp.data.method);
+                    $("#url").val(rsp.data.url);
+                    $("#filter").val(JSON.stringify(rsp.data.filter));
+                    $("#iconPath").val(rsp.data.iconPath);
+                    $("#format").val(rsp.data.format);
+                    $("#multiplier").val(rsp.data.multiplier);
+                    $("#offset").val(rsp.data.offset);
+                }).catch(function(rsp) {
+                    alert("Internal error.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            function setConfig(pluginUid) {
+                disableUI();
+
+                return utils.makeRequest({
+                    method: "POST",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/grabConfig",
+                    isJsonResponse: true,
+                    parameter: {
+                        method:  $("#method").val(),
+                        url:  $("#url").val(),
+                        filter: $("#filter").val(),
+                        iconPath: $("#iconPath").val(),
+                        format: $("#format").val(),
+                        multiplier: $("#multiplier").val(),
+                        offset: $("#offset").val()
+                    }
+                }).then(function(rsp) {
+                    alert("Ok.");
+                }).catch(function(rsp) {
+                    alert("Failed.");
+                }).finally(function() {
+                    enableUI();
+                });
+            }
+
+            $(document).ready(function() {
+                menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
+                menu.create("menu", menu.data);
+                
+                utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
+
+                /* Disable all forms, until the plugin instances are loaded. */
+                disableUI();
+    
+                /* Load all plugin instances. */
+                getPluginInstances().then(function(cnt) {
+                    var select = document.getElementById("pluginUid");
+
+                    if (0 < cnt) {
+
+                        return getConfig(
+                            select.options[select.selectedIndex].value
+                        );
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -87,6 +87,7 @@ public:
     {
         m_tft.init();
         m_tft.fillScreen(TFT_BLACK);
+        m_isOn = true;
 
         return true;
     }
@@ -95,32 +96,7 @@ public:
      * Show framebuffer on physical display. This may be synchronous
      * or asynchronous.
      */
-    void show() final
-    {
-        int32_t x = 0;
-        int32_t y = 0;
-
-        for(y = 0; y < MATRIX_HEIGHT; ++y)
-        {
-            for(x = 0; x < MATRIX_WIDTH; ++x)
-            {
-                Color       brightnessAdjustedColor = m_ledMatrix.getColor(x, y);
-                uint16_t    intensity               = brightnessAdjustedColor.getIntensity();
-                int32_t     xNative                 = y * (PIXEL_HEIGHT + PiXEL_DISTANCE) + BORDER_Y;
-                int32_t     yNative                 = TFT_HEIGHT - (x * (PIXEL_WIDTH  + PiXEL_DISTANCE) + BORDER_X) - 1;
-
-                intensity *= (static_cast<uint16_t>(m_brightness) + 1U);
-                intensity /= 256U;
-                brightnessAdjustedColor.setIntensity(static_cast<uint8_t>(intensity));
-
-                m_tft.fillRect( xNative,
-                                yNative,
-                                PIXEL_HEIGHT,
-                                PIXEL_WIDTH,
-                                brightnessAdjustedColor.to565());
-            }
-        }
-    }
+    void show() final;
 
     /**
      * The display is ready, when the last physical pixel update is finished.
@@ -199,6 +175,23 @@ public:
         return m_ledMatrix.getColor(x, y);
     }
 
+    /**
+     * Power display off.
+     */
+    void off() final;
+
+    /**
+     * Power display on.
+     */
+    void on() final;
+
+    /**
+     * Is display powered on?
+     * 
+     * @return If display is powered on, it will return true otherwise false.
+     */
+    bool isOn() const final;
+
 private:
 
     /* The below TFT_* definitions are set in platform.ini build_flags */
@@ -230,6 +223,7 @@ private:
     TFT_eSPI                                        m_tft;          /**< T-Display driver */
     YAGfxStaticBitmap<MATRIX_WIDTH, MATRIX_HEIGHT>  m_ledMatrix;    /**< Simulated LED matrix framebuffer */
     uint8_t                                         m_brightness;   /**< Display brightness [0; 255] value. 255 = max. brightness. */
+    bool                                            m_isOn;         /**< Is display on? */
 
     /**
      * Construct display.

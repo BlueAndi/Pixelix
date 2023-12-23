@@ -5,15 +5,15 @@
 
 # Alternative Icons
 
-- [Alternative Icons](#alternative-icons)
-- [Purpose](#purpose)
-- [OpenWeatherPlugin](#openweatherplugin)
-  - [Color Intense](#color-intense)
-  - [Animated](#animated)
-- [BTCQuotePlugin](#btcquoteplugin)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Alternative Icons](#alternative-icons)
+* [Purpose](#purpose)
+* [OpenWeatherPlugin](#openweatherplugin)
+  * [Color Intense](#color-intense)
+  * [Animated](#animated)
+* [BTCQuotePlugin](#btcquoteplugin)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Purpose
 

@@ -5,21 +5,21 @@
 
 # Plugin development <!-- omit in toc -->
 
-- [What must be done?](#what-must-be-done)
-- [Rules](#rules)
-- [Recommendations](#recommendations)
-- [Typical use cases](#typical-use-cases)
-  - [Initial configuration in filesystem](#initial-configuration-in-filesystem)
-  - [Reload configuration from filesystem periodically](#reload-configuration-from-filesystem-periodically)
-  - [Request information from URL periodically](#request-information-from-url-periodically)
-- [Traps and pitfalls](#traps-and-pitfalls)
-  - [active/inactive](#activeinactive)
-- [SW Architecture](#sw-architecture)
-  - [Static View](#static-view)
-  - [Dynamic View](#dynamic-view)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [What must be done?](#what-must-be-done)
+* [Rules](#rules)
+* [Recommendations](#recommendations)
+* [Typical use cases](#typical-use-cases)
+  * [Initial configuration in filesystem](#initial-configuration-in-filesystem)
+  * [Reload configuration from filesystem periodically](#reload-configuration-from-filesystem-periodically)
+  * [Request information from URL periodically](#request-information-from-url-periodically)
+* [Traps and pitfalls](#traps-and-pitfalls)
+  * [active/inactive](#activeinactive)
+* [SW Architecture](#sw-architecture)
+  * [Static View](#static-view)
+  * [Dynamic View](#dynamic-view)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # What must be done?
 1. Create the plugin as library:

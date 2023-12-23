@@ -91,6 +91,11 @@ public:
     void begin();
 
     /**
+     * Stop the sensor data provider.
+     */
+    void end();
+
+    /**
      * Get number of installed sensor drivers, independed of the physical
      * sensor availability.
      * 
@@ -159,6 +164,11 @@ private:
     SensorDataProviderImpl* m_impl;
 
     /**
+     * Device id, used for topic registration.
+     */
+    String                  m_deviceId;
+
+    /**
      * Constructs the sensor data provder.
      */
     SensorDataProvider();
@@ -166,6 +176,11 @@ private:
     /* Not allowed. */
     SensorDataProvider(const SensorDataProvider& instance);
     SensorDataProvider& operator=(const SensorDataProvider& instance);
+
+    /**
+     * Log the sensor availability to the logging system as user information.
+     */
+    void logSensorAvailability();
 
     /**
      * Add the channel offset value to the JSON array.
@@ -182,6 +197,21 @@ private:
      * @param[in]   jsonOffset  JSON offset value
      */
     void channelOffsetFromJson(ISensorChannel& channel, JsonVariantConst jsonOffset) const;
+
+    /**
+     * Create file with the default calibration values.
+     */
+    void createCalibrationFile();
+
+    /**
+     * Register sensor topics.
+     */
+    void registerSensorTopics();
+
+    /**
+     * Unregister sensor topics.
+     */
+    void unregisterSensorTopics();
 };
 
 /******************************************************************************

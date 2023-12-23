@@ -172,18 +172,23 @@ void TempHumidPlugin::process(bool isConnected)
 
         m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
     }
-}
-
-void TempHumidPlugin::active(YAGfx& gfx)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Set time to show page - either 10s or slot_time / 4
      * read here because otherwise we do not get config changes during runtime in slot_time.
      */
     if (nullptr != m_slotInterf) {
         m_pageTime = m_slotInterf->getDuration() / 4U;
+
+        if (DEFAULT_PAGE_TIME > m_pageTime)
+        {
+            m_pageTime = DEFAULT_PAGE_TIME;
+        }
     }
+}
+
+void TempHumidPlugin::active(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);

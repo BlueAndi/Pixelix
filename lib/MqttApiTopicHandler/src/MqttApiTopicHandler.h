@@ -45,7 +45,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <ITopicHandler.h>
-#include <IPluginMaintenance.hpp>
 #include <vector>
 
 #include "HomeAssistantMqtt.h"
@@ -70,7 +69,6 @@ public:
      */
     MqttApiTopicHandler() :
         ITopicHandler(),
-        m_hostname(),
         m_listOfTopicStates(),
         m_isMqttConnected(false),
         m_haExtension()
@@ -96,22 +94,26 @@ public:
     void stop() final;
 
     /**
-     * Register a single topic of the given plugin.
+     * Register the topic.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
-     * @param[in] topic     The topic name.
-     * @param[in] access    The topic accessibility.
-     * @param[in] extra     Extra parameters, which depend on the topic handler.
+     * @param[in] deviceId      The device id which represents the physical device.
+     * @param[in] entityId      The entity id which represents the entity of the device.
+     * @param[in] topic         The topic name.
+     * @param[in] extra         Extra parameters, which depend on the topic handler.
+     * @param[in] getTopicFunc  Function to get the topic content.
+     * @param[in] setTopicFunc  Function to set the topic content.
+     * @param[in] uploadReqFunc Function used for requesting whether an file upload is allowed.
      */
-    void registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra) final;
+    void registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc) final;
 
     /**
-     * Unregister the topic of the given plugin.
+     * Unregister the topic.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    void unregisterTopic(IPluginMaintenance* plugin, const String& topic) final;
+    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic) final;
 
     /**
      * Process the topic handler.
@@ -121,28 +123,33 @@ public:
     /**
      * Notify that the topic has changed.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    void notify(IPluginMaintenance* plugin, const String& topic) final;
+    void notify(const String& deviceId, const String& entityId, const String& topic) final;
 
 private:
 
     /** A topic state is published by a plugin. */
     struct TopicState
     {
-        IPluginMaintenance* plugin;         /**< The plugin which provides the topic. */
-        String              topic;          /**< The topic which provides its state. */
-        String              topicUri;       /**< The topic MQTT URI without endpoint. */
-        Access              access;         /**< The topic accessibility. */
-        bool                isPublishReq;   /**< Is it required to publish the state? */
+        String          deviceId;       /**< The device id. */
+        String          entityId;       /**< The entity id. */
+        String          topic;          /**< The topic which provides its state. */
+        GetTopicFunc    getTopicFunc;   /**< Function used to get topic content. */
+        SetTopicFunc    setTopicFunc;   /**< Function used to set topic content. */
+        UploadReqFunc   uploadReqFunc;  /**< Function used to check whether a file upload is allowed. */
+        bool            isPublishReq;   /**< Is it required to publish the state? */
 
         /** Construct topic state. */
         TopicState() :
-            plugin(nullptr),
+            deviceId(),
+            entityId(),
             topic(),
-            topicUri(),
-            access(ACCESS_READ_WRITE),
+            getTopicFunc(nullptr),
+            setTopicFunc(nullptr),
+            uploadReqFunc(nullptr),
             isPublishReq(false)
         {
         }
@@ -162,8 +169,7 @@ private:
     /** MQTT path endpoint for write access. */
     static const char*  MQTT_ENDPOINT_WRITE_ACCESS;
 
-    String              m_hostname;             /**< Hostname cache used for the base URI */
-    ListOfTopicStates   m_listOfTopicStates;    /**< List of registered plugins. */
+    ListOfTopicStates   m_listOfTopicStates;    /**< List of registered topic states. */
     bool                m_isMqttConnected;      /**< Is the MQTT connection to the broker established? */
     HomeAssistantMqtt   m_haExtension;          /**< Home Assistant extension */
 
@@ -171,61 +177,40 @@ private:
     MqttApiTopicHandler& operator=(const MqttApiTopicHandler& adapter);
 
     /**
-     * Get plugin MQTT base URI to identify plugin by UID.
-     *
-     * @param[in] uid   Plugin UID
-     *
-     * @return Plugin MQTT API base URI
+     * Request to publish all topic states.
      */
-    String getBaseUriByUid(uint16_t uid);
+    void requestToPublishAllTopicStates();
 
     /**
-     * Get plugin MQTT base URI to identify plugin by alias name.
-     *
-     * @param[in] alias Plugin alias name
-     *
-     * @return Plugin MQTT API base URI
-     */
-    String getBaseUriByAlias(const String& alias);
-
-    /**
-     * Register a single topic of the given plugin.
+     * Publish topic states, which are requested.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
-     * @param[in] topic     The topic name.
-     * @param[in] access    The topic accessibility.
-     * @param[in] extra     Extra parameters, which depend on the topic handler.
-     * @param[in] baseUri   The REST API base URI which to use.
+     * Note: Need to be called continously and will only publish one info per
+     *       call cycle.
      */
-    void registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra, const String& baseUri);
+    void publishTopicStatesOnDemand();
 
     /**
      * Write topic data.
      * 
-     * @param[in] plugin    The plugin which relates to the topic.
-     * @param[in] topicUri  The topic URI
-     * @param[in] payload   The payload data.
-     * @param[in] size      The payload size in byte.
+     * @param[in] deviceId      The device id which represents the physical device.
+     * @param[in] entityId      The entity id which represents the entity of the device.
+     * @param[in] topic         The topic name.
+     * @param[in] payload       The payload data.
+     * @param[in] size          The payload size in byte.
+     * @param[in] setTopicFunc  Function to set the topic content.
+     * @param[in] uploadReqFunc Function used for requesting whether an file upload is allowed.
      */
-    void write(IPluginMaintenance* plugin, const String& topicUri, const uint8_t* payload, size_t size);
+    void write(const String& deviceId, const String& entityId, const String& topic, const uint8_t* payload, size_t size, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc);
 
     /**
-     * Unregister a single topic of the given plugin.
+     * Publish topic data.
      * 
-     * @param[in] plugin    The related plugin.
-     * @param[in] topic     The topic.
-     * @param[in] baseUri   The MQTT API base URI.
+     * @param[in] deviceId      The device id which represents the physical device.
+     * @param[in] entityId      The entity id which represents the entity of the device.
+     * @param[in] topic         The topic name.
+     * @param[in] getTopicFunc  Function to get the topic content.
      */
-    void unregisterTopic(IPluginMaintenance* plugin, const String& topic, const String& baseUri);
-
-    /**
-     * Publish plugin specific topic data.
-     * 
-     * @param[in] baseUri   The MQTT API base URI.
-     * @param[in] plugin    The related plugin.
-     * @param[in] topic     The topic.
-     */
-    void publish(const String& baseUri, IPluginMaintenance* plugin, const String& topic);
+    void publish(const String& deviceId, const String& entityId, const String& topic, GetTopicFunc getTopicFunc);
 
     /**
      * Clear all topic states.

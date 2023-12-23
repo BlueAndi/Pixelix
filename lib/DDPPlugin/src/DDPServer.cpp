@@ -43,127 +43,127 @@
  *****************************************************************************/
 
 /** Bit index for the version in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_VERSION_BIT    (6U)
+#define DDP_HEADER_FLAGS_VERSION_BIT            (6U)
 
 /** Bit mask for the version in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_VERSION_MASK   (0x03U)
+#define DDP_HEADER_FLAGS_VERSION_MASK           (0x03U)
 
 /** Bit index for the timecode flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_TIMECODE_BIT   (4U)
+#define DDP_HEADER_FLAGS_TIMECODE_BIT           (4U)
 
 /** Bit mask for the timecode flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_TIMECODE_MASK  (0x01U)
+#define DDP_HEADER_FLAGS_TIMECODE_MASK          (0x01U)
 
 /** Bit index for the storage flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_STORAGE_BIT    (3U)
+#define DDP_HEADER_FLAGS_STORAGE_BIT            (3U)
 
 /** Bit mask for the storage flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_STORAGE_MASK   (0x01U)
+#define DDP_HEADER_FLAGS_STORAGE_MASK           (0x01U)
 
 /** Bit index for the reply flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_REPLY_BIT      (2U)
+#define DDP_HEADER_FLAGS_REPLY_BIT              (2U)
 
 /** Bit mask for the reply flagn in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_REPLY_MASK     (0x01U)
+#define DDP_HEADER_FLAGS_REPLY_MASK             (0x01U)
 
 /** Bit index for the query flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_QUERY_BIT      (1U)
+#define DDP_HEADER_FLAGS_QUERY_BIT              (1U)
 
 /** Bit mask for the query flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_QUERY_MASK     (0x01U)
+#define DDP_HEADER_FLAGS_QUERY_MASK             (0x01U)
 
 /** Bit index for the push flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_PUSH_BIT       (0U)
+#define DDP_HEADER_FLAGS_PUSH_BIT               (0U)
 
 /** Bit mask for the push flag in the DDP header flags byte. */
-#define DDP_HEADER_FLAGS_PUSH_MASK      (0x01U)
+#define DDP_HEADER_FLAGS_PUSH_MASK              (0x01U)
 
 /** Bit index for the sequence number in the DDP header control byte. */
-#define DDP_HEADER_CONTROL_SEQ_NO_BIT   (0U)
+#define DDP_HEADER_CONTROL_SEQ_NO_BIT           (0U)
 
 /** Bit mask for the sequence number in the DDP header control byte. */
-#define DDP_HEADER_CONTROL_SEQ_NO_MASK  (0x0fU)
+#define DDP_HEADER_CONTROL_SEQ_NO_MASK          (0x0fU)
 
 /** Bit index for the customer bit in the DDP header data type byte. */
-#define DDP_HEADER_DT_CUSTOM_BIT        (7U)
+#define DDP_HEADER_DT_CUSTOM_BIT                (7U)
 
 /** Bit mask for the customer bit in the DDP header data type byte. */
-#define DDP_HEADER_DT_CUSTOM_MASK       (0x01U)
+#define DDP_HEADER_DT_CUSTOM_MASK               (0x01U)
 
 /** Bit index for the data type in the DDP header data type byte. */
-#define DDP_HEADER_DT_DATA_TYPE_BIT     (3U)
+#define DDP_HEADER_DT_DATA_TYPE_BIT             (3U)
 
 /** Bit mask for the data type in the DDP header data type byte. */
-#define DDP_HEADER_DT_DATA_TYPE_MASK    (0x07U)
+#define DDP_HEADER_DT_DATA_TYPE_MASK            (0x07U)
 
 /** Bit index for the pixel size in the DDP header data type byte. */
-#define DDP_HEADER_DT_PIXEL_SIZE_BIT    (0U)
+#define DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_BIT    (0U)
 
 /** Bit mask for the pixel size in the DDP header data type byte. */
-#define DDP_HEADER_DT_PIXEL_SIZE_MASK   (0x07U)
+#define DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_MASK   (0x07U)
 
 /** DDP data type - undefined */
-#define DDP_DATA_TYPE_UNDEFINED         (0U)
+#define DDP_DATA_TYPE_UNDEFINED                 (0U)
 
 /** DDP data type - RGB order */
-#define DDP_DATA_TYPE_RGB               (1U)
+#define DDP_DATA_TYPE_RGB                       (1U)
 
 /** DDP data type - HSL order */
-#define DDP_DATA_TYPE_HSL               (2U)
+#define DDP_DATA_TYPE_HSL                       (2U)
 
 /** DDP data type - RGBW order */
-#define DDP_DATA_TYPE_RGBW              (3U)
+#define DDP_DATA_TYPE_RGBW                      (3U)
 
 /** DDP data type - Grayscale (shades of gray) */
-#define DDP_DATA_TYPE_GRAYSCALE         (4U)
+#define DDP_DATA_TYPE_GRAYSCALE                 (4U)
 
 /** DDP pixel size - undefined */
-#define DDP_PIXEL_SIZE_UNDEFINED        (0U)
+#define DDP_PIXEL_ELEMENT_SIZE_UNDEFINED        (0U)
 
-/** DDP pixel size - 1 bit per pixel */
-#define DDP_PIXEL_SIZE_1                (1U)
+/** DDP pixel size - 1 bit per pixel element */
+#define DDP_PIXEL_ELEMENT_SIZE_1                (1U)
 
-/** DDP pixel size - 4 bit per pixel */
-#define DDP_PIXEL_SIZE_4                (2U)
+/** DDP pixel size - 4 bit per pixel element */
+#define DDP_PIXEL_ELEMENT_SIZE_4                (2U)
 
-/** DDP pixel size - 8 bit per pixel */
-#define DDP_PIXEL_SIZE_8                (3U)
+/** DDP pixel size - 8 bit per pixel element */
+#define DDP_PIXEL_ELEMENT_SIZE_8                (3U)
 
-/** DDP pixel size - 16 bit per pixel */
-#define DDP_PIXEL_SIZE_16               (4U)
+/** DDP pixel size - 16 bit per pixel element */
+#define DDP_PIXEL_ELEMENT_SIZE_16               (4U)
 
-/** DDP pixel size - 24 bit per pixel */
-#define DDP_PIXEL_SIZE_24               (5U)
+/** DDP pixel size - 24 bit per pixel element */
+#define DDP_PIXEL_ELEMENT_SIZE_24               (5U)
 
-/** DDP pixel size - 32 bit per pixel */
-#define DDP_PIXEL_SIZE_32               (6U)
+/** DDP pixel size - 32 bit per pixel element */
+#define DDP_PIXEL_ELEMENT_SIZE_32               (6U)
 
 /** DDP id - reserved */
-#define DDP_ID_RESERVED                 (0U)
+#define DDP_ID_RESERVED                         (0U)
 
 /** DDP id - default device */
-#define DDP_ID_DEFAULT                  (1U)
+#define DDP_ID_DEFAULT                          (1U)
 
 /** DDP id - custom id defined via JSON config */
-#define DDP_ID_CUSTOM                   (2U)
+#define DDP_ID_CUSTOM                           (2U)
 
 /** DDP id - JSON control */
-#define DDP_ID_JSON_CONTROL             (246U)
+#define DDP_ID_JSON_CONTROL                     (246U)
 
 /** DDP id - JSON config */
-#define DDP_ID_JSON_CONFIG              (250U)
+#define DDP_ID_JSON_CONFIG                      (250U)
 
 /** DDP id - JSON status */
-#define DDP_ID_JSON_STATUS              (251U)
+#define DDP_ID_JSON_STATUS                      (251U)
 
 /** DDP id - DMX legay mode */
-#define DDP_ID_DMX_TRANSIT              (254U)
+#define DDP_ID_DMX_TRANSIT                      (254U)
 
 /** DDP id - all devices */
-#define DDP_ID_ALL_DEVICES              (255U)
+#define DDP_ID_ALL_DEVICES                      (255U)
 
 /** DDP timecode field size in byte */
-#define DDP_TIMECODE_SIZE               (4U)
+#define DDP_TIMECODE_SIZE                       (4U)
 
 /******************************************************************************
  * Types and classes
@@ -198,7 +198,7 @@ bool DDPServer::begin(const String& deviceManufacturer, const String& deviceMode
     {
         m_udpServer.onPacket([](void* arg, AsyncUDPPacket& packet)
         {
-            DDPServer*  tthis = reinterpret_cast<DDPServer*>(arg);
+            DDPServer*  tthis = static_cast<DDPServer*>(arg);
 
             if (nullptr != tthis)
             {
@@ -394,46 +394,46 @@ uint8_t DDPServer::getDataType(const DDPHeader& header)
     return dataType;
 }
 
-uint8_t DDPServer::getBitsPerPixel(const DDPHeader& header)
+uint8_t DDPServer::getBitsPerPixelElement(const DDPHeader& header)
 {
-    uint8_t bitsPerPixel = (header.detail.dataType >> DDP_HEADER_DT_PIXEL_SIZE_BIT) & DDP_HEADER_DT_PIXEL_SIZE_MASK;
+    uint8_t bitsPerPixelElement = (header.detail.dataType >> DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_BIT) & DDP_HEADER_DT_PIXEL_ELEMENT_SIZE_MASK;
 
-    switch(bitsPerPixel)
+    switch(bitsPerPixelElement)
     {
-    case DDP_PIXEL_SIZE_UNDEFINED:
-        bitsPerPixel = 8U;
+    case DDP_PIXEL_ELEMENT_SIZE_UNDEFINED:
+        bitsPerPixelElement = 0U;
         break;
 
-    case DDP_PIXEL_SIZE_1:
-        bitsPerPixel = 1U;
+    case DDP_PIXEL_ELEMENT_SIZE_1:
+        bitsPerPixelElement = 1U;
         break;
 
-    case DDP_PIXEL_SIZE_4:
-        bitsPerPixel = 4U;
+    case DDP_PIXEL_ELEMENT_SIZE_4:
+        bitsPerPixelElement = 4U;
         break;
 
-    case DDP_PIXEL_SIZE_8:
-        bitsPerPixel = 8U;
+    case DDP_PIXEL_ELEMENT_SIZE_8:
+        bitsPerPixelElement = 8U;
         break;
 
-    case DDP_PIXEL_SIZE_16:
-        bitsPerPixel = 16U;
+    case DDP_PIXEL_ELEMENT_SIZE_16:
+        bitsPerPixelElement = 16U;
         break;
 
-    case DDP_PIXEL_SIZE_24:
-        bitsPerPixel = 24U;
+    case DDP_PIXEL_ELEMENT_SIZE_24:
+        bitsPerPixelElement = 24U;
         break;
 
-    case DDP_PIXEL_SIZE_32:
-        bitsPerPixel = 32U;
+    case DDP_PIXEL_ELEMENT_SIZE_32:
+        bitsPerPixelElement = 32U;
         break;
 
     default:
-        bitsPerPixel = 8U;
+        bitsPerPixelElement = 0U;
         break;
     }
 
-    return bitsPerPixel;
+    return bitsPerPixelElement;
 }
 
 uint16_t DDPServer::getOffset(const DDPHeader& header)
@@ -586,7 +586,7 @@ void DDPServer::handleData(const DDPHeader& header, uint8_t* payload, uint16_t p
     else if ((DDP_ID_ALL_DEVICES == header.detail.id) ||
              (DDP_ID_DEFAULT == header.detail.id))
     {
-        ddpNotify(static_cast<DDPServer::Format>(getDataType(header)), getOffset(header), getBitsPerPixel(header), payload, payloadSize, isPushFlagSet(header));
+        ddpNotify(static_cast<DDPServer::Format>(getDataType(header)), getOffset(header), getBitsPerPixelElement(header), payload, payloadSize, isPushFlagSet(header));
     }
     else
     {
@@ -594,7 +594,7 @@ void DDPServer::handleData(const DDPHeader& header, uint8_t* payload, uint16_t p
     }
 }
 
-void DDPServer::ddpNotify(Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal)
+void DDPServer::ddpNotify(Format format, uint32_t offset, uint8_t bitsPerPixelElement, uint8_t* payload, uint16_t payloadSize, bool isFinal)
 {
     DDPCallback callback = nullptr;
 
@@ -606,7 +606,7 @@ void DDPServer::ddpNotify(Format format, uint32_t offset, uint8_t bitsPerPixel, 
 
     if (nullptr != callback)
     {
-        callback(format, offset, bitsPerPixel, payload, payloadSize, isFinal);
+        callback(format, offset, bitsPerPixelElement, payload, payloadSize, isFinal);
     }
 }
 

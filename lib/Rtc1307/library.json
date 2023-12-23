@@ -1,0 +1,25 @@
+{
+    "name": "Rtc1307",
+    "version": "0.1.0",
+    "description": "....",
+    "authors": [{
+        "name": "Andreas Merkle",
+        "email": "web@blue-andi.de",
+        "url": "https://github.com/BlueAndi",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "IRtc"
+    }, {
+        "owner": "Adafruit",
+        "name": "RTClib",
+        "version": "~2.1.1"
+    }, {
+        "owner": "Adafruit",
+        "name": "Adafruit BusIO",
+        "version": "~1.14.1"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

@@ -103,7 +103,7 @@ bool SignalDetectorPlugin::getTopic(const String& topic, JsonObject& value) cons
     return isSuccessful;
 }
 
-bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObject& value)
+bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
@@ -568,7 +568,7 @@ bool SignalDetectorPlugin::startHttpRequest()
 void SignalDetectorPlugin::initHttpClient()
 {
     /* Note: All registered callbacks are running in a different task context! */
-    m_client.regOnResponse([](const HttpResponse& rsp){
+    m_client.regOnResponse([](const HttpResponse& rsp) {
         uint16_t statusCode = rsp.getStatusCode();
 
         if (HttpStatus::STATUS_CODE_OK == statusCode)

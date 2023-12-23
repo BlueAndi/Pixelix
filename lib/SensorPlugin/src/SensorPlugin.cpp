@@ -84,7 +84,7 @@ bool SensorPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool SensorPlugin::setTopic(const String& topic, const JsonObject& value)
+bool SensorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 

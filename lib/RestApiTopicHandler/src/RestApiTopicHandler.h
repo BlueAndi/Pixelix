@@ -45,7 +45,6 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <ITopicHandler.h>
-#include <IPluginMaintenance.hpp>
 #include <vector>
 #include <ESPAsyncWebServer.h>
 
@@ -69,7 +68,7 @@ public:
      */
     RestApiTopicHandler() :
         ITopicHandler(),
-        m_pluginTopicList()
+        m_listOfTopicMetaData()
     {
     }
 
@@ -98,22 +97,26 @@ public:
     }
 
     /**
-     * Register a single topic of the given plugin.
+     * Register the topic.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
-     * @param[in] topic     The topic name.
-     * @param[in] access    The topic accessibility.
-     * @param[in] extra     Extra parameters, which depend on the topic handler.
+     * @param[in] deviceId      The device id which represents the physical device.
+     * @param[in] entityId      The entity id which represents the entity of the device.
+     * @param[in] topic         The topic name.
+     * @param[in] extra         Extra parameters, which depend on the topic handler.
+     * @param[in] getTopicFunc  Function to get the topic content.
+     * @param[in] setTopicFunc  Function to set the topic content.
+     * @param[in] uploadReqFunc Function used for requesting whether an file upload is allowed.
      */
-    void registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra) final;
+    void registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc) final;
 
     /**
-     * Unregister the topic of the given plugin.
+     * Unregister the topic.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    void unregisterTopic(IPluginMaintenance* plugin, const String& topic) final;
+    void unregisterTopic(const String& deviceId, const String& entityId, const String& topic) final;
 
     /**
      * Process the topic handler.
@@ -126,105 +129,93 @@ public:
     /**
      * Notify that the topic has changed.
      * 
-     * @param[in] plugin    The plugin which provides the topic.
+     * @param[in] deviceId  The device id which represents the physical device.
+     * @param[in] entityId  The entity id which represents the entity of the device.
      * @param[in] topic     The topic name.
      */
-    void notify(IPluginMaintenance* plugin, const String& topic) final
+    void notify(const String& deviceId, const String& entityId, const String& topic) final
     {
         /* Nothing to do. */
+        (void)deviceId;
+        (void)entityId;
+        (void)topic;
     }
 
 private:
 
     /**
-     * Plugin topic relevant data.
+     * Topic meta data.
      */
-    struct PluginTopic
+    struct TopicMetaData
     {
-        IPluginMaintenance*         plugin;         /**< The plugin which provides the topic. */
+        String                      deviceId;       /**< The device id. */
+        String                      entityId;       /**< The entity id. */
         String                      topic;          /**< The plugin topic. */
+        GetTopicFunc                getTopicFunc;   /**< Function used to get topic content. */
+        SetTopicFunc                setTopicFunc;   /**< Function used to set topic content. */
+        UploadReqFunc               uploadReqFunc;  /**< Function used to check whether a file upload is allowed. */
         AsyncCallbackWebHandler*    webHandler;     /**< Webhandler callback, necessary to remove it later again. */
         String                      uri;            /**< URI where the handler is registered. */
         bool                        isUploadError;  /**< If upload error happened, it will be true otherwise false. */
         String                      fullPath;       /**< Full path of uploaded file. If empty, there is no file available. */
-        File                        fd;             /**< Upload file descriptor */
-        Access                      access;         /**< Access to the topic (r, rw, w) */
 
         /**
-         * Initialize the web handler data.
+         * Initialize topic meta data.
          */
-        PluginTopic() :
-            plugin(nullptr),
+        TopicMetaData() :
+            deviceId(),
+            entityId(),
             topic(),
+            getTopicFunc(nullptr),
+            setTopicFunc(nullptr),
+            uploadReqFunc(nullptr),
             webHandler(nullptr),
             uri(),
             isUploadError(false),
-            fullPath(),
-            fd(),
-            access(ACCESS_READ_WRITE)
+            fullPath()
         {
         }
     };
 
     /**
-     * List of plugin object data.
+     * List of topic meta data.
      */
-    typedef std::vector<PluginTopic*> PluginTopicList;
+    typedef std::vector<TopicMetaData*> ListOfTopicMetaData;
 
-    PluginTopicList m_pluginTopicList;  /**< List of plugin topics with webhandler data. */
+    ListOfTopicMetaData m_listOfTopicMetaData;  /**< List of topic meta data. */
 
     RestApiTopicHandler(const RestApiTopicHandler& adapter);
     RestApiTopicHandler& operator=(const RestApiTopicHandler& adapter);
 
     /**
-     * Get plugin REST base URI to identify plugin by UID.
+     * Get plugin REST base URI to identify plugin.
      *
-     * @param[in] uid   Plugin UID
-     *
-     * @return Plugin REST API base URI
-     */
-    String getBaseUriByUid(uint16_t uid);
-
-    /**
-     * Get plugin REST base URI to identify plugin by alias name.
-     *
-     * @param[in] alias Plugin alias name
+     * @param[in] entityId  The entity id which represents the entity of the device.
      *
      * @return Plugin REST API base URI
      */
-    String getBaseUriByAlias(const String& alias);
-
-    /**
-     * Register a single topic of the given plugin.
-     * 
-     * @param[in] plugin    The plugin which provides the topic.
-     * @param[in] topic     The topic name.
-     * @param[in] access    The topic accessibility.
-     * @param[in] extra     Extra parameters, which depend on the topic handler.
-     * @param[in] baseUri   The REST API base URI which to use.
-     */
-    void registerTopic(IPluginMaintenance* plugin, const String& topic, Access access, JsonObjectConst& extra, const String& baseUri);
+    String getBaseUri(const String& entityId);
 
     /**
      * The web request handler handles all incoming HTTP requests for every plugin topic.
      * 
      * @param[in] request       The web request information from the client.
-     * @param[in] pluginTopic   The related plugin topic data.
+     * @param[in] topicMetaData The related topic meta data.
      */
-    void webReqHandler(AsyncWebServerRequest *request, PluginTopic* pluginTopic);
+    void webReqHandler(AsyncWebServerRequest *request, TopicMetaData* topicMetaData);
 
     /**
      * File upload handler.
      *
-     * @param[in] request           HTTP request.
-     * @param[in] filename          Name of the uploaded file.
-     * @param[in] index             Current file offset.
-     * @param[in] data              Next data part of file, starting at offset.
-     * @param[in] len               Data part size in byte.
-     * @param[in] final             Is final packet or not.
-     * @param[in] pluginTopic   The related plugin topic data.
+     * @param[in] request       HTTP request.
+     * @param[in] filename      Name of the uploaded file.
+     * @param[in] index         Current file offset.
+     * @param[in] data          Next data part of file, starting at offset.
+     * @param[in] len           Data part size in byte.
+     * @param[in] final         Is final packet or not.
+     * @param[in] topicMetaData The related topic meta data.
      */
-    void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, PluginTopic* pluginTopic);
+    void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, TopicMetaData* topicMetaData);
 
     /**
      * Convert HTTP parameters to JSON format.

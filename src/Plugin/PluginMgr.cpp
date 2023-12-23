@@ -74,12 +74,20 @@ const char* PluginMgr::MQTT_SPECIAL_CHARACTERS  = "+#*>$"; /* See MQTT specifica
 
 void PluginMgr::begin()
 {
-    createPluginConfigDirectory();
-}
+    SettingsService& settings = SettingsService::getInstance();
 
-void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
-{
-    m_pluginFactory.registerPlugin(name, createFunc);
+    if (false == settings.open(true))
+    {
+        m_deviceId = settings.getHostname().getDefault();
+    }
+    else
+    {
+        m_deviceId = settings.getHostname().getValue();
+
+        settings.close();
+    }
+
+    createPluginConfigDirectory();
 }
 
 IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
@@ -108,23 +116,13 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
-            TopicHandlerService::getInstance().unregisterTopics(plugin);
+            TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
 
             m_pluginFactory.destroyPlugin(plugin);
         }
     }
 
     return status;
-}
-
-const char* PluginMgr::findFirst()
-{
-    return m_pluginFactory.findFirst();
-}
-
-const char* PluginMgr::findNext()
-{
-    return m_pluginFactory.findNext();
 }
 
 bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)
@@ -136,18 +134,31 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
         (true == isPluginAliasValid(alias)))
     {
         /* First remove current registered topics. */
-        TopicHandlerService::getInstance().unregisterTopics(plugin);
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
 
         /* Set new alias */
         plugin->setAlias(alias);
 
         /* Register web API, based on new alias. */
-        TopicHandlerService::getInstance().registerTopics(plugin);
+        TopicHandlerService::getInstance().registerTopics(m_deviceId, plugin);
 
         isSuccessful = true;
     }
 
     return isSuccessful;
+}
+
+void PluginMgr::unregisterAllPluginTopics()
+{
+    uint8_t maxSlots    = DisplayMgr::getInstance().getMaxSlots();
+    uint8_t slotId      = 0U;
+
+    for(slotId = 0U; slotId < maxSlots; ++slotId)
+    {
+        IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
+
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
+    }
 }
 
 bool PluginMgr::load()
@@ -378,7 +389,7 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (true == isSuccessful)
         {
-            TopicHandlerService::getInstance().registerTopics(plugin);
+            TopicHandlerService::getInstance().registerTopics(m_deviceId, plugin);
         }
     }
 
