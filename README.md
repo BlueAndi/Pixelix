@@ -94,6 +94,7 @@ If you assemble your own Pixelix hardware, its recommended to use a development 
 Additional supported variants, which were original not in focus:
 * [LILYGO&reg; TTGO T-Display ESP32 WiFi and Bluetooth Module Development Board For Arduino 1.14 Inch LCD](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
 * [LILYGO&reg; T-Display ESP32-S3 1.9 inch ST7789 LCD Display Touch Screen Development Board](https://www.lilygo.cc/products/t-display-s3)
+* Limited HUB75 panel support, configured as an example for the ESP32-DoIt DevKit v1 development board.
 
 Although PIXELIX was designed to show information, that is pushed or pulled via REST API, the following sensors can be directly connected and evaluated:
 * Temperature and humidity sensors DHTx
