@@ -165,7 +165,7 @@ void TempHumidPlugin::process(bool isConnected)
                 {
                     m_humidity = humidity;
 
-                    LOG_INFO("Humidity: %3.1f %%", m_humidity);
+                    LOG_INFO("Humidity: %3.0f %%", m_humidity);
                 }
             }
         }
@@ -266,7 +266,7 @@ void TempHumidPlugin::handleTemperature()
     }
     else
     {
-        char    valueReducedPrecison[6] = { 0 };    /* Holds a value in lower precision for display. */
+        char    valueReducedPrecison[10] = { 0 };   /* Holds a value in lower precision for display. */
         String  text;
 
         /* Generate temperature string with reduced precision and add unit °C. */
@@ -289,10 +289,10 @@ void TempHumidPlugin::handleHumidity()
     }
     else
     {
-        char    valueReducedPrecison[4] = { 0 };    /* Holds a value in lower precision for display. */
+        char    valueReducedPrecison[10] = { 0 };   /* Holds a value in lower precision for display. */
         String  text;
 
-        (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humidity);
+        (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3.0f", m_humidity);
         text  = "\\calign";
         text += valueReducedPrecison;
         text += ISensorChannel::channelTypeToUnit(m_humiditySensorCh->getType());
