@@ -74,14 +74,14 @@ The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed f
 * [Hardware description](./pixelix/v2.0/ELECTRONIC.md)
 * [Bill of material](./pixelix/v2.0/BOM.md)
 * [Pinning](../../lib/HalLedMatrix/Board.h)
-* [Housing](./pixelix/v2.0/3D-files/)
+* [Housing](./pixelix/housing/)
 
 # Pixelix Board v2.1
 The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
 * [Hardware description](./pixelix/v2.1/ELECTRONIC.md)
 * [Bill of material](./pixelix/v2.1/BOM.md)
 * [Pinning](../../lib/HalLedMatrix/Board.h)
-* [Housing](./pixelix/v2.1/3D-files/)
+* [Housing](./pixelix/housing/)
 
 # Ulanzi TC001 smart pixel clock
 * Manufacturer: [Ulanzi](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882)
