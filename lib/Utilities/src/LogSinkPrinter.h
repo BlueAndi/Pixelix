@@ -137,19 +137,48 @@ public:
     void send(const Logging::Msg& msg) final;
 
     /** Maximum timestamp string length. */
-    static const uint32_t   TIMESTAMP_LEN   = 10U;
+    static const size_t     TIMESTAMP_LEN           = 10U;
 
     /** Maximum log level string length. */
-    static const uint32_t   LOG_LEVEL_LEN   = 7U;
+    static const size_t     LOG_LEVEL_LEN           = 7U;
 
     /** Maximum filename string length. */
-    static const uint32_t   FILENAME_LEN    = 22U;
+    static const size_t     FILENAME_LEN            = 22U;
+
+    /** Maximum divider string length. */
+    static const size_t     DIVIDER_LEN             = 1U;
 
     /** Maximum line number string length. */
-    static const uint32_t   LINE_LEN        = 5U;
+    static const size_t     LINE_LEN                = 5U;
+
+    /** The sum of all spaces in between the elements. */
+    static const size_t     SPACES_LEN              = 5U;
 
     /** The maximum size of the whole log message. */
-    static const uint16_t LOG_MESSAGE_BUFFER_SIZE = Logging::MESSAGE_BUFFER_SIZE + TIMESTAMP_LEN + LOG_LEVEL_LEN + FILENAME_LEN + LINE_LEN + 6u /* others */;
+    static const size_t     LOG_MESSAGE_BUFFER_SIZE = TIMESTAMP_LEN +
+                                                        LOG_LEVEL_LEN +
+                                                        FILENAME_LEN +
+                                                        DIVIDER_LEN +
+                                                        LINE_LEN +
+                                                        Logging::MESSAGE_BUFFER_SIZE +
+                                                        SPACES_LEN;
+
+    /** Divider between filename and line number. */
+    static const char*      DIVIDER;
+
+    /** This string indicates the user that the log message was cut. */
+    static const char*      STR_CUT_OFF_SEQ;
+
+    /** Length of the cut off sequence. */
+    static const size_t     STR_CUT_OFF_SEQ_LEN     = 4U;
+
+    /** Index in the log buffer where the message will begin. */
+    static const size_t     MSG_INDEX               = TIMESTAMP_LEN +
+                                                        LOG_LEVEL_LEN +
+                                                        FILENAME_LEN +
+                                                        DIVIDER_LEN +
+                                                        LINE_LEN +
+                                                        SPACES_LEN - 1U;
 
 private:
 
