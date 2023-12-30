@@ -129,9 +129,13 @@ static void testLogging()
     const char*     LOG_MODULE      = strrchr(__FILE__, '\\'); /* Windows backslash */
     const char*     TEST_STRING_1   = "TestMessage";
     const String    TEST_STRING_2   = "TestMessageAsString";
-    const char*     LOG_FORMAT      = "%*s %*s:%.*d %s\n";
-    char            expectedLogMessage[128];
+    char            expectedLogMessage[128U];
     int             lineNo          = 0;
+    const size_t    TIMESTAMP_IDX   = 0U;
+    const size_t    LOG_LEVEL_IDX   = LogSinkPrinter::TIMESTAMP_LEN + 1U;
+    const size_t    FILENAME_IDX    = LOG_LEVEL_IDX + LogSinkPrinter::LOG_LEVEL_LEN + 1U;
+    const size_t    MESSAGE_IDX     = LogSinkPrinter::MSG_INDEX;
+    String          expected;
 
     /* If no windows backslash is found, maybe its a linux slash? */
     if (nullptr == LOG_MODULE)
@@ -168,43 +172,45 @@ static void testLogging()
 
     /* Check expected error log output, with type const char* string. */
     LOG_ERROR(TEST_STRING_1); lineNo = __LINE__;
-    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), LOG_FORMAT,
-        LogSinkPrinter::LOG_LEVEL_LEN,
-        "ERROR  ",
-        LogSinkPrinter::FILENAME_LEN,
-        LOG_MODULE,
-        LogSinkPrinter::LINE_LEN,
-        lineNo,
-        TEST_STRING_1);
-    printBuffer = myTestLogger.getBuffer();
 
     /* Skip timestamp */
-    printBuffer = &printBuffer[LogSinkPrinter::TIMESTAMP_LEN + 1];
 
-    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
+    /* Check log level */
+    expected = "ERROR";
+    TEST_ASSERT_EQUAL_STRING_LEN(expected.c_str(), &printBuffer[LOG_LEVEL_IDX], expected.length());
+    
+    /* Check filename with divider and line number */
+    expected  = LOG_MODULE;
+    expected += LogSinkPrinter::DIVIDER;
+    expected += lineNo;
+    TEST_ASSERT_EQUAL_STRING_LEN(expected.c_str(), &printBuffer[FILENAME_IDX], expected.length());
+
+    /* Check message */
+    expected = TEST_STRING_1;
+    TEST_ASSERT_EQUAL_STRING_LEN(expected.c_str(), &printBuffer[MESSAGE_IDX], expected.length());
 
     /* Check expected error log output, with type const String string. */
     LOG_ERROR(TEST_STRING_2);  lineNo = __LINE__;
-    (void)snprintf(expectedLogMessage, sizeof(expectedLogMessage), LOG_FORMAT,
-        LogSinkPrinter::LOG_LEVEL_LEN,
-        "ERROR  ",
-        LogSinkPrinter::FILENAME_LEN,
-        LOG_MODULE,
-        LogSinkPrinter::LINE_LEN,
-        lineNo,
-        TEST_STRING_2.c_str());
-    printBuffer = myTestLogger.getBuffer();
 
     /* Skip timestamp */
-    printBuffer = &printBuffer[LogSinkPrinter::TIMESTAMP_LEN + 1];
 
-    TEST_ASSERT_EQUAL_STRING(expectedLogMessage, printBuffer);
+    /* Check log level */
+    expected = "ERROR";
+    TEST_ASSERT_EQUAL_STRING_LEN(expected.c_str(), &printBuffer[LOG_LEVEL_IDX], expected.length());
+    
+    /* Check filename with divider and line number */
+    expected  = LOG_MODULE;
+    expected += LogSinkPrinter::DIVIDER;
+    expected += lineNo;
+    TEST_ASSERT_EQUAL_STRING_LEN(expected.c_str(), &printBuffer[FILENAME_IDX], expected.length());
+
+    /* Check message */
+    expected = TEST_STRING_2;
+    TEST_ASSERT_EQUAL_STRING_LEN(expected.c_str(), &printBuffer[MESSAGE_IDX], expected.length());
 
     /* Unregister log sink and nothing shall be printed anymore. */
     Logging::getInstance().unregisterSink(&myLogSink);
     myTestLogger.clear();
     LOG_ERROR("Should not be shown.");
     TEST_ASSERT_EQUAL_UINT32(0, strlen(myTestLogger.getBuffer()));
-
-    return;
 }

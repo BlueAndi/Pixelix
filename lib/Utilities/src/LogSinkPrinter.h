@@ -152,7 +152,7 @@ public:
     static const size_t     LINE_LEN                = 5U;
 
     /** The sum of all spaces in between the elements. */
-    static const size_t     SPACES_LEN              = 5U;
+    static const size_t     SPACES_LEN              = 3U;
 
     /** The maximum size of the whole log message. */
     static const size_t     LOG_MESSAGE_BUFFER_SIZE = TIMESTAMP_LEN +
@@ -161,7 +161,8 @@ public:
                                                         DIVIDER_LEN +
                                                         LINE_LEN +
                                                         Logging::MESSAGE_BUFFER_SIZE +
-                                                        SPACES_LEN;
+                                                        SPACES_LEN +
+                                                        1U; /* String termination */
 
     /** Divider between filename and line number. */
     static const char*      DIVIDER;
@@ -178,7 +179,7 @@ public:
                                                         FILENAME_LEN +
                                                         DIVIDER_LEN +
                                                         LINE_LEN +
-                                                        SPACES_LEN - 1U;
+                                                        SPACES_LEN;
 
 private:
 

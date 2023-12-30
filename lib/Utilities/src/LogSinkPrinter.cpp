@@ -128,9 +128,10 @@ void LogSinkPrinter::send(const Logging::Msg& msg)
         }
 
         written = 0;
-        while((BUFFER_SIZE_CUT_OFF > writtenTotal) && (MSG_INDEX >= writtenTotal))
+        while((BUFFER_SIZE_CUT_OFF > writtenTotal) && (MSG_INDEX > writtenTotal))
         {
             buffer[writtenTotal] = ' ';
+            ++written;
             ++writtenTotal;
         }
 

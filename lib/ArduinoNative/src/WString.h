@@ -301,6 +301,28 @@ public:
         return *this;
     }
 
+    String& operator +=(int number)
+    {
+        char* tmp = nullptr;
+
+        char strNumber[2 + 3 * sizeof(int)];
+        (void)itoa(number, strNumber, 10);
+
+        tmp = new char[m_size + strlen(strNumber)];
+
+        if (nullptr != tmp)
+        {
+            strcpy(tmp, m_buffer);
+            strcat(tmp, strNumber);
+
+            delete[] m_buffer;
+            m_buffer = tmp;
+            ++m_size;
+        }
+
+        return *this;
+    }
+
     String operator +(const String& str) const
     {
         String tmp = *this;
