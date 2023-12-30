@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 /******************************************************************************
@@ -304,9 +305,9 @@ public:
     String& operator +=(int number)
     {
         char* tmp = nullptr;
-
         char strNumber[2 + 3 * sizeof(int)];
-        (void)itoa(number, strNumber, 10);
+
+        sprintf(strNumber, "%d", number);
 
         tmp = new char[m_size + strlen(strNumber)];
 
