@@ -1,7 +1,7 @@
 
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -197,7 +197,7 @@ public:
         /* Example data, used to generate the very first configuration file. */
         m_targetDate.day                    = 1U;
         m_targetDate.month                  = 8U;
-        m_targetDate.year                   = 2023U;
+        m_targetDate.year                   = 2024U;
         m_targetDateInformation.plural      = "DAYS";
         m_targetDateInformation.singular    = "DAY";
 
