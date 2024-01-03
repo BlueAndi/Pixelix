@@ -67,6 +67,12 @@ public:
     virtual void begin() = 0;
 
     /**
+     * Process the sensor driver. Mainly used to read the sensor value and
+     * provide its data cached to the sensor channels.
+     */
+    virtual void process() = 0;
+
+    /**
      * Get sensor name.
      * 
      * @return Sensor name
