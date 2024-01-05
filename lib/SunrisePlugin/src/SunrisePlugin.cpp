@@ -465,7 +465,7 @@ void SunrisePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             const void*                     vPayload    = rsp.getPayload(payloadSize);
             const char*                     payload     = static_cast<const char*>(vPayload);
             const size_t                    FILTER_SIZE = 128U;
-            StaticJsonDocument<FILTER_SIZE> filter;
+            StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
             /* Example:
             * {
@@ -486,10 +486,10 @@ void SunrisePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             * }
             */
 
-            filter["results"]["sunrise"]    = true;
-            filter["results"]["sunset"]     = true;
+            jsonFilterDoc["results"]["sunrise"] = true;
+            jsonFilterDoc["results"]["sunset"]  = true;
 
-            if (true == filter.overflowed())
+            if (true == jsonFilterDoc.overflowed())
             {
                 LOG_ERROR("Less memory for filter available.");
             }
@@ -500,7 +500,7 @@ void SunrisePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             }
             else
             {
-                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
 
                 if (DeserializationError::Ok != error.code())
                 {

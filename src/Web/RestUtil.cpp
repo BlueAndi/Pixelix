@@ -100,10 +100,6 @@ void RestUtil::sendJsonRsp(AsyncWebServerRequest* request, const JsonDocument& j
     {
         LOG_ERROR("JSON document has less memory available.");
     }
-    else
-    {
-        LOG_DEBUG("JSON document size: %u", jsonDoc.memoryUsage());
-    }
 
     if (nullptr != request)
     {

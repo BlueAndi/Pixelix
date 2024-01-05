@@ -243,12 +243,12 @@ void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             const void*                     vPayload    = rsp.getPayload(payloadSize);
             const char*                     payload     = static_cast<const char*>(vPayload);
             const size_t                    FILTER_SIZE = 128U;
-            StaticJsonDocument<FILTER_SIZE> filter;
+            StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
-            filter["bpi"]["USD"]["rate_float"]  = true;
-            filter["bpi"]["USD"]["rate"]        = true;
+            jsonFilterDoc["bpi"]["USD"]["rate_float"]   = true;
+            jsonFilterDoc["bpi"]["USD"]["rate"]         = true;
 
-            if (true == filter.overflowed())
+            if (true == jsonFilterDoc.overflowed())
             {
                 LOG_ERROR("Less memory for filter available.");
             }
@@ -259,7 +259,7 @@ void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             }
             else
             {
-                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
 
                 if (DeserializationError::Ok != error.code())
                 {

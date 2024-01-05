@@ -526,7 +526,8 @@ void SensorDataProvider::createCalibrationFile()
                 }
                 else
                 {
-                    DynamicJsonDocument jsonDoc(256U);
+                    const size_t        JSON_DOC_SIZE   = 256U;
+                    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
 
                     if (DeserializationError::Ok == deserializeJson(jsonDoc, value->jsonStrValue))
                     {
@@ -549,7 +550,8 @@ void SensorDataProvider::registerSensorTopics()
     {
         const SensorTopic*  sensorTopic             = &gSensorTopics[index];
         SensorTopicRunData* sensorTopicRunData      = &gSensorLastValue[index];
-        DynamicJsonDocument jsonDoc(512U);
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
         JsonObjectConst     extra;
         uint8_t             sensorIndex             = 0U;
         uint8_t             channelIndex            = 0U;

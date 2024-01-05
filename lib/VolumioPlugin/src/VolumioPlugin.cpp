@@ -570,16 +570,16 @@ void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             const void*                     vPayload    = rsp.getPayload(payloadSize);
             const char*                     payload     = static_cast<const char*>(vPayload);
             const size_t                    FILTER_SIZE = 128U;
-            StaticJsonDocument<FILTER_SIZE> filter;
+            StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
-            filter["artist"]    = true;
-            filter["duration"]  = true;
-            filter["seek"]      = true;
-            filter["service"]   = true;
-            filter["status"]    = true;
-            filter["title"]     = true;
+            jsonFilterDoc["artist"]     = true;
+            jsonFilterDoc["duration"]   = true;
+            jsonFilterDoc["seek"]       = true;
+            jsonFilterDoc["service"]    = true;
+            jsonFilterDoc["status"]     = true;
+            jsonFilterDoc["title"]      = true;
             
-            if (true == filter.overflowed())
+            if (true == jsonFilterDoc.overflowed())
             {
                 LOG_ERROR("Less memory for filter available.");
             }
@@ -590,7 +590,7 @@ void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
             }
             else
             {
-                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
 
                 if (DeserializationError::Ok != error.code())
                 {

@@ -177,13 +177,16 @@ bool PluginMgr::load()
         LOG_WARNING("Failed to load file %s.", fullConfigFileName.c_str());
         isSuccessful = false;
     }
+    else if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+        isSuccessful = false;
+    }
     else
     {
         JsonArray       jsonSlots   = jsonDoc["slotConfiguration"].as<JsonArray>();
         uint8_t         slotId      = 0;
         const uint8_t   MAX_SLOTS   = DisplayMgr::getInstance().getMaxSlots();
-
-        checkJsonDocOverflow(jsonDoc, __LINE__);
 
         for(JsonObject jsonSlot: jsonSlots)
         {
@@ -236,9 +239,11 @@ void PluginMgr::save()
         }
     }
 
-    checkJsonDocOverflow(jsonDoc, __LINE__);
-
-    if (false == jsonFile.save(fullConfigFileName, jsonDoc))
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else if (false == jsonFile.save(fullConfigFileName, jsonDoc))
     {
         LOG_ERROR("Couldn't save slot configuration.");
     }
@@ -251,25 +256,6 @@ void PluginMgr::save()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-/**
- * Check dynamic JSON document for overflow and log a corresponding message,
- * otherwise log its document size.
- * 
- * @param[in] jsonDoc   Dynamic JSON document, which to check.
- * @param[in] line      Line number where the document is handled in the module.
- */
-void PluginMgr::checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line)
-{
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document @%d has less memory available.", line);
-    }
-    else
-    {
-        LOG_INFO("JSON document @%d size: %u", line, jsonDoc.memoryUsage());
-    }
-}
 
 void PluginMgr::createPluginConfigDirectory()
 {

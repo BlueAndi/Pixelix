@@ -111,9 +111,8 @@ void TopicHandlerService::registerTopics(const String& deviceId, IPluginMaintena
         {
             LOG_ERROR("JSON document has less memory available.");
         }
-
         /* Handle each topic */
-        if (0U < jsonTopics.size())
+        else if (0U < jsonTopics.size())
         {
             for (JsonVariantConst jsonTopic : jsonTopics)
             {
