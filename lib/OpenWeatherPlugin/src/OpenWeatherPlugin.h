@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 #include "AsyncHttpClient.h"
 #include "IOpenWeatherSource.h"
 
@@ -66,7 +66,7 @@
 /**
  * Shows weather informations provided by OpenWeather: https://openweathermap.org/
  */
-class OpenWeatherPlugin : public Plugin, private PluginConfigFsHandler
+class OpenWeatherPlugin : public PluginWithConfig
 {
 public:
 
@@ -98,8 +98,7 @@ public:
      * @param[in] uid   Unique id
      */
     OpenWeatherPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -124,9 +123,6 @@ public:
         m_slotInterf(nullptr),
         m_durationCounter(0u),
         m_isUpdateAvailable(false),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false),
         m_taskProxy()
     {
@@ -462,13 +458,6 @@ private:
     /** Time for duration tick period in ms */
     static const uint32_t   DURATION_TICK_PERIOD    = SIMPLE_TIMER_SECONDS(1U);
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-    
     Fonts::FontType             m_fontType;                     /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup                 m_textCanvas;                   /**< Canvas used for the text widget. */
     WidgetGroup                 m_iconCanvas;                   /**< Canvas used for the bitmap widget. */
@@ -493,9 +482,6 @@ private:
     const ISlotPlugin*          m_slotInterf;                   /**< Slot interface */
     uint8_t                     m_durationCounter;              /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
     bool                        m_isUpdateAvailable;            /**< Flag to indicate an updated date value. */
-    SimpleTimer                 m_cfgReloadTimer;               /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                        m_storeConfigReq;               /**< Is requested to store the configuration in persistent memory? */
-    bool                        m_reloadConfigReq;              /**< Is requested to reload the configuration from persistent memory? */
     bool                        m_hasTopicChanged;              /**< Has the topic content changed? */
 
     /**
@@ -543,11 +529,6 @@ private:
      * Destroy OpenWeatherSource.
      */
     void destroyOpenWeatherSource();
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

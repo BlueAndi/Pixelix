@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 #include "AsyncHttpClient.h"
 
 #include <WidgetGroup.h>
@@ -67,7 +67,7 @@
  * If the VOLUMIO server is offline, the plugin gets automatically disabled,
  * otherwise enabled.
  */
-class VolumioPlugin : public Plugin, private PluginConfigFsHandler
+class VolumioPlugin : public PluginWithConfig
 {
 public:
 
@@ -78,8 +78,7 @@ public:
      * @param[in] uid   Unique id
      */
     VolumioPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_textCanvas(),
         m_iconCanvas(),
         m_stdIconWidget(),
@@ -98,9 +97,6 @@ public:
         m_lastSeekValue(0U),
         m_pos(0U),
         m_state(STATE_UNKNOWN),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false),
         m_taskProxy()
     {
@@ -311,13 +307,6 @@ private:
      */
     static const uint32_t   OFFLINE_PERIOD      = SIMPLE_TIMER_SECONDS(60U);
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
     WidgetGroup             m_textCanvas;           /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;           /**< Canvas used for the bitmap widget. */
     BitmapWidget            m_stdIconWidget;        /**< Bitmap widget, used to show the standard icon. */
@@ -336,9 +325,6 @@ private:
     uint32_t                m_lastSeekValue;        /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
     uint8_t                 m_pos;                  /**< Current music position in percent. */
     VolumioState            m_state;                /**< Volumio player state */
-    SimpleTimer             m_cfgReloadTimer;       /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;       /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;      /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
 
     /**
@@ -374,11 +360,6 @@ private:
      * Task proxy used to decouple server responses, which happen in a different task context.
      */
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

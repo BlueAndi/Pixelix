@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
@@ -63,7 +63,7 @@
  * The sound reactive plugin shows a bar graph, which represents the frequency
  * bands of audio input.
  */
-class SoundReactivePlugin : public Plugin, private PluginConfigFsHandler
+class SoundReactivePlugin : public PluginWithConfig
 {
 public:
 
@@ -74,8 +74,7 @@ public:
      * @param[in] uid   Unique id
      */
     SoundReactivePlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_mutex(),
         m_barHeight{0U},
         m_peakHeight{0U},
@@ -85,9 +84,6 @@ public:
         m_freqBins(nullptr),
         m_corrFactors(),
         m_peak(INMP441_MAX_SPL),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false)
     {
         uint8_t bandIdx = 0U;
@@ -239,19 +235,19 @@ private:
     /**
      * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC_CONFIG;
+    static const char*              TOPIC_CONFIG;
 
     /**
      * The max. number of frequency bands, the plugin supports.
      * If you change this, the number of frequency bins which to sum up
      * must be calculated again.
      */
-    static const uint8_t    MAX_FREQ_BANDS                      = 16U;
+    static const uint8_t            MAX_FREQ_BANDS              = 16U;
 
     /**
      * Period in which the peak of a bar will be decayed in ms.
      */
-    static const uint32_t   DECAY_PEAK_PERIOD                   = 100U;
+    static const uint32_t           DECAY_PEAK_PERIOD           = 100U;
 
     /**
      * INMP441 data word bit width.
@@ -317,14 +313,7 @@ private:
      * List with the high edge frequency bin of the center band frequency.
      * This list is valid for 16 bands.
      */
-    static const uint16_t   LIST_16_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_16];
-
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD                   = SIMPLE_TIMER_SECONDS(30U);
+    static const uint16_t           LIST_16_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_16];
 
     mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
     uint16_t                m_barHeight[MAX_FREQ_BANDS];    /**< The current height of every bar, which represents a frequency band. */
@@ -335,15 +324,7 @@ private:
     float*                  m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
     float                   m_corrFactors[MAX_FREQ_BANDS];  /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
     float                   m_peak;                         /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
-    SimpleTimer             m_cfgReloadTimer;               /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;               /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;              /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;              /**< Has the topic content changed? */
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

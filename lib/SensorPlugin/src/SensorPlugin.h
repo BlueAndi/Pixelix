@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 
 #include <TextWidget.h>
 #include <ISensorChannel.hpp>
@@ -63,7 +63,7 @@
 /**
  * The sensor plugin can show a provided value by any connected sensor.
  */
-class SensorPlugin : public Plugin, private PluginConfigFsHandler
+class SensorPlugin : public PluginWithConfig
 {
 public:
 
@@ -74,17 +74,13 @@ public:
      * @param[in] uid   Unique id
      */
     SensorPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textWidget(),
         m_mutex(),
         m_sensorIdx(0U),
         m_channelIdx(0U),
         m_sensorChannel(nullptr),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
@@ -247,13 +243,6 @@ private:
     /** Sensor value update period in ms. */
     static const uint32_t   UPDATE_PERIOD   = SIMPLE_TIMER_SECONDS(2U);
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
     Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
@@ -261,15 +250,7 @@ private:
     uint8_t                 m_channelIdx;               /**< Index of selected channel. */
     ISensorChannel*         m_sensorChannel;            /**< Values of this channel will be shown. */
     SimpleTimer             m_updateTimer;              /**< Sensor value update timer. */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

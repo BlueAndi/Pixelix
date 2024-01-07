@@ -45,7 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <time.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 
 #include <LampWidget.h>
 #include <TextWidget.h>
@@ -65,7 +65,7 @@
  * Shows the current data and time (alternately) over the whole display.
  * It can be configured to show only the date or only the time as well.
  */
-class DateTimePlugin : public Plugin, private PluginConfigFsHandler
+class DateTimePlugin : public PluginWithConfig
 {
 public:
 
@@ -76,8 +76,7 @@ public:
      * @param[in] uid   Unique id
      */
     DateTimePlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_textWidget("\\calignNo NTP"),
         m_textCanvas(),
         m_lampCanvas(),
@@ -95,9 +94,6 @@ public:
         m_dayOffColor(DAY_OFF_COLOR),
         m_slotInterf(nullptr),
         m_mutex(),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
@@ -298,13 +294,6 @@ private:
      */
     static const uint32_t   DURATION_DEFAULT        = SIMPLE_TIMER_SECONDS(30U);
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD       = SIMPLE_TIMER_SECONDS(30U);
-
     TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_lampCanvas;               /**< Canvas used for the lamp widget. */
@@ -322,15 +311,7 @@ private:
     Color                   m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
     const ISlotPlugin*      m_slotInterf;               /**< Slot interface */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

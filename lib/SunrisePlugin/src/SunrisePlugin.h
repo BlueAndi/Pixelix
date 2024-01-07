@@ -45,7 +45,7 @@
  * Includes
  *****************************************************************************/
 #include "AsyncHttpClient.h"
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 
 #include <WidgetGroup.h>
 #include <BitmapWidget.h>
@@ -72,7 +72,7 @@
  *
  * Powered by sunrise-sunset.org!
  */
-class SunrisePlugin : public Plugin, private PluginConfigFsHandler
+class SunrisePlugin : public PluginWithConfig
 {
 public:
 
@@ -83,8 +83,7 @@ public:
      * @param[in] uid   Unique id
      */
     SunrisePlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -97,9 +96,6 @@ public:
         m_client(),
         m_mutex(),
         m_requestTimer(),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false),
         m_taskProxy()
     {
@@ -309,13 +305,6 @@ private:
     /** Default time format according to strftime(). */
     static const char*      TIME_FORMAT_DEFAULT;
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
     Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -329,9 +318,6 @@ private:
     SimpleTimer             m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_requestTimer;             /**< Timer is used for cyclic sunrise/sunset http request. */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
 
     /**
@@ -365,11 +351,6 @@ private:
      * Task proxy used to decouple server responses, which happen in a different task context.
      */
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

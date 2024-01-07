@@ -44,7 +44,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 #include "time.h"
 
 #include <WidgetGroup.h>
@@ -70,7 +70,7 @@
  * in the filesystem, where the target date has to be configured.
  *
  */
-class CountdownPlugin : public Plugin, private PluginConfigFsHandler
+class CountdownPlugin : public PluginWithConfig
 {
 public:
 
@@ -177,8 +177,7 @@ public:
      * @param[in] uid   Unique id
      */
     CountdownPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -189,9 +188,6 @@ public:
         m_targetDateInformation(),
         m_remainingDays(""),
         m_mutex(),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false)
     {
         /* Example data, used to generate the very first configuration file. */
@@ -388,13 +384,6 @@ private:
     */
     static const int16_t    TM_OFFSET_YEAR  = 1900;
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
     Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -405,15 +394,7 @@ private:
     TargetDayDescription    m_targetDateInformation;    /**< String used for configured additional target date information. */
     String                  m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;           /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;          /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

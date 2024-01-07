@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 #include "AsyncHttpClient.h"
 
 #include <SimpleTimer.hpp>
@@ -64,7 +64,7 @@
  * The sound reactive plugin shows a bar graph, which represents the frequency
  * bands of audio input.
  */
-class SignalDetectorPlugin : public Plugin, private PluginConfigFsHandler
+class SignalDetectorPlugin : public PluginWithConfig
 {
 public:
 
@@ -75,8 +75,7 @@ public:
      * @param[in] uid   Unique id
      */
     SignalDetectorPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textWidget(),
         m_mutex(),
@@ -86,9 +85,6 @@ public:
         m_isUpdateReq(false),
         m_timer(),
         m_slotInterf(nullptr),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
@@ -283,13 +279,6 @@ private:
      */
     static const char*      DEFAULT_TEXT;
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
     Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
     TextWidget              m_textWidget;       /**< If signal is detected, it will show a corresponding text. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
@@ -299,15 +288,7 @@ private:
     bool                    m_isUpdateReq;      /**< Display update request, by changing the text. */
     SimpleTimer             m_timer;            /**< Timer used for slot duration timeout detection in case deactivate() is not called. */
     const ISlotPlugin*      m_slotInterf;       /**< Slot interface */
-    SimpleTimer             m_cfgReloadTimer;   /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;   /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;  /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;  /**< Has the topic content changed? */
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

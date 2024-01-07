@@ -228,25 +228,7 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
         m_textWidget.move(0, offsY);
     }
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-    else
-    {
-        /* Remember current timestamp to detect updates of the configuration in the
-         * filesystem without using the plugin API.
-         */
-        updateTimestampLastUpdate();
-    }
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    PluginWithConfig::start(width, height);
 
     m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
 
@@ -272,59 +254,16 @@ void DateTimePlugin::start(uint16_t width, uint16_t height)
 
 void DateTimePlugin::stop()
 {
-    String                      configurationFilename   = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_cfgReloadTimer.stop();
-
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void DateTimePlugin::process(bool isConnected)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    PLUGIN_NOT_USED(isConnected);
-
-    /* Configuration in persistent memory updated? */
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        if (true == isConfigurationUpdated())
-        {
-            m_reloadConfigReq = true;
-        }
-
-        m_cfgReloadTimer.restart();
-    }
-
-    if (true == m_storeConfigReq)
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
-        }
-
-        m_storeConfigReq = false;
-    }
-    else if (true == m_reloadConfigReq)
-    {
-        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
-
-        if (true == loadConfiguration())
-        {
-            updateTimestampLastUpdate();
-        }
-
-        m_reloadConfigReq = false;
-    }
-    else
-    {
-        ;
-    }
+    PluginWithConfig::process(isConnected);
 
     /* The date/time information shall be retrieved every second while plugin is activated. */
     if ((true == m_checkUpdateTimer.isTimerRunning()) &&
@@ -377,13 +316,6 @@ void DateTimePlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void DateTimePlugin::requestStoreToPersistentMemory()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_storeConfigReq = true;
-}
 
 void DateTimePlugin::getConfiguration(JsonObject& jsonCfg) const
 {

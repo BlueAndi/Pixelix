@@ -471,7 +471,7 @@ void IconTextPlugin::getSpriteSheetFilePath(String& fullPath) const
 
 String IconTextPlugin::getFileName(const String& ext)
 {
-    return PluginConfigFsHandler::generateFullPath(getUID(), ext);
+    return generateFullPath(getUID(), ext);
 }
 
 /******************************************************************************

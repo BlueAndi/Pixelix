@@ -177,41 +177,18 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
         m_textWidget.move(0, offsY);
     }
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
-    else
-    {
-        /* Remember current timestamp to detect updates of the configuration in the
-         * filesystem without using the plugin API.
-         */
-        updateTimestampLastUpdate();
-    }
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    PluginWithConfig::start(width, height);
 
     initHttpClient();
 }
 
 void GruenbeckPlugin::stop()
 {
-    String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_cfgReloadTimer.stop();
     m_requestTimer.stop();
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void GruenbeckPlugin::process(bool isConnected)
@@ -219,42 +196,7 @@ void GruenbeckPlugin::process(bool isConnected)
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    /* Configuration in persistent memory updated? */
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        if (true == isConfigurationUpdated())
-        {
-            m_reloadConfigReq = true;
-        }
-
-        m_cfgReloadTimer.restart();
-    }
-
-    if (true == m_storeConfigReq)
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to save configuration: %s", getFullPathToConfiguration().c_str());
-        }
-
-        m_storeConfigReq = false;
-    }
-    else if (true == m_reloadConfigReq)
-    {
-        LOG_INFO("Reload configuration: %s", getFullPathToConfiguration().c_str());
-
-        if (true == loadConfiguration())
-        {
-            updateTimestampLastUpdate();
-        }
-
-        m_reloadConfigReq = false;
-    }
-    else
-    {
-        ;
-    }
+    PluginWithConfig::process(isConnected);
 
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
@@ -385,13 +327,6 @@ void GruenbeckPlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-void GruenbeckPlugin::requestStoreToPersistentMemory()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_storeConfigReq = true;
-}
 
 void GruenbeckPlugin::getConfiguration(JsonObject& jsonCfg) const
 {

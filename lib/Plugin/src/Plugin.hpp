@@ -47,8 +47,6 @@
 
 #include <stdint.h>
 #include <YAGfx.h>
-#include <JsonFile.h>
-#include <ArduinoJson.h>
 
 /******************************************************************************
  * Macros
@@ -342,6 +340,25 @@ public:
     {
     }
 
+    /**
+     * Generate the full path for any plugin instance specific kind of configuration
+     * file.
+     * 
+     * @param[in] uid       The plugin UID
+     * @param[in] extension Full path filename
+     *
+     * @return Full path
+     */
+    static String generateFullPath(uint16_t uid, const String& extension)
+    {
+        return String(CONFIG_PATH) + "/" + uid + extension;
+    }
+
+    /**
+     * Path where plugin specific configuration files shall be stored.
+     */
+    static constexpr const char* CONFIG_PATH = "/configuration";
+
 protected:
 
     bool    m_isEnabled;    /**< Plugin is enabled or disabled */
@@ -370,197 +387,6 @@ private:
     Plugin();
     Plugin(const Plugin& plugin);
     Plugin& operator=(const Plugin& plugin);
-};
-
-/**
- * This class handles the plugin configuration file in the filesystem.
- * Use it for loading and saving the configuration, as well as checking
- * whether the configuration file was changed without the handlers
- * knowledge.
- */
-class PluginConfigFsHandler
-{
-public:
-
-    /**
-     * Destroy the plugin configuration filesystem handler.
-     */
-    ~PluginConfigFsHandler()
-    {
-    }
-
-    /**
-     * Generate the full path for any plugin instance specific kind of configuration
-     * file.
-     * 
-     * @param[in] uid       The plugin UID
-     * @param[in] extension Full path filename
-     *
-     * @return Full path
-     */
-    static String generateFullPath(uint16_t uid, const String& extension)
-    {
-        return String(CONFIG_PATH) + "/" + uid + extension;
-    }
-
-    /**
-     * Get full path (path + filename) to plugin instance specific configuration
-     * in JSON format.
-     * 
-     * @return Full path to configuration file
-     */
-    String getFullPathToConfiguration() const
-    {
-        return generateFullPath(m_uid, ".json");
-    }
-
-    /**
-     * Path where plugin specific configuration files shall be stored.
-     */
-    static constexpr const char*    CONFIG_PATH = "/configuration";
-
-protected:
-
-    const uint16_t  m_uid;                          /**< Unique id */
-    FS&             m_fs;                           /**< Filesystem used to load and save the configuration file. */
-    time_t          m_timestampOfLastFileUpdate;    /**< Configuration in persistent memory written the last time (unix timeformat). */
-
-    PluginConfigFsHandler();
-    PluginConfigFsHandler(const PluginConfigFsHandler& handler);
-    PluginConfigFsHandler& operator=(const PluginConfigFsHandler& handler);
-
-    /**
-     * Construct the plugin configuration filesystem handler.
-     * 
-     * @param[in] uid   The plugin UID.
-     * @param[in] fs    The filesystem where to load and save the configuration file.
-     */
-    PluginConfigFsHandler(uint16_t uid, FS& fs) :
-        m_uid(uid),
-        m_fs(fs),
-        m_timestampOfLastFileUpdate(0U)
-    {
-    }
-
-    /**
-     * Get configuration in JSON.
-     * 
-     * @param[out] cfg  Configuration
-     */
-    virtual void getConfiguration(JsonObject& cfg) const = 0;
-
-    /**
-     * Set configuration in JSON.
-     * 
-     * @param[in] cfg   Configuration
-     * 
-     * @return If successful set, it will return true otherwise false.
-     */
-    virtual bool setConfiguration(JsonObjectConst& cfg) = 0;
-
-    /**
-     * Update the internal timestamp of the last configuration file update.
-     */
-    void updateTimestampLastUpdate()
-    {
-        m_timestampOfLastFileUpdate = getLastConfigurationUpdate();
-    }
-
-    /**
-     * Get timestamp of the last configuration update in the persistent memory.
-     * 
-     * @return Timestamp in unix time format.
-     */
-    time_t getLastConfigurationUpdate() const
-    {
-        String  configurationFilename   = getFullPathToConfiguration();
-        File    fd                      = m_fs.open(configurationFilename, "r");
-        time_t  timestamp               = 0U;
-
-        if (true == fd)
-        {
-            timestamp = fd.getLastWrite();
-            fd.close();
-        }
-
-        return timestamp;
-    }
-
-    /**
-     * Is the configuration in persistent memory updated without using the
-     * plugin API?
-     * 
-     * @return If updated, it will return true otherwise false.
-     */
-    bool isConfigurationUpdated() const
-    {
-        bool    isConfigurationUpdated      = false;
-        time_t  timestampOfLastFileUpdate   = getLastConfigurationUpdate();
-        
-        if (timestampOfLastFileUpdate != m_timestampOfLastFileUpdate)
-        {
-            isConfigurationUpdated = true;
-        }
-
-        return isConfigurationUpdated;
-    }
-
-    /**
-     * Saves current configuration to JSON file.
-     * 
-     * @return If successful saved, it will return true otherwise false.
-     */
-    bool saveConfiguration()
-    {
-        bool                status                  = true;
-        JsonFile            jsonFile(m_fs);
-        const size_t        JSON_DOC_SIZE           = 1024U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObject          jsonRootObject          = jsonDoc.to<JsonObject>();
-        String              configurationFilename   = getFullPathToConfiguration();
-
-        getConfiguration(jsonRootObject);
-        
-        if (false == jsonFile.save(configurationFilename, jsonDoc))
-        {
-            status = false;
-        }
-        else
-        {
-            m_timestampOfLastFileUpdate = getLastConfigurationUpdate();
-        }
-
-        return status;
-    }
-
-    /**
-     * Load configuration from JSON file.
-     * 
-     * @return If successful loaded, it will return true otherwise false.
-     */
-    bool loadConfiguration()
-    {
-        bool                status                  = true;
-        JsonFile            jsonFile(m_fs);
-        const size_t        JSON_DOC_SIZE           = 1024U;
-        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-        JsonObjectConst     jsonRootObject          = jsonDoc.to<JsonObject>();
-        String              configurationFilename   = getFullPathToConfiguration();
-
-        if (false == jsonFile.load(configurationFilename, jsonDoc))
-        {
-            status = false;
-        }
-        else
-        {
-            status = setConfiguration(jsonRootObject);
-        }
-
-        return status;
-    }
-
-private:
-
 };
 
 /******************************************************************************

@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 
 #include <WidgetGroup.h>
 #include <BitmapWidget.h>
@@ -63,7 +63,7 @@
 /**
  * Grab information from a MQTT broker and display it.
  */
-class GrabViaMqttPlugin : public Plugin, private PluginConfigFsHandler
+class GrabViaMqttPlugin : public PluginWithConfig
 {
 public:
 
@@ -74,8 +74,7 @@ public:
      * @param[in] uid   Unique id
      */
     GrabViaMqttPlugin(const char* name, uint16_t uid) :
-        Plugin(name, uid),
-        PluginConfigFsHandler(uid, FILESYSTEM),
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_layoutRight(),
         m_layoutLeft(),
@@ -90,9 +89,6 @@ public:
         m_multiplier(1.0f),
         m_offset(0.0f),
         m_mutex(),
-        m_cfgReloadTimer(),
-        m_storeConfigReq(false),
-        m_reloadConfigReq(false),
         m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
@@ -265,13 +261,6 @@ private:
      */
     static const char*      TOPIC_CONFIG;
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
     Fonts::FontType         m_fontType;             /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_layoutRight;          /**< Canvas used for the text widget in a layout with icon on the left side. */
     WidgetGroup             m_layoutLeft;           /**< Canvas used for the bitmap widget in a layout with text on the right side. */
@@ -286,15 +275,7 @@ private:
     float                   m_multiplier;           /**< If grabbed value is a number, it will be multiplied with the multiplier. */
     float                   m_offset;               /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */
     mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
-    SimpleTimer             m_cfgReloadTimer;       /**< Timer is used to cyclic reload the configuration from persistent memory. */
-    bool                    m_storeConfigReq;       /**< Is requested to store the configuration in persistent memory? */
-    bool                    m_reloadConfigReq;      /**< Is requested to reload the configuration from persistent memory? */
     bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
-
-    /**
-     * Request to store configuration to persistent memory.
-     */
-    void requestStoreToPersistentMemory();
 
     /**
      * Get configuration in JSON.

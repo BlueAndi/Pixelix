@@ -590,7 +590,7 @@ void ThreeIconPlugin::getSpriteSheetFilePath(uint8_t iconId, String& fullPath) c
 
 String ThreeIconPlugin::getFileName(uint8_t iconId, const String& ext)
 {
-    return PluginConfigFsHandler::generateFullPath(getUID(), "_" + String(iconId) + ext);
+    return generateFullPath(getUID(), "_" + String(iconId) + ext);
 }
 
 /******************************************************************************
