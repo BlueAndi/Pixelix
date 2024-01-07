@@ -255,6 +255,7 @@ public:
      * @return the currently active fadeEffect.
      */
     FadeEffect getFadeEffect();
+    
     /**
      * Move plugin to a different slot.
      *

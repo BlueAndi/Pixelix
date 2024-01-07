@@ -537,8 +537,8 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
         }
         else
         {
-            String              pluginName  = request->arg("name");
-            IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName);
+            const String&       pluginName  = request->arg("name");
+            IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName.c_str());
 
             /* Plugin not found? */
             if (nullptr == plugin)
@@ -615,7 +615,7 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
             }
             else
             {
-                String              pluginName  = request->arg("name");
+                const String&       pluginName  = request->arg("name");
                 IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
                 if (nullptr == plugin)

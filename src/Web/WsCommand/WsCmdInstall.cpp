@@ -78,7 +78,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     else
     {
         String              msg;
-        IPluginMaintenance* plugin  = PluginMgr::getInstance().install(m_pluginName);
+        IPluginMaintenance* plugin  = PluginMgr::getInstance().install(m_pluginName.c_str());
 
         if (nullptr == plugin)
         {

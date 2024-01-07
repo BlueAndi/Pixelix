@@ -67,7 +67,7 @@ public:
     /**
      * IPluginMaintenance creation function, used by the plugin manager to create a plugin instance.
      */
-    typedef IPluginMaintenance* (*CreateFunc)(const String& name, uint16_t uid);
+    typedef IPluginMaintenance* (*CreateFunc)(const char* name, uint16_t uid);
 
     /**
      * Destroys the interface.

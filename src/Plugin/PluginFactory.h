@@ -91,7 +91,7 @@ public:
      * 
      * @return If successful, it will return the plugin object pointer otherwise nullptr.
      */
-    IPluginMaintenance* createPlugin(const String& name);
+    IPluginMaintenance* createPlugin(const char* name);
 
     /**
      * Create a plugin by name with given UID.
@@ -101,7 +101,7 @@ public:
      * 
      * @return If successful, it will return the plugin object pointer otherwise nullptr.
      */
-    IPluginMaintenance* createPlugin(const String& name, uint16_t uid);
+    IPluginMaintenance* createPlugin(const char* name, uint16_t uid);
 
     /**
      * Destroy plugin object.

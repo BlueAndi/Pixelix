@@ -90,7 +90,7 @@ void PluginMgr::begin()
     createPluginConfigDirectory();
 }
 
-IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
+IPluginMaintenance* PluginMgr::install(const char* name, uint8_t slotId)
 {
     IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name);
 
@@ -309,10 +309,11 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
 
     if (false == isKeyValuePairMissing)
     {
-        String      name        = jsonName.as<String>();
+        const char* name        = jsonName.as<const char*>();
         uint32_t    duration    = jsonDuration.as<uint32_t>();
 
-        if (false == name.isEmpty())
+        /* Name available? */
+        if ('\0' != name[0])
         {
             IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
@@ -327,7 +328,7 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
             
                 if (nullptr == plugin)
                 {
-                    LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                    LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name, uid, slotId);
                 }
                 else
                 {
@@ -341,7 +342,7 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
 
                     if (false == install(plugin, slotId))
                     {
-                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name, uid, slotId);
 
                         m_pluginFactory.destroyPlugin(plugin);
                         plugin = nullptr;

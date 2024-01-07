@@ -78,8 +78,8 @@ void CaptivePortalHandler::handleRequest(AsyncWebServerRequest* request)
 
             if (true == settings.open(false))
             {
-                const String& ssid              = request->arg("ssid");
-                const String& passphrase        = request->arg("passphrase");
+                const String&   ssid            = request->arg("ssid");
+                const String&   passphrase      = request->arg("passphrase");
                 KeyValueString& kvSSID          = settings.getWifiSSID();
                 KeyValueString& kvPassphrase    = settings.getWifiPassphrase();
 

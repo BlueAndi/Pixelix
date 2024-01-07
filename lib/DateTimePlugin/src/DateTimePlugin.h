@@ -72,10 +72,10 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    DateTimePlugin(const String& name, uint16_t uid) :
+    DateTimePlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
         PluginConfigFsHandler(uid, FILESYSTEM),
         m_textWidget("\\calignNo NTP"),
@@ -114,12 +114,12 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow) DateTimePlugin(name, uid);
     }

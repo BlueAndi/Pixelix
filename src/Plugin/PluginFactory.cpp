@@ -61,12 +61,12 @@
  * Public Methods
  *****************************************************************************/
 
-IPluginMaintenance* PluginFactory::createPlugin(const String& name)
+IPluginMaintenance* PluginFactory::createPlugin(const char* name)
 {
     return createPlugin(name, generateUID());
 }
 
-IPluginMaintenance* PluginFactory::createPlugin(const String& name, uint16_t uid)
+IPluginMaintenance* PluginFactory::createPlugin(const char* name, uint16_t uid)
 {
     IPluginMaintenance*         plugin                  = nullptr;
     uint8_t                     pluginTypeListLength    = 0U;

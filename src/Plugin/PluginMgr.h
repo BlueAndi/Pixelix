@@ -92,7 +92,7 @@ public:
      *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    IPluginMaintenance* install(const String& name, uint8_t slotId = SlotList::SLOT_ID_INVALID);
+    IPluginMaintenance* install(const char* name, uint8_t slotId = SlotList::SLOT_ID_INVALID);
 
     /**
      * Uninstall plugin.

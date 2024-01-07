@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin interface
+ * @brief  Plugin base
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup plugin
@@ -62,7 +62,8 @@
  *****************************************************************************/
 
 /**
- * A plugin can be plugged into a display slot and will shown.
+ * A base plugin can be plugged into a display slot and will shown.
+ * Overwrite the methods in a derived class to extend its functionality.
  */
 class Plugin : public IPluginMaintenance
 {
@@ -246,7 +247,7 @@ public:
      */
     const char* getName() const override
     {
-        return m_name.c_str();
+        return m_name;
     }
 
     /**
@@ -349,10 +350,10 @@ protected:
      * Constructs the plugin.
      * It is disabled by default.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    Plugin(const String& name, uint16_t uid) :
+    Plugin(const char* name, uint16_t uid) :
         m_isEnabled(false),
         m_uid(uid),
         m_alias(),
@@ -364,7 +365,7 @@ private:
 
     const uint16_t  m_uid;      /**< Unique id */
     String          m_alias;    /**< Alias name */
-    String          m_name;     /**< Plugin name */
+    const char*     m_name;     /**< Plugin name */
 
     Plugin();
     Plugin(const Plugin& plugin);
