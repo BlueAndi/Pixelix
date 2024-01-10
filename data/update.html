@@ -325,7 +325,11 @@
 
                             return promiseChain;
                         }).then(function() {
-                            dialog.showInfo("<p>Restore successful.</p>");
+                            return dialog.showInfo("<p>Restore successful.</p>", true);
+                        }).then(function() {
+                            return restClient.reset();
+                        }).then(function() {
+                            return dialog.showInfo("<p>Reset performed to apply restored configuration.</p>");
                         }).catch(function() {
                             dialog.showError("<p>Restore failed.</p>");
                         });
