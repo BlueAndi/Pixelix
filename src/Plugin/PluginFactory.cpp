@@ -79,9 +79,11 @@ IPluginMaintenance* PluginFactory::createPlugin(const char* name, uint16_t uid)
         const PluginList::Element* elem = &pluginTypeList[idx];
 
         /* Plugin type found? */
-        if (name == elem->name)
+        if (0 == strcmp(name, elem->name))
         {
-            /* Produce the plugin object. */
+            /* Produce the plugin object. Its important to use the name from the PluginList,
+             * because it must exist over plugin instance lifetime.
+             */
             plugin = elem->createFunc(elem->name, uid);
 
             if (nullptr != plugin)
