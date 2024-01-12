@@ -192,11 +192,26 @@ void SensorDataProvider::begin()
 
     logSensorAvailability();
     registerSensorTopics();
+    
+    m_timer.start(SENSOR_PROCESS_PERIOD);
+    m_isInitialized = true;
 }
 
 void SensorDataProvider::end()
 {
+    m_isInitialized = false;
+    m_timer.stop();
     unregisterSensorTopics();
+}
+
+void SensorDataProvider::process()
+{
+    if ((true == m_isInitialized) &&
+        (true == m_timer.isTimeout()))
+    {
+        m_impl->process();
+        m_timer.restart();
+    }
 }
 
 uint8_t SensorDataProvider::getNumSensors() const
@@ -380,7 +395,9 @@ bool SensorDataProvider::save()
 
 SensorDataProvider::SensorDataProvider() :
     m_impl(Sensors::getSensorDataProviderImpl()),
-    m_deviceId()
+    m_deviceId(),
+    m_timer(),
+    m_isInitialized(false)
 {
 }
 
@@ -558,59 +575,69 @@ void SensorDataProvider::registerSensorTopics()
         {
             LOG_ERROR("Sensor/Channel %u discovery details error.", index);
         }
-
-        extra = jsonDoc.as<JsonObjectConst>();
-
-        /* Try to find a sensor channel which provides the required information. */
-        if (true == find(sensorIndex, channelIndex, sensorTopic->sensorChannelType))
+        else
         {
-            ISensor*        sensor          = this->getSensor(sensorIndex);
-            ISensorChannel* sensorChannel   = sensor->getChannel(channelIndex);
-            String          channelName     = "/" + ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
-            String          entityId        = "sensors/";
+            extra = jsonDoc.as<JsonObjectConst>();
 
-            entityId += index;
-
-            ITopicHandler::GetTopicFunc         getTopicFunc    =
-                [sensorTopic, sensorChannel](const String& topic, JsonObject& value) -> bool
-                {
-                    const uint32_t VALUE_PRECISION = 2U; /* 2 digits after the . */
-
-                    UTIL_NOT_USED(topic);
-
-                    value["value"] = sensorChannel->getValueAsString(VALUE_PRECISION);
-
-                    return true;
-                };
-            TopicHandlerService::HasChangedFunc hasChangedFunc  =
-                [sensorTopic, sensorChannel, sensorTopicRunData](const String& topic) -> bool
-                {
-                    bool hasChanged = false;
-
-                    UTIL_NOT_USED(topic);
-
-                    if ((nullptr != sensorTopic) &&
-                        (nullptr != sensorChannel) &&
-                        (nullptr != sensorTopicRunData))
+            /* Try to find a sensor channel which provides the required information. */
+            if (true == find(sensorIndex, channelIndex, sensorTopic->sensorChannelType))
+            {
+                const uint32_t                      VALUE_PRECISION = 2U; /* 2 digits after the . */
+                ISensor*                            sensor          = this->getSensor(sensorIndex);
+                ISensorChannel*                     sensorChannel   = sensor->getChannel(channelIndex);
+                String                              channelName     = "/" + ISensorChannel::channelTypeToName(sensorTopic->sensorChannelType);
+                String                              entityId        = "sensors/";
+                ITopicHandler::GetTopicFunc         getTopicFunc    =
+                    [sensorTopic, sensorChannel, VALUE_PRECISION](const String& topic, JsonObject& jsonValue) -> bool
                     {
-                        String      value       = sensorChannel->getValueAsString(2U);
-                        uint32_t    timestamp   = millis();
-                        uint32_t    delta       = timestamp - sensorTopicRunData->lastTimestamp;
+                        bool    isSuccessful    = false;
+                        String  value           = sensorChannel->getValueAsString(VALUE_PRECISION);
 
-                        if ((sensorTopicRunData->lastValue != value) &&
-                            (sensorTopic->updatePeriod <= delta))
+                        /* The callback is dedicated to a topic, therefore the
+                         * topic parameter is not used.
+                         */
+                        UTIL_NOT_USED(topic);
+
+                        /* Floating point channels may provide NaN. */
+                        if (value != "NAN")
+                        {
+                            jsonValue["value"] = value;
+
+                            isSuccessful = true;
+                        }
+
+                        return isSuccessful;
+                    };
+                TopicHandlerService::HasChangedFunc hasChangedFunc  =
+                    [sensorTopic, sensorChannel, sensorTopicRunData, VALUE_PRECISION](const String& topic) -> bool
+                    {
+                        bool            hasChanged      = false;
+                        String          value           = sensorChannel->getValueAsString(VALUE_PRECISION);
+                        uint32_t        timestamp       = millis();
+                        uint32_t        delta           = timestamp - sensorTopicRunData->lastTimestamp;
+
+                        /* The callback is dedicated to a topic, therefore the
+                         * topic parameter is not used.
+                         */
+                        UTIL_NOT_USED(topic);
+
+                        if ((value != "NAN") &&                         /* Floating point channels may provide NaN. */
+                            (sensorTopicRunData->lastValue != value) && /* Value changed? */
+                            (sensorTopic->updatePeriod <= delta))       /* Update period expired? */
                         {
                             sensorTopicRunData->lastValue       = value;
                             sensorTopicRunData->lastTimestamp   = timestamp;
 
                             hasChanged = true;
                         }
-                    }
 
-                    return hasChanged;
-                };
+                        return hasChanged;
+                    };
 
-            topicHandlerService.registerTopic(m_deviceId, entityId, channelName, extra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
+                entityId += index;
+
+                topicHandlerService.registerTopic(m_deviceId, entityId, channelName, extra, getTopicFunc, hasChangedFunc, nullptr, nullptr);
+            }
         }
     }
 }

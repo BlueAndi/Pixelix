@@ -46,6 +46,7 @@
 #include <stdint.h>
 #include <ISensor.hpp>
 #include <ArduinoJson.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -94,6 +95,11 @@ public:
      * Stop the sensor data provider.
      */
     void end();
+
+    /**
+     * Process the sensor drivers.
+     */
+    void process();
 
     /**
      * Get number of installed sensor drivers, independed of the physical
@@ -159,6 +165,11 @@ private:
     static const char*      SENSOR_CALIB_FILE_NAME;
 
     /**
+     * Sensor process period in ms.
+     */
+    static const uint32_t   SENSOR_PROCESS_PERIOD   = SIMPLE_TIMER_SECONDS(10U);
+
+    /**
      * Hidden implementation to avoid to include here all available sensors directly.
      */
     SensorDataProviderImpl* m_impl;
@@ -167,6 +178,17 @@ private:
      * Device id, used for topic registration.
      */
     String                  m_deviceId;
+
+    /**
+     * Timer used for cyclic sensor driver processing.
+     */
+    SimpleTimer             m_timer;
+
+    /**
+     * The flag indicates whether the sensor data provider was initialized
+     * by begin() or not. Calling end() will reset the flag.
+     */
+    bool                    m_isInitialized;
 
     /**
      * Constructs the sensor data provder.

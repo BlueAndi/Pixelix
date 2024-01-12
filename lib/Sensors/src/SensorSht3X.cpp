@@ -75,6 +75,14 @@ void SensorSht3X::begin()
     }
 }
 
+void SensorSht3X::process()
+{
+    if (true == m_isAvailable)
+    {
+        (void)m_driver.readSample();
+    }
+}
+
 const char* SensorSht3X::getName() const
 {
     /* Model can not be read back and the automatic detection may be enabled,
