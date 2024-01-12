@@ -161,6 +161,7 @@ void ConnectedState::process(StateMachine& sm)
     }
 
     Services::processAll();
+    SensorDataProvider::getInstance().process();
 }
 
 void ConnectedState::exit(StateMachine& sm)

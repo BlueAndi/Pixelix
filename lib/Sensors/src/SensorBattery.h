@@ -170,6 +170,15 @@ public:
     void begin() final;
 
     /**
+     * Process the sensor driver. Mainly used to read the sensor value and
+     * provide its data cached to the sensor channels.
+     */
+    void process() final
+    {
+        /* Nothing to do.*/
+    }
+
+    /**
      * Get sensor name.
      * 
      * @return Sensor name

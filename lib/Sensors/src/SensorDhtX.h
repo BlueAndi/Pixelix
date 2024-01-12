@@ -93,13 +93,24 @@ public:
     }
 
     /**
-     * Get data value.
+     * Get the temperature.
+     * If there is any error, it will return NaN.
      * 
-     * @return Sensor data value in °C.
+     * @return Temperature in °C.
      */
     float getValue() final
     {
-        return m_driver.readTemperature() + m_offset;
+        /* readTemperature() will provide the last value from the cache in case
+         * the request period is lower than 2s.
+         */
+        float temperature = m_driver.readTemperature();
+
+        if (false == isnan(temperature))
+        {
+            temperature += m_offset;
+        }
+
+        return temperature;
     }
 
     /**
@@ -168,13 +179,24 @@ public:
     }
 
     /**
-     * Get data value.
+     * Get the humidity.
+     * If there is any error, it will return NaN.
      * 
-     * @return Sensor data value in %.
+     * @return Humidity in %.
      */
     float getValue() final
     {
-        return m_driver.readHumidity() + m_offset;
+        /* readHumidity() will provide the last value from the cache in case
+         * the request period is lower than 2s.
+         */
+        float humidity = m_driver.readHumidity();
+
+        if (false == isnan(humidity))
+        {
+            humidity += m_offset;
+        }
+
+        return humidity;
     }
 
     /**
@@ -250,6 +272,15 @@ public:
      * Configures the sensor, so it is able to provide sensor data.
      */
     void begin() final;
+
+    /**
+     * Process the sensor driver. Mainly used to read the sensor value and
+     * provide its data cached to the sensor channels.
+     */
+    void process() final
+    {
+        /* Nothing to do.*/
+    }
 
     /**
      * Get sensor name.

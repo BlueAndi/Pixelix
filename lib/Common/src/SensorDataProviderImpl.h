@@ -86,6 +86,11 @@ public:
     void begin();
 
     /**
+     * Process the sensor drivers.
+     */
+    void process();
+
+    /**
      * Get number of installed sensor drivers, independed of the physical
      * sensor availability.
      * 

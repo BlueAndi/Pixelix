@@ -161,6 +161,7 @@ public:
 
     /**
      * Get data value.
+     * If there is any error, it will return NaN.
      * 
      * @return Sensor data value
      */
@@ -182,6 +183,7 @@ public:
 
     /**
      * Get value as string.
+     * If there is any error, it will return "NAN".
      * 
      * @param[in] precision The precision (ignored for integer values) of the value.
      * 
@@ -191,7 +193,7 @@ public:
     {
         float   value       = getValue();
         String  valueStr;
-        char    buffer[20];
+        char    buffer[20U];
 
         (void)snprintf(buffer, sizeof(buffer), "%.*F", precision, value);
         valueStr = buffer;

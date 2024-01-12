@@ -35,6 +35,7 @@
 #include "ConnectingState.h"
 #include "SysMsg.h"
 #include "Services.h"
+#include "SensorDataProvider.h"
 
 #include "IdleState.h"
 #include "ConnectedState.h"
@@ -180,6 +181,7 @@ void ConnectingState::process(StateMachine& sm)
     }
 
     Services::processAll();
+    SensorDataProvider::getInstance().process();
 }
 
 void ConnectingState::exit(StateMachine& sm)

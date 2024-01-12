@@ -71,6 +71,19 @@ void SensorDataProviderImpl::begin()
     }
 }
 
+void SensorDataProviderImpl::process()
+{
+    uint8_t index = 0U;
+
+    for(index = 0U; index < m_cnt; ++index)
+    {
+        if (nullptr != m_sensors[index])
+        {
+            m_sensors[index]->process();
+        }
+    }
+}
+
 ISensor* SensorDataProviderImpl::getSensor(uint8_t index)
 {
     ISensor*    sensor  = nullptr;
