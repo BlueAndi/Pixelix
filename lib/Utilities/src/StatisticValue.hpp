@@ -138,7 +138,7 @@ public:
 
         if (avgCnt <= m_wrIdx)
         {
-            m_wrIdx = zero;
+            m_wrIdx = 0U;
         }
 
         if (avgCnt > m_cnt)
