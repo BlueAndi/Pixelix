@@ -114,15 +114,16 @@ bool Logging::selectSink(const String& name)
 
     while((MAX_SINKS > index) && (false == status))
     {
-        if (m_sinks[index]->getName() == name)
+        if (nullptr != m_sinks[index])
         {
-            m_selectedSink = m_sinks[index];
-            status = true;
+            if (m_sinks[index]->getName() == name)
+            {
+                m_selectedSink = m_sinks[index];
+                status = true;
+            }
         }
-        else
-        {
-            ++index;
-        }
+
+        ++index;
     }
 
     return status;
