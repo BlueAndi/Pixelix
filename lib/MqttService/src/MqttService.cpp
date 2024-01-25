@@ -251,7 +251,7 @@ void MqttService::unsubscribe(const char* topic)
                 {
                     Subscriber* subscriber = *it;
 
-                    m_mqttClient.unsubscribe(subscriber->topic.c_str());
+                    (void)m_mqttClient.unsubscribe(subscriber->topic.c_str());
 
                     (void)m_subscriberList.erase(it);
                     delete subscriber;
