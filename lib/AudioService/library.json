@@ -14,8 +14,9 @@
     }, {
         "name": "Service"
     }, {
+        "owner": "kosme",
         "name": "arduinoFFT",
-        "version": "https://github.com/kosme/arduinoFFT#develop @ ~1.9.2"
+        "version": "~2.0.0"
     }],
     "frameworks": "*",
     "platforms": "*"
