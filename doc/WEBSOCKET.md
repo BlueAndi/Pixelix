@@ -5,29 +5,29 @@
 
 # Websocket API <!-- omit in toc -->
 
-- [Get display pixel colors](#get-display-pixel-colors)
-- [Get slots information](#get-slots-information)
-- [Reset](#reset)
-- [Brightness](#brightness)
-  - [Get brightness information](#get-brightness-information)
-  - [Set brightness](#set-brightness)
-  - [Set brightness and enable/enable automatic brightness adjustment](#set-brightness-and-enableenable-automatic-brightness-adjustment)
-  - [Response](#response)
-  - [Get plugins information](#get-plugins-information)
-- [Install a plugin](#install-a-plugin)
-- [Uninstall a plugin](#uninstall-a-plugin)
-- [Move a plugin](#move-a-plugin)
-- [Enable/Disable logging](#enabledisable-logging)
-  - [Is logging enabled?](#is-logging-enabled)
-  - [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
-- [Enable/Disable iperf](#enabledisable-iperf)
-  - [Is iperf enabled?](#is-iperf-enabled)
-  - [Start/Stop iperf server](#startstop-iperf-server)
-- [Trigger virtual user button](#trigger-virtual-user-button)
-- [Switch to next fade effect](#switch-to-next-fade-effect)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Get display pixel colors](#get-display-pixel-colors)
+* [Get slots information](#get-slots-information)
+* [Reset](#reset)
+* [Brightness](#brightness)
+  * [Get brightness information](#get-brightness-information)
+  * [Set brightness](#set-brightness)
+  * [Set brightness and enable/enable automatic brightness adjustment](#set-brightness-and-enableenable-automatic-brightness-adjustment)
+  * [Response](#response)
+  * [Get plugins information](#get-plugins-information)
+* [Install a plugin](#install-a-plugin)
+* [Uninstall a plugin](#uninstall-a-plugin)
+* [Move a plugin](#move-a-plugin)
+* [Enable/Disable logging](#enabledisable-logging)
+  * [Is logging enabled?](#is-logging-enabled)
+  * [Enable/Disable logging to websocket](#enabledisable-logging-to-websocket)
+* [Enable/Disable iperf](#enabledisable-iperf)
+  * [Is iperf enabled?](#is-iperf-enabled)
+  * [Start/Stop iperf server](#startstop-iperf-server)
+* [Trigger virtual user button](#trigger-virtual-user-button)
+* [Switch to next fade effect](#switch-to-next-fade-effect)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Get display pixel colors
 Command: ```GETDISP```
@@ -181,7 +181,7 @@ Response:
   * ```NACK```
 
 Event: If logging is enabled, a event will be automatically be sent for every log message.
-* ```EVT;<timestamp>;<level>;<filename>;<line>;<text>```
+* ```EVT;LOG;<timestamp>;<level>;<filename>;<line>;<text>```
 * ```<timestamp>```: Timestamp in ms
 * ```<level>```: Log level
 * ```<filename>```: Filename where the log message comes from, emphasized in "".

@@ -5,31 +5,32 @@
 
 # SW Architecture  <!-- omit in toc -->
 
-- [Purpose](#purpose)
-- [Scope](#scope)
-- [Context](#context)
-- [Deployment](#deployment)
-- [Layers](#layers)
-  - [Application](#application)
-  - [Services](#services)
-  - [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal)
-- [System Startup](#system-startup)
-  - [High Level](#high-level)
-- [System States](#system-states)
-- [Details](#details)
-  - [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal-1)
-  - [Graphic Base Functionality](#graphic-base-functionality)
-  - [Widgets](#widgets)
-  - [User Button Handling](#user-button-handling)
-  - [Audio Service](#audio-service)
-  - [Plugin Handling](#plugin-handling)
-    - [Static View](#static-view)
-    - [Dynamic View](#dynamic-view)
-  - [Spectrum Analyzer](#spectrum-analyzer)
-  - [Slot Handling](#slot-handling)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
+* [Purpose](#purpose)
+* [Scope](#scope)
+* [Context](#context)
+* [Deployment](#deployment)
+* [Layers](#layers)
+  * [Application](#application)
+  * [Services](#services)
+  * [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal)
+* [System Startup](#system-startup)
+  * [High Level](#high-level)
+* [System States](#system-states)
+* [Details](#details)
+  * [Hardware Abstraction Layer (HAL)](#hardware-abstraction-layer-hal-1)
+  * [Graphic Base Functionality](#graphic-base-functionality)
+  * [Widgets](#widgets)
+  * [User Button Handling](#user-button-handling)
+  * [Audio Service](#audio-service)
+  * [Topic Handler Service](#topic-handler-service)
+  * [Plugin Handling](#plugin-handling)
+    * [Static View](#static-view)
+    * [Dynamic View](#dynamic-view)
+  * [Spectrum Analyzer](#spectrum-analyzer)
+  * [Slot Handling](#slot-handling)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Purpose
 The SW architecture provides an overview regarding the relationships of different classes and components. It serves for understanding, maintaining, fixing and extending the software.
@@ -103,7 +104,10 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 ![button-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/button.wsd)
 
 ## Audio Service
-![button-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/Development/doc/architecture/uml/audio_service.wsd)
+![audio-service-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/audio_service.wsd)
+
+## Topic Handler Service
+![topic-handler-service-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/topic_handler_service.wsd)
 
 ## Plugin Handling
 
@@ -112,6 +116,8 @@ PIXELIX as a system is not complete alone. It interacts with other neighbor syst
 
 ### Dynamic View
 ![plugin-service-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/plugin-service-dynamic.wsd)
+
+![plugin-cfg-handling-dynamic-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/plugin_cfg_handling.wsd)
 
 ## Spectrum Analyzer
 ![specturm-analyzer-diagram](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/BlueAndi/esp-rgb-led-matrix/master/doc/architecture/uml/spectrum-analyzer.wsd)

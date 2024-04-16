@@ -1,0 +1,90 @@
+@startuml
+
+participant "RestApiTopicHandler" as restApiTopicHandler
+participant "PluginMgr" as pluginMgr
+participant "DisplayMgr" as displayMgr
+participant "Plugin" as plugin
+participant "FS" as fs
+
+autoactivate on
+
+note over restApiTopicHandler,fs
+    Initial start of the plugin.
+end note
+
+-> pluginMgr: install <PLUGIN-TYPE>
+    pluginMgr -> displayMgr: install plugin <PLUGIN-INSTANCE>
+        displayMgr -> plugin : start
+            plugin ->  fs: Read configuration from <PLUGIN-UID>.json
+            plugin <-- fs
+
+            alt Read failed
+                note over plugin,fs
+                    If configuration is not available or invalid,
+                    a initial configuration will be written.
+                end note
+                plugin -> fs: Write configuration to <PLUGIN-UID>.json
+                plugin <-- fs
+            end alt
+
+        displayMgr <--plugin
+    pluginMgr <-- displayMgr
+<-- pluginMgr
+
+note over restApiTopicHandler,fs
+    Read configuration via REST API.
+end note
+
+-> restApiTopicHandler: GET /rest/api/v1/display/uid/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI>
+    note over restApiTopicHandler
+        The topic handler would be able to read the configuration
+        from the filesystem. But this shall be avoided because of
+        slow flash access and to avoid that plugin has internally
+        a different configuration than stored in the filesystem.
+    end note
+    restApiTopicHandler -> plugin: Read configuration
+    restApiTopicHandler <-- plugin: Configuration as JSON
+<-- restApiTopicHandler: Configuration as JSON
+
+note over restApiTopicHandler,fs
+    Write configuration via REST API.
+end note
+
+-> restApiTopicHandler: POST /rest/api/v1/display/uid/<PLUGIN-UID>/<PLUGIN-SPECIFIC-URI> with JSON
+    note over plugin
+        Don't write configuration to flash, because flash access is
+        slow. It shall be written during plugin processing.
+    end note
+    restApiTopicHandler -> plugin: Write configuration
+    restApiTopicHandler <-- plugin
+<-- restApiTopicHandler
+
+note over plugin
+    Store configuration triggered by previous
+    REST API call for writing the configuration.
+end note
+
+-> displayMgr: Process
+    displayMgr -> plugin: Process
+        plugin -> fs: Write configuration to <PLUGIN-UID>.json
+        plugin <-- fs
+    displayMgr <-- plugin
+<-- displayMgr
+
+note over restApiTopicHandler,fs
+    Stop of the plugin.
+end note
+
+-> pluginMgr: uninstall <PLUGIN-UID>
+    pluginMgr -> displayMgr: uninstall plugin <PLUGIN-UID>
+        displayMgr -> plugin : stop
+            note over plugin,fs
+                Don't waste flash space by unused configurations.
+            end note
+            plugin ->  fs: Remove configuration <PLUGIN-UID>.json
+            plugin <-- fs
+        displayMgr <--plugin
+    pluginMgr <-- displayMgr
+<-- pluginMgr
+
+@enduml

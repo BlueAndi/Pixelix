@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -177,7 +177,7 @@ void AudioDrv::stop()
 
 void AudioDrv::processTask(void* parameters)
 {
-    AudioDrv* tthis = reinterpret_cast<AudioDrv*>(parameters);
+    AudioDrv* tthis = static_cast<AudioDrv*>(parameters);
 
     if ((nullptr != tthis) &&
         (nullptr != tthis->m_xSemaphore))

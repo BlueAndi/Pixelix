@@ -26,19 +26,19 @@ package "HAL" {
 
     package Sensors {
         component "SensorDhtX" as sensorDhtX
-        component "SensorLdrGl5528" as sensorLdrGl5528
+        component "SensorLdr" as sensorLdr
         component "SensorSht3X" as sensorSht3X
     }
 
     audioDrv ...> i2s
     sensorDataProvider ..> sensorSht3X
     sensorDataProvider ..> sensorDhtX
-    sensorDataProvider ..> sensorLdrGl5528
+    sensorDataProvider ..> sensorLdr
     buttonDrv ..> board
 
     sensorSht3X ..> twoWire
     sensorDhtX ..> oneWire
-    sensorLdrGl5528 .u.> board
+    sensorLdr .u.> board
 }
 
 @enduml

@@ -55,15 +55,20 @@
                 </ul>
                 <h3 class="mt-2">Configuration</h3>
                 <h3 class="mt-1">Location</h3>
-                <form id="myForm" action="javascript:setLocation(pluginUid.options[pluginUid.selectedIndex].value, latitude.value, longitude.value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getLocation(pluginUid.options[pluginUid.selectedIndex].value, 'latitude', 'longitude')">
-                    </select>
-                    <br />
-                    <label for="latitude">Latitude:</label><br />
-                    <input type="text" id="latitude" name="latitude" value="0" /><br />
-                    <label for="longitude">Longitude:</label><br />
-                    <input type="text" id="longitude" name="longitude" value="0" /><br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="latitude">Latitude:</label>
+                        <input type="text" id="latitude" name="latitude" value="0" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="longitude">Longitude:</label>
+                        <input type="text" id="longitude" name="longitude" value="0" />    
+                    </div>                    
                     <input name="submit" type="submit" value="Update"/>
                 </form>          
             </div>
@@ -73,7 +78,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -140,19 +145,15 @@
                 });
             };
     
-            function getLocation(pluginUid, latitudeId, longitudeId) {
+            function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/location",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var latitudeInput   = document.getElementById(latitudeId);
-                    var longitudeInput  = document.getElementById(longitudeId);
-
-                    latitudeInput.value     = rsp.data.latitude;
-                    longitudeInput.value    = rsp.data.longitude;
-
+                    $("#longitude").val(rsp.data.longitude);
+                    $("#latitude").val(rsp.data.latitude);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -160,16 +161,15 @@
                 });
             }
 
-            function setLocation(pluginUid, latitude, longitude) {
+            function setConfig(pluginUid) {
                 disableUI();
-
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/location",
                     isJsonResponse: true,
                     parameter: {
-                        latitude: latitude,
-                        longitude: longitude
+                        latitude: $("#latitude").val(),
+                        longitude: $("#longitude").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -195,10 +195,8 @@
 
                     if (0 < cnt) {
 
-                        return getLocation(
-                            select.options[select.selectedIndex].value,
-                            "latitude",
-                            "longitude"
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

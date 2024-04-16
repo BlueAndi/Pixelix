@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "WsCmdButton.h"
-#include "DisplayMgr.h"
+#include "ButtonActions.h"
 
 #include <Util.h>
 
@@ -76,7 +76,7 @@ void WsCmdButton::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
     else
     {
-        DisplayMgr::getInstance().activateNextSlot();
+        executeAction(m_actionId);
 
         sendPositiveResponse(server, client);
     }
@@ -86,9 +86,16 @@ void WsCmdButton::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
 void WsCmdButton::setPar(const char* par)
 {
-    UTIL_NOT_USED(par);
+    uint8_t actionId;
 
-    m_isError = true;
+    if (false == Util::strToUInt8(par, actionId))
+    {
+        m_isError = true;
+    }
+    else
+    {
+        m_actionId = static_cast<ButtonActionId>(actionId);
+    }
 }
 
 /******************************************************************************

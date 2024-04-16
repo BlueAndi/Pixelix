@@ -228,3 +228,11 @@ pixelix.rest.Client.prototype.setSetting = function(key, value) {
 
     return promise;
 };
+
+pixelix.rest.Client.prototype.reset = function() {
+    return utils.makeRequest({
+        method: "GET",
+        url: "/rest/api/v1/reset",
+        isJsonResponse: true
+    });
+};

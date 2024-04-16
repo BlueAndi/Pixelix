@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Abstrac sensor data channel interface
+ * @brief  Abstract sensor data channel interface
  * @author Andreas Merkle <web@blue-andi.de>
  * 
  * @addtogroup hal
@@ -69,7 +69,8 @@ public:
         DATA_TYPE_INVALID = 0,  /**< Invalid data type */
         DATA_TYPE_UINT32,       /**< 32 bit unsigned integer */
         DATA_TYPE_INT32,        /**< 32 bit signed integer */
-        DATA_TYPE_FLOAT32       /**< 32 bit float */
+        DATA_TYPE_FLOAT32,      /**< 32 bit float */
+        DATA_TYPE_BOOL          /**< Boolean value */
     };
 
     /**
@@ -80,7 +81,8 @@ public:
         TYPE_RAW_NONE = 0,                  /**< Raw digits */
         TYPE_TEMPERATURE_DEGREE_CELSIUS,    /**< Temperature in [°C] */
         TYPE_HUMIDITY_PERCENT,              /**< Humidity in [%] */
-        TYPE_ILLUMINANCE_LUX                /**< Illuminance in [lux] */
+        TYPE_ILLUMINANCE_LUX,               /**< Illuminance in [lux] */
+        TYPE_STATE_OF_CHARGE_PERCENT        /**< State of Charge in [%] */
     };
 
     /**
@@ -142,6 +144,10 @@ public:
             name = "illuminance";
             break;
 
+        case ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT:
+            name = "soc";
+            break;
+
         default:
             break;
         }
@@ -177,6 +183,10 @@ public:
 
         case ISensorChannel::TYPE_ILLUMINANCE_LUX:
             unit = "lux";
+            break;
+
+        case ISensorChannel::TYPE_STATE_OF_CHARGE_PERCENT:
+            unit = "%";
             break;
 
         default:

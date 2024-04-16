@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,8 +37,6 @@
 #include "HttpStatus.h"
 
 #include <Logging.h>
-#include <FileSystem.h>
-#include <JsonFile.h>
 #include <Util.h>
 
 /******************************************************************************
@@ -61,10 +59,10 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize plugin topics. */
-const char*     SignalDetectorPlugin::TOPIC_CFG         = "/cfg";
-const char*     SignalDetectorPlugin::TOPIC_TEXT        = "/text";
-const char*     SignalDetectorPlugin::TOPIC_PUSH_URL    = "/pushUrl";
+/* Initialize plugin topic. */
+const char*     SignalDetectorPlugin::TOPIC_CONFIG      = "/signalDetector";
+
+/* Initialize the default text which will be shown if signal is detected. */
 const char*     SignalDetectorPlugin::DEFAULT_TEXT      = "\\calignSignal!";
 
 /******************************************************************************
@@ -89,137 +87,124 @@ bool SignalDetectorPlugin::isEnabled() const
 
 void SignalDetectorPlugin::getTopics(JsonArray& topics) const
 {
-    uint8_t idx = 0U;
-
-    while(AudioService::MAX_TONE_DETECTORS > idx)
-    {
-        (void)topics.add(String(TOPIC_CFG) + "/" + idx);
-        ++idx;
-    }
-
-    (void)topics.add(TOPIC_TEXT);
-    (void)topics.add(TOPIC_PUSH_URL);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool SignalDetectorPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.startsWith(String(TOPIC_CFG) + "/"))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        uint32_t    indexBeginToneId    = topic.lastIndexOf("/") + 1U;
-        String      toneIdStr           = topic.substring(indexBeginToneId);
-        uint8_t     toneId              = AudioService::MAX_TONE_DETECTORS;
-        bool        status              = Util::strToUInt8(toneIdStr, toneId);
-
-        if ((true == status) &&
-            (AudioService::MAX_TONE_DETECTORS > toneId))
-        {
-            value["frequency"]      = getTargetFreq(toneId);
-            value["minDuration"]    = getMinDuration(toneId);
-            value["threshold"]      = getThreshold(toneId);
-
-            isSuccessful = true;
-        }
-    }
-    else if (0U != topic.equals(TOPIC_TEXT))
-    {
-        value["text"] = getText();
+        getConfiguration(value);
         isSuccessful = true;
-    }
-    else if (0U != topic.equals(TOPIC_PUSH_URL))
-    {
-        value["pushUrl"] = getPushUrl();
-        isSuccessful = true;
-    }
-    else
-    {
-        ;
     }
 
     return isSuccessful;
 }
 
-bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObject& value)
+bool SignalDetectorPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.startsWith(String(TOPIC_CFG) + "/"))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        uint32_t    indexBeginToneId    = topic.lastIndexOf("/") + 1U;
-        String      toneIdStr           = topic.substring(indexBeginToneId);
-        uint8_t     toneId              = AudioService::MAX_TONE_DETECTORS;
-        bool        status              = Util::strToUInt8(toneIdStr, toneId);
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonArrayConst      jsonTones               = value["tones"];
+        JsonVariantConst    jsonText                = value["text"];
+        JsonVariantConst    jsonPushUrl             = value["pushUrl"];
 
-        if ((true == status) &&
-            (AudioService::MAX_TONE_DETECTORS > toneId))
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
+
+        if (false == jsonText.isNull())
         {
-            JsonVariantConst jsonTargetFreq  = value["frequency"];
-            JsonVariantConst jsonMinDuration = value["minDuration"];
-            JsonVariantConst jsonThreshold   = value["threshold"];
-
-            if (false == jsonTargetFreq.isNull())
-            {
-                float freq = jsonTargetFreq.as<float>();
-
-                setTargetFreq(toneId, freq);
-            }
-
-            if (false == jsonMinDuration.isNull())
-            {
-                uint32_t minDuration = jsonMinDuration.as<uint32_t>();
-
-                setMinDuration(toneId, minDuration);
-            }
-
-            if (false == jsonThreshold.isNull())
-            {
-                float threshold = jsonThreshold.as<float>();
-
-                setThreshold(toneId, threshold);
-            }
-
-            isSuccessful = true;   
-        }
-    }
-    else if (0U != topic.equals(TOPIC_TEXT))
-    {
-        String              text;
-        JsonVariantConst    jsonShow    = value["show"];
-
-        if (false == jsonShow.isNull())
-        {
-            text = jsonShow.as<String>();
+            jsonCfg["text"] = jsonText;
             isSuccessful = true;
+        }
+
+        if (false == jsonPushUrl.isNull())
+        {
+            jsonCfg["pushUrl"] = jsonPushUrl;
+            isSuccessful = true;
+        }
+
+        if (false == jsonTones.isNull())
+        {
+            uint8_t toneIdx = 0U;
+
+            for(JsonVariantConst tone : jsonTones)
+            {
+                if (AudioService::MAX_TONE_DETECTORS <= toneIdx)
+                {
+                    break;
+                }
+                else
+                {
+                    JsonVariantConst jsonTargetFreq     = tone["frequency"];
+                    JsonVariantConst jsonMinDuration    = tone["minDuration"];
+                    JsonVariantConst jsonThreshold      = tone["threshold"];
+
+                    if (false == jsonTargetFreq.isNull())
+                    {
+                        jsonCfg["tones"][toneIdx]["frequency"] = jsonTargetFreq.as<float>();
+                        isSuccessful = true;
+                    }
+
+                    if (false == jsonMinDuration.isNull())
+                    {
+                        jsonCfg["tones"][toneIdx]["minDuration"] = jsonMinDuration.as<uint32_t>();
+                        isSuccessful = true;
+                    }
+
+                    if (false == jsonThreshold.isNull())
+                    {
+                        jsonCfg["tones"][toneIdx]["threshold"] = jsonThreshold.as<float>();
+                        isSuccessful = true;
+                    }
+                }
+
+                ++toneIdx;
+            }
         }
 
         if (true == isSuccessful)
         {
-            setText(text);
-        }
-    }
-    else if (0U != topic.equals(TOPIC_PUSH_URL))
-    {
-        String              url;
-        JsonVariantConst    jsonSet = value["set"];
+            JsonObjectConst jsonCfgConst = jsonCfg;
 
-        if (false == jsonSet.isNull())
-        {
-            url = jsonSet.as<String>();
-            isSuccessful = true;
-        }
+            isSuccessful = setConfiguration(jsonCfgConst);
 
-        if (true == isSuccessful)
-        {
-            setPushUrl(url);
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
-    }
-    else
-    {
-        ;
     }
 
     return isSuccessful;
+}
+
+bool SignalDetectorPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
 }
 
 void SignalDetectorPlugin::setSlot(const ISlotPlugin* slotInterf)
@@ -230,8 +215,6 @@ void SignalDetectorPlugin::setSlot(const ISlotPlugin* slotInterf)
 void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    PLUGIN_NOT_USED(width);
 
     /* Choose font. */
     m_textWidget.setFont(Fonts::getFontByType(m_fontType));
@@ -250,16 +233,7 @@ void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
     /* Clear */
     m_isDetected = false;
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
+    PluginWithConfig::start(width, height);
 
     initHttpClient();
 }
@@ -267,12 +241,8 @@ void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
 void SignalDetectorPlugin::stop()
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
-    String                      configurationFilename   = getFullPathToConfiguration();
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void SignalDetectorPlugin::active(YAGfx& gfx)
@@ -301,8 +271,6 @@ void SignalDetectorPlugin::process(bool isConnected)
      * previous call. This clears the detection flag in the audio service.
      */
     bool                        isDetected = isSignalDetected();
-
-    PLUGIN_NOT_USED(isConnected);
 
     if (true == isDetected)
     {
@@ -336,6 +304,8 @@ void SignalDetectorPlugin::process(bool isConnected)
             m_isDetected = false;
         }
     }
+
+    PluginWithConfig::process(isConnected);
 }
 
 void SignalDetectorPlugin::update(YAGfx& gfx)
@@ -352,138 +322,6 @@ void SignalDetectorPlugin::update(YAGfx& gfx)
     }
 }
 
-float SignalDetectorPlugin::getTargetFreq(uint8_t idx) const
-{
-    float                       freq            = 0.0F;
-    AudioToneDetector*          audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    if (nullptr != audioToneDetector)
-    {
-        freq = audioToneDetector->getTargetFreq();
-    }
-
-    return freq;
-}
-
-void SignalDetectorPlugin::setTargetFreq(uint8_t idx, float freq)
-{
-    AudioToneDetector*          audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    if (nullptr != audioToneDetector)
-    {
-        if (freq != audioToneDetector->getTargetFreq())
-        {
-            audioToneDetector->setTargetFreq(freq);
-
-            (void)saveConfiguration();
-        }
-    }
-}
-
-uint32_t SignalDetectorPlugin::getMinDuration(uint8_t idx) const
-{
-    uint32_t                    minDuration         = 0U;
-    AudioToneDetector*          audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    if (nullptr != audioToneDetector)
-    {
-        minDuration = audioToneDetector->getMinDuration();
-    }
-
-    return minDuration;
-}
-
-void SignalDetectorPlugin::setMinDuration(uint8_t idx, uint32_t duration)
-{
-    AudioToneDetector*          audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    if (nullptr != audioToneDetector)
-    {
-        if (duration != audioToneDetector->getMinDuration())
-        {
-            audioToneDetector->setMinDuration(duration);
-
-            (void)saveConfiguration();
-        }
-    }
-}
-
-float SignalDetectorPlugin::getThreshold(uint8_t idx) const
-{
-    float                       threshold           = 0.0F;
-    AudioToneDetector*          audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    if (nullptr != audioToneDetector)
-    {
-        threshold = audioToneDetector->getThreshold();
-    }
-
-    return threshold;
-}
-
-void SignalDetectorPlugin::setThreshold(uint8_t idx, float threshold)
-{
-    AudioToneDetector*          audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    if (nullptr != audioToneDetector)
-    {
-        if (threshold != audioToneDetector->getThreshold())
-        {
-            audioToneDetector->setThreshold(threshold);
-
-            (void)saveConfiguration();
-        }
-    }
-}
-
-String SignalDetectorPlugin::getText() const
-{
-    String                      formattedText;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    formattedText = m_textWidget.getFormatStr();
-
-    return formattedText;
-}
-
-void SignalDetectorPlugin::setText(const String& formatText)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (formatText != m_textWidget.getFormatStr())
-    {
-        m_textWidget.setFormatStr(formatText);
-        (void)saveConfiguration();
-    }
-}
-
-String SignalDetectorPlugin::getPushUrl() const
-{
-    String                      url;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    url = m_pushUrl;
-
-    return url;
-}
-
-void SignalDetectorPlugin::setPushUrl(const String& url)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (url != m_pushUrl)
-    {
-        m_pushUrl = url;
-        (void)saveConfiguration();
-    }
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -491,6 +329,113 @@ void SignalDetectorPlugin::setPushUrl(const String& url)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void SignalDetectorPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    uint8_t                     idx             = 0U;
+    JsonArray                   jsonTones       = jsonCfg.createNestedArray("tones");
+
+    while(AudioService::MAX_TONE_DETECTORS > idx)
+    {
+        AudioToneDetector*  audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
+
+        if (nullptr != audioToneDetector)
+        {
+            JsonObject jsonTone = jsonTones.createNestedObject();
+
+            jsonTone["frequency"]   = audioToneDetector->getTargetFreq();
+            jsonTone["minDuration"] = audioToneDetector->getMinDuration();
+            jsonTone["threshold"]   = audioToneDetector->getThreshold();
+        }
+
+        ++idx;
+    }
+
+    jsonCfg["text"]     = m_textWidget.getFormatStr();
+    jsonCfg["pushUrl"]  = m_pushUrl;
+}
+
+bool SignalDetectorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool                status      = false;
+    JsonArrayConst      jsonTones   = jsonCfg["tones"];
+    JsonVariantConst    jsonText    = jsonCfg["text"];
+    JsonVariantConst    jsonPushUrl = jsonCfg["pushUrl"];
+
+    if (true == jsonTones.isNull())
+    {
+        LOG_WARNING("Tone(s) not found or invalid type.");
+    }
+    else if (false == jsonText.is<String>())
+    {
+        LOG_WARNING("Text not found or invalid type.");
+    }
+    else if (false == jsonPushUrl.is<String>())
+    {
+        LOG_WARNING("Push URL not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive>  guard(m_mutex);
+        uint8_t                     idx = 0U;
+
+        status = true;
+
+        for(JsonVariantConst tone : jsonTones)
+        {
+            AudioToneDetector* audioToneDetector = AudioService::getInstance().getAudioToneDetector(idx);
+
+            if (nullptr == audioToneDetector)
+            {
+                LOG_WARNING("Too many tone detector configurations.");
+                break;
+            }
+            else
+            {
+                JsonVariantConst jsonTargetFreq     = tone["frequency"];
+                JsonVariantConst jsonMinDuration    = tone["minDuration"];
+                JsonVariantConst jsonThreshold      = tone["threshold"];
+
+                if (false == jsonTargetFreq.is<float>())
+                {
+                    LOG_WARNING("Target frequency not found or invalid type.");
+                    status = false;
+                }
+                else if (false == jsonMinDuration.is<uint32_t>())
+                {
+                    LOG_WARNING("Min. duration not found or invalid type.");
+                    status = false;
+                }
+                else if (false == jsonThreshold.is<float>())
+                {
+                    LOG_WARNING("Threshold not found or invalid type.");
+                    status = false;
+                }
+                else
+                {
+                    audioToneDetector->setTargetFreq(jsonTargetFreq.as<float>());
+                    audioToneDetector->setMinDuration(jsonMinDuration.as<uint32_t>());
+                    audioToneDetector->setThreshold(jsonThreshold.as<float>());
+
+                    ++idx;
+                }
+
+                if (false == status)
+                {
+                    break;
+                }
+            }
+        }
+
+        m_textWidget.setFormatStr(jsonText.as<String>());
+        m_pushUrl = jsonPushUrl.as<String>();
+
+        m_hasTopicChanged = true;
+    }
+
+    return status;
+}
 
 bool SignalDetectorPlugin::startHttpRequest()
 {
@@ -553,7 +498,7 @@ bool SignalDetectorPlugin::startHttpRequest()
 void SignalDetectorPlugin::initHttpClient()
 {
     /* Note: All registered callbacks are running in a different task context! */
-    m_client.regOnResponse([](const HttpResponse& rsp){
+    m_client.regOnResponse([](const HttpResponse& rsp) {
         uint16_t statusCode = rsp.getStatusCode();
 
         if (HttpStatus::STATUS_CODE_OK == statusCode)
@@ -566,141 +511,6 @@ void SignalDetectorPlugin::initHttpClient()
     m_client.regOnError([]() {
         LOG_WARNING("Connection error happened.");
    });
-}
-
-bool SignalDetectorPlugin::saveConfiguration() const
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-    uint8_t             idx                     = 0U;
-    JsonArray           jsonTones               = jsonDoc.createNestedArray("tones");
-
-    while(AudioService::MAX_TONE_DETECTORS > idx)
-    {
-        AudioToneDetector*  audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
-
-        if (nullptr != audioToneDetector)
-        {
-            JsonObject jsonTone = jsonTones.createNestedObject();
-
-            jsonTone["frequency"]   = audioToneDetector->getTargetFreq();
-            jsonTone["minDuration"] = audioToneDetector->getMinDuration();
-            jsonTone["threshold"]   = audioToneDetector->getThreshold();
-        }
-
-        ++idx;
-    }
-
-    jsonDoc["text"]     = m_textWidget.getFormatStr();
-    jsonDoc["pushUrl"]  = m_pushUrl;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
-}
-
-bool SignalDetectorPlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonArrayConst      jsonTones   = jsonDoc["tones"];
-        JsonVariantConst    jsonText    = jsonDoc["text"];
-        JsonVariantConst    jsonPushUrl = jsonDoc["pushUrl"];
-
-        if (true == jsonTones.isNull())
-        {
-            LOG_WARNING("Tone(s) not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonText.is<String>())
-        {
-            LOG_WARNING("Text not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonPushUrl.is<String>())
-        {
-            LOG_WARNING("Push URL not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            JsonArrayConst::iterator    it;
-            uint8_t                     idx = 0U;
-
-            for(it = jsonTones.begin(); it != jsonTones.end(); ++it)
-            {
-                AudioToneDetector*  audioToneDetector   = AudioService::getInstance().getAudioToneDetector(idx);
-
-                if (nullptr == audioToneDetector)
-                {
-                    LOG_WARNING("Too many tone detector configurations.");
-                    break;
-                }
-                else
-                {
-                    JsonVariantConst jsonTargetFreq     = (*it)["frequency"];
-                    JsonVariantConst jsonMinDuration    = (*it)["minDuration"];
-                    JsonVariantConst jsonThreshold      = (*it)["threshold"];
-
-                    if (false == jsonTargetFreq.is<float>())
-                    {
-                        LOG_WARNING("Target frequency not found or invalid type.");
-                        status = false;
-                    }
-                    else if (false == jsonMinDuration.is<uint32_t>())
-                    {
-                        LOG_WARNING("Min. duration not found or invalid type.");
-                        status = false;
-                    }
-                    else if (false == jsonThreshold.is<float>())
-                    {
-                        LOG_WARNING("Threshold not found or invalid type.");
-                        status = false;
-                    }
-                    else
-                    {
-                        audioToneDetector->setTargetFreq(jsonTargetFreq.as<float>());
-                        audioToneDetector->setMinDuration(jsonMinDuration.as<uint32_t>());
-                        audioToneDetector->setThreshold(jsonThreshold.as<float>());
-
-                        ++idx;
-                    }
-
-                    if (false == status)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            m_textWidget.setFormatStr(jsonText.as<String>());
-            m_pushUrl = jsonPushUrl.as<String>();
-        }
-    }
-
-    return status;
 }
 
 bool SignalDetectorPlugin::isSignalDetected()

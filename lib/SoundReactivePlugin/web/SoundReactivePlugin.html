@@ -38,11 +38,11 @@
                 <p>Required: A digital microphone (INMP441) is required, connected to the I2S port.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get configuration about how many frequency bands are shown.</h3>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config</code></pre>
                 <h3 class="mt-1">Set configuration about how many frequency bands shall be shown.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/cfg?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/cfg?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/config?freqBandLen=&lt;FREQ-BAND-LEN&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -55,17 +55,19 @@
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Number of frequency bands</h3>
-                <form id="myForm" action="javascript:setCfg(pluginUid.options[pluginUid.selectedIndex].value, freqBandLen.options[freqBandLen.selectedIndex].value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getCfg(pluginUid.options[pluginUid.selectedIndex].value, 'freqBandLen')">
-                    </select>
-                    <br />
-                    <label for="freqBandLen">Configuration:</label><br />
-                    <select id="freqBandLen">
-                        <option value="8">Show 8 frequency bands.</option>
-                        <option value="16">Show 16 frequency bands.</option>
-                    </select>
-                    <br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="freqBandLen">Configuration:</label>
+                        <select id="freqBandLen">
+                            <option value="8">Show 8 frequency bands.</option>
+                            <option value="16">Show 16 frequency bands.</option>
+                        </select>    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>   
             </div>
@@ -75,7 +77,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -141,17 +143,14 @@
                 });
             };
 
-            function getCfg(pluginUid, freqBandLen) {
+            function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var freqBandLenInput = document.getElementById(freqBandLen);
-
-                    freqBandLenInput.value = rsp.data.freqBandLen;
-
+                    $("#freqBandLen").val(rsp.data.freqBandLen);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -159,15 +158,14 @@
                 });
             }
 
-            function setCfg(pluginUid, freqBandLen) {
+            function setConfig(pluginUid) {
                 disableUI();
-
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/cfg",
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/config",
                     isJsonResponse: true,
                     parameter: {
-                        freqBandLen: freqBandLen
+                        freqBandLen: $("#freqBandLen").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -193,9 +191,8 @@
 
                     if (0 < cnt) {
 
-                        return getCfg(
-                            select.options[select.selectedIndex].value,
-                            "freqBandLen"
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

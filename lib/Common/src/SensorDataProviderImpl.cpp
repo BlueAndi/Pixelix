@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,6 +67,19 @@ void SensorDataProviderImpl::begin()
         if (nullptr != m_sensors[index])
         {
             m_sensors[index]->begin();
+        }
+    }
+}
+
+void SensorDataProviderImpl::process()
+{
+    uint8_t index = 0U;
+
+    for(index = 0U; index < m_cnt; ++index)
+    {
+        if (nullptr != m_sensors[index])
+        {
+            m_sensors[index]->process();
         }
     }
 }

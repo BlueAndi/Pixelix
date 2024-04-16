@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,11 +35,9 @@
 #include "ClockDrv.h"
 #include "CountdownPlugin.h"
 #include "Util.h"
-#include "FileSystem.h"
 
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -62,10 +60,10 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* CountdownPlugin::IMAGE_PATH = "/plugins/CountdownPlugin/countdown.bmp";
+const char* CountdownPlugin::IMAGE_PATH     = "/plugins/CountdownPlugin/countdown.bmp";
 
 /* Initialize plugin topic. */
-const char* CountdownPlugin::TOPIC      = "/countdown";
+const char* CountdownPlugin::TOPIC_CONFIG   = "/countdown";
 
 /******************************************************************************
  * Public Methods
@@ -73,77 +71,105 @@ const char* CountdownPlugin::TOPIC      = "/countdown";
 
 void CountdownPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool CountdownPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        DateDMY                 targetDate              = getTargetDate();
-        TargetDayDescription    targetDayDescription    = getTargetDayDescription();
-
-        value["day"]      = targetDate.day;
-        value["month"]    = targetDate.month;
-        value["year"]     = targetDate.year;
-        value["plural"]   = targetDayDescription.plural;
-        value["singular"] = targetDayDescription.singular;
-
+        getConfiguration(value);
         isSuccessful = true;
     }
 
     return isSuccessful;
 }
 
-bool CountdownPlugin::setTopic(const String& topic, const JsonObject& value)
+bool CountdownPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        DateDMY                 targetDate              = getTargetDate();
-        TargetDayDescription    targetDayDescription    = getTargetDayDescription();
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonDay                 = value["day"];
+        JsonVariantConst    jsonMonth               = value["month"];
+        JsonVariantConst    jsonYear                = value["year"];
+        JsonVariantConst    jsonDescPlural          = value["descPlural"];
+        JsonVariantConst    jsonDescSingular        = value["descSingular"];
 
-        if (false == value["day"].isNull())
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
+
+        if (false == jsonDay.isNull())
         {
-            targetDate.day = value["day"].as<uint8_t>();
+            jsonCfg["day"] = jsonDay.as<uint8_t>();
             isSuccessful = true;
         }
 
-        if (false == value["month"].isNull())
+        if (false == jsonMonth.isNull())
         {
-            targetDate.month = value["month"].as<uint8_t>();
+            jsonCfg["month"] = jsonMonth.as<uint8_t>();
             isSuccessful = true;
         }
 
-        if (false == value["year"].isNull())
+        if (false == jsonYear.isNull())
         {
-            targetDate.year = value["year"].as<uint16_t>();
+            jsonCfg["year"] = jsonYear.as<uint16_t>();
             isSuccessful = true;
         }
 
-        if (false == value["plural"].isNull())
+        if (false == jsonDescPlural.isNull())
         {
-            targetDayDescription.plural = value["plural"].as<String>();
+            jsonCfg["descPlural"] = jsonDescPlural.as<String>();
             isSuccessful = true;
         }
 
-        if (false == value["singular"].isNull())
+        if (false == jsonDescSingular.isNull())
         {
-            targetDayDescription.singular = value["singular"].as<String>();
+            jsonCfg["descSingular"] = jsonDescSingular.as<String>();
             isSuccessful = true;
         }
 
         if (true == isSuccessful)
         {
-            setTargetDate(targetDate);
-            setTargetDayDescription(targetDayDescription);
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
     }
 
     return isSuccessful;
+}
+
+bool CountdownPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
 }
 
 void CountdownPlugin::start(uint16_t width, uint16_t height)
@@ -175,108 +201,34 @@ void CountdownPlugin::start(uint16_t width, uint16_t height)
         m_textWidget.move(0, offsY);
     }
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
+    PluginWithConfig::start(width, height);
 
-    calculateDifferenceInDays();
-
-    m_cfgReloadTimer.start(CFG_RELOAD_PERIOD);
+    calculateRemainingDays();
 }
 
 void CountdownPlugin::stop()
 {
-    String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_cfgReloadTimer.stop();
+    PluginWithConfig::stop();
+}
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+void CountdownPlugin::process(bool isConnected)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    PluginWithConfig::process(isConnected);
+
+    calculateRemainingDays();
 }
 
 void CountdownPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if ((true == m_cfgReloadTimer.isTimerRunning()) &&
-        (true == m_cfgReloadTimer.isTimeout()))
-    {
-        (void)loadConfiguration();
-        calculateDifferenceInDays();
-
-        m_cfgReloadTimer.restart();
-    }
-
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
     m_textCanvas.update(gfx);
-}
-
-CountdownPlugin::DateDMY CountdownPlugin::getTargetDate() const
-{
-    DateDMY                     targetDate;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    targetDate = m_targetDate;
-
-    return targetDate;
-}
-
-void CountdownPlugin::setTargetDate(const DateDMY& targetDate)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if ((targetDate.day != m_targetDate.day) ||
-        (targetDate.month != m_targetDate.month) ||
-        (targetDate.year != m_targetDate.year))
-    {
-        LOG_INFO("New target date: %04u-%02u-%02u", targetDate.year, targetDate.month, targetDate.day);
-
-        m_targetDate = targetDate;
-
-        /* Always stores the configuration, otherwise it will be overwritten during
-         * plugin activation.
-         */
-        (void)saveConfiguration();
-    }
-}
-
-CountdownPlugin::TargetDayDescription CountdownPlugin::getTargetDayDescription() const
-{
-    TargetDayDescription        desc;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    desc = m_targetDateInformation;
-
-    return desc;
-}
-
-void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& targetDayDescription)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if ((targetDayDescription.plural != m_targetDateInformation.plural) ||
-        (targetDayDescription.singular != m_targetDateInformation.singular))
-    {
-        LOG_INFO("New unit description: \"%s\" / \"%s\"", targetDayDescription.plural.c_str(), targetDayDescription.singular.c_str());
-
-        m_targetDateInformation = targetDayDescription;
-
-        /* Always stores the configuration, otherwise it will be overwritten during
-         * plugin activation.
-         */
-        (void)saveConfiguration();
-    }
 }
 
 /******************************************************************************
@@ -287,97 +239,69 @@ void CountdownPlugin::setTargetDayDescription(const TargetDayDescription& target
  * Private Methods
  *****************************************************************************/
 
-bool CountdownPlugin::saveConfiguration() const
+void CountdownPlugin::getConfiguration(JsonObject& jsonCfg) const
 {
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonDoc["day"]                  = m_targetDate.day;
-    jsonDoc["month"]                = m_targetDate.month;
-    jsonDoc["year"]                 = m_targetDate.year;
-    jsonDoc["descriptionPlural"]    = m_targetDateInformation.plural;
-    jsonDoc["descriptionSingular"]  = m_targetDateInformation.singular;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
+    jsonCfg["day"]          = m_targetDate.day;
+    jsonCfg["month"]        = m_targetDate.month;
+    jsonCfg["year"]         = m_targetDate.year;
+    jsonCfg["descPlural"]   = m_targetDateInformation.plural;
+    jsonCfg["descSingular"] = m_targetDateInformation.singular;
+}
+
+bool CountdownPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool                status              = false;
+    JsonVariantConst    jsonDay             = jsonCfg["day"];
+    JsonVariantConst    jsonMonth           = jsonCfg["month"];
+    JsonVariantConst    jsonYear            = jsonCfg["year"];
+    JsonVariantConst    jsonDescPlural      = jsonCfg["descPlural"];
+    JsonVariantConst    jsonDescSingular    = jsonCfg["descSingular"];
+
+    if (false == jsonDay.is<uint8_t>())
     {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
+        LOG_WARNING("JSON day not found or invalid type.");
+    }
+    else if (false == jsonMonth.is<uint8_t>())
+    {
+        LOG_WARNING("JSON month not found or invalid type.");
+    }
+    else if (false == jsonYear.is<uint16_t>())
+    {
+        LOG_WARNING("JSON year not found or invalid type.");
+    }
+    else if (false == jsonDescPlural.is<String>())
+    {
+        LOG_WARNING("JSON descriptionPlural not found or invalid type.");
+    }
+    else if (false == jsonDescSingular.is<String>())
+    {
+        LOG_WARNING("JSON descriptionSingular not found or invalid type.");
     }
     else
     {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        m_targetDate.day                    = jsonDay.as<uint8_t>();
+        m_targetDate.month                  = jsonMonth.as<uint8_t>();
+        m_targetDate.year                   = jsonYear.as<uint16_t>();
+        m_targetDateInformation.plural      = jsonDescPlural.as<String>();
+        m_targetDateInformation.singular    = jsonDescSingular.as<String>();
+
+        m_hasTopicChanged = true;
+
+        status = true;
     }
 
     return status;
 }
 
-bool CountdownPlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonVariantConst    jsonDay             = jsonDoc["day"];
-        JsonVariantConst    jsonMonth           = jsonDoc["month"];
-        JsonVariantConst    jsonYear            = jsonDoc["year"];
-        JsonVariantConst    jsonDescPlural      = jsonDoc["descriptionPlural"];
-        JsonVariantConst    jsonDescSingular    = jsonDoc["descriptionSingular"];
-
-        if (false == jsonDay.is<uint8_t>())
-        {
-            LOG_WARNING("JSON day not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonMonth.is<uint8_t>())
-        {
-            LOG_WARNING("JSON month not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonYear.is<uint16_t>())
-        {
-            LOG_WARNING("JSON year not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonDescPlural.is<String>())
-        {
-            LOG_WARNING("JSON descriptionPlural not found or invalid type.");
-            status = false;
-        }
-        else if (false == jsonDescSingular.is<String>())
-        {
-            LOG_WARNING("JSON descriptionSingular not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_targetDate.day                    = jsonDay.as<uint8_t>();
-            m_targetDate.month                  = jsonMonth.as<uint8_t>();
-            m_targetDate.year                   = jsonYear.as<uint16_t>();
-            m_targetDateInformation.plural      = jsonDescPlural.as<String>();
-            m_targetDateInformation.singular    = jsonDescSingular.as<String>();
-        }
-    }
-
-    return status;
-}
-
-void CountdownPlugin::calculateDifferenceInDays()
+void CountdownPlugin::calculateRemainingDays()
 {
     tm currentTime;
 
-    if (false != ClockDrv::getInstance().getTime(&currentTime))
+    if (true == ClockDrv::getInstance().getTime(currentTime))
     {
         uint32_t    currentDateInDays   = 0U;
         uint32_t    targetDateInDays    = 0U;
@@ -395,7 +319,7 @@ void CountdownPlugin::calculateDifferenceInDays()
 
         numberOfDays = targetDateInDays - currentDateInDays;
 
-        if( numberOfDays > 0)
+        if (0 < numberOfDays)
         {
             char remaining[10] = "";
 

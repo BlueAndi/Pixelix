@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,14 +68,15 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    JustTextPlugin(const String& name, uint16_t uid) :
+    JustTextPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textWidget(),
-        m_mutex()
+        m_mutex(),
+        m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
     }
@@ -91,14 +92,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new JustTextPlugin(name, uid);
+        return new(std::nothrow)JustTextPlugin(name, uid);
     }
 
     /**
@@ -144,6 +145,21 @@ public:
      *     ]
      * }
      * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
+     * }
+     * 
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -168,7 +184,18 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
+
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
 
     /**
      * Start the plugin. This is called only once during plugin lifetime.
@@ -219,9 +246,10 @@ private:
      */
     static const char*  TOPIC_TEXT;
 
-    Fonts::FontType         m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget              m_textWidget;   /**< Text widget, used for showing the text. */
-    mutable MutexRecursive  m_mutex;        /**< Mutex to protect against concurrent access. */
+    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */
 };
 
 /******************************************************************************

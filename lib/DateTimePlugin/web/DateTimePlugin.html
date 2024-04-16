@@ -57,12 +57,12 @@
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime</code></pre>
                 <h3 class="mt-1">Set configuration about what the plugin shall show.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime?cfg=&lt;CFG&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime?cfg=&lt;CFG&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/dateTime?mode=&lt;MODE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/dateTime?mode=&lt;MODE&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>CFG: Configuration id
+                    <li>MODE: Display mode
                         <ul>
                             <li>0: Show date and time.</li>
                             <li>1: Show only the date.</li>
@@ -72,18 +72,40 @@
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Display</h3>
-                <form id="myForm" action="javascript:setCfg(pluginUid.options[pluginUid.selectedIndex].value, cfg.options[cfg.selectedIndex].value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getCfg(pluginUid.options[pluginUid.selectedIndex].value, 'cfg')">
-                    </select>
-                    <br />
-                    <label for="cfg">Configuration:</label><br />
-                    <select id="cfg">
-                        <option value="0">Show date and time.</option>
-                        <option value="1">Show only the date.</option>
-                        <option value="2">Show only the time.</option>
-                    </select>
-                    <br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="mode">Display mode:</label>
+                        <select id="mode">
+                            <option value="0">Show date and time.</option>
+                            <option value="1">Show only the date.</option>
+                            <option value="2">Show only the time.</option>
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Time format:</label>
+                        <input type="text" id="timeFormat" name="timeFormat" value="" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Date format:</label>
+                        <input type="text" id="dateFormat" name="dateFormat" value="" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Time zone:</label>
+                        <input type="text" id="timeZone" name="timeZone" value="" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Color of actual day:</label>
+                        <input type="text" id="dayOnColor" name="dayOnColor" value="" />    
+                    </div>
+                    <div class="form-group">
+                        <label for="timeFormat">Color of other days:</label>
+                        <input type="text" id="dayOffColor" name="dayOffColor" value="" />    
+                    </div>                    
                     <input name="submit" type="submit" value="Update"/>
                 </form>   
             </div>
@@ -93,7 +115,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -159,17 +181,19 @@
                 });
             };
 
-            function getCfg(pluginUid, cfg) {
+            function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var cfgInput = document.getElementById(cfg);
-
-                    cfgInput.value = rsp.data.cfg;
-
+                    $("#mode").val(rsp.data.mode);
+                    $("#timeFormat").val(rsp.data.timeFormat);
+                    $("#dateFormat").val(rsp.data.dateFormat);
+                    $("#timeZone").val(rsp.data.timeZone);
+                    $("#dayOnColor").val(rsp.data.dayOnColor);
+                    $("#dayOffColor").val(rsp.data.dayOffColor);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -177,15 +201,19 @@
                 });
             }
 
-            function setCfg(pluginUid, cfg) {
+            function setConfig(pluginUid) {
                 disableUI();
-
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/dateTime",
                     isJsonResponse: true,
                     parameter: {
-                        cfg: cfg
+                        mode: $("#mode").val(),
+                        timeFormat: $("#timeFormat").val(),
+                        dateFormat: $("#dateFormat").val(),
+                        timeZone: $("#timeZone").val(),
+                        dayOnColor: $("#dayOnColor").val(),
+                        dayOffColor: $("#dayOffColor").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -211,9 +239,8 @@
 
                     if (0 < cnt) {
 
-                        return getCfg(
-                            select.options[select.selectedIndex].value,
-                            "cfg"
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "PluginFactory.h"
+#include "PluginList.h"
 
 #include <Logging.h>
 
@@ -60,80 +61,38 @@
  * Public Methods
  *****************************************************************************/
 
-void PluginFactory::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
-{
-    PluginRegEntry* entry = new(std::nothrow) PluginRegEntry();
-
-    if (nullptr != entry)
-    {
-        entry->name         = name;
-        entry->createFunc   = createFunc;
-
-        if (false == m_registry.append(entry))
-        {
-            LOG_ERROR("Couldn't add %s to registry.", name.c_str());
-
-            delete entry;
-            entry = nullptr;
-        }
-        else
-        {
-            LOG_INFO("Plugin type %s registered.", name.c_str());
-        }
-    }
-    else
-    {
-        LOG_ERROR("Couldn't add %s to registry.", name.c_str());
-    }
-}
-
-IPluginMaintenance* PluginFactory::createPlugin(const String& name)
+IPluginMaintenance* PluginFactory::createPlugin(const char* name)
 {
     return createPlugin(name, generateUID());
 }
 
-IPluginMaintenance* PluginFactory::createPlugin(const String& name, uint16_t uid)
+IPluginMaintenance* PluginFactory::createPlugin(const char* name, uint16_t uid)
 {
-    IPluginMaintenance*                     plugin  = nullptr;
-    PluginRegEntry*                         entry   = nullptr;
-    DLinkedListIterator<PluginRegEntry*>    itPluginReg(m_registry);
+    IPluginMaintenance*         plugin                  = nullptr;
+    uint8_t                     pluginTypeListLength    = 0U;
+    const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
+    uint8_t                     idx                     = 0U;
 
     /* Walk through registry and find the requested plugin type. */
-    if (true == itPluginReg.first())
+    while((nullptr == plugin) && (pluginTypeListLength > idx))
     {
-        bool isFound = false;
-
-        /* Find plugin type in the registry */
-        entry = *itPluginReg.current();
-
-        while((false == isFound) && (nullptr != entry))
-        {
-            if (name == entry->name)
-            {
-                isFound = true;
-            }
-            else if (false == itPluginReg.next())
-            {
-                entry = nullptr;
-            }
-            else
-            {
-                entry = *itPluginReg.current();
-            }
-        }
+        const PluginList::Element* elem = &pluginTypeList[idx];
 
         /* Plugin type found? */
-        if ((true == isFound) &&
-            (nullptr != entry))
+        if (0 == strcmp(name, elem->name))
         {
-            /* Produce the plugin object. */
-            plugin = entry->createFunc(entry->name, uid);
+            /* Produce the plugin object. Its important to use the name from the PluginList,
+             * because it must exist over plugin instance lifetime.
+             */
+            plugin = elem->createFunc(elem->name, uid);
 
             if (nullptr != plugin)
             {
                 m_plugins.append(plugin);
             }
         }
+
+        ++idx;
     }
 
     return plugin;
@@ -155,30 +114,6 @@ void PluginFactory::destroyPlugin(IPluginMaintenance* plugin)
             delete plugin;
         }
     }
-}
-
-const char* PluginFactory::findFirst()
-{
-    const char* name = nullptr;
-
-    if (true == m_registryIter.first())
-    {
-        name = (*m_registryIter.current())->name.c_str();
-    }
-
-    return name;
-}
-
-const char* PluginFactory::findNext()
-{
-    const char* name = nullptr;
-
-    if (true == m_registryIter.next())
-    {
-        name = (*m_registryIter.current())->name.c_str();
-    }
-
-    return name;
 }
 
 /******************************************************************************

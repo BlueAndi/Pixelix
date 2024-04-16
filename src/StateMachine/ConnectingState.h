@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,6 @@
 #include <StateMachine.hpp>
 #include <WString.h>
 #include <SimpleTimer.hpp>
-#include "ButtonHandler.h"
 
 /******************************************************************************
  * Macros
@@ -117,9 +116,6 @@ private:
     /** Timer, used for retry mechanism. */
     SimpleTimer     m_retryTimer;
 
-    /** Button handler */
-    ButtonHandler   m_buttonHandler;
-
     /** Is quiet mode active? Quiet mode no unnecessary system messages on the display. */
     bool            m_isQuiet;
 
@@ -130,7 +126,6 @@ private:
         m_wifiSSID(),
         m_wifiPassphrase(),
         m_retryTimer(),
-        m_buttonHandler(),
         m_isQuiet(false)
     {
     }

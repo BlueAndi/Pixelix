@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,8 +36,6 @@
 #include "AudioService.h"
 
 #include <Logging.h>
-#include <FileSystem.h>
-#include <JsonFile.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -60,7 +58,7 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char*     SoundReactivePlugin::TOPIC_CHANNEL                      = "/cfg";
+const char*     SoundReactivePlugin::TOPIC_CONFIG                       = "/config";
 
 /* Initialize the list with the high edge frequency bin of the center band frequency. */
 const uint16_t  SoundReactivePlugin::LIST_16_BAND_HIGH_EDGE_FREQ_BIN[]  =
@@ -89,48 +87,59 @@ const uint16_t  SoundReactivePlugin::LIST_16_BAND_HIGH_EDGE_FREQ_BIN[]  =
 
 void SoundReactivePlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC_CHANNEL);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool SoundReactivePlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CHANNEL))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        value["freqBandLen"] = getFreqBandLen();
-
+        getConfiguration(value);
         isSuccessful = true;
     }
 
     return isSuccessful;
 }
 
-bool SoundReactivePlugin::setTopic(const String& topic, const JsonObject& value)
+bool SoundReactivePlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC_CHANNEL))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        JsonVariantConst jsonFreqBandLen = value["freqBandLen"];
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonFreqBandLen         = value["freqBandLen"];
+
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
 
         if (false == jsonFreqBandLen.isNull())
         {
-            uint8_t freqBandLen = jsonFreqBandLen.as<uint8_t>();
+            jsonCfg["freqBandLen"] = jsonFreqBandLen.as<uint8_t>();
+            isSuccessful = true;
+        }
 
-            if (NUM_OF_BANDS_8 == freqBandLen)
+        if (true == isSuccessful)
+        {
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
             {
-                setFreqBandLen(NUM_OF_BANDS_8);
-                isSuccessful = true;
-            }
-            else if (NUM_OF_BANDS_16 == freqBandLen)
-            {
-                setFreqBandLen(NUM_OF_BANDS_16);
-                isSuccessful = true;
-            }
-            else
-            {
-                ;
+                requestStoreToPersistentMemory();
             }
         }
     }
@@ -138,12 +147,23 @@ bool SoundReactivePlugin::setTopic(const String& topic, const JsonObject& value)
     return isSuccessful;
 }
 
+bool SoundReactivePlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
+}
+
 void SoundReactivePlugin::start(uint16_t width, uint16_t height)
 {
     SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
     MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    PLUGIN_NOT_USED(width);
 
     if (nullptr != spectrumAnalyzer)
     {
@@ -158,22 +178,12 @@ void SoundReactivePlugin::start(uint16_t width, uint16_t height)
     m_decayPeakTimer.start(DECAY_PEAK_PERIOD);
     m_maxHeight = height;
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
+    PluginWithConfig::start(width, height);
 }
 
 void SoundReactivePlugin::stop()
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
-    String                      configurationFilename   = getFullPathToConfiguration();
 
     m_decayPeakTimer.stop();
 
@@ -183,10 +193,7 @@ void SoundReactivePlugin::stop()
         m_freqBins = nullptr;
     }
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void SoundReactivePlugin::process(bool isConnected)
@@ -194,7 +201,7 @@ void SoundReactivePlugin::process(bool isConnected)
     SpectrumAnalyzer*           spectrumAnalyzer = AudioService::getInstance().getSpectrumAnalyzer();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    PLUGIN_NOT_USED(isConnected);
+    PluginWithConfig::process(isConnected);
 
     decayPeak();
 
@@ -270,54 +277,41 @@ void SoundReactivePlugin::update(YAGfx& gfx)
  * Private Methods
  *****************************************************************************/
 
-bool SoundReactivePlugin::saveConfiguration() const
+
+void SoundReactivePlugin::getConfiguration(JsonObject& jsonCfg) const
 {
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    jsonDoc["freqBandLen"] = m_numOfFreqBands;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
+    jsonCfg["freqBandLen"] = m_numOfFreqBands;
 }
 
-bool SoundReactivePlugin::loadConfiguration()
+bool SoundReactivePlugin::setConfiguration(JsonObjectConst& jsonCfg)
 {
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
+    bool                status          = false;
+    JsonVariantConst    jsonFreqBandLen = jsonCfg["freqBandLen"];
 
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
+    if (false == jsonFreqBandLen.is<uint8_t>())
     {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
+        LOG_WARNING("freqBandLen not found or invalid type.");
     }
     else
     {
-        JsonVariantConst jsonFreqBandLen = jsonDoc["freqBandLen"];
+        NumOfBands numOfBands = static_cast<NumOfBands>(jsonFreqBandLen.as<uint8_t>());
 
-        if (false == jsonFreqBandLen.is<uint8_t>())
+        if ((NUM_OF_BANDS_8 != numOfBands) &&
+            (NUM_OF_BANDS_16 != numOfBands))
         {
             LOG_WARNING("freqBandLen not found or invalid type.");
-            status = false;
         }
         else
         {
-            m_numOfFreqBands = static_cast<NumOfBands>(jsonFreqBandLen.as<uint8_t>());
+            MutexGuard<MutexRecursive>  guard(m_mutex);
+
+            m_numOfFreqBands = numOfBands;
+
+            m_hasTopicChanged = true;
+
+            status = true;
         }
     }
 

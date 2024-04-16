@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,14 +71,15 @@ const char*    WsCmd::NACK      = "NACK";
  * Protected Methods
  *****************************************************************************/
 
-void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg)
+void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg)
 {
     if ((nullptr != server) &&
         (nullptr != client))
     {
         String rsp = ACK;
 
-        if (false == msg.isEmpty())
+        if ((nullptr != msg) &&
+            ('\0' != msg[0U]))
         {
             rsp += DELIMITER;
             rsp += msg;
@@ -90,10 +91,10 @@ void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* c
 
 void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client)
 {
-    sendPositiveResponse(server, client, "");
+    sendPositiveResponse(server, client, nullptr);
 }
 
-void WsCmd::sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const String& msg)
+void WsCmd::sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg)
 {
     if ((nullptr != server) &&
         (nullptr != client))
@@ -101,7 +102,16 @@ void WsCmd::sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* c
         String rsp = NACK;
 
         rsp += DELIMITER;
-        rsp += msg;
+
+        if ((nullptr != msg) &&
+            ('\0' != msg[0U]))
+        {
+            rsp += msg;
+        }
+        else
+        {
+            rsp += "\"Unknown.\"";
+        }
 
         server->text(client->id(), rsp);
     }

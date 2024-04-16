@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@
 #include <Display.h>
 #include <YAFont.h>
 #include <TomThumb.h>
+#include <Board.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -72,6 +73,10 @@ void ErrorState::entry(StateMachine& sm)
     UTIL_NOT_USED(sm);
 
     LOG_INFO("Going in error state.");
+
+    m_timer.start(BLINK_ON_PERIOD);
+    Board::ledOn();
+    m_cnt = 0U;
 
     /* Any low level error happended and no error message can be shown
      * by the system message handler?
@@ -122,6 +127,42 @@ void ErrorState::entry(StateMachine& sm)
 void ErrorState::process(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
+
+    /* The error state is signalled with the onboard LED.
+     * If a dedicated error id is set, the number of the error is blinked, so
+     * the user can count it.
+     */
+    if (true == m_timer.isTimeout())
+    {
+        if (false == Board::isLedOn())
+        {
+            Board::ledOn();
+            m_timer.start(BLINK_ON_PERIOD);
+        }
+        else
+        {
+            Board::ledOff();
+
+            if (ERROR_ID_NO_ERROR == m_errorId)
+            {
+                m_timer.start(BLINK_OFF_SHORT_PERIOD);
+            }
+            else
+            {
+                ++m_cnt;
+
+                if (m_cnt < static_cast<uint8_t>(m_errorId))
+                {
+                    m_timer.start(BLINK_OFF_SHORT_PERIOD);
+                }
+                else
+                {
+                    m_timer.start(BLINK_OFF_LONG_PERIOD);
+                    m_cnt = 0U;
+                }
+            }
+        }
+    }
 
     /* Wait for manual reset. */
 }

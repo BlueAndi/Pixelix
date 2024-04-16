@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,7 +68,8 @@ const YAFont&               TextWidget::DEFAULT_FONT        = Fonts::getFontByTy
 TextWidget::KeywordHandler  TextWidget::m_keywordHandlers[] =
 {
     &TextWidget::handleColor,
-    &TextWidget::handleAlignment
+    &TextWidget::handleAlignment,
+    &TextWidget::handleCharCode
 };
 
 /* Set default scroll pause in ms. */
@@ -534,6 +535,37 @@ bool TextWidget::handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, 
     else
     {
         ;
+    }
+
+    return status;
+}
+
+bool TextWidget::handleCharCode(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const
+{
+    bool status = false;
+
+    UTIL_NOT_USED(isScrolling);
+
+    if (('x' == formatStr[0]) ||
+        ('X' == formatStr[0]))
+    {
+        const uint8_t   CHAR_CODE_LEN   = 2U;
+        String          charCodeStr     = String("0x") + formatStr.substring(1, 1 + CHAR_CODE_LEN);
+        uint8_t         charCode        = 0U;
+        bool            convStatus      = Util::strToUInt8(charCodeStr, charCode);
+
+        if (true == convStatus)
+        {
+            if ((false == noAction) &&
+                (nullptr != gfx) &&
+                (nullptr != gfxText))
+            {
+                gfxText->drawChar(*gfx, static_cast<char>(charCode));
+            }
+
+            overstep    = 1U + CHAR_CODE_LEN;
+            status      = true;
+        }
     }
 
     return status;

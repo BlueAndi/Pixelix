@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 #include "AsyncHttpClient.h"
 
 #include <WidgetGroup.h>
@@ -52,6 +52,7 @@
 #include <TextWidget.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -65,22 +66,19 @@
  * Shows the current state of VOLUMIO and the artist/title of the played music.
  * If the VOLUMIO server is offline, the plugin gets automatically disabled,
  * otherwise enabled.
- *
- * Change VOLUMIO host address via REST API:
- * Text: POST \c "<base-uri>/host?set=<host-address>"
  */
-class VolumioPlugin : public Plugin
+class VolumioPlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    VolumioPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
+    VolumioPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_textCanvas(),
         m_iconCanvas(),
         m_stdIconWidget(),
@@ -99,6 +97,7 @@ public:
         m_lastSeekValue(0U),
         m_pos(0U),
         m_state(STATE_UNKNOWN),
+        m_hasTopicChanged(false),
         m_taskProxy()
     {
         (void)m_mutex.create();
@@ -126,14 +125,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new VolumioPlugin(name, uid);
+        return new(std::nothrow)VolumioPlugin(name, uid);
     }
 
     /**
@@ -145,6 +144,21 @@ public:
      *     "topics": [
      *         "/text"
      *     ]
+     * }
+     * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
      * }
      * 
      * @param[out] topics   Topis in JSON format
@@ -171,8 +185,19 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+    
     /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
@@ -213,20 +238,6 @@ public:
      * @param[in] gfx   Display graphics interface
      */
     void update(YAGfx& gfx) final;
-
-    /**
-     * Get VOLUMIO host address.
-     * 
-     * @return VOLUMIO host address.
-     */
-    String getHost() const;
-
-    /**
-     * Set VOLUMIO host address.
-     * 
-     * @param[in] host  VOLUMIO host address
-     */
-    void setHost(const String& host);
 
 private:
 
@@ -272,9 +283,9 @@ private:
     static const char*      IMAGE_PATH_PAUSE_ICON;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
 
     /**
      * Period in ms for requesting data from server.
@@ -296,24 +307,25 @@ private:
      */
     static const uint32_t   OFFLINE_PERIOD      = SIMPLE_TIMER_SECONDS(60U);
 
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_stdIconWidget;            /**< Bitmap widget, used to show the standard icon. */
-    BitmapWidget            m_stopIconWidget;           /**< Bitmap widget, used to show the stop icon. */
-    BitmapWidget            m_playIconWidget;           /**< Bitmap widget, used to show the play icon. */
-    BitmapWidget            m_pauseIconWidget;          /**< Bitmap widget, used to show the pause icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    String                  m_volumioHost;              /**< Host address of the VOLUMIO server. */
-    String                  m_urlIcon;                  /**< REST API URL for updating the icon */
-    String                  m_urlText;                  /**< REST API URL for updating the text */
-    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer             m_requestTimer;             /**< Timer used for cyclic request of new data. */
-    SimpleTimer             m_offlineTimer;             /**< Timer used for offline detection. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    bool                    m_isConnectionError;        /**< Is connection error happened? */
-    uint32_t                m_lastSeekValue;            /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
-    uint8_t                 m_pos;                      /**< Current music position in percent. */
-    VolumioState            m_state;                    /**< Volumio player state */
+    WidgetGroup             m_textCanvas;           /**< Canvas used for the text widget. */
+    WidgetGroup             m_iconCanvas;           /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_stdIconWidget;        /**< Bitmap widget, used to show the standard icon. */
+    BitmapWidget            m_stopIconWidget;       /**< Bitmap widget, used to show the stop icon. */
+    BitmapWidget            m_playIconWidget;       /**< Bitmap widget, used to show the play icon. */
+    BitmapWidget            m_pauseIconWidget;      /**< Bitmap widget, used to show the pause icon. */
+    TextWidget              m_textWidget;           /**< Text widget, used for showing the text. */
+    String                  m_volumioHost;          /**< Host address of the VOLUMIO server. */
+    String                  m_urlIcon;              /**< REST API URL for updating the icon */
+    String                  m_urlText;              /**< REST API URL for updating the text */
+    AsyncHttpClient         m_client;               /**< Asynchronous HTTP client. */
+    SimpleTimer             m_requestTimer;         /**< Timer used for cyclic request of new data. */
+    SimpleTimer             m_offlineTimer;         /**< Timer used for offline detection. */
+    mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                    m_isConnectionError;    /**< Is connection error happened? */
+    uint32_t                m_lastSeekValue;        /**< Last seek value, retrieved from VOLUMIO. Used to cross-check the provided status. */
+    uint8_t                 m_pos;                  /**< Current music position in percent. */
+    VolumioState            m_state;                /**< Volumio player state */
+    bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -350,6 +362,22 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
+
+    /**
      * Change Volumio player state.
      * Depended on the new state, the corresponding bitmap icon is enabled.
      *
@@ -370,21 +398,19 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle asynchronous web response from the server.
+     * This will be called in LwIP context! Don't modify any member here directly!
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleAsyncWebResponse(const HttpResponse& rsp);
+
+    /**
      * Handle a web response from the server.
      * 
      * @param[in] jsonDoc   Web response as JSON document
      */
     void handleWebResponse(DynamicJsonDocument& jsonDoc);
-    
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 
     /**
      * Clear the task proxy queue.

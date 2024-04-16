@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,12 +44,13 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 #include "AsyncHttpClient.h"
 
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
 #include <TextWidget.h>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -63,18 +64,18 @@
  * The sound reactive plugin shows a bar graph, which represents the frequency
  * bands of audio input.
  */
-class SignalDetectorPlugin : public Plugin
+class SignalDetectorPlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    SignalDetectorPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
+    SignalDetectorPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textWidget(),
         m_mutex(),
@@ -83,7 +84,8 @@ public:
         m_client(),
         m_isUpdateReq(false),
         m_timer(),
-        m_slotInterf(nullptr)
+        m_slotInterf(nullptr),
+        m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
         m_textWidget.setFormatStr(DEFAULT_TEXT);
@@ -100,14 +102,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new SignalDetectorPlugin(name, uid);
+        return new(std::nothrow)SignalDetectorPlugin(name, uid);
     }
 
     /**
@@ -153,6 +155,21 @@ public:
      *     ]
      * }
      * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
+     * }
+     * 
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -177,8 +194,19 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+    
     /**
      * Set the slot interface, which the plugin can used to request information
      * from the slot, it is plugged in.
@@ -239,121 +267,44 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /**
-     * Get target frequency in Hz.
-     * 
-     * 0 Hz means this tone detector is disabled.
-     * 
-     * @param[in] idx   Index of the tone detector.
-     * 
-     * @return Target frequency in Hz.
-     */
-    float getTargetFreq(uint8_t idx) const;
-
-    /**
-     * Set target frequency in Hz.
-     * 
-     * 0 Hz means this tone detector is disabled.
-     * 
-     * @param[in] idx   Index of the tone detector.
-     * @param[in] freq  Target frequency in Hz
-     */
-    void setTargetFreq(uint8_t idx, float freq);
-
-    /**
-     * Get min. duration in ms which the audio signal must be present.
-     * 
-     * @param[in] idx   Index of the tone detector.
-     * 
-     * @return Min. duration in ms
-     */
-    uint32_t getMinDuration(uint8_t idx) const;
-
-    /**
-     * Set min. duration in ms which the audio signal must be present.
-     * 
-     * @param[in] idx       Index of the tone detector.
-     * @param[in] duration  Min. duration in ms
-     */
-    void setMinDuration(uint8_t idx, uint32_t duration);
-
-    /**
-     * Get the magntiude threshold.
-     * 
-     * @param[in] idx   Index of the tone detector.
-     * 
-     * @return Magnitude threshold
-     */
-    float getThreshold(uint8_t idx) const;
-
-    /**
-     * Set the magnitude threshold. The audio signal must be greater than the
-     * threshold to be recognized.
-     * 
-     * @param[in] idx       Index of the tone detector.
-     * @param[in] threshold Magnitude threshold
-     */
-    void setThreshold(uint8_t idx, float threshold);
-
-    /**
-     * Get text.
-     * 
-     * @return Formatted text
-     */
-    String getText() const;
-
-    /**
-     * Set text, which may contain format tags.
-     *
-     * @param[in] formatText    Text, which may contain format tags.
-     */
-    void setText(const String& formatText);
-
-    /**
-     * Get push URL.
-     * 
-     * @return Push URL
-     */
-    String getPushUrl() const;
-
-    /**
-     * Set push URL.
-     *
-     * @param[in] url   Push URL
-     */
-    void setPushUrl(const String& url);
-
 private:
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC_CFG;
-
-    /**
-     * Plugin topic, used to get/set the text which is shown if signal is detected.
-     */
-    static const char*      TOPIC_TEXT;
-
-    /**
-     * Plugin topic, used to get/set the URL which is triggered if signal is detected.
-     */
-    static const char*      TOPIC_PUSH_URL;
+    static const char*      TOPIC_CONFIG;
 
     /**
      * Default text which is shown until user set a different text.
      */
     static const char*      DEFAULT_TEXT;
 
-    Fonts::FontType         m_fontType;     /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget              m_textWidget;   /**< If signal is detected, it will show a corresponding text. */
-    mutable MutexRecursive  m_mutex;        /**< Mutex to protect against concurrent access. */
-    bool                    m_isDetected;   /**< Shows that the signal was detected. */
-    String                  m_pushUrl;      /**< Push URL which will be triggered if signal is detected. */
-    AsyncHttpClient         m_client;       /**< HTTP(S) client used for push notification. */
-    bool                    m_isUpdateReq;  /**< Display update request, by changing the text. */
-    SimpleTimer             m_timer;        /**< Timer used for slot duration timeout detection in case deactivate() is not called. */
-    const ISlotPlugin*      m_slotInterf;   /**< Slot interface */
+    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
+    TextWidget              m_textWidget;       /**< If signal is detected, it will show a corresponding text. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
+    bool                    m_isDetected;       /**< Shows that the signal was detected. */
+    String                  m_pushUrl;          /**< Push URL which will be triggered if signal is detected. */
+    AsyncHttpClient         m_client;           /**< HTTP(S) client used for push notification. */
+    bool                    m_isUpdateReq;      /**< Display update request, by changing the text. */
+    SimpleTimer             m_timer;            /**< Timer used for slot duration timeout detection in case deactivate() is not called. */
+    const ISlotPlugin*      m_slotInterf;       /**< Slot interface */
+    bool                    m_hasTopicChanged;  /**< Has the topic content changed? */
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
      * Request new data.
@@ -366,16 +317,6 @@ private:
      * Register callback function on response reception.
      */
     void initHttpClient(void);
-
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 
     /**
      * Is the audio signal detected?

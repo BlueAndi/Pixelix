@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -81,7 +81,16 @@ bool JustTextPlugin::isEnabled() const
 
 void JustTextPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC_TEXT);
+    JsonObject jsonText = topics.createNestedObject();
+ 
+    jsonText["name"] = TOPIC_TEXT;
+
+    /* Home Assistant support of MQTT discovery (https://www.home-assistant.io/integrations/mqtt) */
+    jsonText["ha"]["component"]             = "text";                           /* MQTT integration */
+    jsonText["ha"]["discovery"]["name"]     = "MQTT text";                      /* Application that is the origin the discovered MQTT. */
+    jsonText["ha"]["discovery"]["cmd_tpl"]  = "{\"text\": \"{{ value }}\" }";   /* Command template */
+    jsonText["ha"]["discovery"]["val_tpl"]  = "{{ value_json.text }}";          /* Value template */
+    jsonText["ha"]["discovery"]["ic"]       = "mdi:form-textbox";               /* Icon (MaterialDesignIcons.com) */
 }
 
 bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -100,18 +109,18 @@ bool JustTextPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
+bool JustTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
         String              text;
-        JsonVariantConst    jsonShow    = value["show"];
+        JsonVariantConst    jsonText    = value["text"];
 
-        if (false == jsonShow.isNull())
+        if (false == jsonText.isNull())
         {
-            text = jsonShow.as<String>();
+            text = jsonText.as<String>();
             isSuccessful = true;
         }
 
@@ -122,6 +131,19 @@ bool JustTextPlugin::setTopic(const String& topic, const JsonObject& value)
     }
 
     return isSuccessful;
+}
+
+bool JustTextPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
 }
 
 void JustTextPlugin::start(uint16_t width, uint16_t height)
@@ -172,7 +194,12 @@ void JustTextPlugin::setText(const String& formatText)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_textWidget.setFormatStr(formatText);
+    if (m_textWidget.getFormatStr() != formatText)
+    {
+        m_textWidget.setFormatStr(formatText);
+
+        m_hasTopicChanged = true;
+    }
 }
 
 /******************************************************************************

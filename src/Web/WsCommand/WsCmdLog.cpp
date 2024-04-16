@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -94,17 +94,19 @@ void WsCmdLog::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         selectedSink = Logging::getInstance().getSelectedSink();
 
+        preparePositiveResponse(msg);
+
         if ((nullptr == selectedSink) ||
             (selectedSink->getName() != "Websocket"))
         {
-            msg = "0";
+            msg += "0";
         }
         else
         {
-            msg = "1";
+            msg += "1";
         }
 
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
 
     m_cnt       = 0U;

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,6 @@
  * Includes
  *****************************************************************************/
 #include "AsyncHttpClient.h"
-#include "ButtonHandler.h"
 
 #include <stdint.h>
 #include <StateMachine.hpp>
@@ -100,15 +99,13 @@ public:
 
 private:
 
-    AsyncHttpClient m_client;           /**< Asynchronous HTTP client. */
-    ButtonHandler   m_buttonHandler;    /**< Button handler */
+    AsyncHttpClient m_client; /**< Asynchronous HTTP client. */
 
     /**
      * Constructs the state.
      */
     ConnectedState():
-        m_client(),
-        m_buttonHandler()
+        m_client()
     {
         initHttpClient();
     }
@@ -128,6 +125,12 @@ private:
      */
     void initHttpClient(void);
     
+    /**
+     * Notify via URL that the system is online.
+     * 
+     * @param[in] pushUrl   Push URL
+     */
+    void pushUrl(const String& pushUrl);
 };
 
 /******************************************************************************

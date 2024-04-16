@@ -1,0 +1,180 @@
+@startuml
+
+
+participant "PluginMgr" as pluginMgr
+participant "Plugin" as plugin
+participant "TopicHandlerService" as topicHandlerService
+participant "RestApiTopicHandler" as restApiTopicHandler
+participant "MqttApiTopicHandler" as mqttApiTopicHandler
+participant "HTTP Server" as httpServer
+participant "MQTT Client" as mqttClient
+
+autoactivate on
+
+note over pluginMgr,mqttClient
+    Registration of plugin topics
+end note
+
+-> pluginMgr
+
+loop for every plugin
+    pluginMgr -> topicHandlerService: register plugin topics with <DEVICE-ID>
+
+        topicHandlerService -> plugin: get topics
+        topicHandlerService <-- plugin: topics
+
+        loop for every plugin topic
+
+            topicHandlerService -> topicHandlerService: Determine topic name, accessibility and extra parameters.
+            topicHandlerService <-- topicHandlerService
+
+            loop for every topic handler
+
+                note over topicHandlerService
+                    <ENTITY-ID> by plugin UID = "display/uid/<PLUGIN-UID>"
+                end note
+
+                topicHandlerService -> restApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
+
+                    note over restApiTopicHandler,httpServer
+                        URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
+                    end note
+
+                    restApiTopicHandler -> httpServer: register REST URL
+                    restApiTopicHandler <-- httpServer
+
+                topicHandlerService <-- restApiTopicHandler
+
+                alt If plugin alias available
+
+                    note over topicHandlerService
+                        <ENTITY-ID> by plugin alias = "display/alias/<PLUGIN-ALIAS>"
+                    end note
+
+                    topicHandlerService -> restApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
+
+                        note over restApiTopicHandler,httpServer
+                            URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
+                        end note
+
+                        restApiTopicHandler -> httpServer: register REST URL
+                        restApiTopicHandler <-- httpServer
+
+                    topicHandlerService <-- restApiTopicHandler
+
+                end alt
+
+                note over topicHandlerService
+                    <ENTITY-ID> by plugin UID = "display/uid/<PLUGIN-UID>"
+                end note
+
+                topicHandlerService -> mqttApiTopicHandler: register topic (device id, entity id, topic, accessiblity, extra parameters)
+
+                    note over mqttApiTopicHandler
+                        Readable topics will be published during processing:
+                        * Initially after registration
+                        * After connection establishment
+                        * On Change
+                    end note
+
+                    alt If topic is readable
+
+                        note over mqttApiTopicHandler,mqttClient
+                            path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/state
+                            path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/state
+                        end note
+
+                        mqttApiTopicHandler -> mqttApiTopicHandler: Store plugin topic in publisher queue
+                        mqttApiTopicHandler <-- mqttApiTopicHandler
+
+                    end alt
+
+                    alt If topic is writeable
+
+                        note over mqttApiTopicHandler,mqttClient
+                            path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/set
+                        end note
+
+                        mqttApiTopicHandler -> mqttClient: Subscribe plugin topic path by plugin UID
+                        mqttApiTopicHandler <-- mqttClient
+
+                        alt If plugin alias available
+
+                            note over mqttApiTopicHandler,mqttClient
+                                path: <DEVICE-ID>/<ENTITY-ID>/<TOPIC>/set
+                            end note
+
+                            mqttApiTopicHandler -> mqttClient: Subscribe plugin topic path by plugin alias
+                            mqttApiTopicHandler <-- mqttClient
+
+                        end alt
+
+                    end alt
+
+                topicHandlerService <-- mqttApiTopicHandler
+
+                alt If plugin alias available
+
+                    note over topicHandlerService
+                        <ENTITY-ID> by plugin alias = "display/alias/<PLUGIN-ALIAS>"
+                    end note
+
+                    topicHandlerService -> mqttApiTopicHandler: ...
+                    topicHandlerService <-- mqttApiTopicHandler
+
+                end alt
+
+            end loop
+
+        end loop
+
+    pluginMgr <-- topicHandlerService
+end loop
+
+<-- pluginMgr
+
+note over pluginMgr,mqttClient
+    Automatically publish in case of a changed readable topic.
+end note
+
+-> topicHandlerService: process
+
+    alt Every 500ms
+
+        loop For every readable plugin topic
+
+            alt Topic not changed
+                topicHandlerService -> plugin: Has topic changed?
+                topicHandlerService <-- plugin: false
+            end alt
+
+            alt Topic changed
+                topicHandlerService -> plugin: Has topic changed?
+                topicHandlerService <-- plugin: true
+
+                loop for every topic handler
+
+                    topicHandlerService -> restApiTopicHandler: Plugin topic changed
+                    topicHandlerService <-- restApiTopicHandler
+
+                    topicHandlerService -> mqttApiTopicHandler: Plugin topic changed
+
+                        mqttApiTopicHandler -> plugin: get topic
+                        mqttApiTopicHandler <-- plugin: topic content
+
+                        mqttApiTopicHandler -> mqttClient: publish topic content
+                        mqttApiTopicHandler <-- mqttClient
+
+                    topicHandlerService <-- mqttApiTopicHandler
+
+                end loop
+
+            end alt
+
+        end loop
+
+    end alt
+
+<-- topicHandlerService
+
+@enduml

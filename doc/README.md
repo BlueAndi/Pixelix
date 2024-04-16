@@ -5,16 +5,11 @@
 
 # Documentation  <!-- omit in toc -->
 
-- [Requirements](#requirements)
-- [Hardware](#hardware)
-- [Software](#software)
-- [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
-- [License](#license)
-- [Contribution](#contribution)
-
-# Requirements
-
-* [Requirements](REQUIREMENTS.md)
+* [Hardware](#hardware)
+* [Software](#software)
+* [Issues, Ideas And Bugs](#issues-ideas-and-bugs)
+* [License](#license)
+* [Contribution](#contribution)
 
 # Hardware
 
@@ -30,12 +25,13 @@
     * [Software update](./config/SW-UPDATE.md)
 * [Plugins](PLUGINS.md)
 * [Plugin Development](PLUGIN-DEV.md)
-* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.1)
+* [REST API description](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.4.0)
 * [MQTT](MQTT.md)
 * [Home Assistant REST Wrapper](HOMEASSISTANT.md)
 * [Websocket API description](WEBSOCKET.md)
 * [Sprite sheet](SPRITESHEET.md)
 * [Alternative icons](ICONS.md)
+* [Configuration examples for GrabViaMqttPlugin and GrabViaRestPlugin.](./grabConfigs/README.md)
 
 # Issues, Ideas And Bugs
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.

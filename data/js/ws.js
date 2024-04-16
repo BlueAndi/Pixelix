@@ -30,7 +30,7 @@ pixelix.ws.getLogLevelStr = function(logLevel) {
     case 5:
         str = "TRACE";
         break;
-    
+
     default:
         str = "UNKNWON";
         break;
@@ -151,11 +151,16 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
     var elements    = 0;
 
     if ("EVT" === status) {
-        rsp.timestamp = parseInt(data[0]);
-        rsp.level = parseInt(data[1]);
-        rsp.filename = data[2].substring(1, data[2].length - 1);
-        rsp.line = parseInt(data[3]);
-        rsp.text = data[4].substring(1, data[4].length - 1);
+        rsp.evtType = data.shift();
+
+        if ("LOG" === rsp.evtType) {
+            rsp.timestamp = parseInt(data[0]);
+            rsp.level = parseInt(data[1]);
+            rsp.filename = data[2].substring(1, data[2].length - 1);
+            rsp.line = parseInt(data[3]);
+            rsp.text = data[4].substring(1, data[4].length - 1);
+        }
+
         this._sendEvt(rsp);
     } else {
         if (null === this._pendingCmd) {
@@ -165,9 +170,9 @@ pixelix.ws.Client.prototype._onMessage = function(msg) {
                 rsp.name = data[0];
                 this._pendingCmd.resolve(rsp);
             } else if ("GETDISP" === this._pendingCmd.name) {
-                rsp.slotId = data.shift();
-                rsp.width = data.shift();
-                rsp.height = data.shift();
+                rsp.slotId = parseInt(data.shift());
+                rsp.width = parseInt(data.shift());
+                rsp.height = parseInt(data.shift());
                 rsp.data = [];
                 for(index = 0; index < data.length; ++index) {
                     rsp.data.push(parseInt(data[index], 16));
@@ -552,14 +557,21 @@ pixelix.ws.Client.prototype.stopIperf = function(options) {
     }.bind(this));
 };
 
-pixelix.ws.Client.prototype.triggerButton = function() {
+pixelix.ws.Client.prototype.triggerButton = function(options) {
     return new Promise(function(resolve, reject) {
+        var par = null;
+
         if (null === this._socket) {
             reject();
         } else {
+
+            if ("number" === typeof options.actionId) {
+                par = options.actionId.toString();
+            }
+
             this._sendCmd({
                 name: "BUTTON",
-                par: null,
+                par: par,
                 resolve: resolve,
                 reject: reject
             });

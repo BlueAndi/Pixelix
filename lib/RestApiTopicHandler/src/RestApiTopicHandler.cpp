@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,95 +66,80 @@
  * Public Methods
  *****************************************************************************/
 
-void RestApiTopicHandler::registerTopics(IPluginMaintenance* plugin)
+void RestApiTopicHandler::registerTopic(const String& deviceId, const String& entityId, const String& topic, JsonObjectConst& extra, GetTopicFunc getTopicFunc, SetTopicFunc setTopicFunc, UploadReqFunc uploadReqFunc)
 {
-    if (nullptr != plugin)
+    if ((false == deviceId.isEmpty()) &&
+        (false == entityId.isEmpty()) &&
+        (false == topic.isEmpty()))
     {
-        const size_t        JSON_DOC_SIZE   = 512U;
-        DynamicJsonDocument topicsDoc(JSON_DOC_SIZE);
-        JsonArray           topics          = topicsDoc.createNestedArray("topics");
+        TopicMetaData* topicMetaData = new(std::nothrow) TopicMetaData();
 
-        /* Get topics from plugin. */
-        plugin->getTopics(topics);
-
-        /* Handle each topic */
-        if (0U < topics.size())
+        if (nullptr != topicMetaData)
         {
-            PluginObjData*  metaData = new(std::nothrow) PluginObjData();
+            String                      baseUri     = getBaseUri(entityId);
+            ArRequestHandlerFunction    onRequest   =
+                                            [this, topicMetaData](AsyncWebServerRequest *request)
+                                            {
+                                                this->webReqHandler(request, topicMetaData);
+                                            };
+            ArUploadHandlerFunction     onUpload    =
+                                            [this, topicMetaData](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+                                            {
+                                                this->uploadHandler(request, filename, index, data, len, final, topicMetaData);
+                                            };
 
-            if (nullptr != metaData)
-            {
-                String baseUriByUid     = getBaseUriByUid(plugin->getUID());
-                String baseUriByAlias;
+            topicMetaData->deviceId         = deviceId;
+            topicMetaData->entityId         = entityId;
+            topicMetaData->topic            = topic;
+            topicMetaData->getTopicFunc     = getTopicFunc;
+            topicMetaData->setTopicFunc     = setTopicFunc;
+            topicMetaData->uploadReqFunc    = uploadReqFunc;
+            topicMetaData->uri              = baseUri + topic;
+            topicMetaData->webHandler       = &MyWebServer::getInstance().on(topicMetaData->uri.c_str(), HTTP_ANY, onRequest, onUpload);
 
-                if (false == plugin->getAlias().isEmpty())
-                {
-                    baseUriByAlias = getBaseUriByAlias(plugin->getAlias());
-                }
+            UTIL_NOT_USED(extra);
 
-                metaData->plugin = plugin;
+            LOG_INFO("Register: %s", topicMetaData->uri.c_str());
 
-                for (JsonVariantConst topic : topics)
-                {
-                    registerTopic(baseUriByUid, metaData, topic.as<String>());
-
-                    if (false == baseUriByAlias.isEmpty())
-                    {
-                        registerTopic(baseUriByAlias, metaData, topic.as<String>());
-                    }
-                }
-
-                m_pluginMeta.push_back(metaData);
-            }
+            m_listOfTopicMetaData.push_back(topicMetaData);
         }
     }
 }
 
-void RestApiTopicHandler::unregisterTopics(IPluginMaintenance* plugin)
+void RestApiTopicHandler::unregisterTopic(const String& deviceId, const String& entityId, const String& topic)
 {
-    if (nullptr != plugin)
+    if ((false == deviceId.isEmpty()) &&
+        (false == entityId.isEmpty()) &&
+        (false == topic.isEmpty()))
     {
-        PluginObjDataList::iterator pluginMetaIt = m_pluginMeta.begin();
+        ListOfTopicMetaData::iterator topicMetaDataIt = m_listOfTopicMetaData.begin();
 
-        /* Walk through plugin meta and remove every topic.
-         * At the end, destroy the meta information.
-         */
-        while(m_pluginMeta.end() != pluginMetaIt)
+        while(m_listOfTopicMetaData.end() != topicMetaDataIt)
         {
-            PluginObjData* pluginMeta = *pluginMetaIt;
+            TopicMetaData* topicMetaData = *topicMetaDataIt;
 
-            if (plugin == pluginMeta->plugin)
+            if ((nullptr != topicMetaData) &&
+                (deviceId == topicMetaData->deviceId) &&
+                (entityId == topicMetaData->entityId) &&
+                (topic == topicMetaData->topic))
             {
-                WebHandlerDataList::iterator webHandlerDataIt = pluginMeta->webHandlers.begin();
-
-                while(pluginMeta->webHandlers.end() != webHandlerDataIt)
+                if (false == MyWebServer::getInstance().removeHandler(topicMetaData->webHandler))
                 {
-                    WebHandlerData* webHandlerData = *webHandlerDataIt;
-
-                    if (nullptr != webHandlerData->webHandler)
-                    {
-                        LOG_INFO("[%s][%u] Unregister: %s", pluginMeta->plugin->getName(), pluginMeta->plugin->getUID(), webHandlerData->uri.c_str());
-
-                        if (false == MyWebServer::getInstance().removeHandler(webHandlerData->webHandler))
-                        {
-                            LOG_WARNING("Couldn't remove handler %s.", webHandlerData->uri.c_str());
-                        }
-
-                        webHandlerDataIt = pluginMeta->webHandlers.erase(webHandlerDataIt);
-                        delete webHandlerData;
-                    }
-                    else
-                    {
-                        ++webHandlerDataIt;
-                    }
+                    LOG_WARNING("Failed to unregister: %s", topicMetaData->uri.c_str());
+                }
+                else
+                {
+                    LOG_INFO("Unregister: %s", topicMetaData->uri.c_str());
                 }
 
-                pluginMetaIt = m_pluginMeta.erase(pluginMetaIt);
-                delete pluginMeta;
+                topicMetaDataIt = m_listOfTopicMetaData.erase(topicMetaDataIt);
+                
+                delete topicMetaData;
+                topicMetaData = nullptr;
             }
             else
             {
-                ++pluginMetaIt;
+                ++topicMetaDataIt;
             }
         }
     }
@@ -168,81 +153,37 @@ void RestApiTopicHandler::unregisterTopics(IPluginMaintenance* plugin)
  * Private Methods
  *****************************************************************************/
 
-String RestApiTopicHandler::getBaseUriByUid(uint16_t uid)
+String RestApiTopicHandler::getBaseUri(const String& entityId)
 {
     String  baseUri = RestApi::BASE_URI;
-    baseUri += "/display";
-    baseUri += "/uid/";
-    baseUri += uid;
+    baseUri += "/";
+    baseUri += entityId;
 
     return baseUri;
 }
 
-String RestApiTopicHandler::getBaseUriByAlias(const String& alias)
-{
-    String  baseUri = RestApi::BASE_URI;
-    baseUri += "/display";
-    baseUri += "/alias/";
-    baseUri += alias;
-
-    return baseUri;
-}
-
-void RestApiTopicHandler::registerTopic(const String& baseUri, PluginObjData* metaData, const String& topic)
-{
-    if ((nullptr != metaData) &&
-        (nullptr != metaData->plugin))
-    {
-        WebHandlerData* webHandlerData = new(std::nothrow) WebHandlerData;
-
-        if (nullptr == webHandlerData)
-        {
-            LOG_ERROR("[%s][%u] Couldn't allocate web handler data.", metaData->plugin->getName(), metaData->plugin->getUID());
-        }
-        else
-        {
-            String              topicUri    = baseUri + topic;
-            IPluginMaintenance* plugin      = metaData->plugin;
-
-            LOG_INFO("[%s][%u] Register: %s", metaData->plugin->getName(), metaData->plugin->getUID(), topicUri.c_str());
-
-            webHandlerData->webHandler  = &MyWebServer::getInstance().on(
-                                            topicUri.c_str(),
-                                            HTTP_ANY,
-                                            [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request)
-                                            {
-                                                this->webReqHandler(request, plugin, topic, webHandlerData);
-                                            },
-                                            [this, plugin, topic, webHandlerData](AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
-                                            {
-                                                this->uploadHandler(request, filename, index, data, len, final, plugin, topic, webHandlerData);
-                                            });
-            webHandlerData->uri         = topicUri;
-
-            metaData->webHandlers.push_back(webHandlerData);
-        }
-    }
-}
-
-void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
+void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, TopicMetaData* topicMetaData)
 {
     String              content;
-    const size_t        JSON_DOC_SIZE   = 1024U;
+    const size_t        JSON_DOC_SIZE   = 2048U;
     DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
     JsonObject          dataObj         = jsonDoc.createNestedObject("data");
     uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
 
     if ((nullptr == request) ||
-        (nullptr == plugin) ||
-        (nullptr == webHandlerData))
+        (nullptr == topicMetaData))
     {
         return;
     }
 
-    if (HTTP_GET == request->method())
+    if ((HTTP_GET == request->method()) &&
+        (nullptr != topicMetaData->getTopicFunc))
     {
-        if (false == plugin->getTopic(topic, dataObj))
+        /* Topic data will be transported in the HTTP body as JSON. */
+        if (false == topicMetaData->getTopicFunc(topicMetaData->topic, dataObj))
         {
+            LOG_WARNING("Topic \"%s\" not supported by %s.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
+
             RestUtil::prepareRspError(jsonDoc, "Requested topic not supported.");
 
             jsonDoc.remove("data");
@@ -255,34 +196,35 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, IPluginM
             httpStatusCode      = HttpStatus::STATUS_CODE_OK;
         }
     }
-    else if (HTTP_POST == request->method())
+    else if ((HTTP_POST == request->method()) &&
+             (nullptr != topicMetaData->setTopicFunc))
     {
         DynamicJsonDocument jsonDocPar(JSON_DOC_SIZE);
-        size_t              idx = 0U;
-
-        /* Add arguments */
-        for(idx = 0U; idx < request->args(); ++idx)
-        {
-            jsonDocPar[request->argName(idx)] = request->arg(idx);
-        }
+        JsonObjectConst     jsonValue;
+        
+        /* Topic data is in the HTTP parameters and needs to be converted to JSON. */
+        par2Json(jsonDocPar, request);
 
         /* Add uploaded file */
-        if ((false == webHandlerData->isUploadError) &&
-            (false == webHandlerData->fullPath.isEmpty()))
+        if ((false == topicMetaData->isUploadError) &&
+            (false == topicMetaData->fullPath.isEmpty()))
         {
-            jsonDocPar["fullPath"] = webHandlerData->fullPath;
+            jsonDocPar["fullPath"] = topicMetaData->fullPath;
         }
 
-        if (false == plugin->setTopic(topic, jsonDocPar.as<JsonObject>()))
+        jsonValue = jsonDocPar.as<JsonObjectConst>(); /* Assign after par2Json conversion! Otherwise there will be a empty object. */
+        if (false == topicMetaData->setTopicFunc(topicMetaData->topic, jsonValue))
         {
+            LOG_WARNING("Topic \"%s\" not supported by %s or invalid data.", topicMetaData->topic.c_str(), topicMetaData->entityId.c_str());
+
             RestUtil::prepareRspError(jsonDoc, "Requested topic not supported or invalid data.");
 
             jsonDoc.remove("data");
 
             /* If a file is available, it will be removed now. */
-            if (false == webHandlerData->fullPath.isEmpty())
+            if (false == topicMetaData->fullPath.isEmpty())
             {
-                (void)FILESYSTEM.remove(webHandlerData->fullPath);
+                (void)FILESYSTEM.remove(topicMetaData->fullPath);
             }
 
             httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
@@ -305,7 +247,7 @@ void RestApiTopicHandler::webReqHandler(AsyncWebServerRequest *request, IPluginM
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
 }
 
-void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, IPluginMaintenance* plugin, const String& topic, WebHandlerData* webHandlerData)
+void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final, TopicMetaData* topicMetaData)
 {
     /* Begin of upload? */
     if (0 == index)
@@ -328,48 +270,49 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
         if (fileSystemSpace <= fileSize)
         {
             LOG_WARNING("Upload of %s aborted. Not enough space.", filename.c_str());
-            webHandlerData->isUploadError = true;
-            webHandlerData->fullPath.clear();
+            topicMetaData->isUploadError = true;
+            topicMetaData->fullPath.clear();
         }
         else
         {
             LOG_INFO("Upload of %s (%d bytes) starts.", filename.c_str(), fileSize);
-            webHandlerData->isUploadError = false;
-            webHandlerData->fullPath.clear();
+            topicMetaData->isUploadError = false;
+            topicMetaData->fullPath.clear();
 
             /* Ask plugin, whether the upload is allowed or not. */
-            if (false == plugin->isUploadAccepted(topic, filename, webHandlerData->fullPath))
+            if ((nullptr == topicMetaData->uploadReqFunc) ||
+                (false == topicMetaData->uploadReqFunc(topicMetaData->topic, filename, topicMetaData->fullPath)))
             {
-                LOG_WARNING("[%s][%u] Upload not supported.", plugin->getName(), plugin->getUID());
-                webHandlerData->isUploadError = true;
-                webHandlerData->fullPath.clear();
+                LOG_WARNING("Upload not supported by %s.", topicMetaData->entityId.c_str());
+                topicMetaData->isUploadError = true;
+                topicMetaData->fullPath.clear();
             }
             else
             {
                 /* Create a new file and overwrite a existing one. */
-                webHandlerData->fd = FILESYSTEM.open(webHandlerData->fullPath, "w");
+                request->_tempFile = FILESYSTEM.open(topicMetaData->fullPath, "w");
 
-                if (false == webHandlerData->fd)
+                if (false == request->_tempFile)
                 {
-                    LOG_ERROR("Couldn't create file: %s", webHandlerData->fullPath.c_str());
-                    webHandlerData->isUploadError = true;
-                    webHandlerData->fullPath.clear();
+                    LOG_ERROR("Couldn't create file: %s", topicMetaData->fullPath.c_str());
+                    topicMetaData->isUploadError = true;
+                    topicMetaData->fullPath.clear();
                 }
             }
         }
     }
 
-    if (false == webHandlerData->isUploadError)
+    if (false == topicMetaData->isUploadError)
     {
         /* If file is open, write data to it. */
-        if (true == webHandlerData->fd)
+        if (true == request->_tempFile)
         {
-            if (len != webHandlerData->fd.write(data, len))
+            if (len != request->_tempFile.write(data, len))
             {
                 LOG_ERROR("Less data written, upload aborted.");
-                webHandlerData->isUploadError = true;
-                webHandlerData->fullPath.clear();
-                webHandlerData->fd.close();
+                topicMetaData->isUploadError = true;
+                topicMetaData->fullPath.clear();
+                request->_tempFile.close();
             }
         }
 
@@ -378,7 +321,96 @@ void RestApiTopicHandler::uploadHandler(AsyncWebServerRequest *request, const St
         {
             LOG_INFO("Upload of %s finished.", filename.c_str());
 
-            webHandlerData->fd.close();
+            request->_tempFile.close();
+        }
+    }
+}
+
+void RestApiTopicHandler::par2Json(JsonDocument& jsonDocPar, AsyncWebServerRequest *request)
+{
+    size_t idx = 0U;
+
+    /* Add arguments:
+     * - key=value              --> { "key": "value" }
+     * - key.subKey=value       --> { "key": { "subKey": "value "} }
+     * - key._0_=value          --> { "key": [ "value" ] }
+     * - key._0_.subKey=value   --> { "key": [ "subKey": "value" ] }
+     * 
+     * Note: Only the patterns above are supported, but not a higher
+     *       nesting level.
+     */
+    for(idx = 0U; idx < request->args(); ++idx)
+    {
+        const String&   keyPattern  = request->argName(idx);
+        const String&   value 	    = request->arg(idx);
+        int             dotIdx      = keyPattern.indexOf(".");
+
+        /* No "."  in the key pattern means: key=value */
+        if (0 > dotIdx)
+        {
+            jsonDocPar[keyPattern] = value;
+        }
+        /* No "_" after the "." means: key.subKey=value */
+        else if ('_' != keyPattern[dotIdx + 1U])
+        {
+            String  key     = keyPattern.substring(0, dotIdx);
+            String  subKey  = keyPattern.substring(dotIdx + 1U);
+
+            jsonDocPar[key][subKey] = value;
+        }
+        /* Its an array. */
+        else
+        {
+            String  key     = keyPattern.substring(0, dotIdx);
+            int     dot2Idx = keyPattern.lastIndexOf(".");
+
+            /* No additional "." means: key._0_=value */
+            if (dotIdx == dot2Idx)
+            {
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+
+                /* Remove "_" at the front and the end. */
+                strArrayIdx.remove(0U, 1U);
+                strArrayIdx.remove(strArrayIdx.length() - 1U);
+
+                jsonDocPar[key][strArrayIdx.toInt()] = value;
+            }
+            /* Additional "." means: key._0_.subKey=value */
+            else
+            {
+                String  strArrayIdx = keyPattern.substring(dotIdx + 1U);
+                String  subKey      = keyPattern.substring(dot2Idx + 1U);
+
+                /* Remove "_" at the front and the end. */
+                strArrayIdx.remove(0U, 1U);
+                strArrayIdx.remove(strArrayIdx.length() - 1U);
+
+                jsonDocPar[key][strArrayIdx.toInt()][subKey] = value;
+            }
+        }
+    }
+}
+
+void RestApiTopicHandler::clearPluginTopics()
+{
+    ListOfTopicMetaData::iterator topicMetaDataIt = m_listOfTopicMetaData.begin();
+
+    while(m_listOfTopicMetaData.end() != topicMetaDataIt)
+    {
+        TopicMetaData* topicMetaData = *topicMetaDataIt;
+
+        if (nullptr != topicMetaData)
+        {
+            (void)MyWebServer::getInstance().removeHandler(topicMetaData->webHandler);
+
+            topicMetaDataIt = m_listOfTopicMetaData.erase(topicMetaDataIt);
+
+            delete topicMetaData;
+            topicMetaData = nullptr;
+        }
+        else
+        {
+            ++topicMetaDataIt;
         }
     }
 }

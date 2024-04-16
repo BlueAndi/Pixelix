@@ -1,7 +1,7 @@
 
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 #include "time.h"
 
 #include <WidgetGroup.h>
@@ -53,6 +53,7 @@
 #include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -69,7 +70,7 @@
  * in the filesystem, where the target date has to be configured.
  *
  */
-class CountdownPlugin : public Plugin
+class CountdownPlugin : public PluginWithConfig
 {
 public:
 
@@ -172,11 +173,11 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    CountdownPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
+    CountdownPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -187,12 +188,12 @@ public:
         m_targetDateInformation(),
         m_remainingDays(""),
         m_mutex(),
-        m_cfgReloadTimer()
+        m_hasTopicChanged(false)
     {
         /* Example data, used to generate the very first configuration file. */
-        m_targetDate.day                    = 29;
-        m_targetDate.month                  = 8;
-        m_targetDate.year                   = 2019;
+        m_targetDate.day                    = 1U;
+        m_targetDate.month                  = 8U;
+        m_targetDate.year                   = 2024U;
         m_targetDateInformation.plural      = "DAYS";
         m_targetDateInformation.singular    = "DAY";
 
@@ -210,14 +211,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new CountdownPlugin(name, uid);
+        return new(std::nothrow) CountdownPlugin(name, uid);
     }
 
     /**
@@ -256,6 +257,21 @@ public:
      *     ]
      * }
      * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
+     * }
+     * 
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -280,8 +296,19 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+    
     /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
@@ -297,7 +324,7 @@ public:
      */
     void start(uint16_t width, uint16_t height) final;
 
-   /**
+    /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
      * 
@@ -306,40 +333,22 @@ public:
     void stop() final;
 
     /**
+     * Process the plugin.
+     * Overwrite it if your plugin has cyclic stuff to do without being in a
+     * active slot.
+     * 
+     * @param[in] isConnected   The network connection status. If network
+     *                          connection is established, it will be true otherwise false.
+     */
+    void process(bool isConnected) final;
+
+    /**
      * Update the display.
      * The scheduler will call this method periodically.
      *
      * @param[in] gfx   Display graphics interface
      */
     void update(YAGfx& gfx) final;
-
-    /**
-     * Get current target date for countdown.
-     *
-     * @return Target date
-     */
-    DateDMY getTargetDate() const;
-
-    /**
-     * Set target date for countdown.
-     *
-     * @param[in] targetDate    Target date
-     */
-    void setTargetDate(const DateDMY& targetDate);
-
-    /**
-     * Get the language depended strings for the unit.
-     *
-     * @return Target day unit descriptions
-     */
-    TargetDayDescription getTargetDayDescription() const;
-
-    /**
-     * Set language depended strings for the unit.
-     *
-     * @param[in] targetDayDescription  Unit in plural and singular form, e.g. "days/day".
-     */
-    void setTargetDayDescription(const TargetDayDescription& targetDayDescription);
 
 private:
 
@@ -359,9 +368,9 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
 
    /**
     * Offset to translate the month of the tm struct (time.h)
@@ -375,13 +384,6 @@ private:
     */
     static const int16_t    TM_OFFSET_YEAR  = 1900;
 
-    /**
-     * The configuration in the persistent memory shall be cyclic loaded.
-     * This mechanism ensure that manual changes in the file are considered.
-     * This is the reload period in ms.
-     */
-    static const uint32_t   CFG_RELOAD_PERIOD   = SIMPLE_TIMER_SECONDS(30U);
-
     Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
@@ -392,22 +394,29 @@ private:
     TargetDayDescription    m_targetDateInformation;    /**< String used for configured additional target date information. */
     String                  m_remainingDays;            /**< String used for displaying the remaining days untril the target date. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    SimpleTimer             m_cfgReloadTimer;           /**< Timer is used to cyclic reload the configuration from persistent memory. */
+    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
 
     /**
-     * Saves current configuration to JSON file.
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
      */
-    bool saveConfiguration() const;
+    void getConfiguration(JsonObject& cfg) const final;
 
     /**
-     * Load configuration from JSON file.
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
      */
-    bool loadConfiguration();
+    bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
-     * Calculates the difference between m_targetTime and m_currentTime in days.
+     * Calculates the remaining days between m_targetTime and m_currentTime in days and
+     * update m_remainingDays.
      */
-    void calculateDifferenceInDays(void);
+    void calculateRemainingDays(void);
 
     /**
      * Counts the number of leap years.

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,7 @@
 #include "ConnectingState.h"
 #include "SysMsg.h"
 #include "Services.h"
+#include "SensorDataProvider.h"
 
 #include "IdleState.h"
 #include "ConnectedState.h"
@@ -72,9 +73,6 @@
 void ConnectingState::entry(StateMachine& sm)
 {
     SettingsService& settings = SettingsService::getInstance();
-
-    /* Observer button state changes and derrive actions. */
-    ButtonDrv::getInstance().registerObserver(m_buttonHandler);
 
     /* Are remote wifi network informations available? */
     if (true == settings.open(true))
@@ -122,9 +120,6 @@ void ConnectingState::entry(StateMachine& sm)
 
 void ConnectingState::process(StateMachine& sm)
 {
-    /* Process button state changes */
-    m_buttonHandler.process();
-
     /* No retry mechanism is running? */
     if (false == m_retryTimer.isTimerRunning())
     {
@@ -140,7 +135,7 @@ void ConnectingState::process(StateMachine& sm)
 
         if (false == m_isQuiet)
         {
-            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
         }
 
         /* Remote wifi network informations are available, try to establish a connection. */
@@ -186,14 +181,14 @@ void ConnectingState::process(StateMachine& sm)
     }
 
     Services::processAll();
+    SensorDataProvider::getInstance().process();
 }
 
 void ConnectingState::exit(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
-    /* Remove button handler as button state observer. */
-    ButtonDrv::getInstance().unregisterObserver();
+    /* Nothing to do. */
 }
 
 /******************************************************************************

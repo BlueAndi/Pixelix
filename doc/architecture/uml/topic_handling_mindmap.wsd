@@ -1,0 +1,167 @@
+@startmindmap
+
++[#lightgreen] Topic
+
+++ Access
+
++++ REST API
+
+++++ Base URI: http://<HOSTNAME>/rest/api/v1
+
+++++ GET
++++++ URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
+++++++ Examples
++++++++ <BASE-URI>/display/uid/1234/text
++++++++ <BASE-URI>/display/alias/myPlugin/text
+
+++++ POST
++++++ URL: <BASE-URI>/<ENTITY-ID>/<TOPIC>
+++++++ Examples
++++++++ <BASE-URI>/display/uid/1234/text
++++++++ <BASE-URI>/display/alias/myPlugin/text
+
++++++ Parameters via HTTP arguments
+******: key=value __converts to__
+<code>
+{
+    "key": "value"
+}
+</code>;
+******: key.sub=value __converts to__
+<code>
+{
+    "key": {
+        "sub": "value"
+    }
+}
+</code>;
+******: key._0_=value __converts to__
+<code>
+{
+    "key": [
+        "value"
+    ]
+}
+</code>;
+******: key._0_.sub=value __converts to__
+<code>
+{
+    "key": [{
+        "sub": "value"
+    }]
+}
+</code>;
+
++++++ A file is BASE64 encoded and provided in HTTP body.
+
+
+++++ General response
++++++ In case of successful request
+******:
+<code>
+{
+    "data": {},
+    "status": "ok"
+}
+</code>;
+
++++++ In case of an error
+******:
+<code>
+{
+    "data": {},
+    "status": "error"
+}
+</code>;
++++++ The data element contains the request specific information.
+
++++ MQTT API
+
+++++ Homeassistant auto discovery
++++++ General path
+++++++ <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<DEVICE-ID>/<ENTITY-ID>/config
++++++ Topic with plugin UID: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display/uid/<PLUGIN-UID>/config
+*****:
+<code>
+{
+  "name": "MQTT text",
+  "object_id": "display/uid/19583",
+  "unique_id": "pixelix-facfc834/display/uid/19583",
+  "device": {
+    "identifiers": "F4:12:FA:CF:C8:34",
+    "configuration_url": "http://192.168.2.62",
+    "name": "pixelix-facfc834",
+    "model": "Pixelix",
+    "manufacturer": "BlueAndi & Friends",
+    "sw_version": "v7.0.0"
+  },
+  "state_topic": "pixelix-facfc834/display/uid/19583/text/state",
+  "value_template": "{{ value_json.text }}",
+  "command_topic": "pixelix-facfc834/display/uid/19583/text/set",
+  "command_template": "{\"text\": \"{{ value }}\" }"
+}
+</code>;
++++++ Topic with plugin alias: <HOMEASSISTANT-DISCOVERY-PREFIX>/<HOMEASSISTANT-COMPONENT>/<HOSTNAME>/display/alias/<PLUGIN-ALIAS>/config
+*****:
+<code>
+{
+  "name": "MQTT text",
+  "object_id": "display/alias/myPlugin",
+  "unique_id": "pixelix-facfc834/display/alias/myPlugin",
+  "device": {
+    "identifiers": "F4:12:FA:CF:C8:34",
+    "configuration_url": "http://192.168.2.62",
+    "name": "pixelix-facfc834",
+    "model": "Pixelix",
+    "manufacturer": "BlueAndi & Friends",
+    "sw_version": "v7.0.0"
+  },
+  "state_topic": "pixelix-facfc834/display/alias/myPlugin/text/state",
+  "value_template": "{{ value_json.text }}",
+  "command_topic": "pixelix-facfc834/display/alias/myPlugin/text/set",
+  "command_template": "{\"text\": \"{{ value }}\" }"
+}
+</code>;
+++++ HOMEASSISTANT-DEVICE-CLASS
++++++ Customizeable in Home assistant: https://www.home-assistant.io/docs/configuration/customizing-devices
++++++ Skipped, because no matching device class is available.
+++++ HOMEASSISTANT-COMPONENT
++++++ Components nowadays integrations: https://www.home-assistant.io/integrations
++++++ The integration depends on the plugin.
++++++ Integration: text
+++++++ https://www.home-assistant.io/integrations/text.mqtt/
++++++ Integration: sensor
+++++++ https://www.home-assistant.io/integrations/sensor.mqtt/
+
+++++ Status
++++++ MQTT topic by plugin UID: <HOSTNAME>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/state
++++++ MQTT topic by plugin alias: <HOSTNAME>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/state
++++++ MQTT topic by sensor: <HOSTNAME>/sensors/<SENSOR-CHANNEL-ID>/<TOPIC>/state
++++++ Direction: Pixelix --> Client(s)
+++++ Command
++++++ MQTT topic: <HOSTNAME>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/set
++++++ MQTT topic: <HOSTNAME>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/set
++++++ Direction: Client(s) --> Pixelix
+++++ Availability
++++++ MQTT topic: <HOSTNAME>/display/uid/<PLUGIN-UID>/<PLUGIN-TOPIC>/available
++++++ MQTT topic: <HOSTNAME>/display/alias/<PLUGIN-ALIAS>/<PLUGIN-TOPIC>/available
++++++ Direction: Pixelix --> Client(s)
++++++ "online"/"offline"
++++++ Skipped for the moment. May be supported in future.
+
+-- A plugin deals only with topics\nand doesn't know about REST or MQTT.
+-- Device identification\n(DEVICE-ID)
+--- Unique hostname (HOSTNAME)
+-- Entity identification\n(ENTITY-ID)
+--- Plugins
+---- display/uid/<PLUGIN-UID>
+---- display/alias/<PLUGIN-ALIAS>
+--- Sensors
+---- sensors/<SENSOR-CHANNEL-ID>
+-- Plugin identification
+--- Unique plugin ID (PLUGIN-UID) assigned at instance creation
+--- Unique plugin alias (PLUGIN-ALIAS) assigned by user
+-- Sensor/Channel identification
+--- The provided sensor/channel information is part of a array.\nThe array index is the <SENSOR-CHANNEL-ID>.
+
+@endmindmap

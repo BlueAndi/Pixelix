@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -319,7 +319,7 @@ uint8_t SlotList::getStickySlot() const
  * 
  * If slot is empty or the plugin is disabled, it will fail.
  * 
- * @param[in]   slotId  The id of the slot which to set sticky.
+ * @param[in] slotId    The id of the slot which to set sticky.
  * 
  * @return If successful it will return true otherwise false.
  */

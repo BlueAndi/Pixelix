@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,7 +70,8 @@ public:
      * @param[in] driver    The SHT3x driver.
      */
     Sht3XTemperatureChannel(SHTSensor& driver) :
-        m_driver(driver)
+        m_driver(driver),
+        m_offset(0.0F)
     {
     }
 
@@ -92,18 +93,47 @@ public:
     }
 
     /**
-     * Get data value.
+     * Get the temperature.
+     * If there is any error, it will return NaN.
      * 
-     * @return Sensor data value
+     * @return Temperature in °C.
      */
-    float getValue()
+    float getValue() final
     {
-        return m_driver.getTemperature();
+        float temperature = m_driver.getTemperature();
+
+        if (false == isnan(temperature))
+        {
+            temperature += m_offset;
+        }
+
+        return temperature;
+    }
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value in °C.
+     */
+    float getOffset() const final
+    {
+        return m_offset;
+    }
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value in °C.
+     */
+    void setOffset(float offset) final
+    {
+        m_offset = offset;
     }
 
 private:
 
     SHTSensor&  m_driver;   /**< SHT3x sensor driver. */
+    float       m_offset;   /**< Temperature offset in °C for sensor tolerance compensation. */
 
     Sht3XTemperatureChannel();
     Sht3XTemperatureChannel(const Sht3XTemperatureChannel& channel);
@@ -123,7 +153,8 @@ public:
      * @param[in] driver    The SHT3x driver.
      */
     Sht3XHumidityChannel(SHTSensor& driver) :
-        m_driver(driver)
+        m_driver(driver),
+        m_offset(0.0F)
     {
     }
 
@@ -145,18 +176,47 @@ public:
     }
 
     /**
-     * Get data value.
+     * Get the humidity.
+     * If there is any error, it will return NaN.
      * 
-     * @return Sensor data value
+     * @return Humidity in %.
      */
-    float getValue()
+    float getValue() final
     {
-        return m_driver.getHumidity();
+        float humidity = m_driver.getHumidity();
+
+        if (false == isnan(humidity))
+        {
+            humidity += m_offset;
+        }
+
+        return humidity;
+    }
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value in %.
+     */
+    float getOffset() const final
+    {
+        return m_offset;
+    }
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value in %.
+     */
+    void setOffset(float offset) final
+    {
+        m_offset = offset;
     }
 
 private:
 
     SHTSensor&  m_driver;   /**< SHT3x sensor driver. */
+    float       m_offset;   /**< Humidity offset in % for sensor tolerance compensation. */
 
     Sht3XHumidityChannel();
     Sht3XHumidityChannel(const Sht3XHumidityChannel& channel);
@@ -194,6 +254,12 @@ public:
      * Configures the sensor, so it is able to provide sensor data.
      */
     void begin() final;
+
+    /**
+     * Process the sensor driver. Mainly used to read the sensor value and
+     * provide its data cached to the sensor channels.
+     */
+    void process() final;
 
     /**
      * Get sensor name.

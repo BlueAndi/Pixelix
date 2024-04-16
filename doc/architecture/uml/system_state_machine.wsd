@@ -1,4 +1,4 @@
-@startuml
+@startuml System State Machine
 
 title System State Machine
 
@@ -32,14 +32,20 @@ RestartState: /do: Restart
 [*] --> InitState: Power up
 InitState --> APState: [Button pressed]\nSet wifi access point mode
 InitState -> ConnectingState: [Button released]\nSet wifi station mode
+
 APState --> ErrorState: [Failed to start\nwifi access point]
 APState --> RestartState: [Update received]
+
 ConnectingState --> IdleState: [Remote wifi SSID or\npassword missing]
 ConnectingState --> ConnectedState: [Connection successful established]
+
 ConnectedState --> ConnectingState: [Connection lost]
 ConnectedState --> RestartState: [Update finished]
+
 ErrorState --> [*]: [Restart]
+
 IdleState --> [*]: [Restart]
+
 RestartState --> [*]: [Restart]
 
 @enduml

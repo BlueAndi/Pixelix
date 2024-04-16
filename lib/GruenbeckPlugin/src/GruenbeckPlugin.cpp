@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,11 +34,10 @@
  *****************************************************************************/
 #include "GruenbeckPlugin.h"
 #include "AsyncHttpClient.h"
-#include "FileSystem.h"
 
 #include <ArduinoJson.h>
 #include <Logging.h>
-#include <JsonFile.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -61,10 +60,10 @@
  *****************************************************************************/
 
 /* Initialize image path. */
-const char* GruenbeckPlugin::IMAGE_PATH = "/plugin/GruenbeckPlugin/gruenbeck.bmp";
+const char* GruenbeckPlugin::IMAGE_PATH     = "/plugin/GruenbeckPlugin/gruenbeck.bmp";
 
 /* Initialize plugin topic. */
-const char* GruenbeckPlugin::TOPIC      = "/ipAddress";
+const char* GruenbeckPlugin::TOPIC_CONFIG   = "/ipAddress";
 
 /******************************************************************************
  * Public Methods
@@ -72,47 +71,78 @@ const char* GruenbeckPlugin::TOPIC      = "/ipAddress";
 
 void GruenbeckPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool GruenbeckPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        String  ipAddress   = getIPAddress();
-
-        value["ipAddress"] = ipAddress;
-
+        getConfiguration(value);
         isSuccessful = true;
     }
 
     return isSuccessful;
 }
 
-bool GruenbeckPlugin::setTopic(const String& topic, const JsonObject& value)
+bool GruenbeckPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
         String              ipAddress;
-        JsonVariantConst    jsonSet     = value["set"];
+        JsonVariantConst    jsonIpAddress           = value["ipAddress"];
 
-        if (false == jsonSet.isNull())
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
+
+        if (false == jsonIpAddress.isNull())
         {
-            ipAddress = jsonSet.as<String>();
+            jsonCfg["ipAddress"] = jsonIpAddress.as<String>();
             isSuccessful = true;
         }
 
         if (true == isSuccessful)
         {
-            setIPAddress(ipAddress);
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
     }
 
     return isSuccessful;
+}
+
+bool GruenbeckPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
 }
 
 void GruenbeckPlugin::start(uint16_t width, uint16_t height)
@@ -147,37 +177,26 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
         m_textWidget.move(0, offsY);
     }
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
+    PluginWithConfig::start(width, height);
 
     initHttpClient();
 }
 
 void GruenbeckPlugin::stop()
 {
-    String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_requestTimer.stop();
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void GruenbeckPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    PluginWithConfig::process(isConnected);
 
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
@@ -301,24 +320,6 @@ void GruenbeckPlugin::update(YAGfx& gfx)
     }
 }
 
-String GruenbeckPlugin::getIPAddress() const
-{
-    String                      ipAddress;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    ipAddress = m_ipAddress;
-
-    return ipAddress;
-}
-
-void GruenbeckPlugin::setIPAddress(const String& ipAddress)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    m_ipAddress = ipAddress;
-    (void)saveConfiguration();
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -326,6 +327,39 @@ void GruenbeckPlugin::setIPAddress(const String& ipAddress)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void GruenbeckPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["ipAddress"] = m_ipAddress;
+}
+
+bool GruenbeckPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool                status          = false;
+    JsonVariantConst    jsonIpAddress   = jsonCfg["ipAddress"];
+
+    if (false == jsonIpAddress.is<String>())
+    {
+        LOG_WARNING("JSON ipAddress not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        m_ipAddress = jsonIpAddress.as<String>();
+
+        /* Force update on display */
+        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+
+        m_hasTopicChanged = true;
+
+        status = true;
+    }
+
+    return status;
+}
 
 bool GruenbeckPlugin::startHttpRequest()
 {
@@ -359,53 +393,7 @@ void GruenbeckPlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
-            const size_t            JSON_DOC_SIZE   = 256U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
-
-            if (nullptr != jsonDoc)
-            {
-                /* Structure of response-payload for requesting D_Y_10_1
-                *
-                * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
-                *
-                * <data><code>ok</code><D_Y_10_1>  = 31 bytes
-                * XYZ                              = 3 byte (relevant data)
-                * </D_Y_10_1></data>               = 18 bytes
-                */
-
-                /* Start index of relevant data */
-                const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
-
-                /* Length of relevant data */
-                const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
-
-                size_t          payloadSize                     = 0U;
-                const char*     payload                         = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-                char            restCapacity[RELEVANT_DATA_LENGTH + 1];
-                Msg             msg;
-
-                if (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH))
-                {
-                    memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
-                    restCapacity[RELEVANT_DATA_LENGTH] = '\0';
-                }
-                else
-                {
-                    restCapacity[0] = '?';
-                    restCapacity[1] = '\0';
-                }
-
-                (*jsonDoc)["restCapacity"] = restCapacity;
-
-                msg.type    = MSG_TYPE_RSP;
-                msg.rsp     = jsonDoc;
-
-                if (false == this->m_taskProxy.send(msg))
-                {
-                    delete jsonDoc;
-                    jsonDoc = nullptr;
-                }
-            }
+            handleAsyncWebResponse(rsp);
         }
     );
 
@@ -432,6 +420,62 @@ void GruenbeckPlugin::initHttpClient()
     );
 }
 
+void GruenbeckPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        const size_t            JSON_DOC_SIZE   = 256U;
+        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+
+        if (nullptr != jsonDoc)
+        {
+            /* Structure of response-payload for requesting D_Y_10_1
+            *
+            * <data><code>ok</code><D_Y_10_1>XYZ</D_Y_10_1></data>
+            *
+            * <data><code>ok</code><D_Y_10_1>  = 31 bytes
+            * XYZ                              = 3 byte (relevant data)
+            * </D_Y_10_1></data>               = 18 bytes
+            */
+
+            /* Start index of relevant data */
+            const uint32_t  START_INDEX_OF_RELEVANT_DATA    = 31U;
+
+            /* Length of relevant data */
+            const uint32_t  RELEVANT_DATA_LENGTH            = 3U;
+
+            size_t          payloadSize                     = 0U;
+            const void*     vPayload                        = rsp.getPayload(payloadSize);
+            const char*     payload                         = static_cast<const char*>(vPayload);
+            char            restCapacity[RELEVANT_DATA_LENGTH + 1];
+            Msg             msg;
+
+            if ((nullptr != payload) &&
+                (payloadSize >= (START_INDEX_OF_RELEVANT_DATA + RELEVANT_DATA_LENGTH)))
+            {
+                memcpy(restCapacity, &payload[START_INDEX_OF_RELEVANT_DATA], RELEVANT_DATA_LENGTH);
+                restCapacity[RELEVANT_DATA_LENGTH] = '\0';
+            }
+            else
+            {
+                restCapacity[0] = '?';
+                restCapacity[1] = '\0';
+            }
+
+            (*jsonDoc)["restCapacity"] = restCapacity;
+
+            msg.type    = MSG_TYPE_RSP;
+            msg.rsp     = jsonDoc;
+
+            if (false == this->m_taskProxy.send(msg))
+            {
+                delete jsonDoc;
+                jsonDoc = nullptr;
+            }
+        }
+    }
+}
+
 void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
 {
     JsonVariantConst jsonRestCapacity = jsonDoc["restCapacity"];
@@ -445,60 +489,6 @@ void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         m_relevantResponsePart = jsonRestCapacity.as<String>();
         m_httpResponseReceived = true;
     }
-}
-
-bool GruenbeckPlugin::saveConfiguration() const
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    jsonDoc["gruenbeckIP"] = m_ipAddress;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
-}
-
-bool GruenbeckPlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonVariantConst jsonIP = jsonDoc["gruenbeckIP"];
-
-        if (false == jsonIP.is<String>())
-        {
-            LOG_WARNING("JSON gruenbeckIP not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_ipAddress = jsonIP.as<String>();
-        }
-    }
-
-    return status;
 }
 
 void GruenbeckPlugin::clearQueue()

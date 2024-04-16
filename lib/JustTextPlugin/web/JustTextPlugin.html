@@ -35,6 +35,7 @@
                 <h1 class="mt-5">JustTextPlugin</h1>
                 <p><img src="JustTextPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows only text on the whole display. If no text is set, the plugin will be skipped in the slot.</p>
+                <p>If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.</p>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Get text</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</code></pre>
@@ -44,8 +45,8 @@
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set text</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?show=&lt;TEXT&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?show=&lt;TEXT&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?text=&lt;TEXT&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -54,12 +55,15 @@
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Text</h3>
                 <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
-                    </select>
-                    <br />
-                    <label for="justText">Text:</label><br />
-                    <input type="text" id="justText" name="justText" value="" size="20" /><br />
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="justText">Text:</label>
+                        <input type="text" id="justText" name="justText" value="" size="20" />                            
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>          
             </div>
@@ -69,7 +73,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -167,7 +171,7 @@
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/text",
                     isJsonResponse: true,
                     parameter: {
-                        show: justText
+                        text: justText
                     }
                 }).then(function(rsp) {
                     alert("Ok.");

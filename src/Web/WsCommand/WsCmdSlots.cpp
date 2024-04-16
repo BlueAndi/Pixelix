@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -82,7 +82,9 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         uint8_t     slotId      = SlotList::SLOT_ID_INVALID;
         uint8_t     stickySlot  = displayMgr.getStickySlot();
 
-        msg = displayMgr.getMaxSlots();
+        preparePositiveResponse(msg);
+
+        msg += displayMgr.getMaxSlots();
 
         /* Provides for every slot:
          * - Name of plugin.
@@ -120,7 +122,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             msg += duration;
         }
 
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
 
     m_isError = false;

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -70,12 +70,56 @@ Display::Display() :
     IDisplay(),
     m_strip(Board::LedMatrix::width * Board::LedMatrix::height, Board::Pin::ledMatrixDataOutPinNo),
     m_topo(Board::LedMatrix::width, Board::LedMatrix::height),
-    m_ledMatrix()
+    m_ledMatrix(),
+    m_isOn(true)
 {
 }
 
 Display::~Display()
 {
+}
+
+void Display::show()
+{
+    if (true == m_isOn)
+    {
+        const int16_t height = m_ledMatrix.getHeight();
+        const int16_t width = m_ledMatrix.getWidth();
+
+        for (int16_t y = 0; y < height; ++y)
+        {
+            for (int16_t x = 0; x < width; ++x)
+            {
+                HtmlColor htmlColor = static_cast<uint32_t>(m_ledMatrix.getColor(x, y));
+#if CONFIG_DISPLAY_ROTATE180 != 0
+                m_strip.SetPixelColor(m_topo.Map(width - x - 1, height - y - 1), htmlColor);
+#else
+                m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
+#endif
+            }
+        }
+
+        m_strip.Show();
+    }
+}
+
+void Display::off()
+{
+    m_isOn = false;
+
+    /* Simulate powered off display. */
+    m_strip.ClearTo(ColorDef::BLACK);
+    m_strip.Show();
+}
+
+void Display::on()
+{
+    m_isOn = true;
+}
+
+bool Display::isOn() const
+{
+    return m_isOn;
 }
 
 /******************************************************************************

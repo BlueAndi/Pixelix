@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -81,7 +81,7 @@ public:
      * It provides received data to the application. If the final flag is set, the
      * data is complete and ready for showing it.
      */
-    typedef std::function<void(Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal)> DDPCallback;
+    typedef std::function<void(Format format, uint32_t offset, uint8_t bitsPerPixelElement, uint8_t* payload, uint16_t payloadSize, bool isFinal)> DDPCallback;
 
     /**
      * DDP application callback prototype for DMX legacy mode.
@@ -405,13 +405,14 @@ private:
     uint8_t getDataType(const DDPHeader& header);
 
     /**
-     * Get the bits per pixel from the DDP header.
+     * Get the bits per pixel element from the DDP header.
+     * Pixel element means for just one base color, not for the whole pixel.
      * 
      * @param[in] header    DDP header
      * 
-     * @return Bits per pixel
+     * @return Bits per pixel element
      */
-    uint8_t getBitsPerPixel(const DDPHeader& header);
+    uint8_t getBitsPerPixelElement(const DDPHeader& header);
 
     /**
      * Get the offset from the DDP header.
@@ -470,14 +471,14 @@ private:
      * Notifys a registered application and provides the DDP received data.
      * The application needs to copy the data into its own context!
      * 
-     * @param[in] format        Format of the payload data
-     * @param[in] offset        Byte offset in display framebuffer where to continue
-     * @param[in] bitsPerPixel  Bits per pixel in payload data
-     * @param[in] payload       Payload data
-     * @param[in] payloadSize   Payload data size in byte
-     * @param[in] isFinal       If final, its the last data and display shall show it. Otherwise more data will come.
+     * @param[in] format                Format of the payload data
+     * @param[in] offset                Byte offset in display framebuffer where to continue
+     * @param[in] bitsPerPixelElement   Bits per pixel element in payload data
+     * @param[in] payload               Payload data
+     * @param[in] payloadSize           Payload data size in byte
+     * @param[in] isFinal               If final, its the last data and display shall show it. Otherwise more data will come.
      */
-    void ddpNotify(Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal);
+    void ddpNotify(Format format, uint32_t offset, uint8_t bitsPerPixelElement, uint8_t* payload, uint16_t payloadSize, bool isFinal);
 
     /**
      * Notifys a registered application and provides the DMX received data.

@@ -72,7 +72,7 @@
                         </div>
                         <div class="progress">
                             <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
-                        </div>    
+                        </div>
                     </div>
 
                     <div class="tab-pane fade" id="backup" role="tabpanel" aria-labelledby="backup-tab">
@@ -99,12 +99,12 @@
 
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -160,7 +160,7 @@
                 var files       = [];
                 var fileParameters  = {};
                 var fileHeaders     = {};
-                
+
                 if (2 < fileCnt) {
                     fileCnt = 2;
                 }
@@ -170,7 +170,7 @@
 
                     if (("~FIRMWARE_FILENAME~" === file.name) ||
                         ("~FILESYSTEM_FILENAME~" === file.name)) {
-                    
+
                         files.push(file);
                     }
                 }
@@ -325,7 +325,11 @@
 
                             return promiseChain;
                         }).then(function() {
-                            dialog.showInfo("<p>Restore successful.</p>");
+                            return dialog.showInfo("<p>Restore successful.</p>", true);
+                        }).then(function() {
+                            return restClient.reset();
+                        }).then(function() {
+                            return dialog.showInfo("<p>Reset performed to apply restored configuration.</p>");
                         }).catch(function() {
                             dialog.showError("<p>Restore failed.</p>");
                         });
@@ -337,7 +341,7 @@
             $(document).ready(function() {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
-                
+
                 $("#inputFile").on("change", function() {
                     var fileName = $(this).val().split("\\").pop();
                     $(this).next(".custom-file-label").addClass("selected").html(fileName);

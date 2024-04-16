@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,10 +67,10 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    DDPPlugin(const String& name, uint16_t uid) :
+    DDPPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
         m_server(),
         m_mutex(),
@@ -91,14 +91,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new DDPPlugin(name, uid);
+        return new(std::nothrow) DDPPlugin(name, uid);
     }
 
     /**
@@ -149,7 +149,6 @@ public:
 private:
 
     DDPServer           m_server;       /**< DDP server */
-
     Mutex               m_mutex;        /**< Mutex to protect against concurrent access */
     YAGfxDynamicBitmap  m_framebuffer;  /**< Framebuffer used for synchronization */
     bool                m_isUpdated;    /**< Is framebuffer updated and ready to show? */
@@ -157,14 +156,14 @@ private:
     /**
      * On data reception, this method will be called from a different context.
      * 
-     * @param[in] format        Format of the payload data
-     * @param[in] offset        Byte offset in display framebuffer where to continue
-     * @param[in] bitsPerPixel  Bits per pixel in payload data
-     * @param[in] payload       Payload data
-     * @param[in] payloadSize   Payload data size in byte
-     * @param[in] isFinal       If final, its the last data and display shall show it. Otherwise more data will come.
+     * @param[in] format                Format of the payload data
+     * @param[in] offset                Byte offset in display framebuffer where to continue
+     * @param[in] bitsPerPixelElement   Bits per pixel in payload data
+     * @param[in] payload               Payload data
+     * @param[in] payloadSize           Payload data size in byte
+     * @param[in] isFinal               If final, its the last data and display shall show it. Otherwise more data will come.
      */
-    void onData(DDPServer::Format format, uint32_t offset, uint8_t bitsPerPixel, uint8_t* payload, uint16_t payloadSize, bool isFinal);
+    void onData(DDPServer::Format format, uint32_t offset, uint8_t bitsPerPixelElement, uint8_t* payload, uint16_t payloadSize, bool isFinal);
 };
 
 /******************************************************************************

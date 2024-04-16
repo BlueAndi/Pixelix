@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,18 +71,21 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    IconTextPlugin(const String& name, uint16_t uid) :
+    IconTextPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
         m_bitmapWidget(),
         m_textWidget(),
+        m_iconPath(),
+        m_spriteSheetPath(),
         m_isUploadError(false),
-        m_mutex()
+        m_mutex(),
+        m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
     }
@@ -98,14 +101,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new IconTextPlugin(name, uid);
+        return new(std::nothrow)IconTextPlugin(name, uid);
     }
 
     /**
@@ -151,6 +154,21 @@ public:
      *     ]
      * }
      * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
+     * }
+     * 
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -175,7 +193,18 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
+
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
 
     /**
      * Is a upload request accepted or rejected?
@@ -231,17 +260,48 @@ public:
     void setText(const String& formatText);
 
     /**
-     * Load bitmap image / sprite sheet from filesystem.
-     * If a bitmap image is loaded, it will remove a corresponding sprite
-     * sheet file from filesystem.
-     * If a sprite sheet is loaded, it will load the texture file from
-     * filesystem. This assumes that the texture file was uploaded before!
+     * Load bitmap image from filesystem. If a sprite sheet is available, the
+     * bitmap will be automatically used as texture for animation.
      *
-     * @param[in] filename  Bitmap image / Sprite sheet filename
+     * @param[in] filename  Bitmap image filename
      *
      * @return If successul, it will return true otherwise false.
      */
     bool loadBitmap(const String& filename);
+
+    /**
+     * Load sprite sheet from filesystem. If a bitmap is available, it will
+     * be automatically used as texture for animation.
+     *
+     * @param[in] filename  Sprite sheet filename
+     *
+     * @return If successul, it will return true otherwise false.
+     */
+    bool loadSpriteSheet(const String& filename);
+
+    /**
+     * Clear bitmap icon.
+     */
+    void clearBitmap();
+
+    /**
+     * Clear sprite sheet.
+     */
+    void clearSpriteSheet();
+
+    /**
+     * Get icon file path.
+     * 
+     * @param[out] Path to icon file.
+     */
+    void getIconFilePath(String& fullPath) const;
+
+    /**
+     * Get sprite sheet file path.
+     * 
+     * @param[out] Path to sprite sheet file.
+     */
+    void getSpriteSheetFilePath(String& fullPath) const;
 
 private:
 
@@ -254,6 +314,11 @@ private:
      * Plugin topic, used for parameter exchange.
      */
     static const char*      TOPIC_ICON;
+
+    /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*      TOPIC_SPRITESHEET;
 
     /**
      * Icon width in pixels.
@@ -280,8 +345,11 @@ private:
     WidgetGroup             m_iconCanvas;       /**< Canvas used for the bitmap widget. */
     BitmapWidget            m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
     TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    String                  m_iconPath;         /**< Full path to icon. */
+    String                  m_spriteSheetPath;  /**< Full path to spritesheet. */
     bool                    m_isUploadError;    /**< Flag to signal a upload error. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */
 
     /**
      * Get filename with path.

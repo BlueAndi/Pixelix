@@ -12,7 +12,9 @@
     "dependencies": [{
         "name": "YAGfx"
     }, {
-        "name": "ArduinoJson"
+        "owner": "bblanchon",
+        "name": "ArduinoJson",
+        "version": "~6.21.5"
     }, {
         "name": "LinkedList"
     }, {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -238,6 +238,11 @@ public:
     void activateNextSlot();
 
     /**
+     * Activate previous slot.
+     */
+    void activatePreviousSlot();
+
+    /**
      * Activate next fade effect.
      * 
      * @param[in] fadeEffect fadeEffect to be activated.
@@ -250,6 +255,7 @@ public:
      * @return the currently active fadeEffect.
      */
     FadeEffect getFadeEffect();
+    
     /**
      * Move plugin to a different slot.
      *
@@ -324,6 +330,23 @@ public:
      */
     void setNetworkStatus(bool isConnected);
 
+    /**
+     * Power display off.
+     */
+    void displayOff();
+
+    /**
+     * Power display on.
+     */
+    void displayOn();
+
+    /**
+     * Is the display powered on?
+     * 
+     * @return If the display is powered on, it will return true otherwise false.
+     */
+    bool isDisplayOn() const;
+
 private:
 
     /** The process task stack size in bytes */
@@ -354,7 +377,7 @@ private:
     mutable MutexRecursive      m_mutexInterf;
 
     /** Mutex to protect the display update against concurrent access. */
-    MutexRecursive              m_mutexUpdate;
+    mutable MutexRecursive      m_mutexUpdate;
 
     /** Process task handle */
     TaskHandle_t                m_processTaskHandle;
@@ -442,6 +465,15 @@ private:
      * @return Id of next slot
      */
     uint8_t nextSlot(uint8_t slotId);
+
+    /**
+     * Schedule previous slot with a installed and enabled plugin.
+     *
+     * @param[in] slotId    Id of current slot
+     *
+     * @return Id of previous slot
+     */
+    uint8_t previousSlot(uint8_t slotId);
 
     /**
      * Start fade effect.

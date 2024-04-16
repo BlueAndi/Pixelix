@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -72,10 +72,10 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    TempHumidPlugin(const String& name, uint16_t uid) :
+    TempHumidPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
@@ -83,11 +83,11 @@ public:
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
         m_page(TEMPERATURE),
-        m_pageTime(10000U),
+        m_pageTime(DEFAULT_PAGE_TIME),
         m_timer(),
         m_mutex(),
-        m_humid(0.0F),
-        m_temp(0.0F),
+        m_humidity(0.0F),
+        m_temperature(0.0F),
         m_sensorUpdateTimer(),
         m_slotInterf(nullptr),
         m_temperatureSensorCh(nullptr),
@@ -117,14 +117,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new TempHumidPlugin(name, uid);
+        return new(std::nothrow)TempHumidPlugin(name, uid);
     }
 
     /**
@@ -240,7 +240,12 @@ private:
     /**
      * Read sensor only every N milliseconds (currently 90 seconds)
      */
-    static const uint32_t       SENSOR_UPDATE_PERIOD = SIMPLE_TIMER_SECONDS(90U);
+    static const uint32_t       SENSOR_UPDATE_PERIOD    = SIMPLE_TIMER_SECONDS(90U);
+
+    /**
+     * Default time in ms how long one page will be shown until the next page.
+     */
+    static const uint32_t       DEFAULT_PAGE_TIME       = SIMPLE_TIMER_SECONDS(10U);
 
     Fonts::FontType             m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
     WidgetGroup                 m_textCanvas;               /**< Canvas used for the text widget. */
@@ -248,15 +253,25 @@ private:
     BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
     TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
     uint8_t                     m_page;                     /**< Number of page, which to show. */
-    unsigned long               m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
+    uint32_t                    m_pageTime;                 /**< How long to show page (1/4 slot-time or 10s default). */    
     SimpleTimer                 m_timer;                    /**< Timer for changing page. */
     MutexRecursive              m_mutex;                    /**< Mutex to protect against concurrent access. */
-    float                       m_humid;                    /**< Last sensor humidity value */
-    float                       m_temp;                     /**< Last sensor temperature value */
+    float                       m_humidity;                 /**< Last sensor humidity value in %. */
+    float                       m_temperature;              /**< Last sensor temperature value in °C. */
     SimpleTimer                 m_sensorUpdateTimer;        /**< Time used for cyclic sensor reading. */
     const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
     ISensorChannel*             m_temperatureSensorCh;      /**< Temperature sensor channel */
     ISensorChannel*             m_humiditySensorCh;         /**< Humidity sensor channel */
+
+    /**
+     * Get the current temperature and prepare the widgets about shall be shown.
+     */
+    void handleTemperature();
+
+    /**
+     * Get the current humidity and prepare the widgets about shall be shown.
+     */
+    void handleHumidity();
 };
 
 /******************************************************************************

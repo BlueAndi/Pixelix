@@ -103,12 +103,12 @@
                 </div>
             </div>
         </main>
-  
+
         <!-- Footer -->
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -137,7 +137,7 @@
 
             function toggleLogLevel(logLevel) {
                 var index = filter.indexOf(logLevel);
-                                
+
                 if (0 > index) {
                     filter.push(logLevel);
                 } else {
@@ -186,7 +186,7 @@
                 case 5:
                     color = "#0004FF";
                     break;
-                
+
                 default:
                     color = "#0EFF00";
                     break;
@@ -378,7 +378,7 @@
                     /* Enable measurement button too. */
                     isIperfAvailable = true;
                     enableUI();
-                    
+
                 }).catch(function(err) {
                     if ("undefined" !== typeof err) {
                         console.error(err);

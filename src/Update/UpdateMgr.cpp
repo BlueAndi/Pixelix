@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -145,6 +145,14 @@ void UpdateMgr::process()
     if (true == m_isInitialized)
     {
         ArduinoOTA.handle();
+
+        /* Delayed restart request? */
+        if ((true == m_timer.isTimerRunning()) &&
+            (true == m_timer.isTimeout()))
+        {
+            m_isRestartReq = true;
+            m_timer.stop();
+        }
     }
 }
 
@@ -221,7 +229,8 @@ UpdateMgr::UpdateMgr() :
     m_progress(0U),
     m_isRestartReq(false),
     m_textWidget(),
-    m_progressBar()
+    m_progressBar(),
+    m_timer()
 {
     /* Move text for a better look. */
     m_textWidget.move(1, 1);
@@ -272,7 +281,7 @@ void UpdateMgr::onEnd()
     /* Note, there is no need here to start the webserver or the display
      * manager again, because we request a restart of the system now.
      */
-    getInstance().reqRestart();
+    getInstance().reqRestart(0U);
 }
 
 void UpdateMgr::onProgress(unsigned int progress, unsigned int total)
@@ -318,8 +327,12 @@ void UpdateMgr::onError(ota_error_t error)
     /* Mount filesystem, because it may be unmounted in case of failed filesystem update. */
     if (false == FILESYSTEM.begin())
     {
+        /* To ensure the log information will be shown. */
+        const uint32_t RESTART_DELAY = 100U; /* ms */
+
         LOG_FATAL("Couldn't mount filesystem.");
-        getInstance().reqRestart();
+
+        getInstance().reqRestart(RESTART_DELAY);
     }
     else
     {
@@ -333,10 +346,10 @@ void UpdateMgr::onError(ota_error_t error)
             const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
             const uint32_t  SCROLLING_REPEAT_NUM    = 2U;
 
-            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM, true);
+            SysMsg::getInstance().show(infoStr, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
             /* Request a restart */
-            getInstance().reqRestart();
+            getInstance().reqRestart(DURATION_NON_SCROLLING);
         }
     }
 

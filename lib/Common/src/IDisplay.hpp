@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -100,6 +100,23 @@ public:
      * Clear display.
      */
     virtual void clear() = 0;
+
+    /**
+     * Power display off.
+     */
+    virtual void off() = 0;
+
+    /**
+     * Power display on.
+     */
+    virtual void on() = 0;
+
+    /**
+     * Is display powered on?
+     * 
+     * @return If display is powered on, it will return true otherwise false.
+     */
+    virtual bool isOn() const = 0;
 
 protected:
 

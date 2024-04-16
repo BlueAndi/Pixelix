@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,12 +45,13 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <time.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 
 #include <LampWidget.h>
 #include <TextWidget.h>
 #include <WidgetGroup.h>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -64,23 +65,23 @@
  * Shows the current data and time (alternately) over the whole display.
  * It can be configured to show only the date or only the time as well.
  */
-class DateTimePlugin : public Plugin
+class DateTimePlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    DateTimePlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
+    DateTimePlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_textWidget("\\calignNo NTP"),
         m_textCanvas(),
         m_lampCanvas(),
         m_lampWidgets(),
-        m_cfg(CFG_DATE_TIME),
+        m_mode(MODE_DATE_TIME),
         m_checkUpdateTimer(),
         m_durationCounter(0u),
         m_shownSecond(-1),
@@ -92,8 +93,8 @@ public:
         m_dayOnColor(DAY_ON_COLOR),
         m_dayOffColor(DAY_OFF_COLOR),
         m_slotInterf(nullptr),
-        m_mutex()
-
+        m_mutex(),
+        m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
     }
@@ -109,14 +110,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new DateTimePlugin(name, uid);
+        return new(std::nothrow) DateTimePlugin(name, uid);
     }
 
     /**
@@ -128,6 +129,21 @@ public:
      *     "topics": [
      *         "/text"
      *     ]
+     * }
+     * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
      * }
      * 
      * @param[out] topics   Topis in JSON format
@@ -154,8 +170,19 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+    
     /**
      * Set the slot interface, which the plugin can used to request information
      * from the slot, it is plugged in.
@@ -179,7 +206,7 @@ public:
      */
     void start(uint16_t width, uint16_t height) final;
 
-   /**
+    /**
      * Stop the plugin. This is called only once during plugin lifetime.
      * It can be used as a first clean-up, before the plugin will be destroyed.
      * 
@@ -219,52 +246,24 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /** Plugin configuration possibilities. */
-    enum Cfg
-    {
-        CFG_DATE_TIME = 0,  /**< Show date and time */
-        CFG_DATE_ONLY,      /**< Show only the date */
-        CFG_TIME_ONLY,      /**< Show only the time */
-        CFG_MAX             /**< Number of configurations */
-    };
-
-    /**
-     * Get configuration about what shall be shown.
-     * 
-     * @return Configuration
-     */
-    Cfg getCfg() const
-    {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-        Cfg                         cfg             = m_cfg;
-
-        return cfg;
-    }
-
-    /**
-     * Set configuration about what shall be shown.
-     * 
-     * @param[in] cfg   Configuration
-     */
-    void setCfg(Cfg cfg)
-    {
-        MutexGuard<MutexRecursive> guard(m_mutex);
-
-        if ((cfg != m_cfg) &&
-            (CFG_MAX > cfg))
-        {
-            m_cfg = cfg;
-
-            (void)saveConfiguration();
-        }
-    }
-
 private:
 
     /**
-     * Plugin topic, used for configuration.
+     * The plugin provides several modes, which influences whats shown on the
+     * display.
      */
-    static const char*      TOPIC_CFG;
+    enum Mode
+    {
+        MODE_DATE_TIME = 0,  /**< Show date and time */
+        MODE_DATE_ONLY,      /**< Show only the date */
+        MODE_TIME_ONLY,      /**< Show only the time */
+        MODE_MAX             /**< Number of configurations */
+    };
+
+    /**
+     * Plugin topic, used to read/write the configuration.
+     */
+    static const char*      TOPIC_CONFIG;
 
     /** Max. number of lamps. */
     static const uint8_t    MAX_LAMPS               = 7U;
@@ -299,7 +298,7 @@ private:
     WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
     WidgetGroup             m_lampCanvas;               /**< Canvas used for the lamp widget. */
     LampWidget              m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
-    Cfg                     m_cfg;                      /**< Configuration about what shall be shown. */
+    Mode                    m_mode;                     /**< Display mode about what shall be shown. */
     SimpleTimer             m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessary. */
     uint8_t                 m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
     int                     m_shownSecond;              /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
@@ -312,6 +311,23 @@ private:
     Color                   m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
     const ISlotPlugin*      m_slotInterf;               /**< Slot interface */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
      * Get current date/time and update the text, which to be displayed.
@@ -342,16 +358,6 @@ private:
      * @return If the calculation is successful, it will return true otherwise false.
      */
     bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
-
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 
     /**
      * Get the current time as formatted string.

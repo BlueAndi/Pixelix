@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief Three icon plugin
+ * @brief  Three icon plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
  * @addtogroup plugin
@@ -68,16 +68,18 @@ public:
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name.
+     * @param[in] name  Plugin name (must exist over lifetime).
      * @param[in] uid   Unique id.
      */
-    ThreeIconPlugin(const String& name, uint16_t uid) :
+    ThreeIconPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
         m_threeIconCanvas(),
-        m_bitmapWidget(),
-        m_isSpriteSheetAvailable{false},
+        m_bitmapWidgets(),
+        m_iconPaths(),
+        m_spriteSheetPaths(),
         m_isUploadError(false),
-        m_mutex()
+        m_mutex(),
+        m_hasTopicChanged()
     {
         (void)m_mutex.create();
     }
@@ -93,14 +95,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name.
+     * @param[in] name  Plugin name (must exist over lifetime).
      * @param[in] uid   Unique id.
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new ThreeIconPlugin(name, uid);
+        return new(std::nothrow)ThreeIconPlugin(name, uid);
     }
 
     /**
@@ -114,7 +116,22 @@ public:
      *     ]
      * }
      * 
-     * @param[out] topics   Topis in JSON format.
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
+     * }
+     * 
+     * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
 
@@ -138,7 +155,18 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
+    
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
     
     /**
      * Is a upload request accepted or rejected?
@@ -180,19 +208,26 @@ public:
     void update(YAGfx& gfx) final;
 
     /**
-     * Load bitmap or spritesheet from filesystem and show it on the icon position by
-     * icon id.
-     * 
-     * If a animation is required, upload first the bitmap and then the spritesheet.
-     * Because a bitmap upload will remove any spritesheet. This behaviour is necessary
-     * to show only bitmaps too.
+     * Load bitmap image from filesystem. If a sprite sheet is available, the
+     * bitmap will be automatically used as texture for animation.
      *
-     * @param[in] filename  Bitmap filename.
      * @param[in] iconId    The icon id.
+     * @param[in] filename  Bitmap image filename.
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadBitmap(const String& filename, uint8_t iconId);
+    bool loadBitmap(uint8_t iconId, const String& filename);
+
+    /**
+     * Load sprite sheet from filesystem. If a bitmap is available, it will
+     * be automatically used as texture for animation.
+     *
+     * @param[in] iconId    The icon id.
+     * @param[in] filename  Sprite sheet filename.
+     *
+     * @return If successul, it will return true otherwise false.
+     */
+    bool loadSpriteSheet(uint8_t iconId, const String& filename);
 
     /**
      * Get the state of the FORWARD control flag of an icon.
@@ -235,12 +270,40 @@ public:
      */
     void clearBitmap(uint8_t iconId);
 
+    /**
+     * Clear sprite sheet by icon id.
+     * 
+     * @param[in] iconId The icon id. 
+     */
+    void clearSpriteSheet(uint8_t iconId);
+
+    /**
+     * Get icon file path by icon id.
+     * 
+     * @param[in]   iconId      The icon id. 
+     * @param[out]  fullPath    Path to icon file.
+     */
+    void getIconFilePath(uint8_t iconId, String& fullPath) const;
+
+    /**
+     * Get sprite sheet file path by icon id.
+     * 
+     * @param[in]   iconId      The icon id. 
+     * @param[out]  fullPath    Path to sprite sheet file.
+     */
+    void getSpriteSheetFilePath(uint8_t iconId, String& fullPath) const;
+
 private:
 
     /**
      * Plugin topic, used for bitmap/spritesheet upload and control.
      */
     static const char*      TOPIC_BITMAP;
+
+    /**
+     * Plugin topic, used for parameter exchange.
+     */
+    static const char*      TOPIC_SPRITESHEET;
 
    /**
      * Plugin topic, used for only for animation control in case a spritesheet
@@ -274,11 +337,13 @@ private:
     static const char*      FILE_EXT_SPRITE_SHEET;
 
 
-    WidgetGroup             m_threeIconCanvas;                      /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidget[MAX_ICONS];              /**< Bitmap widget, used to show the icon. */
-    bool                    m_isSpriteSheetAvailable[MAX_ICONS];    /**< Flag to indicate whether a spritesheet is used or just a bitmap. */
-    bool                    m_isUploadError;                        /**< Flag to signal a upload error. */
-    mutable MutexRecursive  m_mutex;                                /**< Mutex to protect against concurrent access. */
+    WidgetGroup             m_threeIconCanvas;              /**< Canvas used for the bitmap widget. */
+    BitmapWidget            m_bitmapWidgets[MAX_ICONS];     /**< Bitmap widgets, used to show the icon. */
+    String                  m_iconPaths[MAX_ICONS];         /**< Full path to icons. */
+    String                  m_spriteSheetPaths[MAX_ICONS];  /**< Full path to spritesheets. */
+    bool                    m_isUploadError;                /**< Flag to signal a upload error. */
+    mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged[MAX_ICONS];  /**< Has the topic content changed? */
 
     /**
      * Get image filename with path.

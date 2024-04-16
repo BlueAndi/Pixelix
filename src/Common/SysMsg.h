@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -88,16 +88,30 @@ public:
      * @param[in] msg       Message to show
      * @param[in] duration  Duration in ms, how long a non-scrolling message shall be shown.
      * @param[in] max       How often shall a scrolling message be shown.
-     * @param[in] blocking  If false, function will return immediately, otherwise waits till end.
      */
-    void show(const String& msg, uint32_t duration = 0U, uint32_t max = 0U, bool blocking = false);
+    void show(const String& msg, uint32_t duration = 0U, uint32_t max = 0U);
 
     /**
-     * Is the system message handler ready for the next message?
-     *
-     * @return If system message is ready, it will return true otherwise false.
+     * Enable signal in the corners as additional user information.
      */
-    bool isReady() const;
+    void enableSignal();
+
+    /**
+     * Disable signal in the corners as additional user information.
+     */
+    void disableSignal();
+
+    /**
+     * Is a system message shown in this moment?
+     * 
+     * @return If a system message is shown, it will return true otherwise false.
+     */
+    bool isActive() const;
+
+    /**
+     * Show next message in the queue.
+     */
+    void next();
 
 private:
 

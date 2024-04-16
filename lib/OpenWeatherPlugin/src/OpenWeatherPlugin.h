@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,14 +44,16 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 #include "AsyncHttpClient.h"
+#include "IOpenWeatherSource.h"
 
 #include <WidgetGroup.h>
 #include <BitmapWidget.h>
 #include <TextWidget.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -64,28 +66,48 @@
 /**
  * Shows weather informations provided by OpenWeather: https://openweathermap.org/
  */
-class OpenWeatherPlugin : public Plugin
+class OpenWeatherPlugin : public PluginWithConfig
 {
 public:
 
     /**
+     * The supported OpenWeather sources.
+     */
+    enum OpenWeatherSource
+    {
+        OPENWEATHER_SOURCE_CURRENT = 0, /**< Current weather data */
+        OPENWEATHER_SOURCE_ONE_CALL_25, /**< OpenWeather One-Call API v2.5 */
+        OPENWEATHER_SOURCE_ONE_CALL_30, /**< OpenWeather One-Call API v3.0 */
+    };
+
+    /**
+     * Enumeration to choose an additional weather information to be displayed.
+     */
+    enum OtherWeatherInformation
+    {
+        OTHER_WEATHER_INFO_UVI = 0,     /**< Display UV Index as additional information. */
+        OTHER_WEATHER_INFO_HUMIDITY,    /**< Display humidity in % as additional information. */
+        OTHER_WEATHER_INFO_WIND,        /**< Display windspeed in m/s as additional information. */
+        OTHER_WEATHER_INFO_OFF          /**< Display only general weather information. */
+    };
+
+    /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    OpenWeatherPlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
+    OpenWeatherPlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
         m_bitmapWidget(),
         m_textWidget("\\calign?"),
-        m_apiKey(""),
-        m_latitude("48.858"),/* Example data */
-        m_longitude("2.295"),/* Example data */
-        m_additionalInformation(OFF),
-        m_units("metric"),
+        m_sourceId(OPENWEATHER_SOURCE_ONE_CALL_25),
+        m_updatePeriod(UPDATE_PERIOD),
+        m_source(nullptr),
+        m_additionalInformation(OTHER_WEATHER_INFO_OFF),
         m_configurationFilename(),
         m_client(),
         m_requestTimer(),
@@ -93,28 +115,20 @@ public:
         m_mutex(),
         m_isConnectionError(false),
         m_currentTemp("\\calign?"),
-        m_currentWeatherIcon(IMAGE_PATH_STD_ICON),
+        m_currentWeatherIconFullPath(IMAGE_PATH_STD_ICON),
         m_currentUvIndex("\\calign?"),
         m_currentHumidity("\\calign?"),
         m_currentWindspeed("\\calign?"),
+        m_hasWeatherIconChanged(true),
         m_slotInterf(nullptr),
         m_durationCounter(0u),
         m_isUpdateAvailable(false),
+        m_hasTopicChanged(false),
         m_taskProxy()
     {
         (void)m_mutex.create();
+        createOpenWeatherSource(m_sourceId); /* Default */
     }
-
-    /**
-     * Enumeration to choose an additional weather information to be displayed.
-     */
-    enum OtherWeatherInformation
-    {
-        UVI = 0,    /**< Display UV Index as additional information. */
-        HUMIDITY,   /**< Display humidity in % as additional information. */
-        WIND,       /**< Display windspeed in m/s as additional information. */
-        OFF         /**< Display only general weather information. */
-    };
 
     /**
      * Destroys the plugin.
@@ -131,6 +145,7 @@ public:
         m_client.end();
         
         clearQueue();
+        destroyOpenWeatherSource();
         
         m_mutex.destroy();
     }
@@ -138,14 +153,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new OpenWeatherPlugin(name, uid);
+        return new(std::nothrow)OpenWeatherPlugin(name, uid);
     }
 
     /**
@@ -184,6 +199,21 @@ public:
      *     ]
      * }
      * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
+     * }
+     * 
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -208,8 +238,19 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+    
     /**
      * Set the slot interface, which the plugin can used to request information
      * from the slot, it is plugged in.
@@ -386,9 +427,19 @@ private:
     static const char*      OPEN_WEATHER_BASE_URI;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
+
+    /**
+     * Filename extension of bitmap image file.
+     */
+    static const char*      FILE_EXT_BITMAP;
+
+    /**
+     * Filename extension of sprite sheet parameter file.
+     */
+    static const char*      FILE_EXT_SPRITE_SHEET;
 
     /**
      * Period in ms for requesting data from server.
@@ -407,31 +458,32 @@ private:
     /** Time for duration tick period in ms */
     static const uint32_t   DURATION_TICK_PERIOD    = SIMPLE_TIMER_SECONDS(1U);
 
-    Fonts::FontType             m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup                 m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup                 m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;               /**< Text widget, used for showing the text. */
-    String                      m_apiKey;                   /**< OpenWeather API Key */
-    String                      m_latitude;                 /**< The latitude. */
-    String                      m_longitude;                /**< The longitude. */
-    OtherWeatherInformation     m_additionalInformation;    /**< The configured additional weather information. */
-    String                      m_units;                    /**< The units. */
-    String                      m_configurationFilename;    /**< String used for specifying the configuration filename. */
-    AsyncHttpClient             m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer                 m_requestTimer;             /**< Timer used for cyclic request of new data. */
-    SimpleTimer                 m_updateContentTimer;       /**< Timer used for duration ticks in [s]. */
-    mutable MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
-    bool                        m_isConnectionError;        /**< Is connection error happened? */
-    String                      m_currentTemp;              /**< The current temperature. */
-    String                      m_currentWeatherIcon;       /**< The current weather condition icon. */
-    String                      m_currentUvIndex;           /**< The current UV index. */
-    String                      m_currentHumidity;          /**< The current humidity. */
-    String                      m_currentWindspeed;         /**< The current wind speed. */
-    const ISlotPlugin*          m_slotInterf;               /**< Slot interface */
-    uint8_t                     m_durationCounter;          /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
-    bool                        m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
-    
+    Fonts::FontType             m_fontType;                     /**< Font type which shall be used if there is no conflict with the layout. */
+    WidgetGroup                 m_textCanvas;                   /**< Canvas used for the text widget. */
+    WidgetGroup                 m_iconCanvas;                   /**< Canvas used for the bitmap widget. */
+    BitmapWidget                m_bitmapWidget;                 /**< Bitmap widget, used to show the icon. */
+    TextWidget                  m_textWidget;                   /**< Text widget, used for showing the text. */
+    OpenWeatherSource           m_sourceId;                     /**< OpenWeather source id. */
+    uint32_t                    m_updatePeriod;                 /**< Period in ms for requesting data from server. This is used in case the last request to the server was successful. */
+    IOpenWeatherSource*         m_source;                       /**< OpenWeather source to use to retrieve weather information. */
+    OtherWeatherInformation     m_additionalInformation;        /**< The configured additional weather information. */
+    String                      m_configurationFilename;        /**< String used for specifying the configuration filename. */
+    AsyncHttpClient             m_client;                       /**< Asynchronous HTTP client. */
+    SimpleTimer                 m_requestTimer;                 /**< Timer used for cyclic request of new data. */
+    SimpleTimer                 m_updateContentTimer;           /**< Timer used for duration ticks in [s]. */
+    mutable MutexRecursive      m_mutex;                        /**< Mutex to protect against concurrent access. */
+    bool                        m_isConnectionError;            /**< Is connection error happened? */
+    String                      m_currentTemp;                  /**< The current temperature. */
+    String                      m_currentWeatherIconFullPath;   /**< The current weather condition icon full path. */
+    String                      m_currentUvIndex;               /**< The current UV index. */
+    String                      m_currentHumidity;              /**< The current humidity. */
+    String                      m_currentWindspeed;             /**< The current wind speed. */
+    bool                        m_hasWeatherIconChanged;        /**< Has weather icon changed? If yes, it will be updated otherwise skipped to not disturb running animations. */
+    const ISlotPlugin*          m_slotInterf;                   /**< Slot interface */
+    uint8_t                     m_durationCounter;              /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
+    bool                        m_isUpdateAvailable;            /**< Flag to indicate an updated date value. */
+    bool                        m_hasTopicChanged;              /**< Has the topic content changed? */
+
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
      */
@@ -467,16 +519,44 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
+     * Create OpenWeather source according to id.
+     * 
+     * @param[in] id    OpenWeather source id
+     */
+    void createOpenWeatherSource(OpenWeatherSource id);
+
+    /**
+     * Destroy OpenWeatherSource.
+     */
+    void destroyOpenWeatherSource();
+
+    /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
+
+    /**
+     * Map the UV index value to a color corresponding the the icon.
+    */
+    const char* uvIndexToColor(uint8_t uvIndex);
+
+    /**
      * Updates the text and icon, which to be displayed.
      *
      * @param[in] force Force update.
      */
     void updateDisplay(bool force);
-
-    /**
-     * Map the UV index value to a color corresponding the the icon.
-    */
-    String uvIndexToColor(float uvIndex);
 
     /**
      * Request new data.
@@ -491,21 +571,24 @@ private:
     void initHttpClient(void);
 
     /**
+     * Handle asynchronous web response from the server.
+     * This will be called in LwIP context! Don't modify any member here directly!
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleAsyncWebResponse(const HttpResponse& rsp);
+
+    /**
      * Handle a web response from the server.
      * 
      * @param[in] jsonDoc   Web response as JSON document
      */
-    void handleWebResponse(DynamicJsonDocument& jsonDoc);
+    void handleWebResponse(const DynamicJsonDocument& jsonDoc);
 
     /**
-     * Saves current configuration to JSON file.
+     * Prepares the data to show from the OpenWeather source data.
      */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
+    void prepareDataToShow();
 
     /**
      * Clear the task proxy queue.

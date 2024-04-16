@@ -40,8 +40,8 @@
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/ipAddress</code></pre>
                 <h3 class="mt-1">Set ip-address</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress?set=&lt;IPADDRESS&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/ipAddress?set=&lt;IPADDRESS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/ipAddress?gruenbeckIP=&lt;IPADDRESS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/ipAddress?gruenbeckIP=&lt;IPADDRESS&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -49,13 +49,16 @@
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">IP-address</h3>
-                <form id="myForm" action="javascript:setIPAddress(pluginUid.options[pluginUid.selectedIndex].value, ipAddress.value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getIPAddress(pluginUid.options[pluginUid.selectedIndex].value, 'ipAddress')">
-                    </select>
-                    <br />
-                    <label for="ipAddress">IP-address of server:</label><br />
-                    <input type="text" id="ipAddress" name="ipAddress" value="192.168.178.12" /><br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="gruenbeckIP">IP-address of server:</label>
+                        <input type="text" id="gruenbeckIP" name="gruenbeckIP" value="192.168.178.12" />    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>       
             </div>
@@ -65,7 +68,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -132,17 +135,14 @@
                 });
             };
     
-            function getIPAddress(pluginUid, ipAddressId) {
+            function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var ipAddressInput = document.getElementById(ipAddressId);
-
-                    ipAddressInput.value = rsp.data.ipAddress;
-
+                    $("#gruenbeckIP").val(rsp.data.gruenbeckIP);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -150,15 +150,14 @@
                 });
             }
 
-            function setIPAddress(pluginUid, ipAddress) {
+            function setConfig(pluginUid) {
                 disableUI();
-
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/ipAddress",
                     isJsonResponse: true,
                     parameter: {
-                        set: ipAddress
+                        gruenbeckIP: $("#gruenbeckIP").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -184,9 +183,8 @@
 
                     if (0 < cnt) {
 
-                        return getIPAddress(
-                            select.options[select.selectedIndex].value,
-                            "ipAddress"
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

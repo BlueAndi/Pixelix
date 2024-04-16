@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -123,7 +123,11 @@ public:
         return seek(pos, SeekSet);
     }
 
-    size_t position() const;
+    size_t position() const
+    {
+        return ftell(m_fd);
+    }
+
     size_t size() const;
 
     void close()

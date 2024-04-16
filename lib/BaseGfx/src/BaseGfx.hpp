@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -368,8 +368,6 @@ public:
      * @param[in] x         x-coordinate of upper left point
      * @param[in] y         y-coordinate of upper left point
      * @param[in] bitmap    Bitmap pixel buffer
-     * @param[in] width     Bitmap width in pixel
-     * @param[in] height    Bitmap height in pixel
      */
     void drawBitmap(int16_t x, int16_t y, const BaseGfxBitmap<TColor>& bitmap)
     {

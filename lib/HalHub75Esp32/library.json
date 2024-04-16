@@ -1,0 +1,25 @@
+{
+    "name": "HalHub75Esp32",
+    "version": "0.1.0",
+    "description": "HAL for HUB75 on ESP32.",
+    "authors": [{
+        "name": "Mariano Dupont",
+        "email": "marianomd@gmail.com",
+        "url": "https://github.com/marianomd",
+        "maintainer": true
+    }],
+    "license": "MIT",
+    "dependencies": [{
+        "name": "Common"
+    }, {
+        "name": "Utilities"
+    }, {
+        "name": "YAGfx"
+    }, {
+        "owner": "mrfaptastic",
+        "name": "ESP32 HUB75 LED MATRIX PANEL DMA Display",
+        "version": "~3.0.9"
+    }],
+    "frameworks": "*",
+    "platforms": "*"
+}

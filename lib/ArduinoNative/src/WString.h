@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 /******************************************************************************
@@ -292,6 +293,28 @@ public:
 
             strcpy(tmp, m_buffer);
             strcat(tmp, cBuff);
+
+            delete[] m_buffer;
+            m_buffer = tmp;
+            ++m_size;
+        }
+
+        return *this;
+    }
+
+    String& operator +=(int number)
+    {
+        char* tmp = nullptr;
+        char strNumber[2 + 3 * sizeof(int)];
+
+        sprintf(strNumber, "%d", number);
+
+        tmp = new char[m_size + strlen(strNumber)];
+
+        if (nullptr != tmp)
+        {
+            strcpy(tmp, m_buffer);
+            strcat(tmp, strNumber);
 
             delete[] m_buffer;
             m_buffer = tmp;

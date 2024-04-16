@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -144,7 +144,7 @@ void ResetMon::getResetReasonToStr(String& str, RESET_REASON resetReason)
 {
     switch(resetReason)
     {
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#if defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32S2)
     case NO_MEAN:
         str = "NO_MEAN";
         break;
@@ -213,6 +213,8 @@ void ResetMon::getResetReasonToStr(String& str, RESET_REASON resetReason)
         str = "efuse reset digital core";
         break;
 
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+
     case USB_UART_CHIP_RESET:
         str = "usb uart reset digital core";
         break;
@@ -224,6 +226,8 @@ void ResetMon::getResetReasonToStr(String& str, RESET_REASON resetReason)
     case POWER_GLITCH_RESET:
         str = "power glitch reset digital core and rtc module";
         break;
+
+#endif /* defined(CONFIG_IDF_TARGET_ESP32S3) */
 
 #else
 

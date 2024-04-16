@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,6 +71,9 @@ const char* IconTextLampPlugin::TOPIC_LAMP              = "/lamp";
 /* Initialize plugin topic. */
 const char* IconTextLampPlugin::TOPIC_ICON              = "/bitmap";
 
+/* Initialize plugin topic. */
+const char* IconTextLampPlugin::TOPIC_SPRITESHEET       = "/spritesheet";
+
 /* Initialize bitmap image filename extension. */
 const char* IconTextLampPlugin::FILE_EXT_BITMAP         = ".bmp";
 
@@ -83,17 +86,34 @@ const char* IconTextLampPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
 
 void IconTextLampPlugin::getTopics(JsonArray& topics) const
 {
-    uint8_t lampId = 0U;
+    uint8_t     lampId          = 0U;
+    JsonObject  jsonText        = topics.createNestedObject();
+    JsonObject  jsonIcon        = topics.createNestedObject();
+    JsonObject  jsonSpriteSheet = topics.createNestedObject();
+    JsonObject  jsonLamps       = topics.createNestedObject();
 
-    (void)topics.add(TOPIC_TEXT);
-    (void)topics.add(TOPIC_LAMPS);
+    jsonText["name"]            = TOPIC_TEXT;
+
+    /* Home Assistant support of MQTT discovery (https://www.home-assistant.io/integrations/mqtt) */
+    jsonText["ha"]["component"]             = "text";                           /* MQTT integration */
+    jsonText["ha"]["discovery"]["name"]     = "MQTT text";                      /* Application that is the origin the discovered MQTT. */
+    jsonText["ha"]["discovery"]["cmd_tpl"]  = "{\"text\": \"{{ value }}\" }";   /* Command template */
+    jsonText["ha"]["discovery"]["val_tpl"]  = "{{ value_json.text }}";          /* Value template */
+    jsonText["ha"]["discovery"]["ic"]       = "mdi:form-textbox";               /* Icon (MaterialDesignIcons.com) */
+
+    jsonIcon["name"]            = TOPIC_ICON;
+    jsonIcon["access"]          = "w"; /* Only icon upload is supported. */
+
+    jsonSpriteSheet["name"]     = TOPIC_SPRITESHEET;
+    jsonSpriteSheet["access"]   = "w"; /* Only sprite sheet upload is supported. */
+
+    jsonLamps["name"]           = TOPIC_LAMPS;
+    jsonLamps["access"]         = "r"; /* Only read access allowed. */
 
     for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
     {
         (void)topics.add(String(TOPIC_LAMP) + "/" + lampId);
     }
-
-    (void)topics.add(TOPIC_ICON);
 }
 
 bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
@@ -102,9 +122,16 @@ bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
-        String  formattedText   = getText();
+        String  formattedText       = getText();
+        String  iconFullPath;
+        String  spriteSheetFullPath;
 
-        value["text"] = formattedText;
+        getIconFilePath(iconFullPath);
+        getSpriteSheetFilePath(spriteSheetFullPath);
+
+        value["text"]                   = formattedText;
+        value["iconFullPath"]           = iconFullPath;
+        value["spriteSheetFullPath"]    = spriteSheetFullPath;
 
         isSuccessful = true;
     }
@@ -151,24 +178,56 @@ bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
     return isSuccessful;
 }
 
-bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
+bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
         String              text;
-        JsonVariantConst    jsonShow    = value["show"];
+        JsonVariantConst    jsonText                = value["text"];
+        JsonVariantConst    jsonIconFullPath        = value["iconFullPath"];
+        JsonVariantConst    jsonSpriteSheetFullPath = value["spriteSheetFullPath"];
 
-        if (false == jsonShow.isNull())
+        if (false == jsonText.isNull())
         {
-            text = jsonShow.as<String>();
+            text = jsonText.as<String>();
+
+            setText(text);
+
             isSuccessful = true;
         }
 
-        if (true == isSuccessful)
+        if (false == jsonIconFullPath.isNull())
         {
-            setText(text);
+            String iconFullPath = jsonIconFullPath.as<String>();
+
+            if (true == iconFullPath.isEmpty())
+            {
+                clearBitmap();
+            }
+            else
+            {
+                loadBitmap(iconFullPath);
+            }
+
+            isSuccessful = true;
+        }
+
+        if (false == jsonSpriteSheetFullPath.isNull())
+        {
+            String spriteSheetFullPath = jsonSpriteSheetFullPath.as<String>();
+
+            if (true == spriteSheetFullPath.isEmpty())
+            {
+                clearSpriteSheet();
+            }
+            else
+            {
+                loadSpriteSheet(spriteSheetFullPath);
+            }
+
+            isSuccessful = true;
         }
     }
     else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
@@ -177,7 +236,7 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
         String              lampIdStr           = topic.substring(indexBeginLampId);
         uint8_t             lampId              = MAX_LAMPS;
         bool                status              = Util::strToUInt8(lampIdStr, lampId);
-        JsonVariantConst    jsonSet             = value["set"];
+        JsonVariantConst    jsonSet             = value["state"];
 
         if ((true == status) &&
             (MAX_LAMPS > lampId) &&
@@ -205,11 +264,29 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
     {
         JsonVariantConst jsonFullPath = value["fullPath"];
 
+        /* File upload? */
         if (false == jsonFullPath.isNull())
         {
             String fullPath = jsonFullPath.as<String>();
 
             isSuccessful = loadBitmap(fullPath);
+        }
+    }
+    else if (0U != topic.equals(TOPIC_SPRITESHEET))
+    {
+        JsonVariantConst jsonFullPath = value["fullPath"];
+
+        /* File upload? */
+        if (false == jsonFullPath.isNull())
+        {
+            String fullPath = jsonFullPath.as<String>();
+
+            /* Don't use the return value, because there may be no bitmap
+             * available.
+             */
+            (void)loadSpriteSheet(fullPath);
+
+            isSuccessful = true;
         }
     }
     else
@@ -218,6 +295,48 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObject& value)
     }
 
     return isSuccessful;
+}
+
+bool IconTextLampPlugin::hasTopicChanged(const String& topic)
+{
+    bool hasTopicChanged = false;
+
+    if (0U != topic.equals(TOPIC_TEXT))
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        hasTopicChanged = m_hasTopicTextChanged;
+        m_hasTopicTextChanged = false;
+    }
+    else if (0U != topic.equals(TOPIC_LAMPS))
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        hasTopicChanged = m_hasTopicLampsChanged;
+        m_hasTopicLampsChanged = false;
+    }
+    else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
+    {
+        uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
+        String      lampIdStr           = topic.substring(indexBeginLampId);
+        uint8_t     lampId              = MAX_LAMPS;
+        bool        status              = Util::strToUInt8(lampIdStr, lampId);
+
+        if ((true == status) &&
+            (MAX_LAMPS > lampId))
+        {
+            MutexGuard<MutexRecursive> guard(m_mutex);
+            
+            hasTopicChanged = m_hasTopicLampChanged[lampId];
+            m_hasTopicLampChanged[lampId] = false;
+        }
+    }
+    else
+    {
+        ;
+    }
+
+    return hasTopicChanged;
 }
 
 bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename)
@@ -233,18 +352,20 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
             isAccepted = true;
         }
+    }
+    else if (0U != topic.equals(TOPIC_SPRITESHEET))
+    {
         /* Accept upload of a sprite sheet file. */
-        else if (0U != srcFilename.endsWith(FILE_EXT_SPRITE_SHEET))
+        if (0U != srcFilename.endsWith(FILE_EXT_SPRITE_SHEET))
         {
             dstFilename = getFileName(FILE_EXT_SPRITE_SHEET);
 
             isAccepted = true;
         }
-        else
-        {
-            /* Not accepted. */
-            ;
-        }
+    }
+    else
+    {
+        ;
     }
 
     return isAccepted;
@@ -252,24 +373,37 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    uint16_t                    tcHeight        = 0U;
-    uint16_t                    lampWidth       = 0U;
-    uint16_t                    lampDistance    = 0U;
-    const uint16_t              minDistance     = 1U;   /* Min. distance between lamps. */
-    const uint16_t              minBorder       = 1U;   /* Min. border left and right of all lamps. */
-    const uint16_t              canvasWidth     = width - ICON_WIDTH;
+    uint16_t                    tcHeight            = 0U;
+    uint16_t                    lampWidth           = 0U;
+    uint16_t                    lampDistance        = 0U;
+    const uint16_t              minDistance         = 1U;   /* Min. distance between lamps. */
+    const uint16_t              minBorder           = 1U;   /* Min. border left and right of all lamps. */
+    const uint16_t              canvasWidth         = width - ICON_WIDTH;
+    String                      bitmapFullPath      = getFileName(FILE_EXT_BITMAP);
+    String                      spriteSheetFullPath = getFileName(FILE_EXT_SPRITE_SHEET);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
     (void)m_iconCanvas.addWidget(m_bitmapWidget);
 
-    /* If there is already an icon in the filesystem, it will be loaded.
-     * First check whether it is a animated sprite sheet and if not, try
-     * to load just a bitmap image.
+    /* If there is an icon in the filesystem with the plugin UID as filename,
+     * it will be loaded. First check whether it is a animated sprite sheet
+     * and if not, try to load just a bitmap image.
      */
-    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, getFileName(FILE_EXT_SPRITE_SHEET), getFileName(FILE_EXT_BITMAP)))
+    m_iconPath.clear();
+    m_spriteSheetPath.clear();
+
+    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
     {
-        (void)m_bitmapWidget.load(FILESYSTEM, getFileName(FILE_EXT_BITMAP));
+        if (true == m_bitmapWidget.load(FILESYSTEM, bitmapFullPath))
+        {
+            m_iconPath = bitmapFullPath;
+        }
+    }
+    else
+    {
+        m_iconPath          = bitmapFullPath;
+        m_spriteSheetPath   = spriteSheetFullPath;
     }
 
     /* The text canvas is left aligned to the icon canvas and aligned to the
@@ -313,16 +447,20 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 
 void IconTextLampPlugin::stop()
 {
-    MutexGuard<MutexRecursive> guard(m_mutex);
+    String                      bitmapFullPath       = getFileName(FILE_EXT_BITMAP);
+    String                      spriteSheetFullPath  = getFileName(FILE_EXT_SPRITE_SHEET);
+    MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_BITMAP)))
+    /* Remove icon which is specific for the plugin instance. */
+    if (false != FILESYSTEM.remove(bitmapFullPath))
     {
-        LOG_INFO("File %s removed", getFileName(FILE_EXT_BITMAP).c_str());
+        LOG_INFO("File %s removed", bitmapFullPath.c_str());
     }
 
-    if (false != FILESYSTEM.remove(getFileName(FILE_EXT_SPRITE_SHEET)))
+    /* Remove spritesheet which is specific for the plugin instance. */
+    if (false != FILESYSTEM.remove(spriteSheetFullPath))
     {
-        LOG_INFO("File %s removed", getFileName(FILE_EXT_SPRITE_SHEET).c_str());
+        LOG_INFO("File %s removed", spriteSheetFullPath.c_str());
     }
 }
 
@@ -350,7 +488,12 @@ void IconTextLampPlugin::setText(const String& formatText)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_textWidget.setFormatStr(formatText);
+    if (m_textWidget.getFormatStr() != formatText)
+    {
+        m_textWidget.setFormatStr(formatText);
+
+        m_hasTopicTextChanged = true;
+    }
 }
 
 bool IconTextLampPlugin::loadBitmap(const String& filename)
@@ -358,34 +501,88 @@ bool IconTextLampPlugin::loadBitmap(const String& filename)
     bool                        status = false;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (0U != filename.endsWith(FILE_EXT_BITMAP))
+    if (m_iconPath != filename)
     {
-        status = m_bitmapWidget.load(FILESYSTEM, filename);
+        m_iconPath = filename;
 
-        /* Ensure that only the bitmap image file exists in the filesystem,
-         * otherwise after a restart, the obsolete sprite sheet will
-         * be loaded.
-         */
-        if (true == status)
-        {
-            (void)FILESYSTEM.remove(getFileName(FILE_EXT_SPRITE_SHEET));
-        }
+        m_hasTopicTextChanged = true;
     }
-    else if (0U != filename.endsWith(FILE_EXT_SPRITE_SHEET))
+
+    if (false == m_spriteSheetPath.isEmpty())
     {
-        String bmpFilename = filename;
-
-        bmpFilename.replace(FILE_EXT_SPRITE_SHEET, FILE_EXT_BITMAP);
-
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, filename,  bmpFilename);
+        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
     }
-    else
+    
+    if (false == status)
     {
-        /* Not supported. */
-        ;
+        status = m_bitmapWidget.load(FILESYSTEM, m_iconPath);
     }
 
     return status;
+}
+
+bool IconTextLampPlugin::loadSpriteSheet(const String& filename)
+{
+    bool                        status = false;
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+
+    if (m_spriteSheetPath != filename)
+    {
+        m_spriteSheetPath = filename;
+
+        m_hasTopicTextChanged = true;
+    }
+
+    if (false == m_iconPath.isEmpty())
+    {
+        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
+    }
+
+    return status;
+}
+
+void IconTextLampPlugin::clearBitmap()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (false == m_iconPath.isEmpty())
+    {
+        m_iconPath.clear();
+        m_bitmapWidget.clear(ColorDef::BLACK);
+
+        m_hasTopicTextChanged = true;
+    }
+}
+
+void IconTextLampPlugin::clearSpriteSheet()
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    if (false == m_spriteSheetPath.isEmpty())
+    {
+        m_spriteSheetPath.clear();
+
+        m_hasTopicTextChanged = true;
+    }
+
+    if (false == m_iconPath.isEmpty())
+    {
+        (void)m_bitmapWidget.load(FILESYSTEM, m_iconPath);
+    }
+}
+
+void IconTextLampPlugin::getIconFilePath(String& fullPath) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    fullPath = m_iconPath;
+}
+
+void IconTextLampPlugin::getSpriteSheetFilePath(String& fullPath) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    fullPath = m_spriteSheetPath;
 }
 
 bool IconTextLampPlugin::getLamp(uint8_t lampId) const
@@ -408,7 +605,13 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        m_lampWidgets[lampId].setOnState(state);
+        if (state != m_lampWidgets[lampId].getOnState())
+        {
+            m_lampWidgets[lampId].setOnState(state);
+
+            m_hasTopicLampsChanged = true;
+            m_hasTopicLampChanged[lampId] = true;
+        }
     }
 }
 
@@ -422,7 +625,7 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 
 String IconTextLampPlugin::getFileName(const String& ext)
 {
-    return generateFullPath(ext);
+    return generateFullPath(getUID(), ext);
 }
 
 bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -78,7 +78,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     else
     {
         String              msg;
-        IPluginMaintenance* plugin  = PluginMgr::getInstance().install(m_pluginName);
+        IPluginMaintenance* plugin  = PluginMgr::getInstance().install(m_pluginName.c_str());
 
         if (nullptr == plugin)
         {
@@ -86,7 +86,9 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
         }
         else
         {
-            msg  = DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
+            preparePositiveResponse(msg);
+
+            msg += DisplayMgr::getInstance().getSlotIdByPluginUID(plugin->getUID());
             msg += DELIMITER;
             msg += plugin->getUID();
 
@@ -94,9 +96,9 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
             /* Save current installed plugins to persistent memory. */
             PluginMgr::getInstance().save();
-        }
 
-        sendPositiveResponse(server, client, msg);
+            sendResponse(server, client, msg);
+        }
     }
 
     m_isError = false;

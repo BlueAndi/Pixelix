@@ -48,19 +48,22 @@
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Sensor and Channel</h3>
-                <form id="myForm" action="javascript:setSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value, sensorList.options[sensorList.selectedIndex].value, channelList.options[channelList.selectedIndex].value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value, 'sensorIndex', 'channelIndex')">
-                    </select>
-                    <br />
-                    <label for="sensorList">Sensor:</label><br />
-                    <select id="sensorList" onChange="updateChannelList(sensorList.options[sensorList.selectedIndex].value)">
-                    </select>
-                    <br />
-                    <label for="channelList">Channel:</label><br />
-                    <select id="channelList">
-                    </select>
-                    <br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getSensorAndChannel(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="sensorList">Sensor:</label>
+                        <select id="sensorList" onChange="updateChannelList(sensorList.options[sensorList.selectedIndex].value)">
+                        </select>    
+                    </div>
+                    <div class="form-group">
+                        <label for="channelList">Channel:</label>
+                        <select id="channelList">
+                        </select>    
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>       
             </div>
@@ -70,7 +73,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -169,7 +172,7 @@
                 });
             }
     
-            function getSensorAndChannel(pluginUid, sensorId, channelId) {
+            function getSensorAndChannel(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
@@ -207,7 +210,7 @@
                 });
             }
 
-            function setSensorAndChannel(pluginUid, sensorIndex, channelIndex) {
+            function setConfig(pluginUid) {
                 disableUI();
 
                 return utils.makeRequest({
@@ -215,8 +218,8 @@
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/channel",
                     isJsonResponse: true,
                     parameter: {
-                        sensorIndex: sensorIndex,
-                        channelIndex: channelIndex
+                        sensorIndex: $("#sensorList").val(),
+                        channelIndex: $("#channelList").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -265,9 +268,7 @@
                     if (0 < cnt) {
 
                         return getSensorAndChannel(
-                            select.options[select.selectedIndex].value,
-                            "sensorIndex",
-                            "channelIndex"
+                            select.options[select.selectedIndex].value
                         );
                     }
                 }).catch(function(err) {

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,6 +45,8 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <ISensor.hpp>
+#include <ArduinoJson.h>
+#include <SimpleTimer.hpp>
 
 /******************************************************************************
  * Macros
@@ -90,6 +92,16 @@ public:
     void begin();
 
     /**
+     * Stop the sensor data provider.
+     */
+    void end();
+
+    /**
+     * Process the sensor drivers.
+     */
+    void process();
+
+    /**
      * Get number of installed sensor drivers, independed of the physical
      * sensor availability.
      * 
@@ -127,6 +139,20 @@ public:
                 uint8_t channelStartIdx = 0U);
 
     /**
+     * Load sensor calibration values from persistent memory.
+     * 
+     * @return If successful loaded, it will return true otherwise false.
+     */
+    bool load();
+
+    /**
+     * Save sensor calibration values to persistent memory.
+     * 
+     * @return If successful saved, it will return true otherwise false.
+     */
+    bool save();
+
+    /**
      * Invalid sensor index.
      */
     static const uint8_t    INVALID_SENSOR_IDX  = UINT8_MAX;
@@ -134,17 +160,80 @@ public:
 private:
 
     /**
+     * Full path to sensor calibration value file.
+     */
+    static const char*      SENSOR_CALIB_FILE_NAME;
+
+    /**
+     * Sensor process period in ms.
+     */
+    static const uint32_t   SENSOR_PROCESS_PERIOD   = SIMPLE_TIMER_SECONDS(10U);
+
+    /**
      * Hidden implementation to avoid to include here all available sensors directly.
      */
     SensorDataProviderImpl* m_impl;
+
+    /**
+     * Device id, used for topic registration.
+     */
+    String                  m_deviceId;
+
+    /**
+     * Timer used for cyclic sensor driver processing.
+     */
+    SimpleTimer             m_timer;
+
+    /**
+     * The flag indicates whether the sensor data provider was initialized
+     * by begin() or not. Calling end() will reset the flag.
+     */
+    bool                    m_isInitialized;
 
     /**
      * Constructs the sensor data provder.
      */
     SensorDataProvider();
 
+    /* Not allowed. */
     SensorDataProvider(const SensorDataProvider& instance);
     SensorDataProvider& operator=(const SensorDataProvider& instance);
+
+    /**
+     * Log the sensor availability to the logging system as user information.
+     */
+    void logSensorAvailability();
+
+    /**
+     * Add the channel offset value to the JSON array.
+     * 
+     * @param[out]  jsonOffset  JSON offset array
+     * @param[in]   channel     Sensor channel
+     */
+    void channelOffsetToJson(JsonArray& jsonOffset, const ISensorChannel& channel) const;
+
+    /**
+     * Get the channel offset from the JSON value.
+     * 
+     * @param[out]  channel     Sensor channel
+     * @param[in]   jsonOffset  JSON offset value
+     */
+    void channelOffsetFromJson(ISensorChannel& channel, JsonVariantConst jsonOffset) const;
+
+    /**
+     * Create file with the default calibration values.
+     */
+    void createCalibrationFile();
+
+    /**
+     * Register sensor topics.
+     */
+    void registerSensorTopics();
+
+    /**
+     * Unregister sensor topics.
+     */
+    void unregisterSensorTopics();
 };
 
 /******************************************************************************

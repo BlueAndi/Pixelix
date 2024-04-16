@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,12 +37,12 @@
 #include "FileSystem.h"
 #include "Plugin.hpp"
 #include "JsonFile.h"
-#include "TopicHandlers.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
 #include <SettingsService.h>
+#include <TopicHandlerService.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -74,15 +74,23 @@ const char* PluginMgr::MQTT_SPECIAL_CHARACTERS  = "+#*>$"; /* See MQTT specifica
 
 void PluginMgr::begin()
 {
+    SettingsService& settings = SettingsService::getInstance();
+
+    if (false == settings.open(true))
+    {
+        m_deviceId = settings.getHostname().getDefault();
+    }
+    else
+    {
+        m_deviceId = settings.getHostname().getValue();
+
+        settings.close();
+    }
+
     createPluginConfigDirectory();
 }
 
-void PluginMgr::registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc)
-{
-    m_pluginFactory.registerPlugin(name, createFunc);
-}
-
-IPluginMaintenance* PluginMgr::install(const String& name, uint8_t slotId)
+IPluginMaintenance* PluginMgr::install(const char* name, uint8_t slotId)
 {
     IPluginMaintenance* plugin = m_pluginFactory.createPlugin(name);
 
@@ -108,23 +116,13 @@ bool PluginMgr::uninstall(IPluginMaintenance* plugin)
 
         if (true == status)
         {
-            unregisterTopics(plugin);
+            TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
 
             m_pluginFactory.destroyPlugin(plugin);
         }
     }
 
     return status;
-}
-
-const char* PluginMgr::findFirst()
-{
-    return m_pluginFactory.findFirst();
-}
-
-const char* PluginMgr::findNext()
-{
-    return m_pluginFactory.findNext();
 }
 
 bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& alias)
@@ -136,18 +134,31 @@ bool PluginMgr::setPluginAliasName(IPluginMaintenance* plugin, const String& ali
         (true == isPluginAliasValid(alias)))
     {
         /* First remove current registered topics. */
-        unregisterTopics(plugin);
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
 
         /* Set new alias */
         plugin->setAlias(alias);
 
         /* Register web API, based on new alias. */
-        registerTopics(plugin);
+        TopicHandlerService::getInstance().registerTopics(m_deviceId, plugin);
 
         isSuccessful = true;
     }
 
     return isSuccessful;
+}
+
+void PluginMgr::unregisterAllPluginTopics()
+{
+    uint8_t maxSlots    = DisplayMgr::getInstance().getMaxSlots();
+    uint8_t slotId      = 0U;
+
+    for(slotId = 0U; slotId < maxSlots; ++slotId)
+    {
+        IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
+
+        TopicHandlerService::getInstance().unregisterTopics(m_deviceId, plugin);
+    }
 }
 
 bool PluginMgr::load()
@@ -166,13 +177,16 @@ bool PluginMgr::load()
         LOG_WARNING("Failed to load file %s.", fullConfigFileName.c_str());
         isSuccessful = false;
     }
+    else if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+        isSuccessful = false;
+    }
     else
     {
         JsonArray       jsonSlots   = jsonDoc["slotConfiguration"].as<JsonArray>();
         uint8_t         slotId      = 0;
         const uint8_t   MAX_SLOTS   = DisplayMgr::getInstance().getMaxSlots();
-
-        checkJsonDocOverflow(jsonDoc, __LINE__);
 
         for(JsonObject jsonSlot: jsonSlots)
         {
@@ -225,9 +239,11 @@ void PluginMgr::save()
         }
     }
 
-    checkJsonDocOverflow(jsonDoc, __LINE__);
-
-    if (false == jsonFile.save(fullConfigFileName, jsonDoc))
+    if (true == jsonDoc.overflowed())
+    {
+        LOG_ERROR("JSON document has less memory available.");
+    }
+    else if (false == jsonFile.save(fullConfigFileName, jsonDoc))
     {
         LOG_ERROR("Couldn't save slot configuration.");
     }
@@ -240,25 +256,6 @@ void PluginMgr::save()
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
-
-/**
- * Check dynamic JSON document for overflow and log a corresponding message,
- * otherwise log its document size.
- * 
- * @param[in] jsonDoc   Dynamic JSON document, which to check.
- * @param[in] line      Line number where the document is handled in the module.
- */
-void PluginMgr::checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line)
-{
-    if (true == jsonDoc.overflowed())
-    {
-        LOG_ERROR("JSON document @%d has less memory available.", line);
-    }
-    else
-    {
-        LOG_INFO("JSON document @%d size: %u", line, jsonDoc.memoryUsage());
-    }
-}
 
 void PluginMgr::createPluginConfigDirectory()
 {
@@ -312,10 +309,11 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
 
     if (false == isKeyValuePairMissing)
     {
-        String      name        = jsonName.as<String>();
+        const char* name        = jsonName.as<const char*>();
         uint32_t    duration    = jsonDuration.as<uint32_t>();
 
-        if (false == name.isEmpty())
+        /* Name available? */
+        if ('\0' != name[0])
         {
             IPluginMaintenance* plugin = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
@@ -330,7 +328,7 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
             
                 if (nullptr == plugin)
                 {
-                    LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                    LOG_ERROR("Couldn't create plugin %s (uid %u) in slot %u.", name, uid, slotId);
                 }
                 else
                 {
@@ -344,7 +342,7 @@ void PluginMgr::prepareSlotByConfiguration(uint8_t slotId, const JsonObject& jso
 
                     if (false == install(plugin, slotId))
                     {
-                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name.c_str(), uid, slotId);
+                        LOG_WARNING("Couldn't install %s (uid %u) in slot %u.", name, uid, slotId);
 
                         m_pluginFactory.destroyPlugin(plugin);
                         plugin = nullptr;
@@ -378,7 +376,7 @@ bool PluginMgr::install(IPluginMaintenance* plugin, uint8_t slotId)
 
         if (true == isSuccessful)
         {
-            registerTopics(plugin);
+            TopicHandlerService::getInstance().registerTopics(m_deviceId, plugin);
         }
     }
 
@@ -421,50 +419,6 @@ bool PluginMgr::installToSlot(IPluginMaintenance* plugin, uint8_t slotId)
     }
 
     return status;
-}
-
-void PluginMgr::registerTopics(IPluginMaintenance* plugin)
-{
-    if (nullptr != plugin)
-    {
-        uint8_t         idx                 = 0U;
-        uint8_t         count               = 0U;
-        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
-
-        while(count > idx)
-        {
-            ITopicHandler* handler = topicHandlerList[idx];
-
-            if (nullptr != handler)
-            {
-                handler->registerTopics(plugin);
-            }
-
-            ++idx;
-        }
-    }
-}
-
-void PluginMgr::unregisterTopics(IPluginMaintenance* plugin)
-{
-    if (nullptr != plugin)
-    {
-        uint8_t         idx                 = 0U;
-        uint8_t         count               = 0U;
-        ITopicHandler** topicHandlerList    = TopicHandlers::getList(count);
-
-        while(count > idx)
-        {
-            ITopicHandler* handler = topicHandlerList[idx];
-
-            if (nullptr != handler)
-            {
-                handler->unregisterTopics(plugin);
-            }
-
-            ++idx;
-        }
-    }
 }
 
 bool PluginMgr::isPluginAliasValid(const String& alias)

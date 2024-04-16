@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,11 +44,12 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
 #include <math.h>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -62,18 +63,18 @@
  * The sound reactive plugin shows a bar graph, which represents the frequency
  * bands of audio input.
  */
-class SoundReactivePlugin : public Plugin
+class SoundReactivePlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    SoundReactivePlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
+    SoundReactivePlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_mutex(),
         m_barHeight{0U},
         m_peakHeight{0U},
@@ -82,7 +83,8 @@ public:
         m_maxHeight(0U),
         m_freqBins(nullptr),
         m_corrFactors(),
-        m_peak(INMP441_MAX_SPL)
+        m_peak(INMP441_MAX_SPL),
+        m_hasTopicChanged(false)
     {
         uint8_t bandIdx = 0U;
 
@@ -110,14 +112,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new SoundReactivePlugin(name, uid);
+        return new(std::nothrow)SoundReactivePlugin(name, uid);
     }
 
     /**
@@ -129,6 +131,21 @@ public:
      *     "topics": [
      *         "/text"
      *     ]
+     * }
+     * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
      * }
      * 
      * @param[out] topics   Topis in JSON format
@@ -155,7 +172,18 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
+
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
 
     /**
      * Start the plugin. This is called only once during plugin lifetime.
@@ -195,6 +223,8 @@ public:
      */
     void update(YAGfx& gfx) final;
 
+private:
+
     /* Supported number of frequency bands. */
     enum NumOfBands
     {
@@ -203,55 +233,21 @@ public:
     };
 
     /**
-     * Get current number of shown frequency bands.
-     * 
-     * @return Number of frequency bands
+     * Plugin topic, used to read/write the configuration.
      */
-    NumOfBands getFreqBandLen() const
-    {
-        NumOfBands                  freqBandLen     = NUM_OF_BANDS_8;
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-
-        freqBandLen = m_numOfFreqBands;
-
-        return freqBandLen;
-    }
-
-    /**
-     * Set number of shown frequency bands.
-     * 
-     * @param[in] freqBandLen   Number of frequency bands to show
-     */
-    void setFreqBandLen(NumOfBands freqBandLen)
-    {
-        MutexGuard<MutexRecursive>  guard(m_mutex);
-
-        if (freqBandLen != m_numOfFreqBands)
-        {
-            m_numOfFreqBands = freqBandLen;
-
-            (void)saveConfiguration();
-        }
-    }
-
-private:
-
-    /**
-     * Plugin topic, used for parameter exchange.
-     */
-    static const char*      TOPIC_CHANNEL;
+    static const char*              TOPIC_CONFIG;
 
     /**
      * The max. number of frequency bands, the plugin supports.
      * If you change this, the number of frequency bins which to sum up
      * must be calculated again.
      */
-    static const uint8_t    MAX_FREQ_BANDS                      = 16U;
+    static const uint8_t            MAX_FREQ_BANDS              = 16U;
 
     /**
      * Period in which the peak of a bar will be decayed in ms.
      */
-    static const uint32_t   DECAY_PEAK_PERIOD                   = 100U;
+    static const uint32_t           DECAY_PEAK_PERIOD           = 100U;
 
     /**
      * INMP441 data word bit width.
@@ -317,7 +313,7 @@ private:
      * List with the high edge frequency bin of the center band frequency.
      * This list is valid for 16 bands.
      */
-    static const uint16_t   LIST_16_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_16];
+    static const uint16_t           LIST_16_BAND_HIGH_EDGE_FREQ_BIN[NUM_OF_BANDS_16];
 
     mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
     uint16_t                m_barHeight[MAX_FREQ_BANDS];    /**< The current height of every bar, which represents a frequency band. */
@@ -328,16 +324,23 @@ private:
     float*                  m_freqBins;                     /**< List of frequency bins, calculated from the spectrum analyzer results. On the heap to avoid stack overflow. */
     float                   m_corrFactors[MAX_FREQ_BANDS];  /**< Correction factors per frequency band. The factors are calculated if the signal average is lower than the microphone noise floor. */
     float                   m_peak;                         /**< Determined signal peak over all frequency bands in dB SPL, used for AGC. */
+    bool                    m_hasTopicChanged;              /**< Has the topic content changed? */
 
     /**
-     * Saves current configuration to JSON file.
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
      */
-    bool saveConfiguration() const;
+    void getConfiguration(JsonObject& cfg) const final;
 
     /**
-     * Load configuration from JSON file.
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
      */
-    bool loadConfiguration();
+    bool setConfiguration(JsonObjectConst& cfg) final;
 
     /**
      * Decay graphical signal peak periodically.
@@ -354,7 +357,24 @@ private:
      */
     void handleFreqBins(float* freqBins, size_t freqBinLen);
 
+    /**
+     * Convert the frequency bins to octave frequency bands.
+     * 
+     * @param[out]  octaveFreqBands     Array of octave frequency bands
+     * @param[in]   octaveFreqBandsLen  Number of octave frequency bands
+     * @param[in]   freqBins            Array of frequency bins
+     * @param[in]   freqBinLen          Number of frequency bins
+     */
     void convertToOctaveFreqBands(float* octaveFreqBands, size_t octaveFreqBandsLen, float* freqBins, size_t freqBinLen);
+
+    /**
+     * Calculate the average over the amplitudes of the octave frequency bands.
+     * 
+     * @param[in] octaveFreqBands       Array of octave frequency bands
+     * @param[in] octaveFreqBandsLen    Number of octave frequency bands
+     * 
+     * @return Average amplitude value
+     */
     float calculateAmplitudeAverage(float* octaveFreqBands, size_t octaveFreqBandsLen);
 };
 

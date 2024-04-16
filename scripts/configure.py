@@ -2,7 +2,7 @@
 
 # MIT License
 #
-# Copyright (c) 2019 - 2023 Andreas Merkle (web@blue-andi.de)
+# Copyright (c) 2019 - 2024 Andreas Merkle (web@blue-andi.de)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -40,8 +40,8 @@ _WEB_DATA_PATH = "./data/plugins"
 
 _MENU_FULL_PATH = "./data/js/pluginsSubMenu.js"
 
-_PLUGIN_LIST_FULL_PATH = "./src/Generated/PluginList.hpp"
-_PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.hpp"
+_PLUGIN_LIST_FULL_PATH = "./src/Generated/PluginList.cpp"
+_PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.cpp"
 
 _SERVICE_LIST_FULL_PATH = "./src/Generated/Services.cpp"
 _SERVICE_LIST_TEMPLATE_FULL_PATH = "./scripts/Services.cpp"
@@ -144,26 +144,26 @@ def _generate_web_menu(menu_full_path, plugin_list):
         file_desc.write("]\n")
 
 def _generate_cpp_plugin_list(plugin_list_full_path, plugin_list):
-    """Generate the PluginList.hpp source file.
+    """Generate the PluginList.cpp source file.
 
     Args:
-        plugin_list_full_path (str): Full path to PluginList.hpp where it shall be created.
-        plugin_list (list): List of all plugin names
+        plugin_list_full_path (str): Full path to PluginList.cpp where it shall be created.
+        plugin_list (list): List of all plugin names.
     """
     includes = ""
-    register_calls = ""
+    list_entries = ""
 
     for idx, plugin_name in enumerate(plugin_list):
         if 0 < idx:
             includes += "\n"
-            register_calls += "\n"
+            list_entries += ",\n"
 
         includes += f"#include <{plugin_name}.h>"
-        register_calls += f"    pluginMgr.registerPlugin(\"{plugin_name}\", {plugin_name}::create);"
+        list_entries += f"    {{ \"{plugin_name}\", {plugin_name}::create }}"
 
     data = {
         "INCLUDES": includes,
-        "REGISTER": register_calls
+        "LIST_ENTRIES": list_entries
     }
 
     with open(_PLUGIN_LIST_TEMPLATE_FULL_PATH, "r", encoding="utf-8") as file_desc:

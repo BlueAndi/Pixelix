@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -350,6 +350,7 @@ private:
     Queue<Cmd>      m_cmdQueue;             /**< Command queue */
     Queue<Event>    m_evtQueue;             /**< Event queue */
     Mutex           m_mutex;                /**< Used to protect against concurrent access. */
+    bool            m_hasGlobalMutex;       /**< Has the task the global mutex? */
 
     /* Protected data */
     bool            m_isConnected;          /**< Is a connection established? */
@@ -635,6 +636,18 @@ private:
      * @return User friendly error information. May be nullptr in case of unknown error id.
      */
     const char* errorToStr(int8_t error);
+
+    /**
+     * Take global mutex to serialize all AsyncHttpClient's.
+     * 
+     * @return If taken, it will return true otherwise false. If already taken, it will return false.
+     */
+    bool takeGlobalMutex();
+
+    /**
+     * Give global mutex back for the next one.
+     */
+    void giveGlobalMutex();
 };
 
 /******************************************************************************

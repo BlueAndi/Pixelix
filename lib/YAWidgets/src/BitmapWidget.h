@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -164,30 +164,30 @@ public:
     bool loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName);
 
     /**
-     * Get the animation control flag FORWARD of a sprite sheet 
+     * Get the animation control flag FORWARD of a sprite sheet.
      * 
      * @return If forward, it will return true otherwise false.
      */
     bool isSpriteSheetForward() const;
 
     /**
-     * Set the animation control flag FORWARD of a sprite sheet 
+     * Set the animation control flag FORWARD of a sprite sheet.
      * 
      * @param[in] forward The state to be set.
      */
     void setSpriteSheetForward(bool forward);
 
     /**
-     * Get the animation control flag REPEAT of a sprite sheet 
+     * Get the animation control flag REPEAT of a sprite sheet.
      * 
      * @return If its repeated, it will return true otherwise false.
      */
     bool isSpriteSheetRepeatInfinite() const;
 
     /**
-     * Set the animation control flag REPEAT of a sprite sheet 
+     * Set the animation control flag REPEAT of a sprite sheet.
      * 
-     * @param[in] isRepeat The state to be set.
+     * @param[in] repeat The repeat flat to be set.
      */
     void setSpriteSheetRepeatInfinite(bool repeat);
     

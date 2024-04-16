@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
+#include <WString.h>
 
 /**
  * WiFi utilities
@@ -72,6 +73,14 @@ namespace WiFiUtil
  */
 extern uint8_t getSignalQuality(int8_t rssi);
 
+/**
+ * Add a device unique ID to the destination string.
+ * The device unique ID is derived fromt the wifi
+ * MAC address.
+ * 
+ * @param[in, out] dst  Destination
+ */
+extern void addDeviceUniqueId(String& dst);
 }
 
 #endif  /* WIFI_UTIL_H */

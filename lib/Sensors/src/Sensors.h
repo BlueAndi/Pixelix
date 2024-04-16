@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,6 +54,17 @@
  * Types and Classes
  *****************************************************************************/
 
+/**
+ * Sensor channel default value configuration.
+ */
+typedef struct
+{
+    uint8_t     sensorId;       /**< Sensor id */
+    uint8_t     channelId;      /**< Channel id */
+    const char* jsonStrValue;   /**< Default value as JSON string. */
+    
+} SensorChannelDefaultValue;
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
@@ -70,6 +81,15 @@ namespace Sensors
  * @return Sensor data provider implementation instance
  */
 extern SensorDataProviderImpl* getSensorDataProviderImpl();
+
+/**
+ * Get the sensor channel default values.
+ * 
+ * @param[in] values    Number of values in the list.
+ * 
+ * @return List of default values
+ */
+extern const SensorChannelDefaultValue* getSensorChannelDefaultValues(uint8_t& values);
 
 }
 

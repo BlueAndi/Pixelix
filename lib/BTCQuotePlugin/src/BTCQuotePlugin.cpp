@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@
 #include <ArduinoJson.h>
 #include <Logging.h>
 #include <JsonFile.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -224,26 +225,41 @@ void BTCQuotePlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
-            const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+            handleAsyncWebResponse(rsp);
+        }
+    );
+}
 
-            if (nullptr != jsonDoc)
+void BTCQuotePlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        const size_t            JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+
+        if (nullptr != jsonDoc)
+        {
+            size_t                          payloadSize = 0U;
+            const void*                     vPayload    = rsp.getPayload(payloadSize);
+            const char*                     payload     = static_cast<const char*>(vPayload);
+            const size_t                    FILTER_SIZE = 128U;
+            StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
+
+            jsonFilterDoc["bpi"]["USD"]["rate_float"]   = true;
+            jsonFilterDoc["bpi"]["USD"]["rate"]         = true;
+
+            if (true == jsonFilterDoc.overflowed())
             {
-                size_t                          payloadSize = 0U;
-                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-                const size_t                    FILTER_SIZE = 128U;
-                StaticJsonDocument<FILTER_SIZE> filter;
-                DeserializationError            error;
-
-                filter["bpi"]["USD"]["rate_float"]      = true;
-                filter["bpi"]["USD"]["rate"]            = true;
-
-                if (true == filter.overflowed())
-                {
-                    LOG_ERROR("Less memory for filter available.");
-                }
-
-                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
+                LOG_ERROR("Less memory for filter available.");
+            }
+            else if ((nullptr == payload) ||
+                     (0U == payloadSize))
+            {
+                LOG_ERROR("No payload.");
+            }
+            else
+            {
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
 
                 if (DeserializationError::Ok != error.code())
                 {
@@ -264,17 +280,24 @@ void BTCQuotePlugin::initHttpClient()
                 }
             }
         }
-    );
+    }
 }
 
 void BTCQuotePlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 {
-    m_relevantResponsePart = jsonDoc["bpi"]["USD"]["rate"].as<String>() + " $/BTC";
-    m_relevantResponsePart.replace(",", "'");               // beautify to european(?) standard formatting ' for 1000s
-    
-    LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
+    JsonVariantConst    jsonBpi     = jsonDoc["bpi"];
+    JsonVariantConst    jsonUsd     = jsonBpi["USD"];
+    JsonVariantConst    jsonRate    = jsonUsd["rate"];
 
-    m_textWidget.setFormatStr(m_relevantResponsePart);
+    if (false == jsonRate.isNull())
+    {
+        m_relevantResponsePart = jsonRate.as<String>() + " $/BTC";
+        m_relevantResponsePart.replace(",", "'");  /* Beautify to european(?) standard formatting ' for 1000s */
+        
+        LOG_INFO("BTC/USD to print %s", m_relevantResponsePart.c_str());
+
+        m_textWidget.setFormatStr(m_relevantResponsePart);
+    }
 }
 
 void BTCQuotePlugin::clearQueue()

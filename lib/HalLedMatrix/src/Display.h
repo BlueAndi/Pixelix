@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@
  *****************************************************************************/
 #include <stdint.h>
 #include <IDisplay.hpp>
-#include <NeoPixelBrightnessBus.h>
+#include <NeoPixelBusLg.h>
 #include <ColorDef.hpp>
 #include <YAGfxBitmap.h>
 
@@ -95,24 +95,7 @@ public:
      * Show framebuffer on physical display. This may be synchronous
      * or asynchronous.
      */
-    void show() final
-    {
-        int16_t x = 0;
-        int16_t y = 0;
-
-        for(y = 0; y < m_ledMatrix.getHeight(); ++y)
-        {
-            for(x = 0; x < m_ledMatrix.getWidth(); ++x)
-            {
-                HtmlColor htmlColor = static_cast<uint32_t>(m_ledMatrix.getColor(x, y));
-
-                m_strip.SetPixelColor(m_topo.Map(x, y), htmlColor);
-            }
-        }
-
-        m_strip.Show();
-        return;
-    }
+    void show() final;
 
     /**
      * The display is ready, when the last physical pixel update is finished.
@@ -132,15 +115,14 @@ public:
      */
     void setBrightness(uint8_t brightness) final
     {
-        /* To protect the electronic parts, the brigntness will be scaled down
+        /* To protect the electronic parts, the luminance will be scaled down
          * according to the max. supply current.
          */
-        const uint8_t SAFE_BRIGHTNESS =
+        const uint8_t SAFE_LUMINANCE =
             (Board::LedMatrix::supplyCurrentMax * brightness) /
             (Board::LedMatrix::maxCurrentPerLed * Board::LedMatrix::width *Board::LedMatrix::height);
 
-        m_strip.SetBrightness(SAFE_BRIGHTNESS);
-        return;
+        m_strip.SetLuminance(SAFE_LUMINANCE);
     }
 
     /**
@@ -198,19 +180,43 @@ public:
         return m_ledMatrix.getColor(x, y);
     }
 
+    /**
+     * Power display off.
+     */
+    void off() final;
+
+    /**
+     * Power display on.
+     */
+    void on() final;
+
+    /**
+     * Is display powered on?
+     * 
+     * @return If display is powered on, it will return true otherwise false.
+     */
+    bool isOn() const final;
+
 private:
 
-    /** Pixel representation of the LED matrix */
-    NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod>                  m_strip;
+    /**
+     * Pixel representation of the LED matrix. Gamma correction disabled.
+     */
+    NeoPixelBusLg<NeoGrbFeature, Neo800KbpsMethod, NeoGammaNullMethod>      m_strip;
 
     /** Panel topology, used to map coordinates to the framebuffer. */
-    NeoTopology<ColumnMajorAlternatingLayout>                               m_topo;
+    NeoTopology<CONFIG_LED_TOPO>                                            m_topo;
 
     /**
      * The LED matrix framebuffer.
      * This is the drawback for the direct color manipulation via getColor().
      */
     YAGfxStaticBitmap<Board::LedMatrix::width, Board::LedMatrix::height>    m_ledMatrix;
+
+    /**
+     * Is display on?
+     */
+    bool                                                                    m_isOn;
 
     /**
      * Construct display.

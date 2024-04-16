@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@
  * Includes
  *****************************************************************************/
 #include "AsyncHttpClient.h"
-#include "Plugin.hpp"
+#include "PluginWithConfig.hpp"
 
 #include <WidgetGroup.h>
 #include <BitmapWidget.h>
@@ -54,6 +54,7 @@
 #include <SimpleTimer.hpp>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
+#include <FileSystem.h>
 
 /******************************************************************************
  * Macros
@@ -71,18 +72,18 @@
  *
  * Powered by sunrise-sunset.org!
  */
-class SunrisePlugin : public Plugin
+class SunrisePlugin : public PluginWithConfig
 {
 public:
 
     /**
      * Constructs the plugin.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      */
-    SunrisePlugin(const String& name, uint16_t uid) :
-        Plugin(name, uid),
+    SunrisePlugin(const char* name, uint16_t uid) :
+        PluginWithConfig(name, uid, FILESYSTEM),
         m_fontType(Fonts::FONT_TYPE_DEFAULT),
         m_textCanvas(),
         m_iconCanvas(),
@@ -95,6 +96,7 @@ public:
         m_client(),
         m_mutex(),
         m_requestTimer(),
+        m_hasTopicChanged(false),
         m_taskProxy()
     {
         (void)m_mutex.create();
@@ -122,14 +124,14 @@ public:
     /**
      * Plugin creation method, used to register on the plugin manager.
      *
-     * @param[in] name  Plugin name
+     * @param[in] name  Plugin name (must exist over lifetime)
      * @param[in] uid   Unique id
      *
      * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
      */
-    static IPluginMaintenance* create(const String& name, uint16_t uid)
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new SunrisePlugin(name, uid);
+        return new(std::nothrow)SunrisePlugin(name, uid);
     }
 
     /**
@@ -168,6 +170,21 @@ public:
      *     ]
      * }
      * 
+     * By default a topic is readable and writeable.
+     * This can be set explicit with the "access" key with the following possible
+     * values:
+     * - Only readable: "r"
+     * - Only writeable: "w"
+     * - Readable and writeable: "rw"
+     * 
+     * Example:
+     * {
+     *     "topics": [{
+     *         "name": "/text",
+     *         "access": "r"
+     *     }]
+     * }
+     * 
      * @param[out] topics   Topis in JSON format
      */
     void getTopics(JsonArray& topics) const final;
@@ -192,8 +209,19 @@ public:
      * 
      * @return If successful it will return true otherwise false.
      */
-    bool setTopic(const String& topic, const JsonObject& value) final;
+    bool setTopic(const String& topic, const JsonObjectConst& value) final;
 
+    /**
+     * Is the topic content changed since last time?
+     * Every readable volatile topic shall support this. Otherwise the topic
+     * handlers might not be able to provide updated information.
+     * 
+     * @param[in] topic The topic which to check.
+     * 
+     * @return If the topic content changed since last time, it will return true otherwise false.
+     */
+    bool hasTopicChanged(const String& topic) final;
+    
     /**
      * Start the plugin. This is called only once during plugin lifetime.
      * It can be used as deferred initialization (after the constructor)
@@ -235,22 +263,6 @@ public:
      */
     void update(YAGfx& gfx) final;
 
-    /**
-     * Get geo location.
-     *
-     * @param[out] longitude    Longitude
-     * @param[out] latitude     Latitude
-     */
-    void getLocation(String& longitude, String&latitude) const;
-
-    /**
-     * Set geo location.
-     *
-     * @param[in] longitude Longitude
-     * @param[in] latitude  Latitude
-     */
-    void setLocation(const String& longitude, const String& latitude);
-
 private:
 
     /**
@@ -269,9 +281,14 @@ private:
     static const char*      IMAGE_PATH;
 
     /**
-     * Plugin topic, used for parameter exchange.
+     * Plugin topic, used to read/write the configuration.
      */
-    static const char*      TOPIC;
+    static const char*      TOPIC_CONFIG;
+
+    /**
+     * Sunset and sunrise times API base URI.
+     */
+    static const char*      BASE_URI;
 
     /**
      * Period in ms for requesting sunset/sunrise from server.
@@ -301,6 +318,7 @@ private:
     SimpleTimer             m_requestDataTimer;         /**< Timer, used for cyclic request of new data. */
     mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
     SimpleTimer             m_requestTimer;             /**< Timer is used for cyclic sunrise/sunset http request. */
+    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.
@@ -335,6 +353,22 @@ private:
     TaskProxy<Msg, 2U, 0U> m_taskProxy;
 
     /**
+     * Get configuration in JSON.
+     * 
+     * @param[out] cfg  Configuration
+     */
+    void getConfiguration(JsonObject& cfg) const final;
+
+    /**
+     * Set configuration in JSON.
+     * 
+     * @param[in] cfg   Configuration
+     * 
+     * @return If successful set, it will return true otherwise false.
+     */
+    bool setConfiguration(JsonObjectConst& cfg) final;
+
+    /**
      * Request new data.
      *
      * @return If successful it will return true otherwise false.
@@ -345,6 +379,14 @@ private:
      * Register callback function on response reception.
      */
     void initHttpClient(void);
+
+    /**
+     * Handle asynchronous web response from the server.
+     * This will be called in LwIP context! Don't modify any member here directly!
+     * 
+     * @param[in] jsonDoc   Web response as JSON document
+     */
+    void handleAsyncWebResponse(const HttpResponse& rsp);
 
     /**
      * Handle a web response from the server.
@@ -363,16 +405,6 @@ private:
      * @return A formatted (timezone adjusted) time string according to the configured time format.
      */
     String addCurrentTimezoneValues(const String& dateTimeString) const;
-
-    /**
-     * Saves current configuration to JSON file.
-     */
-    bool saveConfiguration() const;
-
-    /**
-     * Load configuration from JSON file.
-     */
-    bool loadConfiguration();
 
     /**
      * Clear the task proxy queue.

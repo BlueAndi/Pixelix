@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@
  * Includes
  *****************************************************************************/
 #include "WsCmdPlugins.h"
-#include "PluginMgr.h"
+#include "PluginList.h"
 
 #include <Util.h>
 
@@ -76,27 +76,28 @@ void WsCmdPlugins::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     }
     else
     {
-        String      msg;
-        uint8_t     cnt         = 0U;
-        const char* pluginName  = PluginMgr::getInstance().findFirst();
+        String                      msg;
+        uint8_t                     pluginTypeListLength    = 0U;
+        const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
+        uint8_t                     idx                     = 0U;
 
-        while(nullptr != pluginName)
+        preparePositiveResponse(msg);
+
+        while(pluginTypeListLength > idx)
         {
-            if (0 < cnt)
+            if (0 < idx)
             {
                 msg += DELIMITER;
             }
 
             msg += "\"";
-            msg += pluginName;
+            msg += pluginTypeList[idx].name;
             msg += "\"";
 
-            pluginName = PluginMgr::getInstance().findNext();
-
-            ++cnt;
+            ++idx;
         }
 
-        sendPositiveResponse(server, client, msg);
+        sendResponse(server, client, msg);
     }
 
     m_isError = false;

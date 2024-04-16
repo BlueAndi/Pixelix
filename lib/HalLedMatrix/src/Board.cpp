@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,8 +62,14 @@ using namespace Board;
 /** Digital output pin: Onboard LED */
 const DOutPin<Pin::onBoardLedPinNo>                 Board::onBoardLedOut;
 
-/** Digital input pin: User button (input with pull-up) */
-const DInPin<Pin::userButtonPinNo, INPUT_PULLUP>    Board::userButtonIn;
+/** Digital input pin: Button "ok" (input with pull-up) */
+const DInPin<Pin::buttonOkPinNo, INPUT_PULLUP>      Board::buttonOkIn;
+
+/** Digital input pin: Button "left" (input with pull-up) */
+const DInPin<Pin::buttonLeftPinNo, INPUT_PULLUP>    Board::buttonLeftIn;
+
+/** Digital input pin: Button "right" (input with pull-up) */
+const DInPin<Pin::buttonRightPinNo, INPUT_PULLUP>   Board::buttonRightIn;
 
 /** Digital output pin: Test pin (only for debug purposes) */
 const DOutPin<Pin::testPinNo>                       Board::testPinOut;
@@ -77,6 +83,12 @@ const AnalogPin<Pin::ldrInPinNo>                    Board::ldrIn;
 /** Digital input pin: DHT Sensor (input with pull-up) */
 const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>         Board::dhtIn;
 
+/** Analog input pin: battery voltage in */
+const AnalogPin<Pin::batteryInPinNo>                Board::batteryVoltageIn;
+
+/** Digital output pin: Buzzer */
+const DOutPin<Pin::buzzerOutPinNo>                  Board::buzzerOut;
+
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
@@ -85,11 +97,15 @@ const DInPin<Pin::dhtInPinNo, INPUT_PULLUP>         Board::dhtIn;
 static const IoPin* ioPinList[] =
 {
     &onBoardLedOut,
-    &userButtonIn,
+    &buttonOkIn,
+    &buttonLeftIn,
+    &buttonRightIn,
     &testPinOut,
     &ledMatrixDataOut,
     &ldrIn,
-    &dhtIn
+    &dhtIn,
+    &batteryVoltageIn,
+    &buzzerOut
 };
 
 /******************************************************************************
@@ -120,6 +136,9 @@ extern void Board::init()
             ioPinList[index]->init();
         }
     }
+
+    /* Disable buzzer */
+    buzzerOut.write(LOW);
 }
 
 extern void Board::reset()
@@ -127,6 +146,23 @@ extern void Board::reset()
     ESP.restart();
 
     /* Will never be reached. */
+}
+
+extern void Board::ledOn()
+{
+    /* High active */
+    onBoardLedOut.write(HIGH);
+}
+
+extern void Board::ledOff()
+{
+    /* High active */
+    onBoardLedOut.write(LOW);
+}
+
+extern bool Board::isLedOn()
+{
+    return (HIGH == onBoardLedOut.read()) ? true : false;
 }
 
 /******************************************************************************

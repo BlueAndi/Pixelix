@@ -44,11 +44,13 @@
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set OpenWeather related configuration.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather?apiKey=&lt;API-KEY&gt;&lat=&lt;LATITUDE&gt;&lon=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather?apiKey=&lt;API-KEY&gt;&lat=&lt;LATITUDE&gt;&lon=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
+                    <li>SOURCE-ID: The OpenWeather source id - 0: Current weather / 1: One-Call API v2.5 / 2: One-Call API v3.0</li>
+                    <li>UPDATE-PERIOD: The period in minutes for updating the weather information. Please consider your limits, see <a href="https://m.openweathermap.org/price" target="_blank">professional collections price table</a>.</li>
                     <li>API-KEY: The OpenWeather api key.</li>
                     <li>LATITUDE: The latitude of the location.</li>
                     <li>LONGITUDE: The longitude of the location.</li>
@@ -57,29 +59,52 @@
 
                 </ul>
                 <h3 class="mt-2">Configuration</h3>
-                <form id="myForm" action="javascript:setWeatherData(pluginUid.options[pluginUid.selectedIndex].value, apiKey.value, lat.value, lon.value, other.options[other.selectedIndex].value, units.options[units.selectedIndex].value)">
-                    <label for="pluginUid">Plugin UID:</label><br />
-                    <select id="pluginUid" size="1" onChange="getWeatherData(pluginUid.options[pluginUid.selectedIndex].value, 'apiKey', 'lat', lon, 'other.options[other.selectedIndex].value, units.options[units.selectedIndex].value')">
-                    </select>
-                    <br />
-                    <label for="apiKey">API key:</label><br />
-                    <input type="text" id="apiKey" name="apiKey" value="Your API key" /><br />
-                    <label for="lat">Latitude:</label><br />
-                    <input type="text" id="lat" name="lat" value="The latitude" /><br />
-                    <label for="lon">Longitude:</label><br />
-                    <input type="text" id="lon" name="lon" value="The longitude" /><br />
-                    <label for="other">Additional information:</label><br />
-                    <select id="other" size="1">
-                        <option value="0">uvIndex</option>
-                        <option value="1">humidity</option>
-                        <option value="2">windspeed</option>
-                        <option value="3">off</option>
-                    </select><br />
-                    <label for="units">Units:</label><br />
-                    <select id="units" size="1">
-                        <option value="metric">metric</option>
-                        <option value="imperial">imperial</option>
-                    </select><br />
+                <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                    <div class="form-group">
+                        <label for="pluginUid">Plugin UID:</label>
+                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sourceId">OpenWeather source id:</label>
+                        <select id="sourceId" size="1">
+                            <option value="0">Current weather</option>
+                            <option value="1">One-Call API v2.5</option>
+                            <option value="2">One-Call API v3.0</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="updatePeriod">Update period in minutes:</label>
+                        <input type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" />
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKey">API key:</label>
+                        <input type="text" id="apiKey" name="apiKey" value="Your API key" />
+                    </div>
+                    <div class="form-group">
+                        <label for="latitude">Latitude:</label>
+                        <input type="text" id="latitude" name="latitude" value="The latitude" />
+                    </div>
+                    <div class="form-group">
+                        <label for="longitude">Longitude:</label>
+                        <input type="text" id="longitude" name="longitude" value="The longitude" />
+                    </div>
+                    <div class="form-group">
+                        <label for="other">Additional information:</label>
+                        <select id="other" size="1">
+                            <option value="0">uvIndex</option>
+                            <option value="1">humidity</option>
+                            <option value="2">windspeed</option>
+                            <option value="3">off</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="units">Units:</label>
+                        <select id="units" size="1">
+                            <option value="metric">metric</option>
+                            <option value="imperial">imperial</option>
+                        </select>
+                    </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
             </div>
@@ -89,7 +114,7 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2023 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
                 <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
@@ -109,15 +134,15 @@
 
             var pluginName  = "OpenWeatherPlugin";
             var restClient  = new pixelix.rest.Client();
-    
+
             function enableUI() {
                 utils.enableForm("myForm", true);
             }
-    
+
             function disableUI() {
                 utils.enableForm("myForm", false);
             }
-    
+
             function getPluginInstances() {
                 return restClient.getPluginInstances().then(function(rsp) {
                     var slotIndex   = 0;
@@ -130,7 +155,7 @@
 
                             optionText = rsp.data.slots[slotIndex].uid;
                             optionText += " (";
-                            
+
                             if (0 === rsp.data.slots[slotIndex].alias.length) {
                                 optionText += "-"
                             } else {
@@ -142,7 +167,7 @@
                             $option = $("<option>")
                                         .attr("value", "" + rsp.data.slots[slotIndex].uid)
                                         .text(optionText);
-                            
+
                             $("#pluginUid").append($option);
 
                             ++cnt;
@@ -155,46 +180,43 @@
                     return Promise.resolve(0);
                 });
             };
-    
-            function getWeatherData(pluginUid, apiKeyId, latId, lonId, otherId, unitId) {
+
+            function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/weather",
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var apiKeyInput     = document.getElementById(apiKeyId);
-                    var latInput        = document.getElementById(latId);
-                    var lonInput        = document.getElementById(lonId);
-                    var otherInput      = document.getElementById(otherId);
-                    var unitInput       = document.getElementById(unitId);
-
-                    apiKeyInput.value           = rsp.data.apiKey;
-                    latInput.value              = rsp.data.lat;
-                    lonInput.value              = rsp.data.lon;
-                    otherInput.options.value    = rsp.data.other;
-                    unitInput.options.value     = rsp.data.unit;
-
+                    $("#sourceId").val(rsp.data.sourceId);
+                    $("#updatePeriod").val(rsp.data.updatePeriod);
+                    $("#apiKey").val(rsp.data.apiKey);
+                    $("#latitude").val(rsp.data.latitude);
+                    $("#longitude").val(rsp.data.longitude);
+                    $("#other").val(rsp.data.other);
+                    $("#units").val(rsp.data.units);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
                     enableUI();
                 });
             }
-    
-            function setWeatherData(pluginUid, apiKey, lat, lon, other, units) {
+
+            function setConfig(pluginUid) {
                 disableUI();
-    
+
                 return utils.makeRequest({
                     method: "POST",
                     url: "/rest/api/v1/display/uid/" + pluginUid + "/weather",
                     isJsonResponse: true,
                     parameter: {
-                        apiKey: apiKey,
-                        lat: lat,
-                        lon: lon,
-                        other: other,
-                        units:units
+                        sourceId: $("#sourceId").val(),
+                        updatePeriod: $("#updatePeriod").val(),
+                        apiKey: $("#apiKey").val(),
+                        latitude: $("#latitude").val(),
+                        longitude: $("#longitude").val(),
+                        other: $("#other").val(),
+                        units: $("#units").val()
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -208,25 +230,20 @@
             $(document).ready(function() {
                 menu.addSubMenu(menu.data, "Plugins", pluginSubMenu);
                 menu.create("menu", menu.data);
-                
+
                 utils.injectOrigin("injectOrigin", "{{ORIGIN}}");
 
                 /* Disable all forms, until the plugin instances are loaded. */
                 disableUI();
-    
+
                 /* Load all plugin instances. */
                 getPluginInstances().then(function(cnt) {
                     var select = document.getElementById("pluginUid");
-    
+
                     if (0 < cnt) {
-    
-                        return getWeatherData(
-                            select.options[select.selectedIndex].value,
-                            "apiKey",
-                            "lat",
-                            "lon",
-                            "other",
-                            "units"
+
+                        return getConfig(
+                            select.options[select.selectedIndex].value
                         );
                     }
                 });

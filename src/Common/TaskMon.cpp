@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -144,9 +144,11 @@ void TaskMon::process()
 #endif  /* configUSE_TRACE_FACILITY */
 }
 
-String TaskMon::taskState2Str(eTaskState state)
+#if configUSE_TRACE_FACILITY
+
+const char* TaskMon::taskState2Str(eTaskState state)
 {
-    String name;
+    const char* name = "";
 
     switch(state)
     {
@@ -199,6 +201,8 @@ String TaskMon::fillUpSpaces(const char* str, size_t len)
 
     return result;
 }
+
+#endif  /* configUSE_TRACE_FACILITY */
 
 /******************************************************************************
  * Protected Methods

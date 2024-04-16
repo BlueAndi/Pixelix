@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,11 +33,10 @@
  * Includes
  *****************************************************************************/
 #include "VolumioPlugin.h"
-#include "FileSystem.h"
 
 #include <Logging.h>
 #include <ArduinoJson.h>
-#include <JsonFile.h>
+#include <HttpStatus.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -72,7 +71,7 @@ const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/plugins/VolumioPlugin/vo
 const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/plugins/VolumioPlugin/volumioPause.bmp";
 
 /* Initialize plugin topic. */
-const char* VolumioPlugin::TOPIC                    = "/host";
+const char* VolumioPlugin::TOPIC_CONFIG             = "/host";
 
 /******************************************************************************
  * Public Methods
@@ -80,47 +79,77 @@ const char* VolumioPlugin::TOPIC                    = "/host";
 
 void VolumioPlugin::getTopics(JsonArray& topics) const
 {
-    (void)topics.add(TOPIC);
+    (void)topics.add(TOPIC_CONFIG);
 }
 
 bool VolumioPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        String  host    = getHost();
-
-        value["host"] = host;
-
+        getConfiguration(value);
         isSuccessful = true;
     }
 
     return isSuccessful;
 }
 
-bool VolumioPlugin::setTopic(const String& topic, const JsonObject& value)
+bool VolumioPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
-    if (0U != topic.equals(TOPIC))
+    if (0U != topic.equals(TOPIC_CONFIG))
     {
-        String              host;
-        JsonVariantConst    jsonHost = value["host"];
+        const size_t        JSON_DOC_SIZE           = 512U;
+        DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+        JsonObject          jsonCfg                 = jsonDoc.to<JsonObject>();
+        JsonVariantConst    jsonHost                = value["host"];
+
+        /* The received configuration may not contain all single key/value pair.
+         * Therefore read first the complete internal configuration and
+         * overwrite them with the received ones.
+         */
+        getConfiguration(jsonCfg);
+
+        /* Note:
+         * Check only for the key/value pair availability.
+         * The type check will follow in the setConfiguration().
+         */
 
         if (false == jsonHost.isNull())
         {
-            host = jsonHost.as<String>();
+            jsonCfg["host"] = jsonHost.as<String>();
             isSuccessful = true;
         }
 
         if (true == isSuccessful)
         {
-            setHost(host);
+            JsonObjectConst jsonCfgConst = jsonCfg;
+
+            isSuccessful = setConfiguration(jsonCfgConst);
+
+            if (true == isSuccessful)
+            {
+                requestStoreToPersistentMemory();
+            }
         }
     }
 
     return isSuccessful;
+}
+
+bool VolumioPlugin::hasTopicChanged(const String& topic)
+{
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        hasTopicChanged = m_hasTopicChanged;
+
+    /* Only a single topic, therefore its not necessary to check. */
+    PLUGIN_NOT_USED(topic);
+
+    m_hasTopicChanged = false;
+
+    return hasTopicChanged;
 }
 
 void VolumioPlugin::start(uint16_t width, uint16_t height)
@@ -166,16 +195,7 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
         m_textWidget.move(0, offsY);
     }
 
-    /* Try to load configuration. If there is no configuration available, a default configuration
-     * will be created.
-     */
-    if (false == loadConfiguration())
-    {
-        if (false == saveConfiguration())
-        {
-            LOG_WARNING("Failed to create initial configuration file %s.", getFullPathToConfiguration().c_str());
-        }
-    }
+    PluginWithConfig::start(width, height);
 
     initHttpClient();
 
@@ -184,16 +204,12 @@ void VolumioPlugin::start(uint16_t width, uint16_t height)
 
 void VolumioPlugin::stop()
 {
-    String                      configurationFilename = getFullPathToConfiguration();
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_offlineTimer.stop();
     m_requestTimer.stop();
 
-    if (false != FILESYSTEM.remove(configurationFilename))
-    {
-        LOG_INFO("File %s removed", configurationFilename.c_str());
-    }
+    PluginWithConfig::stop();
 }
 
 void VolumioPlugin::process(bool isConnected)
@@ -201,6 +217,8 @@ void VolumioPlugin::process(bool isConnected)
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
+    PluginWithConfig::process(isConnected);
+    
     /* Only if a network connection is established the required information
      * shall be periodically requested via REST API.
      */
@@ -322,27 +340,6 @@ void VolumioPlugin::update(YAGfx& gfx)
     PLUGIN_NOT_USED(tcY);
 }
 
-String VolumioPlugin::getHost() const
-{
-    String                      host;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    host = m_volumioHost;
-
-    return host;
-}
-
-void VolumioPlugin::setHost(const String& host)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (host != m_volumioHost)
-    {
-        m_volumioHost = host;
-        (void)saveConfiguration();
-    }
-}
-
 /******************************************************************************
  * Protected Methods
  *****************************************************************************/
@@ -350,6 +347,39 @@ void VolumioPlugin::setHost(const String& host)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void VolumioPlugin::getConfiguration(JsonObject& jsonCfg) const
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
+
+    jsonCfg["host"] = m_volumioHost;
+}
+
+bool VolumioPlugin::setConfiguration(JsonObjectConst& jsonCfg)
+{
+    bool                status      = false;
+    JsonVariantConst    jsonHost    = jsonCfg["host"];
+
+    if (false == jsonHost.is<String>())
+    {
+        LOG_WARNING("Host not found or invalid type.");
+    }
+    else
+    {
+        MutexGuard<MutexRecursive> guard(m_mutex);
+
+        m_volumioHost = jsonHost.as<String>();
+
+        /* Force update on display */
+        m_requestTimer.start(UPDATE_PERIOD_SHORT);
+
+        m_hasTopicChanged = true;
+
+        status = true;
+    }
+
+    return status;
+}
 
 void VolumioPlugin::changeState(VolumioState state)
 {
@@ -435,49 +465,7 @@ void VolumioPlugin::initHttpClient()
     m_client.regOnResponse(
         [this](const HttpResponse& rsp)
         {
-            const size_t            JSON_DOC_SIZE   = 512U;
-            DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
-
-            if (nullptr != jsonDoc)
-            {
-                size_t                          payloadSize = 0U;
-                const char*                     payload     = reinterpret_cast<const char*>(rsp.getPayload(payloadSize));
-                const size_t                    FILTER_SIZE = 128U;
-                StaticJsonDocument<FILTER_SIZE> filter;
-                DeserializationError            error;
-
-                filter["artist"]    = true;
-                filter["duration"]  = true;
-                filter["seek"]      = true;
-                filter["service"]   = true;
-                filter["status"]    = true;
-                filter["title"]     = true;
-                
-                if (true == filter.overflowed())
-                {
-                    LOG_ERROR("Less memory for filter available.");
-                }
-
-                error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(filter));
-
-                if (DeserializationError::Ok != error.code())
-                {
-                    LOG_WARNING("JSON parse error: %s", error.c_str());
-                }
-                else
-                {
-                    Msg msg;
-
-                    msg.type    = MSG_TYPE_RSP;
-                    msg.rsp     = jsonDoc;
-
-                    if (false == this->m_taskProxy.send(msg))
-                    {
-                        delete jsonDoc;
-                        jsonDoc = nullptr;
-                    }
-                }
-            }
+            handleAsyncWebResponse(rsp);
         }
     );
 
@@ -502,6 +490,63 @@ void VolumioPlugin::initHttpClient()
             (void)this->m_taskProxy.send(msg);
         }
     );
+}
+
+void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
+{
+    if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
+    {
+        const size_t            JSON_DOC_SIZE   = 512U;
+        DynamicJsonDocument*    jsonDoc         = new(std::nothrow) DynamicJsonDocument(JSON_DOC_SIZE);
+
+        if (nullptr != jsonDoc)
+        {
+            size_t                          payloadSize = 0U;
+            const void*                     vPayload    = rsp.getPayload(payloadSize);
+            const char*                     payload     = static_cast<const char*>(vPayload);
+            const size_t                    FILTER_SIZE = 128U;
+            StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
+
+            jsonFilterDoc["artist"]     = true;
+            jsonFilterDoc["duration"]   = true;
+            jsonFilterDoc["seek"]       = true;
+            jsonFilterDoc["service"]    = true;
+            jsonFilterDoc["status"]     = true;
+            jsonFilterDoc["title"]      = true;
+            
+            if (true == jsonFilterDoc.overflowed())
+            {
+                LOG_ERROR("Less memory for filter available.");
+            }
+            else if ((nullptr == payload) ||
+                     (0U == payloadSize))
+            {
+                LOG_ERROR("No payload.");
+            }
+            else
+            {
+                DeserializationError error = deserializeJson(*jsonDoc, payload, payloadSize, DeserializationOption::Filter(jsonFilterDoc));
+
+                if (DeserializationError::Ok != error.code())
+                {
+                    LOG_WARNING("JSON parse error: %s", error.c_str());
+                }
+                else
+                {
+                    Msg msg;
+
+                    msg.type    = MSG_TYPE_RSP;
+                    msg.rsp     = jsonDoc;
+
+                    if (false == this->m_taskProxy.send(msg))
+                    {
+                        delete jsonDoc;
+                        jsonDoc = nullptr;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
@@ -644,60 +689,6 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
             enable();
         }
     }
-}
-
-bool VolumioPlugin::saveConfiguration() const
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    jsonDoc["host"] = m_volumioHost;
-    
-    if (false == jsonFile.save(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to save file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        LOG_INFO("File %s saved.", configurationFilename.c_str());
-    }
-
-    return status;
-}
-
-bool VolumioPlugin::loadConfiguration()
-{
-    bool                status                  = true;
-    JsonFile            jsonFile(FILESYSTEM);
-    const size_t        JSON_DOC_SIZE           = 512U;
-    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
-    String              configurationFilename   = getFullPathToConfiguration();
-
-    if (false == jsonFile.load(configurationFilename, jsonDoc))
-    {
-        LOG_WARNING("Failed to load file %s.", configurationFilename.c_str());
-        status = false;
-    }
-    else
-    {
-        JsonVariantConst jsonHost = jsonDoc["host"];
-
-        if (false == jsonHost.is<String>())
-        {
-            LOG_WARNING("Host not found or invalid type.");
-            status = false;
-        }
-        else
-        {
-            m_volumioHost = jsonHost.as<String>();
-        }
-    }
-
-    return status;
 }
 
 void VolumioPlugin::clearQueue()

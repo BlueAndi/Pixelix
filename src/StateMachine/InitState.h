@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,6 +46,14 @@
 #include <stdint.h>
 #include <StateMachine.hpp>
 #include <IPluginMaintenance.hpp>
+#include <SimpleTimer.hpp>
+
+#if CONFIG_RTC == 1
+#include "Rtc1307Drv.h"
+#else /* CONFIG_RTC == 1 */
+#include "RtcNoneDrv.h"
+#endif /* CONFIG_RTC == 1 */
+
 
 /******************************************************************************
  * Macros
@@ -99,13 +107,30 @@ public:
 
 private:
 
-    bool    m_isApModeRequested;    /**< Is wifi AP mode requested? */
+    /**
+     * How long shall the logo be shown in ms.
+     * As long as it is shown, stay in this state!
+     */
+    const uint32_t SHOW_LOGO_DURATION   = 2000U;
+
+    bool        m_isQuiet;              /**< Is quite mode active? */
+    bool        m_isApModeRequested;    /**< Is wifi AP mode requested? */
+    SimpleTimer m_timer;                /**< Timer used to stay for a min. time in this state. */
+
+#if CONFIG_RTC == 1
+    Rtc1307Drv  m_rtcDrv;               /**< RTC driver */
+#else /* CONFIG_RTC == 1 */
+    RtcNoneDrv  m_rtcDrv;               /**< RTC driver without functionality. */
+#endif /* CONFIG_RTC == 1 */
 
     /**
      * Constructs the state.
      */
     InitState() :
-        m_isApModeRequested(false)
+        m_isQuiet(false),
+        m_isApModeRequested(false),
+        m_timer(),
+        m_rtcDrv()
     {
     }
 
@@ -136,6 +161,13 @@ private:
      *                      plugin will be created and installed.
      */
     void welcome(IPluginMaintenance* plugin);
+
+    /**
+     * Checks whether the filesystem content is compatible to the Pixelix version.
+     * 
+     * @return If filesystem content is compatible, it will return true otherwise false.
+     */
+    bool isFsCompatible();
 };
 
 /******************************************************************************

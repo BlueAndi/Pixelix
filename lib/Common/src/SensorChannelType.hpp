@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -95,6 +95,20 @@ public:
     virtual T getValue() = 0;
 
     /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value
+     */
+    virtual T getOffset() const = 0;
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value.
+     */
+    virtual void setOffset(T offset) = 0;
+
+    /**
      * Get value as string.
      * 
      * @param[in] precision The precision (ignored for integer values) of the value.
@@ -147,10 +161,92 @@ public:
 
     /**
      * Get data value.
+     * If there is any error, it will return NaN.
      * 
      * @return Sensor data value
      */
     virtual float getValue() = 0;
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value
+     */
+    virtual float getOffset() const = 0;
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value.
+     */
+    virtual void setOffset(float offset) = 0;
+
+    /**
+     * Get value as string.
+     * If there is any error, it will return "NAN".
+     * 
+     * @param[in] precision The precision (ignored for integer values) of the value.
+     * 
+     * @return Value as string
+     */
+    String getValueAsString(uint32_t precision) override
+    {
+        float   value       = getValue();
+        String  valueStr;
+        char    buffer[20U];
+
+        (void)snprintf(buffer, sizeof(buffer), "%.*F", precision, value);
+        valueStr = buffer;
+
+        return valueStr;
+    }
+};
+
+/**
+ * Specialization for boolean value channel.
+ */
+template <>
+class SensorChannelType<bool, ISensorChannel::DATA_TYPE_BOOL> : public ISensorChannel
+{
+public:
+
+    /**
+     * Get the data type.
+     * 
+     * @return Sensor data type
+     */
+    DataType getDataType() const final
+    {
+        return DATA_TYPE_BOOL;
+    }
+
+    /**
+     * Get sensor channel type.
+     * 
+     * @return Sensor channel type
+     */
+    virtual Type getType() const = 0;
+
+    /**
+     * Get data value.
+     * 
+     * @return Sensor data value
+     */
+    virtual bool getValue() = 0;
+
+    /**
+     * Get the correction offset, used for sensor tolerance compensation.
+     * 
+     * @return Offset value
+     */
+    virtual bool getOffset() const = 0;
+
+    /**
+     * Set correction offset to compensate sensor tolerance.
+     * 
+     * @param[in] offset    The correction offset value.
+     */
+    virtual void setOffset(bool offset) = 0;
 
     /**
      * Get value as string.
@@ -161,14 +257,11 @@ public:
      */
     String getValueAsString(uint32_t precision) override
     {
-        float   value       = getValue();
-        String  valueStr;
-        char    buffer[20];
+        bool value = getValue();
 
-        (void)snprintf(buffer, sizeof(buffer), "%.*F", precision, value);
-        valueStr = buffer;
+        (void)precision;
 
-        return valueStr;
+        return (false == value) ? "false" : "true";
     }
 };
 
@@ -180,6 +273,9 @@ typedef SensorChannelType<int32_t, ISensorChannel::DATA_TYPE_INT32> SensorChanne
 
 /** Sensor, which provides data as 32 bit floating point. */
 typedef SensorChannelType<float, ISensorChannel::DATA_TYPE_FLOAT32> SensorChannelFloat32;
+
+/** Sensor, which provides data as boolean. */
+typedef SensorChannelType<bool, ISensorChannel::DATA_TYPE_BOOL> SensorChannelBool;
 
 /******************************************************************************
  * Functions

@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,6 @@
 #include "SlotList.h"
 #include "PluginFactory.h"
 
-#include <ITopicHandler.h>
 #include <IPluginMaintenance.hpp>
 
 /******************************************************************************
@@ -85,14 +84,6 @@ public:
     void begin();
 
     /**
-     * Register a plugin.
-     *
-     * @param[in] name          Plugin name
-     * @param[in] createFunc    The plugin creation function.
-     */
-    void registerPlugin(const String& name, IPluginMaintenance::CreateFunc createFunc);
-
-    /**
      * Install plugin.
      * If no slot id is given, the plugin will be installed in the next available slot.
      *
@@ -101,7 +92,7 @@ public:
      *
      * @return If successful, it will return a pointer to the plugin instance, otherwise nullptr.
      */
-    IPluginMaintenance* install(const String& name, uint8_t slotId = SlotList::SLOT_ID_INVALID);
+    IPluginMaintenance* install(const char* name, uint8_t slotId = SlotList::SLOT_ID_INVALID);
 
     /**
      * Uninstall plugin.
@@ -113,20 +104,6 @@ public:
     bool uninstall(IPluginMaintenance* plugin);
 
     /**
-     * Find first plugin.
-     *
-     * @return If plugin found, it will return its name otherwise nullptr.
-     */
-    const char* findFirst();
-
-    /**
-     * Find next plugin.
-     *
-     * @return If plugin found, it will return its name otherwise nullptr.
-     */
-    const char* findNext();
-
-    /**
      * Set the alias name of a plugin.
      * If the plugin has registered a topic handler, the corresponding URIs will be updated.
      * 
@@ -135,6 +112,12 @@ public:
      * @return If successful, it will return true otherwise false.
      */
     bool setPluginAliasName(IPluginMaintenance* plugin, const String& alias);
+
+    /**
+     * Unregister all plugin topics from the topic handler service.
+     * The plugins will still be installed, but won't get any update from outside.
+     */
+    void unregisterAllPluginTopics();
 
     /**
      * Load plugin installation from persistent memory.
@@ -163,12 +146,14 @@ private:
     static const char*  MQTT_SPECIAL_CHARACTERS;
 
     PluginFactory   m_pluginFactory;    /**< The plugin factory with the plugin type registry. */
+    String          m_deviceId;         /**< Device id, used for topic registration. */
 
     /**
      * Constructs the plugin manager.
      */
     PluginMgr() :
-        m_pluginFactory()
+        m_pluginFactory(),
+        m_deviceId()
     {
     }
 
@@ -182,15 +167,6 @@ private:
 
     PluginMgr(const PluginMgr& fab);
     PluginMgr& operator=(const PluginMgr& fab);
-
-    /**
-     * Check dynamic JSON document for overflow and log a corresponding message,
-     * otherwise log its document size.
-     * 
-     * @param[in] jsonDoc   Dynamic JSON document, which to check.
-     * @param[in] line      Line number where the document is handled in the module.
-     */
-    void checkJsonDocOverflow(const DynamicJsonDocument& jsonDoc, int line);
 
     /**
      * If configuration directory doesn't exists, it will be created.
@@ -235,20 +211,6 @@ private:
      * @return If successful installed, it will return true otherwise false.
      */
     bool installToSlot(IPluginMaintenance* plugin, uint8_t slotId);
-
-    /**
-     * Register all topics of the given plugin.
-     * 
-     * @param[in] plugin    The plugin, which topics shall be registered.
-     */
-    void registerTopics(IPluginMaintenance* plugin);
-
-    /**
-     * Unregister all topics of the given plugin.
-     * 
-     * @param[in] plugin    The plugin, which topics to unregister.
-     */
-    void unregisterTopics(IPluginMaintenance* plugin);
 
     /**
      * Checks whether the alias is valid. It will check for not compliant

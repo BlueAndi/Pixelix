@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -147,9 +147,9 @@ void TempHumidPlugin::process(bool isConnected)
 
                 if (!isnan(temperature))
                 {
-                    m_temp = temperature;
+                    m_temperature = temperature;
 
-                    LOG_INFO("Temperature: %0.1f °C", m_temp);
+                    LOG_INFO("Temperature: %0.1f °C", m_temperature);
                 }
             }
         }
@@ -163,27 +163,32 @@ void TempHumidPlugin::process(bool isConnected)
 
                 if (!isnan(humidity))
                 {
-                    m_humid = humidity;
+                    m_humidity = humidity;
 
-                    LOG_INFO("Humidity: %3.1f %%", m_humid);
+                    LOG_INFO("Humidity: %3.0f %%", m_humidity);
                 }
             }
         }
 
         m_sensorUpdateTimer.start(SENSOR_UPDATE_PERIOD);
     }
-}
-
-void TempHumidPlugin::active(YAGfx& gfx)
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
 
     /* Set time to show page - either 10s or slot_time / 4
      * read here because otherwise we do not get config changes during runtime in slot_time.
      */
     if (nullptr != m_slotInterf) {
         m_pageTime = m_slotInterf->getDuration() / 4U;
+
+        if (DEFAULT_PAGE_TIME > m_pageTime)
+        {
+            m_pageTime = DEFAULT_PAGE_TIME;
+        }
     }
+}
+
+void TempHumidPlugin::active(YAGfx& gfx)
+{
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     gfx.fillScreen(ColorDef::BLACK);
     m_iconCanvas.update(gfx);
@@ -223,58 +228,23 @@ void TempHumidPlugin::update(YAGfx& gfx)
     {
         /* Clear display */
         gfx.fillScreen(ColorDef::BLACK);
-        
-        m_iconCanvas.update(gfx);
-        m_textCanvas.update(gfx);
 
         switch(m_page)
         {
         case TEMPERATURE:
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-
-            if (nullptr == m_temperatureSensorCh)
-            {
-                m_textWidget.setFormatStr("\\calign-");
-            }
-            else
-            {
-                char    valueReducedPrecison[6] = { 0 };    /* Holds a value in lower precision for display. */
-                String  text;
-
-                /* Generate temperature string with reduced precision and add unit °C. */
-                (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temp < -9.9F) ? "%.0f" : "%.1f" , m_temp);
-                text  = "\\calign";
-                text += valueReducedPrecison;
-                text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
-
-                m_textWidget.setFormatStr(text);
-            }
+            handleTemperature();
             break;
 
         case HUMIDITY:
-            (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
-
-            if (nullptr == m_humiditySensorCh)
-            {
-                m_textWidget.setFormatStr("\\calign-");
-            }
-            else
-            {
-                char    valueReducedPrecison[4] = { 0 };    /* Holds a value in lower precision for display. */
-                String  text;
-
-                (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3f", m_humid);
-                text  = "\\calign";
-                text += valueReducedPrecison;
-                text += ISensorChannel::channelTypeToUnit(m_humiditySensorCh->getType());
-                
-                m_textWidget.setFormatStr(text);
-            }
+            handleHumidity();
             break;
 
         default:
             break;
         }
+
+        m_iconCanvas.update(gfx);
+        m_textCanvas.update(gfx);
     }
 }
 
@@ -285,6 +255,51 @@ void TempHumidPlugin::update(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void TempHumidPlugin::handleTemperature()
+{
+    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
+
+    if (nullptr == m_temperatureSensorCh)
+    {
+        m_textWidget.setFormatStr("\\calign-");
+    }
+    else
+    {
+        char    valueReducedPrecison[10] = { 0 };   /* Holds a value in lower precision for display. */
+        String  text;
+
+        /* Generate temperature string with reduced precision and add unit °C. */
+        (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temperature < -9.9F) ? "%.0f" : "%.1f" , m_temperature);
+        text  = "\\calign";
+        text += valueReducedPrecison;
+        text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
+
+        m_textWidget.setFormatStr(text);
+    }
+}
+
+void TempHumidPlugin::handleHumidity()
+{
+    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
+
+    if (nullptr == m_humiditySensorCh)
+    {
+        m_textWidget.setFormatStr("\\calign-");
+    }
+    else
+    {
+        char    valueReducedPrecison[10] = { 0 };   /* Holds a value in lower precision for display. */
+        String  text;
+
+        (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3.0f", m_humidity);
+        text  = "\\calign";
+        text += valueReducedPrecison;
+        text += ISensorChannel::channelTypeToUnit(m_humiditySensorCh->getType());
+        
+        m_textWidget.setFormatStr(text);
+    }
+}
 
 /******************************************************************************
  * External Functions

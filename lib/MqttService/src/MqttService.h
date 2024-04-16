@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -73,6 +73,16 @@ public:
     typedef std::function<void(const String& topic, const uint8_t* payload, size_t size)>    TopicCallback;
 
     /**
+     * MQTT service states.
+     */
+    enum State
+    {
+        STATE_DISCONNECTED = 0, /**< No connection to a MQTT broker */
+        STATE_CONNECTED,        /**< Connected with a MQTT broker */
+        STATE_IDLE              /**< Service is idle */
+    };
+
+    /**
      * Get the audio service instance.
      * 
      * @return Audio service instance
@@ -98,6 +108,13 @@ public:
      * Process the service.
      */
     void process() final;
+
+    /**
+     * Get current MQTT connection state.
+     * 
+     * @return MQTT connection state
+     */
+    State getState() const;
 
     /**
      * Publish a message for a topic.
@@ -158,16 +175,6 @@ public:
 private:
 
     /**
-     * MQTT service states.
-     */
-    enum State
-    {
-        STATE_DISCONNECTED = 0, /**< No connection to a MQTT broker */
-        STATE_CONNECTED,        /**< Connected with a MQTT broker */
-        STATE_IDLE              /**< Service is idle */
-    };
-
-    /**
      * Subscriber information
      */
     struct Subscriber
@@ -200,12 +207,6 @@ private:
     static const size_t     MAX_VALUE_MQTT_BROKER_URL   = 64U;
 
     /**
-     * MQTT message which is published after successful connection to a MQTT broker
-     * via /<hostname> topic.
-     */
-    static const char*      HELLO_WORLD;
-
-    /**
      * Reconnect period in ms.
      */
     static const uint32_t   RECONNECT_PERIOD            = SIMPLE_TIMER_SECONDS(10U);
@@ -214,7 +215,7 @@ private:
      * Max. MQTT client buffer size in byte.
      * Received MQTT messages greather than this will be skipped.
      */
-    static const size_t     MAX_BUFFER_SIZE             = 1024U;
+    static const size_t     MAX_BUFFER_SIZE             = 2048U;
 
     KeyValueString          m_mqttBrokerUrlSetting; /**< URL of the MQTT broker setting */
     String                  m_url;                  /**< URL of the MQTT broker */
@@ -256,6 +257,21 @@ private:
     /* An instance shall not be copied. */
     MqttService(const MqttService& service);
     MqttService& operator=(const MqttService& service);
+
+    /**
+     * Handles the DISCONNECTED state.
+     */
+    void disconnectedState();
+
+    /**
+     * Handles the CONNECTED state.
+     */
+    void connectedState();
+
+    /**
+     * Handles the IDLE state.
+     */
+    void idleState();
 
     /**
      * MQTT receive callback.

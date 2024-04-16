@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2023 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2019 - 2024 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,10 +37,13 @@
 #include "DisplayMgr.h"
 #include "Version.h"
 #include "PluginMgr.h"
+#include "PluginList.h"
 #include "WiFiUtil.h"
 #include "FileSystem.h"
 #include "RestUtil.h"
 #include "SlotList.h"
+#include "ButtonActions.h"
+#include "UpdateMgr.h"
 
 #include <Util.h>
 #include <WiFi.h>
@@ -62,6 +65,50 @@
  * Types and classes
  *****************************************************************************/
 
+/** Content type element */
+typedef struct
+{
+    const char* fileExtension;  /**< File extension used to determine content type */
+    const char* contentType;    /**< Content type */
+
+} ContentTypeElem;
+
+/**
+ * Virtual button which can be triggered via REST API.
+ */
+class RestApiButton : public ButtonActions
+{
+public:
+
+    /**
+     * Construct virtual button instance.
+     */
+    RestApiButton() :
+        ButtonActions()
+    {
+    }
+
+    /**
+     * Destroy virtual button instance.
+     */
+    virtual ~RestApiButton()
+    {
+    }
+
+    /**
+     * Execute action by button action id.
+     * 
+     * @param[in] id    Button action id
+     */
+    void executeAction(ButtonActionId id)
+    {
+        ButtonActions::executeAction(id);
+    }
+
+private:
+
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -73,6 +120,7 @@ static void handleSlot(AsyncWebServerRequest* request);
 static void handlePluginInstall(AsyncWebServerRequest* request);
 static void handlePluginUninstall(AsyncWebServerRequest* request);
 static void handlePlugins(AsyncWebServerRequest* request);
+static void handleReset(AsyncWebServerRequest* request);
 static void handleSensors(AsyncWebServerRequest* request);
 static void handleSettings(AsyncWebServerRequest* request);
 static void handleSetting(AsyncWebServerRequest* request);
@@ -81,7 +129,7 @@ static void handleStatus(AsyncWebServerRequest* request);
 static void getFiles(File& dir, JsonArray& files, uint32_t& preCount, uint32_t& count, bool isRecursive);
 static void handleFilesystem(AsyncWebServerRequest* request);
 static void handleFileGet(AsyncWebServerRequest* request);
-static String getContentType(const String& filename);
+static const char* getContentType(const String& filename);
 static void handleFilePost(AsyncWebServerRequest* request);
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 static void handleFileDelete(AsyncWebServerRequest* request);
@@ -90,6 +138,23 @@ static bool isValidHostname(const String& hostname);
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/** Table of content types and the file extensions they will be derived from. */
+static const ContentTypeElem    contentTypeTable[] =
+{
+    { ".html",  "text/html"                 },
+    { ".css",   "text/css"                  },
+    { ".js",    "application/javascript"    },
+    { ".bmp",   "image/bmp"                 },
+    { ".png",   "image/png"                 },
+    { ".gif",   "image/gif"                 },
+    { ".jpg",   "image/jpg"                 },
+    { ".ico",   "image/x-icon"              },
+    { ".xml",   "text/xml"                  },
+    { ".pdf",   "application/x-pdf"         },
+    { ".zip",   "application/x-zip"         },
+    { ".gz",    "application/x-gzip"        }
+};
 
 /******************************************************************************
  * Public Methods
@@ -116,6 +181,7 @@ void RestApi::init(AsyncWebServer& srv)
     (void)srv.on("/rest/api/v1/plugin/install", handlePluginInstall);
     (void)srv.on("/rest/api/v1/plugin/uninstall", handlePluginUninstall);
     (void)srv.on("/rest/api/v1/plugins", handlePlugins);
+    (void)srv.on("/rest/api/v1/reset", handleReset);
     (void)srv.on("/rest/api/v1/sensors", handleSensors);
     (void)srv.on("/rest/api/v1/settings", handleSettings);
     (void)srv.on("/rest/api/v1/setting", handleSetting);
@@ -175,10 +241,38 @@ static void handleButton(AsyncWebServerRequest* request)
     }
     else
     {
-        DisplayMgr::getInstance().activateNextSlot();
- 
-        (void)RestUtil::prepareRspSuccess(jsonDoc);
-        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+        ButtonActionId  actionId        = BUTTON_ACTION_ID_ACTIVATE_NEXT_SLOT; /* Default */
+        bool            isSuccessful    = true;
+
+        if (true == request->hasArg("actionId"))
+        {
+            int32_t i32ActionId = request->arg("actionId").toInt();
+
+            if ((0 > i32ActionId) ||
+                (BUTTON_ACTION_ID_MAX <= i32ActionId))
+            {
+                isSuccessful = false;
+            }
+            else
+            {
+                actionId = static_cast<ButtonActionId>(i32ActionId);
+            }
+        }
+
+        if (false == isSuccessful)
+        {
+            RestUtil::prepareRspError(jsonDoc, "Invalid action id.");
+            httpStatusCode = HttpStatus::STATUS_CODE_METHOD_NOT_ALLOWED;
+        }
+        else
+        {
+            RestApiButton buttonActions;
+
+            buttonActions.executeAction(actionId);
+
+            (void)RestUtil::prepareRspSuccess(jsonDoc);
+            httpStatusCode = HttpStatus::STATUS_CODE_OK;
+        } 
     }
 
     RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
@@ -446,8 +540,8 @@ static void handlePluginInstall(AsyncWebServerRequest* request)
         }
         else
         {
-            String              pluginName  = request->arg("name");
-            IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName);
+            const String&       pluginName  = request->arg("name");
+            IPluginMaintenance* plugin      = PluginMgr::getInstance().install(pluginName.c_str());
 
             /* Plugin not found? */
             if (nullptr == plugin)
@@ -524,7 +618,7 @@ static void handlePluginUninstall(AsyncWebServerRequest* request)
             }
             else
             {
-                String              pluginName  = request->arg("name");
+                const String&       pluginName  = request->arg("name");
                 IPluginMaintenance* plugin      = DisplayMgr::getInstance().getPluginInSlot(slotId);
 
                 if (nullptr == plugin)
@@ -586,15 +680,55 @@ static void handlePlugins(AsyncWebServerRequest* request)
     }
     else
     {
-        JsonVariant dataObj     = RestUtil::prepareRspSuccess(jsonDoc);
-        JsonArray   pluginArray = dataObj.createNestedArray("plugins");
-        const char* pluginName  = PluginMgr::getInstance().findFirst();
+        JsonVariant                 dataObj                 = RestUtil::prepareRspSuccess(jsonDoc);
+        JsonArray                   pluginArray             = dataObj.createNestedArray("plugins");
+        uint8_t                     pluginTypeListLength    = 0U;
+        const PluginList::Element*  pluginTypeList          = PluginList::getList(pluginTypeListLength);
+        uint8_t                     idx                     = 0U;
 
-        while(nullptr != pluginName)
+        while(pluginTypeListLength > idx)
         {
-            pluginArray.add(pluginName);
-            pluginName = PluginMgr::getInstance().findNext();
+            pluginArray.add(pluginTypeList[idx].name);
+            
+            ++idx;
         }
+
+        httpStatusCode = HttpStatus::STATUS_CODE_OK;
+    }
+
+    RestUtil::sendJsonRsp(request, jsonDoc, httpStatusCode);
+}
+
+/**
+ * Perform a reset request.
+ * GET \c "/api/v1/reset"
+ *
+ * @param[in] request   HTTP request
+ */
+static void handleReset(AsyncWebServerRequest* request)
+{
+    const size_t        JSON_DOC_SIZE   = 512U;
+    DynamicJsonDocument jsonDoc(JSON_DOC_SIZE);
+    uint32_t            httpStatusCode  = HttpStatus::STATUS_CODE_OK;
+
+    if (nullptr == request)
+    {
+        return;
+    }
+
+    if (HTTP_GET != request->method())
+    {
+        RestUtil::prepareRspErrorHttpMethodNotSupported(jsonDoc);
+        httpStatusCode = HttpStatus::STATUS_CODE_NOT_FOUND;
+    }
+    else
+    {
+        /* To ensure the positive response will be sent. */
+        const uint32_t RESTART_DELAY = 100U; /* ms */
+
+        (void)RestUtil::prepareRspSuccess(jsonDoc);
+
+        UpdateMgr::getInstance().reqRestart(RESTART_DELAY);
 
         httpStatusCode = HttpStatus::STATUS_CODE_OK;
     }
@@ -1396,61 +1530,20 @@ static void handleFileGet(AsyncWebServerRequest* request)
  * 
  * @return The file specific content type.
  */
-static String getContentType(const String& filename)
+static const char* getContentType(const String& filename)
 {
-    String contentType = "text/plain";
+    const char* contentType = "text/plain";
+    uint8_t     idx         = 0U;
 
-    if (filename.endsWith(".html"))
+    while(UTIL_ARRAY_NUM(contentTypeTable) > idx)
     {
-        contentType = "text/html";
-    }
-    else if (filename.endsWith(".css"))
-    {
-        contentType = "text/css";
-    }
-    else if (filename.endsWith(".js"))
-    {
-        contentType = "application/javascript";
-    }
-    else if (filename.endsWith(".bmp"))
-    {
-        contentType = "image/bmp";
-    }
-    else if (filename.endsWith(".png"))
-    {
-        contentType = "image/png";
-    }
-    else if (filename.endsWith(".gif"))
-    {
-        contentType = "image/gif";
-    }
-    else if (filename.endsWith(".jpg"))
-    {
-        contentType = "image/jpeg";
-    }
-    else if (filename.endsWith(".ico"))
-    {
-        contentType = "image/x-icon";
-    }
-    else if (filename.endsWith(".xml"))
-    {
-        contentType = "text/xml";
-    }
-    else if (filename.endsWith(".pdf"))
-    {
-        contentType = "application/x-pdf";
-    }
-    else if (filename.endsWith(".zip"))
-    {
-        contentType = "application/x-zip";
-    }
-    else if (filename.endsWith(".gz"))
-    {
-        contentType = "application/x-gzip";
-    }
-    else
-    {
-        ;
+        if (true == filename.endsWith(contentTypeTable[idx].fileExtension))
+        {
+            contentType = contentTypeTable[idx].contentType;
+            break;
+        }
+
+        ++idx;
     }
 
     return contentType;
@@ -1500,15 +1593,14 @@ static void handleFilePost(AsyncWebServerRequest* request)
  */
 static void uploadHandler(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
 {
-    static File fd;
-    bool        isError = false;
+    bool isError = false;
 
     /* Begin of upload? */
     if (0 == index)
     {
-        fd = FILESYSTEM.open(filename, "w");
+        request->_tempFile = FILESYSTEM.open(filename, "w");
 
-        if (false == fd)
+        if (false == request->_tempFile)
         {
             isError = true;
         }
@@ -1518,9 +1610,9 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
         }
     }
 
-    if (true == fd)
+    if (true == request->_tempFile)
     {
-        (void)fd.write(data, len);
+        (void)request->_tempFile.write(data, len);
     }
 
     if ((true == final) &&
@@ -1528,13 +1620,13 @@ static void uploadHandler(AsyncWebServerRequest *request, const String& filename
     {        
         LOG_INFO("File %s successful written.", filename.c_str());
 
-        fd.close();
+        request->_tempFile.close();
     }
     else if (true == isError)
     {
         LOG_INFO("File %s upload aborted.", filename.c_str());
 
-        fd.close();
+        request->_tempFile.close();
     }
 
     if (true == isError)

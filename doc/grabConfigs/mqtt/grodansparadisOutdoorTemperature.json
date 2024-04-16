@@ -1,0 +1,12 @@
+{
+  "path": "vscp/FF:FF:FF:FF:FF:FF:FF:FF:61:00:08:01:92:AF:A8:10/10/6/16/0",
+  "filter": {
+    "measurement": {
+      "value": true
+    }
+  },
+  "iconPath": "/configuration/bumblebee.bmp",
+  "format": "\\calign%0.1f\\x8EC",
+  "multiplier": 1,
+  "offset": 0
+}

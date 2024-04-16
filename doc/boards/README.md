@@ -8,15 +8,86 @@ Pixelix supports different ESP32 development boards. Own PCBs were developed too
 
 To find out which part shall be connected to which pin of your development board you can see in the following chapters.
 
-- [Pixelix Board v1.5](#pixelix-board-v15)
-- [Pixelix Board v2.0](#pixelix-board-v20)
-- [Development Boards](#development-boards)
-  - [DOIT ESP32 DEVKIT V1](#doit-esp32-devkit-v1)
-  - [DOIT ESP32 DEVKIT V4](#doit-esp32-devkit-v4)
-  - [ESP32 NodeMCU](#esp32-nodemcu)
-  - [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
-  - [LILYGO® TTGO ESP32 T-Display](#lilygo-ttgo-esp32-t-display)
-  - [LILYGO® ESP32 T-Display S3](#lilygo-esp32-t-display-s3)
+* [Development Boards](#development-boards)
+  * [Adafruit ESP32 Feather V2](#adafruit-esp32-feather-v2)
+  * [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
+  * [DOIT ESP32 DEVKIT V1](#doit-esp32-devkit-v1)
+  * [DOIT ESP32 DEVKIT V1 - HUB75 panel](#doit-esp32-devkit-v1---hub75-panel)
+  * [ESP32 NodeMCU](#esp32-nodemcu)
+  * [LILYGO® TTGO ESP32 T-Display](#lilygo-ttgo-esp32-t-display)
+  * [LILYGO® ESP32 T-Display S3](#lilygo-esp32-t-display-s3)
+  * [M5Stack Core ESP32 WiFi and Bluetooth Module Development Board](#m5stack-core-esp32-wifi-and-bluetooth-module-development-board)
+  * [WEMOS Lolin S2 Mini](#wemos-lolin-s2-mini)
+* [Pixelix Board v1.5](#pixelix-board-v15)
+* [Pixelix Board v2.0](#pixelix-board-v20)
+* [Pixelix Board v2.1](#pixelix-board-v21)
+* [Ulanzi TC001 smart pixel clock](#ulanzi-tc001-smart-pixel-clock)
+
+# Development Boards
+
+## Adafruit ESP32 Feather V2
+* Manufacturer: [Adafruit](https://learn.adafruit.com/adafruit-esp32-feather-v2/overview)
+* Pinning:
+  * Board: [board:adafruit_feather_esp32_v2](../../config/board.ini)
+  * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+* Compatible with Pixelix boards.
+
+## AZ-Delivery ESP-32 Dev Kit C V4
+* Manufacturer: [AZ-Delivery](https://www.az-delivery.de/products/esp-32-dev-kit-c-v4)
+* Pinning:
+  * Board: [board:az-delivery-devkit-v4](../../config/board.ini)
+  * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+* Compatible with Pixelix boards.
+
+## DOIT ESP32 DEVKIT V1
+* Pinning:
+  * Board: [board:az-delivery-devkit-v1](../../config/board.ini)
+  * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+* Compatible with Pixelix boards.
+
+## DOIT ESP32 DEVKIT V1 - HUB75 panel
+* Pinning:
+  * Board: [board:esp32doit-devkit-v1-hub75](../../config/board.ini)
+  * Display: [display:hub75-esp32](../../config/display.ini)
+* Pixelix boards doesn't support HUB75 panels.
+
+## ESP32 NodeMCU
+* Pinning:
+  * Board: [board:esp32-nodemcu](../../config/board.ini)
+  * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+* Compatible with Pixelix boards.
+
+## LILYGO&reg; TTGO ESP32 T-Display
+The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
+
+* Manufacturer: [Lilygo](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
+* Pinning:
+  * Board: [board:lilygo-ttgo-t-display](../../config/board.ini)
+  * Display: [display:lilygo_ttgo_tdisplay](../../config/display.ini)
+* Not compatible with Pixelix boards.
+
+## LILYGO&reg; ESP32 T-Display S3
+The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, because the onboard display is used instead of a external LED matrix.
+
+* Manufacturer: [Lilygo](https://www.lilygo.cc/products/t-display-s3)
+* Pinning:
+  * Board: [board:lilygo-t-display-s3](../../config/board.ini)
+  * Display: [display:lilygo_tdisplay-s3](../../config/display.ini)
+* Not compatible with Pixelix boards.
+
+## M5Stack Core ESP32 WiFi and Bluetooth Module Development Board
+* Manufacturer: [M5Stack](https://m5stack.com/)
+* Pinning:
+  * Board: [board:m5stack_core](../../config/board.ini)
+  * Display: [display:m5stack_core](../../config/display.ini)
+* Not compatible with Pixelix boards.
+
+## WEMOS Lolin S2 Mini
+* Manufacturer: [WEMOS](https://www.wemos.cc/en/latest/s2/s2_mini.html)
+* Pinning:
+  * Board: [board:wemos_lolin_s2_mini](../../config/board.ini)
+  * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+* Not compatible with Pixelix boards.
 
 # Pixelix Board v1.5
 This board was original developed with a ESP32 DevKit V1 development board as piggy bag.
@@ -33,34 +104,20 @@ The Pixelix board v2.0 is the successor of Pixelix board v1.5. It was designed f
 * [Hardware description](./pixelix/v2.0/ELECTRONIC.md)
 * [Bill of material](./pixelix/v2.0/BOM.md)
 * [Pinning](../../lib/HalLedMatrix/Board.h)
-* [Housing](./pixelix/v2.0/3D-files/)
+* [Housing](./pixelix/housing/)
 
-# Development Boards
+# Pixelix Board v2.1
+The Pixelix board v2.1 is the successor of Pixelix board v2.0. It was designed for ESP32 DevKit V4 (4 MB flash) and the Adafruit ESP32 Feather V2 (8 MB flash) development board as piggy bag.
+* [Hardware description](./pixelix/v2.1/ELECTRONIC.md)
+* [Bill of material](./pixelix/v2.1/BOM.md)
+* [Pinning](../../lib/HalLedMatrix/Board.h)
+* [Housing](./pixelix/housing/)
 
-## DOIT ESP32 DEVKIT V1
-* [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
-
-## DOIT ESP32 DEVKIT V4
-* [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
-
-## ESP32 NodeMCU
-* [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
-
-## AZ-Delivery ESP-32 Dev Kit C V4
-* Manufacturer: [AZ-Delivery](https://www.az-delivery.de/products/esp-32-dev-kit-c-v4)
-* [Pinning](../../lib/HalLedMatrix/Board.h) (equal to Pixelix boards)
-
-## LILYGO&reg; TTGO ESP32 T-Display
-The LILYGO&reg; TTGO ESP32 T-Display development board is handled separately, because the onboard display is used instead of a external LED matrix.
-
-* Manufacturer: [Lilygo](http://www.lilygo.cn/prod_view.aspx?TypeId=50033&Id=1126&FId=t3:50033:3)
-* [Pinning](../../lib/HalTftDisplay/Board.h)
-
-## LILYGO&reg; ESP32 T-Display S3
-The LILYGO&reg; ESP32 T-Display S3 development board is handled separately, because the onboard display is used instead of a external LED matrix.
-
-* Manufacturer: [Lilygo](https://www.lilygo.cc/products/t-display-s3)
-* [Pinning](../../lib/HalTftDisplay/Board.h)
+# Ulanzi TC001 smart pixel clock
+* Manufacturer: [Ulanzi](https://www.ulanzi.com/products/ulanzi-pixel-smart-clock-2882)
+* Pinning:
+  * Board: [board:ulanzi-tc001](../../config/board.ini)
+  * Display: [display:led_matrix_row_major_alternating](../../config/display.ini)
 
 # Issues, Ideas And Bugs <!-- omit in toc -->
 If you have further ideas or you found some bugs, great! Create a [issue](https://github.com/BlueAndi/esp-rgb-led-matrix/issues) or if you are able and willing to fix it by yourself, clone the repository and create a pull request.
