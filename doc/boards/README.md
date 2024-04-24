@@ -13,6 +13,7 @@ To find out which part shall be connected to which pin of your development board
   * [AZ-Delivery ESP-32 Dev Kit C V4](#az-delivery-esp-32-dev-kit-c-v4)
   * [DOIT ESP32 DEVKIT V1](#doit-esp32-devkit-v1)
   * [DOIT ESP32 DEVKIT V1 - HUB75 panel](#doit-esp32-devkit-v1---hub75-panel)
+  * [ESP32-S3 DEVKITC-1-N16R8V](#esp32-s3-devkitc-1-n16r8v)
   * [ESP32 NodeMCU](#esp32-nodemcu)
   * [LILYGO® TTGO ESP32 T-Display](#lilygo-ttgo-esp32-t-display)
   * [LILYGO® ESP32 T-Display S3](#lilygo-esp32-t-display-s3)
@@ -50,6 +51,13 @@ To find out which part shall be connected to which pin of your development board
   * Board: [board:esp32doit-devkit-v1-hub75](../../config/board.ini)
   * Display: [display:hub75-esp32](../../config/display.ini)
 * Pixelix boards doesn't support HUB75 panels.
+
+## ESP32-S3 DEVKITC-1-N16R8V
+* Reference design: [ESP32-S3-DevKitC-1](https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitc-1-v1.0.html)
+* Pinning:
+  * Board: [board:esp32-s3-devkitc-1-n16r8v](../../config/board.ini)
+  * Display: [display:led_matrix_column_major_alternating](../../config/display.ini)
+* Not compatible with Pixelix boards.
 
 ## ESP32 NodeMCU
 * Pinning:
