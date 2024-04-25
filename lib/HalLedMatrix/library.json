@@ -16,9 +16,8 @@
     }, {
         "name": "YAGfx"
     }, {
-        "owner": "makuna",
-        "name": "NeoPixelBus",
-        "version": "~2.7.3"
+        "name": "external-repo",
+        "version": "https://github.com/Makuna/NeoPixelBus#Esp32RmtSilentTimeout"
     }],
     "frameworks": "*",
     "platforms": "*"
