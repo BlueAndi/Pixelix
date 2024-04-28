@@ -16,8 +16,9 @@
     }, {
         "name": "YAGfx"
     }, {
-        "name": "external-repo",
-        "version": "https://github.com/Makuna/NeoPixelBus#89a6a8b0194846e8d68024bed4d3587fca92045d"
+        "owner": "makuna",
+        "name": "NeoPixelBus",
+        "version": "~2.8.0"
     }],
     "frameworks": "*",
     "platforms": "*"
