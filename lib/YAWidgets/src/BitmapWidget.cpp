@@ -137,6 +137,10 @@ bool BitmapWidget::load(FS& fs, const String& filename)
             m_spriteSheet.release();
             m_timer.stop();
 
+            /* Update width and height according to loaded bitmap. */
+            m_canvas.setWidth(m_bitmap.getWidth());
+            m_canvas.setHeight(m_bitmap.getHeight());
+
             isSuccessful = true;
         }
     }
@@ -165,6 +169,10 @@ bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, co
          * shall be shown or the single bitmap image.
          */
         m_bitmap.release();        
+
+        /* Update width and height according to loaded bitmap. */
+        m_canvas.setWidth(m_spriteSheet.getFrameWidth());
+        m_canvas.setHeight(m_spriteSheet.getFrameHeight());
 
         isSuccessful = true;
     }

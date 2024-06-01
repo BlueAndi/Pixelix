@@ -43,12 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "PluginWithConfig.hpp"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
 
@@ -75,13 +73,7 @@ public:
      */
     GrabViaMqttPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_layoutRight(),
-        m_layoutLeft(),
-        m_layoutTextOnly(),
-        m_iconWidget(),
-        m_textWidgetRight("\\calign?"),
-        m_textWidgetTextOnly("\\calign?"),
+        m_view(),
         m_path(),
         m_filter(1024U),
         m_iconPath(),
@@ -122,7 +114,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -136,8 +128,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -247,35 +238,19 @@ public:
 private:
 
     /**
-     * Icon width in pixels.
-     */
-    static const uint16_t   ICON_WIDTH          = 8U;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const uint16_t   ICON_HEIGHT         = 8U;
-
-    /**
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
 
-    Fonts::FontType         m_fontType;             /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup             m_layoutRight;          /**< Canvas used for the text widget in a layout with icon on the left side. */
-    WidgetGroup             m_layoutLeft;           /**< Canvas used for the bitmap widget in a layout with text on the right side. */
-    WidgetGroup             m_layoutTextOnly;       /**< Canvas used in case only text is shown. */
-    BitmapWidget            m_iconWidget;           /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidgetRight;      /**< Text widget, used in layout with icon. */
-    TextWidget              m_textWidgetTextOnly;   /**< Text widget, used in layout without icon. */
-    String                  m_path;                 /**< MQTT topic path */
-    DynamicJsonDocument     m_filter;               /**< Filter used for the response in JSON format. */
-    String                  m_iconPath;             /**< Icon filename with path. */
-    String                  m_format;               /**< Format used to embed the retrieved filtered value. */
-    float                   m_multiplier;           /**< If grabbed value is a number, it will be multiplied with the multiplier. */
-    float                   m_offset;               /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */
-    mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
+    _GrabViaMqttPlugin::View    m_view;             /**< View with all widgets. */
+    String                      m_path;             /**< MQTT topic path */
+    DynamicJsonDocument         m_filter;           /**< Filter used for the response in JSON format. */
+    String                      m_iconPath;         /**< Icon filename with path. */
+    String                      m_format;           /**< Format used to embed the retrieved filtered value. */
+    float                       m_multiplier;       /**< If grabbed value is a number, it will be multiplied with the multiplier. */
+    float                       m_offset;           /**< If grabbed value is a number, the offset will be added after the multiplication with the multiplier. */
+    mutable MutexRecursive      m_mutex;            /**< Mutex to protect against concurrent access. */
+    bool                        m_hasTopicChanged;  /**< Has the topic content changed? */
 
     /**
      * Get configuration in JSON.

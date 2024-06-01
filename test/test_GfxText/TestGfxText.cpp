@@ -169,6 +169,4 @@ static void testGfxText()
     testGfxText.setTextWrap(true);
     TEST_ASSERT_TRUE(testGfxText.getTextBoundingBox(glyph->xAdvance, "AA", boundingBoxWidth, boundingBoxHeight));
     TEST_ASSERT_EQUAL_UINT16(2U * TomThumb.yAdvance, boundingBoxHeight);
-
-    return;
 }

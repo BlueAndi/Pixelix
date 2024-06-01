@@ -43,13 +43,13 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "PluginWithConfig.hpp"
-#include "AsyncHttpClient.h"
+#include "./internal/View.h"
 
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
+#include <AsyncHttpClient.h>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
-#include <TextWidget.h>
 #include <FileSystem.h>
 
 /******************************************************************************
@@ -76,8 +76,7 @@ public:
      */
     SignalDetectorPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textWidget(),
+        m_view(),
         m_mutex(),
         m_isDetected(false),
         m_pushUrl(),
@@ -88,7 +87,6 @@ public:
         m_hasTopicChanged(false)
     {
         (void)m_mutex.create();
-        m_textWidget.setFormatStr(DEFAULT_TEXT);
     }
 
     /**
@@ -126,7 +124,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -140,8 +138,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -279,16 +276,15 @@ private:
      */
     static const char*      DEFAULT_TEXT;
 
-    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget              m_textWidget;       /**< If signal is detected, it will show a corresponding text. */
-    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
-    bool                    m_isDetected;       /**< Shows that the signal was detected. */
-    String                  m_pushUrl;          /**< Push URL which will be triggered if signal is detected. */
-    AsyncHttpClient         m_client;           /**< HTTP(S) client used for push notification. */
-    bool                    m_isUpdateReq;      /**< Display update request, by changing the text. */
-    SimpleTimer             m_timer;            /**< Timer used for slot duration timeout detection in case deactivate() is not called. */
-    const ISlotPlugin*      m_slotInterf;       /**< Slot interface */
-    bool                    m_hasTopicChanged;  /**< Has the topic content changed? */
+    _SignalDetectorPlugin::View m_view;             /**< View with all widgets. */
+    mutable MutexRecursive      m_mutex;            /**< Mutex to protect against concurrent access. */
+    bool                        m_isDetected;       /**< Shows that the signal was detected. */
+    String                      m_pushUrl;          /**< Push URL which will be triggered if signal is detected. */
+    AsyncHttpClient             m_client;           /**< HTTP(S) client used for push notification. */
+    bool                        m_isUpdateReq;      /**< Display update request, by changing the text. */
+    SimpleTimer                 m_timer;            /**< Timer used for slot duration timeout detection in case deactivate() is not called. */
+    const ISlotPlugin*          m_slotInterf;       /**< Slot interface */
+    bool                        m_hasTopicChanged;  /**< Has the topic content changed? */
 
     /**
      * Get configuration in JSON.

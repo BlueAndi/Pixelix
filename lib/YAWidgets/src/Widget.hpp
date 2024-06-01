@@ -46,6 +46,7 @@
 #include <stdint.h>
 #include <WString.h>
 #include <YAGfx.h>
+#include <YAGfxCanvas.h>
 
 /******************************************************************************
  * Macros
@@ -56,8 +57,7 @@
  *****************************************************************************/
 
 /**
- * Base widget, which contains the position
- * inside a canvas and declares the graphics interface.
+ * The widget class is the base class of all interface objects.
  */
 class Widget
 {
@@ -83,8 +83,7 @@ public:
         if (&widget != this)
         {
             m_type      = widget.m_type;
-            m_posX      = widget.m_posX;
-            m_posY      = widget.m_posY;
+            m_canvas    = widget.m_canvas;
             /* m_name is not assigned! */
             m_isEnabled = widget.m_isEnabled;
         }
@@ -100,8 +99,8 @@ public:
      */
     void move(int16_t x, int16_t y)
     {
-        m_posX = x;
-        m_posY = y;
+        m_canvas.setOffsetX(x);
+        m_canvas.setOffsetY(y);
     }
 
     /**
@@ -112,8 +111,48 @@ public:
      */
     void getPos(int16_t& x, int16_t& y) const
     {
-        x = m_posX;
-        y = m_posY;
+        x = m_canvas.getOffsetX();
+        y = m_canvas.getOffsetY();
+    }
+
+    /**
+     * Get widget width.
+     * 
+     * @return Width in pixel
+     */
+    uint16_t getWidth() const
+    {
+        return m_canvas.getWidth();
+    }
+
+    /**
+     * Set widget width.
+     * 
+     * @param[in] width Width in pixel
+     */
+    virtual void setWidth(uint16_t width)
+    {
+        m_canvas.setWidth(width);
+    }
+
+    /**
+     * Get widget height.
+     * 
+     * @return Width in pixel
+     */
+    uint16_t getHeight() const
+    {
+        return m_canvas.getHeight();
+    }
+
+    /**
+     * Set widget height.
+     * 
+     * @param[in] height Height in pixel
+     */
+    virtual void setHeight(uint16_t height)
+    {
+        m_canvas.setHeight(height);
     }
 
     /**
@@ -126,7 +165,8 @@ public:
     {
         if (true == m_isEnabled)
         {
-            paint(gfx);
+            m_canvas.setParentGfx(gfx);
+            paint(m_canvas);
         }
     }
 
@@ -213,36 +253,22 @@ public:
 protected:
 
     const char* m_type;         /**< Widget type string */
-    int16_t     m_posX;         /**< Upper left corner (x-coordinate) of the widget in a canvas. */
-    int16_t     m_posY;         /**< Upper left corner (y-coordinate) of the widget in a canvas. */
+    YAGfxCanvas m_canvas;       /**< Canvas used to draw the widget. */
     String      m_name;         /**< Widget name for identification. */
     bool        m_isEnabled;    /**< If widget is enabled, it will be drawn otherwise not. */
 
     /**
-     * Constructs a widget at position (0, 0) in the canvas.
-     * 
-     * @param[in] type Widget type name
-     */
-    Widget(const char* type) :
-        m_type(type),
-        m_posX(0),
-        m_posY(0),
-        m_name(),
-        m_isEnabled(true)
-    {
-    }
-
-    /**
      * Constructs a widget a the given position in the canvas.
      * 
-     * @param[in] type  Widget type name
-     * @param[in] x     Upper left corner (x-coordinate) of the widget in a canvas.
-     * @param[in] y     Upper left corner (y-coordinate) of the widget in a canvas.
+     * @param[in] type      Widget type name
+     * @param[in] width     Widget width in pixel.
+     * @param[in] height    Widget height in pixel.
+     * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y         Upper left corner (y-coordinate) of the widget in a canvas.
     */
-    Widget(const char* type, int16_t x, int16_t y) :
+    Widget(const char* type, uint16_t width, uint16_t height, int16_t x = 0, int16_t y = 0) :
         m_type(type),
-        m_posX(x),
-        m_posY(y),
+        m_canvas(nullptr, x, y, width, height),
         m_name(),
         m_isEnabled(true)
     {
@@ -256,8 +282,7 @@ protected:
     */
     Widget(const Widget& widget) :
         m_type(widget.m_type),
-        m_posX(widget.m_posX),
-        m_posY(widget.m_posY),
+        m_canvas(widget.m_canvas),
         m_name(),
         m_isEnabled(widget.m_isEnabled)
     {

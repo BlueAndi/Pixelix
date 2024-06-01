@@ -79,9 +79,14 @@ public:
 
     /**
      * Constructs a text widget with a empty string in default color.
+     * 
+     * @param[in] width     Widget width in pixel.
+     * @param[in] height    Widget height in pixel.
+     * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y         Upper left corner (y-coordinate) of the widget in a canvas.
      */
-    TextWidget() :
-        Widget(WIDGET_TYPE),
+    TextWidget(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0) :
+        Widget(WIDGET_TYPE, width, height, x, y),
         m_formatStr(),
         m_formatStrNew(),
         m_formatStrTmp(),
@@ -99,12 +104,14 @@ public:
     /**
      * Constructs a text widget with the given string and its color.
      * If there is no color given, it will be default color.
+     * 
+     * The width and height is set to the parent canvas.
      *
      * @param[in] str   String, which may contain format tags.
      * @param[in] color Color of the string
      */
     TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR) :
-        Widget(WIDGET_TYPE),
+        Widget(WIDGET_TYPE, 0U, 0U, 0, 0),
         m_formatStr(str),
         m_formatStrNew(str),
         m_formatStrTmp(),
@@ -125,7 +132,7 @@ public:
      * @param[in] widget Widget, which to copy
      */
     TextWidget(const TextWidget& widget) :
-        Widget(WIDGET_TYPE),
+        Widget(widget),
         m_formatStr(widget.m_formatStr),
         m_formatStrNew(widget.m_formatStrNew),
         m_formatStrTmp(widget.m_formatStrTmp),
@@ -255,7 +262,6 @@ public:
     void setTextColor(const Color& color)
     {
         m_gfxText.setTextColor(color);
-        return;
     }
 
     /**

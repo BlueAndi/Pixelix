@@ -179,6 +179,4 @@ static void testColor()
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getRed());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getGreen());
     TEST_ASSERT_EQUAL_UINT8(0xc8u, myColorA.getBlue());
-
-    return;
 }

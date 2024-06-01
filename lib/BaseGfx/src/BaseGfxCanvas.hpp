@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef BASE_GFX_MAP_HPP
-#define BASE_GFX_MAP_HPP
+#ifndef BASE_GFX_CANVAS_HPP
+#define BASE_GFX_CANVAS_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -57,42 +57,29 @@
  *****************************************************************************/
 
 /**
- * A map is like a window over graphic operations. It defines the window size
- * and the offset. It ensures that drawing is kept inside its defined borders
- * (width, height).
+ * The canvas ensures the graphic operations take place inside a dedicated
+ * window. The window itself can be moved to a position inside the parent
+ * canvas.
  * 
  * @tparam TColor The color representation.
  */
 template < typename TColor >
-class BaseGfxMap : public BaseGfx<TColor>
+class BaseGfxCanvas : public BaseGfx<TColor>
 {
 public:
 
     /**
-     * Constructs a map canvas.
-     */
-    BaseGfxMap() :
-        BaseGfx<TColor>(),
-        m_gfx(nullptr),
-        m_offsX(0),
-        m_offsY(0),
-        m_width(0U),
-        m_height(0U)
-    {
-    }
-
-    /**
-     * Constructs a map canvas.
+     * Constructs a canvas.
      * 
-     * @param[in] gfx       The graphic operations of the underlying canvas.
-     * @param[in] offsX     The x offset in the underlying canvas.
-     * @param[in] offsY     The y offset in the underlying canvas.
-     * @param[in] width     The map canvas width in pixels.
-     * @param[in] height    The map canvas height in pixels.
+     * @param[in] parentGfx The graphic operations of the parent canvas.
+     * @param[in] offsX     The x offset in the parent canvas.
+     * @param[in] offsY     The y offset in the parent canvas.
+     * @param[in] width     The canvas width in pixels.
+     * @param[in] height    The canvas height in pixels.
      */
-    BaseGfxMap(BaseGfx<TColor>& gfx, int16_t offsX = 0, int16_t offsY = 0, uint16_t width = 0U, uint16_t height = 0U) :
+    BaseGfxCanvas(BaseGfx<TColor>* parentGfx = nullptr, int16_t offsX = 0, int16_t offsY = 0, uint16_t width = 0U, uint16_t height = 0U) :
         BaseGfx<TColor>(),
-        m_gfx(&gfx),
+        m_parentGfx(parentGfx),
         m_offsX(offsX),
         m_offsY(offsY),
         m_width(width),
@@ -101,62 +88,62 @@ public:
     }
 
     /**
-     * Constructs a map canvas by copy.
+     * Constructs a canvas by copy.
      * 
-     * @param[in] map   Source map which to copy.
+     * @param[in] canvas    Source canvas which to copy.
      */
-    BaseGfxMap(const BaseGfxMap& map) :
-        BaseGfx<TColor>(map),
-        m_gfx(map.m_gfx),
-        m_offsX(map.m_offsX),
-        m_offsY(map.m_offsY),
-        m_width(map.m_width),
-        m_height(map.m_height)
+    BaseGfxCanvas(const BaseGfxCanvas& canvas) :
+        BaseGfx<TColor>(canvas),
+        m_parentGfx(canvas.m_parentGfx),
+        m_offsX(canvas.m_offsX),
+        m_offsY(canvas.m_offsY),
+        m_width(canvas.m_width),
+        m_height(canvas.m_height)
     {
     }
 
     /**
-     * Destroys the map canvas.
+     * Destroys the canvas.
      */
-    virtual ~BaseGfxMap()
+    virtual ~BaseGfxCanvas()
     {
     }
 
     /**
-     * Assigns a map.
+     * Assigns a canvas.
      * 
-     * @param[in] map   Source map which to assign.
+     * @param[in] canvas    Source canvas which to assign.
      * 
      * @return Canvas
      */
-    BaseGfxMap& operator=(const BaseGfxMap& map)
+    BaseGfxCanvas& operator=(const BaseGfxCanvas& canvas)
     {
-        if (&map != this)
+        if (&canvas != this)
         {
-            m_gfx       = map.m_gfx;
-            m_offsX     = map.m_offsX;
-            m_offsY     = map.m_offsY;
-            m_width     = map.m_width;
-            m_height    = map.m_height;
+            m_parentGfx = canvas.m_parentGfx;
+            m_offsX     = canvas.m_offsX;
+            m_offsY     = canvas.m_offsY;
+            m_width     = canvas.m_width;
+            m_height    = canvas.m_height;
         }
 
         return *this;
     }
 
     /**
-     * Set canvas graphic operations.
+     * Set parent canvas graphic operations.
      * 
-     * @param[in] gfx   Graphic functions
+     * @param[in] gfx   Parent graphic functions
      */
-    void setGfx(BaseGfx<TColor>& gfx)
+    void setParentGfx(BaseGfx<TColor>& gfx)
     {
-        m_gfx = &gfx;
+        m_parentGfx = &gfx;
     }
 
     /**
-     * Get x offset in the underlying canvas.
+     * Get x offset in the parent canvas.
      * 
-     * @return x offset in the underlying canvas
+     * @return x offset in the parent canvas
      */
     int16_t getOffsetX() const
     {
@@ -164,9 +151,9 @@ public:
     }
 
     /**
-     * Set x offset in the underlying canvas.
+     * Set x offset in the parent canvas.
      * 
-     * @param[in] offsX x offset in the underlying canvas
+     * @param[in] offsX x offset in the parent canvas
      */
     void setOffsetX(int16_t offsX)
     {
@@ -174,9 +161,9 @@ public:
     }
 
     /**
-     * Get y offset in the underlying canvas.
+     * Get y offset in the parent canvas.
      * 
-     * @return y offset in the underlying canvas
+     * @return y offset in the parent canvas
      */
     int16_t getOffsetY() const
     {
@@ -184,9 +171,9 @@ public:
     }
 
     /**
-     * Set y offset in the underlying canvas.
+     * Set y offset in the parent canvas.
      * 
-     * @param[in] offsY y offset in the underlying canvas
+     * @param[in] offsY y offset in the parent canvas
      */
     void setOffsetY(int16_t offsY)
     {
@@ -194,9 +181,9 @@ public:
     }
 
     /**
-     * Set map canvas width in pixels.
+     * Set canvas width in pixels.
      * 
-     * @param[in] width Map canvas width in pixels
+     * @param[in] width Canvas width in pixels
      */
     void setWidth(uint16_t width)
     {
@@ -204,9 +191,9 @@ public:
     }
 
     /**
-     * Set map canvas height in pixels.
+     * Set canvas height in pixels.
      * 
-     * @param[in] height Map canvas height in pixels
+     * @param[in] height Canvas height in pixels
      */
     void setHeight(uint16_t height)
     {
@@ -214,9 +201,9 @@ public:
     }
 
     /**
-     * Get map canvas width in pixel.
+     * Get canvas width in pixel.
      *
-     * @return Map canvas width in pixel
+     * @return Map canvas width in pixel.
      */
     uint16_t getWidth() const final
     {
@@ -224,9 +211,9 @@ public:
     }
 
     /**
-     * Get map canvas height in pixel.
+     * Get canvas height in pixel.
      *
-     * @return Map canvas height in pixel
+     * @return Canvas height in pixel.
      */
     uint16_t getHeight() const final
     {
@@ -247,13 +234,16 @@ public:
         static TColor   trash;
         TColor*         pixel   = &trash;
 
-        if ((nullptr != m_gfx) &&
+        if ((nullptr != m_parentGfx) &&
             (0 <= x) &&
             (0 <= y) &&
             (m_width > x) &&
             (m_height > y))
         {
-            pixel = &m_gfx->getColor(x + m_offsX, y + m_offsY);
+            int16_t absX = x + m_offsX;
+            int16_t absY = y + m_offsY;
+
+            pixel = &m_parentGfx->getColor(absX, absY);
         }
 
         return *pixel;
@@ -272,13 +262,16 @@ public:
         static TColor   trash;
         const TColor*   pixel   = &trash;
 
-        if ((nullptr != m_gfx) &&
+        if ((nullptr != m_parentGfx) &&
             (0 <= x) &&
             (0 <= y) &&
             (m_width > x) &&
             (m_height > y))
         {
-            pixel = &m_gfx->getColor(x + m_offsX, y + m_offsY);
+            int16_t absX = x + m_offsX;
+            int16_t absY = y + m_offsY;
+
+            pixel = &m_parentGfx->getColor(absX, absY);
         }
 
         return *pixel;
@@ -293,23 +286,26 @@ public:
      */
     void drawPixel(int16_t x, int16_t y, const TColor& color) final
     {
-        if ((nullptr != m_gfx) &&
+        if ((nullptr != m_parentGfx) &&
             (0 <= x) &&
             (0 <= y) &&
             (m_width > x) &&
             (m_height > y))
         {
-            m_gfx->drawPixel(x + m_offsX, y + m_offsY, color);
+            int16_t absX = x + m_offsX;
+            int16_t absY = y + m_offsY;
+
+            m_parentGfx->drawPixel(absX, absY, color);
         }
     }
 
 private:
 
-    BaseGfx<TColor>*    m_gfx;      /**< The underlying graphic operations. */
-    int16_t             m_offsX;    /**< The x offset in the underlying canvas. */
-    int16_t             m_offsY;    /**< The y offset in the underlying canvas. */
-    uint16_t            m_width;    /**< Map canvas width in pixels. */
-    uint16_t            m_height;   /**< Map canvas height in pixels. */
+    BaseGfx<TColor>*    m_parentGfx;    /**< The parent graphic operations. */
+    int16_t             m_offsX;        /**< The x offset in the parent canvas. */
+    int16_t             m_offsY;        /**< The y offset in the parent canvas. */
+    uint16_t            m_width;        /**< Canvas width in pixels. */
+    uint16_t            m_height;       /**< Canvas height in pixels. */
 
 };
 
@@ -317,6 +313,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* BASE_GFX_MAP_HPP */
+#endif  /* BASE_GFX_CANVAS_HPP */
 
 /** @} */

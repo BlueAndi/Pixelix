@@ -58,20 +58,8 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize image path for standard icon. */
-const char* VolumioPlugin::IMAGE_PATH_STD_ICON      = "/plugins/VolumioPlugin/volumio.bmp";
-
-/* Initialize image path for "stop" icon. */
-const char* VolumioPlugin::IMAGE_PATH_STOP_ICON     = "/plugins/VolumioPlugin/volumioStop.bmp";
-
-/* Initialize image path for "play" icon. */
-const char* VolumioPlugin::IMAGE_PATH_PLAY_ICON     = "/plugins/VolumioPlugin/volumioPlay.bmp";
-
-/* Initialize image path for "pause" icon. */
-const char* VolumioPlugin::IMAGE_PATH_PAUSE_ICON    = "/plugins/VolumioPlugin/volumioPause.bmp";
-
 /* Initialize plugin topic. */
-const char* VolumioPlugin::TOPIC_CONFIG             = "/host";
+const char* VolumioPlugin::TOPIC_CONFIG = "/host";
 
 /******************************************************************************
  * Public Methods
@@ -154,46 +142,9 @@ bool VolumioPlugin::hasTopicChanged(const String& topic)
 
 void VolumioPlugin::start(uint16_t width, uint16_t height)
 {
-    uint16_t                    tcHeight        = 0U;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-
-    (void)m_iconCanvas.addWidget(m_stdIconWidget);
-    (void)m_iconCanvas.addWidget(m_stopIconWidget);
-    (void)m_iconCanvas.addWidget(m_playIconWidget);
-    (void)m_iconCanvas.addWidget(m_pauseIconWidget);
-
-    /* Load all icons from filesystem now, to prevent filesystem
-     * access during active/inactive/update methods.
-     */
-    (void)m_stdIconWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-    (void)m_stopIconWidget.load(FILESYSTEM, IMAGE_PATH_STOP_ICON);
-    (void)m_playIconWidget.load(FILESYSTEM, IMAGE_PATH_PLAY_ICON);
-    (void)m_pauseIconWidget.load(FILESYSTEM, IMAGE_PATH_PAUSE_ICON);
-
-    /* Disable all, except the standard icon. */
-    m_stopIconWidget.disable();
-    m_playIconWidget.disable();
-    m_pauseIconWidget.disable();
-
-    /* The text canvas is left aligned to the icon canvas and aligned to the
-     * top. Consider that below the text canvas the music position is shown.
-     */
-    tcHeight = height - 2U;
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, tcHeight);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (tcHeight > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
 
@@ -230,7 +181,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -258,7 +209,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -293,7 +244,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -323,21 +274,10 @@ void VolumioPlugin::process(bool isConnected)
 
 void VolumioPlugin::update(YAGfx& gfx)
 {
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-    int16_t                     tcX         = 0;
-    int16_t                     tcY         = 0;
-    uint16_t                    posWidth    = m_textCanvas.getWidth() * m_pos / 100U;
-    Color                       posColor    = ColorDef::RED;
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-
-    m_textCanvas.getPos(tcX, tcY);
-    m_textCanvas.update(gfx);
-
-    /* Draw a nice line to represent the current music position. */
-    gfx.drawHLine(tcX, gfx.getHeight() - 1, posWidth, posColor);
-    PLUGIN_NOT_USED(tcY);
+    m_view.getProgressBar().setProgress(m_pos);
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -383,49 +323,27 @@ bool VolumioPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 
 void VolumioPlugin::changeState(VolumioState state)
 {
-    /* Disable current icon */
-    switch(m_state)
-    {
-    case STATE_UNKNOWN:
-        m_stdIconWidget.disable();
-        break;
-
-    case STATE_STOP:
-        m_stopIconWidget.disable();
-        break;
-
-    case STATE_PLAY:
-        m_playIconWidget.disable();
-        break;
-
-    case STATE_PAUSE:
-        m_pauseIconWidget.disable();
-        break;
-
-    default:
-        break;
-    }
-
-    /* Enable new icon */
     switch(state)
     {
     case STATE_UNKNOWN:
-        m_stdIconWidget.enable();
+        m_view.showIcon(_VolumioPlugin::View::ICON_STD);
         break;
 
     case STATE_STOP:
-        m_stopIconWidget.enable();
+        m_view.showIcon(_VolumioPlugin::View::ICON_STOP);
         break;
 
     case STATE_PLAY:
-        m_playIconWidget.enable();
+        m_view.showIcon(_VolumioPlugin::View::ICON_PLAY);
         break;
 
     case STATE_PAUSE:
-        m_pauseIconWidget.enable();
+        m_view.showIcon(_VolumioPlugin::View::ICON_PAUSE);
         break;
         
     default:
+        m_view.showIcon(_VolumioPlugin::View::ICON_STD);
+        state = STATE_UNKNOWN;
         break;
     }
 
@@ -675,7 +593,7 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
         }
 
         changeState(state);
-        m_textWidget.setFormatStr(infoOnDisplay);
+        m_view.setFormatText(infoOnDisplay);
 
         m_pos = static_cast<uint8_t>(pos);
 

@@ -32,11 +32,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "AsyncHttpClient.h"
-#include "ClockDrv.h"
 #include "SunrisePlugin.h"
-#include "time.h"
 
+#include <time.h>
+#include <ClockDrv.h>
 #include <ArduinoJson.h>
 #include <Logging.h>
 #include <HttpStatus.h>
@@ -60,9 +59,6 @@
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
-
-/* Initialize image path. */
-const char* SunrisePlugin::IMAGE_PATH           = "/plugins/SunrisePlugin/sunrise.bmp";
 
 /* Initialize plugin topic. */
 const char* SunrisePlugin::TOPIC_CONFIG         = "/location";
@@ -172,30 +168,7 @@ void SunrisePlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
-
-    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
 
@@ -288,9 +261,7 @@ void SunrisePlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -482,7 +453,7 @@ void SunrisePlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
         sunset  = addCurrentTimezoneValues(sunset);
 
         m_relevantResponsePart = sunrise + " / " + sunset;
-        m_textWidget.setFormatStr(m_relevantResponsePart);
+        m_view.setFormatText(m_relevantResponsePart);
     }
 }
 

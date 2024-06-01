@@ -212,6 +212,4 @@ static void testWidget()
                                     getMin<uint16_t>(YAGfxTest::WIDTH - posX, TestWidget::WIDTH),
                                     getMin<uint16_t>(YAGfxTest::HEIGHT - posY, TestWidget::HEIGHT),
                                     COLOR));
-
-    return;
 }

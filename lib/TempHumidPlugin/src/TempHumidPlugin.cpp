@@ -33,9 +33,9 @@
  * Includes
  *****************************************************************************/
 #include "TempHumidPlugin.h"
-#include "FileSystem.h"
-#include "SensorDataProvider.h"
 
+#include <FileSystem.h>
+#include <SensorDataProvider.h>
 #include <Board.h>
 #include <SensorChannelType.hpp>
 #include <YAColor.h>
@@ -61,12 +61,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize image path for temperature (scale) icon. */
-const char* TempHumidPlugin::IMAGE_PATH_TEMP_ICON      = "/plugins/TempHumidPlugin/temp.bmp";
-
-/* Initialize image path for humidity (drop) icon. */
-const char* TempHumidPlugin::IMAGE_PATH_HUMID_ICON     = "/plugins/TempHumidPlugin/drop.bmp";
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -83,30 +77,7 @@ void TempHumidPlugin::start(uint16_t width, uint16_t height)
     MutexGuard<MutexRecursive>  guard(m_mutex);
     SensorDataProvider&         sensorDataProv  = SensorDataProvider::getInstance();
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
-
-    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
 
     /* Use just the first found sensor for temperature. */
     if (true == sensorDataProv.find(sensorIdx, channelIdx, ISensorChannel::TYPE_TEMPERATURE_DEGREE_CELSIUS, ISensorChannel::DATA_TYPE_FLOAT32))
@@ -190,9 +161,7 @@ void TempHumidPlugin::active(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 void TempHumidPlugin::inactive()
@@ -226,9 +195,6 @@ void TempHumidPlugin::update(YAGfx& gfx)
 
     if (true == showPage)
     {
-        /* Clear display */
-        gfx.fillScreen(ColorDef::BLACK);
-
         switch(m_page)
         {
         case TEMPERATURE:
@@ -243,8 +209,7 @@ void TempHumidPlugin::update(YAGfx& gfx)
             break;
         }
 
-        m_iconCanvas.update(gfx);
-        m_textCanvas.update(gfx);
+        m_view.update(gfx);
     }
 }
 
@@ -258,11 +223,11 @@ void TempHumidPlugin::update(YAGfx& gfx)
 
 void TempHumidPlugin::handleTemperature()
 {
-    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_TEMP_ICON);
+    m_view.loadIcon(_TempHumidPlugin::View::ICON_TEMPERATURE);
 
     if (nullptr == m_temperatureSensorCh)
     {
-        m_textWidget.setFormatStr("\\calign-");
+        m_view.setFormatText("\\calign-");
     }
     else
     {
@@ -275,17 +240,17 @@ void TempHumidPlugin::handleTemperature()
         text += valueReducedPrecison;
         text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
 
-        m_textWidget.setFormatStr(text);
+        m_view.setFormatText(text);
     }
 }
 
 void TempHumidPlugin::handleHumidity()
 {
-    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_HUMID_ICON);
+    m_view.loadIcon(_TempHumidPlugin::View::ICON_HUMIDITY);
 
     if (nullptr == m_humiditySensorCh)
     {
-        m_textWidget.setFormatStr("\\calign-");
+        m_view.setFormatText("\\calign-");
     }
     else
     {
@@ -297,7 +262,7 @@ void TempHumidPlugin::handleHumidity()
         text += valueReducedPrecison;
         text += ISensorChannel::channelTypeToUnit(m_humiditySensorCh->getType());
         
-        m_textWidget.setFormatStr(text);
+        m_view.setFormatText(text);
     }
 }
 

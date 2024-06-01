@@ -156,6 +156,4 @@ static void testBmpImgLoader()
 
     /* Load valid bitmap file. */
     TEST_ASSERT_EQUAL(BmpImgLoader::RET_OK, loader.load(localFileSystem, "./test/test_BmpImgLoader/test24bpp.bmp", bitmap));
-
-    return;
 }

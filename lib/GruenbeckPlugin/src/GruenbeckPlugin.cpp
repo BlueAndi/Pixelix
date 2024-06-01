@@ -59,9 +59,6 @@
  * Local Variables
  *****************************************************************************/
 
-/* Initialize image path. */
-const char* GruenbeckPlugin::IMAGE_PATH     = "/plugin/GruenbeckPlugin/gruenbeck.bmp";
-
 /* Initialize plugin topic. */
 const char* GruenbeckPlugin::TOPIC_CONFIG   = "/ipAddress";
 
@@ -149,34 +146,8 @@ void GruenbeckPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+    m_view.init(width, height);
     
-    /* Load all icons from filesystem now, to prevent filesystem
-     * access during active/inactive/update methods.
-     */
-    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH);
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
-
     PluginWithConfig::start(width, height);
 
     initHttpClient();
@@ -208,7 +179,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (false == startHttpRequest())
             {
                 /* If a request fails, show standard icon and a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -235,7 +206,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (false == startHttpRequest())
             {
                 /* If a request fails, show standard icon and a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -269,7 +240,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (true == m_isConnectionError)
             {
                 /* If a request fails, show a '?' */
-                m_textWidget.setFormatStr("\\calign?");
+                m_view.setFormatText("\\calign?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -292,9 +263,7 @@ void GruenbeckPlugin::active(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 void GruenbeckPlugin::inactive()
@@ -308,11 +277,9 @@ void GruenbeckPlugin::update(YAGfx& gfx)
 
     if (false != m_httpResponseReceived)
     {
-        m_textWidget.setFormatStr("\\calign" + m_relevantResponsePart + "%");
+        m_view.setFormatText("\\calign" + m_relevantResponsePart + "%");
         
-        gfx.fillScreen(ColorDef::BLACK);
-        m_iconCanvas.update(gfx);
-        m_textCanvas.update(gfx);
+        m_view.update(gfx);
 
         m_relevantResponsePart = "";
 

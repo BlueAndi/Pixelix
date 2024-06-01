@@ -43,14 +43,12 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "PluginWithConfig.hpp"
-#include "AsyncHttpClient.h"
+#include "./internal/View.h"
 #include "IOpenWeatherSource.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
+#include <AsyncHttpClient.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
@@ -99,11 +97,7 @@ public:
      */
     OpenWeatherPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_bitmapWidget(),
-        m_textWidget("\\calign?"),
+        m_view(),
         m_sourceId(OPENWEATHER_SOURCE_ONE_CALL_25),
         m_updatePeriod(UPDATE_PERIOD),
         m_source(nullptr),
@@ -115,7 +109,7 @@ public:
         m_mutex(),
         m_isConnectionError(false),
         m_currentTemp("\\calign?"),
-        m_currentWeatherIconFullPath(IMAGE_PATH_STD_ICON),
+        m_currentWeatherIconFullPath(),
         m_currentUvIndex("\\calign?"),
         m_currentHumidity("\\calign?"),
         m_currentWindspeed("\\calign?"),
@@ -170,7 +164,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -184,8 +178,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -387,36 +380,6 @@ public:
 private:
 
     /**
-     * Icon width in pixels.
-     */
-    static const uint16_t   ICON_WIDTH          = 8U;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const uint16_t   ICON_HEIGHT         = 8U;
-
-    /**
-     * Image path within the filesystem to standard icon.
-     */
-    static const char*      IMAGE_PATH_STD_ICON;
-
-    /**
-     * Image path within the filesystem to UV index icon.
-     */
-    static const char*      IMAGE_PATH_UVI_ICON;
-
-    /**
-     * Image path within the filesystem to humidity icon.
-     */
-    static const char*      IMAGE_PATH_HUMIDITY_ICON;
-
-    /**
-     * Image path within the filesystem to windspeed icon.
-     */
-    static const char*      IMAGE_PATH_WIND_ICON;
-
-    /**
      * Image path within the filesystem to weather condition icons.
      */
     static const char*      IMAGE_PATH;
@@ -430,16 +393,6 @@ private:
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
-
-    /**
-     * Filename extension of bitmap image file.
-     */
-    static const char*      FILE_EXT_BITMAP;
-
-    /**
-     * Filename extension of sprite sheet parameter file.
-     */
-    static const char*      FILE_EXT_SPRITE_SHEET;
 
     /**
      * Period in ms for requesting data from server.
@@ -458,11 +411,7 @@ private:
     /** Time for duration tick period in ms */
     static const uint32_t   DURATION_TICK_PERIOD    = SIMPLE_TIMER_SECONDS(1U);
 
-    Fonts::FontType             m_fontType;                     /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup                 m_textCanvas;                   /**< Canvas used for the text widget. */
-    WidgetGroup                 m_iconCanvas;                   /**< Canvas used for the bitmap widget. */
-    BitmapWidget                m_bitmapWidget;                 /**< Bitmap widget, used to show the icon. */
-    TextWidget                  m_textWidget;                   /**< Text widget, used for showing the text. */
+    _OpenWeatherPlugin::View    m_view;                         /**< View with all widgets. */
     OpenWeatherSource           m_sourceId;                     /**< OpenWeather source id. */
     uint32_t                    m_updatePeriod;                 /**< Period in ms for requesting data from server. This is used in case the last request to the server was successful. */
     IOpenWeatherSource*         m_source;                       /**< OpenWeather source to use to retrieve weather information. */

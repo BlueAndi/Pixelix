@@ -67,9 +67,14 @@ public:
 
     /**
      * Constructs a bitmap widget, which is empty.
+     * 
+     * @param[in] width     Widget width in pixel.
+     * @param[in] height    Widget height in pixel.
+     * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
+     * @param[in] y         Upper left corner (y-coordinate) of the widget in a canvas.
      */
-    BitmapWidget() :
-        Widget(WIDGET_TYPE),
+    BitmapWidget(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0) :
+        Widget(WIDGET_TYPE, width, height, x, y),
         m_bitmap(),
         m_spriteSheet(),
         m_timer(),
@@ -83,7 +88,7 @@ public:
      * @param[in] widget Bitmap widge, which to copy
      */
     BitmapWidget(const BitmapWidget& widget) :
-        Widget(WIDGET_TYPE),
+        Widget(widget),
         m_bitmap(widget.m_bitmap),
         m_spriteSheet(widget.m_spriteSheet),
         m_timer(widget.m_timer),
@@ -108,6 +113,9 @@ public:
     /**
      * Set a bitmap.
      *
+     * The widget width and height will be set according to bitmap wdith and
+     * height.
+     * 
      * @param[in] bitmap    Bitmap
      */
     void set(const YAGfxBitmap& bitmap)
@@ -116,6 +124,10 @@ public:
         {
             m_bitmap.copy(bitmap);
         }
+
+        /* Update width and height according to loaded bitmap. */
+        m_canvas.setWidth(m_bitmap.getWidth());
+        m_canvas.setHeight(m_bitmap.getHeight());
 
         /* Release sprite sheet to avoid wasting memory. The widget can
          * only show one of them.
@@ -144,6 +156,9 @@ public:
     /**
      * Load bitmap image from filesystem.
      * If a sprite sheet is active, it will be disabled.
+     * 
+     * The widget width and height will be set according to bitmap wdith and
+     * height.
      *
      * @param[in] fs        Filesystem
      * @param[in] filename  Filename with full path
@@ -155,6 +170,9 @@ public:
     /**
      * Load sprite sheet file (.sprite) from filesystem.
      *
+     * The widget width and height will be set according to sprite sheet
+     * frame wdith and height.
+     * 
      * @param[in] fs                    Filesystem
      * @param[in] spriteSheetFileName   Name of the sprite sheet file in the filesystem
      * @param[in] textureFileName       Name of the texture image file in the filesystem
@@ -210,11 +228,11 @@ private:
     {
         if (true == m_spriteSheet.isEmpty())
         {
-            gfx.drawBitmap(m_posX, m_posY, m_bitmap);
+            gfx.drawBitmap(0, 0, m_bitmap);
         }
         else
         {
-            gfx.drawBitmap(m_posX, m_posY, m_spriteSheet.getFrame());
+            gfx.drawBitmap(0, 0, m_spriteSheet.getFrame());
 
             /* If timer is not running, start it. */
             if (false == m_timer.isTimerRunning())

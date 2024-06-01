@@ -43,13 +43,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
+#include <stdint.h>
+#include <Plugin.hpp>
 #include <FS.h>
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
 #include <Mutex.hpp>
 
 /******************************************************************************
@@ -76,11 +74,7 @@ public:
      */
     IconTextPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_bitmapWidget(),
-        m_textWidget(),
+        m_view(),
         m_iconPath(),
         m_spriteSheetPath(),
         m_isUploadError(false),
@@ -125,7 +119,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -139,8 +133,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -340,11 +333,7 @@ private:
      */
     static const char*      FILE_EXT_SPRITE_SHEET;
 
-    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup             m_textCanvas;       /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;       /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidget;     /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    _IconTextPlugin::View   m_view;             /**< View with all widgets. */
     String                  m_iconPath;         /**< Full path to icon. */
     String                  m_spriteSheetPath;  /**< Full path to spritesheet. */
     bool                    m_isUploadError;    /**< Flag to signal a upload error. */

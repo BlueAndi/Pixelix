@@ -43,10 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
-#include <TextWidget.h>
+#include <stdint.h>
+#include <Plugin.hpp>
 #include <SimpleTimer.hpp>
 
 /******************************************************************************
@@ -73,8 +73,7 @@ public:
      */
     SysMsgPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textWidget(),
+        m_view(),
         m_timer(),
         m_duration(0U),
         m_max(0U),
@@ -113,7 +112,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -127,8 +126,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -206,7 +204,7 @@ public:
     {
         if (false == nextMessage())
         {
-            m_textWidget.clear();
+            m_view.clear();
             disable();
         }
     }
@@ -243,16 +241,15 @@ private:
         }
     };
 
-    Fonts::FontType m_fontType;             /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget      m_textWidget;           /**< Text widget, used for showing the text. */
-    SimpleTimer     m_timer;                /**< Timer used to observer minimum duration */
-    uint32_t        m_duration;             /**< Duration in ms, how long a non-scrolling text shall be shown. */
-    uint32_t        m_max;                  /**< Maximum number how often a scrolling text shall be shown. */
-    bool            m_isInit;               /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
-    SysMsg          m_messages[MAX_SYS_MSG];/**< System message buffer */
-    size_t          m_wrIndex;              /**< System message buffer write index. */
-    size_t          m_rdIndex;              /**< System message buffer read index. */
-    bool            m_isSignalEnabled;      /**< Is signal enabled? */
+    _SysMsgPlugin::View m_view;                 /**< View with all widgets. */
+    SimpleTimer         m_timer;                /**< Timer used to observer minimum duration */
+    uint32_t            m_duration;             /**< Duration in ms, how long a non-scrolling text shall be shown. */
+    uint32_t            m_max;                  /**< Maximum number how often a scrolling text shall be shown. */
+    bool                m_isInit;               /**< Is initialization phase? Leaving this phase means to have duration and etc. handled. */
+    SysMsg              m_messages[MAX_SYS_MSG];/**< System message buffer */
+    size_t              m_wrIndex;              /**< System message buffer write index. */
+    size_t              m_rdIndex;              /**< System message buffer read index. */
+    bool                m_isSignalEnabled;      /**< Is signal enabled? */
 
     /**
      * Show next message from the queue.

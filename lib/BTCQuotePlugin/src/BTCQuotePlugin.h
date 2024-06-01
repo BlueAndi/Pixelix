@@ -42,13 +42,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "AsyncHttpClient.h"
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
+#include <AsyncHttpClient.h>
+#include <Plugin.hpp>
 #include <stdint.h>
-#include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
@@ -79,11 +77,7 @@ public:
      */
     BTCQuotePlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_bitmapWidget(),
-        m_textWidget("\\calign?"),
+        m_view(),
         m_relevantResponsePart(""),
         m_client(),
         m_mutex(),
@@ -132,7 +126,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -146,8 +140,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -194,20 +187,6 @@ public:
 private:
 
     /**
-     * Icon width in pixels.
-     */
-    static const int16_t    ICON_WIDTH          = 8;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const int16_t    ICON_HEIGHT         = 8;
-
-    /**
-     * Image path within the filesystem.
-     */
-    static const char*      BTC_USD_IMAGE_PATH;
-    /**
      * Period in ms for requesting quotes from Server (15 Minutes) (1 for testing!)
      * This is used in case the last request to the server was successful.
      */
@@ -219,15 +198,11 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_MINUTES(1U);
 
-    Fonts::FontType     m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup         m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup         m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget        m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget          m_textWidget;               /**< Text widget, used for showing the text. */
-    String              m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
-    AsyncHttpClient     m_client;                   /**< Asynchronous HTTP client. */
-    MutexRecursive      m_mutex;                    /**< Mutex to protect against concurrent access. */
-    SimpleTimer         m_requestTimer;             /**< Timer is used for cyclic weather http request. */
+    _BTCQuotePlugin::View   m_view;                     /**< View with all widgets. */
+    String                  m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
+    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
+    MutexRecursive          m_mutex;                    /**< Mutex to protect against concurrent access. */
+    SimpleTimer             m_requestTimer;             /**< Timer is used for cyclic weather http request. */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.

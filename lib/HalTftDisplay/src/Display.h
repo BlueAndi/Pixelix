@@ -197,10 +197,10 @@ private:
     /* The below TFT_* definitions are set in platform.ini build_flags */
 
     /** Display matrix width in pixels (not T-Display width) */
-    static const uint16_t   MATRIX_WIDTH        = TFT_MATRIX_WIDTH;
+    static const uint16_t   MATRIX_WIDTH        = CONFIG_LED_MATRIX_WIDTH;
 
     /** Display matrix height in pixels (not T-Display height) */
-    static const uint16_t   MATRIX_HEIGHT       = TFT_MATRIX_HEIGHT;
+    static const uint16_t   MATRIX_HEIGHT       = CONFIG_LED_MATRIX_HEIGHT;
 
     /** Width of a single matrix pixel in T-Display pixels */
     static const int32_t    PIXEL_WIDTH         = TFT_PIXEL_WIDTH;

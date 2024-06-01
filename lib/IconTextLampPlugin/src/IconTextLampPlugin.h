@@ -43,14 +43,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
+#include <stdint.h>
+#include <Plugin.hpp>
 #include <FS.h>
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
-#include <LampWidget.h>
 #include <Mutex.hpp>
 
 /******************************************************************************
@@ -78,14 +75,9 @@ public:
      */
     IconTextLampPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_iconCanvas(),
-        m_textCanvas(),
-        m_lampCanvas(),
-        m_bitmapWidget(),
-        m_textWidget(),
+        m_view(),
         m_iconPath(),
         m_spriteSheetPath(),
-        m_lampWidgets(),
         m_mutex(),
         m_hasTopicTextChanged(false),
         m_hasTopicLampsChanged(false),
@@ -320,16 +312,6 @@ private:
     static const char*      TOPIC_SPRITESHEET;
 
     /**
-     * Icon width in pixels.
-     */
-    static const uint16_t   ICON_WIDTH  = 8U;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const uint16_t   ICON_HEIGHT = 8U;
-
-    /**
      * Filename extension of bitmap image file.
      */
     static const char*      FILE_EXT_BITMAP;
@@ -339,23 +321,13 @@ private:
      */
     static const char*      FILE_EXT_SPRITE_SHEET;
 
-    /**
-     * Max. number of lamps.
-     */
-    static const uint8_t    MAX_LAMPS   = 4U;
-
-    WidgetGroup             m_iconCanvas;                       /**< Canvas used for the bitmap widget. */
-    WidgetGroup             m_textCanvas;                       /**< Canvas used for the text widget. */
-    WidgetGroup             m_lampCanvas;                       /**< Canvas used for the lamp widget. */
-    BitmapWidget            m_bitmapWidget;                     /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;                       /**< Text widget, used for showing the text. */
-    String                  m_iconPath;                         /**< Full path to icon. */
-    String                  m_spriteSheetPath;                  /**< Full path to spritesheet. */
-    LampWidget              m_lampWidgets[MAX_LAMPS];           /**< Lamp widgets, used to signal different things. */
-    mutable MutexRecursive  m_mutex;                            /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicTextChanged;              /**< Has the topic text content changed? */
-    bool                    m_hasTopicLampsChanged;             /**< Has the topic lamps content changed? */
-    bool                    m_hasTopicLampChanged[MAX_LAMPS];   /**< Has the topic lamp content changed? */
+    _IconTextLampPlugin::View   m_view;                 /**< View with all widgets. */
+    String                      m_iconPath;             /**< Full path to icon. */
+    String                      m_spriteSheetPath;      /**< Full path to spritesheet. */
+    mutable MutexRecursive      m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                        m_hasTopicTextChanged;  /**< Has the topic text content changed? */
+    bool                        m_hasTopicLampsChanged; /**< Has the topic lamps content changed? */
+    bool                        m_hasTopicLampChanged[_IconTextLampPlugin::View::MAX_LAMPS];  /**< Has the topic lamp content changed? */
 
     /**
      * Get filename with path.
@@ -365,20 +337,6 @@ private:
      * @return Filename with path.
      */
     String getFileName(const String& ext);
-
-    /**
-     * Calculates the optimal layout for several elements, which shall be aligned.
-     * 
-     * @param[in]   width           Max. available width in pixel.
-     * @param[in]   cnt             Number of elements in a row.
-     * @param[in]   minDistance     The minimal distance in pixel between each element.
-     * @param[in]   minBorder       The minimal border left and right of all elements.
-     * @param[out]  elementWidth    The calculated optimal element width in pixel.
-     * @param[out]  elementDistance The calculated optimal element distance in pixel.
-     * 
-     * @return If the calculation is successful, it will return true otherwise false.
-     */
-    bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
 };
 
 /******************************************************************************

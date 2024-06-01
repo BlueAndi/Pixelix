@@ -80,7 +80,6 @@ public:
     void entry(StateMachine& sm)
     {
         ++m_callCntEntry;
-        return;
     }
 
     /**
@@ -95,8 +94,6 @@ public:
         {
             sm.setState(*m_nextState);
         }
-
-        return;
     }
 
     /**
@@ -107,7 +104,6 @@ public:
     void exit(StateMachine& sm)
     {
         ++m_callCntExit;
-        return;
     }
 
     /**
@@ -118,7 +114,6 @@ public:
     void setState(AbstractState& nextState)
     {
         m_nextState = &nextState;
-        return;
     }
 
     /**
@@ -264,6 +259,4 @@ static void testStateMachine()
     TEST_ASSERT_EQUAL_UINT32(1u, stateA.getCallCntExit());
     TEST_ASSERT_EQUAL_UINT32(1u, stateB.getCallCntEntry());
     TEST_ASSERT_EQUAL_UINT32(1u, stateB.getCallCntExit());
-
-    return;
 }

@@ -145,6 +145,4 @@ static void testSimpleTimer()
     testTimer.start(100U);
     TEST_ASSERT_FALSE(testTimer.isTimeout());
     testTimer.stop();
-
-    return;
 }

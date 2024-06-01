@@ -34,8 +34,8 @@
  * Includes
  *****************************************************************************/
 #include "ThreeIconPlugin.h"
-#include "FileSystem.h"
 
+#include <FileSystem.h>
 #include <Logging.h>
 #include <Util.h>
 
@@ -82,7 +82,7 @@ void ThreeIconPlugin::getTopics(JsonArray& topics) const
 {
     uint8_t iconId = 0U;
 
-    for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
+    for(iconId = 0U; iconId < _ThreeIconPlugin::View::MAX_ICONS; ++iconId)
     {
         JsonObject  jsonIcon        = topics.createNestedObject();
         JsonObject  jsonSpriteSheet = topics.createNestedObject();
@@ -106,11 +106,11 @@ bool ThreeIconPlugin::getTopic(const String& topic, JsonObject& value) const
     {
         uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String      iconIdStr           = topic.substring(indexBeginIconId);
-        uint8_t     iconId              = MAX_ICONS;
+        uint8_t     iconId              = _ThreeIconPlugin::View::MAX_ICONS;
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
 
         if ((true == status) &&
-            (MAX_ICONS > iconId))
+            (_ThreeIconPlugin::View::MAX_ICONS > iconId))
         {
             String  iconFullPath;
             String  spriteSheetFullPath;
@@ -139,11 +139,11 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
     {
         uint32_t            indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String              iconIdStr           = topic.substring(indexBeginIconId);
-        uint8_t             iconId              = MAX_ICONS;
+        uint8_t             iconId              = _ThreeIconPlugin::View::MAX_ICONS;
         bool                status              = Util::strToUInt8(iconIdStr, iconId);
 
         if ((true == status) &&
-            (MAX_ICONS > iconId))
+            (_ThreeIconPlugin::View::MAX_ICONS > iconId))
         {
             JsonVariantConst jsonIconPath = value["fullPath"];
 
@@ -160,11 +160,11 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
     {
         uint32_t            indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String              iconIdStr           = topic.substring(indexBeginIconId);
-        uint8_t             iconId              = MAX_ICONS;
+        uint8_t             iconId              = _ThreeIconPlugin::View::MAX_ICONS;
         bool                status              = Util::strToUInt8(iconIdStr, iconId);
 
         if ((true == status) &&
-            (MAX_ICONS > iconId))
+            (_ThreeIconPlugin::View::MAX_ICONS > iconId))
         {
             JsonVariantConst jsonSpriteSheetPath = value["fullPath"];
 
@@ -186,11 +186,11 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
     {
         uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String      iconIdStr           = topic.substring(indexBeginIconId);
-        uint8_t     iconId              = MAX_ICONS;
+        uint8_t     iconId              = _ThreeIconPlugin::View::MAX_ICONS;
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
 
         if ((true == status) &&
-            (MAX_ICONS > iconId))
+            (_ThreeIconPlugin::View::MAX_ICONS > iconId))
         {
             JsonVariantConst    jsonIsForward           = value["forward"];
             JsonVariantConst    jsonIsRepeat            = value["repeat"];
@@ -288,11 +288,11 @@ bool ThreeIconPlugin::hasTopicChanged(const String& topic)
     {
         uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String      iconIdStr           = topic.substring(indexBeginIconId);
-        uint8_t     iconId              = MAX_ICONS;
+        uint8_t     iconId              = _ThreeIconPlugin::View::MAX_ICONS;
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
 
         if ((true == status) &&
-            (MAX_ICONS > iconId))
+            (_ThreeIconPlugin::View::MAX_ICONS > iconId))
         {
             MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -312,7 +312,7 @@ bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
     {
         uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String      iconIdStr           = topic.substring(indexBeginIconId);
-        uint8_t     iconId              = MAX_ICONS;
+        uint8_t     iconId              = _ThreeIconPlugin::View::MAX_ICONS;
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
      
          /* Accept upload of bitmap file. */
@@ -327,7 +327,7 @@ bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
     {
         uint32_t    indexBeginIconId    = topic.lastIndexOf("/") + 1U;
         String      iconIdStr           = topic.substring(indexBeginIconId);
-        uint8_t     iconId              = MAX_ICONS;
+        uint8_t     iconId              = _ThreeIconPlugin::View::MAX_ICONS;
         bool        status              = Util::strToUInt8(iconIdStr, iconId);
 
         /* Accept upload of a sprite sheet file. */
@@ -349,19 +349,14 @@ bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
 void ThreeIconPlugin::start(uint16_t width, uint16_t height)
 {
     uint8_t                     iconId      = 0U;
-    const int16_t               DISTANCE    = (width - (MAX_ICONS * ICON_WIDTH)) / MAX_ICONS;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_threeIconCanvas.setPosAndSize(0, 0, width, height);
+    m_view.init(width, height);
 
-    for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
+    for(iconId = 0U; iconId < _ThreeIconPlugin::View::MAX_ICONS; ++iconId)
     { 
-        int16_t x                   = (ICON_WIDTH + DISTANCE) * iconId + DISTANCE;
         String bitmapFullPath       = getFileName(iconId, FILE_EXT_BITMAP);
         String spriteSheetFullPath  = getFileName(iconId, FILE_EXT_SPRITE_SHEET);
-
-        (void)m_threeIconCanvas.addWidget(m_bitmapWidgets[iconId]);
-        m_bitmapWidgets[iconId].move(x, 0);
 
         /* If there is an icon in the filesystem with the plugin UID as filename,
          * it will be loaded. First check whether it is a animated sprite sheet
@@ -370,9 +365,9 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
         m_iconPaths[iconId].clear();
         m_spriteSheetPaths[iconId].clear();
 
-        if (false == m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
+        if (false == m_view.getBitmapWidget(iconId).loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
         {
-            if (true == m_bitmapWidgets[iconId].load(FILESYSTEM, bitmapFullPath))
+            if (true == m_view.getBitmapWidget(iconId).load(FILESYSTEM, bitmapFullPath))
             {
                 m_iconPaths[iconId] = bitmapFullPath;
             }
@@ -392,7 +387,7 @@ void ThreeIconPlugin::stop()
     uint8_t                     iconId = 0U;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    for(iconId = 0U; iconId < MAX_ICONS; ++iconId)
+    for(iconId = 0U; iconId < _ThreeIconPlugin::View::MAX_ICONS; ++iconId)
     {
         String bitmapFullPath       = getFileName(iconId, FILE_EXT_BITMAP);
         String spriteSheetFullPath  = getFileName(iconId, FILE_EXT_SPRITE_SHEET);
@@ -413,15 +408,14 @@ void ThreeIconPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_threeIconCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 bool ThreeIconPlugin::loadBitmap(uint8_t iconId, const String& filename)
 {
     bool status = false;
 
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -433,12 +427,12 @@ bool ThreeIconPlugin::loadBitmap(uint8_t iconId, const String& filename)
 
         if (false == m_spriteSheetPaths->isEmpty())
         {
-            status = m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, m_spriteSheetPaths[iconId], m_iconPaths[iconId]);
+            status = m_view.getBitmapWidget(iconId).loadSpriteSheet(FILESYSTEM, m_spriteSheetPaths[iconId], m_iconPaths[iconId]);
         }
 
         if (false == status)
         {
-            status = m_bitmapWidgets[iconId].load(FILESYSTEM, m_iconPaths[iconId]);
+            status = m_view.getBitmapWidget(iconId).load(FILESYSTEM, m_iconPaths[iconId]);
         }
     }
 
@@ -449,7 +443,7 @@ bool ThreeIconPlugin::loadSpriteSheet(uint8_t iconId, const String& filename)
 {
     bool status = false;
 
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -461,7 +455,7 @@ bool ThreeIconPlugin::loadSpriteSheet(uint8_t iconId, const String& filename)
 
         if (false == m_iconPaths[iconId].isEmpty())
         {
-            status = m_bitmapWidgets[iconId].loadSpriteSheet(FILESYSTEM, m_spriteSheetPaths[iconId], m_iconPaths[iconId]);
+            status = m_view.getBitmapWidget(iconId).loadSpriteSheet(FILESYSTEM, m_spriteSheetPaths[iconId], m_iconPaths[iconId]);
         }
     }
 
@@ -473,9 +467,9 @@ bool ThreeIconPlugin::getIsForward(uint8_t iconId) const
     bool                        state = false;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
-        state = m_bitmapWidgets[iconId].isSpriteSheetForward();
+        state = m_view.getBitmapWidget(iconId).isSpriteSheetForward();
     }
     
     return state;
@@ -485,11 +479,13 @@ void ThreeIconPlugin::setIsForward(uint8_t iconId, bool state)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
-        if (state != m_bitmapWidgets[iconId].isSpriteSheetForward())
+        BitmapWidget& bitmapWidget = m_view.getBitmapWidget(iconId);
+
+        if (state != bitmapWidget.isSpriteSheetForward())
         {
-            m_bitmapWidgets[iconId].setSpriteSheetForward(state);
+            bitmapWidget.setSpriteSheetForward(state);
 
             m_hasTopicChanged[iconId] = true;
         }
@@ -501,9 +497,9 @@ bool ThreeIconPlugin::getIsRepeat(uint8_t iconId) const
     bool                        state = false;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
-        state = m_bitmapWidgets[iconId].isSpriteSheetRepeatInfinite();
+        state = m_view.getBitmapWidget(iconId).isSpriteSheetRepeatInfinite();
     }
     
     return state;
@@ -513,11 +509,13 @@ void ThreeIconPlugin::setIsRepeat(uint8_t iconId, bool state)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
-        if (state != m_bitmapWidgets[iconId].isSpriteSheetRepeatInfinite())
+        BitmapWidget& bitmapWidget = m_view.getBitmapWidget(iconId);
+
+        if (state != bitmapWidget.isSpriteSheetRepeatInfinite())
         {
-            m_bitmapWidgets[iconId].setSpriteSheetRepeatInfinite(state);
+            bitmapWidget.setSpriteSheetRepeatInfinite(state);
 
             m_hasTopicChanged[iconId] = true;
         }
@@ -526,14 +524,14 @@ void ThreeIconPlugin::setIsRepeat(uint8_t iconId, bool state)
 
 void ThreeIconPlugin::clearBitmap(uint8_t iconId)
 {
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
         if (false == m_iconPaths[iconId].isEmpty())
         {
             m_iconPaths[iconId].clear();
-            m_bitmapWidgets[iconId].clear(ColorDef::BLACK);
+            m_view.getBitmapWidget(iconId).clear(ColorDef::BLACK);
 
             m_hasTopicChanged[iconId] = true;
         }
@@ -542,7 +540,7 @@ void ThreeIconPlugin::clearBitmap(uint8_t iconId)
 
 void ThreeIconPlugin::clearSpriteSheet(uint8_t iconId)
 {
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -555,14 +553,14 @@ void ThreeIconPlugin::clearSpriteSheet(uint8_t iconId)
 
         if (false == m_iconPaths[iconId].isEmpty())
         {
-            (void)m_bitmapWidgets[iconId].load(FILESYSTEM, m_iconPaths[iconId]);
+            (void)m_view.getBitmapWidget(iconId).load(FILESYSTEM, m_iconPaths[iconId]);
         }
     }
 }
 
 void ThreeIconPlugin::getIconFilePath(uint8_t iconId, String& fullPath) const
 {
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -572,7 +570,7 @@ void ThreeIconPlugin::getIconFilePath(uint8_t iconId, String& fullPath) const
 
 void ThreeIconPlugin::getSpriteSheetFilePath(uint8_t iconId, String& fullPath) const
 {
-    if (MAX_ICONS > iconId)
+    if (_ThreeIconPlugin::View::MAX_ICONS > iconId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 

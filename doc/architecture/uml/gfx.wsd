@@ -64,7 +64,7 @@ class "BaseGfxOverlayBitmap<TColor>" as baseGfxOverlayBitmap {
 
 note top of baseGfxOverlayBitmap
     Maps the bitmap interface to a GFX inherited class.
-    This is helpful, e.g. in case a BaseGfxMap shall
+    This is helpful, e.g. in case a BaseGfxCanvas shall
     be drawn.
 end note
 
@@ -92,13 +92,13 @@ baseGfxOverlayBitmap --|> baseGfxBitmap
 
 baseGfxOverlayBitmap --> baseGfx
 
-class "BaseGfxMap<TColor>" as baseGfxMap {
+class "BaseGfxCanvas<TColor>" as baseGfxCanvas {
     - m_gfx : BaseGfx<TColor>*
     - m_offsX : int16_t
     - m_offsY : int16_t
     - m_width : uint16_t
     - m_height : uint16_t
-    + BaseGfxMap(gfx : BaseGfx<TColor>, width : uint16_t, height : uint16_t, offsX : int16_t, offsY : int16_t)
+    + BaseGfxCanvas(gfx : BaseGfx<TColor>, width : uint16_t, height : uint16_t, offsX : int16_t, offsY : int16_t)
     + setGfx(gfx : BaseGfx<TColor>&) : void
     + getOffsX() const : int16_t
     + getOffsY() const : int16_t
@@ -112,15 +112,14 @@ class "BaseGfxMap<TColor>" as baseGfxMap {
     + drawPixel(x : int16_t, y : int16_t, color : const TColor&) : void
 }
 
-note left of baseGfxMap
-    A map is like a window over graphic operations.
+note left of baseGfxCanvas
+    The canvas ensures that all graphic operation
+    will be performed only inside the canvas.
     It defines the window size and the offset.
-    It ensures that drawing is kept inside
-    its defined borders (width, height).
 end note
 
-baseGfxMap ---|> baseGfx
-baseGfxMap ---> baseGfx
+baseGfxCanvas ---|> baseGfx
+baseGfxCanvas ---> baseGfx
 
 note left of baseGfx
     Basic graphics operations,

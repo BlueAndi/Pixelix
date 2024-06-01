@@ -80,18 +80,6 @@ typedef struct
  * Local Variables
  *****************************************************************************/
 
-/* Initialize image path for standard icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_STD_ICON      = "/plugins/OpenWeatherPlugin/openWeather.bmp";
-
-/* Initialize image path for uvi icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_UVI_ICON      = "/plugins/OpenWeatherPlugin/uvi.bmp";
-
-/* Initialize image path for humidity icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_HUMIDITY_ICON = "/plugins/OpenWeatherPlugin/hum.bmp";
-
-/* Initialize image path for uvi icon. */
-const char* OpenWeatherPlugin::IMAGE_PATH_WIND_ICON     = "/plugins/OpenWeatherPlugin/wind.bmp";
-
 /* Initialize image path for the weather condition icons. */
 const char* OpenWeatherPlugin::IMAGE_PATH               = "/plugins/OpenWeatherPlugin/";
 
@@ -102,12 +90,6 @@ const char* OpenWeatherPlugin::OPEN_WEATHER_BASE_URI    = "http://api.openweathe
 
 /* Initialize plugin topic. */
 const char* OpenWeatherPlugin::TOPIC_CONFIG             = "/weather";
-
-/* Initialize bitmap image filename extension. */
-const char* OpenWeatherPlugin::FILE_EXT_BITMAP          = ".bmp";
-
-/* Initialize sprite sheet parameter filename extension. */
-const char* OpenWeatherPlugin::FILE_EXT_SPRITE_SHEET    = ".sprite";
 
 /** UV-index table */
 static const UvIndexElem uvIndexTable[] =
@@ -248,30 +230,7 @@ void OpenWeatherPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
-
-    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
 
@@ -414,16 +373,18 @@ void OpenWeatherPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false != m_isUpdateAvailable)
+    /* Text update available? */
+    if (true == m_isUpdateAvailable)
     {
-        gfx.fillScreen(ColorDef::BLACK);
-        m_textCanvas.update(gfx);
+        m_view.update(gfx);
 
         m_isUpdateAvailable = false;
     }
-
-    /* Update the icon always, as it may be animated. */
-    m_iconCanvas.update(gfx);
+    /* Update only the icon, as it may be animated. */
+    else
+    {
+        m_view.updateOnlyBitmap(gfx);
+    }
 }
 
 /******************************************************************************
@@ -660,21 +621,7 @@ void OpenWeatherPlugin::updateDisplay(bool force)
         {
             if (true == m_hasWeatherIconChanged)
             {
-                String spriteSheetPath = m_currentWeatherIconFullPath.substring(0U, m_currentWeatherIconFullPath.length() - strlen(FILE_EXT_BITMAP)) + FILE_EXT_SPRITE_SHEET;
-
-                /* If there is an icon in the filesystem, it will be loaded otherwise
-                 * the standard icon. First check whether it is a animated sprite sheet
-                 * and if not, try to load just the bitmap image.
-                 */
-                if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetPath, m_currentWeatherIconFullPath))
-                {
-                    if (false == m_bitmapWidget.load(FILESYSTEM, m_currentWeatherIconFullPath))
-                    {
-                        LOG_WARNING("Icon doesn't exists: %s", m_currentWeatherIconFullPath.c_str());
-
-                        (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-                    }
-                }
+                m_view.loadIcon(m_currentWeatherIconFullPath);
 
                 m_hasWeatherIconChanged = false;
             }
@@ -683,23 +630,21 @@ void OpenWeatherPlugin::updateDisplay(bool force)
         }
         else
         {
-            String  iconPath;
-
             switch (m_additionalInformation)
             {
             case OTHER_WEATHER_INFO_UVI:
                 text = m_currentUvIndex;
-                iconPath = IMAGE_PATH_UVI_ICON;
+                m_view.loadIcon(_OpenWeatherPlugin::View::ICON_UVI);
                 break;
 
             case OTHER_WEATHER_INFO_HUMIDITY:
                 text = m_currentHumidity;
-                iconPath = IMAGE_PATH_HUMIDITY_ICON;
+                m_view.loadIcon(_OpenWeatherPlugin::View::ICON_HUMIDITY);
                 break;
 
             case OTHER_WEATHER_INFO_WIND:
                 text = m_currentWindspeed;
-                iconPath = IMAGE_PATH_WIND_ICON;
+                m_view.loadIcon(_OpenWeatherPlugin::View::ICON_WIND);
                 break;
 
             case OTHER_WEATHER_INFO_OFF:
@@ -712,23 +657,13 @@ void OpenWeatherPlugin::updateDisplay(bool force)
                 break;
             }
 
-            if (false == iconPath.isEmpty())
-            {
-                if (false == m_bitmapWidget.load(FILESYSTEM, iconPath))
-                {
-                    LOG_WARNING("Icon doesn't exists: %s", iconPath.c_str());
-
-                    (void)m_bitmapWidget.load(FILESYSTEM, IMAGE_PATH_STD_ICON);
-                }
-
-                /* Ensure that in case the weather icon shall be shown again,
-                 * it will be loaded.
-                 */
-                m_hasWeatherIconChanged = true;
-            }
+            /* Ensure that in case the weather icon shall be shown again,
+             * it will be loaded.
+             */
+            m_hasWeatherIconChanged = true;
         }
 
-        m_textWidget.setFormatStr(text);
+        m_view.setFormatText(text);
 
         m_isUpdateAvailable = true;
     }
@@ -933,11 +868,11 @@ void OpenWeatherPlugin::prepareDataToShow()
          * If not, check for a generic weather icon.
          * If this is not available too, use the standard OpenWeather icon.
          */
-        weatherConditionIconFullPath = IMAGE_PATH + weatherIconId + FILE_EXT_BITMAP;
+        weatherConditionIconFullPath = IMAGE_PATH + weatherIconId + _OpenWeatherPlugin::View::FILE_EXT_BITMAP;
         if (false == FILESYSTEM.exists(weatherConditionIconFullPath))
         {
             weatherConditionIconFullPath  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
-            weatherConditionIconFullPath += FILE_EXT_BITMAP;
+            weatherConditionIconFullPath += _OpenWeatherPlugin::View::FILE_EXT_BITMAP;
         }
 
         /* If there is really a change, the display shall be updated otherwise

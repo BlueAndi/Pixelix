@@ -156,21 +156,7 @@ void SensorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    PLUGIN_NOT_USED(width);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-
-    /* The text widget is left aligned on x-axis and aligned to the center
-     * of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
 
@@ -204,8 +190,7 @@ void SensorPlugin::update(YAGfx& gfx)
         m_updateTimer.start(UPDATE_PERIOD);
     }
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_textWidget.update(gfx);
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -277,7 +262,7 @@ void SensorPlugin::update()
         text += ISensorChannel::channelTypeToUnit(m_sensorChannel->getType());
     }
 
-    m_textWidget.setFormatStr(text);
+    m_view.setFormatText(text);
 }
 
 ISensorChannel* SensorPlugin::getChannel(uint8_t sensorIdx, uint8_t channelIdx)

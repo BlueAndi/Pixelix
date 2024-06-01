@@ -46,6 +46,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <algorithm>
 
 /******************************************************************************
  * Macros
@@ -78,16 +79,16 @@ public:
     }
 
     /**
-     * Get width in pixel.
+     * Get canvas width in pixel.
      *
-     * @return Canvas width in pixel
+     * @return Canvas width in pixel.
      */
     virtual uint16_t getWidth() const = 0;
 
     /**
-     * Get height in pixel.
+     * Get canvas height in pixel.
      *
-     * @return Canvas height in pixel
+     * @return Canvas height in pixel.
      */
     virtual uint16_t getHeight() const = 0;
 
@@ -130,8 +131,8 @@ public:
     {
         uint16_t    canvasWidth     = getWidth();
         uint16_t    canvasHeight    = getHeight();
-        int16_t     x               = 0;
-        int16_t     y               = 0;
+        int16_t     x;
+        int16_t     y;
 
         for(y = 0; y < canvasHeight; ++y)
         {
@@ -153,7 +154,9 @@ public:
      */
     void drawVLine(int16_t x, int16_t y, uint16_t height, const TColor& color)
     {
-        uint16_t idx = 0U;
+        uint16_t idx;
+
+        height = std::min(height, getHeight());
 
         for(idx = 0U; idx < height; ++idx)
         {
@@ -172,7 +175,9 @@ public:
      */
     void drawHLine(int16_t x, int16_t y, uint16_t width, const TColor& color)
     {
-        uint16_t idx = 0U;
+        uint16_t idx;
+
+        width = std::min(width, getWidth());
 
         for(idx = 0U; idx < width; ++idx)
         {
@@ -301,8 +306,11 @@ public:
      */
     void fillRect(int16_t x, int16_t y, uint16_t width, uint16_t height, const TColor& color)
     {
-        int16_t xIndex = 0;
-        int16_t yIndex = 0;
+        int16_t xIndex;
+        int16_t yIndex;
+
+        width = std::min(width, getWidth());
+        height = std::min(height, getHeight());
 
         for(yIndex = 0; yIndex < height; ++yIndex)
         {

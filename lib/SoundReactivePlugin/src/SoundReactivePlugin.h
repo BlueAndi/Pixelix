@@ -44,8 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include "PluginWithConfig.hpp"
-
+#include <PluginWithConfig.hpp>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
 #include <math.h>

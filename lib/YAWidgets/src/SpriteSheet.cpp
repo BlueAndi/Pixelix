@@ -66,7 +66,7 @@ SpriteSheet& SpriteSheet::operator=(const SpriteSheet& spriteSheet)
     if (this != (&spriteSheet))
     {
         m_texture       = spriteSheet.m_texture;
-        m_textureMap    = spriteSheet.m_textureMap;
+        m_textureMap    = spriteSheet.m_textureMap; /* Overwrite parent GFX some lines below! */
         m_frame         = spriteSheet.m_frame;
         m_frameCnt      = spriteSheet.m_frameCnt;
         m_fps           = spriteSheet.m_fps;
@@ -76,6 +76,8 @@ SpriteSheet& SpriteSheet::operator=(const SpriteSheet& spriteSheet)
         m_framesY       = spriteSheet.m_framesY;
         m_currentFrameX = spriteSheet.m_currentFrameX;
         m_currentFrameY = spriteSheet.m_currentFrameY;
+
+        m_textureMap.setParentGfx(m_texture);
     }
 
     return *this;

@@ -43,11 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
+#include <stdint.h>
+#include <Plugin.hpp>
 #include <Mutex.hpp>
 
 /******************************************************************************
@@ -73,8 +72,7 @@ public:
      */
     ThreeIconPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_threeIconCanvas(),
-        m_bitmapWidgets(),
+        m_view(),
         m_iconPaths(),
         m_spriteSheetPaths(),
         m_isUploadError(false),
@@ -312,21 +310,6 @@ private:
     static const char*      TOPIC_ANIMATION;
 
     /**
-     * Max. number of icons.
-     */
-    static const uint8_t    MAX_ICONS   = 3U;
-
-    /**
-     * Icon width in pixels.
-     */
-    static const uint16_t   ICON_WIDTH    = 8U;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const uint16_t   ICON_HEIGHT   = 8U;
-    
-    /**
      * Filename extension of bitmap image file.
      */
     static const char*      FILE_EXT_BITMAP;
@@ -336,14 +319,12 @@ private:
      */
     static const char*      FILE_EXT_SPRITE_SHEET;
 
-
-    WidgetGroup             m_threeIconCanvas;              /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidgets[MAX_ICONS];     /**< Bitmap widgets, used to show the icon. */
-    String                  m_iconPaths[MAX_ICONS];         /**< Full path to icons. */
-    String                  m_spriteSheetPaths[MAX_ICONS];  /**< Full path to spritesheets. */
-    bool                    m_isUploadError;                /**< Flag to signal a upload error. */
-    mutable MutexRecursive  m_mutex;                        /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged[MAX_ICONS];  /**< Has the topic content changed? */
+    _ThreeIconPlugin::View      m_view;                                                 /**< View with all widgets. */
+    String                      m_iconPaths[_ThreeIconPlugin::View::MAX_ICONS];         /**< Full path to icons. */
+    String                      m_spriteSheetPaths[_ThreeIconPlugin::View::MAX_ICONS];  /**< Full path to spritesheets. */
+    bool                        m_isUploadError;                                        /**< Flag to signal a upload error. */
+    mutable MutexRecursive      m_mutex;                                                /**< Mutex to protect against concurrent access. */
+    bool                        m_hasTopicChanged[_ThreeIconPlugin::View::MAX_ICONS];   /**< Has the topic content changed? */
 
     /**
      * Get image filename with path.

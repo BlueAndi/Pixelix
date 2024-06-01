@@ -208,8 +208,10 @@ void TextWidget::prepareNewText(YAGfx& gfx)
 
 void TextWidget::paint(YAGfx& gfx)
 {
-    int16_t cursorY = m_posY + m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
+    int16_t cursorY = m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
     
+    gfx.fillScreen(ColorDef::BLACK);
+
     /* If there is an updated text available, it shall be determined how to show it on the display. */
     if (true == m_isNewTextAvailable)
     {
@@ -218,13 +220,13 @@ void TextWidget::paint(YAGfx& gfx)
     }
 
     /* Show current text. */
-    m_gfxText.setTextCursorPos(m_posX + m_scrollInfo.offset, cursorY);
+    m_gfxText.setTextCursorPos(m_scrollInfo.offset, cursorY);
     show(gfx, m_formatStr, m_scrollInfo.isEnabled);
 
     /* Show new text. */
     if (true == m_handleNewText)
     {
-        m_gfxText.setTextCursorPos(m_posX + m_scrollInfoNew.offset, cursorY);
+        m_gfxText.setTextCursorPos(m_scrollInfoNew.offset, cursorY);
         show(gfx, m_formatStrNew, m_scrollInfoNew.isEnabled);
     }
 

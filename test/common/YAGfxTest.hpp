@@ -289,7 +289,7 @@ public:
                 if (color != m_buffer[posX + x + (posY + y) * WIDTH])
                 {
                     dump();
-                    printf("x = %d, y = %d\r\n", posX + x, posY + y);
+                    ::printf("x = %d, y = %d\r\n", posX + x, posY + y);
                     isSuccessful = false;
                 }
 

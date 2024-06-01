@@ -233,6 +233,4 @@ static void testGfx()
     /* Clear screen */
     testGfx.fillScreen(0U);
     TEST_ASSERT_TRUE(testGfx.verify(0, 0, YAGfxTest::WIDTH, YAGfxTest::HEIGHT, 0U));
-
-    return;
 }

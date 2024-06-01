@@ -145,7 +145,6 @@ public:
         m_blue(color.m_blue),
         m_intensity(color.m_intensity)
     {
-        return;
     }
 
     /**
@@ -193,7 +192,6 @@ public:
         red     = applyIntensity(m_red);
         green   = applyIntensity(m_green);
         blue    = applyIntensity(m_blue);
-        return;
     }
 
     /**

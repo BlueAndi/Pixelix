@@ -44,7 +44,7 @@
  * Includes
  *****************************************************************************/
 #include <stdint.h>
-#include <YAGfxMap.h>
+#include <YAGfxCanvas.h>
 #include <YAGfxBitmap.h>
 #include <FS.h>
 
@@ -75,7 +75,7 @@ public:
      */
     SpriteSheet() :
         m_texture(),
-        m_textureMap(m_texture),
+        m_textureMap(&m_texture),
         m_frame(m_textureMap),
         m_frameCnt(0U),
         m_fps(DEFAULT_FPS),
@@ -95,7 +95,7 @@ public:
      */
     SpriteSheet(const SpriteSheet& spriteSheet) :
         m_texture(spriteSheet.m_texture),
-        m_textureMap(spriteSheet.m_textureMap),
+        m_textureMap(spriteSheet.m_textureMap), /* Overwrite parent GFX in body! */
         m_frame(spriteSheet.m_frame),
         m_frameCnt(spriteSheet.m_frameCnt),
         m_fps(spriteSheet.m_fps),
@@ -106,6 +106,7 @@ public:
         m_currentFrameX(spriteSheet.m_currentFrameX),
         m_currentFrameY(spriteSheet.m_currentFrameY)
     {
+        m_textureMap.setParentGfx(m_texture);
     }
 
     /**
@@ -288,7 +289,7 @@ private:
     static const uint8_t    DEFAULT_FPS = 12U;
 
     YAGfxDynamicBitmap  m_texture;          /**< Texture image. */
-    YAGfxMap            m_textureMap;       /**< Map canvas over the texture image. */
+    YAGfxCanvas         m_textureMap;       /**< Map canvas over the texture image. */
     YAGfxOverlayBitmap  m_frame;            /**< The current frame. */
     uint8_t             m_frameCnt;         /**< Number of frames in the texture. */
     uint8_t             m_fps;              /**< Number of frames per second. */

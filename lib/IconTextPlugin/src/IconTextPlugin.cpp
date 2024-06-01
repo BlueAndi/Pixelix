@@ -83,7 +83,7 @@ bool IconTextPlugin::isEnabled() const
 
     /* The plugin shall only be scheduled if its enabled and text is set. */
     if ((true == m_isEnabled) &&
-        (false == m_textWidget.getStr().isEmpty()))
+        (false == m_view.getText().isEmpty()))
     {
         isEnabled = true;
     }
@@ -278,8 +278,7 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
     String                      spriteSheetFullPath = getFileName(FILE_EXT_SPRITE_SHEET);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+    m_view.init(width, height);
 
     /* If there is an icon in the filesystem with the plugin UID as filename,
      * it will be loaded. First check whether it is a animated sprite sheet
@@ -288,9 +287,9 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
     m_iconPath.clear();
     m_spriteSheetPath.clear();
 
-    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
+    if (false == m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
     {
-        if (true == m_bitmapWidget.load(FILESYSTEM, bitmapFullPath))
+        if (true == m_view.getBitmapWidget().load(FILESYSTEM, bitmapFullPath))
         {
             m_iconPath = bitmapFullPath;
         }
@@ -299,26 +298,6 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
     {
         m_iconPath          = bitmapFullPath;
         m_spriteSheetPath   = spriteSheetFullPath;
-    }
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
     }
 }
 
@@ -345,17 +324,13 @@ void IconTextPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 String IconTextPlugin::getText() const
 {
-    String                      formattedText;
     MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    formattedText = m_textWidget.getFormatStr();
+    String                      formattedText   = m_view.getFormatText();
 
     return formattedText;
 }
@@ -364,9 +339,9 @@ void IconTextPlugin::setText(const String& formatText)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (m_textWidget.getFormatStr() != formatText)
+    if (m_view.getFormatText() != formatText)
     {
-        m_textWidget.setFormatStr(formatText);
+        m_view.setFormatText(formatText);
 
         m_hasTopicChanged = true;
     }
@@ -386,12 +361,12 @@ bool IconTextPlugin::loadBitmap(const String& filename)
 
     if (false == m_spriteSheetPath.isEmpty())
     {
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
+        status = m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
     }
     
     if (false == status)
     {
-        status = m_bitmapWidget.load(FILESYSTEM, m_iconPath);
+        status = m_view.getBitmapWidget().load(FILESYSTEM, m_iconPath);
     }
 
     return status;
@@ -411,7 +386,7 @@ bool IconTextPlugin::loadSpriteSheet(const String& filename)
 
     if (false == m_iconPath.isEmpty())
     {
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
+        status = m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
     }
 
     return status;
@@ -424,7 +399,7 @@ void IconTextPlugin::clearBitmap()
     if (false == m_iconPath.isEmpty())
     {
         m_iconPath.clear();
-        m_bitmapWidget.clear(ColorDef::BLACK);
+        m_view.getBitmapWidget().clear(ColorDef::BLACK);
 
         m_hasTopicChanged = true;
     }
@@ -443,7 +418,7 @@ void IconTextPlugin::clearSpriteSheet()
 
     if (false == m_iconPath.isEmpty())
     {
-        (void)m_bitmapWidget.load(FILESYSTEM, m_iconPath);
+        (void)m_view.getBitmapWidget().load(FILESYSTEM, m_iconPath);
     }
 }
 

@@ -44,13 +44,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "AsyncHttpClient.h"
-#include "PluginWithConfig.hpp"
+#include "./internal/View.h"
 
+#include <AsyncHttpClient.h>
+#include <PluginWithConfig.hpp>
 #include <stdint.h>
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
@@ -79,11 +77,7 @@ public:
      */
     GruenbeckPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_bitmapWidget(),
-        m_textWidget("\\calign?"),
+        m_view(),
         m_ipAddress("192.168.0.16"),
         m_httpResponseReceived(false),
         m_relevantResponsePart(),
@@ -136,7 +130,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -150,8 +144,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -275,21 +268,6 @@ public:
 private:
 
     /**
-     * Icon width in pixels.
-     */
-    static const int16_t    ICON_WIDTH          = 8;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const int16_t    ICON_HEIGHT         = 8;
-
-    /**
-     * Image path within the filesystem.
-     */
-    static const char*      IMAGE_PATH;
-
-    /**
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
@@ -306,19 +284,15 @@ private:
      */
     static const uint32_t   UPDATE_PERIOD_SHORT = SIMPLE_TIMER_SECONDS(10U);
 
-    Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    String                  m_ipAddress;                /**< IP-address of the Gruenbeck server. */
-    bool                    m_httpResponseReceived;     /**< Flag to indicate a received HTTP response. */
-    String                  m_relevantResponsePart;     /**< String used for the relevant part of the HTTP response. */
-    AsyncHttpClient         m_client;                   /**< Asynchronous HTTP client. */
-    SimpleTimer             m_requestTimer;             /**< Timer, used for cyclic request of new data. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    bool                    m_isConnectionError;        /**< Is connection error happened? */
-    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
+    _GruenbeckPlugin::View  m_view;                 /**< View with all widgets. */
+    String                  m_ipAddress;            /**< IP-address of the Gruenbeck server. */
+    bool                    m_httpResponseReceived; /**< Flag to indicate a received HTTP response. */
+    String                  m_relevantResponsePart; /**< String used for the relevant part of the HTTP response. */
+    AsyncHttpClient         m_client;               /**< Asynchronous HTTP client. */
+    SimpleTimer             m_requestTimer;         /**< Timer, used for cyclic request of new data. */
+    mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                    m_isConnectionError;    /**< Is connection error happened? */
+    bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
 
     /**
      * Defines the message types, which are necessary for HTTP client/server handling.

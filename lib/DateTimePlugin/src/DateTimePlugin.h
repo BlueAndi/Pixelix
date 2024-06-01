@@ -43,13 +43,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
+#include "./internal/View.h"
+
 #include <stdint.h>
 #include <time.h>
-#include "PluginWithConfig.hpp"
-
-#include <LampWidget.h>
-#include <TextWidget.h>
-#include <WidgetGroup.h>
+#include <PluginWithConfig.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
 
@@ -77,10 +75,7 @@ public:
      */
     DateTimePlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
-        m_textWidget("\\calignNo NTP"),
-        m_textCanvas(),
-        m_lampCanvas(),
-        m_lampWidgets(),
+        m_view(),
         m_mode(MODE_DATE_TIME),
         m_checkUpdateTimer(),
         m_durationCounter(0u),
@@ -90,8 +85,6 @@ public:
         m_timeFormat(TIME_FORMAT_DEFAULT),
         m_dateFormat(DATE_FORMAT_DEFAULT),
         m_timeZone(),
-        m_dayOnColor(DAY_ON_COLOR),
-        m_dayOffColor(DAY_OFF_COLOR),
         m_slotInterf(nullptr),
         m_mutex(),
         m_hasTopicChanged(false)
@@ -118,6 +111,30 @@ public:
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
         return new(std::nothrow) DateTimePlugin(name, uid);
+    }
+
+    /**
+     * Get font type.
+     * 
+     * @return The font type the plugin uses.
+     */
+    Fonts::FontType getFontType() const final
+    {
+        return m_view.getFontType();
+    }
+
+    /**
+     * Set font type.
+     * The plugin may skip the font type in case it gets conflicts with the layout.
+     * 
+     * A font type change will only be considered if it is set before the start()
+     * method is called!
+     * 
+     * @param[in] fontType  The font type which the plugin shall use.
+     */
+    void setFontType(Fonts::FontType fontType) final
+    {
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -265,9 +282,6 @@ private:
      */
     static const char*      TOPIC_CONFIG;
 
-    /** Max. number of lamps. */
-    static const uint8_t    MAX_LAMPS               = 7U;
-
     /** Time to check date update period in ms */
     static const uint32_t   CHECK_UPDATE_PERIOD     = SIMPLE_TIMER_SECONDS(1U);
 
@@ -280,12 +294,6 @@ private:
     /** Default date format according to strftime(). */
     static const char*      DATE_FORMAT_DEFAULT;
 
-    /** Color of the current day shown in the day of the week bar. */
-    static const Color      DAY_ON_COLOR;
-
-    /** Color of the other days (not the current one) shown in the day of the week bar. */
-    static const Color      DAY_OFF_COLOR;
-
     /**
      * If the slot duration is infinite (0s), the default duration of 30s shall be assumed as base
      * for toggling between time and date on the display.
@@ -294,24 +302,19 @@ private:
      */
     static const uint32_t   DURATION_DEFAULT        = SIMPLE_TIMER_SECONDS(30U);
 
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_lampCanvas;               /**< Canvas used for the lamp widget. */
-    LampWidget              m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
-    Mode                    m_mode;                     /**< Display mode about what shall be shown. */
-    SimpleTimer             m_checkUpdateTimer;         /**< Timer, used for cyclic check if date/time update is necessary. */
-    uint8_t                 m_durationCounter;          /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
-    int                     m_shownSecond;              /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
-    int                     m_shownDayOfTheYear;        /**< Used to trigger a display update in case the date shall be shown. [0; 365] */
-    bool                    m_isUpdateAvailable;        /**< Flag to indicate an updated date value. */
-    String                  m_timeFormat;               /**< Time format according to strftime(). */
-    String                  m_dateFormat;               /**< Date format according to strftime(). */
-    String                  m_timeZone;                 /**< Timezone of the time to show. If empty, the local time is used. */
-    Color                   m_dayOnColor;               /**< Color of current day in the day of the week bar. */
-    Color                   m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
-    const ISlotPlugin*      m_slotInterf;               /**< Slot interface */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
+    _DateTimePlugin::View   m_view;                 /**< The layout with all used widgets. */
+    Mode                    m_mode;                 /**< Display mode about what shall be shown. */
+    SimpleTimer             m_checkUpdateTimer;     /**< Timer, used for cyclic check if date/time update is necessary. */
+    uint8_t                 m_durationCounter;      /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
+    int                     m_shownSecond;          /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
+    int                     m_shownDayOfTheYear;    /**< Used to trigger a display update in case the date shall be shown. [0; 365] */
+    bool                    m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
+    String                  m_timeFormat;           /**< Time format according to strftime(). */
+    String                  m_dateFormat;           /**< Date format according to strftime(). */
+    String                  m_timeZone;             /**< Timezone of the time to show. If empty, the local time is used. */
+    const ISlotPlugin*      m_slotInterf;           /**< Slot interface */
+    mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */
+    bool                    m_hasTopicChanged;      /**< Has the topic content changed? */
 
     /**
      * Get configuration in JSON.
@@ -336,28 +339,6 @@ private:
      * @param[in] force Force update independent of date.
      */
     void updateDateTime(bool force);
-
-    /**
-     * Set weekday indicator depended on the given time info.
-     *
-     *
-     * @param[in] timeInfo the current time info.
-     */
-    void setWeekdayIndicator(tm timeInfo);
-
-    /**
-     * Calculates the optimal layout for several elements, which shall be aligned.
-     * 
-     * @param[in]   width           Max. available width in pixel.
-     * @param[in]   cnt             Number of elements in a row.
-     * @param[in]   minDistance     The minimal distance in pixel between each element.
-     * @param[in]   minBorder       The minimal border left and right of all elements.
-     * @param[out]  elementWidth    The calculated optimal element width in pixel.
-     * @param[out]  elementDistance The calculated optimal element distance in pixel.
-     * 
-     * @return If the calculation is successful, it will return true otherwise false.
-     */
-    bool calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance);
 
     /**
      * Get the current time as formatted string.

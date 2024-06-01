@@ -43,13 +43,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "PluginWithConfig.hpp"
-#include "AsyncHttpClient.h"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
-#include <TextWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
+#include <AsyncHttpClient.h>
 #include <TaskProxy.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
@@ -79,13 +77,7 @@ public:
      */
     VolumioPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_stdIconWidget(),
-        m_stopIconWidget(),
-        m_playIconWidget(),
-        m_pauseIconWidget(),
-        m_textWidget("\\calign?"),
+        m_view(),
         m_volumioHost("volumio.fritz.box"),
         m_urlIcon(),
         m_urlText(),
@@ -263,26 +255,6 @@ private:
     static const uint16_t   ICON_HEIGHT         = 8U;
 
     /**
-     * Image path within the filesystem to standard icon.
-     */
-    static const char*      IMAGE_PATH_STD_ICON;
-
-    /**
-     * Image path within the filesystem to "stop" icon.
-     */
-    static const char*      IMAGE_PATH_STOP_ICON;
-
-    /**
-     * Image path within the filesystem to "play" icon.
-     */
-    static const char*      IMAGE_PATH_PLAY_ICON;
-
-    /**
-     * Image path within the filesystem to "pause" icon.
-     */
-    static const char*      IMAGE_PATH_PAUSE_ICON;
-
-    /**
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
@@ -307,13 +279,7 @@ private:
      */
     static const uint32_t   OFFLINE_PERIOD      = SIMPLE_TIMER_SECONDS(60U);
 
-    WidgetGroup             m_textCanvas;           /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;           /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_stdIconWidget;        /**< Bitmap widget, used to show the standard icon. */
-    BitmapWidget            m_stopIconWidget;       /**< Bitmap widget, used to show the stop icon. */
-    BitmapWidget            m_playIconWidget;       /**< Bitmap widget, used to show the play icon. */
-    BitmapWidget            m_pauseIconWidget;      /**< Bitmap widget, used to show the pause icon. */
-    TextWidget              m_textWidget;           /**< Text widget, used for showing the text. */
+     _VolumioPlugin::View   m_view;                 /**< View with all widgets. */
     String                  m_volumioHost;          /**< Host address of the VOLUMIO server. */
     String                  m_urlIcon;              /**< REST API URL for updating the icon */
     String                  m_urlText;              /**< REST API URL for updating the text */

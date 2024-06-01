@@ -44,13 +44,11 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "PluginWithConfig.hpp"
-#include "time.h"
+#include "./internal/View.h"
 
-#include <WidgetGroup.h>
-#include <BitmapWidget.h>
+#include <time.h>
+#include <PluginWithConfig.hpp>
 #include <stdint.h>
-#include <TextWidget.h>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
 #include <FileSystem.h>
@@ -178,11 +176,7 @@ public:
      */
     CountdownPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textCanvas(),
-        m_iconCanvas(),
-        m_bitmapWidget(),
-        m_textWidget("\\calign?"),
+        m_view(),
         m_currentDate(),
         m_targetDate(),
         m_targetDateInformation(),
@@ -228,7 +222,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -242,8 +236,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -353,21 +346,6 @@ public:
 private:
 
     /**
-     * Icon width in pixels.
-     */
-    static const int16_t    ICON_WIDTH     = 8;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const int16_t    ICON_HEIGHT    = 8;
-
-    /**
-     * Image path within the filesystem.
-     */
-    static const char*      IMAGE_PATH;
-
-    /**
      * Plugin topic, used to read/write the configuration.
      */
     static const char*      TOPIC_CONFIG;
@@ -384,11 +362,7 @@ private:
     */
     static const int16_t    TM_OFFSET_YEAR  = 1900;
 
-    Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    WidgetGroup             m_textCanvas;               /**< Canvas used for the text widget. */
-    WidgetGroup             m_iconCanvas;               /**< Canvas used for the bitmap widget. */
-    BitmapWidget            m_bitmapWidget;             /**< Bitmap widget, used to show the icon. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
+    _CountdownPlugin::View  m_view;                     /**< View with all widgets. */
     DateDMY                 m_currentDate;              /**< Date structure to hold the current date. */
     DateDMY                 m_targetDate;               /**< Date structure to hold the target date from the configuration data. */
     TargetDayDescription    m_targetDateInformation;    /**< String used for configured additional target date information. */

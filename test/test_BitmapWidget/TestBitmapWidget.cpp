@@ -119,12 +119,12 @@ extern void tearDown(void)
  */
 static void testBitmapWidget()
 {
-    const uint16_t BITMAP_WIDTH     = YAGfxTest::HEIGHT;    /* Use height as width here for a square */
-    const uint16_t BITMAP_HEIGHT    = YAGfxTest::HEIGHT;
-    const char*   WIDGET_NAME       = "bmpWidgetName";
+    const uint16_t  BITMAP_WIDTH    = YAGfxTest::HEIGHT;    /* Use height as width here for a square. */
+    const uint16_t  BITMAP_HEIGHT   = YAGfxTest::HEIGHT;
+    const char*     WIDGET_NAME     = "bmpWidgetName";
 
     YAGfxTest                                       testGfx;
-    BitmapWidget                                    bitmapWidget;
+    BitmapWidget                                    bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT);
     YAGfxStaticBitmap<BITMAP_WIDTH, BITMAP_HEIGHT>  bitmap;
 
     int16_t         x               = 0;
@@ -188,6 +188,4 @@ static void testBitmapWidget()
             TEST_ASSERT_EQUAL_UINT16(x + y * BITMAP_WIDTH, displayBuffer[x + y * YAGfxTest::WIDTH]);
         }
     }
-
-    return;
 }

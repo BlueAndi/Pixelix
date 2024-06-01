@@ -71,7 +71,7 @@ bool JustTextPlugin::isEnabled() const
 
     /* The plugin shall only be scheduled if its enabled and text is set. */
     if ((true == m_isEnabled) &&
-        (false == m_textWidget.getStr().isEmpty()))
+        (false == m_view.getText().isEmpty()))
     {
         isEnabled = true;
     }
@@ -150,21 +150,7 @@ void JustTextPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    PLUGIN_NOT_USED(width);
-
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-
-    /* The text widget is left aligned on x-axis and aligned to the center
-     * of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
 }
 
 void JustTextPlugin::stop()
@@ -176,16 +162,13 @@ void JustTextPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_textWidget.update(gfx);
+    m_view.update(gfx);
 }
 
 String JustTextPlugin::getText() const
 {
-    String                      formattedText;
     MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    formattedText = m_textWidget.getFormatStr();
+    String                      formattedText   = m_view.getFormatText();
 
     return formattedText;
 }
@@ -194,9 +177,9 @@ void JustTextPlugin::setText(const String& formatText)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (m_textWidget.getFormatStr() != formatText)
+    if (m_view.getFormatText() != formatText)
     {
-        m_textWidget.setFormatStr(formatText);
+        m_view.setFormatText(formatText);
 
         m_hasTopicChanged = true;
     }

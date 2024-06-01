@@ -93,15 +93,15 @@ void ProgressBar::paint(YAGfx& gfx)
 
 void ProgressBar::showProgressPixel(YAGfx& gfx)
 {
-    uint16_t    width       = gfx.getWidth() - m_posX;
-    uint16_t    height      = gfx.getHeight() - m_posY;
+    uint16_t    width       = m_canvas.getWidth();
+    uint16_t    height      = m_canvas.getHeight();
     uint16_t    pixelCount  = width * height * m_progress / 100U;
     int16_t     x           = 0;
     int16_t     y           = 0;
 
     while((0U < pixelCount) && (height > y))
     {
-        gfx.drawPixel(m_posX + x, m_posY + y, m_color);
+        gfx.drawPixel(x, y, m_color);
 
         --pixelCount;
 
@@ -116,20 +116,20 @@ void ProgressBar::showProgressPixel(YAGfx& gfx)
 
 void ProgressBar::showProgressBar(YAGfx& gfx)
 {
-    uint16_t    width   = gfx.getWidth() - m_posX;
-    uint16_t    height  = gfx.getHeight() - m_posY;
+    uint16_t    width   = m_canvas.getWidth();
+    uint16_t    height  = m_canvas.getHeight();
 
-    if (gfx.getWidth() > gfx.getHeight())
+    if (width > height)
     {
         width = (width * m_progress) / 100U;
 
-        gfx.fillRect(m_posX, m_posY, width, height, m_color);
+        gfx.fillRect(0, 0, width, height, m_color);
     }
     else
     {
         height = (height * m_progress) / 100U;
 
-        gfx.fillRect(m_posX, m_posY, width, height, m_color);
+        gfx.fillRect(0, 0, width, height, m_color);
     }
 }
 

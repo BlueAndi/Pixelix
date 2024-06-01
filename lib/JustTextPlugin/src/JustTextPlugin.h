@@ -43,10 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "Plugin.hpp"
+#include "./internal/View.h"
 
-#include <TextWidget.h>
+#include <stdint.h>
+#include <Plugin.hpp>
 #include <Mutex.hpp>
 
 /******************************************************************************
@@ -73,8 +73,7 @@ public:
      */
     JustTextPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textWidget(),
+        m_view(),
         m_mutex(),
         m_hasTopicChanged(false)
     {
@@ -116,7 +115,7 @@ public:
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -130,8 +129,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -246,8 +244,7 @@ private:
      */
     static const char*  TOPIC_TEXT;
 
-    Fonts::FontType         m_fontType;         /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget              m_textWidget;       /**< Text widget, used for showing the text. */
+    _JustTextPlugin::View   m_view;             /**< View with all widgets. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
     bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */
 };

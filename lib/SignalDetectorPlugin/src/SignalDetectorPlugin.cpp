@@ -216,19 +216,8 @@ void SignalDetectorPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    /* Choose font. */
-    m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-
-    /* The text widget is left aligned on x-axis and aligned to the center
-     * of y-axis.
-     */
-    if (height > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
+    m_view.setFormatText(DEFAULT_TEXT);
 
     /* Clear */
     m_isDetected = false;
@@ -315,8 +304,7 @@ void SignalDetectorPlugin::update(YAGfx& gfx)
     /* Update display only if requested. */
     if (true == m_isUpdateReq)
     {
-        gfx.fillScreen(ColorDef::BLACK);
-        m_textWidget.update(gfx);
+        m_view.update(gfx);
 
         m_isUpdateReq = false;
     }
@@ -352,7 +340,7 @@ void SignalDetectorPlugin::getConfiguration(JsonObject& jsonCfg) const
         ++idx;
     }
 
-    jsonCfg["text"]     = m_textWidget.getFormatStr();
+    jsonCfg["text"]     = m_view.getFormatText();
     jsonCfg["pushUrl"]  = m_pushUrl;
 }
 
@@ -428,7 +416,7 @@ bool SignalDetectorPlugin::setConfiguration(JsonObjectConst& jsonCfg)
             }
         }
 
-        m_textWidget.setFormatStr(jsonText.as<String>());
+        m_view.setFormatText(jsonText.as<String>());
         m_pushUrl = jsonPushUrl.as<String>();
 
         m_hasTopicChanged = true;

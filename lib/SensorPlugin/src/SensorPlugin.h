@@ -43,10 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <stdint.h>
-#include "PluginWithConfig.hpp"
+#include "./internal/View.h"
 
-#include <TextWidget.h>
+#include <stdint.h>
+#include <PluginWithConfig.hpp>
 #include <ISensorChannel.hpp>
 #include <SimpleTimer.hpp>
 #include <Mutex.hpp>
@@ -75,8 +75,7 @@ public:
      */
     SensorPlugin(const char* name, uint16_t uid) :
         PluginWithConfig(name, uid, FILESYSTEM),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textWidget(),
+        m_view(),
         m_mutex(),
         m_sensorIdx(0U),
         m_channelIdx(0U),
@@ -95,13 +94,26 @@ public:
     }
 
     /**
+     * Plugin creation method, used to register on the plugin manager.
+     *
+     * @param[in] name  Plugin name (must exist over lifetime)
+     * @param[in] uid   Unique id
+     *
+     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
+     */
+    static IPluginMaintenance* create(const char* name, uint16_t uid)
+    {
+        return new(std::nothrow)SensorPlugin(name, uid);
+    }
+
+    /**
      * Get font type.
      * 
      * @return The font type the plugin uses.
      */
     Fonts::FontType getFontType() const final
     {
-        return m_fontType;
+        return m_view.getFontType();
     }
 
     /**
@@ -115,21 +127,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) final
     {
-        m_fontType = fontType;
-        return;
-    }
-
-    /**
-     * Plugin creation method, used to register on the plugin manager.
-     *
-     * @param[in] name  Plugin name (must exist over lifetime)
-     * @param[in] uid   Unique id
-     *
-     * @return If successful, it will return the pointer to the plugin instance, otherwise nullptr.
-     */
-    static IPluginMaintenance* create(const char* name, uint16_t uid)
-    {
-        return new(std::nothrow)SensorPlugin(name, uid);
+        m_view.setFontType(fontType);
     }
 
     /**
@@ -243,14 +241,13 @@ private:
     /** Sensor value update period in ms. */
     static const uint32_t   UPDATE_PERIOD   = SIMPLE_TIMER_SECONDS(2U);
 
-    Fonts::FontType         m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget              m_textWidget;               /**< Text widget, used for showing the text. */
-    mutable MutexRecursive  m_mutex;                    /**< Mutex to protect against concurrent access. */
-    uint8_t                 m_sensorIdx;                /**< Index of selected sensor. */
-    uint8_t                 m_channelIdx;               /**< Index of selected channel. */
-    ISensorChannel*         m_sensorChannel;            /**< Values of this channel will be shown. */
-    SimpleTimer             m_updateTimer;              /**< Sensor value update timer. */
-    bool                    m_hasTopicChanged;          /**< Has the topic content changed? */
+    _SensorPlugin::View     m_view;             /**< View with all widgets. */
+    mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
+    uint8_t                 m_sensorIdx;        /**< Index of selected sensor. */
+    uint8_t                 m_channelIdx;       /**< Index of selected channel. */
+    ISensorChannel*         m_sensorChannel;    /**< Values of this channel will be shown. */
+    SimpleTimer             m_updateTimer;      /**< Sensor value update timer. */
+    bool                    m_hasTopicChanged;  /**< Has the topic content changed? */
 
     /**
      * Get configuration in JSON.

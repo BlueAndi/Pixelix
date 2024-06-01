@@ -120,7 +120,7 @@ extern void tearDown(void)
 static void testTextWidget()
 {
     YAGfxTest   testGfx;
-    TextWidget  textWidget;
+    TextWidget  textWidget(YAGfxTest::WIDTH, YAGfxTest::HEIGHT);
     String      testStr     = "test";
     const Color TEXT_COLOR  = 0x123456;
     const char* WIDGET_NAME = "textWidgetName";
@@ -184,6 +184,4 @@ static void testTextWidget()
     /* Set text with invalid format tag and get text back, which must contain it. */
     textWidget.setFormatStr("\\#FF00FYeah!");
     TEST_ASSERT_EQUAL_STRING("#FF00FYeah!", textWidget.getStr().c_str());
-
-    return;
 }

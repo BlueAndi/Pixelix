@@ -267,6 +267,4 @@ static void testDoublyLinkedList()
     TEST_ASSERT_TRUE(it.first());
     TEST_ASSERT_TRUE(it.find(max));
     TEST_ASSERT_EQUAL(max, *it.current());
-
-    return;
 }

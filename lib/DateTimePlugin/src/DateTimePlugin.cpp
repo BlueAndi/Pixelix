@@ -67,12 +67,6 @@ const char* DateTimePlugin::TIME_FORMAT_DEFAULT = "%I:%M %p";
 /* Initialize default date format. */
 const char* DateTimePlugin::DATE_FORMAT_DEFAULT = "%m/%d";
 
-/* Initialize the color of the actual day. */
-const Color DateTimePlugin::DAY_ON_COLOR        = ColorDef::LIGHTGRAY;
-
-/* Initialize the color of the other days (not the actual day). */
-const Color DateTimePlugin::DAY_OFF_COLOR       = ColorDef::ULTRADARKGRAY;
-
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -194,62 +188,11 @@ void DateTimePlugin::setSlot(const ISlotPlugin* slotInterf)
 
 void DateTimePlugin::start(uint16_t width, uint16_t height)
 {
-    uint16_t                    tcHeight        = 0U;
-    uint16_t                    lampWidth       = 0U;
-    uint16_t                    lampDistance    = 0U;
-    const uint16_t              minDistance     = 1U;   /* Min. distance between lamps. */
-    const uint16_t              minBorder       = 1U;   /* Min. border left and right of all lamps. */
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    /* The text canvas is left aligned to the icon canvas and aligned to the
-     * top. Consider that below the text canvas the day of the week is shown.
-     */
-    tcHeight = height - 1U;
-    m_textCanvas.setPosAndSize(0, 0, width, tcHeight);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (tcHeight > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY  = tcHeight - m_textWidget.getFont().getHeight();
-        uint16_t offsY  = diffY / 2U;
-
-        /* It looks better if the date/time is moved one line down.
-         * And we know here that only numbers and dots may be shown, instead
-         * of e.g. 'q' or 'p'.
-         */
-        if (0U == offsY)
-        {
-            offsY = 1U;
-        }
-
-        m_textWidget.move(0, offsY);
-    }
+    m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
-
-    m_lampCanvas.setPosAndSize(1, height - 1, width, 1U);
-
-    if (true == calcLayout(width, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
-    {
-        /* Calculate the border to have the days (lamps) shown aligned to center. */
-        uint16_t    border  = (width - (MAX_LAMPS * (lampWidth + lampDistance))) / 2U;
-        uint8_t     index   = 0U;
-
-        for(index = 0U; index < MAX_LAMPS; ++index)
-        {
-            int16_t x = (lampWidth + lampDistance) * index + border;
-
-            m_lampWidgets[index].setColorOn(m_dayOnColor);
-            m_lampWidgets[index].setColorOff(m_dayOffColor);
-            m_lampWidgets[index].setWidth(lampWidth);
-
-            (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
-            m_lampWidgets[index].move(x, 0);
-        }
-    }
 }
 
 void DateTimePlugin::stop()
@@ -301,9 +244,7 @@ void DateTimePlugin::update(YAGfx& gfx)
 
     if (false != m_isUpdateAvailable)
     {
-        gfx.fillScreen(ColorDef::BLACK);
-        m_textCanvas.update(gfx);
-        m_lampCanvas.update(gfx);
+        m_view.update(gfx);
 
         m_isUpdateAvailable = false;
     }
@@ -325,8 +266,8 @@ void DateTimePlugin::getConfiguration(JsonObject& jsonCfg) const
     jsonCfg["timeFormat"]   = m_timeFormat;
     jsonCfg["dateFormat"]   = m_dateFormat;
     jsonCfg["timeZone"]     = m_timeZone;
-    jsonCfg["dayOnColor"]   = colorToHtml(m_dayOnColor);
-    jsonCfg["dayOffColor"]  = colorToHtml(m_dayOffColor);
+    jsonCfg["dayOnColor"]   = colorToHtml(m_view.getDayOnColor());
+    jsonCfg["dayOffColor"]  = colorToHtml(m_view.getDayOffColor());
 }
 
 bool DateTimePlugin::setConfiguration(JsonObjectConst& jsonCfg)
@@ -372,8 +313,9 @@ bool DateTimePlugin::setConfiguration(JsonObjectConst& jsonCfg)
         m_timeFormat    = jsonTimeFormat.as<String>();
         m_dateFormat    = jsonDateFormat.as<String>();
         m_timeZone      = jsonTimeZone.as<String>();
-        m_dayOnColor    = colorFromHtml(jsonDayOnColor.as<String>());
-        m_dayOffColor   = colorFromHtml(jsonDayOffColor.as<String>());
+
+        m_view.setDayOnColor(colorFromHtml(jsonDayOnColor.as<String>()));
+        m_view.setDayOffColor(colorFromHtml(jsonDayOffColor.as<String>()));
 
         m_hasTopicChanged = true;
 
@@ -479,13 +421,13 @@ void DateTimePlugin::updateDateTime(bool force)
                 
                 if (true == getTimeAsString(timeAsStr, extTimeFormat, &timeInfo))
                 {
-                    m_textWidget.setFormatStr(timeAsStr);
+                    m_view.setFormatText(timeAsStr);
 
                     m_shownSecond       = timeInfo.tm_sec;
                     m_isUpdateAvailable = true;
                 }
                 
-                setWeekdayIndicator(timeInfo);
+                m_view.setWeekdayIndicator(timeInfo);
             }
         }
         else if (true == showDate)
@@ -502,13 +444,13 @@ void DateTimePlugin::updateDateTime(bool force)
                 
                 if (true == getTimeAsString(dateAsStr, extDateFormat, &timeInfo))
                 {
-                    m_textWidget.setFormatStr(dateAsStr);
+                    m_view.setFormatText(dateAsStr);
 
                     m_shownDayOfTheYear = timeInfo.tm_yday;
                     m_isUpdateAvailable = true;
                 }
                 
-                setWeekdayIndicator(timeInfo);
+                m_view.setWeekdayIndicator(timeInfo);
             }
         }
         else
@@ -521,85 +463,10 @@ void DateTimePlugin::updateDateTime(bool force)
     {
         if(true == force)
         {
-            m_textWidget.setFormatStr("\\calign?");
+            m_view.setFormatText("\\calign?");
             m_isUpdateAvailable = true;
         }
     }
-}
-
-void DateTimePlugin::setWeekdayIndicator(tm timeInfo)
-{
-    /* tm_wday starts at sunday, first lamp indicates monday.*/
-    uint8_t activeLamp = (0U < timeInfo.tm_wday) ? (timeInfo.tm_wday - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);
-
-    /* Last active lamp has to be deactivated. */
-    uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (DateTimePlugin::MAX_LAMPS - 1U);
-
-    if (DateTimePlugin::MAX_LAMPS > activeLamp)
-    {
-        m_lampWidgets[activeLamp].setOnState(true);
-    }
-
-    if (DateTimePlugin::MAX_LAMPS > lampToDeactivate)
-    {
-        m_lampWidgets[lampToDeactivate].setOnState(false);
-    }
-}
-
-bool DateTimePlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)
-{
-    bool    status  = false;
-
-    /* The min. border (left and right) must not be greater than the given width. */
-    if (width > (2U * minBorder))
-    {
-        uint16_t    availableWidth  = width - (2U * minBorder); /* The available width is calculated considering the min. borders. */
-
-        /* The available width must be greater than the number of elements, including the min. element distance. */
-        if (availableWidth > (cnt + ((cnt - 1U) * minDistance)))
-        {
-            uint16_t    maxElementWidth                     = (availableWidth - ((cnt - 1U) * minDistance)) / cnt; /* Max. element width, considering the given limitation. */
-            uint16_t    elementWidthToAvailWidthRatio       = 8U;   /* 1 / N */
-            uint16_t    elementDistanceToElementWidthRatio  = 4U;   /* 1 / N */
-            uint16_t    elementWidthConsideringRatio        = availableWidth / elementWidthToAvailWidthRatio;
-
-            /* Consider the ratio between element width to available width and
-             * ratio between element distance to element width.
-             * This is just to have a nice look.
-             */
-            if (maxElementWidth > elementWidthConsideringRatio)
-            {
-                uint16_t    elementDistanceConsideringRatio = elementWidthConsideringRatio / elementDistanceToElementWidthRatio;
-
-                if (0U == elementDistanceConsideringRatio)
-                {
-                    if (0U == minDistance)
-                    {
-                        elementDistance = 0U;
-                    }
-                    else
-                    {
-                        elementWidth    = maxElementWidth;
-                        elementDistance = (availableWidth - (cnt * maxElementWidth)) / (cnt - 1U);
-                    }
-                }
-                else
-                {
-                    elementWidth    = elementWidthConsideringRatio - elementDistanceConsideringRatio;
-                    elementDistance = elementDistanceConsideringRatio;
-                }
-            }
-            else
-            {
-                elementWidth    = maxElementWidth;
-                elementDistance = minDistance;
-            }
-
-            status = true;
-        }
-    }
-
-    return status;
 }
 
 bool DateTimePlugin::getTimeAsString(String& time, const String& format, const tm *currentTime)

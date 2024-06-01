@@ -244,6 +244,4 @@ static void testUtil(void)
     TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
     hexStr = "0y5";
     TEST_ASSERT_EQUAL_UINT32(0U, Util::hexToUInt32(hexStr));
-
-    return;
 }

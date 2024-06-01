@@ -110,7 +110,7 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
     jsonLamps["name"]           = TOPIC_LAMPS;
     jsonLamps["access"]         = "r"; /* Only read access allowed. */
 
-    for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
+    for(lampId = 0U; lampId < _IconTextLampPlugin::View::MAX_LAMPS; ++lampId)
     {
         (void)topics.add(String(TOPIC_LAMP) + "/" + lampId);
     }
@@ -140,7 +140,7 @@ bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
         JsonArray   lampArray   = value.createNestedArray("lamps");
         uint8_t     lampId      = 0U;
 
-        for(lampId = 0U; lampId < MAX_LAMPS; ++lampId)
+        for(lampId = 0U; lampId < _IconTextLampPlugin::View::MAX_LAMPS; ++lampId)
         {
             bool        lampOnState = getLamp(lampId);
             JsonObject  lampObj     = lampArray.createNestedObject();
@@ -155,11 +155,11 @@ bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
     {
         uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
         String      lampIdStr           = topic.substring(indexBeginLampId);
-        uint8_t     lampId              = MAX_LAMPS;
+        uint8_t     lampId              = _IconTextLampPlugin::View::MAX_LAMPS;
         bool        status              = Util::strToUInt8(lampIdStr, lampId);
 
         if ((true == status) &&
-            (MAX_LAMPS > lampId))
+            (_IconTextLampPlugin::View::MAX_LAMPS > lampId))
         {
             bool    lampState       = getLamp(lampId);
             String  lampStateStr    = (false == lampState) ? "off" : "on";
@@ -234,12 +234,12 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
     {
         uint32_t            indexBeginLampId    = topic.lastIndexOf("/") + 1U;
         String              lampIdStr           = topic.substring(indexBeginLampId);
-        uint8_t             lampId              = MAX_LAMPS;
+        uint8_t             lampId              = _IconTextLampPlugin::View::MAX_LAMPS;
         bool                status              = Util::strToUInt8(lampIdStr, lampId);
         JsonVariantConst    jsonSet             = value["state"];
 
         if ((true == status) &&
-            (MAX_LAMPS > lampId) &&
+            (_IconTextLampPlugin::View::MAX_LAMPS > lampId) &&
             (false == jsonSet.isNull()))
         {
             String state = jsonSet.as<String>();
@@ -319,11 +319,11 @@ bool IconTextLampPlugin::hasTopicChanged(const String& topic)
     {
         uint32_t    indexBeginLampId    = topic.lastIndexOf("/") + 1U;
         String      lampIdStr           = topic.substring(indexBeginLampId);
-        uint8_t     lampId              = MAX_LAMPS;
+        uint8_t     lampId              = _IconTextLampPlugin::View::MAX_LAMPS;
         bool        status              = Util::strToUInt8(lampIdStr, lampId);
 
         if ((true == status) &&
-            (MAX_LAMPS > lampId))
+            (_IconTextLampPlugin::View::MAX_LAMPS > lampId))
         {
             MutexGuard<MutexRecursive> guard(m_mutex);
             
@@ -373,18 +373,11 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    uint16_t                    tcHeight            = 0U;
-    uint16_t                    lampWidth           = 0U;
-    uint16_t                    lampDistance        = 0U;
-    const uint16_t              minDistance         = 1U;   /* Min. distance between lamps. */
-    const uint16_t              minBorder           = 1U;   /* Min. border left and right of all lamps. */
-    const uint16_t              canvasWidth         = width - ICON_WIDTH;
     String                      bitmapFullPath      = getFileName(FILE_EXT_BITMAP);
     String                      spriteSheetFullPath = getFileName(FILE_EXT_SPRITE_SHEET);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    m_iconCanvas.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_iconCanvas.addWidget(m_bitmapWidget);
+    m_view.init(width, height);
 
     /* If there is an icon in the filesystem with the plugin UID as filename,
      * it will be loaded. First check whether it is a animated sprite sheet
@@ -393,9 +386,9 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
     m_iconPath.clear();
     m_spriteSheetPath.clear();
 
-    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
+    if (false == m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
     {
-        if (true == m_bitmapWidget.load(FILESYSTEM, bitmapFullPath))
+        if (true == m_view.getBitmapWidget().load(FILESYSTEM, bitmapFullPath))
         {
             m_iconPath = bitmapFullPath;
         }
@@ -404,44 +397,6 @@ void IconTextLampPlugin::start(uint16_t width, uint16_t height)
     {
         m_iconPath          = bitmapFullPath;
         m_spriteSheetPath   = spriteSheetFullPath;
-    }
-
-    /* The text canvas is left aligned to the icon canvas and aligned to the
-     * top. Consider that below the text canvas the lamps are shown.
-     */
-    tcHeight = height - 2U;
-    m_textCanvas.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, tcHeight);
-    (void)m_textCanvas.addWidget(m_textWidget);
-
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (tcHeight > m_textWidget.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidget.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidget.move(0, offsY);
-    }
-
-    m_lampCanvas.setPosAndSize(ICON_WIDTH, height - 1, canvasWidth, 1U);
-
-    if (true == calcLayout(canvasWidth, MAX_LAMPS, minDistance, minBorder, lampWidth, lampDistance))
-    {
-        /* Calculate the border to have the lamps shown aligned to center. */
-        uint16_t    border  = ((canvasWidth - (MAX_LAMPS * lampWidth)) - ((MAX_LAMPS - 1U) * lampDistance)) / 2U;
-        uint8_t     index   = 0U;
-
-        for(index = 0U; index < MAX_LAMPS; ++index)
-        {
-            /* One space at the begin, two spaces between the lamps. */
-            int16_t x = (lampWidth + lampDistance) * index + border;
-
-            m_lampWidgets[index].setWidth(lampWidth);
-
-            (void)m_lampCanvas.addWidget(m_lampWidgets[index]);
-            m_lampWidgets[index].move(x, 0);
-        }
     }
 }
 
@@ -468,18 +423,13 @@ void IconTextLampPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-    m_iconCanvas.update(gfx);
-    m_textCanvas.update(gfx);
-    m_lampCanvas.update(gfx);
+    m_view.update(gfx);
 }
 
 String IconTextLampPlugin::getText() const
 {
-    String                      formattedText;
     MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    formattedText = m_textWidget.getFormatStr();
+    String                      formattedText = m_view.getFormatText();
 
     return formattedText;
 }
@@ -488,9 +438,9 @@ void IconTextLampPlugin::setText(const String& formatText)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (m_textWidget.getFormatStr() != formatText)
+    if (m_view.getFormatText() != formatText)
     {
-        m_textWidget.setFormatStr(formatText);
+        m_view.setFormatText(formatText);
 
         m_hasTopicTextChanged = true;
     }
@@ -510,12 +460,12 @@ bool IconTextLampPlugin::loadBitmap(const String& filename)
 
     if (false == m_spriteSheetPath.isEmpty())
     {
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
+        status = m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
     }
     
     if (false == status)
     {
-        status = m_bitmapWidget.load(FILESYSTEM, m_iconPath);
+        status = m_view.getBitmapWidget().load(FILESYSTEM, m_iconPath);
     }
 
     return status;
@@ -535,7 +485,7 @@ bool IconTextLampPlugin::loadSpriteSheet(const String& filename)
 
     if (false == m_iconPath.isEmpty())
     {
-        status = m_bitmapWidget.loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
+        status = m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
     }
 
     return status;
@@ -548,7 +498,7 @@ void IconTextLampPlugin::clearBitmap()
     if (false == m_iconPath.isEmpty())
     {
         m_iconPath.clear();
-        m_bitmapWidget.clear(ColorDef::BLACK);
+        m_view.getBitmapWidget().clear(ColorDef::BLACK);
 
         m_hasTopicTextChanged = true;
     }
@@ -567,7 +517,7 @@ void IconTextLampPlugin::clearSpriteSheet()
 
     if (false == m_iconPath.isEmpty())
     {
-        (void)m_bitmapWidget.load(FILESYSTEM, m_iconPath);
+        (void)m_view.getBitmapWidget().load(FILESYSTEM, m_iconPath);
     }
 }
 
@@ -587,27 +537,21 @@ void IconTextLampPlugin::getSpriteSheetFilePath(String& fullPath) const
 
 bool IconTextLampPlugin::getLamp(uint8_t lampId) const
 {
-    bool lampState = false;
-
-    if (MAX_LAMPS > lampId)
-    {
-        MutexGuard<MutexRecursive> guard(m_mutex);
-
-        lampState = m_lampWidgets[lampId].getOnState();
-    }
+    MutexGuard<MutexRecursive>  guard(m_mutex);
+    bool                        lampState = m_view.getLamp(lampId);
 
     return lampState;
 }
 
 void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 {
-    if (MAX_LAMPS > lampId)
+    if (_IconTextLampPlugin::View::MAX_LAMPS > lampId)
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
 
-        if (state != m_lampWidgets[lampId].getOnState())
+        if (state != m_view.getLamp(lampId))
         {
-            m_lampWidgets[lampId].setOnState(state);
+            m_view.setLamp(lampId, state);
 
             m_hasTopicLampsChanged = true;
             m_hasTopicLampChanged[lampId] = true;
@@ -626,62 +570,6 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
 String IconTextLampPlugin::getFileName(const String& ext)
 {
     return generateFullPath(getUID(), ext);
-}
-
-bool IconTextLampPlugin::calcLayout(uint16_t width, uint16_t cnt, uint16_t minDistance, uint16_t minBorder, uint16_t& elementWidth, uint16_t& elementDistance)
-{
-    bool    status  = false;
-
-    /* The min. border (left and right) must not be greater than the given width. */
-    if (width > (2U * minBorder))
-    {
-        uint16_t    availableWidth  = width - (2U * minBorder); /* The available width is calculated considering the min. borders. */
-
-        /* The available width must be greater than the number of elements, including the min. element distance. */
-        if (availableWidth > (cnt + ((cnt - 1U) * minDistance)))
-        {
-            uint16_t    maxElementWidth                     = (availableWidth - ((cnt - 1U) * minDistance)) / cnt; /* Max. element width, considering the given limitation. */
-            uint16_t    elementWidthToAvailWidthRatio       = 8U;   /* 1 / N */
-            uint16_t    elementDistanceToElementWidthRatio  = 4U;   /* 1 / N */
-            uint16_t    elementWidthConsideringRatio        = availableWidth / elementWidthToAvailWidthRatio;
-
-            /* Consider the ratio between element width to available width and
-             * ratio between element distance to element width.
-             * This is just to have a nice look.
-             */
-            if (maxElementWidth > elementWidthConsideringRatio)
-            {
-                uint16_t    elementDistanceConsideringRatio = elementWidthConsideringRatio / elementDistanceToElementWidthRatio;
-
-                if (0U == elementDistanceConsideringRatio)
-                {
-                    if (0U == minDistance)
-                    {
-                        elementDistance = 0U;
-                    }
-                    else
-                    {
-                        elementWidth    = maxElementWidth;
-                        elementDistance = (availableWidth - (cnt * maxElementWidth)) / (cnt - 1U);
-                    }
-                }
-                else
-                {
-                    elementWidth    = elementWidthConsideringRatio - elementDistanceConsideringRatio;
-                    elementDistance = elementDistanceConsideringRatio;
-                }
-            }
-            else
-            {
-                elementWidth    = maxElementWidth;
-                elementDistance = minDistance;
-            }
-
-            status = true;
-        }
-    }
-
-    return status;
 }
 
 /******************************************************************************

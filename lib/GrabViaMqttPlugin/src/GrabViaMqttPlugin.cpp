@@ -198,40 +198,20 @@ void GrabViaMqttPlugin::start(uint16_t width, uint16_t height)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_layoutLeft.setPosAndSize(0, 0, ICON_WIDTH, ICON_HEIGHT);
-    (void)m_layoutLeft.addWidget(m_iconWidget);
-
-    /* The text canvas is left aligned to the icon canvas and it spans over
-     * the whole display height.
-     */
-    m_layoutRight.setPosAndSize(ICON_WIDTH, 0, width - ICON_WIDTH, height);
-    (void)m_layoutRight.addWidget(m_textWidgetRight);
-
-    /* If only text is used, it will span over the whole display. */
-    m_layoutTextOnly.setPosAndSize(0, 0, width, height);
-    (void)m_layoutTextOnly.addWidget(m_textWidgetTextOnly);
-
-    /* Choose font. */
-    m_textWidgetRight.setFont(Fonts::getFontByType(m_fontType));
-    m_textWidgetTextOnly.setFont(Fonts::getFontByType(m_fontType));
-
-    /* The text widget inside the text canvas is left aligned on x-axis and
-     * aligned to the center of y-axis.
-     */
-    if (height > m_textWidgetRight.getFont().getHeight())
-    {
-        uint16_t diffY = height - m_textWidgetRight.getFont().getHeight();
-        uint16_t offsY = diffY / 2U;
-
-        m_textWidgetRight.move(0, offsY);
-        m_textWidgetTextOnly.move(0, offsY);
-    }
+    m_view.init(width, height);
 
     PluginWithConfig::start(width, height);
 
     if (false == m_iconPath.isEmpty())
     {
-        (void)m_iconWidget.load(FILESYSTEM, m_iconPath);
+        if (true == m_view.loadIcon(m_iconPath))
+        {
+            m_view.setupBitmapAndText();
+        }
+    }
+    else
+    {
+        m_view.setupTextOnly();
     }
 
     subscribe();
@@ -257,18 +237,7 @@ void GrabViaMqttPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    gfx.fillScreen(ColorDef::BLACK);
-
-    /* If a icon is available, the icon/text layout will be used otherwise the text only layout. */
-    if (false == m_iconPath.isEmpty())
-    {
-        m_layoutLeft.update(gfx);
-        m_layoutRight.update(gfx);
-    }
-    else
-    {
-        m_layoutTextOnly.update(gfx);
-    }
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -357,27 +326,13 @@ bool GrabViaMqttPlugin::setConfiguration(JsonObjectConst& jsonCfg)
         /* Load icon immediately */
         if (true == reqIcon)
         {
-            if (true == m_iconPath.endsWith(".sprite"))
+            if (true == m_view.loadIcon(m_iconPath))
             {
-                String textureFileName = m_iconPath;
-
-                textureFileName.replace(".sprite", ".bmp");
-
-                if (false == m_iconWidget.loadSpriteSheet(FILESYSTEM, m_iconPath, textureFileName))
-                {
-                    LOG_WARNING("Failed to load animation %s / %s.", m_iconPath.c_str(), textureFileName.c_str());
-                }
-            }
-            else if (true == m_iconPath.endsWith(".bmp"))
-            {
-                if (false == m_iconWidget.load(FILESYSTEM, m_iconPath))
-                {
-                    LOG_WARNING("Failed to load bitmap %s.", m_iconPath.c_str());
-                }
+                m_view.setupBitmapAndText();
             }
             else
             {
-                m_iconWidget.clear(ColorDef::BLACK);
+                m_view.setupTextOnly();
             }
         }
 
@@ -462,8 +417,7 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
 
             (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), value);
 
-            m_textWidgetRight.setFormatStr(buffer);
-            m_textWidgetTextOnly.setFormatStr(buffer);
+            m_view.setFormatText(buffer);
         }
         /* Is it a string? */
         else if (true == jsonValue.is<String>())
@@ -473,13 +427,11 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
 
             (void)snprintf(buffer, sizeof(buffer), m_format.c_str(), jsonValue.as<String>().c_str());
 
-            m_textWidgetRight.setFormatStr(buffer);
-            m_textWidgetTextOnly.setFormatStr(buffer);
+            m_view.setFormatText(buffer);
         }
         else
         {
-            m_textWidgetRight.setFormatStr("\\calign-");
-            m_textWidgetTextOnly.setFormatStr("\\calign-");
+            m_view.setFormatText("\\calign-");
         }
     }
 }
