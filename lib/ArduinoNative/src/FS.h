@@ -70,7 +70,7 @@ enum SeekMode {
 class File
 {
 public:
-    File(FILE* fd) :
+    File(FILE* fd = nullptr) :
         m_fd(fd)
     {
     }
@@ -151,8 +151,6 @@ public:
 private:
 
     FILE*   m_fd;
-
-    File();
 };
 
 class FS
