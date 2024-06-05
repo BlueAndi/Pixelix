@@ -44,8 +44,9 @@
  * Includes
  *****************************************************************************/
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <string>
+#include <cctype>
+#include <algorithm>
 
 /******************************************************************************
  * Macros
@@ -66,17 +67,8 @@ public:
      * Constructs a string.
      */
     String() :
-        m_size(1U),
-        m_buffer(new char[m_size])
+        m_stdStr()
     {
-        if (nullptr == m_buffer)
-        {
-            m_size = 0U;
-        }
-        else
-        {
-            m_buffer[0] = '\0';
-        }
     }
 
     /**
@@ -84,75 +76,36 @@ public:
      */
     ~String()
     {
-        if (nullptr != m_buffer)
-        {
-            delete[] m_buffer;
-            m_buffer = nullptr;
-            m_size = 0U;
-        }
     }
 
     /**
      * Constructs a string by copying another.
      *
-     * @param[in] str String to copy
+     * @param[in] other String to copy
      */
-    String(const String& str) :
-        m_size(str.m_size),
-        m_buffer(nullptr)
+    String(const String& other) :
+        m_stdStr(other.m_stdStr)
     {
-        if ((0 == str.m_size) ||
-            (nullptr == str.m_buffer))
-        {
-            m_buffer = new char[1u];
-
-            if (nullptr == m_buffer)
-            {
-                m_size = 0U;
-            }
-            else
-            {
-                m_size = 1U;
-                m_buffer[0u] = '\0';
-            }
-        }
-        else
-        {
-            m_buffer = new char[str.m_size];
-
-            if (nullptr == m_buffer)
-            {
-                m_size = 0U;
-            }
-            else
-            {
-                m_size = str.m_size;
-                strcpy(m_buffer, str.m_buffer);
-            }
-        }
     }
 
     /**
      * Constructs a string by copying another.
      *
-     * @param[in] str String to copy
+     * @param[in] other String to copy
      */
-    String(const char* str) :
-        m_size((nullptr == str) ? 1u : (strlen(str) + 1U)),
-        m_buffer(new char[m_size])
+    String(const char* other) :
+        m_stdStr(other)
     {
-        if (nullptr == m_buffer)
-        {
-            m_size = 0U;
-        }
-        else if (nullptr == str)
-        {
-            m_buffer[0u] = '\0';
-        }
-        else
-        {
-            strcpy(m_buffer, str);
-        }
+    }
+
+    /**
+     * Constructs a string by copying another.
+     *
+     * @param[in] other String to copy
+     */
+    String(const std::string& other) :
+        m_stdStr(other)
+    {
     }
 
     /**
@@ -161,52 +114,22 @@ public:
      * @param[in] c Single character
      */
     String(char c) :
-        m_size(2U),
-        m_buffer(new char[m_size])
+        m_stdStr(1, c)
     {
-        if (nullptr == m_buffer)
-        {
-            m_size = 0U;
-        }
-        else
-        {
-            m_buffer[0] = c;
-            m_buffer[1] = '\0';
-        }
     }
 
     /**
      * Assign a string.
      *
-     * @param[in] str String, which to assign.
+     * @param[in] other String, which to assign.
      *
      * @return String
      */
-    String& operator=(const String& str)
+    String& operator=(const String& other)
     {
-        if (this != &str)
+        if (this != &other)
         {
-            if (nullptr != m_buffer)
-            {
-                delete[] m_buffer;
-                m_buffer = nullptr;
-            }
-
-            m_size = str.m_size;
-
-            if (0u < m_size)
-            {
-                m_buffer = new char[m_size];
-
-                if (nullptr == m_buffer)
-                {
-                    m_size = 0U;
-                }
-                else
-                {
-                    memcpy(m_buffer, str.m_buffer, m_size);
-                }
-            }
+            m_stdStr = other.m_stdStr;
         }
 
         return *this;
@@ -215,32 +138,25 @@ public:
     /**
      * Compare two strings.
      *
-     * @param[in] str String, which to compare with.
+     * @param[in] other String, which to compare with.
      *
      * @return If the strings are equal, it will return true otherwise false.
      */
-    bool operator==(const String& str) const
+    bool operator==(const String& other) const
     {
-        bool result = false;
-
-        if (0 == strcmp(str.c_str(), m_buffer))
-        {
-            result = true;
-        }
-
-        return result;
+        return m_stdStr == other.m_stdStr;
     }
 
     /**
      * Compare two strings.
      *
-     * @param[in] str String, which to compare with.
+     * @param[in] other String, which to compare with.
      *
      * @return If the strings are equal, it will return true otherwise false.
      */
-    bool operator!=(const String& str) const
+    bool operator!=(const String& other) const
     {
-        return (*this == str) ? false : true;
+       return m_stdStr != other.m_stdStr;
     }
 
     /**
@@ -255,79 +171,39 @@ public:
     {
         char singleChar = '\0';
 
-        if (length() > index)
+        if (m_stdStr.length() > index)
         {
-            singleChar = m_buffer[index];
+            singleChar = m_stdStr[index];
         }
 
         return singleChar;
     }
 
-    String& operator +=(const String& str)
+    String& operator +=(const String& other)
     {
-        if (nullptr != str.m_buffer)
-        {
-            char* tmp = new char[m_size + str.m_size];
-
-            if (nullptr != tmp)
-            {
-                strcpy(tmp, m_buffer);
-                strcat(tmp, str.m_buffer);
-
-                delete[] m_buffer;
-                m_buffer = tmp;
-                m_size += str.m_size;
-            }
-        }
+        m_stdStr += other.m_stdStr;
 
         return *this;
     }
 
     String& operator +=(char c)
     {
-        char* tmp = new char[m_size + 1];
-
-        if (nullptr != tmp)
-        {
-            char cBuff[2] = { c, '\0'};
-
-            strcpy(tmp, m_buffer);
-            strcat(tmp, cBuff);
-
-            delete[] m_buffer;
-            m_buffer = tmp;
-            ++m_size;
-        }
+        m_stdStr += c;
 
         return *this;
     }
 
     String& operator +=(int number)
     {
-        char* tmp = nullptr;
-        char strNumber[2 + 3 * sizeof(int)];
-
-        sprintf(strNumber, "%d", number);
-
-        tmp = new char[m_size + strlen(strNumber)];
-
-        if (nullptr != tmp)
-        {
-            strcpy(tmp, m_buffer);
-            strcat(tmp, strNumber);
-
-            delete[] m_buffer;
-            m_buffer = tmp;
-            ++m_size;
-        }
+        m_stdStr += std::to_string(number);
 
         return *this;
     }
 
-    String operator +(const String& str) const
+    String operator +(const String& other) const
     {
         String tmp = *this;
-        tmp += str;
+        tmp += other;
 
         return tmp;
     }
@@ -339,15 +215,7 @@ public:
      */
     const char* c_str() const
     {
-        static const char*  emptyStr    = "";
-        const char*         buffer      = m_buffer;
-
-        if (nullptr == buffer)
-        {
-            buffer = emptyStr;
-        }
-
-        return buffer;
+        return m_stdStr.c_str();
     }
 
     /**
@@ -357,19 +225,7 @@ public:
      */
     unsigned int length() const
     {
-        unsigned int    length  = 0;
-        const char*     ptr     = m_buffer;
-
-        if (nullptr != m_buffer)
-        {
-            while('\0' != *ptr)
-            {
-                ++length;
-                ++ptr;
-            }
-        }
-
-        return length;
+        return m_stdStr.length();
     }
 
     /**
@@ -381,7 +237,7 @@ public:
      */
     String substring(unsigned int index) const
     {
-        return substring(index, length());
+        return m_stdStr.substr(index);
     }
 
     /**
@@ -394,32 +250,7 @@ public:
      */
     String substring(unsigned int left, unsigned int right) const
     {
-        String              out;
-        const unsigned int  len = length();
-
-        if (left > right)
-        {
-            unsigned int temp = right;
-            right = left;
-            left = temp;
-        }
-
-        if (len > left)
-        {
-            if (length() < right)
-            {
-                right = len;
-            }
-
-            char temp = m_buffer[right];
-            m_buffer[right] = '\0';
-
-            out = &m_buffer[left];
-
-            m_buffer[right] = temp;
-        }
-
-        return out;
+        return m_stdStr.substr(left, right - left);
     }
 
     /**
@@ -449,14 +280,7 @@ public:
      */
     unsigned char startsWith(const String &s2, unsigned int offset) const
     {
-        if((offset > static_cast<unsigned int>(length() - s2.length())) ||
-           (nullptr == m_buffer) ||
-           (nullptr == s2.m_buffer))
-        {
-            return 0;
-        }
-
-        return 0 == strncmp(&m_buffer[offset], s2.m_buffer, s2.length());
+        return 0 == m_stdStr.rfind(s2.c_str(), 0);
     }
 
     /**
@@ -464,10 +288,7 @@ public:
      */
     void clear()
     {
-        if (nullptr != m_buffer)
-        {
-            m_buffer[0] = '\0';
-        }
+        m_stdStr.clear();
     }
 
     /**
@@ -477,23 +298,58 @@ public:
      */
     bool isEmpty() const
     {
-        bool isEmptyFlag = true;
+        return m_stdStr.empty();
+    }
 
-        if ((nullptr != m_buffer) &&
-            (0U < m_size) &&
-            ('\0' != m_buffer[0]))
+    /**
+     * Get last index of given string.
+     * 
+     * @param[in] other   String to search for.
+     * 
+     * @return If found, it will return the index otherwise -1.
+     */
+    int lastIndexOf(const String& other) const
+    {
+        int     index   = -1;
+        size_t  pos     = m_stdStr.find_last_of(other.m_stdStr);
+
+        if (std::string::npos != pos)
         {
-            isEmptyFlag = false;
+            index = pos;
         }
 
-        return isEmptyFlag;
+        return index;
+    }
+
+    /**
+     * Compare string case insenstive.
+     * 
+     * @param[in] other   String to compare with.
+     * 
+     * @return If equal, it will return true otherwise false.
+     */
+    bool equalsIgnoreCase(const String& other) const
+    {
+        return  (m_stdStr.length() == other.m_stdStr.length()) &&
+                (std::equal(m_stdStr.begin(), m_stdStr.end(), other.m_stdStr.begin(), icharEquals));
     }
 
 private:
 
-    size_t  m_size;     /**< String buffer size */
-    char*   m_buffer;   /**< String buffer */
+    std::string m_stdStr;   /**< Internal used std string. */
 
+    /**
+     * Compare single characters case insensitive.
+     * 
+     * @param[in] ch1   Character 1
+     * @param[in] ch2   Character 2
+     *
+     * @return If equal, it will return true otherwise false.
+     */
+    static bool icharEquals(unsigned char ch1, unsigned char ch2)
+    {
+        return std::tolower(ch1) == std::tolower(ch2);
+    }
 };
 
 /******************************************************************************
