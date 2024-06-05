@@ -68,7 +68,7 @@ void LzwDecoder::init(uint8_t lzwMinCodeWidth)
     clear();
 }
 
-bool LzwDecoder::decode(ReadFromInStream readFromInStreamFunc, WriteToOutStream writeToOutStreamFunc)
+bool LzwDecoder::decode(const ReadFromInStream& readFromInStreamFunc, const WriteToOutStream& writeToOutStreamFunc)
 {
     bool        isSuccessful    = true;
     bool        isEnd           = false;
@@ -131,7 +131,7 @@ void LzwDecoder::clear()
     m_isInitialState    = true;
 }
 
-bool LzwDecoder::getCode(uint32_t& code, ReadFromInStream readFromInStreamFunc)
+bool LzwDecoder::getCode(uint32_t& code, const ReadFromInStream& readFromInStreamFunc)
 {
     bool        isSuccessful    = true;
     size_t      codeBufferIdx   = 0U;
@@ -179,7 +179,7 @@ bool LzwDecoder::getCode(uint32_t& code, ReadFromInStream readFromInStreamFunc)
     return isSuccessful;
 }
 
-bool LzwDecoder::decompress(uint32_t& code, WriteToOutStream writeToOutStreamFunc)
+bool LzwDecoder::decompress(uint32_t& code, const WriteToOutStream& writeToOutStreamFunc)
 {
     bool isSuccessful = true;
 

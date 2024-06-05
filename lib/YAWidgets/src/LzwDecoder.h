@@ -124,7 +124,7 @@ public:
      * 
      * @return If successful decoded, it will return true otherwise false.
      */
-    bool decode(ReadFromInStream readFromInStreamFunc, WriteToOutStream writeToOutStreamFunc);
+    bool decode(const ReadFromInStream& readFromInStreamFunc, const WriteToOutStream& writeToOutStreamFunc);
 
 private:
 
@@ -169,7 +169,7 @@ private:
      *
      * @return If successful, it will return true otherwise false.
      */
-    bool getCode(uint32_t& code, ReadFromInStream readFromInStreamFunc);
+    bool getCode(uint32_t& code, const ReadFromInStream& readFromInStreamFunc);
 
     /**
      * Decompress code to output stream.
@@ -179,7 +179,7 @@ private:
      * 
      * @return If successful, it will return true otherwise false.
      */
-    bool decompress(uint32_t& code, WriteToOutStream writeToOutStreamFunc);
+    bool decompress(uint32_t& code, const WriteToOutStream& writeToOutStreamFunc);
 
 };
 
