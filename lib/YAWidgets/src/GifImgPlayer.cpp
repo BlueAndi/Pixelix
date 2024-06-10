@@ -866,7 +866,12 @@ size_t GifImgPlayer::loadImageDataBlock(File& fd, uint8_t* block, size_t size)
     bool        isSuccessful    = true;
     uint8_t     blockSize       = 0U;
 
-    if (false == read(fd, &blockSize, sizeof(blockSize)))
+    if ((nullptr == block) ||
+        (0U == size))
+    {
+        isSuccessful = false;
+    }
+    else if (false == read(fd, &blockSize, sizeof(blockSize)))
     {
         isSuccessful = false;
     }
