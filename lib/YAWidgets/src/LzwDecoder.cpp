@@ -134,7 +134,6 @@ void LzwDecoder::clear()
 bool LzwDecoder::getCode(uint32_t& code, const ReadFromInStream& readFromInStreamFunc)
 {
     bool        isSuccessful    = true;
-    size_t      codeBufferIdx   = 0U;
     uint32_t    codeBitsNeeded  = m_codeWidth;
 
     code = 0U;
