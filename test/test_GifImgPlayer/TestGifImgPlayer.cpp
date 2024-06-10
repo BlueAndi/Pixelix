@@ -179,13 +179,10 @@ static void testGifImgPlayerAnimated()
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestAnimation.gif"));
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     usleep(200000);
-    printf("***** 2\n");
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     usleep(200000);
-    printf("***** 3\n");
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     usleep(200000);
-    printf("***** 4\n");
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     gifImgPlayer.close();
 }
