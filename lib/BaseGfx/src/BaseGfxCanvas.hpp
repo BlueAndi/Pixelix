@@ -131,6 +131,16 @@ public:
     }
 
     /**
+     * Get the parent canvas graphic operations.
+     * 
+     * @return Parent graphic functions
+     */
+    BaseGfx<TColor>* getParentGfx() const
+    {
+        return m_parentGfx;
+    }
+
+    /**
      * Set parent canvas graphic operations.
      * 
      * @param[in] gfx   Parent graphic functions
