@@ -156,6 +156,10 @@ private:
     uint8_t*    m_stack;            /**< Stack */
     uint8_t*    m_stackPtr;         /**< Current stack pointer on stack */
 
+    /* Not allowed */
+    LzwDecoder(const LzwDecoder& other);
+    LzwDecoder& operator=(const LzwDecoder& other);
+
     /**
      * Clear code tables.
      */
