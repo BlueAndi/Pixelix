@@ -167,8 +167,6 @@ static void testLzwDecoder()
         {
             TEST_ASSERT_LESS_THAN_INT32(sizeof(EXPECTED_DATA), dstIndex);
 
-            printf("Out (%u, %u): 0x%02X\n", dstIndex % EXPECTED_DATA_WIDTH, dstIndex / EXPECTED_DATA_WIDTH, data);
-
             TEST_ASSERT_EQUAL_UINT8(EXPECTED_DATA[dstIndex], data);
             ++dstIndex;
 
@@ -178,4 +176,6 @@ static void testLzwDecoder()
 
     TEST_ASSERT_EQUAL(true, result);
     TEST_ASSERT_EQUAL(sizeof(INPUT_DATA), srcIndex);
+
+    lzwDecoder.deInit();
 }

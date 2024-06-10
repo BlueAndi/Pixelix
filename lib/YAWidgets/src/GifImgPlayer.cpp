@@ -203,6 +203,16 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
         {
             ret = RET_FILE_NOT_FOUND;
         }
+        else
+        {
+            /* Allocate image data block, used for parsing. */
+            m_imageDataBlock = new(std::nothrow) uint8_t[IMAGE_DATA_BLOCK_SIZE];
+
+            if (nullptr == m_imageDataBlock)
+            {
+                ret = RET_FILE_FORMAT_UNSUPPORTED;
+            }
+        }
     }
 
     /* If file is opened, the parsing will be started. */
@@ -289,6 +299,12 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
 void GifImgPlayer::close()
 {
     m_fd.close();
+
+    if (nullptr != m_imageDataBlock)
+    {
+        delete[] m_imageDataBlock;
+        m_imageDataBlock = nullptr;
+    }
 
     if (nullptr != m_globalColorTable)
     {
@@ -626,6 +642,8 @@ bool GifImgPlayer::parseImageDescriptor(File& fd)
                 {
                     isSuccessful = false;
                 }
+
+                lzwDecoder.deInit();
 
                 /* After the image data, the block terminator marks the end. */
                 if (sizeof(blockTerminator) != fd.read(&blockTerminator, sizeof(blockTerminator)))

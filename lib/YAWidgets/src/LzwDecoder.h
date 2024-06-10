@@ -86,8 +86,8 @@ public:
         m_firstByte(0U),
         m_inCode(0U),
         m_prevCode(0U),
-        m_codes(new(std::nothrow) uint32_t[CODE_LIMIT]),
-        m_stack(new(std::nothrow) uint8_t[STACK_SIZE]),
+        m_codes(nullptr),
+        m_stack(nullptr),
         m_stackPtr(nullptr)
     {
     }
@@ -111,6 +111,8 @@ public:
 
     /**
      * Initialize with the LZW min. code width (number of bits).
+     * It will allocate internal memory for the decompression. Use the deInit()
+     * after successful decompression to release it again.
      * 
      * @param[in] lzwMinCodeWidth   LZW min. code width
      */
@@ -125,6 +127,12 @@ public:
      * @return If successful decoded, it will return true otherwise false.
      */
     bool decode(const ReadFromInStream& readFromInStreamFunc, const WriteToOutStream& writeToOutStreamFunc);
+
+    /**
+     * Deinitialize the LZW decoder.
+     * It will release internal allocated memory.
+     */
+    void deInit();
 
 private:
 

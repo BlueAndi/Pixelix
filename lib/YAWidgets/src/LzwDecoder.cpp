@@ -60,6 +60,16 @@
 
 void LzwDecoder::init(uint8_t lzwMinCodeWidth)
 {
+    if (nullptr == m_codes)
+    {
+        m_codes = new(std::nothrow) uint32_t[CODE_LIMIT];
+    }
+
+    if (nullptr == m_stack)
+    {
+        m_stack = new(std::nothrow) uint8_t[STACK_SIZE];
+    }
+
     m_lzwMinCodeWidth   = lzwMinCodeWidth;
     m_clearCode         = 1U << m_lzwMinCodeWidth;
     m_endCode           = m_clearCode + 1U;
@@ -113,6 +123,21 @@ bool LzwDecoder::decode(const ReadFromInStream& readFromInStreamFunc, const Writ
     }
 
     return isSuccessful;
+}
+
+void LzwDecoder::deInit()
+{
+    if (nullptr != m_codes)
+    {
+        delete[] m_codes;
+        m_codes = nullptr;
+    }
+
+    if (nullptr != m_stack)
+    {
+        delete[] m_stack;
+        m_stack = nullptr;
+    }
 }
 
 /******************************************************************************

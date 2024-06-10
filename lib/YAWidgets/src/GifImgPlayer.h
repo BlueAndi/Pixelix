@@ -96,7 +96,6 @@ public:
         m_isAnimation(false),
         m_isFinished(false)
     {
-        m_imageDataBlock = new(std::nothrow) uint8_t[IMAGE_DATA_BLOCK_SIZE];
     }
 
     /**
