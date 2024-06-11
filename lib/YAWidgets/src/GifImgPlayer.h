@@ -103,7 +103,10 @@ public:
      */
     ~GifImgPlayer()
     {
-        m_fd.close();
+        if (true == m_fd)
+        {
+            m_fd.close();
+        }        
 
         if (nullptr != m_globalColorTable)
         {
