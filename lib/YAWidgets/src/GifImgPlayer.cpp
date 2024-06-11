@@ -298,7 +298,10 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
 
 void GifImgPlayer::close()
 {
-    m_fd.close();
+    if (true == m_fd)
+    {
+        m_fd.close();
+    }
 
     if (nullptr != m_imageDataBlock)
     {
@@ -715,10 +718,14 @@ bool GifImgPlayer::parseGraphicControlExentsion(File& fd)
         /* The canvas should be restored to the background color?*/
         else if (2U == gce.packedField.disposalMethod)
         {
-            PaletteColor*   paletteColor = &m_globalColorTable[m_bgColorIndex];
+            YAGfx*          gfx             = m_canvas.getParentGfx();
+            PaletteColor*   paletteColor    = &m_globalColorTable[m_bgColorIndex];
             Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
-
-            m_canvas.getParentGfx()->fillRect(0, 0, m_width, m_height, bgColor);
+            
+            if (nullptr != gfx)
+            {
+                gfx->fillRect(0, 0, m_width, m_height, bgColor);
+            }
         }
         /* The decoder should restore the canvas to its previous state before the current image was drawn. */
         else if (3U == gce.packedField.disposalMethod)
