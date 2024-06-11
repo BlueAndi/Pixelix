@@ -153,15 +153,33 @@ static void testGifImgPlayerStatic()
     
     TEST_ASSERT_EQUAL(GifImgPlayer::RET_OK, gifImgPlayer.open(fileSystem, "./test/test_GifImgPlayer/TestStatic.gif"));
     TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
+
+    for(y = 0; y < height; ++y)
+    {
+        for(x = 0; x < width; ++x)
+        {
+            Color& color = testGfx.getColor(x, y);
+
+            printf("%u, %u / 0x%X <-> 0x%X\n", x, y, EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(color));
+
+            TEST_ASSERT_EQUAL_UINT32(EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(color));
+        }
+    }
+
+    /* Verify that the a 2nd play() call with redraw the image. */
+    testGfx.fillScreen(ColorDef::BLACK);
+    TEST_ASSERT_EQUAL(true, gifImgPlayer.play(canvas));
     gifImgPlayer.close();
 
     for(y = 0; y < height; ++y)
     {
         for(x = 0; x < width; ++x)
         {
-            printf("%u, %u\n", x, y);
+            Color& color = testGfx.getColor(x, y);
 
-            TEST_ASSERT_EQUAL_UINT32(EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(testGfx.getColor(x, y)));
+            printf("%u, %u / 0x%X <-> 0x%X\n", x, y, EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(color));
+
+            TEST_ASSERT_EQUAL_UINT32(EXPECTED_DATA[x + y * EXPECTED_DATA_WIDTH], static_cast<uint32_t>(color));
         }
     }
 }
