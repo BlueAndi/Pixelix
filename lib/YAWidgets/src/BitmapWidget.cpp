@@ -33,10 +33,10 @@
  * Includes
  *****************************************************************************/
 #include "BitmapWidget.h"
+#include "BmpImgLoader.h"
 
 #include <YAColor.h>
 #include <Logging.h>
-#include <BmpImgLoader.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -71,8 +71,10 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     {
         Widget::operator=(widget);
         
+        m_imgType       = widget.m_imgType;
         m_bitmap        = widget.m_bitmap;
         m_spriteSheet   = widget.m_spriteSheet;
+        m_gifPlayer     = widget.m_gifPlayer;
         m_timer         = widget.m_timer;
         m_duration      = widget.m_duration;
     }
@@ -82,14 +84,22 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
 
 void BitmapWidget::clear(const Color& color)
 {
-    if (true == m_spriteSheet.isEmpty())
+    if (IMG_TYPE_BMP == m_imgType)
     {
         m_bitmap.fillScreen(color);
     }
-    else
+    else if (IMG_TYPE_SPRITESHEET == m_imgType)
     {
         m_spriteSheet.release();
         m_timer.stop();
+    }
+    else if (IMG_TYPE_GIF == m_imgType)
+    {
+        m_gifPlayer.close();
+    }
+    else
+    {
+        ;
     }
 }
 
@@ -103,45 +113,28 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
     else
     {
-        BmpImgLoader        loader;
-        BmpImgLoader::Ret   ret = loader.load(fs, filename, m_bitmap);
+        int32_t index = filename.lastIndexOf(".");
 
-        if (BmpImgLoader::RET_OK != ret)
+        /* File extension found? */
+        if (0 <= index)
         {
-            if (BmpImgLoader::RET_FILE_NOT_FOUND == ret)
+            String fileExt = filename.substring(index);
+
+            /* BMP image? */
+            if (true == fileExt.equalsIgnoreCase(".bmp"))
             {
-                LOG_ERROR("Failed to open file %s.", filename.c_str());
+                isSuccessful = loadBMP(fs, filename);
             }
-            else if (BmpImgLoader::RET_FILE_FORMAT_INVALID == ret)
+            /* GIF image? */
+            else if (true == fileExt.equalsIgnoreCase(".gif"))
             {
-                LOG_ERROR("File %s has invalid format.", filename.c_str());
-            }
-            else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
-            {
-                LOG_ERROR("File %s has unsupported format.", filename.c_str());
-            }
-            else if (BmpImgLoader::RET_IMG_TOO_BIG == ret)
-            {
-                LOG_ERROR("File %s is too big.", filename.c_str());
+                isSuccessful = loadGIF(fs, filename);
             }
             else
             {
-                LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
+                /* Not supported. */
+                ;
             }
-        }
-        else
-        {
-            /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
-             * shall be shown or the single bitmap image.
-             */
-            m_spriteSheet.release();
-            m_timer.stop();
-
-            /* Update width and height according to loaded bitmap. */
-            m_canvas.setWidth(m_bitmap.getWidth());
-            m_canvas.setHeight(m_bitmap.getHeight());
-
-            isSuccessful = true;
         }
     }
 
@@ -165,14 +158,12 @@ bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, co
         /* Calculate duration per frame. */
         m_duration = 1000U / m_spriteSheet.getFPS();
 
-        /* Avoid wasting memory. Additional this is important to detect whether the sprite sheet
-         * shall be shown or the single bitmap image.
-         */
+        /* Release unused memory. */
         m_bitmap.release();        
+        m_gifPlayer.close();
 
-        /* Update width and height according to loaded bitmap. */
-        m_canvas.setWidth(m_spriteSheet.getFrameWidth());
-        m_canvas.setHeight(m_spriteSheet.getFrameHeight());
+        /* Select image type. */
+        m_imgType = IMG_TYPE_SPRITESHEET;
 
         isSuccessful = true;
     }
@@ -207,6 +198,107 @@ void BitmapWidget::setSpriteSheetRepeatInfinite(bool repeat)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+bool BitmapWidget::loadBMP(FS& fs, const String& filename)
+{
+    bool                isSuccessful    = false;
+    BmpImgLoader        loader;
+    BmpImgLoader::Ret   ret             = loader.load(fs, filename, m_bitmap);
+
+    if (BmpImgLoader::RET_OK != ret)
+    {
+        if (BmpImgLoader::RET_FILE_NOT_FOUND == ret)
+        {
+            LOG_ERROR("Failed to open file %s.", filename.c_str());
+        }
+        else if (BmpImgLoader::RET_FILE_FORMAT_INVALID == ret)
+        {
+            LOG_ERROR("File %s has invalid format.", filename.c_str());
+        }
+        else if (BmpImgLoader::RET_FILE_FORMAT_UNSUPPORTED == ret)
+        {
+            LOG_ERROR("File %s has unsupported format.", filename.c_str());
+        }
+        else if (BmpImgLoader::RET_IMG_TOO_BIG == ret)
+        {
+            LOG_ERROR("File %s is too big.", filename.c_str());
+        }
+        else
+        {
+            LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
+        }
+    }
+    else
+    {
+        /* Release unused memory. */
+        m_spriteSheet.release();
+        m_gifPlayer.close();
+
+        /* Sprite sheet animation timer. */
+        m_timer.stop();
+
+        /* Update width and height according to loaded bitmap. */
+        m_canvas.setWidth(m_bitmap.getWidth());
+        m_canvas.setHeight(m_bitmap.getHeight());
+
+        /* Select image type. */
+        m_imgType = IMG_TYPE_BMP;
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
+
+bool BitmapWidget::loadGIF(FS& fs, const String& filename)
+{
+    bool                isSuccessful    = false;
+    GifImgPlayer::Ret   ret             = m_gifPlayer.open(fs, filename);
+
+    if (GifImgPlayer::RET_OK != ret)
+    {
+        if (GifImgPlayer::RET_FILE_NOT_FOUND == ret)
+        {
+            LOG_ERROR("Failed to open file %s.", filename.c_str());
+        }
+        else if (GifImgPlayer::RET_FILE_ALREADY_OPENED == ret)
+        {
+            LOG_ERROR("File %s already opened.", filename.c_str());
+        }
+        else if (GifImgPlayer::RET_FILE_FORMAT_INVALID == ret)
+        {
+            LOG_ERROR("File %s has invalid format.", filename.c_str());
+        }
+        else if (GifImgPlayer::RET_FILE_FORMAT_UNSUPPORTED == ret)
+        {
+            LOG_ERROR("File %s has unsupported format.", filename.c_str());
+        }
+        else if (GifImgPlayer::RET_IMG_TOO_BIG == ret)
+        {
+            LOG_ERROR("File %s is too big.", filename.c_str());
+        }
+        else
+        {
+            LOG_ERROR("Failed to load %s because of internal error.", filename.c_str());
+        }
+    }
+    else
+    {
+        /* Release unused memory. */
+        m_bitmap.release();
+        m_spriteSheet.release();
+
+        /* Sprite sheet animation timer. */
+        m_timer.stop();
+
+        /* Select image type. */
+        m_imgType = IMG_TYPE_GIF;
+
+        isSuccessful = true;
+    }
+
+    return isSuccessful;   
+}
 
 /******************************************************************************
  * External Functions

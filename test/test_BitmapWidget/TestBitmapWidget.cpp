@@ -173,7 +173,10 @@ static void testBitmapWidget()
     {
         for(x = 0; x < BITMAP_WIDTH; ++x)
         {
-            TEST_ASSERT_EQUAL_UINT32(bitmap.getColor(x, y), bitmapWidget.get().getColor(x, y));
+            const Color&  bitmapColor = bitmap.getColor(x, y);
+            const Color&  bitmapWidgetColor = bitmapWidget.get().getColor(x, y);
+
+            TEST_ASSERT_EQUAL_UINT32(static_cast<uint32_t>(bitmapColor), static_cast<uint32_t>(bitmapWidgetColor));
         }
     }
 
@@ -185,7 +188,10 @@ static void testBitmapWidget()
     {
         for(x = 0; x < BITMAP_WIDTH; ++x)
         {
-            TEST_ASSERT_EQUAL_UINT16(x + y * BITMAP_WIDTH, displayBuffer[x + y * YAGfxTest::WIDTH]);
+            uint32_t    bitmapColor         = x + y * BITMAP_WIDTH;
+            Color*      displayBufferColor  = &displayBuffer[x + y * YAGfxTest::WIDTH];
+
+            TEST_ASSERT_EQUAL_UINT16(bitmapColor, static_cast<uint32_t>(*displayBufferColor));
         }
     }
 }

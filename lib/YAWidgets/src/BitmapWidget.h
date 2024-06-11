@@ -49,6 +49,7 @@
 
 #include "Widget.hpp"
 #include "SpriteSheet.h"
+#include "GifImgPlayer.h"
 
 /******************************************************************************
  * Macros
@@ -75,8 +76,10 @@ public:
      */
     BitmapWidget(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0) :
         Widget(WIDGET_TYPE, width, height, x, y),
+        m_imgType(IMG_TYPE_NO_IMAGE),
         m_bitmap(),
         m_spriteSheet(),
+        m_gifPlayer(),
         m_timer(),
         m_duration(0U)
     {
@@ -89,8 +92,10 @@ public:
      */
     BitmapWidget(const BitmapWidget& widget) :
         Widget(widget),
+        m_imgType(widget.m_imgType),
         m_bitmap(widget.m_bitmap),
         m_spriteSheet(widget.m_spriteSheet),
+        m_gifPlayer(widget.m_gifPlayer),
         m_timer(widget.m_timer),
         m_duration(widget.m_duration)
     {
@@ -99,7 +104,7 @@ public:
     /**
      * Destroys the bitmap widget.
      */
-    ~BitmapWidget()
+    virtual ~BitmapWidget()
     {
     }
 
@@ -112,28 +117,27 @@ public:
 
     /**
      * Set a bitmap.
-     *
-     * The widget width and height will be set according to bitmap wdith and
-     * height.
+     * 
+     * The canvas width and height won't be updated. If required, update them
+     * explicit.
      * 
      * @param[in] bitmap    Bitmap
      */
     void set(const YAGfxBitmap& bitmap)
     {
+        /* Release unused memory. */
+        m_bitmap.release();
+        m_spriteSheet.release();
+        m_gifPlayer.close();
+
+        /* Stop sprite sheet animation timer. */
+        m_timer.stop();
+
         if (true == m_bitmap.create(bitmap.getWidth(), bitmap.getHeight()))
         {
             m_bitmap.copy(bitmap);
+            m_imgType = IMG_TYPE_BMP;
         }
-
-        /* Update width and height according to loaded bitmap. */
-        m_canvas.setWidth(m_bitmap.getWidth());
-        m_canvas.setHeight(m_bitmap.getHeight());
-
-        /* Release sprite sheet to avoid wasting memory. The widget can
-         * only show one of them.
-         */
-        m_spriteSheet.release();
-        m_timer.stop();
     }
 
     /**
@@ -155,10 +159,10 @@ public:
 
     /**
      * Load bitmap image from filesystem.
-     * If a sprite sheet is active, it will be disabled.
+     * If a sprite sheet or is active, it will be disabled.
      * 
-     * The widget width and height will be set according to bitmap wdith and
-     * height.
+     * The canvas width and height won't be updated. If required, update them
+     * explicit.
      *
      * @param[in] fs        Filesystem
      * @param[in] filename  Filename with full path
@@ -169,9 +173,9 @@ public:
 
     /**
      * Load sprite sheet file (.sprite) from filesystem.
-     *
-     * The widget width and height will be set according to sprite sheet
-     * frame wdith and height.
+     * 
+     * The canvas width and height won't be updated. If required, update them
+     * explicit.
      * 
      * @param[in] fs                    Filesystem
      * @param[in] spriteSheetFileName   Name of the sprite sheet file in the filesystem
@@ -214,8 +218,21 @@ public:
 
 private:
 
+    /**
+     * Supported image types.
+     */
+    enum ImgType
+    {
+        IMG_TYPE_NO_IMAGE = 0,  /**< No image */
+        IMG_TYPE_BMP,           /**< BMP image */
+        IMG_TYPE_SPRITESHEET,   /**< Sprite sheet animation with BMP image */
+        IMG_TYPE_GIF            /**< GIF image */
+    };
+
+    ImgType             m_imgType;      /**< Current image type. */
     YAGfxDynamicBitmap  m_bitmap;       /**< Bitmap image which is shown if no sprite sheet is loaded. */
     SpriteSheet         m_spriteSheet;  /**< Sprite sheet for animation with texture. */
+    GifImgPlayer        m_gifPlayer;    /**< GIF image player. */
     SimpleTimer         m_timer;        /**< Timer used for sprite sheet. */
     uint32_t            m_duration;     /**< Duration of one frame in ms. */
 
@@ -226,11 +243,11 @@ private:
      */
     void paint(YAGfx& gfx) override
     {
-        if (true == m_spriteSheet.isEmpty())
+        if (IMG_TYPE_BMP == m_imgType)
         {
             gfx.drawBitmap(0, 0, m_bitmap);
         }
-        else
+        else if (IMG_TYPE_SPRITESHEET == m_imgType)
         {
             gfx.drawBitmap(0, 0, m_spriteSheet.getFrame());
 
@@ -251,8 +268,36 @@ private:
                 ;
             }
         }
+        else if (IMG_TYPE_GIF == m_imgType)
+        {
+            (void)m_gifPlayer.play(gfx);
+        }
+        else
+        {
+            ;
+        }
     }
-    
+
+    /**
+     * Load BMP image from filesystem.
+     *
+     * @param[in] fs        Filesystem
+     * @param[in] filename  Filename with full path
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadBMP(FS& fs, const String& filename);
+
+    /**
+     * Load GIF image from filesystem.
+     *
+     * @param[in] fs        Filesystem
+     * @param[in] filename  Filename with full path
+     *
+     * @return If successful loaded it will return true otherwise false.
+     */
+    bool loadGIF(FS& fs, const String& filename);
+
 };
 
 /******************************************************************************
