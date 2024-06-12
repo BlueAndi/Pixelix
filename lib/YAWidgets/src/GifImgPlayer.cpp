@@ -238,42 +238,43 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
         }
         else
         {
-            /* Reset */
-            m_loopCount             = 0U;
-            m_delay                 = 0U;
-            m_isTransparencyEnabled = false;
-            m_isAnimation           = false;
-            m_timer.stop();
-
-            /* Store the image width and height.
-             * Might be used later to fill the image with a background color.
-             * See disposal method.
-             */
-            m_width     = logicalScreenDescriptor.canvasWidth;
-            m_height    = logicalScreenDescriptor.canvasHeight;
-
-            /* Global color table available? */
-            if (0U != logicalScreenDescriptor.packedField.globalColorTableFlag)
+            /* Create the bitmap as small as possible to not waste memory. */
+            if (false == m_bitmap.create(logicalScreenDescriptor.canvasWidth, logicalScreenDescriptor.canvasHeight))
             {
-                size_t globalColorTableSize = calcColorTableSize(logicalScreenDescriptor.packedField.globalColorTableSizeExp);
-                
-                m_globalColorTableLength    =  globalColorTableSize / sizeof(PaletteColor);
-                m_globalColorTable          = new(std::nothrow) PaletteColor[m_globalColorTableLength];
+                ret = RET_IMG_TOO_BIG;
+            }
+            else
+            {
+                /* Reset */
+                m_loopCount             = 0U;
+                m_delay                 = 0U;
+                m_isTransparencyEnabled = false;
+                m_isAnimation           = false;
+                m_timer.stop();
 
-                /* Out of memory? */
-                if (nullptr == m_globalColorTable)
+                /* Global color table available? */
+                if (0U != logicalScreenDescriptor.packedField.globalColorTableFlag)
                 {
-                    m_globalColorTableLength = 0U;
-                    ret = RET_IMG_TOO_BIG;
-                }
-                /* Read global color table. */
-                else if (false == read(m_fd, m_globalColorTable, globalColorTableSize))
-                {
-                    ret = RET_FILE_FORMAT_INVALID;
-                }
-                else
-                {
-                    ;
+                    size_t globalColorTableSize = calcColorTableSize(logicalScreenDescriptor.packedField.globalColorTableSizeExp);
+                    
+                    m_globalColorTableLength    =  globalColorTableSize / sizeof(PaletteColor);
+                    m_globalColorTable          = new(std::nothrow) PaletteColor[m_globalColorTableLength];
+
+                    /* Out of memory? */
+                    if (nullptr == m_globalColorTable)
+                    {
+                        m_globalColorTableLength = 0U;
+                        ret = RET_IMG_TOO_BIG;
+                    }
+                    /* Read global color table. */
+                    else if (false == read(m_fd, m_globalColorTable, globalColorTableSize))
+                    {
+                        ret = RET_FILE_FORMAT_INVALID;
+                    }
+                    else
+                    {
+                        ;
+                    }
                 }
             }
         }
@@ -282,15 +283,7 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
     /* Clean up in case a error happended. */
     if (RET_OK != ret)
     {
-        m_fd.close();
-
-        if (nullptr != m_globalColorTable)
-        {
-            delete[] m_globalColorTable;
-            
-            m_globalColorTable          = nullptr;
-            m_globalColorTableLength    = 0U;
-        }
+        cleanup();
     }
 
     return ret;
@@ -298,32 +291,7 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
 
 void GifImgPlayer::close()
 {
-    if (true == m_fd)
-    {
-        m_fd.close();
-    }
-
-    if (nullptr != m_imageDataBlock)
-    {
-        delete[] m_imageDataBlock;
-        m_imageDataBlock = nullptr;
-    }
-
-    if (nullptr != m_globalColorTable)
-    {
-        delete[] m_globalColorTable;
-        
-        m_globalColorTable          = nullptr;
-        m_globalColorTableLength    = 0U;
-    }
-
-    if (nullptr != m_localColorTable)
-    {
-        delete[] m_localColorTable;
-        
-        m_localColorTable       = nullptr;
-        m_localColorTableLength = 0U;
-    }
+    cleanup();
 }
 
 bool GifImgPlayer::play(YAGfx& gfx)
@@ -338,22 +306,20 @@ bool GifImgPlayer::play(YAGfx& gfx)
     /* Finished? */
     else if (true == m_isFinished)
     {
-        /* Nothing to do. */
-        ;
+        /* Redraw last scene. */
+        gfx.drawBitmap(0, 0, m_bitmap);
     }
     /* Delay? */
     else if ((true == m_timer.isTimerRunning()) &&
              (false == m_timer.isTimeout()))
     {
-        /* Nothing to do, come back later. */
-        ;
+        /* Redraw last scene. */
+        gfx.drawBitmap(0, 0, m_bitmap);
     }
     else
     {
         bool    isImageShown    = false;
         BlockId blockId         = BLOCK_ID_EXTENSION;
-
-        m_canvas.setParentGfx(gfx);
 
         /* Walk through all blocks in the GIF image. */
         while((BLOCK_ID_TRAILER != blockId) && (false == isImageShown) && (true == isSuccessful))
@@ -375,6 +341,9 @@ bool GifImgPlayer::play(YAGfx& gfx)
 
                 if (true == isSuccessful)
                 {
+                    /* Draw new scene. */
+                    gfx.drawBitmap(0, 0, m_bitmap);
+
                     /* Animation? */
                     if (true == m_isAnimation)
                     {
@@ -410,7 +379,7 @@ bool GifImgPlayer::play(YAGfx& gfx)
                     if (false == m_isFinished)
                     {
                         /* Restart from begin. */
-                        if (false == m_fd.seek(m_animationRestartPos, SeekSet))
+                        if (false == m_fd.seek(m_restartFilePos, SeekSet))
                         {
                             isSuccessful = false;
                         }
@@ -457,6 +426,38 @@ bool GifImgPlayer::play(YAGfx& gfx)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void GifImgPlayer::cleanup()
+{
+    if (true == m_fd)
+    {
+        m_fd.close();
+    }
+
+    m_bitmap.release();
+
+    if (nullptr != m_imageDataBlock)
+    {
+        delete[] m_imageDataBlock;
+        m_imageDataBlock = nullptr;
+    }
+
+    if (nullptr != m_globalColorTable)
+    {
+        delete[] m_globalColorTable;
+        
+        m_globalColorTable          = nullptr;
+        m_globalColorTableLength    = 0U;
+    }
+
+    if (nullptr != m_localColorTable)
+    {
+        delete[] m_localColorTable;
+        
+        m_localColorTable       = nullptr;
+        m_localColorTableLength = 0U;
+    }
+}
 
 bool GifImgPlayer::read(File& fd, void* buffer, size_t size)
 {
@@ -718,14 +719,10 @@ bool GifImgPlayer::parseGraphicControlExentsion(File& fd)
         /* The canvas should be restored to the background color?*/
         else if (2U == gce.packedField.disposalMethod)
         {
-            YAGfx*          gfx             = m_canvas.getParentGfx();
             PaletteColor*   paletteColor    = &m_globalColorTable[m_bgColorIndex];
             Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
             
-            if (nullptr != gfx)
-            {
-                gfx->fillRect(0, 0, m_width, m_height, bgColor);
-            }
+            m_bitmap.fillScreen(bgColor);
         }
         /* The decoder should restore the canvas to its previous state before the current image was drawn. */
         else if (3U == gce.packedField.disposalMethod)
@@ -835,7 +832,7 @@ bool GifImgPlayer::parseNetscape20subBlocks(File& fd)
         /* Store position after application extension to know where to restart
          * the animation.
          */
-        m_animationRestartPos = fd.position();
+        m_restartFilePos = fd.position();
     }
 
     return isSuccessful;

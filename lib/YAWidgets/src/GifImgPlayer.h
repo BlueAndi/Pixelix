@@ -46,6 +46,7 @@
 #include <stdint.h>
 #include <YAGfx.h>
 #include <YAGfxCanvas.h>
+#include <YAGfxBitmap.h>
 #include <FS.h>
 #include <SimpleTimer.hpp>
 
@@ -73,8 +74,9 @@ public:
      * Construct a GIF image player object.
      */
     GifImgPlayer() :
+        m_bitmap(),
         m_fd(),
-        m_canvas(),
+        m_canvas(&m_bitmap),
         m_width(0U),
         m_height(0U),
         m_bgColorIndex(0U),
@@ -89,7 +91,7 @@ public:
         m_posY(0),
         m_isTransparencyEnabled(false),
         m_transparentColorIndex(0U),
-        m_animationRestartPos(0U),
+        m_restartFilePos(0U),
         m_loopCount(0U),
         m_delay(0U),
         m_timer(),
@@ -103,25 +105,7 @@ public:
      */
     ~GifImgPlayer()
     {
-        if (true == m_fd)
-        {
-            m_fd.close();
-        }        
-
-        if (nullptr != m_globalColorTable)
-        {
-            delete[] m_globalColorTable;
-        }
-
-        if (nullptr != m_localColorTable)
-        {
-            delete[] m_localColorTable;
-        }
-
-        if (nullptr != m_imageDataBlock)
-        {
-            delete[] m_imageDataBlock;
-        }
+        cleanup();
     }
 
     /**
@@ -181,30 +165,36 @@ private:
 
     } __attribute__ ((packed)) PaletteColor;
 
-    File            m_fd;                       /**< File descriptor */
-    YAGfxCanvas     m_canvas;                   /**< Canvas used for drawing each scene. Its position and size follows the image descriptor. */
-    uint16_t        m_width;                    /**< Image width in pixel. Used by disposal method. */
-    uint16_t        m_height;                   /**< Image height in pixel. Used by disposal method. */
-    uint8_t         m_bgColorIndex;             /**< Background color index. Used by disposal method. */
-    PaletteColor*   m_globalColorTable;         /**< Global color table. */
-    size_t          m_globalColorTableLength;   /**< Number of palette colors in the global color table. */
-    PaletteColor*   m_localColorTable;          /**< Local color table. */
-    size_t          m_localColorTableLength;    /**< Number of palette colors in the local color table. */
-    uint8_t*        m_imageDataBlock;           /**< Image data block buffer. See IMAGE_DATA_BLOCK_SIZE for fixed size in byte. */
-    size_t          m_imageDataBlockLength;     /**< Image data block length in bytes (fill level). */
-    size_t          m_imageDataBlockIdx;        /**< Read index to the image data block. */
-    int16_t         m_posX;                     /**< Current x-coordinate in the canvas, used inside the LZW decoder callback. */
-    int16_t         m_posY;                     /**< Current y-coordinate in the canvas, used inside the LZW decoder callback. */
-    bool            m_isTransparencyEnabled;    /**< Is transparency enabled or not? */
-    uint8_t         m_transparentColorIndex;    /**< Index of the transparent color. */
+    YAGfxDynamicBitmap  m_bitmap;                   /**< The bitmap contains the last drawn scene. */
+    File                m_fd;                       /**< File descriptor */
+    YAGfxCanvas         m_canvas;                   /**< Canvas used for drawing each scene. Its position and size follows the image descriptor. */
+    uint16_t            m_width;                    /**< Image width in pixel. Used by disposal method. */
+    uint16_t            m_height;                   /**< Image height in pixel. Used by disposal method. */
+    uint8_t             m_bgColorIndex;             /**< Background color index. Used by disposal method. */
+    PaletteColor*       m_globalColorTable;         /**< Global color table. */
+    size_t              m_globalColorTableLength;   /**< Number of palette colors in the global color table. */
+    PaletteColor*       m_localColorTable;          /**< Local color table. */
+    size_t              m_localColorTableLength;    /**< Number of palette colors in the local color table. */
+    uint8_t*            m_imageDataBlock;           /**< Image data block buffer. See IMAGE_DATA_BLOCK_SIZE for fixed size in byte. */
+    size_t              m_imageDataBlockLength;     /**< Image data block length in bytes (fill level). */
+    size_t              m_imageDataBlockIdx;        /**< Read index to the image data block. */
+    int16_t             m_posX;                     /**< Current x-coordinate in the canvas, used inside the LZW decoder callback. */
+    int16_t             m_posY;                     /**< Current y-coordinate in the canvas, used inside the LZW decoder callback. */
+    bool                m_isTransparencyEnabled;    /**< Is transparency enabled or not? */
+    uint8_t             m_transparentColorIndex;    /**< Index of the transparent color. */
     
     /* Only animation relevant variables. */
-    size_t          m_animationRestartPos;      /**< File position used to restart the animation. */
+    size_t          m_restartFilePos;           /**< File position used to restart the animation. */
     uint16_t        m_loopCount;                /**< Number of animation repeats. 0 means infinite. */
     uint32_t        m_delay;                    /**< Delay in ms used between animation scenes. */
     SimpleTimer     m_timer;                    /**< Timer used for animations. */
     bool            m_isAnimation;              /**< GIF contais several scenes which to animate. */
     bool            m_isFinished;               /**< Scenes are finished. */
+
+    /**
+     * Clean-up and release all allocated memory.
+     */
+    void cleanup();
 
     /**
      * Read some bytes from the file.
