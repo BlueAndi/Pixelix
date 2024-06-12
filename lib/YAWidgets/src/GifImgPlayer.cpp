@@ -131,7 +131,7 @@ typedef struct _GcePackedField
 typedef struct _GraphicControlExtension
 {
     GcePackedField  packedField;            /**< Packed field */
-    uint16_t        delayTime;              /**< Delay time */
+    uint16_t        delayTime;              /**< Delay time in 1/100 s */
     uint8_t         transparentColorIndex;  /**< Transparent color index */
 
 } __attribute__ ((packed)) GraphicControlExtension;
@@ -250,6 +250,7 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
                 m_delay                 = 0U;
                 m_isTransparencyEnabled = false;
                 m_isAnimation           = false;
+                m_isFinished            = false;
                 m_timer.stop();
 
                 /* Global color table available? */
@@ -698,7 +699,7 @@ bool GifImgPlayer::parseGraphicControlExentsion(File& fd)
     }
     else
     {
-        m_delay                 = gce.delayTime;
+        m_delay                 = gce.delayTime * 10U;
         m_transparentColorIndex = gce.transparentColorIndex;
 
         if (0U == gce.packedField.transparentColorFlag)
