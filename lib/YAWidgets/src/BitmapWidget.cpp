@@ -237,10 +237,6 @@ bool BitmapWidget::loadBMP(FS& fs, const String& filename)
         /* Sprite sheet animation timer. */
         m_timer.stop();
 
-        /* Update width and height according to loaded bitmap. */
-        m_canvas.setWidth(m_bitmap.getWidth());
-        m_canvas.setHeight(m_bitmap.getHeight());
-
         /* Select image type. */
         m_imgType = IMG_TYPE_BMP;
 
@@ -253,7 +249,13 @@ bool BitmapWidget::loadBMP(FS& fs, const String& filename)
 bool BitmapWidget::loadGIF(FS& fs, const String& filename)
 {
     bool                isSuccessful    = false;
-    GifImgPlayer::Ret   ret             = m_gifPlayer.open(fs, filename);
+    GifImgPlayer::Ret   ret;
+
+    /* A already opened GIF image shall be closed first. */
+    m_gifPlayer.close();
+
+    /* Open GIF image and keep it opened as long its shown. */
+    ret = m_gifPlayer.open(fs, filename);
 
     if (GifImgPlayer::RET_OK != ret)
     {

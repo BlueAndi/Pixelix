@@ -61,6 +61,10 @@
 
 /**
  * Bitmap widget, showing a simple bitmap.
+ * Supported are the following formats:
+ * - Bitmap (.bmp)
+ * - Sprite sheet (.sprite) with bitmap (.bmp)
+ * - GIF image (.gif)
  */
 class BitmapWidget : public Widget
 {
@@ -116,6 +120,16 @@ public:
     BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
+     * Get the bitmap.
+     *
+     * @return Bitmap
+     */
+    const YAGfxBitmap& get() const
+    {
+        return m_bitmap;
+    }
+
+    /**
      * Set a bitmap.
      * 
      * The canvas width and height won't be updated. If required, update them
@@ -141,16 +155,6 @@ public:
     }
 
     /**
-     * Get the bitmap.
-     *
-     * @return Bitmap
-     */
-    const YAGfxBitmap& get() const
-    {
-        return m_bitmap;
-    }
-
-    /**
      * Clear the bitmap.
      * 
      * @param[in] color Color used for clearing.
@@ -159,7 +163,7 @@ public:
 
     /**
      * Load bitmap image from filesystem.
-     * If a sprite sheet or is active, it will be disabled.
+     * If a sprite sheet is active, it will be disabled.
      * 
      * The canvas width and height won't be updated. If required, update them
      * explicit.
