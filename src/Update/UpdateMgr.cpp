@@ -228,12 +228,10 @@ UpdateMgr::UpdateMgr() :
     m_updateIsRunning(false),
     m_progress(0U),
     m_isRestartReq(false),
-    m_textWidget(),
-    m_progressBar(),
+    m_textWidget(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT, 1, 1),
+    m_progressBar(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
     m_timer()
 {
-    /* Move text for a better look. */
-    m_textWidget.move(1, 1);
 }
 
 UpdateMgr::~UpdateMgr()

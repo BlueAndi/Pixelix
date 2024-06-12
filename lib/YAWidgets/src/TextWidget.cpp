@@ -210,8 +210,6 @@ void TextWidget::paint(YAGfx& gfx)
 {
     int16_t cursorY = m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
     
-    gfx.fillScreen(ColorDef::BLACK);
-
     /* If there is an updated text available, it shall be determined how to show it on the display. */
     if (true == m_isNewTextAvailable)
     {
