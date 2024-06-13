@@ -65,6 +65,8 @@ typedef struct _ApplicationExtension ApplicationExtension;
 /**
  * Shows single image GIF files and plays animated GIF files, containing
  * several images inside.
+ * 
+ * Specification: https://www.w3.org/Graphics/GIF/spec-gif89a.txt
  */
 class GifImgPlayer
 {
