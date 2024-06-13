@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /**
- * Shows an icon (bitmap) on the left side in 8 x 8 and text on the right side.
+ * Shows an icon on the left side in 8 x 8 and text on the right side.
  * If the text is too long for the display width, it automatically scrolls.
  */
 class IconTextPlugin : public Plugin
@@ -253,14 +253,15 @@ public:
     void setText(const String& formatText);
 
     /**
-     * Load bitmap image from filesystem. If a sprite sheet is available, the
-     * bitmap will be automatically used as texture for animation.
+     * Load icon image from filesystem. If a sprite sheet is available and the
+     * loaded file is a bitmap, it will be automatically used as texture
+     * for animation.
      *
-     * @param[in] filename  Bitmap image filename
+     * @param[in] filename  Image filename
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadBitmap(const String& filename);
+    bool loadIcon(const String& filename);
 
     /**
      * Load sprite sheet from filesystem. If a bitmap is available, it will
@@ -273,9 +274,9 @@ public:
     bool loadSpriteSheet(const String& filename);
 
     /**
-     * Clear bitmap icon.
+     * Clear icon.
      */
-    void clearBitmap();
+    void clearIcon();
 
     /**
      * Clear sprite sheet.
@@ -314,16 +315,6 @@ private:
     static const char*      TOPIC_SPRITESHEET;
 
     /**
-     * Icon width in pixels.
-     */
-    static const uint16_t   ICON_WIDTH    = 8U;
-
-    /**
-     * Icon height in pixels.
-     */
-    static const uint16_t   ICON_HEIGHT   = 8U;
-
-    /**
      * Filename extension of bitmap image file.
      */
     static const char*      FILE_EXT_BITMAP;
@@ -332,6 +323,11 @@ private:
      * Filename extension of sprite sheet parameter file.
      */
     static const char*      FILE_EXT_SPRITE_SHEET;
+
+    /**
+     * Filename extension of GIF image file.
+     */
+    static const char*      FILE_EXT_GIF;
 
     _IconTextPlugin::View   m_view;             /**< View with all widgets. */
     String                  m_iconPath;         /**< Full path to icon. */

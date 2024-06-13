@@ -539,7 +539,7 @@ void InitState::welcome(IPluginMaintenance* plugin)
 
     if (nullptr != welcomePlugin)
     {
-        (void)welcomePlugin->loadBitmap("/images/smiley.bmp");
+        (void)welcomePlugin->loadIcon("/images/smiley.bmp");
         welcomePlugin->setText("Hello World!");
     }
 }

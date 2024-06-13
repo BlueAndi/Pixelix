@@ -36,7 +36,7 @@
                 <p><img src="IconTextPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows an icon on left side, text on right side. If no text is set, the plugin will be skipped in the slot.</p>
                 <p>Each part can be set separately via the REST API.</p>
-                <p>Show bitmap in the specified slot. Supported are bitmap files (.bmp) with:</p>
+                <p>Show icon in the specified slot. Supported are GIF files and bitmap files (.bmp) with:</p>
                 <ul>
                     <li>24 or 32 bits per pixel.</li>
                     <li>1 plane.</li>
@@ -90,7 +90,7 @@
                     </div>
                     <div class="form-group">
                         <label for="icon">Icon:</label>
-                        <input id="icon" type="file" accept=".bmp" />    
+                        <input id="icon" type="file" accept=".bmp,.gif" />    
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
@@ -212,9 +212,17 @@
             };
 
             function uploadIcon(pluginUid, file) {
+                var promise;
+
                 disableUI();
 
-                return utils.checkBMPFile(file).then(function() {
+                if (true === file.name.toLowerCase().endsWith(".bmp")) {
+                    promise = utils.checkBMPFile(file);
+                } else {
+                    promise = Promise.resolve();
+                }
+
+                return promise.then(function() {
                     return utils.makeRequest({
                         method: "POST",
                         url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap",

@@ -73,6 +73,9 @@ const char* IconTextPlugin::FILE_EXT_BITMAP         = ".bmp";
 /* Initialize sprite sheet parameter filename extension. */
 const char* IconTextPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
 
+/* Initialize GIF image filename extension. */
+const char* IconTextPlugin::FILE_EXT_GIF            = ".gif";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -161,11 +164,11 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 
             if (true == iconFullPath.isEmpty())
             {
-                clearBitmap();
+                clearIcon();
             }
             else
             {
-                loadBitmap(iconFullPath);
+                (void)loadIcon(iconFullPath);
             }
 
             isSuccessful = true;
@@ -181,7 +184,7 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
             }
             else
             {
-                loadSpriteSheet(spriteSheetFullPath);
+                (void)loadSpriteSheet(spriteSheetFullPath);
             }
 
             isSuccessful = true;
@@ -196,7 +199,7 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         {
             String fullPath = jsonFullPath.as<String>();
 
-            isSuccessful = loadBitmap(fullPath);
+            isSuccessful = loadIcon(fullPath);
         }
     }
     else if (0U != topic.equals(TOPIC_SPRITESHEET))
@@ -253,6 +256,17 @@ bool IconTextPlugin::isUploadAccepted(const String& topic, const String& srcFile
 
             isAccepted = true;
         }
+        /* Accept upload of GIF file. */
+        else if (0U != srcFilename.endsWith(FILE_EXT_GIF))
+        {
+            dstFilename = getFileName(FILE_EXT_GIF);
+
+            isAccepted = true;
+        }
+        else
+        {
+            ;
+        }
     }
     else if (0U != topic.equals(TOPIC_SPRITESHEET))
     {
@@ -276,6 +290,7 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
 {
     String                      bitmapFullPath      = getFileName(FILE_EXT_BITMAP);
     String                      spriteSheetFullPath = getFileName(FILE_EXT_SPRITE_SHEET);
+    String                      gifFullPath         = getFileName(FILE_EXT_GIF);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_view.init(width, height);
@@ -293,6 +308,14 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
         {
             m_iconPath = bitmapFullPath;
         }
+        else if (true == m_view.getBitmapWidget().load(FILESYSTEM, gifFullPath))
+        {
+            m_iconPath = gifFullPath;
+        }
+        else
+        {
+            ;
+        }
     }
     else
     {
@@ -303,8 +326,9 @@ void IconTextPlugin::start(uint16_t width, uint16_t height)
 
 void IconTextPlugin::stop()
 {
-    String                      bitmapFullPath       = getFileName(FILE_EXT_BITMAP);
-    String                      spriteSheetFullPath  = getFileName(FILE_EXT_SPRITE_SHEET);
+    String                      bitmapFullPath      = getFileName(FILE_EXT_BITMAP);
+    String                      spriteSheetFullPath = getFileName(FILE_EXT_SPRITE_SHEET);
+    String                      gifFullPath         = getFileName(FILE_EXT_GIF);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     /* Remove icon which is specific for the plugin instance. */
@@ -317,6 +341,12 @@ void IconTextPlugin::stop()
     if (false != FILESYSTEM.remove(spriteSheetFullPath))
     {
         LOG_INFO("File %s removed", spriteSheetFullPath.c_str());
+    }
+
+    /* Remove icon which is specific for the plugin instance. */
+    if (false != FILESYSTEM.remove(gifFullPath))
+    {
+        LOG_INFO("File %s removed", gifFullPath.c_str());
     }
 }
 
@@ -347,7 +377,7 @@ void IconTextPlugin::setText(const String& formatText)
     }
 }
 
-bool IconTextPlugin::loadBitmap(const String& filename)
+bool IconTextPlugin::loadIcon(const String& filename)
 {
     bool                        status = false;
     MutexGuard<MutexRecursive>  guard(m_mutex);
@@ -359,11 +389,16 @@ bool IconTextPlugin::loadBitmap(const String& filename)
         m_hasTopicChanged = true;
     }
 
-    if (false == m_spriteSheetPath.isEmpty())
+    /* If a sprite sheet is available and the file is a bitmap, it will be
+     * used as texture.
+     */
+    if ((true == filename.endsWith(FILE_EXT_BITMAP)) &&
+        (false == m_spriteSheetPath.isEmpty()))
     {
         status = m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
     }
     
+    /* If there is no sprite sheet animation available, just load the icon image. */
     if (false == status)
     {
         status = m_view.getBitmapWidget().load(FILESYSTEM, m_iconPath);
@@ -392,7 +427,7 @@ bool IconTextPlugin::loadSpriteSheet(const String& filename)
     return status;
 }
 
-void IconTextPlugin::clearBitmap()
+void IconTextPlugin::clearIcon()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
