@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /**
- * Shows an icon (bitmap) on the left side in 8 x 8, text on the right side and
+ * Shows an icon on the left side in 8 x 8, text on the right side and
  * under the text a bar with lamps.
  * If the text is too long for the display width, it automatically scrolls.
  */
@@ -77,7 +77,6 @@ public:
         Plugin(name, uid),
         m_view(),
         m_iconPath(),
-        m_spriteSheetPath(),
         m_mutex(),
         m_hasTopicTextChanged(false),
         m_hasTopicLampsChanged(false),
@@ -224,34 +223,18 @@ public:
     void setText(const String& formatText);
 
     /**
-     * Load bitmap image from filesystem. If a sprite sheet is available, the
-     * bitmap will be automatically used as texture for animation.
+     * Load icon image from filesystem.
      *
-     * @param[in] filename  Bitmap image filename
-     *
-     * @return If successul, it will return true otherwise false.
-     */
-    bool loadBitmap(const String& filename);
-
-    /**
-     * Load sprite sheet from filesystem. If a bitmap is available, it will
-     * be automatically used as texture for animation.
-     *
-     * @param[in] filename  Sprite sheet filename
+     * @param[in] filename  Image filename
      *
      * @return If successul, it will return true otherwise false.
      */
-    bool loadSpriteSheet(const String& filename);
+    bool loadIcon(const String& filename);
 
     /**
-     * Clear bitmap icon.
+     * Clear icon.
      */
-    void clearBitmap();
-
-    /**
-     * Clear sprite sheet.
-     */
-    void clearSpriteSheet();
+    void clearIcon();
 
     /**
      * Get icon file path.
@@ -259,13 +242,6 @@ public:
      * @param[out] Path to icon file.
      */
     void getIconFilePath(String& fullPath) const;
-
-    /**
-     * Get sprite sheet file path.
-     * 
-     * @param[out] Path to sprite sheet file.
-     */
-    void getSpriteSheetFilePath(String& fullPath) const;
 
     /**
      * Get lamp state (true = on / false = off).
@@ -306,24 +282,8 @@ private:
      */
     static const char*      TOPIC_ICON;
 
-    /**
-     * Plugin topic, used for parameter exchange.
-     */
-    static const char*      TOPIC_SPRITESHEET;
-
-    /**
-     * Filename extension of bitmap image file.
-     */
-    static const char*      FILE_EXT_BITMAP;
-
-    /**
-     * Filename extension of sprite sheet parameter file.
-     */
-    static const char*      FILE_EXT_SPRITE_SHEET;
-
     _IconTextLampPlugin::View   m_view;                 /**< View with all widgets. */
     String                      m_iconPath;             /**< Full path to icon. */
-    String                      m_spriteSheetPath;      /**< Full path to spritesheet. */
     mutable MutexRecursive      m_mutex;                /**< Mutex to protect against concurrent access. */
     bool                        m_hasTopicTextChanged;  /**< Has the topic text content changed? */
     bool                        m_hasTopicLampsChanged; /**< Has the topic lamps content changed? */

@@ -211,7 +211,7 @@ public:
     }
 
     /**
-     * Load icon by path. It may be a .bmp or a .sprite file.
+     * Load icon by path.
      * 
      * @param[in] path  Path to icon.
      *

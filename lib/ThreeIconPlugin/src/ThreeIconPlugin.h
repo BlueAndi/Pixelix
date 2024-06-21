@@ -58,7 +58,7 @@
  *****************************************************************************/
 
 /**
- * Shows three separate icons (bitmaps).
+ * Shows three separate icons.
  */
 class ThreeIconPlugin : public Plugin
 {
@@ -73,11 +73,9 @@ public:
     ThreeIconPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
         m_view(),
-        m_iconPaths(),
-        m_spriteSheetPaths(),
+        m_slots(),
         m_isUploadError(false),
-        m_mutex(),
-        m_hasTopicChanged()
+        m_mutex()
     {
         (void)m_mutex.create();
     }
@@ -206,135 +204,100 @@ public:
     void update(YAGfx& gfx) final;
 
     /**
-     * Load bitmap image from filesystem. If a sprite sheet is available, the
-     * bitmap will be automatically used as texture for animation.
+     * Get the id of the active icon in a slot.
      *
-     * @param[in] iconId    The icon id.
-     * @param[in] filename  Bitmap image filename.
+     * @param[in] iconId    The slot id.
      *
-     * @return If successul, it will return true otherwise false.
-     */
-    bool loadBitmap(uint8_t iconId, const String& filename);
-
-    /**
-     * Load sprite sheet from filesystem. If a bitmap is available, it will
-     * be automatically used as texture for animation.
-     *
-     * @param[in] iconId    The icon id.
-     * @param[in] filename  Sprite sheet filename.
-     *
-     * @return If successul, it will return true otherwise false.
-     */
-    bool loadSpriteSheet(uint8_t iconId, const String& filename);
-
-    /**
-     * Get the state of the FORWARD control flag of an icon.
-     *
-     * @param[in] iconId    The icon Id.
-     *
-     * @return The state of the isForward animation control flag.
+     * @return The active icon id.
      */  
-    bool getIsForward(uint8_t iconId) const;
+    uint8_t getActiveIconId(uint8_t slotId) const;
 
     /**
-     * Set the state of the FORWARD control flag of an icon.
+     * Set the active icon in a slot by id.
      *
-     * @param[in] iconId    The icon Id.
-     * @param[in] state     The state to be set.
-     */  
-    void setIsForward(uint8_t iconId, bool state);
-
-    /**
-     * Get the state of the REPEAT control flag of an icon.
-     *
+     * @param[in] slotId    The slot id.
      * @param[in] iconId    The icon Id.
      * 
-     * @return The state of the isRepeat animation control flag.
+     * @return If successful it will return true otherwise false.
      */  
-    bool getIsRepeat(uint8_t iconId) const;
+    bool setActiveIconId(uint8_t slotId, uint8_t iconId);
 
     /**
-     * Set the state of the REPEAT control flag of an icon.
-     *
-     * @param[in] iconId    The icon Id.
-     * @param[in] state     The state to be set.
-     */  
-    void setIsRepeat(uint8_t iconId, bool state);
-
-    /**
-     * Clear icon bitmap by icon id.
+     * Clear icon.
      * 
-     * @param iconId The icon id. 
+     * @param[in] slotId    The slot id.
+     * @param[in] iconId    The icon id. 
      */
-    void clearBitmap(uint8_t iconId);
+    void clearIcon(uint8_t slotId, uint8_t iconId);
 
     /**
-     * Clear sprite sheet by icon id.
+     * Get icon file path by slot id and icon id.
      * 
-     * @param[in] iconId The icon id. 
-     */
-    void clearSpriteSheet(uint8_t iconId);
-
-    /**
-     * Get icon file path by icon id.
-     * 
+     * @param[in]   slotId      The slot id.
      * @param[in]   iconId      The icon id. 
      * @param[out]  fullPath    Path to icon file.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void getIconFilePath(uint8_t iconId, String& fullPath) const;
+    bool getIconFilePath(uint8_t slotId, uint8_t iconId, String& fullPath) const;
 
     /**
-     * Get sprite sheet file path by icon id.
+     * Set icon file path by slot id and icon id.
      * 
+     * @param[in]   slotId      The slot id.
      * @param[in]   iconId      The icon id. 
-     * @param[out]  fullPath    Path to sprite sheet file.
+     * @param[out]  fullPath    Path to icon file.
+     * 
+     * @return If successful it will return true otherwise false.
      */
-    void getSpriteSheetFilePath(uint8_t iconId, String& fullPath) const;
+    bool setIconFilePath(uint8_t slotId, uint8_t iconId, const String& fullPath);
 
 private:
 
     /**
-     * Plugin topic, used for bitmap/spritesheet upload and control.
+     * Max. number of icons in a slot.
+     */
+    static const uint8_t    MAX_ICONS_PER_SLOT  = 2U;
+
+    /**
+     * Plugin topic, used for icon upload and control.
      */
     static const char*      TOPIC_BITMAP;
 
-    /**
-     * Plugin topic, used for parameter exchange.
-     */
-    static const char*      TOPIC_SPRITESHEET;
-
    /**
-     * Plugin topic, used for only for animation control in case a spritesheet
-     * with texture is loaded.
+     * Plugin topic, used to control which icon is shown in which slot.
      */
-    static const char*      TOPIC_ANIMATION;
+    static const char*      TOPIC_SLOT;
 
     /**
-     * Filename extension of bitmap image file.
+     * The slot data required for management.
      */
-    static const char*      FILE_EXT_BITMAP;
+    typedef struct
+    {
+        String  icons[MAX_ICONS_PER_SLOT];  /**< The full path's of the slot icons. */
+        uint8_t activeIconId;               /**< Icon id of the active icon. */
+        bool    hasSlotChanged;             /**< Has slot changed since last time? */
 
-    /**
-     * Filename extension of sprite sheet parameter file.
-     */
-    static const char*      FILE_EXT_SPRITE_SHEET;
+    } IconSlot;
 
-    _ThreeIconPlugin::View      m_view;                                                 /**< View with all widgets. */
-    String                      m_iconPaths[_ThreeIconPlugin::View::MAX_ICONS];         /**< Full path to icons. */
-    String                      m_spriteSheetPaths[_ThreeIconPlugin::View::MAX_ICONS];  /**< Full path to spritesheets. */
-    bool                        m_isUploadError;                                        /**< Flag to signal a upload error. */
-    mutable MutexRecursive      m_mutex;                                                /**< Mutex to protect against concurrent access. */
-    bool                        m_hasTopicChanged[_ThreeIconPlugin::View::MAX_ICONS];   /**< Has the topic content changed? */
+    _ThreeIconPlugin::View      m_view;                                             /**< View with all widgets. */
+    IconSlot                    m_slots[_ThreeIconPlugin::View::MAX_ICON_SLOTS];    /**< Icon slots. */
+    bool                        m_isUploadError;                                    /**< Flag to signal a upload error. */
+    mutable MutexRecursive      m_mutex;                                            /**< Mutex to protect against concurrent access. */
 
     /**
      * Get image filename with path.
      * 
+     * @param[in] slotId    The slot id.
      * @param[in] iconId    The icon id.
      * @param[in] ext       File extension.
      * 
      * @return Image filename with path.
      */
-    String getFileName(uint8_t iconId, const String& ext);
+    String getFileName(uint8_t slotId, uint8_t iconId, const String& ext) const;
+
+    bool getSlotIdFromTopic(uint8_t& slotId, const String& topic) const;
+    bool getSlotIdAndIconIdFromTopic(uint8_t& slotId, uint8_t& iconId, const String& topic) const;
 };
 
 /******************************************************************************

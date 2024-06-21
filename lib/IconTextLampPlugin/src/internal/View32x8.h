@@ -127,16 +127,6 @@ public:
     }
 
     /**
-     * Get bitmap widget.
-     * 
-     * @return Bitmap widget
-     */
-    BitmapWidget& getBitmapWidget()
-    {
-        return m_bitmapWidget;
-    }
-
-    /**
      * Get text (non-formatted).
      * 
      * @return Text
@@ -164,6 +154,23 @@ public:
     void setFormatText(const String& formatText)
     {
         m_textWidget.setFormatStr(formatText);
+    }
+
+    /**
+     * Load icon image from filesystem.
+     *
+     * @param[in] filename  Image filename
+     *
+     * @return If successul, it will return true otherwise false.
+     */
+    bool loadIcon(const String& filename);
+
+    /**
+     * Clear icon.
+     */
+    void clearIcon()
+    {
+        m_bitmapWidget.clear(ColorDef::BLACK);
     }
 
     /**

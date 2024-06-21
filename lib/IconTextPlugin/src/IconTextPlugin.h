@@ -76,7 +76,6 @@ public:
         Plugin(name, uid),
         m_view(),
         m_iconPath(),
-        m_spriteSheetPath(),
         m_isUploadError(false),
         m_mutex(),
         m_hasTopicChanged(false)
@@ -253,9 +252,7 @@ public:
     void setText(const String& formatText);
 
     /**
-     * Load icon image from filesystem. If a sprite sheet is available and the
-     * loaded file is a bitmap, it will be automatically used as texture
-     * for animation.
+     * Load icon image from filesystem.
      *
      * @param[in] filename  Image filename
      *
@@ -264,24 +261,9 @@ public:
     bool loadIcon(const String& filename);
 
     /**
-     * Load sprite sheet from filesystem. If a bitmap is available, it will
-     * be automatically used as texture for animation.
-     *
-     * @param[in] filename  Sprite sheet filename
-     *
-     * @return If successul, it will return true otherwise false.
-     */
-    bool loadSpriteSheet(const String& filename);
-
-    /**
      * Clear icon.
      */
     void clearIcon();
-
-    /**
-     * Clear sprite sheet.
-     */
-    void clearSpriteSheet();
 
     /**
      * Get icon file path.
@@ -289,13 +271,6 @@ public:
      * @param[out] Path to icon file.
      */
     void getIconFilePath(String& fullPath) const;
-
-    /**
-     * Get sprite sheet file path.
-     * 
-     * @param[out] Path to sprite sheet file.
-     */
-    void getSpriteSheetFilePath(String& fullPath) const;
 
 private:
 
@@ -309,29 +284,8 @@ private:
      */
     static const char*      TOPIC_ICON;
 
-    /**
-     * Plugin topic, used for parameter exchange.
-     */
-    static const char*      TOPIC_SPRITESHEET;
-
-    /**
-     * Filename extension of bitmap image file.
-     */
-    static const char*      FILE_EXT_BITMAP;
-
-    /**
-     * Filename extension of sprite sheet parameter file.
-     */
-    static const char*      FILE_EXT_SPRITE_SHEET;
-
-    /**
-     * Filename extension of GIF image file.
-     */
-    static const char*      FILE_EXT_GIF;
-
     _IconTextPlugin::View   m_view;             /**< View with all widgets. */
     String                  m_iconPath;         /**< Full path to icon. */
-    String                  m_spriteSheetPath;  /**< Full path to spritesheet. */
     bool                    m_isUploadError;    /**< Flag to signal a upload error. */
     mutable MutexRecursive  m_mutex;            /**< Mutex to protect against concurrent access. */
     bool                    m_hasTopicChanged;  /**< Has the topic text content changed? */

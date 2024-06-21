@@ -169,6 +169,7 @@ public:
 
     /**
      * Load icon by path.
+     * If the path is empty, the standard OpenWeather icon will be loaded.
      * 
      * @param[in] fullPath  The full path to the icon.
      */
@@ -203,16 +204,6 @@ public:
     {
         m_textWidget.setFormatStr(formatText);
     }
-
-    /**
-     * Filename extension of bitmap image file.
-     */
-    static const char*      FILE_EXT_BITMAP;
-
-    /**
-     * Filename extension of sprite sheet parameter file.
-     */
-    static const char*      FILE_EXT_SPRITE_SHEET;
 
 private:
 

@@ -868,12 +868,7 @@ void OpenWeatherPlugin::prepareDataToShow()
          * If not, check for a generic weather icon.
          * If this is not available too, use the standard OpenWeather icon.
          */
-        weatherConditionIconFullPath = IMAGE_PATH + weatherIconId + _OpenWeatherPlugin::View::FILE_EXT_BITMAP;
-        if (false == FILESYSTEM.exists(weatherConditionIconFullPath))
-        {
-            weatherConditionIconFullPath  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
-            weatherConditionIconFullPath += _OpenWeatherPlugin::View::FILE_EXT_BITMAP;
-        }
+        getIconPathByWeatherIconId(weatherConditionIconFullPath, weatherIconId);
 
         /* If there is really a change, the display shall be updated otherwise
          * not to not destroy running animations.
@@ -885,6 +880,53 @@ void OpenWeatherPlugin::prepareDataToShow()
         }
 
         updateDisplay(true);
+    }
+}
+
+void OpenWeatherPlugin::getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId) const
+{
+    String fullPathWithoutExt   = IMAGE_PATH + weatherIconId;
+    String fullPathToIcon       = fullPathWithoutExt + BitmapWidget::FILE_EXT_BITMAP;
+
+    /* No specific bitmap icon available? */
+    if (false == FILESYSTEM.exists(fullPathToIcon))
+    {
+        /* No specific GIF icon available? */
+        fullPathToIcon = fullPathWithoutExt + BitmapWidget::FILE_EXT_GIF;
+        if (false == FILESYSTEM.exists(fullPathToIcon))
+        {
+            fullPathWithoutExt  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
+            fullPathToIcon      = fullPathWithoutExt + BitmapWidget::FILE_EXT_BITMAP;
+
+            /* No generic bitmap icon available? */
+            if (false == FILESYSTEM.exists(fullPathToIcon))
+            {
+                fullPathToIcon = fullPathWithoutExt + BitmapWidget::FILE_EXT_GIF;
+
+                /* No generic GIF icon available? */
+                if (false == FILESYSTEM.exists(fullPathToIcon))
+                {
+                    /* Enforce that the standard icon will be used. */
+                    fullPath.clear();
+                }
+                else
+                {
+                    fullPath = fullPathToIcon;
+                }
+            }
+            else
+            {
+                fullPath = fullPathToIcon;
+            }
+        }
+        else
+        {
+            fullPath = fullPathToIcon;
+        }
+    }
+    else
+    {
+        fullPath = fullPathToIcon;
     }
 }
 

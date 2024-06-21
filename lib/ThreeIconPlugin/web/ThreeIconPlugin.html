@@ -36,8 +36,8 @@
                 <p><img src="ThreeIconPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin is able to show three different icons.</p>
                 <p>Each icon can be set separately via the REST API.</p>
-                <p>If a Sprite Sheet is used the animation of an can be controlled via the REST API (see <a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/doc/SPRITESHEET.md"> Sprite Sheet</a>).</p>
-                <p>Show bitmap in one of the three slots. Supported are bitmap files (.bmp) with:</p>
+                <p>Show icon in one of the three slots. Supported are bitmap (.bmp) and GIF (.gif) files.</p>
+                <p>The bitmap files are limited to:</p>
                 <ul>
                     <li>24 or 32 bits per pixel.</li>
                     <li>1 plane.</li>
@@ -50,34 +50,36 @@
                 </ul>
                 <h2 class="mt-1">REST API</h2>
                 <h3 class="mt-1">Set icon</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;ICON-ID&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;ICON-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>ICON-ID: The id of the icon (starting with 0 from left).</li>
+                    <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
+                    <li>ICON-ID: The id of the icon ([0; 1]).</li>
                 </ul>
                 <h3 class="mt-1">Clear icon</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>ICON-ID: The id of the icon (starting with 0 from left).</li>
+                    <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
+                    <li>ICON-ID: The id of the icon ([0; 1]).</li>
                     <li>STATE: <code>true</code> or <code>false</code></li>
                 </ul>
-                <h3 class="mt-1">Control animation (Sprite Sheet required)</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?forward=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/animation/&lt;ICON-ID&gt;?repeat=&lt;STATE&gt;&AMP;ICONFULLPATH=&lt;ICON-FULL-PATH&gt;&AMP;SPRITESHEETFULLPATH=&lt;SPRITESHEET-FULL-PATH&gt;</code></pre>
+                <h3 class="mt-1">Control slot</h3>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slot/&lt;SLOT-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/slot/&lt;SLOT-ID&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slot/&lt;SLOT-ID&gt;?activeIconId=&lt;ACTIVE-ICON-ID&gt;&amp;icons._0_.iconid=&lt;ICON-ID&gt;&amp;icons._0_.fullPath=&lt;FULL-PATH&gt;&amp;icons._1_.iconid=&lt;ICON-ID&gt;&amp;icons._1_.fullPath=&lt;FULL-PATH&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/slot/&lt;SLOT-ID&gt;?activeIconId=&lt;ACTIVE-ICON-ID&gt;&amp;icons._0_.iconid=&lt;ICON-ID&gt;&amp;icons._0_.fullPath=&lt;FULL-PATH&gt;&amp;icons._1_.iconid=&lt;ICON-ID&gt;&amp;icons._1_.fullPath=&lt;FULL-PATH&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
-                    <li>ICON-ID: The id of the icon (starting with 0 from left).</li>
-                    <li>STATE: <code>true</code> or <code>false</code></li>
-                    <li>ICON-FULL-PATH: Full path to the icon.</li>
-                    <li>SPRITESHEET-FULL-PATH: Full path to the sprite sheet.</li>
+                    <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
+                    <li>ACTIVE-ICON-ID: The id of the active icon in the slot ([0; 1])</li>
+                    <li>ICON-ID: The id of the icon, the path relates to.</li>
+                    <li>FULL-PATH: The full path to the icon image.</li>
                 </ul>
                 <h2 class="mt-2">Configuration</h2>
                 <h3 class="mt-1">Icon</h3>
@@ -88,41 +90,25 @@
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="iconPosBitmap">Icon Position:</label>
-                        <select id="iconPosBitmap" name="iconPos" size="1">
-                            <option value="0" selected>Left</option>
-                            <option value="1">Middle</option>
-                            <option value="2">Right</option>
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label for="bitmap">Icon:</label>
-                        <input id="bitmap" name="bitmap" type="file" accept=".bmp" />    
-                    </div>
-                    <input name="submit" type="submit" value="Update"/>
-                </form>
-                <h3 class="mt-1">Sprite sheet</h3>
-                <form id="setSpriteSheetForm" enctype="multipart/form-data" action="javascript:uploadSpriteSheetByForm('setSpriteSheetForm')">
-                    <div class="form-group">
-                        <label for="pluginUidSpriteSheet">Plugin UID:</label>
-                        <select id="pluginUidSpriteSheet" name="pluginUid" size="1">
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label for="spriteSheetPosBitmap">Sprite sheet position:</label>
-                        <select id="spriteSheetPosBitmap" name="spriteSheetPos" size="1">
+                        <label for="slotIdBitmap">Slot ID:</label>
+                        <select id="slotIdBitmap" name="slotId" size="1">
                             <option value="0" selected>Left</option>
                             <option value="1">Middle</option>
                             <option value="2">Right</option>
                         </select>
+                        <label for="iconIdBitmap">Icon ID:</label>
+                        <select id="iconIdBitmap" name="iconId" size="1">
+                            <option value="0" selected>0 (default)</option>
+                            <option value="1">1</option>
+                        </select>    
                     </div>
                     <div class="form-group">
-                        <label for="spriteSheet">Sprite sheet:</label>
-                        <input id="spriteSheet" name="spriteSheet" type="file" accept=".sprite" />    
+                        <label for="bitmap">Icon:</label>
+                        <input id="bitmap" name="bitmap" type="file" accept=".bmp,.gif" />    
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
-                <h4 class="mt-1">Clear Icon/Sprite sheet</h4>
+                <h4 class="mt-1">Clear Icon</h4>
                 <form id="clearIconForm" enctype="multipart/form-data" action="javascript:clearIconByForm('clearIconForm')">
                     <div class="form-group">
                         <label for="pluginUidClearIcon">Plugin UID:</label>
@@ -130,51 +116,44 @@
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="iconPosClearIcon">Icon Position:</label>
-                        <select id="iconPosClearIcon" name="iconPos" size="1">
+                        <label for="slotIdClearIcon">Slot ID:</label>
+                        <select id="slotIdClearIcon" name="slotId" size="1">
                             <option value="0" selected>Left</option>
                             <option value="1">Middle</option>
                             <option value="2">Right</option>
+                        </select>
+                        <label for="iconIdClearIcon">Icon ID:</label>
+                        <select id="iconIdClearIcon" name="iconId" size="1">
+                            <option value="0" selected>0 (default)</option>
+                            <option value="1">1</option>
                         </select>    
                     </div>
                     <input name="submit" type="submit" value="Clear"/>
                 </form>
-                <h3 class="mt-1">Animation configuration</h3>
-                <form id="myFormAnimation" enctype="multipart/form-data" action="javascript:setAnimationByForm('myFormAnimation')">
+                <h3 class="mt-1">Slot configuration</h3>
+                <form id="myFormSlot" enctype="multipart/form-data" action="javascript:setSlotByForm('myFormSlot')">
                     <div class="form-group">
-                        <label for="pluginUidAnimation">Plugin UID:</label>
-                        <select id="pluginUidAnimation" name="pluginUid" size="1">
+                        <label for="pluginUidSlot">Plugin UID:</label>
+                        <select id="pluginUidSlot" name="pluginUid" size="1">
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="iconPosAnimation">Icon Position:</label>
-                        <select id="iconPosAnimation" name="iconPos" size="1" onchange="getAnimationByForm('myFormAnimation')">
+                        <label for="slotIdSlot">Slot ID:</label>
+                        <select id="slotIdSlot" name="slotId" size="1" onchange="getSlotByForm('myFormSlot')">
                             <option value="0" selected>Left</option>
                             <option value="1">Middle</option>
                             <option value="2">Right</option>
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label for="forwardAnimation">Forward:</label>
-                        <select id="forwardAnimation" name="forward" size="1">
-                            <option>false</option>
-                            <option>true</option>
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label for="repeatAnimation">Repeat:</label>
-                        <select id="repeatAnimation" name="repeat" size="1">
-                            <option>false</option>
-                            <option>true</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="iconFullPath">Icon full path:</label>
-                        <input type="text" id="iconFullPath" name="iconFullPath" value="" size="40" />    
+                        <label for="activeIconId">Active Icon ID:</label>
+                        <input type="number" id="activeIconId" name="activeIconId" value="0" min="0" max="1" />
                     </div>
                     <div class="form-group">
-                        <label for="spriteSheetFullPath">Sprite sheet full path:</label>
-                        <input type="text" id="spriteSheetFullPath" name="spriteSheetFullPath" value="" size="40" />    
+                        <label for="icon0FullPath">Icon ID 0 full path:</label>
+                        <input type="text" id="icon0FullPath" name="icon0FullPath" value="" size="40" /><br />
+                        <label for="icon1FullPath">Icon ID 1 full path:</label>
+                        <input type="text" id="icon1FullPath" name="icon1FullPath" value="" size="40" />
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
@@ -208,14 +187,12 @@
 
             function enableUI() {
                 utils.enableForm("setIconForm", true);
-                utils.enableForm("setSpriteSheetForm", true);
-                utils.enableForm("myFormAnimation", true);
+                utils.enableForm("myFormSlot", true);
             }
 
             function disableUI() {
                 utils.enableForm("setIconForm", false);
-                utils.enableForm("setSpriteSheetForm", false);
-                utils.enableForm("myFormAnimation", false);
+                utils.enableForm("myFormSlot", false);
             }
 
             function getPluginInstances() {
@@ -264,48 +241,40 @@
             function uploadIconByForm(formId) {
                 var values = $("#" + formId).serializeAllArray();
                 var pluginUid = 0;
-                var index = 255;
+                var slotId = 0xff;
+                var iconId = 0xff;
                 var file = $("#bitmap").prop("files")[0]
                 
                 $.each(values, function(idx, field) {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
-                    } else if (field.name === "iconPos") {
-                        index = field.value;
+                    } else if (field.name === "slotId") {
+                        slotId = field.value;
+                    } else if (field.name === "iconId") {
+                        iconId = field.value;
                     } else {
                         /* Skip. */
                     }
                 });
 
-                setIcon(pluginUid, file, index);
+                setIcon(pluginUid, file, slotId, iconId);
             }
 
-            function uploadSpriteSheetByForm(formId) {
-                var values = $("#" + formId).serializeAllArray();
-                var pluginUid = 0;
-                var index = 255;
-                var file = $("#spriteSheet").prop("files")[0]
-                
-                $.each(values, function(idx, field) {
-                    if (field.name === "pluginUid") {
-                        pluginUid = field.value;
-                    } else if (field.name === "spriteSheetPos") {
-                        index = field.value;
-                    } else {
-                        /* Skip. */
-                    }
-                });
+            function setIcon(pluginUid, file, slotId, iconId) {
+                var promise;
 
-                setSpriteSheet(pluginUid, file, index);
-            }
-
-            function setIcon(pluginUid, file, index) {
                 disableUI();
 
-                return utils.checkBMPFile(file).then(function() {
+                if (true === file.name.toLowerCase().endsWith(".bmp")) {
+                    promise = utils.checkBMPFile(file);
+                } else {
+                    promise = Promise.resolve();
+                }
+
+                return promise.then(function() {
                     return utils.makeRequest({
                         method: "POST",
-                        url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap/" + index,
+                        url: "/rest/api/v1/display/uid/" + pluginUid + "/bitmap/" + slotId + "/" + iconId,
                         isJsonResponse: true,
                         parameter: {
                             file: file
@@ -330,61 +299,39 @@
                 });
             }
 
-            function setSpriteSheet(pluginUid, file, index) {
-                disableUI();
-
-                return utils.makeRequest({
-                    method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/spritesheet/" + index,
-                    isJsonResponse: true,
-                    parameter: {
-                        file: file
-                    },
-                    headers: {
-                        "X-File-Size": file.size
-                    }
-                }).then(function(rsp) {
-                    updateForms();
-                    alert("Ok.");
-                }).catch(function(rsp) {
-                    if (("undefined" !== typeof rsp.error) && ("string" === typeof rsp.error.msg)) {
-                        alert("Error: " + rsp.error.msg);
-                    } else {
-                        alert("Failed.");
-                    }
-                }).finally(function() {
-                    enableUI();
-                });
-            }
-
             function clearIconByForm(formId) {
                 var values = $("#" + formId).serializeAllArray();
                 var pluginUid = 0;
-                var index = 255;
+                var slotId = 0xff;
+                var iconId = 0xff;
 
                 $.each(values, function(idx, field) {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
-                    } else if (field.name === "iconPos") {
-                        index = field.value;
+                    } else if (field.name === "slotId") {
+                        slotId = field.value;
+                    } else if (field.name === "iconId") {
+                        iconId = field.value;
                     } else {
                         /* Skip. */
                     }
                 });
 
-                clearIcon(pluginUid, index);
+                clearIcon(pluginUid, slotId, iconId);
             }
 
-            function clearIcon(pluginUid, index) {
+            function clearIcon(pluginUid, slotId, iconId) {
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slot/" + slotId,
                     isJsonResponse: true,
                     parameter: {
-                        iconFullPath: "",
-                        spriteSheetFullPath: ""
+                        icons: [{
+                            iconId: iconId,
+                            fullPath: ""
+                        }]
                     }
                 }).then(function(rsp) {
                     updateForms();
@@ -400,50 +347,38 @@
                 });
             }
 
-            function getAnimationByForm(formId) {
+            function getSlotByForm(formId) {
                 var values = $("#" + formId).serializeAllArray();
                 var pluginUid = 0;
-                var index = 255;
+                var slotId = 0xff;
 
                 $.each(values, function(idx, field) {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
-                    } else if (field.name === "iconPos") {
-                        index = field.value;
+                    } else if (field.name === "slotId") {
+                        slotId = field.value;
                     } else {
                         /* Skip. */
                     }
                 });
 
-                getAnimation(pluginUid, index);
+                getSlot(pluginUid, slotId);
             }
 
-            function getAnimation(pluginUid, index) {
+            function getSlot(pluginUid, slotId) {
                 disableUI();
                 return utils.makeRequest({
                     method: "GET",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slot/" + slotId,
                     isJsonResponse: true
                 }).then(function(rsp) {
-                    var forwardElement = document.getElementById("forwardAnimation");
-                    var repeatElement = document.getElementById("repeatAnimation");
-                    var iconFullPathInput = document.getElementById("iconFullPath");
-                    var spriteSheetFullPathInput = document.getElementById("spriteSheetFullPath");
+                    var activeIconIdInput = document.getElementById("activeIconId");
+                    var icon0FullPathInput = document.getElementById("icon0FullPath");
+                    var icon1FullPathInput = document.getElementById("icon1FullPath");
 
-                    if (false == rsp.data.forward) {
-                        forwardElement.selectedIndex = 0;
-                    } else {
-                        forwardElement.selectedIndex = 1;
-                    }
-
-                    if (false == rsp.data.repeat) {
-                        repeatElement.selectedIndex = 0;
-                    } else {
-                        repeatElement.selectedIndex = 1;
-                    }
-
-                    iconFullPathInput.value = rsp.data.iconFullPath;
-                    spriteSheetFullPathInput.value = rsp.data.spriteSheetFullPath;
+                    activeIconIdInput.value = rsp.data.activeIconId;
+                    icon0FullPathInput.value = rsp.data.icons[0].fullPath;
+                    icon1FullPathInput.value = rsp.data.icons[1].fullPath;
 
                 }).catch(function(rsp) {
                     alert("Internal error.");
@@ -452,48 +387,48 @@
                 });
             }
 
-            function setAnimationByForm(formId) {
+            function setSlotByForm(formId) {
                 var values = $("#" + formId).serializeAllArray();
                 var pluginUid = 0;
-                var index = 255;
-                var isForward = false;
-                var isRepeat = false;
-                var iconFullPath = "";
-                var spriteSheetFullPath = "";
+                var slotId = 0xff;
+                var activeIconId = 0xff;
+                var icons = [{
+                    iconId: 0,
+                    fullPath: ""
+                }, {
+                    iconId: 1,
+                    fullPath: ""
+                }]
 
                 $.each(values, function(idx, field) {
                     if (field.name === "pluginUid") {
                         pluginUid = field.value;
-                    } else if (field.name === "iconPos") {
-                        index = field.value;
-                    } else if (field.name === "forward") {
-                        isForward = field.value;
-                    } else if (field.name === "repeat") {
-                        isRepeat = field.value;
-                    } else if (field.name === "iconFullPath") {
-                        iconFullPath = field.value;
-                    } else if (field.name === "spriteSheetFullPath") {
-                        spriteSheetFullPath = field.value;
+                    } else if (field.name === "slotId") {
+                        slotId = field.value;
+                    } else if (field.name === "activeIconId") {
+                        activeIconId = field.value;
+                    } else if (field.name === "icon0FullPath") {
+                        icons[0].fullPath = field.value;
+                    } else if (field.name === "icon1FullPath") {
+                        icons[1].fullPath = field.value;
                     } else {
                         /* Skip. */
                     }
                 });
 
-                setAnimation(pluginUid, isForward, isRepeat, iconFullPath, spriteSheetFullPath, index);
+                setSlot(pluginUid, slotId, activeIconId, icons);
             }
 
-            function setAnimation(pluginUid, isForward, isRepeat, iconFullPath, spriteSheetFullPath, index) {
+            function setSlot(pluginUid, slotId, activeIconId, icons) {
                 disableUI();
 
                 return utils.makeRequest({
                     method: "POST",
-                    url: "/rest/api/v1/display/uid/" + pluginUid + "/animation/" + index,
+                    url: "/rest/api/v1/display/uid/" + pluginUid + "/slot/" + slotId,
                     isJsonResponse: true,
                     parameter: {
-                        forward: isForward,
-                        repeat: isRepeat,
-                        iconFullPath: iconFullPath,
-                        spriteSheetFullPath: spriteSheetFullPath
+                        activeIconId: activeIconId,
+                        icons: icons
                     }
                 }).then(function(rsp) {
                     alert("Ok.");
@@ -505,11 +440,11 @@
             }
 
             function updateForms() {
-                var selectText = document.getElementById("pluginUidAnimation");
+                var selectText = document.getElementById("pluginUidSlot");
 
                 if (0 <= selectText.selectedIndex) {
 
-                    return getAnimationByForm('myFormAnimation');
+                    return getSlotByForm('myFormSlot');
                 }
             }
 
@@ -537,7 +472,7 @@
                 /* Load all plugin instances. */
                 getPluginInstances().then(function(cnt) {
                     if (0 < cnt) {
-                        getAnimationByForm('myFormAnimation');
+                        getSlotByForm('myFormSlot');
                     }
                 });
             });

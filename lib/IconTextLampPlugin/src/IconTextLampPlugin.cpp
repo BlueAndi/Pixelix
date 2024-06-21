@@ -33,8 +33,8 @@
  * Includes
  *****************************************************************************/
 #include "IconTextLampPlugin.h"
-#include "FileSystem.h"
 
+#include <FileSystem.h>
 #include <Logging.h>
 #include <ArduinoJson.h>
 #include <Util.h>
@@ -60,25 +60,16 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_TEXT              = "/text";
+const char* IconTextLampPlugin::TOPIC_TEXT  = "/text";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMPS             = "/lamps";
+const char* IconTextLampPlugin::TOPIC_LAMPS = "/lamps";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMP              = "/lamp";
+const char* IconTextLampPlugin::TOPIC_LAMP  = "/lamp";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_ICON              = "/bitmap";
-
-/* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_SPRITESHEET       = "/spritesheet";
-
-/* Initialize bitmap image filename extension. */
-const char* IconTextLampPlugin::FILE_EXT_BITMAP         = ".bmp";
-
-/* Initialize sprite sheet parameter filename extension. */
-const char* IconTextLampPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
+const char* IconTextLampPlugin::TOPIC_ICON  = "/bitmap";
 
 /******************************************************************************
  * Public Methods
@@ -86,13 +77,12 @@ const char* IconTextLampPlugin::FILE_EXT_SPRITE_SHEET   = ".sprite";
 
 void IconTextLampPlugin::getTopics(JsonArray& topics) const
 {
-    uint8_t     lampId          = 0U;
-    JsonObject  jsonText        = topics.createNestedObject();
-    JsonObject  jsonIcon        = topics.createNestedObject();
-    JsonObject  jsonSpriteSheet = topics.createNestedObject();
-    JsonObject  jsonLamps       = topics.createNestedObject();
+    uint8_t     lampId      = 0U;
+    JsonObject  jsonText    = topics.createNestedObject();
+    JsonObject  jsonIcon    = topics.createNestedObject();
+    JsonObject  jsonLamps   = topics.createNestedObject();
 
-    jsonText["name"]            = TOPIC_TEXT;
+    jsonText["name"]    = TOPIC_TEXT;
 
     /* Home Assistant support of MQTT discovery (https://www.home-assistant.io/integrations/mqtt) */
     jsonText["ha"]["component"]             = "text";                           /* MQTT integration */
@@ -101,14 +91,11 @@ void IconTextLampPlugin::getTopics(JsonArray& topics) const
     jsonText["ha"]["discovery"]["val_tpl"]  = "{{ value_json.text }}";          /* Value template */
     jsonText["ha"]["discovery"]["ic"]       = "mdi:form-textbox";               /* Icon (MaterialDesignIcons.com) */
 
-    jsonIcon["name"]            = TOPIC_ICON;
-    jsonIcon["access"]          = "w"; /* Only icon upload is supported. */
+    jsonIcon["name"]    = TOPIC_ICON;
+    jsonIcon["access"]  = "w"; /* Only icon upload is supported. */
 
-    jsonSpriteSheet["name"]     = TOPIC_SPRITESHEET;
-    jsonSpriteSheet["access"]   = "w"; /* Only sprite sheet upload is supported. */
-
-    jsonLamps["name"]           = TOPIC_LAMPS;
-    jsonLamps["access"]         = "r"; /* Only read access allowed. */
+    jsonLamps["name"]   = TOPIC_LAMPS;
+    jsonLamps["access"] = "r"; /* Only read access allowed. */
 
     for(lampId = 0U; lampId < _IconTextLampPlugin::View::MAX_LAMPS; ++lampId)
     {
@@ -122,16 +109,13 @@ bool IconTextLampPlugin::getTopic(const String& topic, JsonObject& value) const
 
     if (0U != topic.equals(TOPIC_TEXT))
     {
-        String  formattedText       = getText();
+        String  formattedText   = getText();
         String  iconFullPath;
-        String  spriteSheetFullPath;
 
         getIconFilePath(iconFullPath);
-        getSpriteSheetFilePath(spriteSheetFullPath);
 
-        value["text"]                   = formattedText;
-        value["iconFullPath"]           = iconFullPath;
-        value["spriteSheetFullPath"]    = spriteSheetFullPath;
+        value["text"]           = formattedText;
+        value["iconFullPath"]   = iconFullPath;
 
         isSuccessful = true;
     }
@@ -185,9 +169,8 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
     if (0U != topic.equals(TOPIC_TEXT))
     {
         String              text;
-        JsonVariantConst    jsonText                = value["text"];
-        JsonVariantConst    jsonIconFullPath        = value["iconFullPath"];
-        JsonVariantConst    jsonSpriteSheetFullPath = value["spriteSheetFullPath"];
+        JsonVariantConst    jsonText            = value["text"];
+        JsonVariantConst    jsonIconFullPath    = value["iconFullPath"];
 
         if (false == jsonText.isNull())
         {
@@ -204,27 +187,11 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
 
             if (true == iconFullPath.isEmpty())
             {
-                clearBitmap();
+                clearIcon();
             }
             else
             {
-                loadBitmap(iconFullPath);
-            }
-
-            isSuccessful = true;
-        }
-
-        if (false == jsonSpriteSheetFullPath.isNull())
-        {
-            String spriteSheetFullPath = jsonSpriteSheetFullPath.as<String>();
-
-            if (true == spriteSheetFullPath.isEmpty())
-            {
-                clearSpriteSheet();
-            }
-            else
-            {
-                loadSpriteSheet(spriteSheetFullPath);
+                (void)loadIcon(iconFullPath);
             }
 
             isSuccessful = true;
@@ -269,24 +236,7 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
         {
             String fullPath = jsonFullPath.as<String>();
 
-            isSuccessful = loadBitmap(fullPath);
-        }
-    }
-    else if (0U != topic.equals(TOPIC_SPRITESHEET))
-    {
-        JsonVariantConst jsonFullPath = value["fullPath"];
-
-        /* File upload? */
-        if (false == jsonFullPath.isNull())
-        {
-            String fullPath = jsonFullPath.as<String>();
-
-            /* Don't use the return value, because there may be no bitmap
-             * available.
-             */
-            (void)loadSpriteSheet(fullPath);
-
-            isSuccessful = true;
+            isSuccessful = loadIcon(fullPath);
         }
     }
     else
@@ -346,26 +296,23 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
     if (0U != topic.equals(TOPIC_ICON))
     {
         /* Accept upload of bitmap file. */
-        if (0U != srcFilename.endsWith(FILE_EXT_BITMAP))
+        if (0U != srcFilename.endsWith(BitmapWidget::FILE_EXT_BITMAP))
         {
-            dstFilename = getFileName(FILE_EXT_BITMAP);
+            dstFilename = getFileName(BitmapWidget::FILE_EXT_BITMAP);
 
             isAccepted = true;
         }
-    }
-    else if (0U != topic.equals(TOPIC_SPRITESHEET))
-    {
-        /* Accept upload of a sprite sheet file. */
-        if (0U != srcFilename.endsWith(FILE_EXT_SPRITE_SHEET))
+        /* Accept upload of GIF file. */
+        else if (0U != srcFilename.endsWith(BitmapWidget::FILE_EXT_GIF))
         {
-            dstFilename = getFileName(FILE_EXT_SPRITE_SHEET);
+            dstFilename = getFileName(BitmapWidget::FILE_EXT_GIF);
 
             isAccepted = true;
         }
-    }
-    else
-    {
-        ;
+        else
+        {
+            ;
+        }
     }
 
     return isAccepted;
@@ -373,37 +320,30 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
 
 void IconTextLampPlugin::start(uint16_t width, uint16_t height)
 {
-    String                      bitmapFullPath      = getFileName(FILE_EXT_BITMAP);
-    String                      spriteSheetFullPath = getFileName(FILE_EXT_SPRITE_SHEET);
+    String                      bitmapFullPath  = getFileName(BitmapWidget::FILE_EXT_BITMAP);
+    String                      gifFullPath     = getFileName(BitmapWidget::FILE_EXT_GIF);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_view.init(width, height);
 
-    /* If there is an icon in the filesystem with the plugin UID as filename,
-     * it will be loaded. First check whether it is a animated sprite sheet
-     * and if not, try to load just a bitmap image.
-     */
-    m_iconPath.clear();
-    m_spriteSheetPath.clear();
-
-    if (false == m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, spriteSheetFullPath, bitmapFullPath))
+    if (true == m_view.loadIcon(bitmapFullPath))
     {
-        if (true == m_view.getBitmapWidget().load(FILESYSTEM, bitmapFullPath))
-        {
-            m_iconPath = bitmapFullPath;
-        }
+        m_iconPath = bitmapFullPath;
+    }
+    else if (true == m_view.loadIcon(gifFullPath))
+    {
+        m_iconPath = gifFullPath;
     }
     else
     {
-        m_iconPath          = bitmapFullPath;
-        m_spriteSheetPath   = spriteSheetFullPath;
+        m_iconPath.clear();
     }
 }
 
 void IconTextLampPlugin::stop()
 {
-    String                      bitmapFullPath       = getFileName(FILE_EXT_BITMAP);
-    String                      spriteSheetFullPath  = getFileName(FILE_EXT_SPRITE_SHEET);
+    String                      bitmapFullPath  = getFileName(BitmapWidget::FILE_EXT_BITMAP);
+    String                      gifFullPath     = getFileName(BitmapWidget::FILE_EXT_GIF);
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     /* Remove icon which is specific for the plugin instance. */
@@ -412,10 +352,10 @@ void IconTextLampPlugin::stop()
         LOG_INFO("File %s removed", bitmapFullPath.c_str());
     }
 
-    /* Remove spritesheet which is specific for the plugin instance. */
-    if (false != FILESYSTEM.remove(spriteSheetFullPath))
+    /* Remove icon which is specific for the plugin instance. */
+    if (false != FILESYSTEM.remove(gifFullPath))
     {
-        LOG_INFO("File %s removed", spriteSheetFullPath.c_str());
+        LOG_INFO("File %s removed", gifFullPath.c_str());
     }
 }
 
@@ -429,7 +369,7 @@ void IconTextLampPlugin::update(YAGfx& gfx)
 String IconTextLampPlugin::getText() const
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
-    String                      formattedText = m_view.getFormatText();
+    String                      formattedText   = m_view.getFormatText();
 
     return formattedText;
 }
@@ -446,7 +386,7 @@ void IconTextLampPlugin::setText(const String& formatText)
     }
 }
 
-bool IconTextLampPlugin::loadBitmap(const String& filename)
+bool IconTextLampPlugin::loadIcon(const String& filename)
 {
     bool                        status = false;
     MutexGuard<MutexRecursive>  guard(m_mutex);
@@ -456,68 +396,23 @@ bool IconTextLampPlugin::loadBitmap(const String& filename)
         m_iconPath = filename;
 
         m_hasTopicTextChanged = true;
-    }
 
-    if (false == m_spriteSheetPath.isEmpty())
-    {
-        status = m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
-    }
-    
-    if (false == status)
-    {
-        status = m_view.getBitmapWidget().load(FILESYSTEM, m_iconPath);
+        status = m_view.loadIcon(m_iconPath);
     }
 
     return status;
 }
 
-bool IconTextLampPlugin::loadSpriteSheet(const String& filename)
-{
-    bool                        status = false;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
-
-    if (m_spriteSheetPath != filename)
-    {
-        m_spriteSheetPath = filename;
-
-        m_hasTopicTextChanged = true;
-    }
-
-    if (false == m_iconPath.isEmpty())
-    {
-        status = m_view.getBitmapWidget().loadSpriteSheet(FILESYSTEM, m_spriteSheetPath, m_iconPath);
-    }
-
-    return status;
-}
-
-void IconTextLampPlugin::clearBitmap()
+void IconTextLampPlugin::clearIcon()
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (false == m_iconPath.isEmpty())
     {
         m_iconPath.clear();
-        m_view.getBitmapWidget().clear(ColorDef::BLACK);
+        m_view.clearIcon();
 
         m_hasTopicTextChanged = true;
-    }
-}
-
-void IconTextLampPlugin::clearSpriteSheet()
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (false == m_spriteSheetPath.isEmpty())
-    {
-        m_spriteSheetPath.clear();
-
-        m_hasTopicTextChanged = true;
-    }
-
-    if (false == m_iconPath.isEmpty())
-    {
-        (void)m_view.getBitmapWidget().load(FILESYSTEM, m_iconPath);
     }
 }
 
@@ -526,13 +421,6 @@ void IconTextLampPlugin::getIconFilePath(String& fullPath) const
     MutexGuard<MutexRecursive> guard(m_mutex);
 
     fullPath = m_iconPath;
-}
-
-void IconTextLampPlugin::getSpriteSheetFilePath(String& fullPath) const
-{
-    MutexGuard<MutexRecursive> guard(m_mutex);
-
-    fullPath = m_spriteSheetPath;
 }
 
 bool IconTextLampPlugin::getLamp(uint8_t lampId) const

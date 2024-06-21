@@ -540,6 +540,14 @@ private:
     void prepareDataToShow();
 
     /**
+     * Get the full path to the icon in the filesystem by the weather icon id.
+     * 
+     * @param[out]  fullPath        Full path to icon in the filesystem.
+     * @param[in]   weatherIconId   The weather icon id.
+     */
+    void getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId) const;
+
+    /**
      * Clear the task proxy queue.
      */
     void clearQueue();

@@ -33,6 +33,8 @@
  * Includes
  *****************************************************************************/
 #include "View32x8.h"
+#include <FileSystem.h>
+#include <Logging.h>
 
 using namespace _IconTextPlugin;
 
@@ -59,6 +61,22 @@ using namespace _IconTextPlugin;
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+bool View::loadIcon(const String& path)
+{
+    bool isSuccessful = false;
+
+    if (false == m_bitmapWidget.load(FILESYSTEM, path))
+    {
+        LOG_WARNING("Failed to load icon %s.", path.c_str());
+    }
+    else
+    {
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
+}
 
 /******************************************************************************
  * Protected Methods

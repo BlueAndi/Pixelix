@@ -59,7 +59,13 @@
  *****************************************************************************/
 
 /* Initialize bitmap widget type. */
-const char* BitmapWidget::WIDGET_TYPE = "bitmap";
+const char* BitmapWidget::WIDGET_TYPE       = "bitmap";
+
+/* Initialize bitmap image filename extension. */
+const char* BitmapWidget::FILE_EXT_BITMAP   = ".bmp";
+
+/* Initialize GIF image filename extension. */
+const char* BitmapWidget::FILE_EXT_GIF      = ".gif";
 
 /******************************************************************************
  * Public Methods
@@ -71,12 +77,9 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     {
         Widget::operator=(widget);
         
-        m_imgType       = widget.m_imgType;
-        m_bitmap        = widget.m_bitmap;
-        m_spriteSheet   = widget.m_spriteSheet;
-        m_gifPlayer     = widget.m_gifPlayer;
-        m_timer         = widget.m_timer;
-        m_duration      = widget.m_duration;
+        m_imgType   = widget.m_imgType;
+        m_bitmap    = widget.m_bitmap;
+        m_gifPlayer = widget.m_gifPlayer;
     }
 
     return *this;
@@ -87,11 +90,6 @@ void BitmapWidget::clear(const Color& color)
     if (IMG_TYPE_BMP == m_imgType)
     {
         m_bitmap.fillScreen(color);
-    }
-    else if (IMG_TYPE_SPRITESHEET == m_imgType)
-    {
-        m_spriteSheet.release();
-        m_timer.stop();
     }
     else if (IMG_TYPE_GIF == m_imgType)
     {
@@ -121,12 +119,12 @@ bool BitmapWidget::load(FS& fs, const String& filename)
             String fileExt = filename.substring(index);
 
             /* BMP image? */
-            if (true == fileExt.equalsIgnoreCase(".bmp"))
+            if (true == fileExt.equalsIgnoreCase(FILE_EXT_BITMAP))
             {
                 isSuccessful = loadBMP(fs, filename);
             }
             /* GIF image? */
-            else if (true == fileExt.equalsIgnoreCase(".gif"))
+            else if (true == fileExt.equalsIgnoreCase(FILE_EXT_GIF))
             {
                 isSuccessful = loadGIF(fs, filename);
             }
@@ -139,56 +137,6 @@ bool BitmapWidget::load(FS& fs, const String& filename)
     }
 
     return isSuccessful;
-}
-
-bool BitmapWidget::loadSpriteSheet(FS& fs, const String& spriteSheetFileName, const String& textureFileName)
-{
-    bool isSuccessful = false;
-
-    if (false == fs.exists(spriteSheetFileName))
-    {
-        LOG_WARNING("File %s doesn't exists.", spriteSheetFileName.c_str());
-    }
-    else if (false == fs.exists(textureFileName))
-    {
-        LOG_WARNING("File %s doesn't exists.", textureFileName.c_str());
-    }
-    else if (true == m_spriteSheet.load(fs, spriteSheetFileName, textureFileName))
-    {
-        /* Calculate duration per frame. */
-        m_duration = 1000U / m_spriteSheet.getFPS();
-
-        /* Release unused memory. */
-        m_bitmap.release();        
-        m_gifPlayer.close();
-
-        /* Select image type. */
-        m_imgType = IMG_TYPE_SPRITESHEET;
-
-        isSuccessful = true;
-    }
-
-    return isSuccessful;
-}
-
-bool BitmapWidget::isSpriteSheetForward() const
-{
-    return m_spriteSheet.isForward();
-}
-
-void BitmapWidget::setSpriteSheetForward(bool forward)
-{
-    m_spriteSheet.setForward(forward);
-}
-
-bool BitmapWidget::isSpriteSheetRepeatInfinite() const
-{
-    return m_spriteSheet.isRepeatedInfinite();
-}
-
-void BitmapWidget::setSpriteSheetRepeatInfinite(bool repeat)
-{
-    m_spriteSheet.repeatInfinite(repeat);
 }
 
 /******************************************************************************
@@ -231,11 +179,7 @@ bool BitmapWidget::loadBMP(FS& fs, const String& filename)
     else
     {
         /* Release unused memory. */
-        m_spriteSheet.release();
         m_gifPlayer.close();
-
-        /* Sprite sheet animation timer. */
-        m_timer.stop();
 
         /* Select image type. */
         m_imgType = IMG_TYPE_BMP;
@@ -288,10 +232,6 @@ bool BitmapWidget::loadGIF(FS& fs, const String& filename)
     {
         /* Release unused memory. */
         m_bitmap.release();
-        m_spriteSheet.release();
-
-        /* Sprite sheet animation timer. */
-        m_timer.stop();
 
         /* Select image type. */
         m_imgType = IMG_TYPE_GIF;

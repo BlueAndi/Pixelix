@@ -65,36 +65,13 @@ bool View::loadIcon(const String& path)
 {
     bool isSuccessful = false;
 
-    if (true == path.endsWith(".sprite"))
+    if (false == m_bitmapWidget.load(FILESYSTEM, path))
     {
-        String textureFileName = path;
-
-        textureFileName.replace(".sprite", ".bmp");
-
-        if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, path, textureFileName))
-        {
-            LOG_WARNING("Failed to load animation %s / %s.", path.c_str(), textureFileName.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
-    }
-    else if (true == path.endsWith(".bmp"))
-    {
-        if (false == m_bitmapWidget.load(FILESYSTEM, path))
-        {
-            LOG_WARNING("Failed to load bitmap %s.", path.c_str());
-        }
-        else
-        {
-            isSuccessful = true;
-        }
+        LOG_WARNING("Failed to load icon %s.", path.c_str());
     }
     else
     {
-        /* Not supported. */
-        ;
+        isSuccessful = true;
     }
 
     return isSuccessful;

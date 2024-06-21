@@ -51,7 +51,7 @@ The PIXELIX firmware is for ESP32 boards that controls a RGB LED matrix. It can 
 
 # Features
 * Supports 32x8 LED matrix size out of the box. Its possible to cascade another matrix to have a longer display.
-* Can display static or scrolling text, as well as static or animated icons.
+* Can display static or scrolling text, as well as static (BMP and GIF) or animated icons (GIF).
 * Includes a web interface for configuring and controlling the LED matrix.
 * Supports REST API and MQTT for remote control and integration with other systems, like [Home Assistant](https://www.home-assistant.io/).
 * Can be extended with custom effects and animations. See list of [plugins](./doc/PLUGINS.md).
@@ -225,7 +225,7 @@ This is a low level error code. Please have a look into the following table.
 | E7 | The update manager didn't start up. |
 
 ## How can I use animated icons?
-Upload **first** the bitmap texture image (.bmp) and **afterwards** the sprite sheet file (.sprite). See the details [here](./doc/SPRITESHEET.md). The order is important, because if a bitmap is uploaded, it is assumed that an existing spritesheet is obsolete and will be removed.
+Use animated GIF images to get animated icons. The sprite sheet support was replaced with the GIF images.
 
 ## How do I know that my sensor is recognized?
 

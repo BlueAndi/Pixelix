@@ -57,12 +57,6 @@ using namespace _OpenWeatherPlugin;
  * Local Variables
  *****************************************************************************/
 
-/* Initialize bitmap image filename extension. */
-const char* View::FILE_EXT_BITMAP           = ".bmp";
-
-/* Initialize sprite sheet parameter filename extension. */
-const char* View::FILE_EXT_SPRITE_SHEET     = ".sprite";
-
 /* Initialize image path for standard icon. */
 const char* View::IMAGE_PATH_STD_ICON       = "/plugins/OpenWeatherPlugin/openWeather.bmp";
 
@@ -108,20 +102,17 @@ void View::loadIcon(Icon type)
 
 void View::loadIcon(const String& fullPath)
 {
-    String spriteSheetPath = fullPath.substring(0U, fullPath.length() - strlen(FILE_EXT_BITMAP)) + FILE_EXT_SPRITE_SHEET;
-
-    /* If there is an icon in the filesystem, it will be loaded otherwise
-     * the standard icon. First check whether it is a animated sprite sheet
-     * and if not, try to load just the bitmap image.
-     */
-    if (false == m_bitmapWidget.loadSpriteSheet(FILESYSTEM, spriteSheetPath, fullPath))
+    if (true == fullPath.isEmpty())
     {
-        if (false == m_bitmapWidget.load(FILESYSTEM, fullPath))
-        {
-            LOG_WARNING("Icon doesn't exists: %s", fullPath.c_str());
+        LOG_WARNING("Empty icon path, use standard icon.");
 
-            loadIcon(ICON_STD);
-        }
+        loadIcon(ICON_STD);
+    }
+    else if (false == m_bitmapWidget.load(FILESYSTEM, fullPath))
+    {
+        LOG_WARNING("Icon doesn't exists: %s", fullPath.c_str());
+
+        loadIcon(ICON_STD);
     }
 }
 

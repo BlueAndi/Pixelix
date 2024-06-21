@@ -19,6 +19,38 @@ utils.injectOrigin = function(name, searchFor) {
     }
 };
 
+utils.obj2FormData = function(obj, formData = new FormData()) {
+
+    this.formData = formData;
+
+    this.createFormData = function(obj, subKeyStr = "") {
+        
+        for(let i in obj) {
+            let value          = obj[i];
+            let subKeyStrTrans;
+            
+            if (obj instanceof Array) {
+                subKeyStrTrans = subKeyStr ? subKeyStr + "._" + i + "_" : i;
+            } else {
+                subKeyStrTrans = subKeyStr ? subKeyStr + "." + i : i;
+            }                
+
+            if ((typeof(value) === "string") || (typeof(value) === "number") || (value instanceof File)) {
+
+                this.formData.append(subKeyStrTrans, value);
+
+            } else if (typeof(value) === "object") {
+
+                this.createFormData(value, subKeyStrTrans);
+            }
+        }
+    }
+
+    this.createFormData(obj);
+
+    return this.formData;
+}
+
 utils.makeRequest = function(options) {
     return new Promise(function(resolve, reject) {
         if ("object" !== typeof options) {
@@ -53,11 +85,7 @@ utils.makeRequest = function(options) {
                         urlEncodedPar += encodeURIComponent(options.parameter[key]);
                     }
                 } else {
-                    formData = new FormData();
-
-                    for(key in options.parameter) {
-                        formData.append(key, options.parameter[key]);
-                    }
+                    formData = utils.obj2FormData(options.parameter);
                 }
             }
 

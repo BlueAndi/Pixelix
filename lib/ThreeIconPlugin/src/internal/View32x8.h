@@ -104,7 +104,7 @@ public:
 
         gfx.fillScreen(ColorDef::BLACK);
 
-        while(MAX_ICONS > idx)
+        while(MAX_ICON_SLOTS > idx)
         {
             m_bitmapWidgets[idx].update(gfx);
             ++idx;
@@ -112,43 +112,43 @@ public:
     }
 
     /**
-     * Get bitmap widget by icon id.
+     * Get bitmap widget by slot id.
      * 
-     * @param[in] iconId    The icon id of the slot.
+     * @param[in] slotId    The id of the slot.
      * 
      * @return Bitmap widget
      */
-    const BitmapWidget& getBitmapWidget(uint8_t iconId) const
+    const BitmapWidget& getBitmapWidget(uint8_t slotId) const
     {
-        if (MAX_ICONS <= iconId)
+        if (MAX_ICON_SLOTS <= slotId)
         {
-            iconId = 0U;
+            slotId = 0U;
         }
 
-        return m_bitmapWidgets[iconId];
+        return m_bitmapWidgets[slotId];
     }
 
     /**
-     * Get bitmap widget by icon id.
+     * Get bitmap widget by slot id.
      * 
-     * @param[in] iconId    The icon id of the slot.
+     * @param[in] slotId    The id of the slot.
      * 
      * @return Bitmap widget
      */
-    BitmapWidget& getBitmapWidget(uint8_t iconId)
+    BitmapWidget& getBitmapWidget(uint8_t slotId)
     {
-        if (MAX_ICONS <= iconId)
+        if (MAX_ICON_SLOTS <= slotId)
         {
-            iconId = 0U;
+            slotId = 0U;
         }
 
-        return m_bitmapWidgets[iconId];
+        return m_bitmapWidgets[slotId];
     }
 
     /**
      * Max. number of icons.
      */
-    static const uint8_t    MAX_ICONS       = 3U;
+    static const uint8_t    MAX_ICON_SLOTS  = 3U;
 
 private:
 
@@ -163,7 +163,7 @@ private:
     static const uint16_t   BITMAP_HEIGHT   = CONFIG_LED_MATRIX_HEIGHT;
 
     /** Distance between two bitmaps in pixel. */
-    static const uint8_t    BITMAP_DISTANCE = (CONFIG_LED_MATRIX_WIDTH - (_ThreeIconPlugin::View::MAX_ICONS * BITMAP_WIDTH)) / _ThreeIconPlugin::View::MAX_ICONS;
+    static const uint8_t    BITMAP_DISTANCE = (CONFIG_LED_MATRIX_WIDTH - (MAX_ICON_SLOTS * BITMAP_WIDTH)) / MAX_ICON_SLOTS;
 
     /** Bitmap 0 x-coordinate in pixel. */
     static const uint8_t    BITMAP_0_X      = 0U * (BITMAP_WIDTH + BITMAP_DISTANCE);
@@ -177,7 +177,7 @@ private:
     /** Bitmap y-coordindate in pixel. */
     static const uint8_t    BITMAP_Y        = 0U;
 
-    BitmapWidget    m_bitmapWidgets[MAX_ICONS]; /**< Bitmap widgets used to show the icons. */
+    BitmapWidget    m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
 
     View(const View& other);
     View& operator=(const View& other);
