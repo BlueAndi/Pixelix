@@ -227,6 +227,8 @@ This is a low level error code. Please have a look into the following table.
 ## How can I use animated icons?
 Use animated GIF images to get animated icons. The sprite sheet support (< v8.0.0) was replaced with the GIF images.
 
+If you like to create animated GIFs by yourself, the [Piskel](https://www.piskelapp.com/) editor is recommended. Piskel is a free online editor for animated sprites & pixel art.
+
 ## How do I know that my sensor is recognized?
 
 1. Check the log output from USB (not via web interface) right after startup (at this point WiFi is not connected yet).
