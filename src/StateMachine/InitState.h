@@ -168,6 +168,13 @@ private:
      * @return If filesystem content is compatible, it will return true otherwise false.
      */
     bool isFsCompatible();
+
+    /**
+     * Mount the filesystem.
+     * 
+     * @return If successful mounted, it will return true otherwise false.
+     */
+    bool mountFilesystem();
 };
 
 /******************************************************************************

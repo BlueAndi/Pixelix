@@ -151,7 +151,7 @@ void InitState::entry(StateMachine& sm)
         isError = true;
     }
     /* Mounting the filesystem. */
-    else if (false == FILESYSTEM.begin())
+    else if (false == mountFilesystem())
     {
         LOG_FATAL("Couldn't mount the filesystem.");
         errorId = ErrorState::ERROR_ID_BAD_FS;
@@ -572,6 +572,34 @@ bool InitState::isFsCompatible()
     }
 
     return isCompatible;
+}
+
+bool InitState::mountFilesystem()
+{
+    bool        isSuccessful                = false;
+    bool        formatOnFail                = false;
+    const char* BASE_PATH                   = "/littlefs";
+    uint8_t     maxOpenFiles                = 10U;
+    const char* PARTITION_LABEL_DEFAULT     = "spiffs"; /* Default for most of the partitions, defined by Platformio. */
+    const char* PARTITION_LABEL_ALTERNATIVE = "ffat";   /* Sometimes its different, than the default in Platformio. */
+
+    /* Mount filesytem with default partition label. If it fails, use alternative. */
+    if (false == FILESYSTEM.begin(formatOnFail, BASE_PATH, maxOpenFiles, PARTITION_LABEL_DEFAULT))
+    {
+        /* Try to mount with alternative partition label. */
+        if (true == FILESYSTEM.begin(formatOnFail, BASE_PATH, maxOpenFiles, PARTITION_LABEL_ALTERNATIVE))
+        {
+            /* Successful mounted with alternative partition label. */
+            isSuccessful = true;
+        }
+    }
+    /* Successful mounted with default partition label. */
+    else
+    {
+        isSuccessful = true;
+    }
+
+    return isSuccessful;
 }
 
 /******************************************************************************
