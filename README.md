@@ -225,7 +225,7 @@ This is a low level error code. Please have a look into the following table.
 | E7 | The update manager didn't start up. |
 
 ## How can I use animated icons?
-Use animated GIF images to get animated icons. The sprite sheet support was replaced with the GIF images.
+Use animated GIF images to get animated icons. The sprite sheet support (< v8.0.0) was replaced with the GIF images.
 
 ## How do I know that my sensor is recognized?
 

@@ -187,7 +187,7 @@ private:
     };
 
     ImgType             m_imgType;      /**< Current image type. */
-    YAGfxDynamicBitmap  m_bitmap;       /**< Bitmap image which is shown if no sprite sheet is loaded. */
+    YAGfxDynamicBitmap  m_bitmap;       /**< Bitmap image. */
     GifImgPlayer        m_gifPlayer;    /**< GIF image player. */
 
     /**

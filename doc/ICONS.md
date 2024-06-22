@@ -17,7 +17,7 @@
 
 # Purpose
 
-In order to use alternative icons for plugins you simply have to replace the respective ```<iconName>.bmp``` or in case of an animation additional the ```<iconName>.sprite``` in the corresponding plugin folder. All plugins can be found in ```/lib/<PLUGIN-NAME>``` and their icons in ```/lib/<PLUGIN-NAME>/web```.
+In order to use alternative icons for plugins you simply have to replace the respective ```<iconName>.bmp``` or ```<iconName>.gif``` in the corresponding plugin folder. All plugins can be found in ```/lib/<PLUGIN-NAME>``` and their icons in ```/lib/<PLUGIN-NAME>/web```.
 
 During building the filesystem image they will be automatically grabbed.
 

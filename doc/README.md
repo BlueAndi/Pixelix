@@ -29,7 +29,6 @@
 * [MQTT](MQTT.md)
 * [Home Assistant REST Wrapper](HOMEASSISTANT.md)
 * [Websocket API description](WEBSOCKET.md)
-* [Sprite sheet](SPRITESHEET.md)
 * [Alternative icons](ICONS.md)
 * [Configuration examples for GrabViaMqttPlugin and GrabViaRestPlugin.](./grabConfigs/README.md)
 
