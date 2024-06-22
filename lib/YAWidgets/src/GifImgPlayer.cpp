@@ -39,9 +39,29 @@
  * Compiler Switches
  *****************************************************************************/
 
+/** Value to disable internal debug mode. */
+#define GIF_IMG_PLAYER_DEBUG_DISABLE    0
+
+/** Value to enable internal debug mode. */
+#define GIF_IMG_PLAYER_DEBUG_ENABLE     1
+
+/** Debug mode status */
+#define GIF_IMG_PLAYER_DEBUG_MODE       GIF_IMG_PLAYER_DEBUG_DISABLE
+
 /******************************************************************************
  * Macros
  *****************************************************************************/
+
+#if GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE
+
+/** Debug log macro. */
+#define GIF_IMG_PLAYER_LOG_DEBUG(...)   printf(__VA_ARGS__)
+
+#else /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
+
+#define GIF_IMG_PLAYER_LOG_DEBUG(...)
+
+#endif /* GIF_IMG_PLAYER_DEBUG_MODE == GIF_IMG_PLAYER_DEBUG_ENABLE */
 
 /******************************************************************************
  * Types and classes
@@ -238,6 +258,20 @@ GifImgPlayer::Ret GifImgPlayer::open(FS& fs, const String& fileName)
         }
         else
         {
+            GIF_IMG_PLAYER_LOG_DEBUG("Logical screen descriptor\n");
+            GIF_IMG_PLAYER_LOG_DEBUG("\tCanvas width           : %u\n", logicalScreenDescriptor.canvasWidth);
+            GIF_IMG_PLAYER_LOG_DEBUG("\tCanvas height          : %u\n", logicalScreenDescriptor.canvasHeight);
+            GIF_IMG_PLAYER_LOG_DEBUG("\tPacked field\n");
+            GIF_IMG_PLAYER_LOG_DEBUG("\t\tGlocal color table size exponent: %u\n", logicalScreenDescriptor.packedField.globalColorTableSizeExp);
+            GIF_IMG_PLAYER_LOG_DEBUG("\t\tSort flag                       : %u\n", logicalScreenDescriptor.packedField.sortFlag);
+            GIF_IMG_PLAYER_LOG_DEBUG("\t\tColor resolution                : %u\n", logicalScreenDescriptor.packedField.colorResolution);
+            GIF_IMG_PLAYER_LOG_DEBUG("\t\tGlocal color table flag         : %u\n", logicalScreenDescriptor.packedField.globalColorTableFlag);
+            GIF_IMG_PLAYER_LOG_DEBUG("\tBackground color index : %u\n", logicalScreenDescriptor.bgColorIndex);
+            GIF_IMG_PLAYER_LOG_DEBUG("\tPixel aspect ratio     : %u\n", logicalScreenDescriptor.pixelAspectRatio);
+            GIF_IMG_PLAYER_LOG_DEBUG("\tGlobal color table size: %u colors\n", calcColorTableSize(logicalScreenDescriptor.packedField.globalColorTableSizeExp) / 3U);
+
+            m_bgColorIndex = logicalScreenDescriptor.bgColorIndex;
+            
             /* Create the bitmap as small as possible to not waste memory. */
             if (false == m_bitmap.create(logicalScreenDescriptor.canvasWidth, logicalScreenDescriptor.canvasHeight))
             {
@@ -356,6 +390,8 @@ bool GifImgPlayer::play(YAGfx& gfx)
             /* Is it the end of the image? */
             else if (BLOCK_ID_TRAILER == blockId)
             {
+                GIF_IMG_PLAYER_LOG_DEBUG("Trailer\n");
+
                 /* Animation running? */
                 if (true == m_isAnimation)
                 {
@@ -548,6 +584,9 @@ bool GifImgPlayer::parseExtension(File& fd)
         /* Skip every other extension. */
         else
         {
+            GIF_IMG_PLAYER_LOG_DEBUG("Extension\n");
+            GIF_IMG_PLAYER_LOG_DEBUG("\tSkip unknown label: %u\n", label);
+
             if (false == skipBlock(fd))
             {
                 isSuccessful = false;
@@ -569,6 +608,18 @@ bool GifImgPlayer::parseImageDescriptor(File& fd)
     }
     else
     {
+        GIF_IMG_PLAYER_LOG_DEBUG("Image descriptor\n");
+        GIF_IMG_PLAYER_LOG_DEBUG("\tImage left  : %u\n", imageDescriptor.imageLeft);
+        GIF_IMG_PLAYER_LOG_DEBUG("\tImage top   : %u\n", imageDescriptor.imageTop);
+        GIF_IMG_PLAYER_LOG_DEBUG("\tImage width : %u\n", imageDescriptor.imageWidth);
+        GIF_IMG_PLAYER_LOG_DEBUG("\tImage height: %u\n", imageDescriptor.imageHeight);
+        GIF_IMG_PLAYER_LOG_DEBUG("\tPacked field\n");
+        GIF_IMG_PLAYER_LOG_DEBUG("\t\tLocal color table size exponent: %u\n", imageDescriptor.packedField.localColorTableSizeExp);
+        GIF_IMG_PLAYER_LOG_DEBUG("\t\tSort flag                      : %u\n", imageDescriptor.packedField.sortFlag);
+        GIF_IMG_PLAYER_LOG_DEBUG("\t\tInterlace flag                 : %u\n", imageDescriptor.packedField.interlaceFlag);
+        GIF_IMG_PLAYER_LOG_DEBUG("\t\tLocal color table flag         : %u\n", imageDescriptor.packedField.localColorTableFlag);
+        GIF_IMG_PLAYER_LOG_DEBUG("\tLocal color table size: %u colors\n", calcColorTableSize(imageDescriptor.packedField.localColorTableSizeExp) / 3U);
+
         /* The image descriptor specifies the image left position and image
          * top position of where the image should begin on the canvas.
          */
@@ -699,6 +750,33 @@ bool GifImgPlayer::parseGraphicControlExentsion(File& fd)
     }
     else
     {
+        GIF_IMG_PLAYER_LOG_DEBUG("Graphic control extension\n");
+        GIF_IMG_PLAYER_LOG_DEBUG("\tPacked field\n");
+        GIF_IMG_PLAYER_LOG_DEBUG("\t\tTransparent color flag: %u\n", gce.packedField.transparentColorFlag);
+        GIF_IMG_PLAYER_LOG_DEBUG("\t\tUser input flag       : %u\n", gce.packedField.userInputFlag);
+        GIF_IMG_PLAYER_LOG_DEBUG("\t\tDisposal method       : %u\n", gce.packedField.disposalMethod);
+        GIF_IMG_PLAYER_LOG_DEBUG("\tDelay time             : %u * 1/100 s\n", gce.delayTime);
+        GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color index: %u\n", gce.transparentColorIndex);
+
+        if (0U == gce.packedField.transparentColorFlag)
+        {
+            GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : -\n");
+        }
+        else
+        {
+            if (nullptr == m_globalColorTable)
+            {
+                GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : error - no global color table available\n");
+            }
+            else
+            {
+                GIF_IMG_PLAYER_LOG_DEBUG("\tTransparent color      : 0x%02X%02X%02X\n",
+                    m_globalColorTable[gce.transparentColorIndex].red,
+                    m_globalColorTable[gce.transparentColorIndex].green,
+                    m_globalColorTable[gce.transparentColorIndex].blue);
+            }
+        }
+
         m_delay                 = gce.delayTime * 10U;
         m_transparentColorIndex = gce.transparentColorIndex;
 
@@ -720,10 +798,25 @@ bool GifImgPlayer::parseGraphicControlExentsion(File& fd)
         /* The canvas should be restored to the background color?*/
         else if (2U == gce.packedField.disposalMethod)
         {
-            PaletteColor*   paletteColor    = &m_globalColorTable[m_bgColorIndex];
-            Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
-            
-            m_bitmap.fillScreen(bgColor);
+            /* If no global color table is available, treat the background as transparent. */
+            if (nullptr == m_globalColorTable)
+            {
+                /* Transparency not supported, therefore use black color. */
+                m_bitmap.fillScreen(ColorDef::BLACK);
+            }
+            /* If global color table is available, but transparency flag is enabled, treat the background as transparent. */
+            else if (true == m_isTransparencyEnabled)
+            {
+                /* Transparency not supported, therefore use black color. */
+                m_bitmap.fillScreen(ColorDef::BLACK);
+            }
+            else
+            {
+                PaletteColor*   paletteColor = &m_globalColorTable[m_bgColorIndex];
+                Color           bgColor(paletteColor->red, paletteColor->green, paletteColor->blue);
+
+                m_bitmap.fillScreen(bgColor);
+            }
         }
         /* The decoder should restore the canvas to its previous state before the current image was drawn. */
         else if (3U == gce.packedField.disposalMethod)
@@ -776,6 +869,9 @@ bool GifImgPlayer::parseApplicationExtension(File& fd)
         }
         else
         {
+            GIF_IMG_PLAYER_LOG_DEBUG("Application extension\n");
+            GIF_IMG_PLAYER_LOG_DEBUG("\tSkip unknown\n");
+
             /* Skip all sub-blocks, which are application specific. */
             isSuccessful = skipBlock(fd);
         }
@@ -828,6 +924,10 @@ bool GifImgPlayer::parseNetscape20subBlocks(File& fd)
     }
     else
     {
+        GIF_IMG_PLAYER_LOG_DEBUG("Application extension\n");
+        GIF_IMG_PLAYER_LOG_DEBUG("\tNETSCAPE 2.0\n");
+        GIF_IMG_PLAYER_LOG_DEBUG("\tLoop counter: %u\n", m_loopCount);
+
         m_isAnimation = true;
 
         /* Store position after application extension to know where to restart
