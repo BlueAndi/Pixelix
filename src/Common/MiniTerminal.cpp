@@ -39,6 +39,7 @@
 #include <SettingsService.h>
 #include <StateMachine.hpp>
 #include <WiFi.h>
+#include <ErrorState.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -89,6 +90,12 @@ static const char*     GET_IP                       = "get ip";
 
 /** Command length: get ipaddress */
 static const size_t    GET_IP_LEN 	                = strlen(GET_IP);
+
+/** Command: status */
+static const char*     GET_STATUS                   = "get status";
+
+/** Command length: status */
+static const size_t    GET_STATUS_LEN               = strlen(GET_STATUS);
 
 /******************************************************************************
  * Public Methods
@@ -215,6 +222,10 @@ void MiniTerminal::executeCommand(const char* cmdLine)
     {
         cmdGetIPAddress(&cmdLine[GET_IP_LEN]);
     }
+    else if (0 == strncmp(cmdLine, GET_STATUS, GET_STATUS_LEN))
+    {
+        cmdGetStatus(&cmdLine[GET_STATUS_LEN]);
+    }
     else
     {
         writeError("Unknown command.\n");
@@ -293,6 +304,20 @@ void MiniTerminal::cmdGetIPAddress(const char* par)
             result = WiFi.localIP().toString();
         }
 
+        result += "\n";
+
+        writeSuccessful(result.c_str());
+    }
+}
+
+void MiniTerminal::cmdGetStatus(const char* par)
+{
+    if (nullptr != par)
+    {
+        ErrorState::ErrorId status  = ErrorState::getInstance().getErrorId();
+        String              result;
+
+        result += static_cast<int32_t>(status);
         result += "\n";
 
         writeSuccessful(result.c_str());

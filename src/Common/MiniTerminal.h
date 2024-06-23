@@ -176,6 +176,13 @@ private:
      * @param[in] par   Parameter
      */
     void cmdGetIPAddress(const char* par);
+
+    /**
+     * Get the status (error id).
+     * 
+     * @param[in] par   Parameter
+     */
+    void cmdGetStatus(const char* par);
 };
 
 /******************************************************************************
