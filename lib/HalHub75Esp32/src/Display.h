@@ -102,7 +102,9 @@ public:
         {
             for(x = 0; x < Board::LedMatrix::width; ++x)
             {
-                m_panel.drawPixel(x, y, m_ledMatrix.getColor(x, y).to565());
+                Color& color = m_ledMatrix.getColor(x, y);
+
+                m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
             }
         }
     }
