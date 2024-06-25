@@ -56,28 +56,34 @@
 
 const HUB75_I2S_CFG::i2s_pins   Display::I2S_PINS =
 {
-    R1_PIN,
-    G1_PIN,
-    B1_PIN,
-    R2_PIN,
-    G2_PIN,
-    B2_PIN,
-    A_PIN,
-    B_PIN,
-    C_PIN,
-    D_PIN,
-    E_PIN,
-    LAT_PIN,
-    OE_PIN,
-    CLK_PIN
+    CONFIG_HUB75_R1_PIN,
+    CONFIG_HUB75_G1_PIN,
+    CONFIG_HUB75_B1_PIN,
+    CONFIG_HUB75_R2_PIN,
+    CONFIG_HUB75_G2_PIN,
+    CONFIG_HUB75_B2_PIN,
+    CONFIG_HUB75_A_PIN,
+    CONFIG_HUB75_B_PIN,
+    CONFIG_HUB75_C_PIN,
+    CONFIG_HUB75_D_PIN,
+    CONFIG_HUB75_E_PIN,
+    CONFIG_HUB75_LAT_PIN,
+    CONFIG_HUB75_OE_PIN,
+    CONFIG_HUB75_CLK_PIN
 };
 
 const HUB75_I2S_CFG             Display::MATRIX_CFG  =
 {
     CONFIG_LED_MATRIX_WIDTH,    /* Panel width */
     CONFIG_LED_MATRIX_HEIGHT,   /* Panel height */
-    1U,                         /* Chain length */
-    I2S_PINS                    /* Pin mapping */
+    CONFIG_HUB75_CHAIN_LENGTH,  /* Chain length */
+    I2S_PINS,                   /* Pin mapping */
+    CONFIG_HUB75_DRIVER,        /* Driver */
+    false,                      /* Use DMA double buffer */
+    HUB75_I2S_CFG::HZ_15M,      /* I2S clock speed */
+    DEFAULT_LAT_BLANKING,       /* How many clock cycles to blank OE before/after LAT signal change. */
+    CONFIG_HUB75_CLOCK_PHASE,   /* Clock phase */
+    60U                         /* Min. refresh/scan rate */
 };
 
 /******************************************************************************
