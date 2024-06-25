@@ -95,7 +95,16 @@ public:
      */
     void show() final
     {
-        /* Nothing to do. */
+        int16_t y;
+        int16_t x;
+
+        for(y = 0; y < Board::LedMatrix::height; ++y)
+        {
+            for(x = 0; x < Board::LedMatrix::width; ++x)
+            {
+                m_panel.drawPixel(x, y, m_ledMatrix.getColor(x, y).to565());
+            }
+        }
     }
 
     /**
@@ -132,7 +141,6 @@ public:
      */
     void clear() final
     {
-        m_panel.fillScreen(ColorDef::BLACK);
         m_ledMatrix.fillScreen(ColorDef::BLACK);
     }
 
@@ -249,7 +257,6 @@ private:
      */
     void drawPixel(int16_t x, int16_t y, const Color& color) final
     {
-        m_panel.drawPixelRGB888(x, y, color.getRed(), color.getGreen(), color.getBlue());
         m_ledMatrix.drawPixel(x, y, color);
     }
 };
