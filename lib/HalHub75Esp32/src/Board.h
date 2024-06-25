@@ -157,7 +157,7 @@ namespace LedMatrix
     constexpr uint32_t  supplyCurrentMax    = CONFIG_SUPPLY_CURRENT;
 
     /** Max. current in mA per LED */
-    constexpr uint32_t  maxCurrentPerLed    = 60U;
+    constexpr uint32_t  maxCurrentPerLed    = 1U;
 
 };
 
