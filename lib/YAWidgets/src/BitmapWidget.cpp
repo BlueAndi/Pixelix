@@ -77,12 +77,29 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
     {
         Widget::operator=(widget);
         
-        m_imgType   = widget.m_imgType;
-        m_bitmap    = widget.m_bitmap;
-        m_gifPlayer = widget.m_gifPlayer;
+        m_imgType       = widget.m_imgType;
+        m_bitmap        = widget.m_bitmap;
+        m_gifPlayer     = widget.m_gifPlayer;
+        m_hAlign        = widget.m_hAlign;
+        m_hAlignPosX    = widget.m_hAlignPosX;
     }
 
     return *this;
+}
+
+void BitmapWidget::set(const YAGfxBitmap& bitmap)
+{
+    /* Release unused memory. */
+    m_bitmap.release();
+    m_gifPlayer.close();
+
+    if (true == m_bitmap.create(bitmap.getWidth(), bitmap.getHeight()))
+    {
+        m_bitmap.copy(bitmap);
+        m_imgType = IMG_TYPE_BMP;
+
+        alignWidget();
+    }
 }
 
 void BitmapWidget::clear(const Color& color)
@@ -133,6 +150,11 @@ bool BitmapWidget::load(FS& fs, const String& filename)
                 /* Not supported. */
                 ;
             }
+
+            if (true == isSuccessful)
+            {
+                alignWidget();
+            }
         }
     }
 
@@ -146,6 +168,46 @@ bool BitmapWidget::load(FS& fs, const String& filename)
 /******************************************************************************
  * Private Methods
  *****************************************************************************/
+
+void BitmapWidget::alignWidget()
+{
+    uint16_t imageWidth = 0;
+
+    switch(m_imgType)
+    {
+    case IMG_TYPE_NO_IMAGE:
+        break;
+
+    case IMG_TYPE_BMP:
+        imageWidth = m_bitmap.getWidth();
+        break;
+
+    case IMG_TYPE_GIF:
+        imageWidth = m_gifPlayer.getWidth();
+        break;
+
+    default:
+        break;
+    }
+
+    switch(m_hAlign)
+    {
+    case HALIGN_LEFT:
+        m_hAlignPosX = 0;
+        break;
+
+    case HALIGN_RIGHT:
+        m_hAlignPosX = m_canvas.getWidth() - imageWidth;
+        break;
+
+    case HALIGN_CENTER:
+        m_hAlignPosX = (m_canvas.getWidth() - imageWidth) / 2;
+        break;
+    
+    default:
+        break;
+    }
+}
 
 bool BitmapWidget::loadBMP(FS& fs, const String& filename)
 {

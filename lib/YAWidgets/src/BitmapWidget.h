@@ -79,7 +79,9 @@ public:
         Widget(WIDGET_TYPE, width, height, x, y),
         m_imgType(IMG_TYPE_NO_IMAGE),
         m_bitmap(),
-        m_gifPlayer()
+        m_gifPlayer(),
+        m_hAlign(HALIGN_LEFT),
+        m_hAlignPosX(0)
     {
     }
 
@@ -92,7 +94,9 @@ public:
         Widget(widget),
         m_imgType(widget.m_imgType),
         m_bitmap(widget.m_bitmap),
-        m_gifPlayer(widget.m_gifPlayer)
+        m_gifPlayer(widget.m_gifPlayer),
+        m_hAlign(widget.m_hAlign),
+        m_hAlignPosX(widget.m_hAlignPosX)
     {
     }
 
@@ -128,18 +132,7 @@ public:
      * 
      * @param[in] bitmap    Bitmap
      */
-    void set(const YAGfxBitmap& bitmap)
-    {
-        /* Release unused memory. */
-        m_bitmap.release();
-        m_gifPlayer.close();
-
-        if (true == m_bitmap.create(bitmap.getWidth(), bitmap.getHeight()))
-        {
-            m_bitmap.copy(bitmap);
-            m_imgType = IMG_TYPE_BMP;
-        }
-    }
+    void set(const YAGfxBitmap& bitmap);
 
     /**
      * Clear the image.
@@ -160,6 +153,25 @@ public:
      * @return If successful loaded it will return true otherwise false.
      */
     bool load(FS& fs, const String& filename);
+
+    /** Horizontal alignment. */
+    enum HAlign
+    {
+        HALIGN_LEFT = 0,    /**< Bitmap is left aligned to bitmap widget box. */
+        HALIGN_RIGHT,       /**< Bitmap is right aligned to bitmap widget box. */
+        HALIGN_CENTER       /**< Bitmap is center aligned to bitmap widget box. */
+    };
+
+    /**
+     * Set the horizontal alignment.
+     * 
+     * @param[in] align The horizontal aligment.
+     */
+    void setHorizontalAlignment(HAlign align)
+    {
+        m_hAlign = align;
+        alignWidget();
+    }
 
     /** Widget type string */
     static const char* WIDGET_TYPE;
@@ -189,6 +201,8 @@ private:
     ImgType             m_imgType;      /**< Current image type. */
     YAGfxDynamicBitmap  m_bitmap;       /**< Bitmap image. */
     GifImgPlayer        m_gifPlayer;    /**< GIF image player. */
+    HAlign              m_hAlign;       /**< Horizontal alignment. */
+    int16_t             m_hAlignPosX;   /**< x-coordinate derived from horizontal alignment. */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -199,7 +213,7 @@ private:
     {
         if (IMG_TYPE_BMP == m_imgType)
         {
-            gfx.drawBitmap(0, 0, m_bitmap);
+            gfx.drawBitmap(m_hAlignPosX, 0, m_bitmap);
         }
         else if (IMG_TYPE_GIF == m_imgType)
         {
@@ -210,6 +224,12 @@ private:
             ;
         }
     }
+
+    /**
+     * Align the widget dependend on the bitmap size.
+     * It will adapt the m_hAlignPosX.
+     */
+    void alignWidget();
 
     /**
      * Load BMP image from filesystem.
