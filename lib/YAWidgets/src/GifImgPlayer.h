@@ -149,6 +149,28 @@ public:
      */
     bool play(YAGfx& gfx);
 
+    /**
+     * Get image width.
+     * Note, the GIF must be opened, otherwise it will return 0.
+     * 
+     * @return Image width in pixels 
+     */
+    int16_t getWidth() const
+    {
+        return m_width;
+    }
+
+    /**
+     * Get image height.
+     * Note, the GIF must be opened, otherwise it will return 0.
+     * 
+     * @return Image height in pixels 
+     */
+    int16_t getHeight() const
+    {
+        return m_height;
+    }
+
 private:
 
     /**

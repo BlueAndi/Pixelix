@@ -472,6 +472,8 @@ void GifImgPlayer::cleanup()
     }
 
     m_bitmap.release();
+    m_width = 0U;
+    m_height = 0U;
 
     if (nullptr != m_imageDataBlock)
     {
