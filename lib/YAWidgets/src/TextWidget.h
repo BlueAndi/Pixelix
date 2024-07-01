@@ -89,16 +89,21 @@ public:
         Widget(WIDGET_TYPE, width, height, x, y),
         m_formatStr(),
         m_formatStrNew(),
-        m_formatStrTmp(),
+        m_fadeState(FADE_STATE_IDLE),
+        m_fadeBrightness(0U),
         m_scrollInfo(),
         m_scrollInfoNew(),
         m_isNewTextAvailable(false),
-        m_handleNewText(false),
         m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
         m_scrollingCnt(0U),
         m_scrollOffset(0),
         m_scrollTimer()
     {
+        /* Enable text wrap for multi-line text widget. */
+        if (1U < getLineCount())
+        {
+            m_gfxText.setTextWrap(true);
+        }
     }
 
     /**
@@ -114,16 +119,21 @@ public:
         Widget(WIDGET_TYPE, 0U, 0U, 0, 0),
         m_formatStr(str),
         m_formatStrNew(str),
-        m_formatStrTmp(),
+        m_fadeState(FADE_STATE_IDLE),
+        m_fadeBrightness(0U),
         m_scrollInfo(),
         m_scrollInfoNew(),
         m_isNewTextAvailable(false),
-        m_handleNewText(false),
         m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
         m_scrollingCnt(0U),
         m_scrollOffset(0),
         m_scrollTimer()
     {
+        /* Enable text wrap for multi-line text widget. */
+        if (1U < getLineCount())
+        {
+            m_gfxText.setTextWrap(true);
+        }
     }
 
     /**
@@ -135,11 +145,11 @@ public:
         Widget(widget),
         m_formatStr(widget.m_formatStr),
         m_formatStrNew(widget.m_formatStrNew),
-        m_formatStrTmp(widget.m_formatStrTmp),
+        m_fadeState(widget.m_fadeState),
+        m_fadeBrightness(widget.m_fadeBrightness),
         m_scrollInfo(widget.m_scrollInfo),
         m_scrollInfoNew(widget.m_scrollInfoNew),
         m_isNewTextAvailable(widget.m_isNewTextAvailable),
-        m_handleNewText(widget.m_handleNewText),
         m_gfxText(widget.m_gfxText),
         m_scrollingCnt(widget.m_scrollingCnt),
         m_scrollOffset(widget.m_scrollOffset),
@@ -167,11 +177,11 @@ public:
             
             m_formatStr             = widget.m_formatStr;
             m_formatStrNew          = widget.m_formatStrNew;
-            m_formatStrTmp          = widget.m_formatStrTmp;
+            m_fadeState             = widget.m_fadeState;
+            m_fadeBrightness        = widget.m_fadeBrightness;
             m_scrollInfo            = widget.m_scrollInfo;
             m_scrollInfoNew         = widget.m_scrollInfoNew;
             m_isNewTextAvailable    = widget.m_isNewTextAvailable;
-            m_handleNewText         = widget.m_handleNewText;
             m_gfxText               = widget.m_gfxText;
             m_scrollingCnt          = widget.m_scrollingCnt;
             m_scrollOffset          = widget.m_scrollOffset;
@@ -185,34 +195,17 @@ public:
      * Set the text string. It can contain format tags like:
      * - "#RRGGBB" Color information in RGB888 format
      * 
-     * Note: New text is always scrolled in and not immediate shown.
-     *       If you want to show it immediately, you will need to clear() it first.
-     * 
      * @param[in] formatStr String, which may contain format tags
      */
     void setFormatStr(const String& formatStr)
     {
         /* Avoid update if not necessary. */
-        if ((m_formatStr != formatStr) &&
-            (m_formatStrNew != formatStr))
+        if (((m_formatStr != formatStr) && (false == m_isNewTextAvailable)) ||
+            ((m_formatStrNew != formatStr) && (true == m_isNewTextAvailable)))
         {
-            /* If there is already a new text, which is not shown yet,
-             * skip this new text.
-             */
-            if (false == m_handleNewText)
-            {
-                m_formatStrNew          = formatStr;
-                m_isNewTextAvailable    = true;
-
-                m_formatStrTmp.clear();
-            }
-            else
-            {
-                m_formatStrTmp = formatStr;
-            }
+            m_formatStrNew          = formatStr;
+            m_isNewTextAvailable    = true;
         }
-
-        m_scrollingCnt = 0U;
     }
 
     /**
@@ -222,15 +215,12 @@ public:
     {
         m_formatStr.clear();
         m_formatStrNew.clear();
-        m_formatStrTmp.clear();
 
         m_isNewTextAvailable = false;
-        m_handleNewText = false;
 
         m_scrollInfo.isEnabled  = false;
         m_scrollInfo.offset     = 0;
         m_scrollInfo.offsetDest = 0;
-        m_scrollInfo.stopAtDest = false;
         m_scrollInfo.textWidth  = 0U;
     }
 
@@ -317,7 +307,8 @@ public:
     }
 
     /**
-     * Get scrolling informations.
+     * Get scrolling informations of latest set text.
+     * If a text is just set, it needs one cycle to have the scroll information ready.
      *
      * @param[out] isScrollingEnabled   Is scrolling enabled or not?
      * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
@@ -328,12 +319,11 @@ public:
     {
         bool status = false;
         
-        if ((false == m_isNewTextAvailable) &&
-            (false == m_handleNewText))
+        if (false == m_isNewTextAvailable)
         {
-            status              = true;
             isScrollingEnabled  = m_scrollInfoNew.isEnabled;
             scrollingCnt        = m_scrollingCnt;
+            status              = true;
         }
 
         return status;
@@ -359,41 +349,64 @@ public:
 
 private:
 
+    /** Fading brightness delta value per cycle. */
+    static const uint8_t    FADING_BRIGHTNESS_DELTA = 5U;
+
+    /** Fading brigthness low (darkest value). */
+    static const uint8_t    FADING_BRIGHTNESS_LOW   = 0U;
+
+    /** Fading brigthness high (brigthest value). */
+    static const uint8_t    FADING_BRIGHTNESS_HIGH  = 255U;
+
     /** Keyword handler method. */
     typedef bool (TextWidget::*KeywordHandler)(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const;
+
+    /**
+     * Fade state.
+     */
+    enum FadeState
+    {
+        FADE_STATE_IDLE = 0,    /**< No fading. */
+        FADE_STATE_OUT,         /**< Fading out. */
+        FADE_STATE_IN           /**< Fading in. */
+
+    };
 
     /**
      * Scroll information, used per text.
      */
     struct ScrollInfo
     {
-        bool        isEnabled;  /**< Is scrolling enabled? */
-        bool        stopAtDest; /**< Shall scrolling be stopped if offset destination reached? */
-        int16_t     offsetDest; /**< Offset destination in pixel */
-        int16_t     offset;     /**< Current offset in pixel */
-        uint16_t    textWidth;  /**< Text width in pixel */
+        bool        isEnabled;          /**< Is scrolling enabled? */
+        bool        isScrollingToLeft;  /**< Is text scrolling to left? Otherwise scrolling to top. */
+        int16_t     offsetDest;         /**< Offset destination in pixel */
+        int16_t     offset;             /**< Current offset in pixel */
+        uint16_t    textWidth;          /**< Text width in pixel */
+        uint16_t    textHeight;          /**< Text height in pixel */
 
         /**
          * Initializes scroll information.
          */
         ScrollInfo() :
             isEnabled(false),
-            stopAtDest(false),
+            isScrollingToLeft(true),
             offsetDest(0),
             offset(0),
-            textWidth(0U)
+            textWidth(0U),
+            textHeight(0U)
         {
         }
     };
 
     String          m_formatStr;            /**< Current shown string, which contains format tags. */
     String          m_formatStrNew;         /**< New text string, which contains format tags. */
-    String          m_formatStrTmp;         /**< Temporary formatted string. Used only as storage until a new text is completely taken over. */
+    FadeState       m_fadeState;            /**< The current fade state. Used to switch from old to new text. */
+    uint8_t         m_fadeBrightness;       /**< Brightness value used for fading. */
     ScrollInfo      m_scrollInfo;           /**< Scroll information */
     ScrollInfo      m_scrollInfoNew;        /**< Scroll information for the new text. */
     bool            m_isNewTextAvailable;   /**< Is new updated text available? */
-    bool            m_handleNewText;        /**< New text scroll information is determined, now it shall be handled. */
-    YAGfxText       m_gfxText;              /**< Current gfx for text */
+    YAGfxText       m_gfxText;              /**< GFX for current text. */
+    YAGfxText       m_gfxNewText;           /**< GFX for new text. */
     uint32_t        m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
     int16_t         m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
@@ -402,11 +415,66 @@ private:
     static uint32_t         m_scrollPause;          /**< Pause in ms, between each scroll movement. */
 
     /**
+     * Get the number of lines, which can be used by the text widget.
+     * 
+     * @return Number of lines
+     */
+    uint16_t getLineCount() const;
+
+    /**
+     * Can text be shown static or is scrolling required?
+     * 
+     * @param[in] gfx           Graphics interface
+     * @param[in] textBoxWidth  Text box width in pixel
+     * @param[in] textBoxHeight Text box height in pixel
+     * 
+     * @return If text can be shown static, it will return true otherwise false.
+     */
+    bool isStaticText(YAGfx& gfx, uint16_t textBoxWidth, uint16_t textBoxHeight) const;
+
+    /**
      * Checks new text and prepares the scroll information.
      * 
      * @param[in] gfx   The graphics functionality, necessary to determine text width and etc.
      */
     void prepareNewText(YAGfx& gfx);
+
+    /**
+     * Calculate the cursor start position depended on the scrolling direction.
+     * 
+     * @param[out] curX Cursor x-coordindate
+     * @param[out] curY Cursor y-coordinate
+     */
+    void calculateCursorPos(int16_t& curX, int16_t& curY) const;
+
+    /**
+     * Handle text without fading.
+     * 
+     * @param[in] gfx Graphic functionality
+     */
+    void handleFadeIdle(YAGfx& gfx);
+
+    /**
+     * Handle fading text out.
+     * 
+     * @param[in] gfx Graphic functionality
+     */
+    void handleFadeOut(YAGfx& gfx);
+
+    /**
+     * Handle fading text in.
+     * 
+     * @param[in] gfx Graphic functionality
+     */
+    void handleFadeIn(YAGfx& gfx);
+
+    /**
+     * Scroll the text depended on the scrolling direction.
+     * It will only update the scrolling offset.
+     * 
+     * @param[in] gfx Graphic functionality
+     */
+    void scrollText(YAGfx& gfx);
 
     /**
      * Paint the widget with the given graphics interface.

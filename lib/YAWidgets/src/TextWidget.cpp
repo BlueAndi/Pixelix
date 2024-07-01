@@ -87,121 +87,252 @@ uint32_t                    TextWidget::m_scrollPause       = TextWidget::DEFAUL
  * Private Methods
  *****************************************************************************/
 
+uint16_t TextWidget::getLineCount() const
+{
+    uint16_t lineCount = getHeight() / m_gfxText.getFont().getHeight();
+
+    if (0U == lineCount)
+    {
+        lineCount = 1U;
+    }
+
+    return lineCount;
+}
+
+bool TextWidget::isStaticText(YAGfx& gfx, uint16_t textBoxWidth, uint16_t textBoxHeight) const
+{
+    bool isStatic = false;
+
+    /* Single line text widget? */
+    if (1U >= getLineCount())
+    {
+        /* As long as the text box is smaller than the available width, 
+         * the text can be static shown (no scrolling).
+         */
+        if (gfx.getWidth() >= textBoxWidth)
+        {
+            isStatic = true;
+        }
+    }
+    /* Multi-line text widget */
+    else
+    {
+        /* As long as the text box is smaller than the available height, 
+         * the text can be static shown (no scrolling).
+         */
+        if (gfx.getHeight() >= textBoxHeight)
+        {
+            isStatic = true;
+        }
+    }
+
+    return isStatic;
+}
+
 void TextWidget::prepareNewText(YAGfx& gfx)
 {
-    const uint16_t  SCROLL_DISTANCE = gfx.getWidth() / 2U; /* Distance in pixel after a scrolling text starts to repeat. */
-    uint16_t        textWidth       = 0U;
-    uint16_t        textHeight      = 0U;
-    String          str             = removeFormatTags(m_formatStrNew);
+    uint16_t    textBoxWidth    = 0U;
+    uint16_t    textBoxHeight   = 0U;
+    String      newStr          = removeFormatTags(m_formatStrNew);
 
-    /* Get bounding box of the text, without any format tags. */
-    if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), str.c_str(), textWidth, textHeight))
+    /* Get bounding box of the new text, without any format tags. */
+    if (true == m_gfxText.getTextBoundingBox(gfx.getWidth(), newStr.c_str(), textBoxWidth, textBoxHeight))
     {
-        m_scrollInfoNew.textWidth   = textWidth;
-        m_handleNewText             = true;
+        m_scrollInfoNew.textWidth   = textBoxWidth;
+        m_scrollInfoNew.textHeight  = textBoxHeight;
 
-        /* Can new text be static shown or must it be scrolled? */
-        if (gfx.getWidth() >= m_scrollInfoNew.textWidth)
-        {
-            /* Static */
-            m_scrollInfoNew.isEnabled = false;
-        }
-        else
-        {
-            /* Scrolling */
-            m_scrollInfoNew.isEnabled = true;
-        }
+        /* Stop current scrolling. */
+        m_scrollTimer.stop();
+        m_scrollingCnt = 0U;
 
-        /* Handle the following scenarios:
-         * +==============+==============+
-         * | Current text | New text     |
-         * +==============+==============+
-         * | Static       | Static       | --> Show new text immediately, no scrolling.
-         * +--------------+--------------+
-         * | Static       | Scrolling    | --> Scroll current text out and new one in.
-         * +--------------+--------------+
-         * | Scrolling    | Static       | --> Scroll current text out, new one in and stop scrolling at the end.
-         * +--------------+--------------+
-         * | Scrolling    | Scrolling    | --> Continue scrolling and just scroll new one in.
-         * +--------------+--------------+
+        /* Scenarios:
+         *
+         * - Independed of number of text widget lines:
+         *     - Old text is faded out.
+         *     - Static text is shown after faded in.
+         * 
+         * - Single line text widget:
+         *     - Scrolling direction is from left to right.
+         *     - Start scrolling outside of canvas.
+         * 
+         * - Multi-line text widget:
+         *     - Scrolling direction is from bottom to top.
+         *     - Start scrolling outside of canvas.
          */
 
-        /* Is current text static shown? */
-        if (false == m_scrollInfo.isEnabled)
+        /* No fading active? */
+        if (FADE_STATE_IDLE == m_fadeState)
         {
-            /* Can new text be static shown?
-             * If yes, it will jump immediately in.
-             */
-            if (false == m_scrollInfoNew.isEnabled)
+            /* If no text is shown, fade in immediately. */
+            if (true == m_formatStr.isEmpty())
             {
-                /* New text is kept static. */
-                m_scrollInfoNew.stopAtDest  = false;
-                m_scrollInfoNew.offsetDest  = 0;
-                m_scrollInfoNew.offset      = 0;
-
-                /* Immediate take over. */
-                m_formatStr     = m_formatStrNew;
-                m_scrollInfo    = m_scrollInfoNew;
-                m_handleNewText = false;
+                LOG_INFO("FADE_STATE_IN: %s", m_formatStrNew.c_str());
+                m_fadeState         = FADE_STATE_IN;
+                m_fadeBrightness    = FADING_BRIGHTNESS_LOW;
             }
             else
-            /* New text will be scrolling, starting outside the display. */
             {
-                /* The current text shall scroll out. */
-                m_scrollInfo.isEnabled  = true;
-                m_scrollInfo.offsetDest = -m_scrollInfo.textWidth;
-                m_scrollInfo.offset     = 0;
-
-                /* The next text shall scroll in. */
-                m_scrollInfoNew.stopAtDest  = false;
-                m_scrollInfoNew.offsetDest  = 0;
-                m_scrollInfoNew.offset      = m_scrollInfo.offset + m_scrollInfo.textWidth + SCROLL_DISTANCE;
-
-                /* Avoid that the new text is jumping in, instead of scrolling in. */
-                if (gfx.getWidth() > m_scrollInfoNew.offset)
-                {
-                    m_scrollInfoNew.offset = gfx.getWidth();
-                }
-
-                /* Because the scroll timer is stopped, it must be enabled again. */
-                m_scrollTimer.start(0U);
+                LOG_INFO("FADE_STATE_OUT: %s", m_formatStr.c_str());
+                m_fadeState         = FADE_STATE_OUT;
+                m_fadeBrightness    = FADING_BRIGHTNESS_HIGH;
             }
         }
-        /* Current text is scrolling. */
+        /* Fading in active? */
+        else if (FADE_STATE_IN == m_fadeState)
+        {
+            LOG_INFO("FADE_STATE_OUT: %s", m_formatStr.c_str());
+            /* Take over fade brightness. */
+            m_fadeState = FADE_STATE_OUT;
+        }
+        /* Fading out active. */
         else
         {
-            /* Can new text be static shown? */
-            if (false == m_scrollInfoNew.isEnabled)
-            {
-                /* New text will be scrolling in and then static shown.
-                 * If the current text is near the end, the new text will start outside the display.
-                 */
-                m_scrollInfoNew.isEnabled   = true;
-                m_scrollInfoNew.stopAtDest  = true;
-                m_scrollInfoNew.offsetDest  = 0;
-                m_scrollInfoNew.offset      = m_scrollInfo.offset + m_scrollInfo.textWidth + SCROLL_DISTANCE;
+            /* Just continoue to fade out. */
+        }
 
-                /* Avoid that the new text is jumping in, instead of scrolling in. */
-                if (gfx.getWidth() > m_scrollInfoNew.offset)
-                {
-                    m_scrollInfoNew.offset = gfx.getWidth();
-                }
-            }
-            else
-            /* New text will be scrolling, starting right after current scrolling text.
-             * If the current text is near the end, the new text will start outside the display.
-             */
-            {
-                m_scrollInfoNew.stopAtDest  = false;
-                m_scrollInfoNew.offsetDest  = 0;
-                m_scrollInfoNew.offset      = m_scrollInfo.offset + m_scrollInfo.textWidth + SCROLL_DISTANCE;
+        /* Can new text be static (no scrolling) shown? */
+        if (true == isStaticText(gfx, textBoxWidth, textBoxHeight))
+        {
+            /* New text is kept static. */
+            m_scrollInfoNew.isEnabled   = false;
+            m_scrollInfoNew.offsetDest  = 0;
+            m_scrollInfoNew.offset      = 0;
+        }
+        /* If single line text widget, the current text will be scrolled
+         * to the left and the new text scrolled in from right.
+         */
+        else if (1U == getLineCount())
+        {
+            /* The new text shall scroll in. */
+            m_scrollInfoNew.isEnabled           = true;
+            m_scrollInfoNew.isScrollingToLeft   = true;
+            m_scrollInfoNew.offsetDest          = -m_scrollInfoNew.textWidth;
+            m_scrollInfoNew.offset              = gfx.getWidth();
+        }
+        /* In multi-line text widget the current text will be scrolled
+         * to the top and the new text scrolled in from bottom.
+         */
+        else
+        {
+            /* The new text shall scroll in. */
+            m_scrollInfoNew.isEnabled           = true;
+            m_scrollInfoNew.isScrollingToLeft   = false;
+            m_scrollInfoNew.offsetDest          = -m_scrollInfoNew.textHeight;
+            m_scrollInfoNew.offset              = gfx.getHeight();
+        }
+    }
+}
 
-                /* Avoid that the new text is jumping in, instead of scrolling in. */
-                if (gfx.getWidth() > m_scrollInfoNew.offset)
-                {
-                    m_scrollInfoNew.offset = gfx.getWidth();
-                }
-            }
+void TextWidget::calculateCursorPos(int16_t& curX, int16_t& curY) const
+{
+    if (true == m_scrollInfo.isScrollingToLeft)
+    {
+        curX = m_scrollInfo.offset;
+        curY = m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
+    }
+    else
+    {
+        curX = 0;
+        curY = m_scrollInfo.offset;
+    }
+}
+
+void TextWidget::handleFadeIdle(YAGfx& gfx)
+{
+    int16_t cursorX = 0;
+    int16_t cursorY = 0;
+    
+    calculateCursorPos(cursorX, cursorY);
+
+    /* Show current text. */
+    m_gfxText.setTextCursorPos(cursorX, cursorY);
+    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
+}
+
+void TextWidget::handleFadeOut(YAGfx& gfx)
+{
+    Color   textColor   = m_gfxText.getTextColor();
+    int16_t cursorX     = 0;
+    int16_t cursorY     = 0;
+    
+    calculateCursorPos(cursorX, cursorY);
+
+    if (FADING_BRIGHTNESS_LOW < m_fadeBrightness)
+    {
+        if (FADING_BRIGHTNESS_DELTA <= m_fadeBrightness)
+        {
+            m_fadeBrightness -= FADING_BRIGHTNESS_DELTA;
+        }
+        else
+        {
+            m_fadeBrightness = FADING_BRIGHTNESS_LOW;
+        }
+
+        textColor.setIntensity(m_fadeBrightness);
+        m_gfxText.setTextColor(textColor);
+    }
+    
+    /* Show current text. */
+    m_gfxText.setTextCursorPos(cursorX, cursorY);
+    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
+}
+
+void TextWidget::handleFadeIn(YAGfx& gfx)
+{
+    Color   textColor   = m_gfxText.getTextColor();
+    int16_t cursorX     = 0;
+    int16_t cursorY     = 0;
+    
+    calculateCursorPos(cursorX, cursorY);
+
+    if (FADING_BRIGHTNESS_HIGH > m_fadeBrightness)
+    {
+        if ((FADING_BRIGHTNESS_HIGH - FADING_BRIGHTNESS_DELTA) >= m_fadeBrightness)
+        {
+            m_fadeBrightness += FADING_BRIGHTNESS_DELTA;
+        }
+        else
+        {
+            m_fadeBrightness = FADING_BRIGHTNESS_HIGH;
+        }
+
+        textColor.setIntensity(m_fadeBrightness);
+        m_gfxText.setTextColor(textColor);
+    }
+    
+    /* Show current text. */
+    m_gfxText.setTextCursorPos(cursorX, cursorY);
+    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
+}
+
+void TextWidget::scrollText(YAGfx& gfx)
+{
+    /* Handle scrolling text. */
+    if (m_scrollInfo.offsetDest < m_scrollInfo.offset)
+    {
+        --m_scrollInfo.offset;
+    }
+    else if (m_scrollInfo.offsetDest > m_scrollInfo.offset)
+    {
+        ++m_scrollInfo.offset;
+    }
+    else
+    {
+        /* Left to right scrolling. */
+        if (true == m_scrollInfo.isScrollingToLeft)
+        {
+            m_scrollInfo.offset = gfx.getWidth();
+        }
+        /* Bottom to top scrolling? */
+        else
+        {
+            m_scrollInfo.offset = gfx.getHeight();
+        }
+
+        /* Count number of times the text was scrolled complete. */
+        if (UINT32_MAX > m_scrollingCnt)
+        {
+            ++m_scrollingCnt;
         }
     }
 }
@@ -217,103 +348,52 @@ void TextWidget::paint(YAGfx& gfx)
         m_isNewTextAvailable = false;
     }
 
-    /* Show current text. */
-    m_gfxText.setTextCursorPos(m_scrollInfo.offset, cursorY);
-    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
-
-    /* Show new text. */
-    if (true == m_handleNewText)
+    switch(m_fadeState)
     {
-        m_gfxText.setTextCursorPos(m_scrollInfoNew.offset, cursorY);
-        show(gfx, m_formatStrNew, m_scrollInfoNew.isEnabled);
+    case FADE_STATE_IDLE:
+        handleFadeIdle(gfx);
+        break;
+
+    case FADE_STATE_OUT:
+        handleFadeOut(gfx);
+
+        if (FADING_BRIGHTNESS_LOW == m_fadeBrightness)
+        {
+            LOG_INFO("FADE_STATE_IN: %s", m_formatStrNew.c_str());
+            m_fadeState = FADE_STATE_IN;
+        }
+        break;
+
+    case FADE_STATE_IN:
+        /* Take new string over? */
+        if (FADING_BRIGHTNESS_LOW == m_fadeBrightness)
+        {
+            m_formatStr     = m_formatStrNew;
+            m_scrollInfo    = m_scrollInfoNew;
+
+            if (true == m_scrollInfo.isEnabled)
+            {
+                m_scrollTimer.start(m_scrollPause);
+            }
+        }
+
+        handleFadeIn(gfx);
+
+        if (FADING_BRIGHTNESS_HIGH == m_fadeBrightness)
+        {
+            LOG_INFO("FADE_STATE_IDLE: %s", m_formatStr.c_str());
+            m_fadeState = FADE_STATE_IDLE;
+        }
+        break;
+
+    default:
+        break;
     }
 
     /* Is it time to scroll the text(s) again? */
     if (true == m_scrollTimer.isTimeout())
     {
-        /* Handle scrolling text. */
-        if (m_scrollInfo.offsetDest < m_scrollInfo.offset)
-        {
-            --m_scrollInfo.offset;
-        }
-        else if (m_scrollInfo.offsetDest > m_scrollInfo.offset)
-        {
-            ++m_scrollInfo.offset;
-        }
-        else if (false == m_handleNewText)
-        {
-            m_scrollInfo.offset = gfx.getWidth();
-            
-            ++m_scrollingCnt;
-        }
-        else
-        {
-            /* Wait till new text is at destination position. */
-            ;
-        }
-
-        /* Handle scrolling new text. */
-        if (true == m_handleNewText)
-        {
-            if (m_scrollInfoNew.offsetDest < m_scrollInfoNew.offset)
-            {
-                --m_scrollInfoNew.offset;
-            }
-            else if (m_scrollInfoNew.offsetDest > m_scrollInfoNew.offset)
-            {
-                ++m_scrollInfoNew.offset;
-            }
-            else
-            {
-                m_handleNewText = false;
-                m_formatStr     = m_formatStrNew;
-                m_scrollingCnt  = 0U;
-
-                /* Any additional new format string available? */
-                if (false == m_formatStrTmp.isEmpty())
-                {
-                    m_formatStrNew          = m_formatStrTmp;
-                    m_isNewTextAvailable    = true;
-
-                    m_formatStrTmp.clear();
-                }
-
-                /* If the new text can be shown static, it must be stopped scrolling  now. */
-                if (true == m_scrollInfoNew.stopAtDest)
-                {
-                    m_scrollInfoNew.isEnabled   = false;
-                    m_scrollInfoNew.stopAtDest  = false;
-                }
-
-                /* Show new text static? */
-                if (false == m_scrollInfoNew.isEnabled)
-                {
-                    m_scrollInfo.isEnabled  = false;
-                    m_scrollInfo.stopAtDest = false;
-                    m_scrollInfo.offsetDest = 0;
-                    m_scrollInfo.offset     = 0;
-                    m_scrollInfo.textWidth  = m_scrollInfoNew.textWidth;
-                }
-                else
-                /* Continue scrolling with new text. */
-                {
-                    m_scrollInfo.isEnabled  = true;
-                    m_scrollInfo.stopAtDest = false;
-                    m_scrollInfo.offsetDest = -m_scrollInfoNew.textWidth;
-                    m_scrollInfo.offset     = m_scrollInfoNew.offset - 1;   /* Because new text is already at most left position, decrease one pixel to avoid a short stumble. */
-                    m_scrollInfo.textWidth  = m_scrollInfoNew.textWidth;
-                }
-            }
-        }
-
-        if (false == m_scrollInfo.isEnabled)
-        {
-            m_scrollTimer.stop();
-        }
-        else
-        {
-            m_scrollTimer.start(m_scrollPause);
-        }
+        scrollText(gfx);
     }
 }
 
@@ -468,6 +548,9 @@ bool TextWidget::handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, cons
                 (nullptr != gfx) &&
                 (nullptr != gfxText))
             {
+                Color textColor = colorRGB888;
+
+                textColor.setIntensity(m_fadeBrightness);
                 gfxText->setTextColor(colorRGB888);
             }
 
