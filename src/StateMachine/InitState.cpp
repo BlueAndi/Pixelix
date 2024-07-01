@@ -274,7 +274,7 @@ void InitState::entry(StateMachine& sm)
         /* Show a warning in case the filesystem may not be compatible to the firmware version. */
         if (false == isFsCompatible())
         {
-            const uint32_t  DURATION_NON_SCROLLING  = 3000U; /* ms */
+            const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
             const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
             const uint32_t  DURATION_PAUSE          = 500U; /* ms */
             const uint32_t  SCROLLING_NO_REPEAT     = 0U;
@@ -498,7 +498,7 @@ void InitState::showStartupInfoOnSerial()
 
 void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
 {
-    const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
+    const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
     const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
     const uint32_t  DURATION_PAUSE          = 500U; /* ms */
     const uint32_t  SCROLLING_NO_REPEAT     = 0U;

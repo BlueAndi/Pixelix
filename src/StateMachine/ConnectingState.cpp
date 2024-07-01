@@ -123,10 +123,10 @@ void ConnectingState::process(StateMachine& sm)
     /* No retry mechanism is running? */
     if (false == m_retryTimer.isTimerRunning())
     {
-        const uint32_t  DURATION_NON_SCROLLING  = 2000U; /* ms */
+        const uint32_t  DURATION_NON_SCROLLING  = 4000U; /* ms */
         const uint32_t  SCROLLING_REPEAT_NUM    = 1U;
-        wl_status_t status      = WL_IDLE_STATUS;
-        String      infoStr     = "Connecting to ";
+        wl_status_t     status                  = WL_IDLE_STATUS;
+        String          infoStr                 = "Connecting to ";
 
         infoStr += m_wifiSSID;
         infoStr += ".";
