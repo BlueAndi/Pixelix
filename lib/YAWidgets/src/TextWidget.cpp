@@ -36,7 +36,6 @@
 
 #include <Fonts.h>
 #include <Util.h>
-#include <Logging.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -166,13 +165,11 @@ void TextWidget::prepareNewText(YAGfx& gfx)
             /* If no text is shown, fade in immediately. */
             if (true == m_formatStr.isEmpty())
             {
-                LOG_INFO("FADE_STATE_IN: %s", m_formatStrNew.c_str());
                 m_fadeState         = FADE_STATE_IN;
                 m_fadeBrightness    = FADING_BRIGHTNESS_LOW;
             }
             else
             {
-                LOG_INFO("FADE_STATE_OUT: %s", m_formatStr.c_str());
                 m_fadeState         = FADE_STATE_OUT;
                 m_fadeBrightness    = FADING_BRIGHTNESS_HIGH;
             }
@@ -180,7 +177,6 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         /* Fading in active? */
         else if (FADE_STATE_IN == m_fadeState)
         {
-            LOG_INFO("FADE_STATE_OUT: %s", m_formatStr.c_str());
             /* Take over fade brightness. */
             m_fadeState = FADE_STATE_OUT;
         }
@@ -359,7 +355,6 @@ void TextWidget::paint(YAGfx& gfx)
 
         if (FADING_BRIGHTNESS_LOW == m_fadeBrightness)
         {
-            LOG_INFO("FADE_STATE_IN: %s", m_formatStrNew.c_str());
             m_fadeState = FADE_STATE_IN;
         }
         break;
@@ -381,7 +376,6 @@ void TextWidget::paint(YAGfx& gfx)
 
         if (FADING_BRIGHTNESS_HIGH == m_fadeBrightness)
         {
-            LOG_INFO("FADE_STATE_IDLE: %s", m_formatStr.c_str());
             m_fadeState = FADE_STATE_IDLE;
         }
         break;
