@@ -240,6 +240,16 @@ public:
     }
 
     /**
+     * Get font.
+     *
+     * @return Font which is used.
+     */
+    const BaseFont<TColor>& getFont() const
+    {
+        return m_font;
+    }
+
+    /**
      * Set font.
      *
      * @param[in] font  New font to set.
@@ -387,7 +397,7 @@ public:
     {
         size_t idx = 0U;
 
-        if (nullptr == m_font)
+        if (nullptr == m_font.getGfxFont())
         {
             return;
         }
