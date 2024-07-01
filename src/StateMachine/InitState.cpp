@@ -540,7 +540,7 @@ void InitState::welcome(IPluginMaintenance* plugin)
     if (nullptr != welcomePlugin)
     {
         (void)welcomePlugin->loadIcon("/images/smiley.bmp");
-        welcomePlugin->setText("Hello World!");
+        welcomePlugin->setText("\\calignHello World!");
     }
 }
 
