@@ -388,6 +388,7 @@ void TextWidget::paint(YAGfx& gfx)
     if (true == m_scrollTimer.isTimeout())
     {
         scrollText(gfx);
+        m_scrollTimer.restart();
     }
 }
 
