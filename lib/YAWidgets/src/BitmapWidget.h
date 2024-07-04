@@ -48,6 +48,7 @@
 
 #include "Widget.hpp"
 #include "GifImgPlayer.h"
+#include "Alignment.h"
 
 /******************************************************************************
  * Macros
@@ -80,8 +81,10 @@ public:
         m_imgType(IMG_TYPE_NO_IMAGE),
         m_bitmap(),
         m_gifPlayer(),
-        m_hAlign(HALIGN_LEFT),
-        m_hAlignPosX(0)
+        m_hAlign(Alignment::Horizontal::HORIZONTAL_LEFT),
+        m_vAlign(Alignment::Vertical::VERTICAL_TOP),
+        m_hAlignPosX(0),
+        m_vAlignPosY(0)
     {
     }
 
@@ -96,7 +99,9 @@ public:
         m_bitmap(widget.m_bitmap),
         m_gifPlayer(widget.m_gifPlayer),
         m_hAlign(widget.m_hAlign),
-        m_hAlignPosX(widget.m_hAlignPosX)
+        m_vAlign(widget.m_vAlign),
+        m_hAlignPosX(widget.m_hAlignPosX),
+        m_vAlignPosY(widget.m_vAlignPosY)
     {
     }
 
@@ -154,22 +159,25 @@ public:
      */
     bool load(FS& fs, const String& filename);
 
-    /** Horizontal alignment. */
-    enum HAlign
-    {
-        HALIGN_LEFT = 0,    /**< Bitmap is left aligned to bitmap widget box. */
-        HALIGN_RIGHT,       /**< Bitmap is right aligned to bitmap widget box. */
-        HALIGN_CENTER       /**< Bitmap is center aligned to bitmap widget box. */
-    };
-
     /**
      * Set the horizontal alignment.
      * 
      * @param[in] align The horizontal aligment.
      */
-    void setHorizontalAlignment(HAlign align)
+    void setHorizontalAlignment(Alignment::Horizontal align)
     {
         m_hAlign = align;
+        alignWidget();
+    }
+
+    /**
+     * Set the vertical alignment.
+     * 
+     * @param[in] align The vertical aligment.
+     */
+    void setVerticalAlignment(Alignment::Vertical align)
+    {
+        m_vAlign = align;
         alignWidget();
     }
 
@@ -198,11 +206,13 @@ private:
         IMG_TYPE_GIF            /**< GIF image */
     };
 
-    ImgType             m_imgType;      /**< Current image type. */
-    YAGfxDynamicBitmap  m_bitmap;       /**< Bitmap image. */
-    GifImgPlayer        m_gifPlayer;    /**< GIF image player. */
-    HAlign              m_hAlign;       /**< Horizontal alignment. */
-    int16_t             m_hAlignPosX;   /**< x-coordinate derived from horizontal alignment. */
+    ImgType                 m_imgType;      /**< Current image type. */
+    YAGfxDynamicBitmap      m_bitmap;       /**< Bitmap image. */
+    GifImgPlayer            m_gifPlayer;    /**< GIF image player. */
+    Alignment::Horizontal   m_hAlign;       /**< Horizontal alignment. */
+    Alignment::Vertical     m_vAlign;       /**< Vertical alignment. */
+    int16_t                 m_hAlignPosX;   /**< x-coordinate derived from horizontal alignment. */
+    int16_t                 m_vAlignPosY;   /**< y-coordinate derived from vertical alignment. */
 
     /**
      * Paint the widget with the given graphics interface.
@@ -213,11 +223,11 @@ private:
     {
         if (IMG_TYPE_BMP == m_imgType)
         {
-            gfx.drawBitmap(m_hAlignPosX, 0, m_bitmap);
+            gfx.drawBitmap(m_hAlignPosX, m_vAlignPosY, m_bitmap);
         }
         else if (IMG_TYPE_GIF == m_imgType)
         {
-            (void)m_gifPlayer.play(gfx);
+            (void)m_gifPlayer.play(gfx, m_hAlignPosX, m_vAlignPosY);
         }
         else
         {
@@ -227,7 +237,7 @@ private:
 
     /**
      * Align the widget dependend on the bitmap size.
-     * It will adapt the m_hAlignPosX.
+     * It will adapt the m_hAlignPosX and m_vAlignPosY.
      */
     void alignWidget();
 

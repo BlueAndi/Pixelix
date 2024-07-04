@@ -81,7 +81,9 @@ BitmapWidget& BitmapWidget::operator=(const BitmapWidget& widget)
         m_bitmap        = widget.m_bitmap;
         m_gifPlayer     = widget.m_gifPlayer;
         m_hAlign        = widget.m_hAlign;
+        m_vAlign        = widget.m_vAlign;
         m_hAlignPosX    = widget.m_hAlignPosX;
+        m_vAlignPosY    = widget.m_vAlignPosY;
     }
 
     return *this;
@@ -171,7 +173,8 @@ bool BitmapWidget::load(FS& fs, const String& filename)
 
 void BitmapWidget::alignWidget()
 {
-    uint16_t imageWidth = 0;
+    uint16_t imageWidth     = 0U;
+    uint16_t imageHeight    = 0U;
 
     switch(m_imgType)
     {
@@ -179,11 +182,13 @@ void BitmapWidget::alignWidget()
         break;
 
     case IMG_TYPE_BMP:
-        imageWidth = m_bitmap.getWidth();
+        imageWidth  = m_bitmap.getWidth();
+        imageHeight = m_bitmap.getHeight();
         break;
 
     case IMG_TYPE_GIF:
-        imageWidth = m_gifPlayer.getWidth();
+        imageWidth  = m_gifPlayer.getWidth();
+        imageHeight = m_gifPlayer.getHeight();
         break;
 
     default:
@@ -192,16 +197,34 @@ void BitmapWidget::alignWidget()
 
     switch(m_hAlign)
     {
-    case HALIGN_LEFT:
+    case Alignment::Horizontal::HORIZONTAL_LEFT:
         m_hAlignPosX = 0;
         break;
 
-    case HALIGN_RIGHT:
+    case Alignment::Horizontal::HORIZONTAL_CENTER:
+        m_hAlignPosX = (m_canvas.getWidth() - imageWidth) / 2;
+        break;
+
+    case Alignment::Horizontal::HORIZONTAL_RIGHT:
         m_hAlignPosX = m_canvas.getWidth() - imageWidth;
         break;
 
-    case HALIGN_CENTER:
-        m_hAlignPosX = (m_canvas.getWidth() - imageWidth) / 2;
+    default:
+        break;
+    }
+
+    switch(m_vAlign)
+    {
+    case Alignment::Vertical::VERTICAL_TOP:
+        m_vAlignPosY = 0;
+        break;
+
+    case Alignment::Vertical::VERTICAL_CENTER:
+        m_vAlignPosY = (m_canvas.getHeight() - imageHeight) / 2;
+        break;
+
+    case Alignment::Vertical::VERTICAL_BOTTOM:
+        m_vAlignPosY = m_canvas.getHeight() - imageHeight;
         break;
     
     default:
