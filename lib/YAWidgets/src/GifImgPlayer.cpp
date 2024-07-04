@@ -70,8 +70,11 @@
 /** GIF signature */
 static const char*  GIF_SIGNATURE   = "GIF"; /* 3 byte signature, incl. string termination. */
 
-/** Supported GIF version */
-static const char*  GIF_VERSION     = "89a"; /* 3 byte version, incl. string termination. */
+/** Supported GIF version 87a */
+static const char*  GIF_VERSION_87A = "87a"; /* 3 byte version, incl. string termination. */
+
+/** Supported GIF version 89a */
+static const char*  GIF_VERSION_89A = "89a"; /* 3 byte version, incl. string termination. */
 
 /**
  * The main block ids.
@@ -527,13 +530,25 @@ bool GifImgPlayer::isFileSupported(const GifFileHeader& header) const
 
     if (true == isSupported)
     {
+        bool isVersion89ASupported = true;
+        bool isVersion87ASupported = true;
+
         for(index = 0U; index < sizeof(header.version); ++index)
         {
-            if (GIF_VERSION[index] != header.version[index])
+            if (GIF_VERSION_89A[index] != header.version[index])
             {
-                isSupported = false;
-                break;
+                isVersion89ASupported = false;
             }
+
+            if (GIF_VERSION_87A[index] != header.version[index])
+            {
+                isVersion87ASupported = false;
+            }
+        }
+
+        if ((false == isVersion89ASupported) && (false == isVersion87ASupported))
+        {
+            isSupported = false;
         }
     }
 
