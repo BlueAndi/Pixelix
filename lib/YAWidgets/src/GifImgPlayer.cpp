@@ -329,7 +329,7 @@ void GifImgPlayer::close()
     cleanup();
 }
 
-bool GifImgPlayer::play(YAGfx& gfx)
+bool GifImgPlayer::play(YAGfx& gfx, int16_t x, int16_t y)
 {
     bool isSuccessful = true;
 
@@ -342,14 +342,14 @@ bool GifImgPlayer::play(YAGfx& gfx)
     else if (true == m_isFinished)
     {
         /* Redraw last scene. */
-        gfx.drawBitmap(0, 0, m_bitmap);
+        gfx.drawBitmap(x, y, m_bitmap);
     }
     /* Delay? */
     else if ((true == m_timer.isTimerRunning()) &&
              (false == m_timer.isTimeout()))
     {
         /* Redraw last scene. */
-        gfx.drawBitmap(0, 0, m_bitmap);
+        gfx.drawBitmap(x, y, m_bitmap);
     }
     else
     {
@@ -377,7 +377,7 @@ bool GifImgPlayer::play(YAGfx& gfx)
                 if (true == isSuccessful)
                 {
                     /* Draw new scene. */
-                    gfx.drawBitmap(0, 0, m_bitmap);
+                    gfx.drawBitmap(x, y, m_bitmap);
 
                     /* Animation? */
                     if (true == m_isAnimation)

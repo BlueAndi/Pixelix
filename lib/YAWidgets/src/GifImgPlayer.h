@@ -143,11 +143,16 @@ public:
      * Call it periodically to support animations. The timing of the
      * image changes will be handled internally.
      * 
+     * With coordinates in the parent canvas, the image position can be
+     * manipulated.
+     * 
      * @param[in] gfx   Graphic functions of the parent canvas.
+     * @param[in] x     x-coordinate of the parent canvas.
+     * @param[in] y     y-coordinate of the parent canvas.
      * 
      * @return If successful, it will return true otherwise false.
      */
-    bool play(YAGfx& gfx);
+    bool play(YAGfx& gfx, int16_t x = 0, int16_t y = 0);
 
     /**
      * Get image width.
