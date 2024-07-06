@@ -25,15 +25,15 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  CanvasTextPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
  * @{
  */
 
-#ifndef WIFI_STATUS_PLUGIN_VIEW_H
-#define WIFI_STATUS_PLUGIN_VIEW_H
+#ifndef CANVAS_TEXT_PLUGIN_VIEW_H
+#define CANVAS_TEXT_PLUGIN_VIEW_H
 
 /******************************************************************************
  * Compile Switches
@@ -42,16 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <CanvasTextViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -61,10 +52,76 @@
  * Types and Classes
  *****************************************************************************/
 
+/** Internal plugin functionality. */
+namespace _WifiStatusPlugin
+{
+
+/**
+ * CanvasTextPlugin view.
+ */
+class View : public CanvasTextViewBase
+{
+public:
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        CanvasTextViewBase()
+    {
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+    /**
+     * Update wifi status.
+     *
+     * @param[in] quality   Signal quality in percent [0; 100].
+     */
+    void updateWifiStatus(uint8_t quality);
+
+private:
+
+    /**
+     * Number of signal signal strength bars.
+     */
+    static const uint8_t    WIFI_BARS               = 4U;
+
+    /**
+     * Number of spaces between bars.
+     */
+    static const uint8_t    WIFI_BAR_SPACES         = WIFI_BARS - 1U;
+
+    /**
+     * Width in pixel of a single signal strength bar.
+     */
+    static const uint16_t   WIFI_BAR_WIDTH          = (2U * CANVAS_WIDTH) / (2U * WIFI_BARS + WIFI_BAR_SPACES);
+
+    /**
+     * Width in pixel of a bar space. It shall be half of the bar width.
+     */
+    static const uint16_t   WIFI_BAR_SPACE_WIDTH    = WIFI_BAR_WIDTH / 2U;
+
+    /**
+     * Height in pixel of the lowest signal strength bar.
+     */
+    static const uint16_t   WIFI_BAR_HEIGHT         = CANVAS_HEIGHT / 4U;
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _WifiStatusPlugin */
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* WIFI_STATUS_PLUGIN_VIEW_H */
+#endif  /* CANVAS_TEXT_PLUGIN_VIEW_H */
 
 /** @} */

@@ -25,15 +25,15 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  IconTextLampPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
  * @{
  */
 
-#ifndef ICON_TEXT_LAMP_PLUGIN_VIEW_H
-#define ICON_TEXT_LAMP_PLUGIN_VIEW_H
+#ifndef ICON_TEXT_PLUGIN_VIEW_H
+#define ICON_TEXT_PLUGIN_VIEW_H
 
 /******************************************************************************
  * Compile Switches
@@ -42,16 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <IconTextLampViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -61,10 +52,44 @@
  * Types and Classes
  *****************************************************************************/
 
+/** Internal plugin functionality. */
+namespace _IconTextLampPlugin
+{
+
+/**
+ * IconTextLampPlugin view.
+ */
+class View : public IconTextLampViewBase
+{
+public:
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        IconTextLampViewBase()
+    {
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+private:
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _IconTextLampPlugin */
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* ICON_TEXT_LAMP_PLUGIN_VIEW_H */
+#endif  /* ICON_TEXT_PLUGIN_VIEW_H */
 
 /** @} */

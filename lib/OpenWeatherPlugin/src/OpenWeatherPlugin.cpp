@@ -94,10 +94,10 @@ const char* OpenWeatherPlugin::TOPIC_CONFIG             = "/weather";
 /** UV-index table */
 static const UvIndexElem uvIndexTable[] =
 {
-    { 0U,   3U,     "\\#c0ffa0" },
-    { 3U,   6U,     "\\#f8f140" },
-    { 6U,   8U,     "\\#f77820" },
-    { 8U,   11U,    "\\#d80020" }
+    { 0U,   3U,     "{#c0ffa0}" },
+    { 3U,   6U,     "{#f8f140}" },
+    { 6U,   8U,     "{#f77820}" },
+    { 8U,   11U,    "{#d80020}" }
 };
 
 /******************************************************************************
@@ -541,7 +541,7 @@ bool OpenWeatherPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 const char* OpenWeatherPlugin::uvIndexToColor(uint8_t uvIndex)
 {
     uint8_t     idx     = 0U;
-    const char* color   = "\\#a80081"; /* Default color */
+    const char* color   = "{#a80081}"; /* Default color */
 
     while(UTIL_ARRAY_NUM(uvIndexTable) > idx)
     {
@@ -634,17 +634,17 @@ void OpenWeatherPlugin::updateDisplay(bool force)
             {
             case OTHER_WEATHER_INFO_UVI:
                 text = m_currentUvIndex;
-                m_view.loadIcon(_OpenWeatherPlugin::View::ICON_UVI);
+                m_view.loadIconByType(_OpenWeatherPlugin::View::ICON_UVI);
                 break;
 
             case OTHER_WEATHER_INFO_HUMIDITY:
                 text = m_currentHumidity;
-                m_view.loadIcon(_OpenWeatherPlugin::View::ICON_HUMIDITY);
+                m_view.loadIconByType(_OpenWeatherPlugin::View::ICON_HUMIDITY);
                 break;
 
             case OTHER_WEATHER_INFO_WIND:
                 text = m_currentWindspeed;
-                m_view.loadIcon(_OpenWeatherPlugin::View::ICON_WIND);
+                m_view.loadIconByType(_OpenWeatherPlugin::View::ICON_WIND);
                 break;
 
             case OTHER_WEATHER_INFO_OFF:
@@ -813,18 +813,18 @@ void OpenWeatherPlugin::prepareDataToShow()
         /* Generate UV-Index string and adapt color of string accordingly. */
         if (true == std::isnan(uvIndex))
         {
-            m_currentUvIndex = "\\calignN/A";
+            m_currentUvIndex = "{hc}N/A";
         }
         else
         {
-            m_currentUvIndex = "\\calign";
+            m_currentUvIndex = "{hc}";
             m_currentUvIndex += uvIndexToColor(static_cast<uint8_t>(uvIndex));
             m_currentUvIndex += uvIndex;
         }
 
         if (true == std::isnan(temperature))
         {
-            m_currentUvIndex = "\\calignN/A";
+            m_currentUvIndex = "{hc}N/A";
         }
         else
         {
@@ -834,21 +834,21 @@ void OpenWeatherPlugin::prepareDataToShow()
             /* Generate temperature string with reduced precision and add unit °C/°F. */
             (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
 
-            m_currentTemp  = "\\calign";
+            m_currentTemp  = "{hc}";
             m_currentTemp += tempReducedPrecison;
             m_currentTemp += "\x8E";
             m_currentTemp += (m_source->getUnits() == "metric") ? "C" : "F";
         }
 
         /* Generate humidity string */
-        m_currentHumidity = "\\calign";
+        m_currentHumidity = "{hc}";
         m_currentHumidity += humidity;
         m_currentHumidity += "%";
 
         /* Generate windapeed string and add unit.*/
         if (true == std::isnan(windSpeed))
         {
-            m_currentUvIndex = "\\calignN/A";
+            m_currentUvIndex = "{hc}N/A";
         }
         else
         {
@@ -856,7 +856,7 @@ void OpenWeatherPlugin::prepareDataToShow()
 
             (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
 
-            m_currentWindspeed = "\\calign";
+            m_currentWindspeed = "{hc}";
             m_currentWindspeed += windReducedPrecison;
             m_currentWindspeed += "m/s";
         }

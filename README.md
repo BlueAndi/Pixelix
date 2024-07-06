@@ -190,28 +190,30 @@ Adapt in ```./config/display.ini``` the _CONFIG_LED_MATRIX_WIDTH_ and _CONFIG_LE
 
 ## How to change text properties?
 Text properties can be changed using different keywords added to the string to be displayed.  
-In order to be able to use these keywords, they must be prefixed by a backslash, otherwise they will only be treated as text.
+In order to be able to use these keywords, they must be inside curly braces, otherwise they will only be treated as text.
 
 The following keywords are available:
 Keyword   | Description
 ----------|---------------------------------
-\\#RRGGBB | Change text color (RRGGBB in hex)
-\lalign   | Alignment left
-\ralign   | Alignment right
-\calign   | Alignment center
+{#RRGGBB} | Change text color (RRGGBB in hex)
+{hl}      | Horizontal alignment left
+{hc}      | Horizontal alignment right
+{hr}      | Horizontal alignment center
+{vt}      | Vertical alignment top
+{vc}      | Vertical alignment center
+{vb}      | Vertical alignment bottom
 
-**Note**
-- If theses keywords are used within the sourcecode they have to be prefixed with two backslashes (one additional for escaping).
+**Notes**
 - If these keywords are used via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.2.0) all unsafe ASCII characters must be replaced by the respective percent encoding (see also [ASCII Encoding Reference](https://www.w3schools.com/tags/ref_urlencode.ASP)).
 - The keywords can be combined.  
 
 **Examples**
 
-Sourcecode   | URL   | Result
-----------|--------------------|-------------
-\\\lalign\\\\#ff0000Hi! | %5Clalign%23ff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
-\\\calign\\#ff0000Hi! | %5Ccalign%23ff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
-\\\ralign\\#ff0000Hi! | %5Cralign%23ff0000Hi!| I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
+Sourcecode       | URL               | Result
+-----------------|-------------------|-------------
+{hl}{#ff0000}Hi! | %7Bcl%7Dff0000Hi! | I<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I
+{hc}{#ff0000}Hi! | %7Bhc%7Dff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>&nbsp;&nbsp;&nbsp;&nbsp;I
+{hr}{#ff0000}Hi! | %7Bhr%7Dff0000Hi! | I&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:red">Hi!</span>I
 
 ## The display only shows a error code, like "E4". What does that mean?
 

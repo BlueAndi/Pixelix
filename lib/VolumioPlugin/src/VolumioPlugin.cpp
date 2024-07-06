@@ -181,7 +181,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -209,7 +209,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -244,7 +244,7 @@ void VolumioPlugin::process(bool isConnected)
             {
                 /* If a request fails, show standard icon and a '?' */
                 changeState(STATE_UNKNOWN);
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -276,7 +276,7 @@ void VolumioPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_view.getProgressBar().setProgress(m_pos);
+    m_view.setProgress(m_pos);
     m_view.update(gfx);
 }
 
@@ -326,23 +326,23 @@ void VolumioPlugin::changeState(VolumioState state)
     switch(state)
     {
     case STATE_UNKNOWN:
-        m_view.showIcon(_VolumioPlugin::View::ICON_STD);
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_STD);
         break;
 
     case STATE_STOP:
-        m_view.showIcon(_VolumioPlugin::View::ICON_STOP);
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_STOP);
         break;
 
     case STATE_PLAY:
-        m_view.showIcon(_VolumioPlugin::View::ICON_PLAY);
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_PLAY);
         break;
 
     case STATE_PAUSE:
-        m_view.showIcon(_VolumioPlugin::View::ICON_PAUSE);
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_PAUSE);
         break;
         
     default:
-        m_view.showIcon(_VolumioPlugin::View::ICON_STD);
+        m_view.loadIconByType(_VolumioPlugin::View::ICON_STD);
         state = STATE_UNKNOWN;
         break;
     }
@@ -511,7 +511,7 @@ void VolumioPlugin::handleWebResponse(DynamicJsonDocument& jsonDoc)
 
         if (true == title.isEmpty())
         {
-            title = "\\calign-";
+            title = "{hc}-";
         }
 
         if (service == "mpd")

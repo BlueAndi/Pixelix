@@ -25,15 +25,15 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  DateTimePlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
  * @{
  */
 
-#ifndef DATETIME_PLUGIN_VIEW_H
-#define DATETIME_PLUGIN_VIEW_H
+#ifndef DATE_TIME_PLUGIN_VIEW_H
+#define DATE_TIME_PLUGIN_VIEW_H
 
 /******************************************************************************
  * Compile Switches
@@ -42,16 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <DateTimeViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -61,10 +52,49 @@
  * Types and Classes
  *****************************************************************************/
 
+/** Internal plugin functionality. */
+namespace _DateTimePlugin
+{
+
+/**
+ * DateTimePlugin view.
+ */
+class View : public DateTimeViewBase
+{
+public:
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        DateTimeViewBase()
+    {
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+private:
+
+    /**
+     * Image path within the filesystem to icon.
+     */
+    static const char*  ICON_PATH;
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _DateTimePlugin */
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* DATETIME_PLUGIN_VIEW_H */
+#endif  /* DATE_TIME_PLUGIN_VIEW_H */
 
 /** @} */

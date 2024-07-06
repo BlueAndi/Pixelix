@@ -250,7 +250,7 @@ void GrabViaRestPlugin::process(bool isConnected)
             if (false == startHttpRequest())
             {
                 /* If a request fails, a '?' will be shown. */
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -277,7 +277,7 @@ void GrabViaRestPlugin::process(bool isConnected)
             if (false == startHttpRequest())
             {
                 /* If a request fails, a '?' will be shown. */
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -311,7 +311,7 @@ void GrabViaRestPlugin::process(bool isConnected)
             if (true == m_isConnectionError)
             {
                 /* If a request fails, show standard icon and a '?' */
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -616,7 +616,7 @@ void GrabViaRestPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
     }
     else
     {
-        m_view.setFormatText("\\calign-");
+        m_view.setFormatText("{hc}-");
     }
 }
 

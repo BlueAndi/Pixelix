@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  SysMsgPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
@@ -42,16 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <TextViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -60,6 +51,63 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+
+/** Internal plugin functionality. */
+namespace _SysMsgPlugin
+{
+
+/**
+ * SysMsgPlugin view.
+ */
+class View : public TextViewBase
+{
+public:
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        TextViewBase()
+    {
+        m_textWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+        m_textWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+    /**
+     * Clear text.
+     */
+    void clear()
+    {
+        m_textWidget.clear();
+    }
+
+    /**
+     * Get scrolling informations.
+     *
+     * @param[out] isScrollingEnabled   Is scrolling enabled or not?
+     * @param[out] scrollingCnt         How often was the text complete scrolled over the display?
+     *
+     * @return If scroll information is ready, it will return true otherwise false.
+     */
+    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
+    {
+        return m_textWidget.getScrollInfo(isScrollingEnabled, scrollingCnt);
+    }
+
+private:
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _SysMsgPlugin */
 
 /******************************************************************************
  * Functions

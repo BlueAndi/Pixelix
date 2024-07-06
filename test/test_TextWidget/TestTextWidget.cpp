@@ -169,19 +169,40 @@ static void testTextWidget()
     TEST_ASSERT_NOT_NULL(textWidget.getFont().getGfxFont());
     TEST_ASSERT_EQUAL_PTR(TextWidget::DEFAULT_FONT.getGfxFont(), textWidget.getFont().getGfxFont());
 
-    /* Set text with format tag and get text without format tag back. */
-    textWidget.setFormatStr("\\#FF00FFHello World!");
+    /* Set text with valid format keyword and get text without format keyword back. */
+    textWidget.setFormatStr("{hl}Hello World!");
     TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
 
-    /* Set text with non-escaped format tag and get text back, which must contain it. */
-    textWidget.setFormatStr("#FF00FFHello World!");
-    TEST_ASSERT_EQUAL_STRING("#FF00FFHello World!", textWidget.getStr().c_str());
+    textWidget.setFormatStr("{hc}Hello World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
 
-    /* Set text with invalid format tag and get text back, which must contain it. */
-    textWidget.setFormatStr("\\#ZZ00FFHello World!");
-    TEST_ASSERT_EQUAL_STRING("#ZZ00FFHello World!", textWidget.getStr().c_str());
+    textWidget.setFormatStr("{hr}Hello World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
 
-    /* Set text with invalid format tag and get text back, which must contain it. */
-    textWidget.setFormatStr("\\#FF00FYeah!");
-    TEST_ASSERT_EQUAL_STRING("#FF00FYeah!", textWidget.getStr().c_str());
+    textWidget.setFormatStr("{vt}Hello World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
+
+    textWidget.setFormatStr("{vc}Hello World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
+
+    textWidget.setFormatStr("{vb}Hello World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
+
+    textWidget.setFormatStr("{#FF00FF}Hello World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
+
+    /* Set text with invalid format keyword and get text without format keyword back. */
+    textWidget.setFormatStr("{abcd}Hello World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
+
+    textWidget.setFormatStr("{abcd}Hello {abcd}World!");
+    TEST_ASSERT_EQUAL_STRING("Hello World!", textWidget.getStr().c_str());
+
+    /* Set text with escaped format keyword and get text with format keyword back. */
+    textWidget.setFormatStr("\\{#FF00FF}Hello World!");
+    TEST_ASSERT_EQUAL_STRING("{#FF00FF}Hello World!", textWidget.getStr().c_str());
+
+    /* Set text with character coe format keyword and get text without format keyword back. */
+    textWidget.setFormatStr("{0x41} Hello World!");
+    TEST_ASSERT_EQUAL_STRING("A Hello World!", textWidget.getStr().c_str());
 }

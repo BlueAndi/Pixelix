@@ -179,7 +179,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (false == startHttpRequest())
             {
                 /* If a request fails, show standard icon and a '?' */
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -206,7 +206,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (false == startHttpRequest())
             {
                 /* If a request fails, show standard icon and a '?' */
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -240,7 +240,7 @@ void GruenbeckPlugin::process(bool isConnected)
             if (true == m_isConnectionError)
             {
                 /* If a request fails, show a '?' */
-                m_view.setFormatText("\\calign?");
+                m_view.setFormatText("{hc}?");
 
                 m_requestTimer.start(UPDATE_PERIOD_SHORT);
             }
@@ -277,7 +277,7 @@ void GruenbeckPlugin::update(YAGfx& gfx)
 
     if (false != m_httpResponseReceived)
     {
-        m_view.setFormatText("\\calign" + m_relevantResponsePart + "%");
+        m_view.setFormatText("{hc}" + m_relevantResponsePart + "%");
         
         m_view.update(gfx);
 

@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  SignalDetectorPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
@@ -42,16 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <TextViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -60,6 +51,40 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+
+/** Internal plugin functionality. */
+namespace _SignalDetectorPlugin
+{
+
+/**
+ * SignalDetectorPlugin view.
+ */
+class View : public TextViewBase
+{
+public:
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        TextViewBase()
+    {
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+private:
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _SignalDetectorPlugin */
 
 /******************************************************************************
  * Functions

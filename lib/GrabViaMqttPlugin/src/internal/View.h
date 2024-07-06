@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  GrabViaMqttPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
@@ -42,16 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <IconTextViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -60,6 +51,78 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+
+/** Internal plugin functionality. */
+namespace _GrabViaMqttPlugin
+{
+
+/**
+ * GrabViaMqttPlugin view.
+ */
+class View : public IconTextViewBase
+{
+public:
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        IconTextViewBase(),
+        m_isTextOnly(false)
+    {
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+    /**
+     * Initialize view, which will prepare the widgets and the default values.
+     */
+    void init(uint16_t width, uint16_t height) final
+    {
+        IconTextViewBase::init(width, height);
+
+        setFormatText("{hc}?");
+    }
+
+    /**
+     * Setup layout for text only.
+     */
+    void setupTextOnly()
+    {
+        m_textWidget.move(0, 0);
+        m_textWidget.setWidth(CONFIG_LED_MATRIX_WIDTH);
+        m_textWidget.setHeight(CONFIG_LED_MATRIX_HEIGHT);
+        m_bitmapWidget.clear(ColorDef::BLACK);
+
+        m_isTextOnly = true;
+    }
+
+    /**
+     * Setup layout for bitmap and text.
+     */
+    void setupBitmapAndText()
+    {
+        m_textWidget.move(TEXT_X, TEXT_Y);
+        m_textWidget.setWidth(TEXT_WIDTH);
+        m_textWidget.setHeight(TEXT_HEIGHT);
+
+        m_isTextOnly = false;
+    }
+
+private:
+
+    bool    m_isTextOnly;   /**< Is text only layout selected? */
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _GrabViaMqttPlugin */
 
 /******************************************************************************
  * Functions

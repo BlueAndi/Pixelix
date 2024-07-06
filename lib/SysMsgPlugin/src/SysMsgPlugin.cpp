@@ -142,13 +142,17 @@ void SysMsgPlugin::update(YAGfx& gfx)
     /* Shall scrolling text be shown a specific number of times? */
     else if (0U < m_max)
     {
-        /* Show next message after specific number of times, the text was shown. */
-        if (m_max < scrollingCnt)
+        /* Is the scroll info ready? */
+        if (true == status)
         {
-            /* If no message is available anymore, the plugin will be disabled. */
-            if (false == nextMessage())
+            /* Show next message after specific number of times, the text was shown. */
+            if (m_max < scrollingCnt)
             {
-                disable();
+                /* If no message is available anymore, the plugin will be disabled. */
+                if (false == nextMessage())
+                {
+                    disable();
+                }
             }
         }
     }

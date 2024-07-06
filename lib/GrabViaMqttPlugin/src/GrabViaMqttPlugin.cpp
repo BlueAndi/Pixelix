@@ -431,7 +431,7 @@ void GrabViaMqttPlugin::mqttTopicCallback(const String& topic, const uint8_t* pa
         }
         else
         {
-            m_view.setFormatText("\\calign-");
+            m_view.setFormatText("{hc}-");
         }
     }
 }

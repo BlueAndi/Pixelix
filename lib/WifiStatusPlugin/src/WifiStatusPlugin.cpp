@@ -112,15 +112,13 @@ void WifiStatusPlugin::update(YAGfx& gfx)
             }
             else
             {
-                m_view.setFormatText("\\calign!");
-                m_view.setTextColor(ColorDef::ORANGE);
+                m_view.setFormatText("{#FFA500}{hc}!");
                 m_toggle = false;
             }
         }
         else
         {
-            m_view.setFormatText("\\calignWiFi");
-            m_view.setTextColor(TextWidget::DEFAULT_TEXT_COLOR);
+            m_view.setFormatText("{hc}WiFi");
             m_toggle = true;
         }
 

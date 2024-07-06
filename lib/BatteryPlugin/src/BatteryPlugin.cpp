@@ -114,7 +114,8 @@ void BatteryPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    m_view.update(gfx, m_stateOfCharge);
+    m_view.setStateOfCharge(m_stateOfCharge);
+    m_view.update(gfx);
 }
 
 /******************************************************************************

@@ -50,6 +50,7 @@
 #include <YAFont.h>
 #include <YAGfxText.h>
 #include <SimpleTimer.hpp>
+#include "Alignment.h"
 
 /******************************************************************************
  * Macros
@@ -64,14 +65,18 @@
  * The text has a given color, which can be changed.
  *
  * Different keywords in the string are supported, e.g. for coloring or alignment.
- * Each keyword starts with a '\\', otherwise its treated as just text.
- * Example: "\\#FF0000H#FFFFFFello!" contains a red "H" and a white "ello!".
+ * Each keyword is inside curly braces, otherwise its treated as just text.
+ * Example: "{#FF0000}H{#FFFFFF}ello!" contains a red "H" and a white "ello!".
  *
  * Keywords:
- * - "\\#RRGGBB": Change text color; RRGGBB in hex
- * - "\\lalign" : Alignment left
- * - "\\ralign" : Alignment right
- * - "\\calign" : Alignment center
+ * - "{#RRGGBB}": Change text color; RRGGBB in hex
+ * - "{hl}" : Horizontal alignment left
+ * - "{hc}" : Horizontal alignment center
+ * - "{hr}" : Horizontal alignment right
+ * - "{vt}" : Vertical alignment top
+ * - "{vc}" : Vertical alignment center
+ * - "{vb}" : Vertical alignment bottom
+ * - "{xAA}" : Special character hex code
  */
 class TextWidget : public Widget
 {
@@ -85,26 +90,7 @@ public:
      * @param[in] x         Upper left corner (x-coordinate) of the widget in a canvas.
      * @param[in] y         Upper left corner (y-coordinate) of the widget in a canvas.
      */
-    TextWidget(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0) :
-        Widget(WIDGET_TYPE, width, height, x, y),
-        m_formatStr(),
-        m_formatStrNew(),
-        m_fadeState(FADE_STATE_IDLE),
-        m_fadeBrightness(0U),
-        m_scrollInfo(),
-        m_scrollInfoNew(),
-        m_isNewTextAvailable(false),
-        m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
-        m_scrollingCnt(0U),
-        m_scrollOffset(0),
-        m_scrollTimer()
-    {
-        /* Enable text wrap for multi-line text widget. */
-        if (1U < getLineCount())
-        {
-            m_gfxText.setTextWrap(true);
-        }
-    }
+    TextWidget(uint16_t width = 0U, uint16_t height = 0U, int16_t x = 0, int16_t y = 0);
 
     /**
      * Constructs a text widget with the given string and its color.
@@ -115,47 +101,14 @@ public:
      * @param[in] str   String, which may contain format tags.
      * @param[in] color Color of the string
      */
-    TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR) :
-        Widget(WIDGET_TYPE, 0U, 0U, 0, 0),
-        m_formatStr(str),
-        m_formatStrNew(str),
-        m_fadeState(FADE_STATE_IDLE),
-        m_fadeBrightness(0U),
-        m_scrollInfo(),
-        m_scrollInfoNew(),
-        m_isNewTextAvailable(false),
-        m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
-        m_scrollingCnt(0U),
-        m_scrollOffset(0),
-        m_scrollTimer()
-    {
-        /* Enable text wrap for multi-line text widget. */
-        if (1U < getLineCount())
-        {
-            m_gfxText.setTextWrap(true);
-        }
-    }
+    TextWidget(const String& str, const Color& color = DEFAULT_TEXT_COLOR);
 
     /**
      * Constructs a text widget by copying another one.
      *
      * @param[in] widget Widget, which to copy
      */
-    TextWidget(const TextWidget& widget) :
-        Widget(widget),
-        m_formatStr(widget.m_formatStr),
-        m_formatStrNew(widget.m_formatStrNew),
-        m_fadeState(widget.m_fadeState),
-        m_fadeBrightness(widget.m_fadeBrightness),
-        m_scrollInfo(widget.m_scrollInfo),
-        m_scrollInfoNew(widget.m_scrollInfoNew),
-        m_isNewTextAvailable(widget.m_isNewTextAvailable),
-        m_gfxText(widget.m_gfxText),
-        m_scrollingCnt(widget.m_scrollingCnt),
-        m_scrollOffset(widget.m_scrollOffset),
-        m_scrollTimer(widget.m_scrollTimer)
-    {
-    }
+    TextWidget(const TextWidget& widget);
 
     /**
      * Destroys the text widget.
@@ -169,27 +122,7 @@ public:
      *
      * @param[in] widget Widget, which to assign
      */
-    TextWidget& operator=(const TextWidget& widget)
-    {
-        if (&widget != this)
-        {
-            Widget::operator=(widget);
-            
-            m_formatStr             = widget.m_formatStr;
-            m_formatStrNew          = widget.m_formatStrNew;
-            m_fadeState             = widget.m_fadeState;
-            m_fadeBrightness        = widget.m_fadeBrightness;
-            m_scrollInfo            = widget.m_scrollInfo;
-            m_scrollInfoNew         = widget.m_scrollInfoNew;
-            m_isNewTextAvailable    = widget.m_isNewTextAvailable;
-            m_gfxText               = widget.m_gfxText;
-            m_scrollingCnt          = widget.m_scrollingCnt;
-            m_scrollOffset          = widget.m_scrollOffset;
-            m_scrollTimer           = widget.m_scrollTimer;
-        }
-
-        return *this;
-    }
+    TextWidget& operator=(const TextWidget& widget);
 
     /**
      * Set the text string. It can contain format tags like:
@@ -214,14 +147,16 @@ public:
     void clear()
     {
         m_formatStr.clear();
+        m_scrollInfo.clear();
+
         m_formatStrNew.clear();
+        m_scrollInfoNew.clear();
 
         m_isNewTextAvailable = false;
 
-        m_scrollInfo.isEnabled  = false;
-        m_scrollInfo.offset     = 0;
-        m_scrollInfo.offsetDest = 0;
-        m_scrollInfo.textWidth  = 0U;
+        /* Reset calculated alignment coordinates. */
+        m_hAlignPosX    = 0U;
+        m_vAlignPosY    = 0U;
     }
 
     /**
@@ -329,6 +264,28 @@ public:
         return status;
     }
 
+    /**
+     * Set the horizontal alignment.
+     * 
+     * @param[in] align The horizontal aligment.
+     */
+    void setHorizontalAlignment(Alignment::Horizontal align)
+    {
+        m_hAlign        = align;
+        m_hAlignPosX    = alignTextHorizontal(m_hAlign);
+    }
+
+    /**
+     * Set the vertical alignment.
+     * 
+     * @param[in] align The vertical aligment.
+     */
+    void setVerticalAlignment(Alignment::Vertical align)
+    {
+        m_vAlign        = align;
+        m_vAlignPosY    = alignTextVertical(m_vAlign);
+    }
+
     /** Default text color */
     static const uint32_t   DEFAULT_TEXT_COLOR      = ColorDef::WHITE;
 
@@ -359,7 +316,27 @@ private:
     static const uint8_t    FADING_BRIGHTNESS_HIGH  = 255U;
 
     /** Keyword handler method. */
-    typedef bool (TextWidget::*KeywordHandler)(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const;
+    typedef void (TextWidget::*KeywordHandler)(YAGfx& gfx, const String& keyword);
+ 
+    /**
+     * Format keyword row, which specifies how does the keyword look like and
+     * its corresponding handler.
+     */
+    struct FormatKeywordRow
+    {
+        const char*     keyword;    /**< Keyword */
+        KeywordHandler  handler;    /**< Handler method */
+    };
+
+    /**
+     * Table with keywords, which to apply before text is shown.
+     */
+    static const FormatKeywordRow   FORMAT_KEYWORD_TABLE_1[];
+
+    /**
+     * Table with keywords, which to apply during text is shown.
+     */
+    static const FormatKeywordRow   FORMAT_KEYWORD_TABLE_2[];
 
     /**
      * Fade state.
@@ -396,23 +373,73 @@ private:
             textHeight(0U)
         {
         }
+
+        /**
+         * Clear scroll information.
+         */
+        void clear()
+        {
+            isEnabled           = false;
+            isScrollingToLeft   = true;
+            offsetDest          = 0;
+            offset              = 0;
+            textWidth           = 0U;
+            textHeight          = 0U;
+        }
     };
 
-    String          m_formatStr;            /**< Current shown string, which contains format tags. */
-    String          m_formatStrNew;         /**< New text string, which contains format tags. */
-    FadeState       m_fadeState;            /**< The current fade state. Used to switch from old to new text. */
-    uint8_t         m_fadeBrightness;       /**< Brightness value used for fading. */
-    ScrollInfo      m_scrollInfo;           /**< Scroll information */
-    ScrollInfo      m_scrollInfoNew;        /**< Scroll information for the new text. */
-    bool            m_isNewTextAvailable;   /**< Is new updated text available? */
-    YAGfxText       m_gfxText;              /**< GFX for current text. */
-    YAGfxText       m_gfxNewText;           /**< GFX for new text. */
-    uint32_t        m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
-    int16_t         m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
-    SimpleTimer     m_scrollTimer;          /**< Timer, used for scrolling */
+    /**
+     * Parser results
+     */
+    enum Result
+    {
+        RESULT_TEXT = 0,    /**< Text found */
+        RESULT_KEYWORD,     /**< Format keyword found */
+        RESULT_EMPTY        /**< Empty */
+    };
 
-    static KeywordHandler   m_keywordHandlers[];    /**< List of all supported keyword handlers. */
+    String                  m_formatStr;            /**< Current shown string, which contains format tags. */
+    String                  m_formatStrNew;         /**< New text string, which contains format tags. */
+    FadeState               m_fadeState;            /**< The current fade state. Used to switch from old to new text. */
+    uint8_t                 m_fadeBrightness;       /**< Brightness value used for fading. */
+    ScrollInfo              m_scrollInfo;           /**< Scroll information */
+    ScrollInfo              m_scrollInfoNew;        /**< Scroll information for the new text. */
+    bool                    m_isNewTextAvailable;   /**< Is new updated text available? */
+    YAGfxText               m_gfxText;              /**< GFX for current text. */
+    YAGfxText               m_gfxNewText;           /**< GFX for new text. */
+    uint32_t                m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
+    int16_t                 m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
+    SimpleTimer             m_scrollTimer;          /**< Timer, used for scrolling */
+    Alignment::Horizontal   m_hAlign;               /**< Horizontal alignment. */
+    Alignment::Vertical     m_vAlign;               /**< Vertical alignment. */
+    int16_t                 m_hAlignPosX;           /**< x-coordinate derived from horizontal alignment. */
+    int16_t                 m_vAlignPosY;           /**< y-coordinate derived from vertical alignment. */
+
     static uint32_t         m_scrollPause;          /**< Pause in ms, between each scroll movement. */
+
+    /**
+     * Align the text horizontal and vertical.
+     * It will adapt the m_hAlignPosX and m_vAlignPosY.
+     */
+    void alignText(Alignment::Horizontal hAlign, Alignment::Vertical vAlign);
+
+    /**
+     * Align the text horizontal by calculating the x-coordinate of the text box.
+     *
+     * @param[in] hAlign    Horizontal alignment
+     * 
+     * @return x-coordinate
+     */
+    int16_t alignTextHorizontal(Alignment::Horizontal hAlign) const;
+
+    /**
+     * Align the text vertical by calculating the y-coordinate of the text box.
+     *
+     * @param[in] vAlign    Vertical alignment
+     * 
+     * @return y-coordinate
+     */
+    int16_t alignTextVertical(Alignment::Vertical vAlign) const;
 
     /**
      * Get the number of lines, which can be used by the text widget.
@@ -504,46 +531,124 @@ private:
     void show(YAGfx& gfx, const String& formatStr, bool isScrolling);
 
     /**
-     * Handles the keyword for color changes.
-     *
-     * @param[in] gfx           Graphics interface, only necessary if actions shall take place.
-     * @param[in] gfxText       The text to handle with the keyword.
-     * @param[in] noAction      The handler shall take no action. This is only used to get rid of the keywords in the text.
-     * @param[in] formatStr     String which may contain keywords.
-     * @param[in] isScrolling   Is scrolling active?
-     * @param[out] overstep     Number of characters, which must be overstepped before the next normal character comes.
-     *
-     * @return If keyword is handled successful, it returns true otherwise false.
+     * Parse formatted text. Everytime a text or a format keyword is found, it will
+     * immediately return. Call this function continously for parsing the whole
+     * string, until its finished.
+     * 
+     * A format keyword is enclosed with {}.
+     * If a '{' is part of the text itself, it must be escaped with a backslash.
+     * 
+     * @param[in]   str             String with formatted text.
+     * @param[in]   beginIdx        Index in the string where to start parsing.
+     * @param[out]  resultStr       Result string may contain text, a format keyword or is empty.
+     * @param[out]  remainingIdx    Remaining index in the string
+     * 
+     * @return Parser result, consider it to know whats in the resultStr and whether to continoue parsing.
      */
-    bool handleColor(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const;
+    Result parseFormattedText(const String& str, size_t& beginIdx, String& resultStr, size_t& remainingIdx) const;
 
     /**
-     * Handles the keyword for alignment changes.
-     *
-     * @param[in] gfx           Graphics interface, only necessary if actions shall take place.
-     * @param[in] gfxText       The text to handle with the keyword.
-     * @param[in] noAction      The handler shall take no action. This is only used to get rid of the keywords in the text.
-     * @param[in] formatStr     String which may contain keywords.
-     * @param[in] isScrolling   Is scrolling active?
-     * @param[out] overstep     Number of characters, which must be overstepped before the next normal character comes.
-     *
-     * @return If keyword is handled successful, it returns true otherwise false.
+     * Compares two keywords.
+     * 
+     * @param[in] keyword   Keyword 1, consider wildcards.
+     * @param[in] other     Keyword 2, the concrete one.
+     * 
+     * @return If equal, it will return true otherwise false. 
      */
-    bool handleAlignment(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const;
+    bool isKeywordEqual(const char* keyword, const char* other) const;
 
     /**
-     * Handles the keyword for character code.
-     *
-     * @param[in] gfx           Graphics interface, only necessary if actions shall take place.
-     * @param[in] gfxText       The text to handle with the keyword.
-     * @param[in] noAction      The handler shall take no action. This is only used to get rid of the keywords in the text.
-     * @param[in] formatStr     String which may contain keywords.
-     * @param[in] isScrolling   Is scrolling active?
-     * @param[out] overstep     Number of characters, which must be overstepped before the next normal character comes.
-     *
-     * @return If keyword is handled successful, it returns true otherwise false.
+     * Handle concrete keyword.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] table     Keyword table with the handlers
+     * @param[in] tableSize Number of elements in the keyword table
+     * @param[in] keyword   The keyword which to handle
+     * 
+     * @return If successful, it will return true otherwise false.
      */
-    bool handleCharCode(YAGfx* gfx, YAGfxText* gfxText, bool noAction, const String& formatStr, bool isScrolling, uint8_t& overstep) const;
+    bool handleKeyword(YAGfx& gfx, const FormatKeywordRow* table, size_t tableSize, const String& keyword);
+
+    /**
+     * Align text horizontal left.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void horizontalLeftAligned(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Align text horizontal center.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void horizontalCenterAligned(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Align text horizontal right.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void horizontalRightAligned(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Align text vertical top.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void verticalTopAligned(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Align text vertical center.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void verticalCenterAligned(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Align text vertical bottom.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void verticalBottomAligned(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Handle text color keyword code.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void handleColor(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Handle character keyword code.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void handleCharCode(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Move text cursor horizontal.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void horizontalMove(YAGfx& gfx, const String& keyword);
+
+    /**
+     * Move text cursor vertical.
+     * 
+     * @param[in] gfx       Graphic functionality
+     * @param[in] keyword   Keyword
+     */
+    void verticalMove(YAGfx& gfx, const String& keyword);
+
 };
 
 /******************************************************************************

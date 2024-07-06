@@ -309,7 +309,7 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
 
         if (false == iconSlot.icons[iconSlot.activeIconId].isEmpty())
         {
-            (void)m_view.getBitmapWidget(slotId).load(FILESYSTEM, iconSlot.icons[iconSlot.activeIconId]);
+            (void)m_view.loadIcon(slotId, iconSlot.icons[iconSlot.activeIconId]);
         }
     }
 }
@@ -380,10 +380,10 @@ bool ThreeIconPlugin::setActiveIconId(uint8_t slotId, uint8_t iconId)
 
             if (true == iconSlot.icons[iconId].isEmpty())
             {
-                m_view.getBitmapWidget(slotId).clear(ColorDef::BLACK);
+                m_view.clearIcon(slotId);
                 isSuccessful = true;
             }
-            else if (true == m_view.getBitmapWidget(slotId).load(FILESYSTEM, iconSlot.icons[iconId]))
+            else if (true == m_view.loadIcon(iconId, iconSlot.icons[iconId]))
             {
                 isSuccessful = true;
             }
@@ -412,7 +412,7 @@ void ThreeIconPlugin::clearIcon(uint8_t slotId, uint8_t iconId)
 
             if (iconSlot.activeIconId == iconId)
             {
-                m_view.getBitmapWidget(slotId).clear(ColorDef::BLACK);
+                m_view.clearIcon(iconId);
             }
         }
     }
@@ -458,11 +458,11 @@ bool ThreeIconPlugin::setIconFilePath(uint8_t slotId, uint8_t iconId, const Stri
             /* If a empty icon file path is set, the icon will be cleared. */
             if (true == iconSlot.icons[iconId].isEmpty())
             {
-                m_view.getBitmapWidget(slotId).clear(ColorDef::BLACK);
+                m_view.clearIcon(slotId);
                 isSuccessful = true;
             }
             /* If a icon file path is set, the icon will be loaded. */
-            else if (true == m_view.getBitmapWidget(slotId).load(FILESYSTEM, iconSlot.icons[iconId]))
+            else if (true == m_view.loadIcon(iconId, iconSlot.icons[iconId]))
             {
                 isSuccessful = true;
             }

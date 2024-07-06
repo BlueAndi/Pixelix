@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  VolumioPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
@@ -42,16 +42,8 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <PlayerViewBase.hpp>
+#include <ProgressBar.h>
 
 /******************************************************************************
  * Macros
@@ -60,6 +52,95 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+
+/** Internal plugin functionality. */
+namespace _VolumioPlugin
+{
+
+/**
+ * VolumioPlugin view.
+ */
+class View : public PlayerViewBase
+{
+public:
+
+    /**
+     * Supported icons.
+     */
+    enum Icon
+    {
+        ICON_STD = 0,   /**< Standard Volumio icon. */
+        ICON_STOP,      /**< Stop icon. */
+        ICON_PLAY,      /**< Play icon. */
+        ICON_PAUSE,     /**< Pause icon. */
+        ICON_MAX        /**< Max. number of icons. */
+    };
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        PlayerViewBase()
+    {
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+    /**
+     * Initialize view, which will prepare the widgets and the default values.
+     */
+    void init(uint16_t width, uint16_t height) final
+    {
+        PlayerViewBase::init(width, height);
+
+        setFormatText("{hc}?");
+        (void)loadIconByType(ICON_STD);
+    }
+
+    /**
+     * Load dedicated icon.
+     * 
+     * @param[in] type  The icon type which to set.
+     */
+    void loadIconByType(Icon type);
+
+private:
+
+    /**
+     * Image path within the filesystem to standard icon.
+     */
+    static const char*  IMAGE_PATH_STD_ICON;
+
+    /**
+     * Image path within the filesystem to "stop" icon.
+     */
+    static const char*  IMAGE_PATH_STOP_ICON;
+
+    /**
+     * Image path within the filesystem to "play" icon.
+     */
+    static const char*  IMAGE_PATH_PLAY_ICON;
+
+    /**
+     * Image path within the filesystem to "pause" icon.
+     */
+    static const char*  IMAGE_PATH_PAUSE_ICON;
+
+    /**
+     * Table of icons mapped according to the icon enumeration.
+     */
+    static const char*  ICON_TABLE[ICON_MAX];
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _VolumioPlugin */
 
 /******************************************************************************
  * Functions

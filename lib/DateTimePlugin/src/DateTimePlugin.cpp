@@ -416,7 +416,7 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownSecond != timeInfo.tm_sec))
             {
-                String  extTimeFormat   = "\\calign" + m_timeFormat;
+                String  extTimeFormat   = "{hc}" + m_timeFormat;
                 String  timeAsStr;
                 
                 if (true == getTimeAsString(timeAsStr, extTimeFormat, &timeInfo))
@@ -439,7 +439,7 @@ void DateTimePlugin::updateDateTime(bool force)
             if ((true == force) ||
                 (m_shownDayOfTheYear != timeInfo.tm_yday))
             {
-                String  extDateFormat   = "\\calign" + m_dateFormat;
+                String  extDateFormat   = "{hc}" + m_dateFormat;
                 String  dateAsStr;
                 
                 if (true == getTimeAsString(dateAsStr, extDateFormat, &timeInfo))
@@ -463,7 +463,7 @@ void DateTimePlugin::updateDateTime(bool force)
     {
         if(true == force)
         {
-            m_view.setFormatText("\\calign?");
+            m_view.setFormatText("{hc}?");
             m_isUpdateAvailable = true;
         }
     }

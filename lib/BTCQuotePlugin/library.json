@@ -21,6 +21,8 @@
         "name": "YAWidgets"
     }, {
         "name": "Utilities"
+    }, {
+        "name": "Views"
     }],
     "frameworks": "*",
     "platforms": "*"

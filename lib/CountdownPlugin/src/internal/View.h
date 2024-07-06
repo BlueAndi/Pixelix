@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  CountdownPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
@@ -42,16 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <IconTextViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -60,6 +51,56 @@
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
+
+/** Internal plugin functionality. */
+namespace _CountdownPlugin
+{
+
+/**
+ * CountdownPlugin view.
+ */
+class View : public IconTextViewBase
+{
+public:
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        IconTextViewBase()
+    {
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+    /**
+     * Initialize view, which will prepare the widgets and the default values.
+     */
+    void init(uint16_t width, uint16_t height) final
+    {
+        IconTextViewBase::init(width, height);
+
+        setFormatText("{hc}?");
+        (void)loadIcon(ICON_PATH);
+    }
+
+private:
+
+    /**
+     * Image path within the filesystem to icon.
+     */
+    static const char*  ICON_PATH;
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _CountdownPlugin */
 
 /******************************************************************************
  * Functions

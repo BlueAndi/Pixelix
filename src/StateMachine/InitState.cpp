@@ -505,7 +505,7 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
     SysMsg&         sysMsg                  = SysMsg::getInstance();
 
     /* Show colored PIXELIX */
-    sysMsg.show("\\calign\\#FFFFFF.:\\#FF0000P\\#FFFF00I\\#00FF00X\\#00FFFFE\\#0000FFL\\#FF00FFI\\#FF0000X\\#FFFFFF:.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
+    sysMsg.show("{#FFFFFF}.:{#FF0000}P{#FFFF00}I{#00FF00}X{#00FFFF}E{#0000FF}L{#FF00FF}I{#FF0000}X{#FFFFFF}:.", SHOW_LOGO_DURATION, SCROLLING_REPEAT_NUM);
 
     if (false == isQuietEnabled)
     {
@@ -513,7 +513,7 @@ void InitState::showStartupInfoOnDisplay(bool isQuietEnabled)
         sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
 
         /* Show sw version (short) */
-        sysMsg.show(String("\\calign") + Version::SOFTWARE_VER, DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
+        sysMsg.show(String(Version::SOFTWARE_VER), DURATION_NON_SCROLLING, SCROLLING_REPEAT_NUM);
 
         /* Clear and wait */
         sysMsg.show("", DURATION_PAUSE, SCROLLING_NO_REPEAT);
@@ -540,7 +540,7 @@ void InitState::welcome(IPluginMaintenance* plugin)
     if (nullptr != welcomePlugin)
     {
         (void)welcomePlugin->loadIcon("/images/smiley.bmp");
-        welcomePlugin->setText("\\calignHello World!");
+        welcomePlugin->setText("{hc}Hello World!");
     }
 }
 

@@ -13,6 +13,8 @@
         "name": "LittleFS"
     }, {
         "name": "Plugin"
+    }, {
+        "name": "Views"
     }],
     "frameworks": "*",
     "platforms": "*"

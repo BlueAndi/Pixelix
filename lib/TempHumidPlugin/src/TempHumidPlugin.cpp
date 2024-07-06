@@ -223,11 +223,11 @@ void TempHumidPlugin::update(YAGfx& gfx)
 
 void TempHumidPlugin::handleTemperature()
 {
-    m_view.loadIcon(_TempHumidPlugin::View::ICON_TEMPERATURE);
+    m_view.loadIconByType(_TempHumidPlugin::View::ICON_TEMPERATURE);
 
     if (nullptr == m_temperatureSensorCh)
     {
-        m_view.setFormatText("\\calign-");
+        m_view.setFormatText("{hc}-");
     }
     else
     {
@@ -236,7 +236,7 @@ void TempHumidPlugin::handleTemperature()
 
         /* Generate temperature string with reduced precision and add unit °C. */
         (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), (m_temperature < -9.9F) ? "%.0f" : "%.1f" , m_temperature);
-        text  = "\\calign";
+        text  = "{hc}";
         text += valueReducedPrecison;
         text += ISensorChannel::channelTypeToUnit(m_temperatureSensorCh->getType());
 
@@ -246,11 +246,11 @@ void TempHumidPlugin::handleTemperature()
 
 void TempHumidPlugin::handleHumidity()
 {
-    m_view.loadIcon(_TempHumidPlugin::View::ICON_HUMIDITY);
+    m_view.loadIconByType(_TempHumidPlugin::View::ICON_HUMIDITY);
 
     if (nullptr == m_humiditySensorCh)
     {
-        m_view.setFormatText("\\calign-");
+        m_view.setFormatText("{hc}-");
     }
     else
     {
@@ -258,7 +258,7 @@ void TempHumidPlugin::handleHumidity()
         String  text;
 
         (void)snprintf(valueReducedPrecison, sizeof(valueReducedPrecison), "%3.0f", m_humidity);
-        text  = "\\calign";
+        text  = "{hc}";
         text += valueReducedPrecison;
         text += ISensorChannel::channelTypeToUnit(m_humiditySensorCh->getType());
         

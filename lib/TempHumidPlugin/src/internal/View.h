@@ -25,15 +25,15 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Plugin view
+ * @brief  TempHumidPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
  * @{
  */
 
-#ifndef TEMPHUMID_PLUGIN_VIEW_H
-#define TEMPHUMID_PLUGIN_VIEW_H
+#ifndef TEMP_HUMID_PLUGIN_VIEW_H
+#define TEMP_HUMID_PLUGIN_VIEW_H
 
 /******************************************************************************
  * Compile Switches
@@ -42,16 +42,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-
-#if (CONFIG_LED_MATRIX_WIDTH == 32U) && (CONFIG_LED_MATRIX_HEIGHT == 8U)
-
-#include "View32x8.h"
-
-#else
-
-#error LED matrix size not supported!
-
-#endif
+#include <IconTextViewBase.hpp>
 
 /******************************************************************************
  * Macros
@@ -61,10 +52,87 @@
  * Types and Classes
  *****************************************************************************/
 
+/** Internal plugin functionality. */
+namespace _TempHumidPlugin
+{
+
+/**
+ * TempHumidPlugin view.
+ */
+class View : public IconTextViewBase
+{
+public:
+
+    /**
+     * Supported icons.
+     */
+    enum Icon
+    {
+        ICON_TEMPERATURE = 0,   /**< Temperature icon. */
+        ICON_HUMIDITY,          /**< Humidity icon. */
+        ICON_MAX                /**< Max. number of icons. */
+    };
+
+    /**
+     * Construct the view.
+     */
+    View() :
+        IconTextViewBase()
+    {
+    }
+
+    /**
+     * Destroy the view.
+     */
+    ~View()
+    {
+    }
+
+    /**
+     * Initialize view, which will prepare the widgets and the default values.
+     */
+    void init(uint16_t width, uint16_t height) final
+    {
+        IconTextViewBase::init(width, height);
+
+        setFormatText("{hc}?");
+        (void)loadIconByType(ICON_TEMPERATURE);
+    }
+
+    /**
+     * Load dedicated icon.
+     * 
+     * @param[in] type  The icon type which to set.
+     */
+    void loadIconByType(Icon type);
+
+private:
+
+    /**
+     * Path to the temperature icon
+     */    
+    static const char*  IMAGE_PATH_TEMP_ICON;
+
+    /**
+     * Path to the humidity icon
+     */
+    static const char*  IMAGE_PATH_HUMID_ICON;
+
+    /**
+     * Table of icons mapped according to the icon enumeration.
+     */
+    static const char*  ICON_TABLE[ICON_MAX];
+
+    View(const View& other);
+    View& operator=(const View& other);
+};
+
+} /* _TempHumidPlugin */
+
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* TEMPHUMID_PLUGIN_VIEW_H */
+#endif  /* TEMP_HUMID_PLUGIN_VIEW_H */
 
 /** @} */

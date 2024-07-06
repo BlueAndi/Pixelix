@@ -248,7 +248,7 @@ void SensorPlugin::update()
 
     if (nullptr == m_sensorChannel)
     {
-        text = "\\calign-";
+        text = "{hc}-";
     }
     else
     {
@@ -256,7 +256,7 @@ void SensorPlugin::update()
          * aligned looks better, because the unit stays at the same
          * position and only the number seems to be updated.
          */
-        text  = "\\ralign";
+        text  = "{hr}";
         text += m_sensorChannel->getValueAsString(PRECISION);
         text += " ";
         text += ISensorChannel::channelTypeToUnit(m_sensorChannel->getType());
