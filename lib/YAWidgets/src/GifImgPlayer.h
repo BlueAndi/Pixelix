@@ -79,8 +79,6 @@ public:
         m_bitmap(),
         m_fd(),
         m_canvas(&m_bitmap),
-        m_width(0U),
-        m_height(0U),
         m_bgColorIndex(0U),
         m_globalColorTable(nullptr),
         m_globalColorTableLength(0U),
@@ -162,7 +160,7 @@ public:
      */
     int16_t getWidth() const
     {
-        return m_width;
+        return m_bitmap.getWidth();
     }
 
     /**
@@ -173,7 +171,7 @@ public:
      */
     int16_t getHeight() const
     {
-        return m_height;
+        return m_bitmap.getHeight();
     }
 
 private:
@@ -197,8 +195,6 @@ private:
     YAGfxDynamicBitmap  m_bitmap;                   /**< The bitmap contains the last drawn scene. */
     File                m_fd;                       /**< File descriptor */
     YAGfxCanvas         m_canvas;                   /**< Canvas used for drawing each scene. Its position and size follows the image descriptor. */
-    uint16_t            m_width;                    /**< Image width in pixel. Used by disposal method. */
-    uint16_t            m_height;                   /**< Image height in pixel. Used by disposal method. */
     uint8_t             m_bgColorIndex;             /**< Background color index. Used by disposal method. */
     PaletteColor*       m_globalColorTable;         /**< Global color table. */
     size_t              m_globalColorTableLength;   /**< Number of palette colors in the global color table. */
