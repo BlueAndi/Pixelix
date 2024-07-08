@@ -32,8 +32,8 @@
  * @{
  */
 
-#ifndef ICON_TEXT_PLUGIN_VIEW_H
-#define ICON_TEXT_PLUGIN_VIEW_H
+#ifndef ICON_TEXT_LAMP_PLUGIN_VIEW_H
+#define ICON_TEXT_LAMP_PLUGIN_VIEW_H
 
 /******************************************************************************
  * Compile Switches
@@ -90,6 +90,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* ICON_TEXT_PLUGIN_VIEW_H */
+#endif  /* ICON_TEXT_LAMP_PLUGIN_VIEW_H */
 
 /** @} */
