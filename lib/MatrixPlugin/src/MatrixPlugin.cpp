@@ -46,6 +46,30 @@
  * Types and classes
  *****************************************************************************/
 
+#if 8U == CONFIG_LED_MATRIX_HEIGHT
+
+/** Scaling factor numerator: 256 * (3/4)^(8/height) */
+static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 192U;
+
+#elif 32U == CONFIG_LED_MATRIX_HEIGHT
+
+/** Scaling factor numerator: 256 * (3/4)^(8/height) */
+static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 238U;
+
+#elif 64U == CONFIG_LED_MATRIX_HEIGHT
+
+/** Scaling factor numerator: 256 * (3/4)^(8/height) */
+static constexpr uint16_t  SCALE_FACTOR_NUMERATOR      = 246U;
+
+#else
+
+#error CONFIG_LED_MATRIX_HEIGHT value not supported!
+
+#endif
+
+/** Scaling factor denominator. */
+static constexpr uint16_t  SCALE_FACTOR_DENOMINATOR    = 256U;
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -76,8 +100,7 @@ void MatrixPlugin::update(YAGfx& gfx)
     {
         const Color     CODE_COLOR(175U, 255U, 175U);
         const Color     TRAIL_COLOR(27U, 130U, 39U);
-        const uint16_t  SCALE_FACTOR_NUMERATOR      = 192U;
-        const uint16_t  SCALE_FACTOR_DENOMINATOR    = 256U;
+
         int16_t         x       = 0;
         int16_t         y       = 0;
         Color           color;
