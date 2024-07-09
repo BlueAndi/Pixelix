@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Three icon plugin
+ * @brief  Multiple icon plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
  * @addtogroup plugin
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef ThreeIconPlugin_H
-#define ThreeIconPlugin_H
+#ifndef MULTI_ICON_PLUGIN_H
+#define MULTI_ICON_PLUGIN_H
 
 /******************************************************************************
  * Compile Switches
@@ -58,9 +58,9 @@
  *****************************************************************************/
 
 /**
- * Shows three separate icons.
+ * Shows multiple separate icons, depended on the available display size.
  */
-class ThreeIconPlugin : public Plugin
+class MultiIconPlugin : public Plugin
 {
 public:
 
@@ -70,7 +70,7 @@ public:
      * @param[in] name  Plugin name (must exist over lifetime).
      * @param[in] uid   Unique id.
      */
-    ThreeIconPlugin(const char* name, uint16_t uid) :
+    MultiIconPlugin(const char* name, uint16_t uid) :
         Plugin(name, uid),
         m_view(),
         m_slots(),
@@ -83,7 +83,7 @@ public:
     /**
      * Destroys the plugin.
      */
-    ~ThreeIconPlugin()
+    ~MultiIconPlugin()
     {
         m_mutex.destroy();
     }
@@ -98,7 +98,7 @@ public:
      */
     static IPluginMaintenance* create(const char* name, uint16_t uid)
     {
-        return new(std::nothrow)ThreeIconPlugin(name, uid);
+        return new(std::nothrow)MultiIconPlugin(name, uid);
     }
 
     /**
@@ -264,10 +264,15 @@ private:
      */
     static const char*      TOPIC_BITMAP;
 
-   /**
+    /**
      * Plugin topic, used to control which icon is shown in which slot.
      */
     static const char*      TOPIC_SLOT;
+
+    /**
+     * Plugin topic, used to get the number of slots.
+     */
+    static const char*      TOPIC_SLOTS;
 
     /**
      * The slot data required for management.
@@ -280,8 +285,8 @@ private:
 
     } IconSlot;
 
-    _ThreeIconPlugin::View      m_view;                                             /**< View with all widgets. */
-    IconSlot                    m_slots[_ThreeIconPlugin::View::MAX_ICON_SLOTS];    /**< Icon slots. */
+    _MultiIconPlugin::View      m_view;                                             /**< View with all widgets. */
+    IconSlot                    m_slots[_MultiIconPlugin::View::MAX_ICON_SLOTS];    /**< Icon slots. */
     bool                        m_isUploadError;                                    /**< Flag to signal a upload error. */
     mutable MutexRecursive      m_mutex;                                            /**< Mutex to protect against concurrent access. */
 
@@ -304,6 +309,6 @@ private:
  * Functions
  *****************************************************************************/
 
-#endif  /* ThreeIconPlugin_H */
+#endif  /* MULTI_ICON_PLUGIN_H */
 
 /** @} */

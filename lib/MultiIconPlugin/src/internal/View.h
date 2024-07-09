@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  ThreeIconPlugin view
+ * @brief  MultiIconPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
@@ -54,11 +54,11 @@
  *****************************************************************************/
 
 /** Internal plugin functionality. */
-namespace _ThreeIconPlugin
+namespace _MultiIconPlugin
 {
 
 /**
- * ThreeIconPlugin view.
+ * MultiIconPlugin view.
  */
 class View : public MultiIconViewBase
 {
@@ -85,7 +85,7 @@ private:
     View& operator=(const View& other);
 };
 
-} /* _ThreeIconPlugin */
+} /* _MultiIconPlugin */
 
 /******************************************************************************
  * Functions

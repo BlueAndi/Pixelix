@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  ThreeIconPlugin view
+ * @brief  MultiIconPlugin view
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
@@ -34,7 +34,7 @@
  *****************************************************************************/
 #include "View.h"
 
-using namespace _ThreeIconPlugin;
+using namespace _MultiIconPlugin;
 
 /******************************************************************************
  * Compiler Switches

@@ -74,6 +74,15 @@ public:
             {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_2_X, BITMAP_Y}
         }
     {
+        uint8_t slot = 0U;
+
+        while(MAX_ICON_SLOTS > slot)
+        {
+            m_bitmapWidgets[slot].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+            m_bitmapWidgets[slot].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+
+            ++slot;
+        }
     }
 
     /**

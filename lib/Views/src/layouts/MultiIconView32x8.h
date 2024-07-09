@@ -69,11 +69,20 @@ public:
     MultiIconView32x8() :
         IMultiIconView(),
         m_bitmapWidgets{
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_0_X, BITMAP_Y},
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_1_X, BITMAP_Y},
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_2_X, BITMAP_Y}
+            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_0_X, BITMAP_0_Y},
+            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_1_X, BITMAP_1_Y},
+            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_2_X, BITMAP_2_Y}
         }
     {
+        uint8_t slot = 0U;
+
+        while(MAX_ICON_SLOTS > slot)
+        {
+            m_bitmapWidgets[slot].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+            m_bitmapWidgets[slot].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+
+            ++slot;
+        }
     }
 
     /**
@@ -172,8 +181,14 @@ protected:
     /** Bitmap 2 x-coordinate in pixel. */
     static const uint8_t    BITMAP_2_X      = 2U * (BITMAP_WIDTH + BITMAP_DISTANCE);
 
-    /** Bitmap y-coordindate in pixel. */
-    static const uint8_t    BITMAP_Y        = 0U;
+    /** Bitmap 0 y-coordindate in pixel. */
+    static const uint16_t   BITMAP_0_Y      = 0U;
+
+    /** Bitmap 1 y-coordindate in pixel. */
+    static const uint16_t   BITMAP_1_Y      = BITMAP_0_Y;
+
+    /** Bitmap 2 y-coordindate in pixel. */
+    static const uint16_t   BITMAP_2_Y      = BITMAP_0_Y;
 
     BitmapWidget    m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
 

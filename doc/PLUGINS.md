@@ -13,7 +13,7 @@ Each plugin is identified by its unique UID.
   * [IconTextPlugin](#icontextplugin)
   * [IconTextLampPlugin](#icontextlampplugin)
   * [JustTextPlugin](#justtextplugin)
-  * [ThreeIconPlugin](#threeiconplugin)
+  * [MultiIconPlugin](#multiiconplugin)
 * [Dedicated plugins](#dedicated-plugins)
   * [BatteryPlugin](#batteryplugin)
   * [BTCQuotePlugin](#btcquoteplugin)
@@ -71,9 +71,9 @@ The text to be displayed can be set via the [REST API](https://app.swaggerhub.co
 
 If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.
 
-## ThreeIconPlugin
-The ThreeIconPlugin shows three icons on the display.\
-Each icon can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.4.0#/ThreeIconPlugin).
+## MultiIconPlugin
+The MultiIconPlugin shows multiple icons on the display.\
+Each icon can be set separately via the [REST API](https://app.swaggerhub.com/apis/BlueAndi/Pixelix/1.4.0#/MultiIconPlugin).
 
 # Dedicated plugins
 Dedicated plugins are plugins which only serves one single purpose thy are only internally configurable.

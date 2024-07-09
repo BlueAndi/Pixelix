@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  Three icon plugin
+ * @brief  Multiple icon plugin
  * @author Yann Le Glaz <yann_le@web.de>
  *
  */
@@ -33,7 +33,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "ThreeIconPlugin.h"
+#include "MultiIconPlugin.h"
 
 #include <FileSystem.h>
 #include <Logging.h>
@@ -60,21 +60,24 @@
  *****************************************************************************/
 
 /* Initialize bitmap control topic. */
-const char* ThreeIconPlugin::TOPIC_BITMAP   = "/bitmap";
+const char* MultiIconPlugin::TOPIC_BITMAP   = "/bitmap";
 
 /* Initialize slot control topic. */
-const char* ThreeIconPlugin::TOPIC_SLOT     = "/slot";
+const char* MultiIconPlugin::TOPIC_SLOT     = "/slot";
+
+/* Initialize slots topic. */
+const char* MultiIconPlugin::TOPIC_SLOTS    = "/slots";
 
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
 
-void ThreeIconPlugin::getTopics(JsonArray& topics) const
+void MultiIconPlugin::getTopics(JsonArray& topics) const
 {
     uint8_t slotId = 0U;
     uint8_t iconId = 0U;
 
-    for(slotId = 0U; slotId < _ThreeIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+    for(slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
     {
         JsonObject jsonAnimation = topics.createNestedObject();
 
@@ -88,19 +91,21 @@ void ThreeIconPlugin::getTopics(JsonArray& topics) const
             jsonIcon["access"]  = "w"; /* Only icon upload is supported. */
         }
     }
+
+    topics.add(TOPIC_SLOTS);
 }
 
-bool ThreeIconPlugin::getTopic(const String& topic, JsonObject& value) const
+bool MultiIconPlugin::getTopic(const String& topic, JsonObject& value) const
 {
     bool isSuccessful = false;
 
     if (0U != topic.startsWith(String(TOPIC_SLOT) + "/"))
     {
-        uint8_t slotId  = _ThreeIconPlugin::View::MAX_ICON_SLOTS;
+        uint8_t slotId  = _MultiIconPlugin::View::MAX_ICON_SLOTS;
         bool    status  = getSlotIdFromTopic(slotId, topic);
 
         if ((true == status) &&
-            (_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId))
+            (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
         {
             uint8_t     iconIdx;
             uint8_t     activeIconId    = getActiveIconId(slotId);
@@ -123,22 +128,32 @@ bool ThreeIconPlugin::getTopic(const String& topic, JsonObject& value) const
             isSuccessful = true;
         }
     }
+    else if (0U != topic.equals(TOPIC_SLOTS))
+    {
+        value["slots"] = _MultiIconPlugin::View::MAX_ICON_SLOTS;
+
+        isSuccessful = true;
+    }
+    else
+    {
+        ;
+    }
 
     return isSuccessful;
 }
 
-bool ThreeIconPlugin::setTopic(const String& topic, const JsonObjectConst& value)
+bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value)
 {
     bool isSuccessful = false;
 
     if (0U != topic.startsWith(String(TOPIC_BITMAP) + "/"))
     {
-        uint8_t slotId  = _ThreeIconPlugin::View::MAX_ICON_SLOTS;
+        uint8_t slotId  = _MultiIconPlugin::View::MAX_ICON_SLOTS;
         uint8_t iconId  = MAX_ICONS_PER_SLOT;
         bool    status  = getSlotIdAndIconIdFromTopic(slotId, iconId, topic);
 
         if ((true == status) &&
-            (_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
+            (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
             (MAX_ICONS_PER_SLOT > iconId))
         {
             JsonVariantConst jsonIconPath = value["fullPath"];
@@ -154,11 +169,11 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
     }
     else if (0U != topic.startsWith(String(TOPIC_SLOT) + "/"))
     {
-        uint8_t slotId  = _ThreeIconPlugin::View::MAX_ICON_SLOTS;
+        uint8_t slotId  = _MultiIconPlugin::View::MAX_ICON_SLOTS;
         bool    status  = getSlotIdFromTopic(slotId, topic);
 
         if ((true == status) &&
-            (_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId))
+            (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
         {
             JsonVariantConst    jsonActiveIconId    = value["activeIconId"];
             JsonVariantConst    jsonIcons           = value["icons"];
@@ -209,7 +224,7 @@ bool ThreeIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
     return isSuccessful;
 }
 
-bool ThreeIconPlugin::hasTopicChanged(const String& topic)
+bool MultiIconPlugin::hasTopicChanged(const String& topic)
 {
     bool hasTopicChanged = false;
 
@@ -219,7 +234,7 @@ bool ThreeIconPlugin::hasTopicChanged(const String& topic)
         bool    status  = getSlotIdFromTopic(slotId, topic);
 
         if ((true == status) &&
-            (_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId))
+            (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId))
         {
             MutexGuard<MutexRecursive> guard(m_mutex);
 
@@ -231,18 +246,18 @@ bool ThreeIconPlugin::hasTopicChanged(const String& topic)
     return hasTopicChanged;
 }
 
-bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename)
+bool MultiIconPlugin::isUploadAccepted(const String& topic, const String& srcFilename, String& dstFilename)
 {
     bool isAccepted = false;
 
     if (0U != topic.startsWith(String(TOPIC_BITMAP) + "/"))
     {
-        uint8_t slotId  = _ThreeIconPlugin::View::MAX_ICON_SLOTS;
+        uint8_t slotId  = _MultiIconPlugin::View::MAX_ICON_SLOTS;
         uint8_t iconId  = MAX_ICONS_PER_SLOT;
         bool    status  = getSlotIdAndIconIdFromTopic(slotId, iconId, topic);
 
         if ((true == status) &&
-            (_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
+            (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
             (MAX_ICONS_PER_SLOT > iconId))
         {
             if (0U != srcFilename.endsWith(BitmapWidget::FILE_EXT_BITMAP))
@@ -265,7 +280,7 @@ bool ThreeIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
     return isAccepted;
 }
 
-void ThreeIconPlugin::start(uint16_t width, uint16_t height)
+void MultiIconPlugin::start(uint16_t width, uint16_t height)
 {
     uint8_t                     slotId      = 0U;
     uint8_t                     iconId      = 0U;
@@ -274,7 +289,7 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
     m_view.init(width, height);
 
     /* Scan the filesystem for the icon images. */
-    for(slotId = 0U; slotId < _ThreeIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+    for(slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
     { 
         IconSlot&   iconSlot = m_slots[slotId];
 
@@ -314,14 +329,14 @@ void ThreeIconPlugin::start(uint16_t width, uint16_t height)
     }
 }
 
-void ThreeIconPlugin::stop()
+void MultiIconPlugin::stop()
 {
     uint8_t                     slotId      = 0U;
     uint8_t                     iconId      = 0U;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     /* Scan the filesystem for the icon images. */
-    for(slotId = 0U; slotId < _ThreeIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
+    for(slotId = 0U; slotId < _MultiIconPlugin::View::MAX_ICON_SLOTS; ++slotId)
     { 
         IconSlot&   iconSlot = m_slots[slotId];
 
@@ -343,19 +358,19 @@ void ThreeIconPlugin::stop()
     }
 }
 
-void ThreeIconPlugin::update(YAGfx& gfx)
+void MultiIconPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
     m_view.update(gfx);
 }
 
-uint8_t ThreeIconPlugin::getActiveIconId(uint8_t slotId) const
+uint8_t MultiIconPlugin::getActiveIconId(uint8_t slotId) const
 {
     uint8_t                     activeIconId    = 0U;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if (_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId)
+    if (_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId)
     {
         activeIconId = m_slots[slotId].activeIconId;
     }
@@ -363,12 +378,12 @@ uint8_t ThreeIconPlugin::getActiveIconId(uint8_t slotId) const
     return activeIconId;
 }
 
-bool ThreeIconPlugin::setActiveIconId(uint8_t slotId, uint8_t iconId)
+bool MultiIconPlugin::setActiveIconId(uint8_t slotId, uint8_t iconId)
 {
     bool                        isSuccessful    = false;
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    if ((_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
+    if ((_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
         (MAX_ICONS_PER_SLOT > iconId))
     {
         IconSlot& iconSlot = m_slots[slotId];
@@ -397,9 +412,9 @@ bool ThreeIconPlugin::setActiveIconId(uint8_t slotId, uint8_t iconId)
     return isSuccessful;
 }
 
-void ThreeIconPlugin::clearIcon(uint8_t slotId, uint8_t iconId)
+void MultiIconPlugin::clearIcon(uint8_t slotId, uint8_t iconId)
 {
-    if ((_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
+    if ((_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
         (MAX_ICONS_PER_SLOT > iconId))
     {
         MutexGuard<MutexRecursive>  guard(m_mutex);
@@ -418,11 +433,11 @@ void ThreeIconPlugin::clearIcon(uint8_t slotId, uint8_t iconId)
     }
 }
 
-bool ThreeIconPlugin::getIconFilePath(uint8_t slotId, uint8_t iconId, String& fullPath) const
+bool MultiIconPlugin::getIconFilePath(uint8_t slotId, uint8_t iconId, String& fullPath) const
 {
     bool isSuccessful = false;
 
-    if ((_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
+    if ((_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
         (MAX_ICONS_PER_SLOT > iconId))
     {
         MutexGuard<MutexRecursive> guard(m_mutex);
@@ -433,11 +448,11 @@ bool ThreeIconPlugin::getIconFilePath(uint8_t slotId, uint8_t iconId, String& fu
     return isSuccessful;
 }
 
-bool ThreeIconPlugin::setIconFilePath(uint8_t slotId, uint8_t iconId, const String& fullPath)
+bool MultiIconPlugin::setIconFilePath(uint8_t slotId, uint8_t iconId, const String& fullPath)
 {
     bool isSuccessful = false;
 
-    if ((_ThreeIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
+    if ((_MultiIconPlugin::View::MAX_ICON_SLOTS > slotId) &&
         (MAX_ICONS_PER_SLOT > iconId))
     {
         MutexGuard<MutexRecursive>  guard(m_mutex);
@@ -462,7 +477,7 @@ bool ThreeIconPlugin::setIconFilePath(uint8_t slotId, uint8_t iconId, const Stri
                 isSuccessful = true;
             }
             /* If a icon file path is set, the icon will be loaded. */
-            else if (true == m_view.loadIcon(iconId, iconSlot.icons[iconId]))
+            else if (true == m_view.loadIcon(slotId, iconSlot.icons[iconId]))
             {
                 isSuccessful = true;
             }
@@ -489,12 +504,12 @@ bool ThreeIconPlugin::setIconFilePath(uint8_t slotId, uint8_t iconId, const Stri
  * Private Methods
  *****************************************************************************/
 
-String ThreeIconPlugin::getFileName(uint8_t slotId, uint8_t iconId, const String& ext) const
+String MultiIconPlugin::getFileName(uint8_t slotId, uint8_t iconId, const String& ext) const
 {
     return generateFullPath(getUID(), "_" + String(slotId) + "_" + String(iconId) + ext);
 }
 
-bool ThreeIconPlugin::getSlotIdFromTopic(uint8_t& slotId, const String& topic) const
+bool MultiIconPlugin::getSlotIdFromTopic(uint8_t& slotId, const String& topic) const
 {
     bool    isSuccessful        = false;
     int32_t indexBeginSlotId    = topic.lastIndexOf("/");
@@ -515,7 +530,7 @@ bool ThreeIconPlugin::getSlotIdFromTopic(uint8_t& slotId, const String& topic) c
     return isSuccessful;
 }
 
-bool ThreeIconPlugin::getSlotIdAndIconIdFromTopic(uint8_t& slotId, uint8_t& iconId, const String& topic) const
+bool MultiIconPlugin::getSlotIdAndIconIdFromTopic(uint8_t& slotId, uint8_t& iconId, const String& topic) const
 {
     bool    isSuccessful        = false;
     int32_t indexBeginIconId    = topic.lastIndexOf("/");
