@@ -223,7 +223,7 @@ public:
     bool setActiveIconId(uint8_t slotId, uint8_t iconId);
 
     /**
-     * Clear icon.
+     * Clear icon from view and remove it from filesytem.
      * 
      * @param[in] slotId    The slot id.
      * @param[in] iconId    The icon id. 
@@ -273,6 +273,11 @@ private:
      * Plugin topic, used to get the number of slots.
      */
     static const char*      TOPIC_SLOTS;
+
+    /**
+     * File extension used for temporary files.
+     */
+    static const char*      FILE_EXT_TMP;
 
     /**
      * The slot data required for management.

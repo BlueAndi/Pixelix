@@ -60,16 +60,19 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_TEXT  = "/text";
+const char* IconTextLampPlugin::TOPIC_TEXT      = "/text";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMPS = "/lamps";
+const char* IconTextLampPlugin::TOPIC_LAMPS     = "/lamps";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_LAMP  = "/lamp";
+const char* IconTextLampPlugin::TOPIC_LAMP      = "/lamp";
 
 /* Initialize plugin topic. */
-const char* IconTextLampPlugin::TOPIC_ICON  = "/bitmap";
+const char* IconTextLampPlugin::TOPIC_ICON      = "/bitmap";
+
+/* Initialize file extension for temporary files. */
+const char* IconTextLampPlugin::FILE_EXT_TMP    = ".tmp";
 
 /******************************************************************************
  * Public Methods
@@ -185,16 +188,25 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
         {
             String iconFullPath = jsonIconFullPath.as<String>();
 
-            if (true == iconFullPath.isEmpty())
+            /* Clear always the icon indpended whether its requested by user.
+             * In case of an uploaded new icon, clearing will close the image
+             * file and makes it possible to overwrite the file.
+             */
+            clearIcon();
+
+            if (false == iconFullPath.isEmpty())
             {
-                clearIcon();
+                /* Rename uploaded icon by removing the file extension for temporary files. */
+                String iconFullPathWithoutTmp = iconFullPath.substring(0, iconFullPath.length() - strlen(FILE_EXT_TMP));
+
+                FILESYSTEM.rename(iconFullPath, iconFullPathWithoutTmp);
+
+                isSuccessful = loadIcon(iconFullPathWithoutTmp);
             }
             else
             {
-                (void)loadIcon(iconFullPath);
+                isSuccessful = true;
             }
-
-            isSuccessful = true;
         }
     }
     else if (0U != topic.startsWith(String(TOPIC_LAMP) + "/"))
@@ -313,6 +325,15 @@ bool IconTextLampPlugin::isUploadAccepted(const String& topic, const String& src
         {
             ;
         }
+
+        if (true == isAccepted)
+        {
+            /* If a GIF image is loaded, the file is kept open and can not be overwritten.
+             * Therefore store it first with the additional extension for temporary files.
+             * It will be renamed then in the setTopic() method if upload is successful.
+             */
+            dstFilename += FILE_EXT_TMP;
+        }
     }
 
     return isAccepted;
@@ -350,7 +371,7 @@ void IconTextLampPlugin::stop()
     if (false != FILESYSTEM.remove(bitmapFullPath))
     {
         LOG_INFO("File %s removed", bitmapFullPath.c_str());
-    }
+}
 
     /* Remove icon which is specific for the plugin instance. */
     if (false != FILESYSTEM.remove(gifFullPath))
@@ -388,19 +409,19 @@ void IconTextLampPlugin::setText(const String& formatText)
 
 bool IconTextLampPlugin::loadIcon(const String& filename)
 {
-    bool                        status = false;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (m_iconPath != filename)
     {
         m_iconPath = filename;
 
         m_hasTopicTextChanged = true;
-
-        status = m_view.loadIcon(m_iconPath);
     }
 
-    return status;
+    /* Load the icon always again, as the path might be the same, but
+     * the icon file changed.
+     */
+    return m_view.loadIcon(m_iconPath);
 }
 
 void IconTextLampPlugin::clearIcon()
@@ -409,8 +430,14 @@ void IconTextLampPlugin::clearIcon()
 
     if (false == m_iconPath.isEmpty())
     {
-        m_iconPath.clear();
+        /* Clear icon first in the view (will close file). */
         m_view.clearIcon();
+
+        /* Remove icon from filesystem. */
+        (void)FILESYSTEM.remove(m_iconPath);
+
+        /* Clear the path to the icon. */
+        m_iconPath.clear();
 
         m_hasTopicTextChanged = true;
     }

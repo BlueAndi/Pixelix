@@ -59,10 +59,13 @@
  *****************************************************************************/
 
 /* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_TEXT  = "/text";
+const char* IconTextPlugin::TOPIC_TEXT      = "/text";
 
 /* Initialize plugin topic. */
-const char* IconTextPlugin::TOPIC_ICON  = "/bitmap";
+const char* IconTextPlugin::TOPIC_ICON      = "/bitmap";
+
+/* Initialize file extension for temporary files. */
+const char* IconTextPlugin::FILE_EXT_TMP    = ".tmp";
 
 /******************************************************************************
  * Public Methods
@@ -142,16 +145,25 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         {
             String iconFullPath = jsonIconFullPath.as<String>();
 
-            if (true == iconFullPath.isEmpty())
+            /* Clear always the icon indpended whether its requested by user.
+             * In case of an uploaded new icon, clearing will close the image
+             * file and makes it possible to overwrite the file.
+             */
+            clearIcon();
+
+            if (false == iconFullPath.isEmpty())
             {
-                clearIcon();
+                /* Rename uploaded icon by removing the file extension for temporary files. */
+                String iconFullPathWithoutTmp = iconFullPath.substring(0, iconFullPath.length() - strlen(FILE_EXT_TMP));
+
+                FILESYSTEM.rename(iconFullPath, iconFullPathWithoutTmp);
+
+                isSuccessful = loadIcon(iconFullPathWithoutTmp);
             }
             else
             {
-                (void)loadIcon(iconFullPath);
+                isSuccessful = true;
             }
-
-            isSuccessful = true;
         }
     }
     else if (0U != topic.equals(TOPIC_ICON))
@@ -213,6 +225,15 @@ bool IconTextPlugin::isUploadAccepted(const String& topic, const String& srcFile
         else
         {
             ;
+        }
+
+        if (true == isAccepted)
+        {
+            /* If a GIF image is loaded, the file is kept open and can not be overwritten.
+             * Therefore store it first with the additional extension for temporary files.
+             * It will be renamed then in the setTopic() method if upload is successful.
+             */
+            dstFilename += FILE_EXT_TMP;
         }
     }
     else
@@ -293,19 +314,19 @@ void IconTextPlugin::setText(const String& formatText)
 
 bool IconTextPlugin::loadIcon(const String& filename)
 {
-    bool                        status = false;
-    MutexGuard<MutexRecursive>  guard(m_mutex);
+    MutexGuard<MutexRecursive> guard(m_mutex);
 
     if (m_iconPath != filename)
     {
         m_iconPath = filename;
 
         m_hasTopicChanged = true;
-
-        status = m_view.loadIcon(m_iconPath);
     }
 
-    return status;
+    /* Load the icon always again, as the path might be the same, but
+     * the icon file changed.
+     */
+    return m_view.loadIcon(m_iconPath);
 }
 
 void IconTextPlugin::clearIcon()
@@ -314,8 +335,14 @@ void IconTextPlugin::clearIcon()
 
     if (false == m_iconPath.isEmpty())
     {
-        m_iconPath.clear();
+        /* Clear icon first in the view (will close file). */
         m_view.clearIcon();
+
+        /* Remove icon from filesystem. */
+        (void)FILESYSTEM.remove(m_iconPath);
+
+        /* Clear the path to the icon. */
+        m_iconPath.clear();
 
         m_hasTopicChanged = true;
     }

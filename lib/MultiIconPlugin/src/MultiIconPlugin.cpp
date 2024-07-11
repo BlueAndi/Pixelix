@@ -68,6 +68,9 @@ const char* MultiIconPlugin::TOPIC_SLOT     = "/slot";
 /* Initialize slots topic. */
 const char* MultiIconPlugin::TOPIC_SLOTS    = "/slots";
 
+/* Initialize file extension for temporary files. */
+const char* MultiIconPlugin::FILE_EXT_TMP   = ".tmp";
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -161,9 +164,27 @@ bool MultiIconPlugin::setTopic(const String& topic, const JsonObjectConst& value
             /* File upload? */
             if (false == jsonIconPath.isNull())
             {
-                String iconPath = jsonIconPath.as<String>();
+                String iconFullPath = jsonIconPath.as<String>();
 
-                isSuccessful = setIconFilePath(slotId, iconId, iconPath);
+                /* Clear always the icon indpended whether its requested by user.
+                 * In case of an uploaded new icon, clearing will close the image
+                 * file and makes it possible to overwrite the file.
+                 */
+                clearIcon(slotId, iconId);
+
+                if (false == iconFullPath.isEmpty())
+                {
+                    /* Rename uploaded icon by removing the file extension for temporary files. */
+                    String iconFullPathWithoutTmp = iconFullPath.substring(0, iconFullPath.length() - strlen(FILE_EXT_TMP));
+
+                    FILESYSTEM.rename(iconFullPath, iconFullPathWithoutTmp);
+
+                    isSuccessful = setIconFilePath(slotId, iconId, iconFullPathWithoutTmp);
+                }
+                else
+                {
+                    isSuccessful = true;
+                }
             }
         }
     }
@@ -273,6 +294,15 @@ bool MultiIconPlugin::isUploadAccepted(const String& topic, const String& srcFil
             else
             {
                 ;
+            }
+
+            if (true == isAccepted)
+            {
+                /* If a GIF image is loaded, the file is kept open and can not be overwritten.
+                * Therefore store it first with the additional extension for temporary files.
+                * It will be renamed then in the setTopic() method if upload is successful.
+                */
+                dstFilename += FILE_EXT_TMP;
             }
         }
     }
@@ -422,13 +452,18 @@ void MultiIconPlugin::clearIcon(uint8_t slotId, uint8_t iconId)
 
         if (false == iconSlot.icons[iconId].isEmpty())
         {
-            iconSlot.icons[iconId].clear();
-            iconSlot.hasSlotChanged = true;
-
             if (iconSlot.activeIconId == iconId)
             {
-                m_view.clearIcon(iconId);
+                /* Clear icon first in the view (will close file). */
+                m_view.clearIcon(slotId);
             }
+
+            /* Remove icon from filesystem. */
+            (void)FILESYSTEM.remove(iconSlot.icons[iconId]);
+
+            /* Clear the path to the icon. */
+            iconSlot.icons[iconId].clear();
+            iconSlot.hasSlotChanged = true;
         }
     }
 }

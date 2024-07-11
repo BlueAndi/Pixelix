@@ -232,7 +232,7 @@ public:
     bool loadIcon(const String& filename);
 
     /**
-     * Clear icon.
+     * Clear icon from view and remove it from filesytem.
      */
     void clearIcon();
 
@@ -281,6 +281,11 @@ private:
      * Plugin topic, used for parameter exchange.
      */
     static const char*      TOPIC_ICON;
+
+    /**
+     * File extension used for temporary files.
+     */
+    static const char*      FILE_EXT_TMP;
 
     _IconTextLampPlugin::View   m_view;                 /**< View with all widgets. */
     String                      m_iconPath;             /**< Full path to icon. */
