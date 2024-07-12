@@ -106,9 +106,11 @@ void BitmapWidget::set(const YAGfxBitmap& bitmap)
 
 void BitmapWidget::clear(const Color& color)
 {
+    (void)color; /* Not used. */
+
     if (IMG_TYPE_BMP == m_imgType)
     {
-        m_bitmap.fillScreen(color);
+        m_bitmap.release();
     }
     else if (IMG_TYPE_GIF == m_imgType)
     {
@@ -118,6 +120,8 @@ void BitmapWidget::clear(const Color& color)
     {
         ;
     }
+
+    m_imgType = IMG_TYPE_NO_IMAGE;
 }
 
 bool BitmapWidget::load(FS& fs, const String& filename)

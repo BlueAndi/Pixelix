@@ -120,6 +120,28 @@ public:
     BitmapWidget& operator=(const BitmapWidget& widget);
 
     /**
+     * Set widget width.
+     * 
+     * @param[in] width Width in pixel
+     */
+    void setWidth(uint16_t width) override
+    {
+        Widget::setWidth(width);
+        alignWidget();
+    }
+
+    /**
+     * Set widget height.
+     * 
+     * @param[in] height Height in pixel
+     */
+    void setHeight(uint16_t height) override
+    {
+        Widget::setHeight(height);
+        alignWidget();
+    }
+
+    /**
      * Get the bitmap.
      *
      * @return Bitmap
@@ -181,8 +203,18 @@ public:
         alignWidget();
     }
 
+    /**
+     * Is bitmap widget empty, means no image is shown?
+     * 
+     * @return If empty, it will return true otherwise false.
+     */
+    bool isEmpty() const
+    {
+        return IMG_TYPE_NO_IMAGE == m_imgType;
+    }
+
     /** Widget type string */
-    static const char* WIDGET_TYPE;
+    static const char*  WIDGET_TYPE;
 
     /**
      * Filename extension of bitmap image file.

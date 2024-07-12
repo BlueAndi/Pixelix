@@ -69,10 +69,10 @@ public:
     MultiIconView64x64() :
         IMultiIconView(),
         m_bitmapWidgets{
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_0_X, BITMAP_0_Y},
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_1_X, BITMAP_1_Y},
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_2_X, BITMAP_2_Y},
-            {BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_3_X, BITMAP_3_Y}
+            {0U, 0U, 0, 0},
+            {0U, 0U, 0, 0},
+            {0U, 0U, 0, 0},
+            {0U, 0U, 0, 0}
         }
     {
         uint8_t slot = 0U;
@@ -130,12 +130,21 @@ public:
      */
     bool loadIcon(uint8_t slotId, const String& filename) override
     {
+        bool isSuccessful = false;
+
         if (MAX_ICON_SLOTS <= slotId)
         {
             slotId = 0U;
         }
 
-        return m_bitmapWidgets[slotId].load(FILESYSTEM, filename);
+        isSuccessful = m_bitmapWidgets[slotId].load(FILESYSTEM, filename);
+
+        if (true == isSuccessful)
+        {
+            reorder();
+        }
+
+        return isSuccessful;
     }
 
     /**
@@ -151,6 +160,7 @@ public:
         }
 
         m_bitmapWidgets[slotId].clear(ColorDef::BLACK);
+        reorder();
     }
 
     /**
@@ -160,47 +170,42 @@ public:
 
 protected:
 
-    /**
-     * Bitmap width in pixels.
-     */
-    static const uint16_t   BITMAP_WIDTH    = 32U;
-
-    /**
-     * Bitmap height in pixels.
-     */
-    static const uint16_t   BITMAP_HEIGHT   = 32U;
-
-    /** Distance between two bitmaps in pixel. */
-    static const uint16_t   BITMAP_DISTANCE = 0U;
-
-    /** Bitmap 0 x-coordinate in pixel. */
-    static const uint16_t    BITMAP_0_X      = 0U * (BITMAP_WIDTH + BITMAP_DISTANCE);
-
-    /** Bitmap 1 x-coordinate in pixel. */
-    static const uint16_t    BITMAP_1_X      = 1U * (BITMAP_WIDTH + BITMAP_DISTANCE);
-
-    /** Bitmap 2 x-coordinate in pixel. */
-    static const uint16_t    BITMAP_2_X      = BITMAP_0_X;
-
-    /** Bitmap 3 x-coordinate in pixel. */
-    static const uint16_t    BITMAP_3_X      = BITMAP_1_X;
-
-    /** Bitmap 0 y-coordindate in pixel. */
-    static const uint16_t    BITMAP_0_Y      = 0U;
-
-    /** Bitmap 1 y-coordindate in pixel. */
-    static const uint16_t    BITMAP_1_Y      = BITMAP_0_Y;
-
-    /** Bitmap 2 y-coordindate in pixel. */
-    static const uint16_t    BITMAP_2_Y      = BITMAP_HEIGHT;
-
-    /** Bitmap 3 y-coordindate in pixel. */
-    static const uint16_t    BITMAP_3_Y      = BITMAP_2_Y;
-
     BitmapWidget    m_bitmapWidgets[MAX_ICON_SLOTS]; /**< Bitmap widgets used to show the icons. */
 
     MultiIconView64x64(const MultiIconView64x64& other);
     MultiIconView64x64& operator=(const MultiIconView64x64& other);
+
+    /**
+     * Get the active number of icon slosts.
+     * 
+     * @return Number of active icon slots
+     */
+    uint8_t getActiveIconSlots();
+
+    /**
+     * Re-order the icons, depended on the number of active icon slots.
+     */
+    void reorder();
+
+    /**
+     * Apply layout with just one icon.
+     */
+    void applyLayout1();
+
+    /**
+     * Apply layout with two icons.
+     */
+    void applyLayout2();
+
+    /**
+     * Apply layout with three icons.
+     */
+    void applyLayout3();
+
+    /**
+     * Apply layout with four icons.
+     */
+    void applyLayout4();
 };
 
 /******************************************************************************
