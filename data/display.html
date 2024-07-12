@@ -109,6 +109,7 @@
             var ctx                 = null;     // Canvas context
             var pixelWidth          = 10;       // Width of a single LED in pixels
             var pixelHeight         = 10;       // Height of a single LED in pixels
+            var isDisplayUpdateOn   = false;
             var timerId             = 0;        // Timer id
             var period              = 400;      // Display refresh period in ms
             var wsClient            = new pixelix.ws.Client();
@@ -188,8 +189,10 @@
                         console.error(err);
                     }
                 }).finally(function() {
-                    /* Start next update timer. */
-                    timerId = window.setTimeout(getDisplayContent, period);
+                    if (true === isDisplayUpdateOn) {
+                        /* Start next update timer. */
+                        timerId = window.setTimeout(getDisplayContent, period);
+                    }
                 });
 
                 return;
@@ -299,13 +302,14 @@
                 disableUI();
 
                 /* Currently off? */
-                if (0 === timerId) {
+                if (false === isDisplayUpdateOn) {
                     timerId = window.setTimeout(getDisplayContent, period);
                     $("#updateDisplayButton").text("Disable auto. display update");
+                    isDisplayUpdateOn = true;
                 } else {
                     window.clearTimeout(timerId);
-                    timerId = 0;
                     $("#updateDisplayButton").text("Enable auto. display update");
+                    isDisplayUpdateOn = false;
                 }
 
                 enableUI();
