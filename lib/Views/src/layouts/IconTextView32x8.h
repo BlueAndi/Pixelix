@@ -59,6 +59,17 @@
 
 /**
  * View for 32x8 LED matrix with icon and text.
+ * 
+ * +-----------------------------------------------------------------+
+ * |                |                                                |
+ * |                |                                                |
+ * |                |                                                |
+ * |   Icon         |                   Text                         |
+ * |   8x8          |                   24x8                         |
+ * |                |                                                |
+ * |                |                                                |
+ * |                |                                                |
+ * +-----------------------------------------------------------------+
  */
 class IconTextView32x8 : public IIconTextView
 {
@@ -73,6 +84,10 @@ public:
         m_bitmapWidget(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
         m_textWidget(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y)
     {
+        m_bitmapWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+        m_bitmapWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+        
+        m_textWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
     }
 
     /**

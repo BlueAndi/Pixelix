@@ -59,7 +59,18 @@
  *****************************************************************************/
 
 /**
- * Generic view for 32x8 LED matrix with icon and text.
+ * View for 32x8 LED matrix with icon and text.
+ * 
+ * +-----------------------------------------------------------------+
+ * |                |                                                |
+ * |                |                                                |
+ * |                |                                                |
+ * |   Icon         |                   Text                         |
+ * |   8x8          |                   24x8                         |
+ * |                |                                                |
+ * |                +------------------------------------------------+
+ * |                |                  Lamps 24x1                    |
+ * +----------------+------------------------------------------------+
  */
 class IconTextLampView32x8 : public IIconTextLampView
 {
@@ -78,6 +89,8 @@ public:
                       {LAMP_WIDTH, LAMP_HEIGHT, LAMP_2_X , LAMP_Y},
                       {LAMP_WIDTH, LAMP_HEIGHT, LAMP_3_X , LAMP_Y}}
     {
+        m_bitmapWidget.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+        m_bitmapWidget.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
     }
 
     /**
