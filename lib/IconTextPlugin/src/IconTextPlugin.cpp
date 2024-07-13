@@ -338,9 +338,6 @@ void IconTextPlugin::clearIcon()
         /* Clear icon first in the view (will close file). */
         m_view.clearIcon();
 
-        /* Remove icon from filesystem. */
-        (void)FILESYSTEM.remove(m_iconPath);
-
         /* Clear the path to the icon. */
         m_iconPath.clear();
 

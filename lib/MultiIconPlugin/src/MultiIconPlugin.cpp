@@ -458,9 +458,6 @@ void MultiIconPlugin::clearIcon(uint8_t slotId, uint8_t iconId)
                 m_view.clearIcon(slotId);
             }
 
-            /* Remove icon from filesystem. */
-            (void)FILESYSTEM.remove(iconSlot.icons[iconId]);
-
             /* Clear the path to the icon. */
             iconSlot.icons[iconId].clear();
             iconSlot.hasSlotChanged = true;
