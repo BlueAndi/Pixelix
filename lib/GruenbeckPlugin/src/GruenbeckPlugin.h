@@ -79,8 +79,6 @@ public:
         PluginWithConfig(name, uid, FILESYSTEM),
         m_view(),
         m_ipAddress("192.168.0.16"),
-        m_httpResponseReceived(false),
-        m_relevantResponsePart(),
         m_client(),
         m_requestTimer(),
         m_mutex(),
@@ -286,8 +284,6 @@ private:
 
     _GruenbeckPlugin::View  m_view;                 /**< View with all widgets. */
     String                  m_ipAddress;            /**< IP-address of the Gruenbeck server. */
-    bool                    m_httpResponseReceived; /**< Flag to indicate a received HTTP response. */
-    String                  m_relevantResponsePart; /**< String used for the relevant part of the HTTP response. */
     AsyncHttpClient         m_client;               /**< Asynchronous HTTP client. */
     SimpleTimer             m_requestTimer;         /**< Timer, used for cyclic request of new data. */
     mutable MutexRecursive  m_mutex;                /**< Mutex to protect against concurrent access. */

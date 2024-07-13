@@ -373,18 +373,7 @@ void OpenWeatherPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    /* Text update available? */
-    if (true == m_isUpdateAvailable)
-    {
-        m_view.update(gfx);
-
-        m_isUpdateAvailable = false;
-    }
-    /* Update only the icon, as it may be animated. */
-    else
-    {
-        m_view.updateOnlyBitmap(gfx);
-    }
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -664,8 +653,6 @@ void OpenWeatherPlugin::updateDisplay(bool force)
         }
 
         m_view.setFormatText(text);
-
-        m_isUpdateAvailable = true;
     }
 }
 

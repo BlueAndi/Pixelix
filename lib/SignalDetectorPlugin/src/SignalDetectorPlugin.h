@@ -81,7 +81,6 @@ public:
         m_isDetected(false),
         m_pushUrl(),
         m_client(),
-        m_isUpdateReq(false),
         m_timer(),
         m_slotInterf(nullptr),
         m_hasTopicChanged(false)
@@ -281,7 +280,6 @@ private:
     bool                        m_isDetected;       /**< Shows that the signal was detected. */
     String                      m_pushUrl;          /**< Push URL which will be triggered if signal is detected. */
     AsyncHttpClient             m_client;           /**< HTTP(S) client used for push notification. */
-    bool                        m_isUpdateReq;      /**< Display update request, by changing the text. */
     SimpleTimer                 m_timer;            /**< Timer used for slot duration timeout detection in case deactivate() is not called. */
     const ISlotPlugin*          m_slotInterf;       /**< Slot interface */
     bool                        m_hasTopicChanged;  /**< Has the topic content changed? */

@@ -236,10 +236,7 @@ void SignalDetectorPlugin::stop()
 
 void SignalDetectorPlugin::active(YAGfx& gfx)
 {
-    /* Request display update. In principle only necessary once, except
-     * that the text changes during active phase.
-     */
-    m_isUpdateReq = true;
+    /* Nothing to do. */
 }
 
 void SignalDetectorPlugin::inactive()
@@ -301,13 +298,7 @@ void SignalDetectorPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive>  guard(m_mutex);
 
-    /* Update display only if requested. */
-    if (true == m_isUpdateReq)
-    {
-        m_view.update(gfx);
-
-        m_isUpdateReq = false;
-    }
+    m_view.update(gfx);
 }
 
 /******************************************************************************

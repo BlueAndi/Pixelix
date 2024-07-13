@@ -81,7 +81,6 @@ public:
         m_durationCounter(0u),
         m_shownSecond(-1),
         m_shownDayOfTheYear(-1),
-        m_isUpdateAvailable(false),
         m_timeFormat(TIME_FORMAT_DEFAULT),
         m_dateFormat(DATE_FORMAT_DEFAULT),
         m_timeZone(),
@@ -308,7 +307,6 @@ private:
     uint8_t                 m_durationCounter;      /**< Variable to count the Plugin duration in CHECK_UPDATE_PERIOD ticks . */
     int                     m_shownSecond;          /**< Used to trigger a display update in case the time shall be shown. [0; 59] */
     int                     m_shownDayOfTheYear;    /**< Used to trigger a display update in case the date shall be shown. [0; 365] */
-    bool                    m_isUpdateAvailable;    /**< Flag to indicate an updated date value. */
     String                  m_timeFormat;           /**< Time format according to strftime(). */
     String                  m_dateFormat;           /**< Date format according to strftime(). */
     String                  m_timeZone;             /**< Timezone of the time to show. If empty, the local time is used. */

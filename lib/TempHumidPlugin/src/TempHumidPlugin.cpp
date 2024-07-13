@@ -208,9 +208,9 @@ void TempHumidPlugin::update(YAGfx& gfx)
         default:
             break;
         }
-
-        m_view.update(gfx);
     }
+
+    m_view.update(gfx);
 }
 
 /******************************************************************************

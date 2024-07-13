@@ -125,6 +125,28 @@ public:
     TextWidget& operator=(const TextWidget& widget);
 
     /**
+     * Set widget width.
+     * 
+     * @param[in] width Width in pixel
+     */
+    void setWidth(uint16_t width) override
+    {
+        Widget::setWidth(width);
+        alignText(m_hAlign, m_vAlign);
+    }
+
+    /**
+     * Set widget height.
+     * 
+     * @param[in] height Height in pixel
+     */
+    void setHeight(uint16_t height) override
+    {
+        Widget::setHeight(height);
+        alignText(m_hAlign, m_vAlign);
+    }
+
+    /**
      * Set the text string. It can contain format tags like:
      * - "#RRGGBB" Color information in RGB888 format
      * 

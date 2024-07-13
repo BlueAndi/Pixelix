@@ -116,7 +116,6 @@ public:
         m_hasWeatherIconChanged(true),
         m_slotInterf(nullptr),
         m_durationCounter(0u),
-        m_isUpdateAvailable(false),
         m_hasTopicChanged(false),
         m_taskProxy()
     {
@@ -430,7 +429,6 @@ private:
     bool                        m_hasWeatherIconChanged;        /**< Has weather icon changed? If yes, it will be updated otherwise skipped to not disturb running animations. */
     const ISlotPlugin*          m_slotInterf;                   /**< Slot interface */
     uint8_t                     m_durationCounter;              /**< Variable to count the Plugin duration in DURATION_TICK_PERIOD ticks. */
-    bool                        m_isUpdateAvailable;            /**< Flag to indicate an updated date value. */
     bool                        m_hasTopicChanged;              /**< Has the topic content changed? */
 
     /**

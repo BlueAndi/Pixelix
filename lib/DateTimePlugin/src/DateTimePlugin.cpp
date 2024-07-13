@@ -241,13 +241,8 @@ void DateTimePlugin::inactive()
 void DateTimePlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
-
-    if (false != m_isUpdateAvailable)
-    {
-        m_view.update(gfx);
-
-        m_isUpdateAvailable = false;
-    }
+    
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -423,8 +418,7 @@ void DateTimePlugin::updateDateTime(bool force)
                 {
                     m_view.setFormatText(timeAsStr);
 
-                    m_shownSecond       = timeInfo.tm_sec;
-                    m_isUpdateAvailable = true;
+                    m_shownSecond = timeInfo.tm_sec;
                 }
                 
                 m_view.setWeekdayIndicator(timeInfo);
@@ -447,7 +441,6 @@ void DateTimePlugin::updateDateTime(bool force)
                     m_view.setFormatText(dateAsStr);
 
                     m_shownDayOfTheYear = timeInfo.tm_yday;
-                    m_isUpdateAvailable = true;
                 }
                 
                 m_view.setWeekdayIndicator(timeInfo);
@@ -464,7 +457,6 @@ void DateTimePlugin::updateDateTime(bool force)
         if(true == force)
         {
             m_view.setFormatText("{hc}?");
-            m_isUpdateAvailable = true;
         }
     }
 }

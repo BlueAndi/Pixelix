@@ -275,16 +275,7 @@ void GruenbeckPlugin::update(YAGfx& gfx)
 {
     MutexGuard<MutexRecursive> guard(m_mutex);
 
-    if (false != m_httpResponseReceived)
-    {
-        m_view.setFormatText("{hc}" + m_relevantResponsePart + "%");
-        
-        m_view.update(gfx);
-
-        m_relevantResponsePart = "";
-
-        m_httpResponseReceived = false;
-    }
+    m_view.update(gfx);
 }
 
 /******************************************************************************
@@ -453,8 +444,12 @@ void GruenbeckPlugin::handleWebResponse(const DynamicJsonDocument& jsonDoc)
     }
     else
     {
-        m_relevantResponsePart = jsonRestCapacity.as<String>();
-        m_httpResponseReceived = true;
+        String restCapacity = "{hc}";
+
+        restCapacity += jsonRestCapacity.as<String>();
+        restCapacity += "%";
+
+        m_view.setFormatText(restCapacity);
     }
 }
 

@@ -206,8 +206,12 @@ int16_t TextWidget::alignTextHorizontal(Alignment::Horizontal hAlign) const
 {
     int16_t xPos = 0;
 
-    /* If text scrolls, no alignment is supported. */
-    if (false == m_scrollInfo.isEnabled)
+    /* Horizontal alignment is supported for
+     * - Static text
+     * - Text scrolling from bottom to top
+     */
+    if ((false == m_scrollInfo.isEnabled) ||
+        ((true == m_scrollInfo.isEnabled) && (false == m_scrollInfo.isScrollingToLeft)))
     {
         switch(hAlign)
         {
@@ -235,8 +239,12 @@ int16_t TextWidget::alignTextVertical(Alignment::Vertical vAlign) const
 {
     int16_t yPos = 0;
 
-    /* If text scrolls, no alignment is supported. */
-    if (false == m_scrollInfo.isEnabled)
+    /* Vertical alignment is supported for
+     * - Static text
+     * - Text scrolling from left to right
+     */
+    if ((false == m_scrollInfo.isEnabled) ||
+        ((true == m_scrollInfo.isEnabled) && (true == m_scrollInfo.isScrollingToLeft)))
     {
         switch(vAlign)
         {

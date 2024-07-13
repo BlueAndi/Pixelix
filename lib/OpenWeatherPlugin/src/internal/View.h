@@ -102,16 +102,6 @@ public:
     }
 
     /**
-     * Update the underlying canvas only with the bitmap.
-     * 
-     * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
-     */
-    void updateOnlyBitmap(YAGfx& gfx)
-    {
-        m_bitmapWidget.update(gfx);
-    }
-
-    /**
      * Load dedicated icon.
      * 
      * @param[in] type  The icon type which to set.
