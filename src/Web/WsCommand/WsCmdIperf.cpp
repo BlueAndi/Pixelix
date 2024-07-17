@@ -63,10 +63,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdIperf::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -74,7 +73,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     /* Get iperf status? */
     else if (CMD_STATUS == m_cmd)
@@ -92,14 +91,14 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             msg += "1";
         }
         
-        sendResponse(server, client, msg);
+        sendResponse(server, clientId, msg);
     }
     /* Start iperf? */
     else if (CMD_START == m_cmd)
     {
         if (ESP_OK != iperf_start(&m_cfg))
         {
-            sendNegativeResponse(server, client, "\"Failed to start.\"");
+            sendNegativeResponse(server, clientId, "\"Failed to start.\"");
         }
         else
         {
@@ -115,7 +114,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
                 m_cfg.sip & 0xffU, (m_cfg.sip >> 8) & 0xffU, (m_cfg.sip >> 16) & 0xffU, (m_cfg.sip >>24) & 0xffU, m_cfg.sport,
                 m_cfg.interval, m_cfg.time);
 
-            sendResponse(server, client, msg);
+            sendResponse(server, clientId, msg);
         }
     }
     /* Stop iperf? */
@@ -123,7 +122,7 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     {
         if (ESP_OK != iperf_stop())
         {
-            sendNegativeResponse(server, client, "\"Failed to stop.\"");
+            sendNegativeResponse(server, clientId, "\"Failed to stop.\"");
         }
         else
         {
@@ -135,12 +134,12 @@ void WsCmdIperf::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
             LOG_INFO("iperf stopped.");
 
-            sendResponse(server, client, msg);
+            sendResponse(server, clientId, msg);
         }
     }
     else
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");        
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");        
     }
 
     m_isError   = false;

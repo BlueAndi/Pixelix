@@ -71,10 +71,9 @@ const char*    WsCmd::NACK      = "NACK";
  * Protected Methods
  *****************************************************************************/
 
-void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg)
+void WsCmd::sendPositiveResponse(AsyncWebSocket* server, uint32_t clientId, const char* msg)
 {
-    if ((nullptr != server) &&
-        (nullptr != client))
+    if (nullptr != server)
     {
         String rsp = ACK;
 
@@ -85,19 +84,18 @@ void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* c
             rsp += msg;
         }
 
-        server->text(client->id(), rsp);
+        server->text(clientId, rsp);
     }
 }
 
-void WsCmd::sendPositiveResponse(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmd::sendPositiveResponse(AsyncWebSocket* server, uint32_t clientId)
 {
-    sendPositiveResponse(server, client, nullptr);
+    sendPositiveResponse(server, clientId, nullptr);
 }
 
-void WsCmd::sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* client, const char* msg)
+void WsCmd::sendNegativeResponse(AsyncWebSocket* server, uint32_t clientId, const char* msg)
 {
-    if ((nullptr != server) &&
-        (nullptr != client))
+    if (nullptr != server)
     {
         String rsp = NACK;
 
@@ -113,7 +111,7 @@ void WsCmd::sendNegativeResponse(AsyncWebSocket* server, AsyncWebSocketClient* c
             rsp += "\"Unknown.\"";
         }
 
-        server->text(client->id(), rsp);
+        server->text(clientId, rsp);
     }
 }
 

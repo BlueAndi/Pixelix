@@ -63,10 +63,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdGetDisp::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -74,7 +73,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
@@ -84,7 +83,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         if (nullptr == framebuffer)
         {
-            sendNegativeResponse(server, client, "\"Internal error.\"");
+            sendNegativeResponse(server, clientId, "\"Internal error.\"");
         }
         else
         {
@@ -110,7 +109,7 @@ void WsCmdGetDisp::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
             delete[] framebuffer;
             
-            sendResponse(server, client, msg);
+            sendResponse(server, clientId, msg);
         }
     }
 

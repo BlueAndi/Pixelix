@@ -64,10 +64,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdUninstall::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -75,7 +74,7 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
@@ -84,22 +83,22 @@ void WsCmdUninstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* clien
 
         if (nullptr == plugin)
         {
-            sendNegativeResponse(server, client, "\"Slot is empty.\"");
+            sendNegativeResponse(server, clientId, "\"Slot is empty.\"");
         }
         else if (true == DisplayMgr::getInstance().isSlotLocked(m_slotId))
         {
-            sendNegativeResponse(server, client, "\"Slot is locked.\"");
+            sendNegativeResponse(server, clientId, "\"Slot is locked.\"");
         }
         else if (false == PluginMgr::getInstance().uninstall(plugin))
         {
-            sendNegativeResponse(server, client, "\"Failed to uninstall.\"");
+            sendNegativeResponse(server, clientId, "\"Failed to uninstall.\"");
         }
         else
         {
             /* Save current installed plugins to persistent memory. */
             PluginMgr::getInstance().save();
 
-            sendPositiveResponse(server, client);
+            sendPositiveResponse(server, clientId);
         }
     }
 

@@ -62,10 +62,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdInstall::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -73,7 +72,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
@@ -82,7 +81,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
 
         if (nullptr == plugin)
         {
-            sendNegativeResponse(server, client, "\"Plugin not found.\"");
+            sendNegativeResponse(server, clientId, "\"Plugin not found.\"");
         }
         else
         {
@@ -97,7 +96,7 @@ void WsCmdInstall::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             /* Save current installed plugins to persistent memory. */
             PluginMgr::getInstance().save();
 
-            sendResponse(server, client, msg);
+            sendResponse(server, clientId, msg);
         }
     }
 

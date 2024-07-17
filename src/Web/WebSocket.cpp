@@ -163,6 +163,9 @@ void WebSocketSrv::init(AsyncWebServer& srv)
         settings.close();
     }
 
+    /* Setup the websocket message input queue. */
+    (void)m_msgQueue.create(MAX_WEBSOCKET_MSGS);
+
     /* Register websocket event handler */
     m_webSocket.onEvent(onEvent);
 
@@ -171,6 +174,51 @@ void WebSocketSrv::init(AsyncWebServer& srv)
 
     /* Register websocket on webserver */
     srv.addHandler(&m_webSocket);
+}
+
+void WebSocketSrv::process()
+{
+    WebSocketMsg* msg = nullptr;
+
+    /* Handle all messages in the input queue. */
+    while(true == m_msgQueue.receive(&msg, 0U))
+    {
+        if (nullptr != msg)
+        {
+            if (nullptr != msg->cmd)
+            {
+                LOG_DEBUG("Websocket command: %s", msg->cmd->getCmd());
+
+                /* Parameter available? */
+                if (false == msg->parameters.isEmpty())
+                {
+                    int     beginIdx    = 0;
+                    int     endIdx      = msg->parameters.indexOf(DELIMITER);
+                    String  parStr;
+
+                    while(0 <= endIdx)
+                    {
+                        parStr = msg->parameters.substring(beginIdx, endIdx);
+
+                        LOG_DEBUG("Websocket parameter: %s", parStr.c_str());
+                        msg->cmd->setPar(parStr.c_str());
+
+                        beginIdx    = endIdx + 1U; /* Overstep delimiter */
+                        endIdx      = msg->parameters.indexOf(DELIMITER, beginIdx);
+                    }
+
+                    parStr = msg->parameters.substring(beginIdx);
+                    LOG_DEBUG("Websocket parameter: %s", parStr.c_str());
+                    msg->cmd->setPar(parStr.c_str());
+                }
+
+                msg->cmd->execute(&m_webSocket, msg->clientId);
+            }
+
+            delete msg;
+            msg = nullptr;
+        }
+    }
 }
 
 /******************************************************************************
@@ -307,7 +355,6 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
     const char* cmd         = nullptr;
     size_t      cmdLength   = 0U;
     WsCmd*      wsCmd       = nullptr;
-    const char  DELIMITER   = ';';
 
     if ((nullptr == server) ||
         (nullptr == client) ||
@@ -351,48 +398,31 @@ void WebSocketSrv::handleMsg(AsyncWebSocket* server, AsyncWebSocketClient* clien
         /* Command not found? */
         if (nullptr == wsCmd)
         {
-            client->text("NACK;\"Command unknown.\"");
+            server->text(client->id(), "NACK;\"Command unknown.\"");
         }
         else
         {
-            /* Determine parameters */
-            if ((msgLen > msgIndex) &&
-                (DELIMITER == msg[msgIndex]))
+            WebSocketMsg* wsMsg = new(std::nothrow) WebSocketMsg;
+
+            /* Overstep delimiter in case there are parameters. */
+            if (DELIMITER == msg[msgIndex])
             {
-                const char* par;
-                size_t      parLength;
-                String      parStr;
-
-                /* Overstep delimiter */
                 ++msgIndex;
-
-                par = &msg[msgIndex];
-                parLength = 0U;
-                while(msgLen > msgIndex)
-                {
-                    if (DELIMITER == msg[msgIndex])
-                    {
-                        parStr = String(par, parLength);
-
-                        wsCmd->setPar(parStr.c_str());
-
-                        par = &msg[msgIndex + 1U];
-                        parLength = 0U;
-                    }
-                    else
-                    {
-                        ++parLength;
-                    }
-
-                    ++msgIndex;
-                }
-
-                parStr = String(par, parLength);
-                wsCmd->setPar(parStr.c_str());
             }
 
-            /* Execute command (attention, its called in callback context). */
-            wsCmd->execute(server, client);
+            if (nullptr != wsMsg)
+            {
+                wsMsg->cmd          = wsCmd;
+                wsMsg->clientId     = client->id();
+                wsMsg->parameters   = String(&msg[msgIndex], msgLen - msgIndex);
+
+                if (false == m_msgQueue.sendToBack(wsMsg, QUEUE_WAIT_TIME * portTICK_PERIOD_MS))
+                {
+                    LOG_WARNING("Lost websocket message, because queue full.");
+
+                    delete wsMsg;
+                }
+            }
         }
     }
 }

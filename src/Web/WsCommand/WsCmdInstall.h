@@ -81,9 +81,9 @@ public:
      * Execute command.
      *
      * @param[in] server    Websocket server
-     * @param[in] client    Websocket client
+     * @param[in] clientId  Websocket client ID
      */
-    void execute(AsyncWebSocket* server, AsyncWebSocketClient* client) final;
+    void execute(AsyncWebSocket* server, uint32_t clientId) final;
 
     /**
      * Set command parameter. Call this for each parameter, until executing it.

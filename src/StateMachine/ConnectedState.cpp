@@ -40,6 +40,7 @@
 #include "Services.h"
 #include "SensorDataProvider.h"
 #include "PluginMgr.h"
+#include "MyWebServer.h"
 
 #include "ConnectingState.h"
 #include "RestartState.h"
@@ -142,6 +143,9 @@ void ConnectedState::entry(StateMachine& sm)
 
 void ConnectedState::process(StateMachine& sm)
 {
+    /* Handle webserver. */
+    MyWebServer::process();
+
     /* Handle update, there may be one in the background. */
     UpdateMgr::getInstance().process();
 

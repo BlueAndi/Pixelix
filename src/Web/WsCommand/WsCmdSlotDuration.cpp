@@ -63,10 +63,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdSlotDuration::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdSlotDuration::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -74,7 +73,7 @@ void WsCmdSlotDuration::execute(AsyncWebSocket* server, AsyncWebSocketClient* cl
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
@@ -93,7 +92,7 @@ void WsCmdSlotDuration::execute(AsyncWebSocket* server, AsyncWebSocketClient* cl
 
         msg += DisplayMgr::getInstance().getSlotDuration(m_slotId);
 
-        sendResponse(server, client, msg);
+        sendResponse(server, clientId, msg);
     }
 
     m_isError = false;

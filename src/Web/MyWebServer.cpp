@@ -64,6 +64,9 @@ static void error(AsyncWebServerRequest* request);
 /** Web server */
 static AsyncWebServer   gWebServer(WebConfig::WEBSERVER_PORT);
 
+/** Is captive portal enabled? */
+static bool             gIsCaptivePortalEnabled = false;
+
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
@@ -97,6 +100,8 @@ void MyWebServer::init(bool initCaptivePortal)
     {
         CaptivePortal::init(gWebServer);
     }
+
+    gIsCaptivePortalEnabled = initCaptivePortal;
 }
 
 void MyWebServer::begin()
@@ -109,6 +114,14 @@ void MyWebServer::end()
 {
     /* Stop webserver */
     gWebServer.end();
+}
+
+void MyWebServer::process()
+{
+    if (false == gIsCaptivePortalEnabled)
+    {
+        WebSocketSrv::getInstance().process();
+    }
 }
 
 AsyncWebServer& MyWebServer::getInstance()

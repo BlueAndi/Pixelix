@@ -36,6 +36,7 @@
 #include "SysMsg.h"
 #include "Services.h"
 #include "SensorDataProvider.h"
+#include "MyWebServer.h"
 
 #include "IdleState.h"
 #include "ConnectedState.h"
@@ -180,6 +181,7 @@ void ConnectingState::process(StateMachine& sm)
         }
     }
 
+    MyWebServer::process();
     Services::processAll();
     SensorDataProvider::getInstance().process();
 }

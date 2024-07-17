@@ -62,10 +62,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdSlots::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -73,7 +72,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
@@ -122,7 +121,7 @@ void WsCmdSlots::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
             msg += duration;
         }
 
-        sendResponse(server, client, msg);
+        sendResponse(server, clientId, msg);
     }
 
     m_isError = false;

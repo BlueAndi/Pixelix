@@ -46,8 +46,10 @@
 #include <ESPAsyncWebServer.h>
 #include <stdint.h>
 #include <Print.h>
+#include <Queue.hpp>
 
 #include "WebConfig.h"
+#include "WsCmd.h"
 
 /******************************************************************************
  * Macros
@@ -83,9 +85,51 @@ public:
      */
     void init(AsyncWebServer& srv);
 
+    /**
+     * Handles all received websocket messages.
+     * This method need to be called periodically.
+     */
+    void process();
+
 private:
 
-    AsyncWebSocket  m_webSocket;    /**< Websocket */
+    /** Websocket message delimiter to divide between command name and its parameters. */
+    static const char        DELIMITER          = ';';
+
+    /**
+     * Max. number of websocket messages, which can be queued.
+     */
+    static const size_t     MAX_WEBSOCKET_MSGS  = 8U;
+
+    /**
+     * Wait time in ms how long to wait that the websocket input queue has a
+     * empty slot available.
+     */
+    static const uint32_t   QUEUE_WAIT_TIME     = 100U;
+
+    /** A websocket message, received from a client. */
+    struct WebSocketMsg
+    {
+        WsCmd*      cmd;        /**< Command which shall handle the message. */
+        uint32_t    clientId;   /**< Id of the websocket client, who sent the command. */
+        String      parameters; /**< Command parameters in string form. */
+
+        /** Create the websocket message. */
+        WebSocketMsg() :
+            cmd(nullptr),
+            clientId(0U),
+            parameters()
+        {
+        }
+
+        /** Destroy the websocket message. */
+        ~WebSocketMsg()
+        {
+        }
+    };
+
+    AsyncWebSocket          m_webSocket;    /**< Websocket */
+    Queue<WebSocketMsg*>    m_msgQueue;     /**< Queue with received websocket messages. */
 
     /**
      * Constructs the websocket server.

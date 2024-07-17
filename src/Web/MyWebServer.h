@@ -76,19 +76,24 @@ void init(bool initCaptivePortal);
 /**
  * Start web server, which is running in a separate task.
  */
-void begin(void);
+void begin();
 
 /**
  * Stop web server and its task.
  */
-void end(void);
+void end();
+
+/**
+ * Process web server.
+ */
+void process();
 
 /**
  * Get webserver instance.
  *
  * @return Webserver instance.
  */
-AsyncWebServer& getInstance(void);
+AsyncWebServer& getInstance();
 
 }
 

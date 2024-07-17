@@ -62,10 +62,9 @@
  * Public Methods
  *****************************************************************************/
 
-void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* client)
+void WsCmdBrightness::execute(AsyncWebSocket* server, uint32_t clientId)
 {
-    if ((nullptr == server) ||
-        (nullptr == client))
+    if (nullptr == server)
     {
         return;
     }
@@ -73,7 +72,7 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
     /* Any error happended? */
     if (true == m_isError)
     {
-        sendNegativeResponse(server, client, "\"Parameter invalid.\"");
+        sendNegativeResponse(server, clientId, "\"Parameter invalid.\"");
     }
     else
     {
@@ -99,7 +98,7 @@ void WsCmdBrightness::execute(AsyncWebSocket* server, AsyncWebSocketClient* clie
         msg += DELIMITER;
         msg += (true == DisplayMgr::getInstance().getAutoBrightnessAdjustment()) ? 1 : 0;
 
-        sendResponse(server, client, msg);
+        sendResponse(server, clientId, msg);
     }
 
     m_isError = false;

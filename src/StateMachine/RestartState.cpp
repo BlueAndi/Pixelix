@@ -84,6 +84,7 @@ void RestartState::process(StateMachine& sm)
 {
     UTIL_NOT_USED(sm);
 
+    MyWebServer::process();
     UpdateMgr::getInstance().process();
 
     if ((true == m_timer.isTimerRunning()) &&
