@@ -155,11 +155,11 @@ public:
     void setFormatStr(const String& formatStr)
     {
         /* Avoid update if not necessary. */
-        if (((m_formatStr != formatStr) && (false == m_isNewTextAvailable)) ||
-            ((m_formatStrNew != formatStr) && (true == m_isNewTextAvailable)))
+        if (((m_formatStr != formatStr) && (false == m_prepareNewText)) ||
+            ((m_formatStrNew != formatStr) && (true == m_prepareNewText)))
         {
-            m_formatStrNew          = formatStr;
-            m_isNewTextAvailable    = true;
+            m_formatStrNew      = formatStr;
+            m_prepareNewText    = true;
         }
     }
 
@@ -174,7 +174,7 @@ public:
         m_formatStrNew.clear();
         m_scrollInfoNew.clear();
 
-        m_isNewTextAvailable = false;
+        m_prepareNewText = false;
 
         /* Reset calculated alignment coordinates. */
         m_hAlignPosX    = 0U;
@@ -229,7 +229,7 @@ public:
     void setFont(const YAFont& font)
     {
         m_gfxText.setFont(font);
-        m_isNewTextAvailable = true;
+        m_prepareNewText = true;
     }
 
     /**
@@ -276,7 +276,7 @@ public:
     {
         bool status = false;
         
-        if (false == m_isNewTextAvailable)
+        if (false == m_prepareNewText)
         {
             isScrollingEnabled  = m_scrollInfoNew.isEnabled;
             scrollingCnt        = m_scrollingCnt;
@@ -306,6 +306,22 @@ public:
     {
         m_vAlign        = align;
         m_vAlignPosY    = alignTextVertical(m_vAlign);
+    }
+
+    /**
+     * Enable the fade effect.
+     */
+    void enableFadeEffect()
+    {
+        m_isFadeEffectEnabled = true;
+    }
+
+    /**
+     * Disable the fade effect.
+     */
+    void disableFadeEffect()
+    {
+        m_isFadeEffectEnabled = false;
     }
 
     /** Default text color */
@@ -368,7 +384,6 @@ private:
         FADE_STATE_IDLE = 0,    /**< No fading. */
         FADE_STATE_OUT,         /**< Fading out. */
         FADE_STATE_IN           /**< Fading in. */
-
     };
 
     /**
@@ -424,9 +439,11 @@ private:
     String                  m_formatStrNew;         /**< New text string, which contains format tags. */
     FadeState               m_fadeState;            /**< The current fade state. Used to switch from old to new text. */
     uint8_t                 m_fadeBrightness;       /**< Brightness value used for fading. */
+    bool                    m_isFadeEffectEnabled;  /**< Is fade effect enabled? */
     ScrollInfo              m_scrollInfo;           /**< Scroll information */
     ScrollInfo              m_scrollInfoNew;        /**< Scroll information for the new text. */
-    bool                    m_isNewTextAvailable;   /**< Is new updated text available? */
+    bool                    m_prepareNewText;       /**< User set new text, which shall be prepared. */
+    bool                    m_updateText;           /**< New text is prepared shall be updated. */
     YAGfxText               m_gfxText;              /**< GFX for current text. */
     YAGfxText               m_gfxNewText;           /**< GFX for new text. */
     uint32_t                m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
@@ -497,25 +514,23 @@ private:
     void calculateCursorPos(int16_t& curX, int16_t& curY) const;
 
     /**
-     * Handle text without fading.
-     * 
-     * @param[in] gfx Graphic functionality
+     * Handle the fade effect.
      */
-    void handleFadeIdle(YAGfx& gfx);
+    void handleFadeEffect();
 
     /**
      * Handle fading text out.
      * 
      * @param[in] gfx Graphic functionality
      */
-    void handleFadeOut(YAGfx& gfx);
+    void handleFadeOut();
 
     /**
      * Handle fading text in.
      * 
      * @param[in] gfx Graphic functionality
      */
-    void handleFadeIn(YAGfx& gfx);
+    void handleFadeIn();
 
     /**
      * Scroll the text depended on the scrolling direction.

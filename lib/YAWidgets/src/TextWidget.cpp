@@ -98,9 +98,11 @@ TextWidget::TextWidget(uint16_t width, uint16_t height, int16_t x, int16_t y) :
     m_formatStrNew(),
     m_fadeState(FADE_STATE_IDLE),
     m_fadeBrightness(0U),
+    m_isFadeEffectEnabled(true),
     m_scrollInfo(),
     m_scrollInfoNew(),
-    m_isNewTextAvailable(false),
+    m_prepareNewText(false),
+    m_updateText(false),
     m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
     m_scrollingCnt(0U),
     m_scrollOffset(0),
@@ -123,9 +125,11 @@ TextWidget::TextWidget(const String& str, const Color& color) :
     m_formatStrNew(str),
     m_fadeState(FADE_STATE_IDLE),
     m_fadeBrightness(0U),
+    m_isFadeEffectEnabled(true),
     m_scrollInfo(),
     m_scrollInfoNew(),
-    m_isNewTextAvailable(false),
+    m_prepareNewText(false),
+    m_updateText(false),
     m_gfxText(DEFAULT_FONT, DEFAULT_TEXT_COLOR),
     m_scrollingCnt(0U),
     m_scrollOffset(0),
@@ -148,9 +152,11 @@ TextWidget::TextWidget(const TextWidget& widget) :
     m_formatStrNew(widget.m_formatStrNew),
     m_fadeState(widget.m_fadeState),
     m_fadeBrightness(widget.m_fadeBrightness),
+    m_isFadeEffectEnabled(widget.m_isFadeEffectEnabled),
     m_scrollInfo(widget.m_scrollInfo),
     m_scrollInfoNew(widget.m_scrollInfoNew),
-    m_isNewTextAvailable(widget.m_isNewTextAvailable),
+    m_prepareNewText(widget.m_prepareNewText),
+    m_updateText(widget.m_updateText),
     m_gfxText(widget.m_gfxText),
     m_scrollingCnt(widget.m_scrollingCnt),
     m_scrollOffset(widget.m_scrollOffset),
@@ -172,9 +178,11 @@ TextWidget& TextWidget::operator=(const TextWidget& widget)
         m_formatStrNew          = widget.m_formatStrNew;
         m_fadeState             = widget.m_fadeState;
         m_fadeBrightness        = widget.m_fadeBrightness;
+        m_isFadeEffectEnabled   = widget.m_isFadeEffectEnabled;
         m_scrollInfo            = widget.m_scrollInfo;
         m_scrollInfoNew         = widget.m_scrollInfoNew;
-        m_isNewTextAvailable    = widget.m_isNewTextAvailable;
+        m_prepareNewText        = widget.m_prepareNewText;
+        m_updateText            = widget.m_updateText;
         m_gfxText               = widget.m_gfxText;
         m_scrollingCnt          = widget.m_scrollingCnt;
         m_scrollOffset          = widget.m_scrollOffset;
@@ -341,14 +349,22 @@ void TextWidget::prepareNewText(YAGfx& gfx)
          *     - Start scrolling outside of canvas.
          */
 
+        /* Fade effect disabled? */
+        if (false == m_isFadeEffectEnabled)
+        {
+            m_fadeState         = FADE_STATE_IDLE;
+            m_fadeBrightness    = FADING_BRIGHTNESS_HIGH;
+            m_updateText        = true;
+        }
         /* No fading active? */
-        if (FADE_STATE_IDLE == m_fadeState)
+        else if (FADE_STATE_IDLE == m_fadeState)
         {
             /* If no text is shown, fade in immediately. */
             if (true == m_formatStr.isEmpty())
             {
                 m_fadeState         = FADE_STATE_IN;
                 m_fadeBrightness    = FADING_BRIGHTNESS_LOW;
+                m_updateText        = true;
             }
             else
             {
@@ -365,7 +381,7 @@ void TextWidget::prepareNewText(YAGfx& gfx)
         /* Fading out active. */
         else
         {
-            /* Just continoue to fade out. */
+            /* Just continue to fade out. */
         }
 
         /* Can new text be static (no scrolling) shown? */
@@ -427,26 +443,42 @@ void TextWidget::calculateCursorPos(int16_t& curX, int16_t& curY) const
     curY += m_vAlignPosY;
 }
 
-void TextWidget::handleFadeIdle(YAGfx& gfx)
+void TextWidget::handleFadeEffect()
 {
-    int16_t cursorX = 0;
-    int16_t cursorY = 0;
-    
-    calculateCursorPos(cursorX, cursorY);
+    switch(m_fadeState)
+    {
+    case FADE_STATE_IDLE:
+        /* Nothing to do. */
+        break;
 
-    /* Show current text. */
-    m_gfxText.setTextCursorPos(cursorX, cursorY);
-    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
+    case FADE_STATE_OUT:
+        handleFadeOut();
+
+        /* If text is faded out, replace it with the new text and start fading in. */
+        if (FADING_BRIGHTNESS_LOW == m_fadeBrightness)
+        {
+            m_fadeState     = FADE_STATE_IN;
+            m_updateText    = true;
+        }
+        break;
+
+    case FADE_STATE_IN:
+        handleFadeIn();
+
+        /* If text is faded in, the fading effect is finished. */
+        if (FADING_BRIGHTNESS_HIGH == m_fadeBrightness)
+        {
+            m_fadeState = FADE_STATE_IDLE;
+        }
+        break;
+
+    default:
+        break;
+    }
 }
 
-void TextWidget::handleFadeOut(YAGfx& gfx)
+void TextWidget::handleFadeOut()
 {
-    Color   textColor   = m_gfxText.getTextColor();
-    int16_t cursorX     = 0;
-    int16_t cursorY     = 0;
-    
-    calculateCursorPos(cursorX, cursorY);
-
     if (FADING_BRIGHTNESS_LOW < m_fadeBrightness)
     {
         if (FADING_BRIGHTNESS_DELTA <= m_fadeBrightness)
@@ -457,24 +489,11 @@ void TextWidget::handleFadeOut(YAGfx& gfx)
         {
             m_fadeBrightness = FADING_BRIGHTNESS_LOW;
         }
-
-        textColor.setIntensity(m_fadeBrightness);
-        m_gfxText.setTextColor(textColor);
     }
-    
-    /* Show current text. */
-    m_gfxText.setTextCursorPos(cursorX, cursorY);
-    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
 }
 
-void TextWidget::handleFadeIn(YAGfx& gfx)
+void TextWidget::handleFadeIn()
 {
-    Color   textColor   = m_gfxText.getTextColor();
-    int16_t cursorX     = 0;
-    int16_t cursorY     = 0;
-    
-    calculateCursorPos(cursorX, cursorY);
-
     if (FADING_BRIGHTNESS_HIGH > m_fadeBrightness)
     {
         if ((FADING_BRIGHTNESS_HIGH - FADING_BRIGHTNESS_DELTA) >= m_fadeBrightness)
@@ -485,14 +504,7 @@ void TextWidget::handleFadeIn(YAGfx& gfx)
         {
             m_fadeBrightness = FADING_BRIGHTNESS_HIGH;
         }
-
-        textColor.setIntensity(m_fadeBrightness);
-        m_gfxText.setTextColor(textColor);
     }
-    
-    /* Show current text. */
-    m_gfxText.setTextCursorPos(cursorX, cursorY);
-    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
 }
 
 void TextWidget::scrollText(YAGfx& gfx)
@@ -529,56 +541,45 @@ void TextWidget::scrollText(YAGfx& gfx)
 
 void TextWidget::paint(YAGfx& gfx)
 {
-    int16_t cursorY = m_gfxText.getFont().getHeight() - 1; /* Set cursor to baseline */
+    Color   textColor   = m_gfxText.getTextColor();
+    int16_t cursorX     = 0;
+    int16_t cursorY     = 0;
     
-    /* If there is an updated text available, it shall be determined how to show it on the display. */
-    if (true == m_isNewTextAvailable)
+    /* If there is a new text available, it shall be determined how to show it on the display. */
+    if (true == m_prepareNewText)
     {
         prepareNewText(gfx);
-        m_isNewTextAvailable = false;
+        m_prepareNewText = false;
     }
 
-    switch(m_fadeState)
+    /* Update of current text requested? */
+    if (true == m_updateText)
     {
-    case FADE_STATE_IDLE:
-        handleFadeIdle(gfx);
-        break;
+        m_formatStr     = m_formatStrNew;
+        m_scrollInfo    = m_scrollInfoNew;
+        m_updateText    = false;
 
-    case FADE_STATE_OUT:
-        handleFadeOut(gfx);
+        alignText(m_hAlign, m_vAlign);
 
-        if (FADING_BRIGHTNESS_LOW == m_fadeBrightness)
+        if (true == m_scrollInfo.isEnabled)
         {
-            m_fadeState = FADE_STATE_IN;
+            m_scrollTimer.start(m_scrollPause);
         }
-        break;
-
-    case FADE_STATE_IN:
-        /* Take new string over? */
-        if (FADING_BRIGHTNESS_LOW == m_fadeBrightness)
-        {
-            m_formatStr     = m_formatStrNew;
-            m_scrollInfo    = m_scrollInfoNew;
-
-            alignText(m_hAlign, m_vAlign);
-
-            if (true == m_scrollInfo.isEnabled)
-            {
-                m_scrollTimer.start(m_scrollPause);
-            }
-        }
-
-        handleFadeIn(gfx);
-
-        if (FADING_BRIGHTNESS_HIGH == m_fadeBrightness)
-        {
-            m_fadeState = FADE_STATE_IDLE;
-        }
-        break;
-
-    default:
-        break;
     }
+
+    /* Update text brightness, even if fade effect is disabled. */
+    textColor.setIntensity(m_fadeBrightness);
+    m_gfxText.setTextColor(textColor);
+
+    /* Update the cursor position, it may have changed by scrolling. */
+    calculateCursorPos(cursorX, cursorY);
+    m_gfxText.setTextCursorPos(cursorX, cursorY);
+
+    /* Show the text. */
+    show(gfx, m_formatStr, m_scrollInfo.isEnabled);
+
+    /* Handle fade effect. */
+    handleFadeEffect();
 
     /* Is it time to scroll the text(s) again? */
     if (true == m_scrollTimer.isTimeout())

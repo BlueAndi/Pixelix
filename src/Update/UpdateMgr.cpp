@@ -232,6 +232,11 @@ UpdateMgr::UpdateMgr() :
     m_progressBar(CONFIG_LED_MATRIX_WIDTH, CONFIG_LED_MATRIX_HEIGHT),
     m_timer()
 {
+    /* Disable fade effect, because the update() method will not be
+     * called periodially but only on update progress change.
+     * Therefore the text widget fade effect won't look good.
+     */
+    m_textWidget.disableFadeEffect();
 }
 
 UpdateMgr::~UpdateMgr()
