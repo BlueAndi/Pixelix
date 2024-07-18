@@ -428,9 +428,14 @@ bool MultiIconPlugin::setActiveIconId(uint8_t slotId, uint8_t iconId)
                 m_view.clearIcon(slotId);
                 isSuccessful = true;
             }
-            else if (true == m_view.loadIcon(iconId, iconSlot.icons[iconId]))
+            else if (true == m_view.loadIcon(slotId, iconSlot.icons[iconId]))
             {
                 isSuccessful = true;
+            }
+            else
+            {
+                /* Failed. */
+                ;
             }
         }
         else
