@@ -91,21 +91,21 @@
 /**
  * The filename of the version information file.
  */
-static const char* VERSION_FILE_NAME        = "/version.json";
+static const char VERSION_FILE_NAME[]        = "/version.json";
 
 /**
  * Plugin type of the welcome plugin. This is used to install it in the very
  * first startup. In further startups it is used in addition to the plugin
  * alias whether to show the welcome icon and message.
  */
-static const char*  WELCOME_PLUGIN_TYPE     = "IconTextPlugin";
+static const char WELCOME_PLUGIN_TYPE[]     = "IconTextPlugin";
 
 /**
  * The alias of the welcome plugin. This is used to determine in addition to
  * the plugin type whether to show the welcome icon and message after a reboot
  * again.
  */
-static const char*  WELCOME_PLUGIN_ALIAS    = "_welcome";
+static const char WELCOME_PLUGIN_ALIAS[]    = "_welcome";
 
 /******************************************************************************
  * Public Methods
@@ -308,7 +308,17 @@ void InitState::entry(StateMachine& sm)
 
 void InitState::process(StateMachine& sm)
 {
-    ButtonState buttonState = ButtonDrv::getInstance().getState(BUTTON_ID_OK);
+    ButtonState buttonState = BUTTON_STATE_RELEASED;
+
+    /* Check all buttons to detect a user AP mode request during startup. */
+    for (uint8_t btnId = BUTTON_ID_OK; btnId < BUTTON_ID_CNT; ++btnId)
+    {
+        if (BUTTON_STATE_PRESSED == ButtonDrv::getInstance().getState(static_cast<ButtonId>(btnId)))
+        {
+            buttonState = BUTTON_STATE_PRESSED;
+            break;
+        }
+    }
 
     /* Connect to a remote wifi network? */
     if (BUTTON_STATE_RELEASED == buttonState)
