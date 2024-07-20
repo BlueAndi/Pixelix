@@ -433,6 +433,12 @@ void IconTextLampPlugin::clearIcon()
         /* Clear icon first in the view (will close file). */
         m_view.clearIcon();
 
+        /* If plugin owns the file, it will be removed from filesystem. */
+        if (true == isFileOwnedByPlugin(m_iconPath))
+        {
+            (void)FILESYSTEM.remove(m_iconPath);
+        }
+
         /* Clear the path to the icon. */
         m_iconPath.clear();
 
@@ -479,9 +485,24 @@ void IconTextLampPlugin::setLamp(uint8_t lampId, bool state)
  * Private Methods
  *****************************************************************************/
 
-String IconTextLampPlugin::getFileName(const String& ext)
+String IconTextLampPlugin::getFileName(const String& ext) const
 {
     return generateFullPath(getUID(), ext);
+}
+
+bool IconTextLampPlugin::isFileOwnedByPlugin(const String& filename) const
+{
+    bool    isOwned     = false;
+    String  bmpFileName = getFileName(BitmapWidget::FILE_EXT_BITMAP);
+    String  gifFileName = getFileName(BitmapWidget::FILE_EXT_GIF);
+
+    if ((filename == bmpFileName) ||
+        (filename == gifFileName))
+    {
+        isOwned = true;
+    }
+
+    return isOwned;
 }
 
 /******************************************************************************

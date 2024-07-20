@@ -301,7 +301,16 @@ private:
      *
      * @return Filename with path.
      */
-    String getFileName(const String& ext);
+    String getFileName(const String& ext) const;
+
+    /**
+     * Checks whether the given filen is owned by the plugin or not.
+     * 
+     * @param[in] filename  The name of the file.
+     * 
+     * @return If plugin owns the file, it will return true otherwise false:
+     */
+    bool isFileOwnedByPlugin(const String& filename) const;
 };
 
 /******************************************************************************

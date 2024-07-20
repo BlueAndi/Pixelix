@@ -463,6 +463,12 @@ void MultiIconPlugin::clearIcon(uint8_t slotId, uint8_t iconId)
                 m_view.clearIcon(slotId);
             }
 
+            /* If plugin owns the file, it will be removed from filesystem. */
+            if (true == isFileOwnedByPlugin(iconSlot.icons[iconId], slotId, iconId))
+            {
+                (void)FILESYSTEM.remove(iconSlot.icons[iconId]);
+            }
+
             /* Clear the path to the icon. */
             iconSlot.icons[iconId].clear();
             iconSlot.hasSlotChanged = true;
@@ -544,6 +550,21 @@ bool MultiIconPlugin::setIconFilePath(uint8_t slotId, uint8_t iconId, const Stri
 String MultiIconPlugin::getFileName(uint8_t slotId, uint8_t iconId, const String& ext) const
 {
     return generateFullPath(getUID(), "_" + String(slotId) + "_" + String(iconId) + ext);
+}
+
+bool MultiIconPlugin::isFileOwnedByPlugin(const String& filename, uint8_t slotId, uint8_t iconId) const
+{
+    bool    isOwned     = false;
+    String  bmpFileName = getFileName(slotId, iconId, BitmapWidget::FILE_EXT_BITMAP);
+    String  gifFileName = getFileName(slotId, iconId, BitmapWidget::FILE_EXT_GIF);
+
+    if ((filename == bmpFileName) ||
+        (filename == gifFileName))
+    {
+        isOwned = true;
+    }
+
+    return isOwned;
 }
 
 bool MultiIconPlugin::getSlotIdFromTopic(uint8_t& slotId, const String& topic) const

@@ -306,7 +306,36 @@ private:
      */
     String getFileName(uint8_t slotId, uint8_t iconId, const String& ext) const;
 
+    /**
+     * Checks whether the given filen is owned by the plugin or not.
+     * 
+     * @param[in] filename  The name of the file.
+     * @param[in] slotId    The slot id.
+     * @param[in] iconId    The icon id.
+     * 
+     * @return If plugin owns the file, it will return true otherwise false:
+     */
+    bool isFileOwnedByPlugin(const String& filename, uint8_t slotId, uint8_t iconId) const;
+
+    /**
+     * Get slot id from topic.
+     * 
+     * @param[out]  slotId  The retrieved slot id.
+     * @param[in]   topic   The topic, which contains the slot id.
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
     bool getSlotIdFromTopic(uint8_t& slotId, const String& topic) const;
+
+    /**
+     * Get slot and icon id from topic.
+     * 
+     * @param[out]  slotId  The retrieved slot id.
+     * @param[out]  iconId  The retrieved icon id.
+     * @param[in]   topic   The topic, which contains the slot and icon id.
+     * 
+     * @return If successful, it will return true otherwise false.
+     */
     bool getSlotIdAndIconIdFromTopic(uint8_t& slotId, uint8_t& iconId, const String& topic) const;
 };
 
