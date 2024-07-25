@@ -74,16 +74,17 @@ const HUB75_I2S_CFG::i2s_pins   Display::I2S_PINS =
 
 const HUB75_I2S_CFG             Display::MATRIX_CFG  =
 {
-    CONFIG_LED_MATRIX_WIDTH,    /* Panel width */
-    CONFIG_LED_MATRIX_HEIGHT,   /* Panel height */
-    CONFIG_HUB75_CHAIN_LENGTH,  /* Chain length */
-    I2S_PINS,                   /* Pin mapping */
-    CONFIG_HUB75_DRIVER,        /* Driver */
-    false,                      /* Use DMA double buffer */
-    HUB75_I2S_CFG::HZ_15M,      /* I2S clock speed */
-    DEFAULT_LAT_BLANKING,       /* How many clock cycles to blank OE before/after LAT signal change. */
-    CONFIG_HUB75_CLOCK_PHASE,   /* Clock phase */
-    60U                         /* Min. refresh/scan rate */
+    CONFIG_LED_MATRIX_WIDTH,            /* Panel width */
+    CONFIG_LED_MATRIX_HEIGHT,           /* Panel height */
+    CONFIG_HUB75_CHAIN_LENGTH,          /* Chain length */
+    I2S_PINS,                           /* Pin mapping */
+    CONFIG_HUB75_DRIVER,                /* Driver */
+    false,                              /* Use DMA double buffer */
+    HUB75_I2S_CFG::HZ_8M,               /* I2S clock speed */
+    DEFAULT_LAT_BLANKING,               /* How many clock cycles to blank OE before/after LAT signal change. */
+    CONFIG_HUB75_CLOCK_PHASE,           /* Clock phase */
+    60U,                                /* Min. refresh/scan rate */
+    CONFIG_HUB75_PIXEL_COLOR_DEPTH_BITS /* Pixel color depth bits, e.g. 8 bits means 8 bit per color, therefore 24 bit for RGB. */
 };
 
 /******************************************************************************
