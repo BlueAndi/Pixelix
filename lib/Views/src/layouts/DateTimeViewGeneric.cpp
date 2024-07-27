@@ -64,10 +64,14 @@ const Color DateTimeViewGeneric::DAY_OFF_COLOR = ColorDef::ULTRADARKGRAY;
  * Public Methods
  *****************************************************************************/
 
-void DateTimeViewGeneric::setWeekdayIndicator(tm timeInfo)
+void DateTimeViewGeneric::setCurrentTime(const tm& now)
 {
+    m_now = now;
+
+    /* update lamp widgets */
+
     /* tm_wday starts at sunday, first lamp indicates monday.*/
-    uint8_t activeLamp = (0U < timeInfo.tm_wday) ? (timeInfo.tm_wday - 1U) : (MAX_LAMPS - 1U);
+    uint8_t activeLamp = (0U < m_now.tm_wday) ? (m_now.tm_wday - 1U) : (MAX_LAMPS - 1U);
 
     /* Last active lamp has to be deactivated. */
     uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (MAX_LAMPS - 1U);

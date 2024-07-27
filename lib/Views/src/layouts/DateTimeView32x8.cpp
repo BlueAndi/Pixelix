@@ -64,10 +64,12 @@ const Color DateTimeView32x8::DAY_OFF_COLOR = ColorDef::ULTRADARKGRAY;
  * Public Methods
  *****************************************************************************/
 
-void DateTimeView32x8::setWeekdayIndicator(tm timeInfo)
+void DateTimeView32x8::setCurrentTime(const tm& now)
 {
+    /* update lamp widgets */
+
     /* tm_wday starts at sunday, first lamp indicates monday.*/
-    uint8_t activeLamp = (0U < timeInfo.tm_wday) ? (timeInfo.tm_wday - 1U) : (MAX_LAMPS - 1U);
+    uint8_t activeLamp = (0U < now.tm_wday) ? (now.tm_wday - 1U) : (MAX_LAMPS - 1U);
 
     /* Last active lamp has to be deactivated. */
     uint8_t lampToDeactivate = (0U < activeLamp) ? (activeLamp - 1U) : (MAX_LAMPS - 1U);
