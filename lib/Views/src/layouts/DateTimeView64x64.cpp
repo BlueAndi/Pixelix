@@ -55,10 +55,10 @@ static const int16_t SINUS_VAL_SCALE = 10000;
  */
 enum SecondsDisplayMode
 {
-    SECOND_DISP_OFF  = 0u,    /**< no second indicator    */
-    SECOND_DISP_HAND = 1u,    /**< Draw second clock hand */
-    SECOND_DISP_RING = 2u,    /**< Show passed seconds on minute tick ring */
-    SECOND_DISP_BOTH = 3u,    /*< Show hand and on ring */
+    SECOND_DISP_OFF  = 0U,    /**< no second indicator    */
+    SECOND_DISP_HAND = 1U,    /**< Draw second clock hand */
+    SECOND_DISP_RING = 2U,    /**< Show passed seconds on minute tick ring */
+    SECOND_DISP_BOTH = 3U,    /*< Show hand and on ring */
 };
 
 /******************************************************************************
@@ -97,7 +97,7 @@ static SecondsDisplayMode gSecondsDisplayMode = SECOND_DISP_RING;
   *
   * Sinus value are stored as integer scaled by 10.000.
   */
-static const uint16_t MINUTE_SIN_TAB[16u] = {
+static const uint16_t MINUTE_SIN_TAB[16U] = {
     0,    /* sin(0°)   */
     1045, /* sin(6°)   */
     2079, /* sin(12°)  */
@@ -148,7 +148,7 @@ void DateTimeView64x64::update(YAGfx& gfx)
         drawAnalogClockHand(gfx, m_now.tm_min, ANALOG_RADIUS - 6, ColorDef::WHITE);
         drawAnalogClockHand(gfx, m_now.tm_hour * 5 + m_now.tm_min / 12 , ANALOG_RADIUS - 13, ColorDef::WHITESMOKE);
 
-        if (0u != (gSecondsDisplayMode & SECOND_DISP_HAND))
+        if (0U != (gSecondsDisplayMode & SECOND_DISP_HAND))
         {
             drawAnalogClockHand(gfx, m_now.tm_sec, ANALOG_RADIUS - 1, ColorDef::YELLOW);
         }
@@ -177,9 +177,9 @@ void DateTimeView64x64::update(YAGfx& gfx)
 void DateTimeView64x64::drawAnalogClockBackground(YAGfx& gfx)
 {
     /* draw minute ring */
-    uint16_t secondAngle(270u + m_now.tm_sec * 6u);
+    uint16_t secondAngle(270U + m_now.tm_sec * 6U);
 
-    for (uint16_t angle = 270u; angle < (270u + 360u); angle += 6u)
+    for (uint16_t angle = 270U; angle < (270U + 360U); angle += 6U)
     {
         int16_t dx(getMinuteCosinus(angle));
         int16_t dy(getMinuteSinus(angle));
@@ -187,7 +187,7 @@ void DateTimeView64x64::drawAnalogClockBackground(YAGfx& gfx)
         int16_t xs(ANALOG_CENTER_X + (dx * ANALOG_RADIUS) / SINUS_VAL_SCALE);
         int16_t ys(ANALOG_CENTER_Y + (dy * ANALOG_RADIUS) / SINUS_VAL_SCALE);
 
-        if (0u == (angle % 30u))  /* Draw stronger marks at hour angles. */
+        if (0U == (angle % 30U))  /* Draw stronger marks at hour angles. */
         {
             int16_t xe(ANALOG_CENTER_X + (dx * (ANALOG_RADIUS - 4)) / SINUS_VAL_SCALE);
             int16_t ye(ANALOG_CENTER_Y + (dy * (ANALOG_RADIUS - 4)) / SINUS_VAL_SCALE);
@@ -196,7 +196,7 @@ void DateTimeView64x64::drawAnalogClockBackground(YAGfx& gfx)
         }
 
         Color tickMarkCol(ColorDef::DARKGRAY);
-        if ((0u != (SECOND_DISP_RING & gSecondsDisplayMode)) && (angle <= secondAngle))
+        if ((0U != (SECOND_DISP_RING & gSecondsDisplayMode)) && (angle <= secondAngle))
         {
            /* Draw minute tick marks with passed seconds highlighting. */
            tickMarkCol = ColorDef::YELLOW;
@@ -232,28 +232,28 @@ void DateTimeView64x64::drawAnalogClockHand(YAGfx& gfx, int16_t minute, int16_t 
 
 static int16_t getMinuteSinus(uint16_t angle)
 {
-    angle %= 360u;
+    angle %= 360U;
 
     /*
      * Lookup table only stores 1st quadrant sinus values.
      * Others are calculated based on sinus curve symetries.
      */
     int16_t sinus(0);
-    if (90u >= angle)  /* quadrant 1 */
+    if (90U >= angle)  /* quadrant 1 */
     {
-        sinus = MINUTE_SIN_TAB[angle / 6u];
+        sinus = MINUTE_SIN_TAB[angle / 6U];
     }
-    else if (180u >= angle) /* quadrant 2 is symetric to quadrant 1*/
+    else if (180U >= angle) /* quadrant 2 is symetric to quadrant 1*/
     {
-        sinus = MINUTE_SIN_TAB[(180u - angle) / 6u];
+        sinus = MINUTE_SIN_TAB[(180U - angle) / 6U];
     }
-    else if ( 270u >= angle)  /* quadrant 3 is point symetric to 2 */
+    else if ( 270U >= angle)  /* quadrant 3 is point symetric to 2 */
     {
-        sinus = (-1) * MINUTE_SIN_TAB[(angle - 180u) / 6u];
+        sinus = (-1) * MINUTE_SIN_TAB[(angle - 180U) / 6U];
     }
     else /* quadrant 4 is symetric to 3 */
     {
-        sinus = (-1) * MINUTE_SIN_TAB[(360 - angle) / 6u];
+        sinus = (-1) * MINUTE_SIN_TAB[(360 - angle) / 6U];
     }
 
     return sinus;
@@ -261,5 +261,5 @@ static int16_t getMinuteSinus(uint16_t angle)
 
 int16_t getMinuteCosinus(uint16_t angle)
 {
-    return getMinuteSinus(angle + 90u);
+    return getMinuteSinus(angle + 90U);
 }
