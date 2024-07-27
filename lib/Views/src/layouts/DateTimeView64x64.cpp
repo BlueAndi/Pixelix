@@ -51,12 +51,22 @@ static const int16_t SINUS_VAL_SCALE = 10000;
  * Types and classes
  *****************************************************************************/
 
+/** Options for displaying seconds in analog clock
+ */
+enum SecondsDisplayMode
+{
+    SECOND_DISP_OFF  = 0u,    /**< no second indicator    */
+    SECOND_DISP_HAND = 1u,    /**< Draw second clock hand */
+    SECOND_DISP_RING = 2u,    /**< Show passed seconds on minute tick ring */
+    SECOND_DISP_BOTH = 3u,    /*< Show hand and on ring */
+};
+
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
 
 /**
-* @brief Get the Minute Sinus value
+* @brief Get the Minute Siunus value
 *
 * @param angle Minute angle, must be mutliple of 6°  (360 °/ 60 minutes)
 * @return sinus value for angle (scaled by 10.000)
@@ -74,6 +84,9 @@ static int16_t getMinuteCosinus(uint16_t angle);
 /******************************************************************************
  * Local Variables
  *****************************************************************************/
+
+/** Specify how to visualize seconds in analog clock. */
+static SecondsDisplayMode gSecondsDisplayMode = SECOND_DISP_RING;
 
 /**
   * Sinus lookup table for analog clock drawing
@@ -114,37 +127,43 @@ static const uint16_t MINUTE_SIN_TAB[16u] = {
  */
 void DateTimeView64x64::update(YAGfx& gfx)
 {
-    uint8_t idx = 0U;
 
-    gfx.fillScreen(ColorDef::BLACK);
-
-    m_textWidget.update(gfx);
-    while(MAX_LAMPS > idx)
+    if (m_lastUpdateSecondVal != m_now.tm_sec)
     {
-        m_lampWidgets[idx].update(gfx);
+        uint8_t idx = 0U;
 
-        ++idx;
+        gfx.fillScreen(ColorDef::BLACK);
+
+        m_textWidget.update(gfx);
+
+        for (uint8_t idx = 0; MAX_LAMPS > idx; ++idx)
+        {
+            m_lampWidgets[idx].update(gfx);
+        }
+
+        /* Draw analog clock minute circle*/
+        drawAnalogClockBackground(gfx);
+
+        /* Draw analog clock hands. */
+        drawAnalogClockHand(gfx, m_now.tm_min, ANALOG_RADIUS - 6, ColorDef::WHITE);
+        drawAnalogClockHand(gfx, m_now.tm_hour * 5 + m_now.tm_min / 12 , ANALOG_RADIUS - 13, ColorDef::WHITESMOKE);
+
+        if (0u != (gSecondsDisplayMode & SECOND_DISP_HAND))
+        {
+            drawAnalogClockHand(gfx, m_now.tm_sec, ANALOG_RADIUS - 1, ColorDef::YELLOW);
+        }
+        /* Draw analog clock hand center */
+        gfx.drawRectangle(ANALOG_CENTER_X - 2, ANALOG_CENTER_Y - 2, 5, 5, ColorDef::YELLOW);
+        gfx.drawPixel(ANALOG_CENTER_X, ANALOG_CENTER_Y, ColorDef::BLACK);
+        gfx.drawPixel(ANALOG_CENTER_X-2, ANALOG_CENTER_Y-2, ColorDef::BLACK);
+        gfx.drawPixel(ANALOG_CENTER_X-2, ANALOG_CENTER_Y+2, ColorDef::BLACK);
+        gfx.drawPixel(ANALOG_CENTER_X+2, ANALOG_CENTER_Y-2, ColorDef::BLACK);
+        gfx.drawPixel(ANALOG_CENTER_X+2, ANALOG_CENTER_Y+2, ColorDef::BLACK);
+
+        m_textWidget.update(gfx);
+
+        m_lastUpdateSecondVal = m_now.tm_sec;
     }
-    /* Draw analog clock minute circle*/
-    drawAnalogClockBackground(gfx);
-
-    /* Draw analog clock hands. */
-    drawAnalogClockHand(gfx, m_now.tm_hour * 5 + m_now.tm_min / 12 , ANALOG_RADIUS - 12, ColorDef::GRAY);
-    drawAnalogClockHand(gfx, m_now.tm_min, ANALOG_RADIUS - 6, ColorDef::GRAY);
-    drawAnalogClockHand(gfx, m_now.tm_sec, ANALOG_RADIUS - 1, ColorDef::YELLOW);
-
-    /* Draw analog clock hand center */
-    gfx.drawRectangle(ANALOG_CENTER_X - 2, ANALOG_CENTER_Y - 2, 5, 5, ColorDef::YELLOW);
-    gfx.drawPixel(ANALOG_CENTER_X, ANALOG_CENTER_Y, ColorDef::BLACK);
-    gfx.drawPixel(ANALOG_CENTER_X-2, ANALOG_CENTER_Y-2, ColorDef::BLACK);
-    gfx.drawPixel(ANALOG_CENTER_X-2, ANALOG_CENTER_Y+2, ColorDef::BLACK);
-    gfx.drawPixel(ANALOG_CENTER_X+2, ANALOG_CENTER_Y-2, ColorDef::BLACK);
-    gfx.drawPixel(ANALOG_CENTER_X+2, ANALOG_CENTER_Y+2, ColorDef::BLACK);
-
-    //int16_t x, y;
-    //m_textWidget.getPos(x, y);
-    //gfx.fillRect(x, y, m_textWidget.getWidth(), m_textWidget.getHeight(), ColorDef::RED);
-    //m_textWidget.update(gfx);
 }
 
 /******************************************************************************
@@ -175,12 +194,14 @@ void DateTimeView64x64::drawAnalogClockBackground(YAGfx& gfx)
 
             gfx.drawLine(xs, ys, xe, ye, ColorDef::BLUE);
         }
-        else
+
+        Color tickMarkCol(ColorDef::DARKGRAY);
+        if ((0u != (SECOND_DISP_RING & gSecondsDisplayMode)) && (angle <= secondAngle))
         {
-            /* Draw minute tick marks with passed seconds highlighting. */
-            Color tickMarkCol((angle <= secondAngle) ? ColorDef::YELLOW : ColorDef::DARKGRAY);
-            gfx.drawPixel(xs, ys, tickMarkCol);
+           /* Draw minute tick marks with passed seconds highlighting. */
+           tickMarkCol = ColorDef::YELLOW;
         }
+        gfx.drawPixel(xs, ys, tickMarkCol);
     }
 }
 

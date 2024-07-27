@@ -68,7 +68,9 @@ public:
     /**
      * Construct the view.
      */
-    DateTimeView64x64() : DateTimeViewGeneric()
+    DateTimeView64x64() :
+        DateTimeViewGeneric(),
+        m_lastUpdateSecondVal(-1)
     {
         /* Disable fade effect in case the user required to show seconds,
          * which will continuously trigger the fading effect.
@@ -76,11 +78,11 @@ public:
         m_textWidget.disableFadeEffect();
 
         /*
-         * Move digital clock to lower paet of analog clock.
-         * Analog clock is also shifted in X by one as the 
-         * mid point is 31.5
+         * Move digital clock to lower part of analog clock.
+         * Analog clock is also shifted in X by one as the
+         * mid point is 32.
          */
-        m_textWidget.move(1, 46); 
+        m_textWidget.move(1, 47);
     }
 
     /**
@@ -92,51 +94,53 @@ public:
 
     /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void update(YAGfx& gfx) override;
 
-    
-    
+
+
 protected:
 
     /**
-     * Center x-coordinate of analog clock 
+     * Center x-coordinate of analog clock
      */
 
     static const int16_t ANALOG_CENTER_X     = 32;
 
     /**
-     * Center y-coordinate of analog clock 
+     * Center y-coordinate of analog clock
      */
     static const int16_t ANALOG_CENTER_Y     = 31;
 
     /**
-     * Anaolog Clock radius  
+     * Anaolog Clock radius
      */
     static const int16_t ANALOG_RADIUS       = 31;
+
+    int m_lastUpdateSecondVal;
 
     DateTimeView64x64(const DateTimeView64x64& other);
     DateTimeView64x64& operator=(const DateTimeView64x64& other);
 
     /**
      * Draw analog clock backround (the minute tick marks)
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
     void drawAnalogClockBackground(YAGfx& gfx);
 
     /**
      * Draw analog clock hands for given time.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
-     * @param[in] now current time 
+     * @param[in] now current time
      */
 
     /**
-     * @brief 
-     * 
+     * @brief
+     *
      * @param[in] gfx    Graphic functionality to draw on the underlying canvas.
      * @param[in] minute Minute to point to (0..59).
      * @param[in] radius Length of hand (radius from clock mid point)
