@@ -134,13 +134,6 @@ protected:
     /**
      * Draw analog clock hands for given time.
      *
-     * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
-     * @param[in] now current time
-     */
-
-    /**
-     * @brief
-     *
      * @param[in] gfx    Graphic functionality to draw on the underlying canvas.
      * @param[in] minute Minute to point to (0..59).
      * @param[in] radius Length of hand (radius from clock mid point)

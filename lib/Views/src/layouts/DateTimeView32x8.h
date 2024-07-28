@@ -219,8 +219,8 @@ public:
         updateLampWidgetsColors();
     }
 
-/**
-     * @brief Update current time values in view
+    /**
+     * @brief Update current time values in view.
      * 
      * @param now current time
      */

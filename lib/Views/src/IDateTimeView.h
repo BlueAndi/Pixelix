@@ -145,7 +145,7 @@ public:
     virtual void setDayOffColor(const Color& color) = 0;
 
     /**
-     * @brief Update current time values in view
+     * @brief Update current time values in view.
      * 
      * @param now current time
      */

@@ -44,7 +44,7 @@
  * Macros
  *****************************************************************************/
 
-/** Factor by which Sinu/cosinus values are scaled to use integer math.  */
+/** Factor by which sinus/cosinus values are scaled to use integer math.  */
 static const int16_t SINUS_VAL_SCALE = 10000;
 
 /******************************************************************************
@@ -55,10 +55,10 @@ static const int16_t SINUS_VAL_SCALE = 10000;
  */
 enum SecondsDisplayMode
 {
-    SECOND_DISP_OFF  = 0U,    /**< no second indicator    */
-    SECOND_DISP_HAND = 1U,    /**< Draw second clock hand */
-    SECOND_DISP_RING = 2U,    /**< Show passed seconds on minute tick ring */
-    SECOND_DISP_BOTH = 3U,    /*< Show hand and on ring */
+    SECOND_DISP_OFF  = 0U,    /**< No second indicator display. */
+    SECOND_DISP_HAND = 1U,    /**< Draw second clock hand. */
+    SECOND_DISP_RING = 2U,    /**< Show passed seconds on minute tick ring. */
+    SECOND_DISP_BOTH = 3U,    /**< Show hand and on ring. */
 };
 
 /******************************************************************************
@@ -141,7 +141,7 @@ void DateTimeView64x64::update(YAGfx& gfx)
             m_lampWidgets[idx].update(gfx);
         }
 
-        /* Draw analog clock minute circle*/
+        /* Draw analog clock minute circle. */
         drawAnalogClockBackground(gfx);
 
         /* Draw analog clock hands. */
@@ -152,6 +152,7 @@ void DateTimeView64x64::update(YAGfx& gfx)
         {
             drawAnalogClockHand(gfx, m_now.tm_sec, ANALOG_RADIUS - 1, ColorDef::YELLOW);
         }
+
         /* Draw analog clock hand center */
         gfx.drawRectangle(ANALOG_CENTER_X - 2, ANALOG_CENTER_Y - 2, 5, 5, ColorDef::YELLOW);
         gfx.drawPixel(ANALOG_CENTER_X, ANALOG_CENTER_Y, ColorDef::BLACK);
@@ -207,7 +208,7 @@ void DateTimeView64x64::drawAnalogClockBackground(YAGfx& gfx)
 
 void DateTimeView64x64::drawAnalogClockHand(YAGfx& gfx, int16_t minute, int16_t radius, const Color& col)
 {
-    /* convert minute to angle starting at 270° which draws towards the top of the clock.*/
+    /* Convert minute to angle starting at 270°, which draws towards the top of the clock. */
     minute %= 60;
     minute = 270 + minute * 6;
 
