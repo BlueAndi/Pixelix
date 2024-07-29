@@ -51,16 +51,6 @@ static const int16_t SINUS_VAL_SCALE = 10000;
  * Types and classes
  *****************************************************************************/
 
-/** Options for displaying seconds in analog clock
- */
-enum SecondsDisplayMode
-{
-    SECOND_DISP_OFF  = 0U,    /**< No second indicator display. */
-    SECOND_DISP_HAND = 1U,    /**< Draw second clock hand. */
-    SECOND_DISP_RING = 2U,    /**< Show passed seconds on minute tick ring. */
-    SECOND_DISP_BOTH = 3U,    /**< Show hand and on ring. */
-};
-
 /******************************************************************************
  * Prototypes
  *****************************************************************************/
@@ -68,7 +58,7 @@ enum SecondsDisplayMode
 /**
 * @brief Get the Minute Siunus value
 *
-* @param angle Minute angle, must be mutliple of 6°  (360 °/ 60 minutes)
+* @param angle Minute angle, must be multiple of 6°  (360 °/ 60 minutes)
 * @return sinus value for angle (scaled by 10.000)
 */
 static int16_t getMinuteSinus(uint16_t angle);
@@ -76,7 +66,7 @@ static int16_t getMinuteSinus(uint16_t angle);
 /**
  * @brief Get the Minute Cosinus value
  *
- * @param angle Minute angle, must be mutliple of 6° (360 °/ 60 minutes)
+ * @param angle Minute angle, must be multiple of 6° (360 °/ 60 minutes)
  * @return cosinus value for angle (scaled by 10.000)
  */
 static int16_t getMinuteCosinus(uint16_t angle);
@@ -85,19 +75,16 @@ static int16_t getMinuteCosinus(uint16_t angle);
  * Local Variables
  *****************************************************************************/
 
-/** Specify how to visualize seconds in analog clock. */
-static SecondsDisplayMode gSecondsDisplayMode = SECOND_DISP_RING;
-
 /**
-  * Sinus lookup table for analog clock drawing
-  *
-  * Holds sinus values for the minutes 0 .. 15 angles in quadarant 0.
-  * Other quadrants and cosinus values get derived from these values
-  * to avoid recalculations.
-  *
-  * Sinus value are stored as integer scaled by 10.000.
-  */
-static const uint16_t MINUTE_SIN_TAB[16U] = {
+ * Sinus lookup table for analog clock drawing
+ *
+ * Holds sinus values for the minutes 0 .. 15 angles in quadarant 0.
+ * Other quadrants and cosinus values get derived from these values
+ * to avoid recalculations.
+ *
+ * Sinus value are stored as integer scaled by 10.000.
+ */
+static const int16_t MINUTE_SIN_TAB[16U] = {
     0,    /* sin(0°)   */
     1045, /* sin(6°)   */
     2079, /* sin(12°)  */
@@ -145,10 +132,10 @@ void DateTimeView64x64::update(YAGfx& gfx)
         drawAnalogClockBackground(gfx);
 
         /* Draw analog clock hands. */
-        drawAnalogClockHand(gfx, m_now.tm_min, ANALOG_RADIUS - 6, ColorDef::WHITE);
-        drawAnalogClockHand(gfx, m_now.tm_hour * 5 + m_now.tm_min / 12 , ANALOG_RADIUS - 13, ColorDef::WHITESMOKE);
+        drawAnalogClockHand(gfx, m_now.tm_min, ANALOG_RADIUS - 6, ColorDef::GRAY);
+        drawAnalogClockHand(gfx, m_now.tm_hour * 5 + m_now.tm_min / 12 , ANALOG_RADIUS - 13, ColorDef::WHITE);
 
-        if (0U != (gSecondsDisplayMode & SECOND_DISP_HAND))
+        if (0U != (m_secondsDisplayMode & SECOND_DISP_HAND))
         {
             drawAnalogClockHand(gfx, m_now.tm_sec, ANALOG_RADIUS - 1, ColorDef::YELLOW);
         }
@@ -197,7 +184,7 @@ void DateTimeView64x64::drawAnalogClockBackground(YAGfx& gfx)
         }
 
         Color tickMarkCol(ColorDef::DARKGRAY);
-        if ((0U != (SECOND_DISP_RING & gSecondsDisplayMode)) && (angle <= secondAngle))
+        if ((0U != (SECOND_DISP_RING & m_secondsDisplayMode)) && (angle <= secondAngle))
         {
            /* Draw minute tick marks with passed seconds highlighting. */
            tickMarkCol = ColorDef::YELLOW;
