@@ -26,6 +26,10 @@
 # Imports
 ################################################################################
 from configure import configure
+from determine_layout import determine_layout
+
+# pylint: disable=undefined-variable
+Import("env") # type: ignore
 
 ################################################################################
 # Variables
@@ -43,4 +47,7 @@ from configure import configure
 # Main
 ################################################################################
 
-configure("./config/configSmallUlanzi.ini")
+# pylint: disable=undefined-variable
+layout = determine_layout(env["BUILD_FLAGS"]) # type: ignore
+
+configure("./config/configSmallUlanzi.ini", layout)

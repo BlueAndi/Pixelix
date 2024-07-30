@@ -1,4 +1,4 @@
-"""Configures the plugins."""
+"""Determine the display layout by the build flags."""
 
 # MIT License
 #
@@ -25,11 +25,7 @@
 ################################################################################
 # Imports
 ################################################################################
-from configure import configure
-from determine_layout import determine_layout
-
-# pylint: disable=undefined-variable
-Import("env") # type: ignore
+import re
 
 ################################################################################
 # Variables
@@ -43,11 +39,32 @@ Import("env") # type: ignore
 # Functions
 ################################################################################
 
+def determine_layout(build_flags):
+    """Determine the display layout by the build flags.
+        It assumes that the build flags contain the following pre-processor defines:
+        - CONFIG_LED_MATRIX_WIDTH
+        - CONFIG_LED_MATRIX_HEIGHT
+
+    Args:
+        build_flags (list[str]): Build flags
+
+    Returns:
+        str: Display layout
+    """
+    width = 0
+    height = 0
+
+    for build_flag in build_flags:
+        match = re.search("-D CONFIG_LED_MATRIX_WIDTH=([0-9]+).*", build_flag)
+        if match:
+            width = int(match.group(1))
+
+        match = re.search("-D CONFIG_LED_MATRIX_HEIGHT=([0-9]+).*", build_flag)
+        if match:
+            height = int(match.group(1))
+
+    return f"LAYOUT_{width}X{height}"
+
 ################################################################################
 # Main
 ################################################################################
-
-# pylint: disable=undefined-variable
-layout = determine_layout(env["BUILD_FLAGS"]) # type: ignore
-
-configure("./config/configSmallNoI2s.ini", layout)
