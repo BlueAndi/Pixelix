@@ -126,8 +126,11 @@ def _clean_up_folders(plugin_list, dst_path):
         for folder in dst_subfolders:
             if folder not in plugin_list:
                 dst_full_path = dst_path + "/" + folder
-                print(f"\t\"{dst_full_path}\" removed.")
-                shutil.rmtree(dst_full_path)
+                try:
+                    shutil.rmtree(dst_full_path)
+                    print(f"\t\"{dst_full_path}\" removed.")
+                except FileNotFoundError:
+                    pass
                 is_cleaned_up = True
 
     return is_cleaned_up
@@ -277,7 +280,10 @@ def configure_plugins(plugin_list, layout):
 
                 if data_web_plugin_path_checksum != plugin_lib_web_path_checksum:
                     print("\tCopy web data:")
-                    shutil.rmtree(data_web_plugin_path)
+                    try:
+                        shutil.rmtree(data_web_plugin_path)
+                    except FileNotFoundError:
+                        pass
                     _copy_files(src_files, data_web_plugin_path)
                     is_generation_required = True
 
