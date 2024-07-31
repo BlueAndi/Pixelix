@@ -147,8 +147,12 @@ def _copy_files(src_files, dst_path):
 
     # Copy source files to destination.
     for src_file in src_files:
-        print(f"\t\t{src_file} -> {dst_path}")
-        shutil.copy2(src_file, dst_path)
+        print(f"\t\t{src_file} -> {dst_path}", end="")
+        try:
+            shutil.copy2(src_file, dst_path)
+            print("")
+        except FileNotFoundError:
+            print(" -> file not found!")
 
 def _generate_web_menu(menu_full_path, plugin_list):
     """Generate the menu.json file.
