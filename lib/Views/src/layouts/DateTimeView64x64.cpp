@@ -56,9 +56,9 @@ static const int16_t SINUS_VAL_SCALE = 10000;
  *****************************************************************************/
 
 /**
-* @brief Get the Minute Siunus value
+* @brief Get the Minute Sinus value
 *
-* @param angle Minute angle, must be multiple of 6°  (360 °/ 60 minutes)
+* @param[in] angle Minute angle, must be multiple of 6°  (360 °/ 60 minutes)
 * @return sinus value for angle (scaled by 10.000)
 */
 static int16_t getMinuteSinus(uint16_t angle);
@@ -66,7 +66,7 @@ static int16_t getMinuteSinus(uint16_t angle);
 /**
  * @brief Get the Minute Cosinus value
  *
- * @param angle Minute angle, must be multiple of 6° (360 °/ 60 minutes)
+ * @param[in] angle Minute angle, must be multiple of 6° (360 °/ 60 minutes)
  * @return cosinus value for angle (scaled by 10.000)
  */
 static int16_t getMinuteCosinus(uint16_t angle);

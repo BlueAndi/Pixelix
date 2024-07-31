@@ -222,7 +222,7 @@ public:
     /**
      * @brief Update current time values in view.
      * 
-     * @param now current time
+     * @param[in] now current time
      */
     virtual void setCurrentTime(const tm& now) override;
 
