@@ -43,7 +43,8 @@
  * Includes
  *****************************************************************************/
 #include <YAGfx.h>
-#include <IDateTimeView.h>
+#include "DateTimeViewGeneric.h"
+
 #include <Fonts.h>
 #include <LampWidget.h>
 #include <TextWidget.h>
@@ -60,7 +61,7 @@
 /**
  * View for 64x64 LED matrix with date and time.
  */
-class DateTimeView64x64 : public IDateTimeView
+class DateTimeView64x64 : public DateTimeViewGeneric
 {
 public:
 
@@ -68,23 +69,21 @@ public:
      * Construct the view.
      */
     DateTimeView64x64() :
-        IDateTimeView(),
-        m_fontType(Fonts::FONT_TYPE_DEFAULT),
-        m_textWidget(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
-        m_lampWidgets{{LAMP_WIDTH, LAMP_HEIGHT, LAMP_0_X , LAMP_Y},
-                      {LAMP_WIDTH, LAMP_HEIGHT, LAMP_1_X , LAMP_Y},
-                      {LAMP_WIDTH, LAMP_HEIGHT, LAMP_2_X , LAMP_Y},
-                      {LAMP_WIDTH, LAMP_HEIGHT, LAMP_3_X , LAMP_Y},
-                      {LAMP_WIDTH, LAMP_HEIGHT, LAMP_4_X , LAMP_Y},
-                      {LAMP_WIDTH, LAMP_HEIGHT, LAMP_5_X , LAMP_Y},
-                      {LAMP_WIDTH, LAMP_HEIGHT, LAMP_6_X , LAMP_Y}},
-        m_dayOnColor(DAY_ON_COLOR),
-        m_dayOffColor(DAY_OFF_COLOR)
+        DateTimeViewGeneric(),
+        m_secondsDisplayMode(SECOND_DISP_RING),
+        m_lastUpdateSecondVal(-1)
     {
         /* Disable fade effect in case the user required to show seconds,
          * which will continuously trigger the fading effect.
          */
         m_textWidget.disableFadeEffect();
+
+        /*
+         * Move digital clock to lower part of analog clock.
+         * Analog clock is also shifted in X by one as the
+         * mid point is 32.
+         */
+        m_textWidget.move(1, 47);
     }
 
     /**
@@ -95,217 +94,68 @@ public:
     }
 
     /**
-     * Initialize view, which will prepare the widgets and the default values.
-     */
-    void init(uint16_t width, uint16_t height) override
-    {
-        UTIL_NOT_USED(width);
-        UTIL_NOT_USED(height);
-
-        m_textWidget.setFormatStr("{hc}No NTP");
-        updateLampWidgetsColors();
-    }
-
-    /**
-     * Get font type.
-     * 
-     * @return The font type the view uses.
-     */
-    Fonts::FontType getFontType() const override
-    {
-        return m_fontType;
-    }
-
-    /**
-     * Set font type.
-     * 
-     * @param[in] fontType  The font type which the view shall use.
-     */
-    void setFontType(Fonts::FontType fontType) override
-    {
-        m_fontType = fontType;
-        m_textWidget.setFont(Fonts::getFontByType(m_fontType));
-    }
-
-    /**
      * Update the underlying canvas.
-     * 
+     *
      * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    void update(YAGfx& gfx) override
-    {
-        uint8_t idx = 0U;
+    void update(YAGfx& gfx) override;
 
-        gfx.fillScreen(ColorDef::BLACK);
-        m_textWidget.update(gfx);
 
-        while(MAX_LAMPS > idx)
-        {
-            m_lampWidgets[idx].update(gfx);
-
-            ++idx;
-        }
-    }
-
-    /**
-     * Get text (non-formatted).
-     * 
-     * @return Text
-     */
-    String getText() const override
-    {
-        return m_textWidget.getStr();
-    }
-
-    /**
-     * Get text (formatted).
-     * 
-     * @return Text
-     */
-    String getFormatText() const override
-    {
-        return m_textWidget.getFormatStr();
-    }
-
-    /**
-     * Set text (formatted).
-     * 
-     * @param[in] formatText    Formatted text to show.
-     */
-    void setFormatText(const String& formatText) override
-    {
-        m_textWidget.setFormatStr(formatText);
-    }
-
-    /**
-     * Get the color to show the actual day.
-     * 
-     * @return Color
-     */
-    const Color& getDayOnColor() const override
-    {
-        return m_dayOnColor;
-    }
-
-    /**
-     * Set the color which is used for the actual day.
-     * 
-     * @param[in] color Color for the actual day
-     */
-    void setDayOnColor(const Color& color) override
-    {
-        m_dayOnColor = color;
-        updateLampWidgetsColors();
-    }
-
-    /**
-     * Get the color to show the other days than the actual one.
-     * 
-     * @return Color
-     */
-    const Color& getDayOffColor() const override
-    {
-        return m_dayOffColor;
-    }
-
-    /**
-     * Set the color which is used for the other days than the actual day.
-     * 
-     * @param[in] color Color for the other days
-     */
-    void setDayOffColor(const Color& color) override
-    {
-        m_dayOffColor = color;
-        updateLampWidgetsColors();
-    }
-
-    /**
-     * Set weekday indicator depended on the given time info.
-     *
-     * @param[in] timeInfo the current time info.
-     */
-    void setWeekdayIndicator(tm timeInfo) override;
-
-    /** Max. number of lamps. One lamp per day in a week. */
-    static const uint8_t    MAX_LAMPS       = 7U;
 
 protected:
 
-    /** Distance between two lamps in pixel. */
-    static const uint8_t    LAMP_DISTANCE   = 1U;
+    /** Options for displaying seconds in analog clock
+     */
+    enum SecondsDisplayMode
+    {
+        SECOND_DISP_OFF = 0U,  /**< No second indicator display. */
+        SECOND_DISP_HAND = 1U, /**< Draw second clock hand. */
+        SECOND_DISP_RING = 2U, /**< Show passed seconds on minute tick ring. */
+        SECOND_DISP_BOTH = 3U, /**< Show hand and on ring. */
+    };
 
-    /** Lamp width in pixel. */
-    static const uint8_t    LAMP_WIDTH      = (CONFIG_LED_MATRIX_WIDTH - ((MAX_LAMPS + 1U) * LAMP_DISTANCE)) / MAX_LAMPS;
+    SecondsDisplayMode m_secondsDisplayMode; /**< How to visualize seconds in analog clock. */
 
-    /** Lamp distance to the canvas border in pixel. */
-    static const uint8_t    LAMP_BORDER     = (CONFIG_LED_MATRIX_WIDTH - (MAX_LAMPS * LAMP_WIDTH) - ((MAX_LAMPS - 1U) * LAMP_DISTANCE)) / 2U;
-
-    /** Lamp height in pixel. */
-    static const uint8_t    LAMP_HEIGHT     = 1U;
-
-    /** Lamp 0 x-coordinate in pixel. */
-    static const uint8_t    LAMP_0_X        = LAMP_BORDER + (0 * (LAMP_WIDTH + LAMP_DISTANCE));
-
-    /** Lamp 1 x-coordinate in pixel. */
-    static const uint8_t    LAMP_1_X        = LAMP_BORDER + (1 * (LAMP_WIDTH + LAMP_DISTANCE));
-
-    /** Lamp 2 x-coordinate in pixel. */
-    static const uint8_t    LAMP_2_X        = LAMP_BORDER + (2 * (LAMP_WIDTH + LAMP_DISTANCE));
-
-    /** Lamp 3 x-coordinate in pixel. */
-    static const uint8_t    LAMP_3_X        = LAMP_BORDER + (3 * (LAMP_WIDTH + LAMP_DISTANCE));
-
-    /** Lamp 4 x-coordinate in pixel. */
-    static const uint8_t    LAMP_4_X        = LAMP_BORDER + (4 * (LAMP_WIDTH + LAMP_DISTANCE));
-
-    /** Lamp 5 x-coordinate in pixel. */
-    static const uint8_t    LAMP_5_X        = LAMP_BORDER + (5 * (LAMP_WIDTH + LAMP_DISTANCE));
-
-    /** Lamp 6 x-coordinate in pixel. */
-    static const uint8_t    LAMP_6_X        = LAMP_BORDER + (6 * (LAMP_WIDTH + LAMP_DISTANCE));
-
-    /** Lamp y-coordindate in pixel. */
-    static const uint8_t    LAMP_Y          = CONFIG_LED_MATRIX_HEIGHT - 1U;
 
     /**
-     * Text width in pixels.
+     * Center x-coordinate of analog clock
      */
-    static const uint16_t   TEXT_WIDTH      = CONFIG_LED_MATRIX_WIDTH;
+    static const int16_t ANALOG_CENTER_X     = 32;
 
     /**
-     * Text height in pixels.
+     * Center y-coordinate of analog clock
      */
-    static const uint16_t   TEXT_HEIGHT     = CONFIG_LED_MATRIX_HEIGHT - LAMP_HEIGHT;
+    static const int16_t ANALOG_CENTER_Y     = 31;
 
     /**
-     * Text widget x-coordinate in pixels.
+     * Anaolog Clock radius
      */
-    static const int16_t    TEXT_X          = 0;
+    static const int16_t ANALOG_RADIUS       = 31;
 
     /**
-     * Text widget y-coordinate in pixels.
+     * Seconds value of last display update. Used to avoid unecessary redrawing.
      */
-    static const int16_t    TEXT_Y          = 0;
-
-    /** Color of the current day shown in the day of the week bar. */
-    static const Color      DAY_ON_COLOR;
-
-    /** Color of the other days (not the current one) shown in the day of the week bar. */
-    static const Color      DAY_OFF_COLOR;
-
-    Fonts::FontType m_fontType;                 /**< Font type which shall be used if there is no conflict with the layout. */
-    TextWidget      m_textWidget;               /**< Text widget, used for showing the text. */
-    LampWidget      m_lampWidgets[MAX_LAMPS];   /**< Lamp widgets, used to signal the day of week. */
-    Color           m_dayOnColor;               /**< Color of current day in the day of the week bar. */
-    Color           m_dayOffColor;              /**< Color of the other days in the day of the week bar. */
+    int m_lastUpdateSecondVal;
 
     DateTimeView64x64(const DateTimeView64x64& other);
     DateTimeView64x64& operator=(const DateTimeView64x64& other);
 
     /**
-     * Updates all colors of the lamp widgets.
+     * Draw analog clock backround (the minute tick marks)
+     *
+     * @param[in] gfx   Graphic functionality to draw on the underlying canvas.
      */
-    void updateLampWidgetsColors();
+    void drawAnalogClockBackground(YAGfx& gfx);
+
+    /**
+     * Draw analog clock hands for given time.
+     *
+     * @param[in] gfx    Graphic functionality to draw on the underlying canvas.
+     * @param[in] minute Minute to point to (0..59).
+     * @param[in] radius Length of hand (radius from clock mid point)
+     * @param[in] col    Color of the hand.
+     */
+    void drawAnalogClockHand(YAGfx& gfx, int16_t minute, int16_t radius, const Color& col);
 };
 
 /******************************************************************************

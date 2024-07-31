@@ -400,7 +400,14 @@ void DateTimePlugin::updateDateTime(bool force)
             /* Should never happen. */
             m_mode = MODE_DATE_TIME;
             break;
-        };
+        }
+
+        /* cache time every second in view  (i.e. for analog clock) */
+        if ((true == force) ||
+            (m_shownSecond != timeInfo.tm_sec))
+        {
+            m_view.setCurrentTime(timeInfo);
+        }
 
         if (true == showTime)
         {
@@ -419,9 +426,7 @@ void DateTimePlugin::updateDateTime(bool force)
                     m_view.setFormatText(timeAsStr);
 
                     m_shownSecond = timeInfo.tm_sec;
-                }
-                
-                m_view.setWeekdayIndicator(timeInfo);
+                } 
             }
         }
         else if (true == showDate)
@@ -441,9 +446,7 @@ void DateTimePlugin::updateDateTime(bool force)
                     m_view.setFormatText(dateAsStr);
 
                     m_shownDayOfTheYear = timeInfo.tm_yday;
-                }
-                
-                m_view.setWeekdayIndicator(timeInfo);
+                }              
             }
         }
         else
