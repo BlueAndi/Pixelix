@@ -30,7 +30,6 @@ import shutil
 import json
 import hashlib
 from string import Template
-from os.path import normpath, isdir, isfile
 
 ################################################################################
 # Variables
@@ -52,6 +51,9 @@ _PLUGIN_LIST_TEMPLATE_FULL_PATH = "./scripts/PluginList.cpp"
 # Functions
 ################################################################################
 
+def _sort_key(file_path):
+    return os.path.basename(file_path)
+
 def calculate_path_checksum(paths):
     """Recursively calculates a checksum representing the contents of all files
         found with a sequence of file and/or directory paths.
@@ -63,21 +65,23 @@ def calculate_path_checksum(paths):
         int: MD5 checksum
     """
     hasher = hashlib.md5()
+    file_list = []
 
-    paths.sort()
     for path in paths:
-        if isdir(path):
+        if os.path.isdir(path):
             filenames = os.listdir(path)
-            filenames.sort()
             for filename in filenames:
-                file_path = normpath(path + "/" + filename)
-                with open(file_path, "rb") as file:
-                    while chunk := file.read(8192):
-                        hasher.update(chunk)
-        elif isfile(path):
-            with open(path, "rb") as file:
-                while chunk := file.read(8192):
-                    hasher.update(chunk)
+                file_path = os.path.normpath(path + "/" + filename)
+                file_list.append(file_path)
+        elif os.path.isfile(path):
+            file_list.append(path)
+
+    file_list_sorted = sorted(file_list, key=_sort_key)
+
+    for file_path in file_list_sorted:
+        with open(file_path, "rb") as file:
+            while chunk := file.read(8192):
+                hasher.update(chunk)
 
     return hasher.hexdigest()
 
