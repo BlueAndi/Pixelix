@@ -328,8 +328,9 @@ protected:
     Fonts::FontType     m_fontType;                                     /**< Font type which shall be used if there is no conflict with the layout. */
     BitmapWidget        m_weatherIconCurrent;                           /**< Current weather icon. */
     TextWidget          m_weatherInfoCurrentText;                       /**< Current weather info text. */
+    TextWidget          m_forecastDayNames[FORECAST_DAYS];              /**< Forecast day names */
     BitmapWidget        m_forecastIcons[FORECAST_DAYS];                 /**< Forecast weather icons. */
-    TextWidget          m_forecastTemperatues[FORECAST_DAYS];           /**< Forecast temperature (min. and max.) */
+    TextWidget          m_forecastTemperatures[FORECAST_DAYS];          /**< Forecast temperature (min. and max.) */
     uint32_t            m_viewDuration;                                 /**< The duration in ms, this view will be shown on the display. */
     SimpleTimer         m_viewDurationTimer;                            /**< The timer used to determine which weather info to show on the display. */
     String              m_units;                                        /**< Units (default, metric, imperial) */

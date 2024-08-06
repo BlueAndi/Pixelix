@@ -34,6 +34,7 @@
  *****************************************************************************/
 #include "OpenWeatherView64x64.h"
 #include <FileSystem.h>
+#include <ClockDrv.h>
 
 /******************************************************************************
  * Compiler Switches
@@ -103,14 +104,21 @@ OpenWeatherView64x64::OpenWeatherView64x64() :
     m_fontType(Fonts::FONT_TYPE_DEFAULT),
     m_weatherIconCurrent(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
     m_weatherInfoCurrentText(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
-    m_forecastIcons{
-        { 12U, 16U, 0 * 12U + 2U, 32U },
-        { 12U, 16U, 1 * 12U + 2U, 32U },
-        { 12U, 16U, 2 * 12U + 2U, 32U },
-        { 12U, 16U, 3 * 12U + 2U, 32U },
-        { 12U, 16U, 4 * 12U + 2U, 32U }
+    m_forecastDayNames{
+        { 12U, 8U, 0 * 12U + 2U, 32U },
+        { 12U, 8U, 1 * 12U + 2U, 32U },
+        { 12U, 8U, 2 * 12U + 2U, 32U },
+        { 12U, 8U, 3 * 12U + 2U, 32U },
+        { 12U, 8U, 4 * 12U + 2U, 32U },
     },
-    m_forecastTemperatues{
+    m_forecastIcons{
+        { 12U, 8U, 0 * 12U + 2U, 40U },
+        { 12U, 8U, 1 * 12U + 2U, 40U },
+        { 12U, 8U, 2 * 12U + 2U, 40U },
+        { 12U, 8U, 3 * 12U + 2U, 40U },
+        { 12U, 8U, 4 * 12U + 2U, 40U }
+    },
+    m_forecastTemperatures{
         { 12U, 16U, 0 * 12U + 2U, 48U },
         { 12U, 16U, 1 * 12U + 2U, 48U },
         { 12U, 16U, 2 * 12U + 2U, 48U },
@@ -139,11 +147,14 @@ OpenWeatherView64x64::OpenWeatherView64x64() :
 
     for(day = 0U; day < FORECAST_DAYS; ++day)
     {
+        m_forecastDayNames[day].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+        m_forecastDayNames[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+
         m_forecastIcons[day].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
         m_forecastIcons[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
 
-        m_forecastTemperatues[day].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
-        m_forecastTemperatues[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+        m_forecastTemperatures[day].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+        m_forecastTemperatures[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
     }
 }
 
@@ -159,8 +170,9 @@ void OpenWeatherView64x64::update(YAGfx& gfx)
 
     for(day = 0U; day < FORECAST_DAYS; ++day)
     {
+        m_forecastDayNames[day].update(gfx);
         m_forecastIcons[day].update(gfx);
-        m_forecastTemperatues[day].update(gfx);
+        m_forecastTemperatures[day].update(gfx);
     }
 }
 
@@ -307,11 +319,33 @@ void OpenWeatherView64x64::updateWeatherInfoCurrentOnView()
 
 void OpenWeatherView64x64::updateWeatherInfoForecastOnView()
 {
-    int8_t day;
-
+    int8_t      day;
+    ClockDrv&   clockDrv            = ClockDrv::getInstance();
+    struct tm   timeInfo            = { 0 };
+    bool        isClockAvailable    = clockDrv.getTime(timeInfo);
+    uint8_t     nextDayOfWeek       = static_cast<uint8_t>(timeInfo.tm_wday + 1) % 7U;
+    
     for(day = 0U; day < FORECAST_DAYS; ++day)
     {
         String temperatures;
+
+        if (true == isClockAvailable)
+        {
+            const uint32_t  MAX_DAY_NAME_BUFFER_SIZE = 32U;
+            char            dayName[MAX_DAY_NAME_BUFFER_SIZE];
+
+            timeInfo.tm_wday = nextDayOfWeek;
+            if (0U != strftime(dayName, sizeof(dayName), "%a", &timeInfo))
+            {
+                /* Use only the first two characters of the day name. */
+                dayName[2U] = '\0';
+
+                m_forecastDayNames[day].setFormatStr(dayName);
+            }
+
+            ++nextDayOfWeek;
+            nextDayOfWeek %= 7U;
+        }
 
         if (true == m_isWeatherIconForecastUpdated[day])
         {
@@ -332,7 +366,7 @@ void OpenWeatherView64x64::updateWeatherInfoForecastOnView()
         temperatures += "\n";
         appendTemperature(temperatures, m_weatherInfoForecast[day].temperatureMax, true, true);
 
-        m_forecastTemperatues[day].setFormatStr(temperatures);
+        m_forecastTemperatures[day].setFormatStr(temperatures);
     }
 }
 

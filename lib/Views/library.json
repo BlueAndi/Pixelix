@@ -9,7 +9,9 @@
         "maintainer": true
     }],
     "license": "MIT",
-    "dependencies": [],
+    "dependencies": [{
+        "name": "IRtc"
+    }],
     "frameworks": "*",
     "platforms": "*"
 }
