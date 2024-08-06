@@ -419,10 +419,11 @@ void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
 
         if (nullptr != jsonDoc)
         {
-            size_t                          payloadSize = 0U;
-            const void*                     vPayload    = rsp.getPayload(payloadSize);
-            const char*                     payload     = static_cast<const char*>(vPayload);
-            const size_t                    FILTER_SIZE = 128U;
+            bool                            isSuccessful    = false;
+            size_t                          payloadSize     = 0U;
+            const void*                     vPayload        = rsp.getPayload(payloadSize);
+            const char*                     payload         = static_cast<const char*>(vPayload);
+            const size_t                    FILTER_SIZE     = 128U;
             StaticJsonDocument<FILTER_SIZE> jsonFilterDoc;
 
             jsonFilterDoc["artist"]     = true;
@@ -456,12 +457,14 @@ void VolumioPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
                     msg.type    = MSG_TYPE_RSP;
                     msg.rsp     = jsonDoc;
 
-                    if (false == this->m_taskProxy.send(msg))
-                    {
-                        delete jsonDoc;
-                        jsonDoc = nullptr;
-                    }
+                    isSuccessful = this->m_taskProxy.send(msg);
                 }
+            }
+
+            if (false == isSuccessful)
+            {
+                delete jsonDoc;
+                jsonDoc = nullptr;
             }
         }
     }
