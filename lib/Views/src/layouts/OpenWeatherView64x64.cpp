@@ -65,7 +65,7 @@ typedef struct
  *****************************************************************************/
 
 /** The epsilon is used to compare floats. */
-static const float  EPSILON = 0.0001f;
+static const float  EPSILON = 0.0001F;
 
 /* Initialize image path for the weather condition icons. */
 const char* OpenWeatherView64x64::IMAGE_PATH                        = "/plugins/OpenWeatherPlugin/";
