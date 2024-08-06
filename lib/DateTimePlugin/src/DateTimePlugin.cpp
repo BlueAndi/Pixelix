@@ -326,7 +326,7 @@ void DateTimePlugin::updateDateTime(bool force)
     struct tm   timeInfo            = { 0 };
     bool        isClockAvailable    = false;
 
-    /* If not other timezone is given, the local time shall be used. */
+    /* If no other timezone is given, the local time shall be used. */
     if (true == m_timeZone.isEmpty())
     {
         isClockAvailable = clockDrv.getTime(timeInfo);
