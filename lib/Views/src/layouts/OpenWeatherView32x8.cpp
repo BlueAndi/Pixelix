@@ -64,6 +64,9 @@ typedef struct
  * Local Variables
  *****************************************************************************/
 
+/** The epsilon is used to compare floats. */
+static const float  EPSILON = 0.0001F;
+
 /* Initialize image path for the weather condition icons. */
 const char* OpenWeatherView32x8::IMAGE_PATH                 = "/plugins/OpenWeatherPlugin/";
 
@@ -92,13 +95,52 @@ static const UvIndexElem uvIndexTable[] =
  * Public Methods
  *****************************************************************************/
 
+OpenWeatherView32x8::OpenWeatherView32x8() :
+    IOpenWeatherView(),
+    m_fontType(Fonts::FONT_TYPE_DEFAULT),
+    m_weatherIconCurrent(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
+    m_weatherInfoCurrentText(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
+    m_viewDurationTimer(),
+    m_viewDuration(0U),
+    m_units("metric"),
+    m_weatherInfo(),
+    m_weatherInfoId(0U),
+    m_weatherInfoCurrent(),
+    m_isWeatherInfoCurrentUpdated(false),
+    m_isWeatherIconCurrentUpdated(false)
+{
+    m_weatherIconCurrent.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+    m_weatherIconCurrent.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+    
+    m_weatherInfoCurrentText.setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
+    m_weatherInfoCurrentText.setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+}
+
 void OpenWeatherView32x8::update(YAGfx& gfx)
 {
     handleWeatherInfo();
 
     gfx.fillScreen(ColorDef::BLACK);
-    m_bitmapWidget.update(gfx);
-    m_textWidget.update(gfx);
+    m_weatherIconCurrent.update(gfx);
+    m_weatherInfoCurrentText.update(gfx);
+}
+
+void OpenWeatherView32x8::setWeatherInfoCurrent(const WeatherInfoCurrent& info)
+{
+    if ((m_weatherInfoCurrent.iconId != info.iconId) ||
+        (EPSILON < fabsf(m_weatherInfoCurrent.temperature - info.temperature)) ||
+        (m_weatherInfoCurrent.humidity != info.humidity) ||
+        (EPSILON < fabsf(m_weatherInfoCurrent.uvIndex - info.uvIndex)) ||
+        (EPSILON < fabsf(m_weatherInfoCurrent.windSpeed - info.windSpeed)))
+    {
+        if (m_weatherInfoCurrent.iconId != info.iconId)
+        {
+            m_isWeatherIconCurrentUpdated = true;
+        }
+
+        m_weatherInfoCurrent            = info;
+        m_isWeatherInfoCurrentUpdated   = true;
+    }
 }
 
 /******************************************************************************
@@ -148,92 +190,45 @@ OpenWeatherView32x8::WeatherInfo OpenWeatherView32x8::getActiveWeatherInfo() con
     return static_cast<WeatherInfo>(m_weatherInfo & (1U << m_weatherInfoId));
 }
 
-void OpenWeatherView32x8::updateWeatherInfoOnView()
+void OpenWeatherView32x8::updateWeatherInfoCurrentOnView()
 {
     String iconFullPath;
-    String text         = "-";
+    String text;
 
     switch(getActiveWeatherInfo())
     {
     case WEATHER_INFO_EMPTY:
         iconFullPath = IMAGE_PATH_STD_ICON;
+        text = "-";
         break;
 
     case WEATHER_INFO_TEMPERATURE:
-        getIconPathByWeatherIconId(iconFullPath, m_weatherInfoCurrent.iconId);
+        getIconPathByWeatherIconId(iconFullPath, m_weatherInfoCurrent.iconId, "");
 
         if (true == iconFullPath.isEmpty())
         {
             iconFullPath = IMAGE_PATH_STD_ICON;
         }
 
-        if (false == std::isnan(m_weatherInfoCurrent.temperature))
-        {
-            const char* reducePrecision         = (m_weatherInfoCurrent.temperature < -9.9F) ? "%.0f" : "%.1f";
-            char        tempReducedPrecison[6]  = { 0 };
-
-            /* Generate temperature string with reduced precision and add unit °C/°F. */
-            (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, m_weatherInfoCurrent.temperature);
-
-            text  = tempReducedPrecison;
-            text += "\x8E";
-
-            if (m_units == "default")
-            {
-                text += "K";
-            }
-            else if (m_units == "metric")
-            {
-                text += "C";
-            }
-            else
-            {
-                text += "F";
-            }
-        }
+        appendTemperature(text, m_weatherInfoCurrent.temperature);
         break;
         
     case WEATHER_INFO_HUMIDITY:
         iconFullPath = IMAGE_PATH_HUMIDITY_ICON;
 
-        text  = m_weatherInfoCurrent.humidity;
-        text += "%";
+        appendHumidity(text, m_weatherInfoCurrent.humidity);
         break;
         
     case WEATHER_INFO_WIND_SPEED:
         iconFullPath = IMAGE_PATH_WIND_ICON;
 
-        if (false == std::isnan(m_weatherInfoCurrent.windSpeed))
-        {
-            char windReducedPrecison[5] = { 0 };
-
-            (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", m_weatherInfoCurrent.windSpeed);
-
-            text  = windReducedPrecison;
-
-            if (m_units == "default")
-            {
-                text += "m/s";
-            }
-            else if (m_units == "metric")
-            {
-                text += "m/s";
-            }
-            else
-            {
-                text += "mph";
-            }
-        }
+        appendWindSpeed(text, m_weatherInfoCurrent.windSpeed);
         break;
         
     case WEATHER_INFO_UV_INDEX:
         iconFullPath = IMAGE_PATH_UVI_ICON;
 
-        if (false == std::isnan(m_weatherInfoCurrent.uvIndex))
-        {
-            text  = uvIndexToColor(static_cast<uint8_t>(m_weatherInfoCurrent.uvIndex));
-            text += m_weatherInfoCurrent.uvIndex;
-        }
+        appendUvIndex(text, m_weatherInfoCurrent.uvIndex);
         break;
         
     default:
@@ -241,16 +236,14 @@ void OpenWeatherView32x8::updateWeatherInfoOnView()
         break;
     }
 
-    /* Change icon only if its really necessary to avoid restarting animated
-     * icon.
-     */
-    if (m_iconFullPath != iconFullPath)
+    /* Change icon only if its really necessary to avoid restarting animated icon. */
+    if (true == m_isWeatherIconCurrentUpdated)
     {
-        (void)m_bitmapWidget.load(FILESYSTEM, iconFullPath);
-        m_iconFullPath = iconFullPath;
+        (void)m_weatherIconCurrent.load(FILESYSTEM, iconFullPath);
+        m_isWeatherIconCurrentUpdated = false;
     }
 
-    m_textWidget.setFormatStr(text);
+    m_weatherInfoCurrentText.setFormatStr(text);
 }
 
 void OpenWeatherView32x8::handleWeatherInfo()
@@ -267,11 +260,16 @@ void OpenWeatherView32x8::handleWeatherInfo()
             minDuration = VIEW_DURATION_MIN;
         }
 
-        updateWeatherInfoOnView();
+        /* Update icons the first time and every time a reset of the
+         * weather info was triggered.
+         */
+        m_isWeatherIconCurrentUpdated = true;
+
+        updateWeatherInfoCurrentOnView();
         m_viewDurationTimer.start(minDuration);
     }
-    /* Update weather info periodically or in case the weather info is updated, immediate. */
-    else if ((true == m_viewDurationTimer.isTimeout()) || (true == m_isWeatherInfoUpdated))
+    /* Update weather info periodically. */
+    else if (true == m_viewDurationTimer.isTimeout())
     {
         WeatherInfo oldWeatherInfo = getActiveWeatherInfo();
         WeatherInfo newWeatherInfo = WEATHER_INFO_EMPTY;
@@ -281,43 +279,49 @@ void OpenWeatherView32x8::handleWeatherInfo()
         /* The view will only be updated if different weather info is required
          * or the weather info itself was updated.
          */
-        if ((oldWeatherInfo != getActiveWeatherInfo()) || (true == m_isWeatherInfoUpdated))
+        if (oldWeatherInfo != getActiveWeatherInfo())
         {
-            updateWeatherInfoOnView();
+            m_isWeatherInfoCurrentUpdated = true;
+            m_isWeatherIconCurrentUpdated = true; /* The icon will change depended on kind of weather information. */
         }
 
         m_viewDurationTimer.restart();
-        m_isWeatherInfoUpdated = false;
     }
     else
     {
         /* Nothing to do. */
     }
+
+    if (true == m_isWeatherInfoCurrentUpdated)
+    {
+        updateWeatherInfoCurrentOnView();
+        m_isWeatherInfoCurrentUpdated = false;
+    }
 }
 
-void OpenWeatherView32x8::getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId) const
+void OpenWeatherView32x8::getIconPathByWeatherIconId(String& fullPath, const String& weatherIconId, const String&addition) const
 {
     fullPath.clear();
 
     if (false == weatherIconId.isEmpty())
     {
         String fullPathWithoutExt   = IMAGE_PATH + weatherIconId;
-        String fullPathToIcon       = fullPathWithoutExt + BitmapWidget::FILE_EXT_BITMAP;
+        String fullPathToIcon       = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
 
         /* No specific bitmap icon available? */
         if (false == FILESYSTEM.exists(fullPathToIcon))
         {
             /* No specific GIF icon available? */
-            fullPathToIcon = fullPathWithoutExt + BitmapWidget::FILE_EXT_GIF;
+            fullPathToIcon = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_GIF;
             if (false == FILESYSTEM.exists(fullPathToIcon))
             {
                 fullPathWithoutExt  = IMAGE_PATH + weatherIconId.substring(0U, weatherIconId.length() - 1U);
-                fullPathToIcon      = fullPathWithoutExt + BitmapWidget::FILE_EXT_BITMAP;
+                fullPathToIcon      = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_BITMAP;
 
                 /* No generic bitmap icon available? */
                 if (false == FILESYSTEM.exists(fullPathToIcon))
                 {
-                    fullPathToIcon = fullPathWithoutExt + BitmapWidget::FILE_EXT_GIF;
+                    fullPathToIcon = fullPathWithoutExt + addition + BitmapWidget::FILE_EXT_GIF;
 
                     /* No generic GIF icon available? */
                     if (true == FILESYSTEM.exists(fullPathToIcon))
@@ -360,6 +364,90 @@ const char* OpenWeatherView32x8::uvIndexToColor(uint8_t uvIndex)
     }
 
     return color;
+}
+
+void OpenWeatherView32x8::appendTemperature(String& dst, float temperature, bool noFraction, bool noUnit)
+{
+    if (false == std::isnan(temperature))
+    {
+        const char* reducePrecision         = (false == noFraction) ? (temperature < -9.9F) ? "%.0f" : "%.1f" : "%.0f";
+        char        tempReducedPrecison[6]  = { 0 };
+
+        /* Generate temperature string with reduced precision and add unit �C/�F. */
+        (void)snprintf(tempReducedPrecison, sizeof(tempReducedPrecison), reducePrecision, temperature);
+
+        dst += tempReducedPrecison;
+
+        if (false == noUnit)
+        {
+            dst += "\x8E";
+
+            if (m_units == "default")
+            {
+                dst += "K";
+            }
+            else if (m_units == "metric")
+            {
+                dst += "C";
+            }
+            else
+            {
+                dst += "F";
+            }
+        }
+    }
+    else
+    {
+        dst += "-";
+    }
+}
+
+void OpenWeatherView32x8::appendHumidity(String& dst, uint8_t humidity)
+{
+    dst += humidity;
+    dst += "%";
+}
+
+void OpenWeatherView32x8::appendWindSpeed(String& dst, float windSpeed)
+{
+    if (false == std::isnan(windSpeed))
+    {
+        char windReducedPrecison[5] = { 0 };
+
+        (void)snprintf(windReducedPrecison, sizeof(windReducedPrecison), "%.1f", windSpeed);
+
+        dst += windReducedPrecison;
+
+        if (m_units == "default")
+        {
+            dst += "m/s";
+        }
+        else if (m_units == "metric")
+        {
+            dst += "m/s";
+        }
+        else
+        {
+            dst += "mph";
+        }
+    }
+    else
+    {
+        dst += "-";
+    }
+}
+
+void OpenWeatherView32x8::appendUvIndex(String& dst, float uvIndex)
+{
+    if (false == std::isnan(uvIndex))
+    {
+        dst += uvIndexToColor(static_cast<uint8_t>(uvIndex));
+        dst += uvIndex;
+    }
+    else
+    {
+        dst += "-";
+    }
 }
 
 /******************************************************************************
