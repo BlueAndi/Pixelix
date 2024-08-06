@@ -25,14 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  OpenWeather source for One-Call API
+ * @brief  OpenWeather source for One-Call API to retrieve forecast weather
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "OpenWeatherOneCall.h"
+#include "OpenWeatherOneCallForecast.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -58,7 +58,7 @@
  * Public Methods
  *****************************************************************************/
 
-void OpenWeatherOneCall::getUrl(String& url) const
+void OpenWeatherOneCallForecast::getUrl(String& url) const
 {
     url += "/data/";
     url += m_oneCallApiVersion;
@@ -70,89 +70,138 @@ void OpenWeatherOneCall::getUrl(String& url) const
     url += m_units;
     url += "&appid=";
     url += m_apiKey;
-    url += "&exclude=minutely,hourly,daily,alerts";
+    url += "&exclude=current,minutely,hourly,alerts";
 }
 
-void OpenWeatherOneCall::getFilter(JsonDocument& jsonFilterDoc) const
+void OpenWeatherOneCallForecast::getFilter(JsonDocument& jsonFilterDoc) const
 {
-    JsonObject jsonCurrent = jsonFilterDoc.createNestedObject("current");
+    uint8_t     day;
+    JsonArray   jsonDaily   = jsonFilterDoc.createNestedArray("daily");
 
     /*
     
         {
-        "lat": 33.44,
-        "lon": -94.04,
-        "timezone": "America/Chicago",
-        "timezone_offset": -21600,
-        "current": {
-            "dt": 1618317040,
-            "sunrise": 1618282134,
-            "sunset": 1618333901,
-            "temp": 284.07,
-            "feels_like": 282.84,
-            "pressure": 1019,
-            "humidity": 62,
-            "dew_point": 277.08,
-            "uvi": 0.89,
-            "clouds": 0,
-            "visibility": 10000,
-            "wind_speed": 6,
-            "wind_deg": 300,
-            "weather": [
+        "lat":33.44,
+        "lon":-94.04,
+        "timezone":"America/Chicago",
+        "timezone_offset":-18000,
+        "daily":[
             {
-                "id": 500,
-                "main": "Rain",
-                "description": "light rain",
-                "icon": "10d"
-            }
-            ],
-            "rain": {
-            "1h": 0.21
-            }
-        }
+                "dt":1684951200,
+                "sunrise":1684926645,
+                "sunset":1684977332,
+                "moonrise":1684941060,
+                "moonset":1684905480,
+                "moon_phase":0.16,
+                "summary":"Expect a day of partly cloudy with rain",
+                "temp":{
+                    "day":299.03,
+                    "min":290.69,
+                    "max":300.35,
+                    "night":291.45,
+                    "eve":297.51,
+                    "morn":292.55
+                },
+                "feels_like":{
+                    "day":299.21,
+                    "night":291.37,
+                    "eve":297.86,
+                    "morn":292.87
+                },
+                "pressure":1016,
+                "humidity":59,
+                "dew_point":290.48,
+                "wind_speed":3.98,
+                "wind_deg":76,
+                "wind_gust":8.92,
+                "weather":[
+                    {
+                    "id":500,
+                    "main":"Rain",
+                    "description":"light rain",
+                    "icon":"10d"
+                    }
+                ],
+                "clouds":92,
+                "pop":0.47,
+                "rain":0.15,
+                "uvi":9.23
+            },
+            ...
+        ]
     
     */
 
-    jsonCurrent["temp"]                 = true;
-    jsonCurrent["uvi"]                  = true;
-    jsonCurrent["humidity"]             = true;
-    jsonCurrent["wind_speed"]           = true;
-    jsonCurrent["weather"][0]["icon"]   = true;
+   for(day = 0U; day < FORECAST_DAYS; ++day)
+   {
+        jsonDaily[day]["temp"]["min"]           = true;
+        jsonDaily[day]["temp"]["max"]           = true;
+        jsonDaily[day]["weather"][0]["icon"]    = true;
+   }
 }
 
-void OpenWeatherOneCall::parse(const JsonDocument& jsonDoc)
+void OpenWeatherOneCallForecast::parse(const JsonDocument& jsonDoc)
 {
-    JsonVariantConst    jsonCurrent     = jsonDoc["current"];
-    JsonVariantConst    jsonTemperature = jsonCurrent["temp"];
-    JsonVariantConst    jsonUvi         = jsonCurrent["uvi"];
-    JsonVariantConst    jsonHumidity    = jsonCurrent["humidity"];
-    JsonVariantConst    jsonWindSpeed   = jsonCurrent["wind_speed"];
-    JsonVariantConst    jsonIcon        = jsonCurrent["weather"][0]["icon"];
+    uint8_t             day;
+    JsonVariantConst    jsonDaily   = jsonDoc["daily"];
 
-    if (false == jsonTemperature.isNull())
+    for(day = 0U; day < FORECAST_DAYS; ++day)
     {
-        m_temperature = jsonTemperature.as<float>();
+        JsonVariantConst    jsonTemperatureMin  = jsonDaily[day]["temp"]["min"];
+        JsonVariantConst    jsonTemperatureMax  = jsonDaily[day]["temp"]["max"];
+        JsonVariantConst    jsonIcon            = jsonDaily[day]["weather"][0]["icon"];
+
+        if (false == jsonTemperatureMin.isNull())
+        {
+            m_weatherInfo[day].temperatureMin = jsonTemperatureMin.as<float>();
+        }
+
+        if (false == jsonTemperatureMax.isNull())
+        {
+            m_weatherInfo[day].temperatureMax = jsonTemperatureMax.as<float>();
+        }
+
+        if (false == jsonIcon.isNull())
+        {
+            m_weatherInfo[day].weatherIconId = jsonIcon.as<String>();
+        }
+    }
+}
+
+float OpenWeatherOneCallForecast::getTemperatureMin(uint8_t day) const
+{
+    float temperatureMin = std::numeric_limits<float>::quiet_NaN();
+
+    if (FORECAST_DAYS > day)
+    {
+        temperatureMin = m_weatherInfo[day].temperatureMin;
     }
 
-    if (false == jsonUvi.isNull())
+    return temperatureMin;
+}
+
+float OpenWeatherOneCallForecast::getTemperatureMax(uint8_t day) const
+{
+    float temperatureMax = std::numeric_limits<float>::quiet_NaN();
+
+    if (FORECAST_DAYS > day)
     {
-        m_uvIndex = jsonUvi.as<float>();
+        temperatureMax = m_weatherInfo[day].temperatureMax;
     }
 
-    if (false == jsonHumidity.isNull())
+    return temperatureMax;
+}
+
+const String OpenWeatherOneCallForecast::getWeatherIconId(uint8_t day) const
+{
+    String iconId;
+
+    if (FORECAST_DAYS > day)
     {
-        m_humidity = jsonHumidity.as<int>();
+        iconId = m_weatherInfo[day].weatherIconId;
     }
 
-    if (false == jsonWindSpeed.isNull())
-    {
-        m_windSpeed = jsonWindSpeed.as<float>();
-    }
-
-    if (false == jsonIcon.isNull())
-    {
-        m_weatherIconId = jsonIcon.as<String>();
-    }
+    return iconId;
 }
 
 /******************************************************************************

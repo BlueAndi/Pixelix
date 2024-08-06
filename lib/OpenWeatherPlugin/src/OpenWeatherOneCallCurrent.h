@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  OpenWeather source for One-Call API
+ * @brief  OpenWeather source for One-Call API to retrieve current weather
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup plugin
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef OPENWEATHER_ONECALL_H
-#define OPENWEATHER_ONECALL_H
+#ifndef OPENWEATHER_ONECALL_CURRENT_H
+#define OPENWEATHER_ONECALL_CURRENT_H
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "IOpenWeatherSource.h"
+#include "IOpenWeatherCurrent.h"
 #include <limits.h>
 
 /******************************************************************************
@@ -59,7 +59,7 @@
  * v2.5 see https://openweathermap.org/api/one-call-api
  * v3.0 see https://openweathermap.org/api/one-call-3
  */
-class OpenWeatherOneCall : public IOpenWeatherSource
+class OpenWeatherOneCallCurrent : public IOpenWeatherCurrent
 {
 public:
 
@@ -68,8 +68,8 @@ public:
      * 
      * @param[in] oneCallApiVersion Version of the One-Call API to use. Supported: "2.5" and "3.0"
      */
-    OpenWeatherOneCall(const String& oneCallApiVersion) :
-        IOpenWeatherSource(),
+    OpenWeatherOneCallCurrent(const String& oneCallApiVersion) :
+        IOpenWeatherCurrent(),
         m_oneCallApiVersion(oneCallApiVersion),
         m_apiKey(),
         m_latitude(DEFAULT_LATITUDE),
@@ -86,7 +86,7 @@ public:
     /**
      * Destroys the OpenWeather source.
      */
-    virtual ~OpenWeatherOneCall()
+    virtual ~OpenWeatherOneCallCurrent()
     {
     }
 
@@ -265,15 +265,15 @@ private:
     float   m_windSpeed;            /**< Wind speed, unit according to configuration. */
 
     /* Not allowed. */
-    OpenWeatherOneCall();
-    OpenWeatherOneCall(const OpenWeatherOneCall& other);
-    OpenWeatherOneCall& operator=(const OpenWeatherOneCall& other);
+    OpenWeatherOneCallCurrent();
+    OpenWeatherOneCallCurrent(const OpenWeatherOneCallCurrent& other);
+    OpenWeatherOneCallCurrent& operator=(const OpenWeatherOneCallCurrent& other);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* OPENWEATHER_ONECALL_H */
+#endif  /* OPENWEATHER_ONECALL_CURRENT_H */
 
 /** @} */

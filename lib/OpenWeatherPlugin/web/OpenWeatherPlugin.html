@@ -44,8 +44,8 @@
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
                 <h3 class="mt-1">Set OpenWeather related configuration.</h3>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
-                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&other=&lt;OTHER&gt;&units=&lt;UNITS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&weatherInfo=&lt;WEATHER-INFO&gt;&units=&lt;UNITS&gt;</code></pre>
+                <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&weatherInfo=&lt;WEATHER-INFO&gt;&units=&lt;UNITS&gt;</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
@@ -55,8 +55,14 @@
                     <li>LATITUDE: The latitude of the location.</li>
                     <li>LONGITUDE: The longitude of the location.</li>
                     <li>UNITS: <code>metric</code> or <code>imperial</code></li>
-                    <li>OTHER: <code>uvIndex</code> or <code>humidity</code> or <code>windspeed</code> or <code>off</code></li>
-
+                    <li>WEATHER-INFO: Sum the number up of the info you like to see.
+                        <ul>
+                            <li>1: Temperature</li>
+                            <li>2: Humidity</li>
+                            <li>4: Wind speed</li>
+                            <li>8: UV-index</li>
+                        </ul>
+                    </li>
                 </ul>
                 <h3 class="mt-2">Configuration</h3>
                 <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
@@ -90,13 +96,14 @@
                         <input type="text" id="longitude" name="longitude" value="The longitude" />
                     </div>
                     <div class="form-group">
-                        <label for="other">Additional information:</label>
-                        <select id="other" size="1">
-                            <option value="0">uvIndex</option>
-                            <option value="1">humidity</option>
-                            <option value="2">windspeed</option>
-                            <option value="3">off</option>
-                        </select>
+                        <input type="checkbox" id="temperature" name="weatherInfo" value="1" />
+                        <label for="temperature">Temperature</label>
+                        <input type="checkbox" id="humidity" name="weatherInfo" value="2" />
+                        <label for="humidity">Humidity</label>
+                        <input type="checkbox" id="windSpeed" name="weatherInfo" value="4" />
+                        <label for="windSpeed">Wind speed</label>
+                        <input type="checkbox" id="uvIndex" name="weatherInfo" value="8" />
+                        <label for="uvIndex">UV-index</label>
                     </div>
                     <div class="form-group">
                         <label for="units">Units:</label>
@@ -181,6 +188,34 @@
                 });
             };
 
+            function setWeatherInfo(value) {
+                var idx;
+
+                if (value & 0x01) {
+                    $("#temperature").prop('checked', true);
+                } else {
+                    $("#temperature").prop('checked', false);
+                }
+
+                if (value & 0x02) {
+                    $("#humidity").prop('checked', true);
+                } else {
+                    $("#humidity").prop('checked', false);
+                }
+
+                if (value & 0x04) {
+                    $("#windSpeed").prop('checked', true);
+                } else {
+                    $("#windSpeed").prop('checked', false);
+                }
+
+                if (value & 0x08) {
+                    $("#uvIndex").prop('checked', true);
+                } else {
+                    $("#uvIndex").prop('checked', false);
+                }
+            }
+
             function getConfig(pluginUid) {
                 disableUI();
                 return utils.makeRequest({
@@ -193,13 +228,24 @@
                     $("#apiKey").val(rsp.data.apiKey);
                     $("#latitude").val(rsp.data.latitude);
                     $("#longitude").val(rsp.data.longitude);
-                    $("#other").val(rsp.data.other);
                     $("#units").val(rsp.data.units);
+                    setWeatherInfo(rsp.data.weatherInfo);
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
                     enableUI();
                 });
+            }
+
+            function getWeatherInfo() {
+                var weatherInfo = 0;
+                var $boxes = $('input[name=weatherInfo]:checked');
+
+                $boxes.each(function() {
+                    weatherInfo += parseInt(this.value);
+                });
+
+                return weatherInfo;
             }
 
             function setConfig(pluginUid) {
@@ -215,7 +261,7 @@
                         apiKey: $("#apiKey").val(),
                         latitude: $("#latitude").val(),
                         longitude: $("#longitude").val(),
-                        other: $("#other").val(),
+                        weatherInfo: getWeatherInfo(),
                         units: $("#units").val()
                     }
                 }).then(function(rsp) {

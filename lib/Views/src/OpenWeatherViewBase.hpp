@@ -25,15 +25,15 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  OpenWeatherPlugin view
+ * @brief  Base class for view for OpenWeather.
  * @author Andreas Merkle <web@blue-andi.de>
  * @addtogroup plugin
  *
  * @{
  */
 
-#ifndef OPENWEATHER_PLUGIN_VIEW_H
-#define OPENWEATHER_PLUGIN_VIEW_H
+#ifndef OPEN_WEATHER_VIEW_BASE_HPP
+#define OPEN_WEATHER_VIEW_BASE_HPP
 
 /******************************************************************************
  * Compile Switches
@@ -42,7 +42,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <OpenWeatherViewBase.hpp>
+#include "Layouts.h"
+//#include "./layouts/OpenWeatherViewGeneric.h"
+#include "./layouts/OpenWeatherView32x8.h"
+#include "./layouts/OpenWeatherView64x64.h"
 
 /******************************************************************************
  * Macros
@@ -52,44 +55,54 @@
  * Types and Classes
  *****************************************************************************/
 
-/** Internal plugin functionality. */
-namespace _OpenWeatherPlugin
-{
-
 /**
- * OpenWeatherPlugin view.
+ * View for OpenWeather.
+ * 
+ * @tparam option   Layout which to choose
  */
-class View : public OpenWeatherViewBase
+template< Layout option >
+class OpenWeatherView : public OpenWeatherView32x8
 {
 public:
-
     /**
-     * Construct the view.
+     * Destroys the view.
      */
-    View() :
-        OpenWeatherViewBase()
-    {
-    }
-
-    /**
-     * Destroy the view.
-     */
-    ~View()
-    {
-    }
-
-private:
-
-    View(const View& other);
-    View& operator=(const View& other);
+    virtual ~OpenWeatherView() = default;
 };
 
-} /* _OpenWeatherPlugin */
+/**
+ * View for OpenWeather for 32x8 display.
+ */
+template<>
+class OpenWeatherView<LAYOUT_32X8> : public OpenWeatherView32x8
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~OpenWeatherView() = default;
+};
+
+/**
+ * View for OpenWeather for 64x64 display.
+ */
+template<>
+class OpenWeatherView<LAYOUT_64X64> : public OpenWeatherView64x64
+{
+public:
+    /**
+     * Destroys the view.
+     */
+    virtual ~OpenWeatherView() = default;
+};
+
+/** View for OpenWeather, considering the display size. */
+using OpenWeatherViewBase = OpenWeatherView<LAYOUT_TYPE>;
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* OPENWEATHER_PLUGIN_VIEW_H */
+#endif  /* OPEN_WEATHER_VIEW_BASE_HPP */
 
 /** @} */

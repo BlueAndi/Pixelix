@@ -25,15 +25,16 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  OpenWeatherPlugin view
+ * @brief  Interface for the forecast weather
  * @author Andreas Merkle <web@blue-andi.de>
+ *
  * @addtogroup plugin
  *
  * @{
  */
 
-#ifndef OPENWEATHER_PLUGIN_VIEW_H
-#define OPENWEATHER_PLUGIN_VIEW_H
+#ifndef IOPEN_WEATHER_FORECAST_H
+#define IOPEN_WEATHER_FORECAST_H
 
 /******************************************************************************
  * Compile Switches
@@ -42,7 +43,10 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include <OpenWeatherViewBase.hpp>
+#include <WString.h>
+#include <stdint.h>
+#include <ArduinoJson.h>
+#include "IOpenWeatherGeneric.h"
 
 /******************************************************************************
  * Macros
@@ -52,44 +56,49 @@
  * Types and Classes
  *****************************************************************************/
 
-/** Internal plugin functionality. */
-namespace _OpenWeatherPlugin
-{
-
-/**
- * OpenWeatherPlugin view.
- */
-class View : public OpenWeatherViewBase
+/** This type is the abstract interface for the forecast weather. */
+class IOpenWeatherForecast : public IOpenWeatherGeneric
 {
 public:
 
     /**
-     * Construct the view.
+     * Get the min. temperature.
+     * Might be NaN in case no response was never parsed
+     * or its not supported by the OpenWeather source.
+     * 
+     * @param[in] day   Forecast day [0; 4]
+     * 
+     * @return Temperature, the unit is according to configuration.
      */
-    View() :
-        OpenWeatherViewBase()
-    {
-    }
+    virtual float getTemperatureMin(uint8_t day) const = 0;
 
     /**
-     * Destroy the view.
+     * Get the max. temperature.
+     * Might be NaN in case no response was never parsed
+     * or its not supported by the OpenWeather source.
+     * 
+     * @param[in] day   Forecast day [0; 4]
+     * 
+     * @return Temperature, the unit is according to configuration.
      */
-    ~View()
-    {
-    }
+    virtual float getTemperatureMax(uint8_t day) const = 0;
 
-private:
+    /**
+     * Get the weather icon id.
+     * 
+     * @param[in] day   Forecast day [0; 4]
+     * 
+     * @return Weather icon id
+     */
+    virtual const String getWeatherIconId(uint8_t day) const = 0;
 
-    View(const View& other);
-    View& operator=(const View& other);
+protected:
 };
-
-} /* _OpenWeatherPlugin */
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* OPENWEATHER_PLUGIN_VIEW_H */
+#endif  /* IOPEN_WEATHER_FORECAST_H */
 
 /** @} */

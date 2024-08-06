@@ -25,16 +25,14 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  OpenWeatherPlugin view
+ * @brief  OpenWeather source for One-Call API to retrieve current weather
  * @author Andreas Merkle <web@blue-andi.de>
  */
 
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "View.h"
-
-using namespace _OpenWeatherPlugin;
+#include "OpenWeatherOneCallCurrent.h"
 
 /******************************************************************************
  * Compiler Switches
@@ -59,6 +57,103 @@ using namespace _OpenWeatherPlugin;
 /******************************************************************************
  * Public Methods
  *****************************************************************************/
+
+void OpenWeatherOneCallCurrent::getUrl(String& url) const
+{
+    url += "/data/";
+    url += m_oneCallApiVersion;
+    url += "/onecall?lat=";
+    url += m_latitude;
+    url += "&lon=";
+    url += m_longitude;
+    url += "&units=";
+    url += m_units;
+    url += "&appid=";
+    url += m_apiKey;
+    url += "&exclude=minutely,hourly,daily,alerts";
+}
+
+void OpenWeatherOneCallCurrent::getFilter(JsonDocument& jsonFilterDoc) const
+{
+    JsonObject jsonCurrent = jsonFilterDoc.createNestedObject("current");
+
+    /*
+    
+        {
+        "lat": 33.44,
+        "lon": -94.04,
+        "timezone": "America/Chicago",
+        "timezone_offset": -21600,
+        "current": {
+            "dt": 1618317040,
+            "sunrise": 1618282134,
+            "sunset": 1618333901,
+            "temp": 284.07,
+            "feels_like": 282.84,
+            "pressure": 1019,
+            "humidity": 62,
+            "dew_point": 277.08,
+            "uvi": 0.89,
+            "clouds": 0,
+            "visibility": 10000,
+            "wind_speed": 6,
+            "wind_deg": 300,
+            "weather": [
+            {
+                "id": 500,
+                "main": "Rain",
+                "description": "light rain",
+                "icon": "10d"
+            }
+            ],
+            "rain": {
+            "1h": 0.21
+            }
+        }
+    
+    */
+
+    jsonCurrent["temp"]                 = true;
+    jsonCurrent["uvi"]                  = true;
+    jsonCurrent["humidity"]             = true;
+    jsonCurrent["wind_speed"]           = true;
+    jsonCurrent["weather"][0]["icon"]   = true;
+}
+
+void OpenWeatherOneCallCurrent::parse(const JsonDocument& jsonDoc)
+{
+    JsonVariantConst    jsonCurrent     = jsonDoc["current"];
+    JsonVariantConst    jsonTemperature = jsonCurrent["temp"];
+    JsonVariantConst    jsonUvi         = jsonCurrent["uvi"];
+    JsonVariantConst    jsonHumidity    = jsonCurrent["humidity"];
+    JsonVariantConst    jsonWindSpeed   = jsonCurrent["wind_speed"];
+    JsonVariantConst    jsonIcon        = jsonCurrent["weather"][0]["icon"];
+
+    if (false == jsonTemperature.isNull())
+    {
+        m_temperature = jsonTemperature.as<float>();
+    }
+
+    if (false == jsonUvi.isNull())
+    {
+        m_uvIndex = jsonUvi.as<float>();
+    }
+
+    if (false == jsonHumidity.isNull())
+    {
+        m_humidity = jsonHumidity.as<int>();
+    }
+
+    if (false == jsonWindSpeed.isNull())
+    {
+        m_windSpeed = jsonWindSpeed.as<float>();
+    }
+
+    if (false == jsonIcon.isNull())
+    {
+        m_weatherIconId = jsonIcon.as<String>();
+    }
+}
 
 /******************************************************************************
  * Protected Methods

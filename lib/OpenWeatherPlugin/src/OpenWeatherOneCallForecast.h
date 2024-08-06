@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  OpenWeather source for current weather data
+ * @brief  OpenWeather source for One-Call API to retrieve forecast weather
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup plugin
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef OPENWEATHERCURRENT_H
-#define OPENWEATHERCURRENT_H
+#ifndef OPENWEATHER_ONECALL_FORECAST_H
+#define OPENWEATHER_ONECALL_FORECAST_H
 
 /******************************************************************************
  * Compile Switches
@@ -43,7 +43,7 @@
 /******************************************************************************
  * Includes
  *****************************************************************************/
-#include "IOpenWeatherCurrent.h"
+#include "IOpenWeatherForecast.h"
 #include <limits.h>
 
 /******************************************************************************
@@ -55,34 +55,34 @@
  *****************************************************************************/
 
 /**
- * The OpenWeather source for current weather data.
- * https://openweathermap.org/current
+ * The OpenWeather source for One-Call API
+ * v2.5 see https://openweathermap.org/api/one-call-api
+ * v3.0 see https://openweathermap.org/api/one-call-3
  */
-class OpenWeatherCurrent : public IOpenWeatherCurrent
+class OpenWeatherOneCallForecast : public IOpenWeatherForecast
 {
 public:
 
     /**
      * Constructs the OpenWeather source.
+     * 
+     * @param[in] oneCallApiVersion Version of the One-Call API to use. Supported: "2.5" and "3.0"
      */
-    OpenWeatherCurrent() :
-        IOpenWeatherCurrent(),
+    OpenWeatherOneCallForecast(const String& oneCallApiVersion) :
+        IOpenWeatherForecast(),
+        m_oneCallApiVersion(oneCallApiVersion),
         m_apiKey(),
         m_latitude(DEFAULT_LATITUDE),
         m_longitude(DEFAULT_LONGITUDE),
         m_units(DEFAULT_UNITS),
-        m_temperature(std::numeric_limits<float>::quiet_NaN()),
-        m_weatherIconId(),
-        m_uvIndex(std::numeric_limits<float>::quiet_NaN()),
-        m_humidity(0),
-        m_windSpeed(std::numeric_limits<float>::quiet_NaN())
+        m_weatherInfo()
     {
     }
 
     /**
      * Destroys the OpenWeather source.
      */
-    virtual ~OpenWeatherCurrent()
+    virtual ~OpenWeatherOneCallForecast()
     {
     }
 
@@ -192,82 +192,78 @@ public:
     void parse(const JsonDocument& jsonDoc) final;
 
     /**
-     * Get the temperature.
+     * Get the min. temperature.
      * Might be NaN in case no response was never parsed
      * or its not supported by the OpenWeather source.
      * 
+     * @param[in] day   Forecast day [0; 4]
+     * 
      * @return Temperature, the unit is according to configuration.
      */
-    float getTemperature() const final
-    {
-        return m_temperature;
-    }
+    float getTemperatureMin(uint8_t day) const final;
+
+    /**
+     * Get the max. temperature.
+     * Might be NaN in case no response was never parsed
+     * or its not supported by the OpenWeather source.
+     * 
+     * @param[in] day   Forecast day [0; 4]
+     * 
+     * @return Temperature, the unit is according to configuration.
+     */
+    float getTemperatureMax(uint8_t day) const final;
 
     /**
      * Get the weather icon id.
      * 
+     * @param[in] day   Forecast day [0; 4]
+     * 
      * @return Weather icon id
      */
-    const String& getWeatherIconId() const final
-    {
-        return m_weatherIconId;
-    }
-
-    /**
-     * Get the UV-index.
-     * Might be NaN in case no response was never parsed
-     * or its not supported by the OpenWeather source.
-     * 
-     * @return UV-index.
-     */
-    float getUvIndex() const final
-    {
-        return m_uvIndex;
-    }
-
-    /**
-     * Get the humidity.
-     * 
-     * @return Humidity in %.
-     */
-    int getHumidity() const final
-    {
-        return m_humidity;
-    }
-
-    /**
-     * Get the wind speed.
-     * Might be NaN in case no response was never parsed
-     * or its not supported by the OpenWeather source.
-     * 
-     * @return Wind speed, the unit is according to configuration.
-     */
-    float getWindSpeed() const final
-    {
-        return m_windSpeed;
-    }
+    const String getWeatherIconId(uint8_t day) const final;
 
 private:
 
-    String  m_apiKey;           /**< OpenWeather API Key */
-    String  m_latitude;         /**< The latitude. */
-    String  m_longitude;        /**< The longitude. */
-    String  m_units;            /**< The units to use for temperature and wind speed. */
-    float   m_temperature;      /**< Temperature, unit according to configuration. */
-    String  m_weatherIconId;    /**< Weather icon id. */
-    float   m_uvIndex;          /**< UV-index */
-    int     m_humidity;         /**< Humidity in %. */
-    float   m_windSpeed;        /**< Wind speed, unit according to configuration. */
+    /**
+     * Weather information of one day.
+     */
+    struct WeatherInfo
+    {
+        float   temperatureMin; /**< Min. temperature, unit according to configuration. */
+        float   temperatureMax; /**< Max. temperature, unit according to configuration. */
+        String  weatherIconId;  /**< Weather icon id. */
+
+        /** Construct the weather info object. */
+        WeatherInfo() :
+            temperatureMin(std::numeric_limits<float>::quiet_NaN()),
+            temperatureMax(std::numeric_limits<float>::quiet_NaN()),
+            weatherIconId()
+        {
+        }
+
+        /** Destroy the weather info object. */
+        ~WeatherInfo()
+        {
+        }
+    };
+
+    String      m_oneCallApiVersion;            /**< OpenWeather One-Call API version */
+    String      m_apiKey;                       /**< OpenWeather API Key */
+    String      m_latitude;                     /**< The latitude. */
+    String      m_longitude;                    /**< The longitude. */
+    String      m_units;                        /**< The units to use for temperature and wind speed. */
+    WeatherInfo m_weatherInfo[FORECAST_DAYS];   /**< Weather forecast info of every day. */
 
     /* Not allowed. */
-    OpenWeatherCurrent(const OpenWeatherCurrent& other);
-    OpenWeatherCurrent& operator=(const OpenWeatherCurrent& other);
+    OpenWeatherOneCallForecast();
+    OpenWeatherOneCallForecast(const OpenWeatherOneCallForecast& other);
+    OpenWeatherOneCallForecast& operator=(const OpenWeatherOneCallForecast& other);
 };
 
 /******************************************************************************
  * Functions
  *****************************************************************************/
 
-#endif  /* OPENWEATHERCURRENT_H */
+#endif  /* OPENWEATHER_ONECALL_FORECAST_H */
 
 /** @} */

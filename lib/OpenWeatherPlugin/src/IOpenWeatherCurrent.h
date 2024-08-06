@@ -25,7 +25,7 @@
     DESCRIPTION
 *******************************************************************************/
 /**
- * @brief  OpenWeather source interface
+ * @brief  Interface for the current weather
  * @author Andreas Merkle <web@blue-andi.de>
  *
  * @addtogroup plugin
@@ -33,8 +33,8 @@
  * @{
  */
 
-#ifndef IOPENWEATHERSOURCE_H
-#define IOPENWEATHERSOURCE_H
+#ifndef IOPEN_WEATHER_CURRENT_H
+#define IOPEN_WEATHER_CURRENT_H
 
 /******************************************************************************
  * Compile Switches
@@ -46,109 +46,20 @@
 #include <WString.h>
 #include <stdint.h>
 #include <ArduinoJson.h>
+#include "IOpenWeatherGeneric.h"
 
 /******************************************************************************
  * Macros
  *****************************************************************************/
 
-/** Default latitude (Berlin) */
-#define DEFAULT_LATITUDE    "52.519"
-
-/** Default longitude (Berlin) */
-#define DEFAULT_LONGITUDE   "13.376"
-
-/** Default units */
-#define DEFAULT_UNITS       "metric"
-
 /******************************************************************************
  * Types and Classes
  *****************************************************************************/
 
-/** This type is the abstract interface for a OpenWeather source. */
-class IOpenWeatherSource
+/** This type is the abstract interface for the current weather. */
+class IOpenWeatherCurrent : public IOpenWeatherGeneric
 {
 public:
-
-    /**
-     * Get the API key.
-     * 
-     * @return API key
-     */
-    virtual const String& getApiKey() const = 0;
-
-    /**
-     * Set the API key.
-     * 
-     * @param[in] apiKey    The API key which to set.
-     */
-    virtual void setApiKey(const String& apiKey) = 0;
-
-    /**
-     * Get the latitude.
-     * 
-     * @return Latitude
-     */
-    virtual const String& getLatitude() const = 0;
-
-    /**
-     * Set thel latidue.
-     * 
-     * @param[in] latitude  The latitude which to set.
-     */
-    virtual void setLatitude(const String& latitude) = 0;
-
-    /**
-     * Get the longitude.
-     * 
-     * @return Longitude
-     */
-    virtual const String& getLongitude() const = 0;
-
-    /**
-     * Set the longitude.
-     * 
-     * @param[in] longitude The longitude which to set.
-     */
-    virtual void setLongitude(const String& longitude) = 0;
-
-    /**
-     * Get the units which are used for temperature and
-     * wind speed.
-     * 
-     * @return Units
-     */
-    virtual const String& getUnits() const = 0;
-
-    /**
-     * Set the units to use temperature and wind speed.
-     * 
-     * @param[in] units The units which to set.
-     */
-    virtual void setUnits(const String& units) = 0;
-
-    /**
-     * Adds the URI to the base URL.
-     * 
-     * @param[out] url  The base URL to use.
-     */
-    virtual void getUrl(String& url) const = 0;
-
-    /**
-     * Get the filter which to apply on the response from the weather source.
-     * Its a positive filter, which means everything marked with true, will
-     * be used. Everything else will not be considered.
-     * 
-     * @param[out] jsonFilterDoc    The filter which to use.
-     */
-    virtual void getFilter(JsonDocument& jsonFilterDoc) const = 0;
-    
-    /**
-     * Parse a response from the weather source and will update its internal
-     * data.
-     * 
-     * @param[out] jsonDoc  The JSON response which to parse.
-     */
-    virtual void parse(const JsonDocument& jsonDoc) = 0;
 
     /**
      * Get the temperature.
@@ -198,6 +109,6 @@ protected:
  * Functions
  *****************************************************************************/
 
-#endif  /* IOPENWEATHERSOURCE_H */
+#endif  /* IOPEN_WEATHER_CURRENT_H */
 
 /** @} */
