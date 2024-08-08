@@ -59,17 +59,6 @@
 
 /**
  * OpenWeather view for 32x8 LED matrix with icon and text.
- * 
- * +-----------------------------------------------------------------+
- * |                |                                                |
- * |                |                                                |
- * |                |                                                |
- * |   Icon         |                   Text                         |
- * |   8x8          |                   24x8                         |
- * |                |                                                |
- * |                |                                                |
- * |                |                                                |
- * +-----------------------------------------------------------------+
  */
 class OpenWeatherView32x8 : public IOpenWeatherView
 {
@@ -230,55 +219,6 @@ public:
     }
 
 protected:
-
-    /**
-     * Bitmap size in pixels.
-     */
-    static const uint16_t   BITMAP_SIZE     = 8U;
-
-    /**
-     * Bitmap width in pixels.
-     */
-    static const uint16_t   BITMAP_WIDTH    = BITMAP_SIZE;
-
-    /**
-     * Bitmap height in pixels.
-     */
-    static const uint16_t   BITMAP_HEIGHT   = BITMAP_SIZE;
-
-    /**
-     * Bitmap widget x-coordinate in pixels.
-     * Left aligned.
-     */
-    static const int16_t    BITMAP_X        = 0;
-
-    /**
-     * Bitmap widget y-coordinate in pixels.
-     * Top aligned.
-     */
-    static const int16_t    BITMAP_Y        = 0;
-
-    /**
-     * Text width in pixels.
-     */
-    static const uint16_t   TEXT_WIDTH      = CONFIG_LED_MATRIX_WIDTH - BITMAP_WIDTH;
-
-    /**
-     * Text height in pixels.
-     */
-    static const uint16_t   TEXT_HEIGHT     = 8U;
-
-    /**
-     * Text widget x-coordinate in pixels.
-     * Left aligned, after icon.
-     */
-    static const int16_t    TEXT_X          = BITMAP_WIDTH;
-
-    /**
-     * Text widget y-coordinate in pixels.
-     * Top aligned.
-     */
-    static const int16_t    TEXT_Y          = 0;
 
     /**
      * Image path within the filesystem to weather condition icons.

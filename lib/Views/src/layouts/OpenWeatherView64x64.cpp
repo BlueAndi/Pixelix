@@ -65,8 +65,137 @@ typedef struct
  * Local Variables
  *****************************************************************************/
 
+/* Layout
+ *
+ * +------------------------------------------------------+
+ * |                                                      |
+ * |           Weather icon of current weather            |
+ * |                      64x16                           |
+ * |                                                      |
+ * +------------------------------------------------------+
+ * |                                                      |
+ * |         Weather info text of current weather         |
+ * |                      64x16                           |
+ * |                                                      |
+ * +------------------------------------------------------+
+ * |  Text    |  Text    |  Text    |  Text    |  Text    |
+ * |  12x8    |  12x8    |  12x8    |  12x8    |  12x8    |
+ * +------------------------------------------------------+
+ * |  Icon    |  Icon    |  Icon    |  Icon    |  Icon    |
+ * |  12x8    |  12x8    |  12x8    |  12x8    |  12x8    |
+ * +------------------------------------------------------+
+ * |  Text    |  Text    |  Text    |  Text    |  Text    |
+ * |  12x16   |  12x16   |  12x16   |  12x16   |  12x16   |
+ * |          |          |          |          |          |
+ * |          |          |          |          |          |
+ * +------------------------------------------------------+
+*/
+
+/**
+ * Weather icon of current weather width in pixels.
+ */
+static const uint16_t   WEATHER_ICON_CURRENT_WIDTH              = CONFIG_LED_MATRIX_WIDTH;
+
+/**
+ * Weather icon of current weather height in pixels.
+ */
+static const uint16_t   WEATHER_ICON_CURRENT_HEIGHT             = 16U;
+
+/**
+ * Weather icon of current weather widget x-coordinate in pixels.
+ * Left aligned.
+ */
+static const int16_t    WEATHER_ICON_CURRENT_X                  = 0;
+
+/**
+ * Weather icon of current weather widget y-coordinate in pixels.
+ * Top aligned.
+ */
+static const int16_t    WEATHER_ICON_CURRENT_Y                  = 0;
+
+/**
+ * Text width in pixels.
+ */
+static const uint16_t   WEATHER_INFO_TEXT_CURRENT_WIDTH         = CONFIG_LED_MATRIX_WIDTH;
+
+/**
+ * Text height in pixels.
+ */
+static const uint16_t   WEATHER_INFO_TEXT_CURRENT_HEIGHT        = 16U;
+
+/**
+ * Text widget x-coordinate in pixels.
+ * Left aligned, after icon.
+ */
+static const int16_t    WEATHER_INFO_TEXT_CURRENT_X             = 0;
+
+/**
+ * Text widget y-coordinate in pixels.
+ */
+static const int16_t    WEATHER_INFO_TEXT_CURRENT_Y             = WEATHER_ICON_CURRENT_Y + WEATHER_ICON_CURRENT_HEIGHT;
+
+/**
+ * Forecast weather day name width in pixels.
+ */
+static const uint16_t   WEATHER_FORECAST_DAY_WIDTH              = CONFIG_LED_MATRIX_WIDTH / 5U;
+
+/**
+ * Forecast weather day name height in pixels.
+ */
+static const uint16_t   WEATHER_FORECAST_DAY_HEIGHT             = 8U;
+
+/**
+ * Border used left and right of the weather forecast names in pixels.
+ */
+static const int16_t    WEATHER_FORECAST_DAY_BORDER             = (CONFIG_LED_MATRIX_WIDTH - OpenWeatherView64x64::FORECAST_DAYS * WEATHER_FORECAST_DAY_WIDTH) / 2U;
+
+/**
+ * Forecast weather day name text widget y-coordinate in pixels.
+ */
+static const int16_t    WEATHER_FORECAST_DAY_Y                  = WEATHER_INFO_TEXT_CURRENT_Y + WEATHER_INFO_TEXT_CURRENT_HEIGHT;
+
+/**
+ * Weather icon of forecast weather width in pixels.
+ */
+static const uint16_t   WEATHER_ICON_FORECAST_WIDTH             = WEATHER_FORECAST_DAY_WIDTH;
+
+/**
+ * Weather icon of forecast weather height in pixels.
+ */
+static const uint16_t   WEATHER_ICON_FORECAST_HEIGHT            = WEATHER_FORECAST_DAY_HEIGHT;
+
+/**
+ * Border used left and right of the weather forecast icons in pixels.
+ */
+static const uint16_t   WEATHER_ICON_FORECAST_BORDER            = WEATHER_FORECAST_DAY_BORDER;
+
+/**
+ * Weather icon of forecast weather bitmap widget y-coordinate in pixels.
+ */
+static const uint16_t   WEATHER_ICON_FORECAST_Y                 = WEATHER_FORECAST_DAY_Y + WEATHER_FORECAST_DAY_HEIGHT;
+
+/**
+ * Weather forecast temperature width in pixels.
+ */
+static const uint16_t   WEATHER_FORECAST_TEMPERATURES_WIDTH     = WEATHER_FORECAST_DAY_WIDTH;
+
+/**
+ * Weather forecast temperature height in pixels.
+ */
+static const uint16_t   WEATHER_FORECAST_TEMPERATURES_HEIGHT    = 16U;
+
+/**
+ * Border used left and right of the weather forecast temperatures in pixels.
+ */
+static const uint16_t   WEATHER_FORECAST_TEMPERATURES_BORDER    = WEATHER_ICON_FORECAST_BORDER;
+
+/**
+ * Weather forecast temperature text widget y-coordinate in pixels.
+ */
+static const uint16_t   WEATHER_FORECAST_TEMPERATURES_Y         = WEATHER_ICON_FORECAST_Y + WEATHER_ICON_FORECAST_HEIGHT;
+
 /** The epsilon is used to compare floats. */
-static const float  EPSILON = 0.0001F;
+static const float      EPSILON                                 = 0.0001F;
 
 /* Initialize image path for the weather condition icons. */
 const char* OpenWeatherView64x64::IMAGE_PATH                        = "/plugins/OpenWeatherPlugin/";
@@ -102,28 +231,28 @@ static const UvIndexElem uvIndexTable[] =
 OpenWeatherView64x64::OpenWeatherView64x64() :
     IOpenWeatherView(),
     m_fontType(Fonts::FONT_TYPE_DEFAULT),
-    m_weatherIconCurrent(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
-    m_weatherInfoCurrentText(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
+    m_weatherIconCurrent(WEATHER_ICON_CURRENT_WIDTH, WEATHER_ICON_CURRENT_HEIGHT, WEATHER_ICON_CURRENT_X, WEATHER_ICON_CURRENT_Y),
+    m_weatherInfoCurrentText(WEATHER_INFO_TEXT_CURRENT_WIDTH, WEATHER_INFO_TEXT_CURRENT_HEIGHT, WEATHER_INFO_TEXT_CURRENT_X, WEATHER_INFO_TEXT_CURRENT_Y),
     m_forecastDayNames{
-        { 12U, 8U, 0 * 12U + 2U, 32U },
-        { 12U, 8U, 1 * 12U + 2U, 32U },
-        { 12U, 8U, 2 * 12U + 2U, 32U },
-        { 12U, 8U, 3 * 12U + 2U, 32U },
-        { 12U, 8U, 4 * 12U + 2U, 32U },
+        { WEATHER_FORECAST_DAY_WIDTH, WEATHER_FORECAST_DAY_HEIGHT, 0 * WEATHER_FORECAST_DAY_WIDTH + WEATHER_FORECAST_DAY_BORDER, WEATHER_FORECAST_DAY_Y },
+        { WEATHER_FORECAST_DAY_WIDTH, WEATHER_FORECAST_DAY_HEIGHT, 1 * WEATHER_FORECAST_DAY_WIDTH + WEATHER_FORECAST_DAY_BORDER, WEATHER_FORECAST_DAY_Y },
+        { WEATHER_FORECAST_DAY_WIDTH, WEATHER_FORECAST_DAY_HEIGHT, 2 * WEATHER_FORECAST_DAY_WIDTH + WEATHER_FORECAST_DAY_BORDER, WEATHER_FORECAST_DAY_Y },
+        { WEATHER_FORECAST_DAY_WIDTH, WEATHER_FORECAST_DAY_HEIGHT, 3 * WEATHER_FORECAST_DAY_WIDTH + WEATHER_FORECAST_DAY_BORDER, WEATHER_FORECAST_DAY_Y },
+        { WEATHER_FORECAST_DAY_WIDTH, WEATHER_FORECAST_DAY_HEIGHT, 4 * WEATHER_FORECAST_DAY_WIDTH + WEATHER_FORECAST_DAY_BORDER, WEATHER_FORECAST_DAY_Y },
     },
     m_forecastIcons{
-        { 12U, 8U, 0 * 12U + 2U, 40U },
-        { 12U, 8U, 1 * 12U + 2U, 40U },
-        { 12U, 8U, 2 * 12U + 2U, 40U },
-        { 12U, 8U, 3 * 12U + 2U, 40U },
-        { 12U, 8U, 4 * 12U + 2U, 40U }
+        { WEATHER_ICON_FORECAST_WIDTH, WEATHER_ICON_FORECAST_HEIGHT, 0 * WEATHER_ICON_FORECAST_WIDTH + WEATHER_ICON_FORECAST_BORDER, WEATHER_ICON_FORECAST_Y },
+        { WEATHER_ICON_FORECAST_WIDTH, WEATHER_ICON_FORECAST_HEIGHT, 1 * WEATHER_ICON_FORECAST_WIDTH + WEATHER_ICON_FORECAST_BORDER, WEATHER_ICON_FORECAST_Y },
+        { WEATHER_ICON_FORECAST_WIDTH, WEATHER_ICON_FORECAST_HEIGHT, 2 * WEATHER_ICON_FORECAST_WIDTH + WEATHER_ICON_FORECAST_BORDER, WEATHER_ICON_FORECAST_Y },
+        { WEATHER_ICON_FORECAST_WIDTH, WEATHER_ICON_FORECAST_HEIGHT, 3 * WEATHER_ICON_FORECAST_WIDTH + WEATHER_ICON_FORECAST_BORDER, WEATHER_ICON_FORECAST_Y },
+        { WEATHER_ICON_FORECAST_WIDTH, WEATHER_ICON_FORECAST_HEIGHT, 4 * WEATHER_ICON_FORECAST_WIDTH + WEATHER_ICON_FORECAST_BORDER, WEATHER_ICON_FORECAST_Y }
     },
     m_forecastTemperatures{
-        { 12U, 16U, 0 * 12U + 2U, 48U },
-        { 12U, 16U, 1 * 12U + 2U, 48U },
-        { 12U, 16U, 2 * 12U + 2U, 48U },
-        { 12U, 16U, 3 * 12U + 2U, 48U },
-        { 12U, 16U, 4 * 12U + 2U, 48U }
+        { WEATHER_FORECAST_TEMPERATURES_WIDTH, WEATHER_FORECAST_TEMPERATURES_HEIGHT, 0 * WEATHER_FORECAST_TEMPERATURES_WIDTH + WEATHER_FORECAST_TEMPERATURES_BORDER, WEATHER_FORECAST_TEMPERATURES_Y },
+        { WEATHER_FORECAST_TEMPERATURES_WIDTH, WEATHER_FORECAST_TEMPERATURES_HEIGHT, 1 * WEATHER_FORECAST_TEMPERATURES_WIDTH + WEATHER_FORECAST_TEMPERATURES_BORDER, WEATHER_FORECAST_TEMPERATURES_Y },
+        { WEATHER_FORECAST_TEMPERATURES_WIDTH, WEATHER_FORECAST_TEMPERATURES_HEIGHT, 2 * WEATHER_FORECAST_TEMPERATURES_WIDTH + WEATHER_FORECAST_TEMPERATURES_BORDER, WEATHER_FORECAST_TEMPERATURES_Y },
+        { WEATHER_FORECAST_TEMPERATURES_WIDTH, WEATHER_FORECAST_TEMPERATURES_HEIGHT, 3 * WEATHER_FORECAST_TEMPERATURES_WIDTH + WEATHER_FORECAST_TEMPERATURES_BORDER, WEATHER_FORECAST_TEMPERATURES_Y },
+        { WEATHER_FORECAST_TEMPERATURES_WIDTH, WEATHER_FORECAST_TEMPERATURES_HEIGHT, 4 * WEATHER_FORECAST_TEMPERATURES_WIDTH + WEATHER_FORECAST_TEMPERATURES_BORDER, WEATHER_FORECAST_TEMPERATURES_Y }
     },
     m_viewDurationTimer(),
     m_viewDuration(0U),
@@ -154,7 +283,7 @@ OpenWeatherView64x64::OpenWeatherView64x64() :
         m_forecastIcons[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
 
         m_forecastTemperatures[day].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
-        m_forecastTemperatures[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_CENTER);
+        m_forecastTemperatures[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_RIGHT);
     }
 }
 

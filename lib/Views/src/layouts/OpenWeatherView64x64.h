@@ -59,29 +59,6 @@
 
 /**
  * OpenWeather view for 64x64 LED matrix with icon and text.
- * 
- * +------------------------------------------------------+
- * |                                                      |
- * |                      Icon                            |
- * |                      64x16                           |
- * |                                                      |
- * +------------------------------------------------------+
- * |                                                      |
- * |                      Text                            |
- * |                      64x16                           |
- * |                                                      |
- * +------------------------------------------------------+
- * |  Text    |  Text    |  Text    |  Text    |  Text    |
- * |  12x8    |  12x8    |  12x8    |  12x8    |  12x8    |
- * +------------------------------------------------------+
- * |  Icon    |  Icon    |  Icon    |  Icon    |  Icon    |
- * |  12x8    |  12x8    |  12x8    |  12x8    |  12x8    |
- * +------------------------------------------------------+
- * |  Text    |  Text    |  Text    |  Text    |  Text    |
- * |  12x16   |  12x16   |  12x16   |  12x16   |  12x16   |
- * |          |          |          |          |          |
- * |          |          |          |          |          |
- * +------------------------------------------------------+
  */
 class OpenWeatherView64x64 : public IOpenWeatherView
 {
@@ -239,50 +216,6 @@ public:
     }
 
 protected:
-
-    /**
-     * Bitmap width in pixels.
-     */
-    static const uint16_t   BITMAP_WIDTH    = CONFIG_LED_MATRIX_WIDTH;
-
-    /**
-     * Bitmap height in pixels.
-     */
-    static const uint16_t   BITMAP_HEIGHT   = 16U;
-
-    /**
-     * Bitmap widget x-coordinate in pixels.
-     * Left aligned.
-     */
-    static const int16_t    BITMAP_X        = 0;
-
-    /**
-     * Bitmap widget y-coordinate in pixels.
-     * Top aligned.
-     */
-    static const int16_t    BITMAP_Y        = 0;
-
-    /**
-     * Text width in pixels.
-     */
-    static const uint16_t   TEXT_WIDTH      = CONFIG_LED_MATRIX_WIDTH;
-
-    /**
-     * Text height in pixels.
-     */
-    static const uint16_t   TEXT_HEIGHT     = 16U;
-
-    /**
-     * Text widget x-coordinate in pixels.
-     * Left aligned, after icon.
-     */
-    static const int16_t    TEXT_X          = 0;
-
-    /**
-     * Text widget y-coordinate in pixels.
-     * Top aligned.
-     */
-    static const int16_t    TEXT_Y          = BITMAP_HEIGHT;
 
     /**
      * Image path within the filesystem to weather condition icons.

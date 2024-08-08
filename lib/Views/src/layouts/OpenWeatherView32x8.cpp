@@ -64,6 +64,63 @@ typedef struct
  * Local Variables
  *****************************************************************************/
 
+/* Layout
+ *
+ * +-----------------------------------------------------------------+
+ * |                |                                                |
+ * |                |                                                |
+ * |                |                                                |
+ * |   Icon         |                   Text                         |
+ * |   8x8          |                   24x8                         |
+ * |                |                                                |
+ * |                |                                                |
+ * |                |                                                |
+ * +-----------------------------------------------------------------+
+ */
+
+/**
+ * Weather icon of current weather width in pixels.
+ */
+static const uint16_t   WEATHER_ICON_CURRENT_WIDTH              = CONFIG_LED_MATRIX_WIDTH;
+
+/**
+ * Weather icon of current weather height in pixels.
+ */
+static const uint16_t   WEATHER_ICON_CURRENT_HEIGHT             = 16U;
+
+/**
+ * Weather icon of current weather widget x-coordinate in pixels.
+ * Left aligned.
+ */
+static const int16_t    WEATHER_ICON_CURRENT_X                  = 0;
+
+/**
+ * Weather icon of current weather widget y-coordinate in pixels.
+ * Top aligned.
+ */
+static const int16_t    WEATHER_ICON_CURRENT_Y                  = 0;
+
+/**
+ * Text width in pixels.
+ */
+static const uint16_t   WEATHER_INFO_TEXT_CURRENT_WIDTH         = CONFIG_LED_MATRIX_WIDTH;
+
+/**
+ * Text height in pixels.
+ */
+static const uint16_t   WEATHER_INFO_TEXT_CURRENT_HEIGHT        = 16U;
+
+/**
+ * Text widget x-coordinate in pixels.
+ * Left aligned, after icon.
+ */
+static const int16_t    WEATHER_INFO_TEXT_CURRENT_X             = 0;
+
+/**
+ * Text widget y-coordinate in pixels.
+ */
+static const int16_t    WEATHER_INFO_TEXT_CURRENT_Y             = WEATHER_ICON_CURRENT_Y + WEATHER_ICON_CURRENT_HEIGHT;
+
 /** The epsilon is used to compare floats. */
 static const float  EPSILON = 0.0001F;
 
@@ -98,8 +155,8 @@ static const UvIndexElem uvIndexTable[] =
 OpenWeatherView32x8::OpenWeatherView32x8() :
     IOpenWeatherView(),
     m_fontType(Fonts::FONT_TYPE_DEFAULT),
-    m_weatherIconCurrent(BITMAP_WIDTH, BITMAP_HEIGHT, BITMAP_X, BITMAP_Y),
-    m_weatherInfoCurrentText(TEXT_WIDTH, TEXT_HEIGHT, TEXT_X, TEXT_Y),
+    m_weatherIconCurrent(WEATHER_ICON_CURRENT_WIDTH, WEATHER_ICON_CURRENT_HEIGHT, WEATHER_ICON_CURRENT_X, WEATHER_ICON_CURRENT_Y),
+    m_weatherInfoCurrentText(WEATHER_INFO_TEXT_CURRENT_WIDTH, WEATHER_INFO_TEXT_CURRENT_HEIGHT, WEATHER_INFO_TEXT_CURRENT_X, WEATHER_INFO_TEXT_CURRENT_Y),
     m_viewDurationTimer(),
     m_viewDuration(0U),
     m_units("metric"),
