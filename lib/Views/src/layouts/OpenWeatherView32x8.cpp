@@ -81,12 +81,12 @@ typedef struct
 /**
  * Weather icon of current weather width in pixels.
  */
-static const uint16_t   WEATHER_ICON_CURRENT_WIDTH              = CONFIG_LED_MATRIX_WIDTH;
+static const uint16_t   WEATHER_ICON_CURRENT_WIDTH              = 8U;
 
 /**
  * Weather icon of current weather height in pixels.
  */
-static const uint16_t   WEATHER_ICON_CURRENT_HEIGHT             = 16U;
+static const uint16_t   WEATHER_ICON_CURRENT_HEIGHT             = 8U;
 
 /**
  * Weather icon of current weather widget x-coordinate in pixels.
@@ -103,23 +103,23 @@ static const int16_t    WEATHER_ICON_CURRENT_Y                  = 0;
 /**
  * Text width in pixels.
  */
-static const uint16_t   WEATHER_INFO_TEXT_CURRENT_WIDTH         = CONFIG_LED_MATRIX_WIDTH;
+static const uint16_t   WEATHER_INFO_TEXT_CURRENT_WIDTH         = CONFIG_LED_MATRIX_WIDTH - WEATHER_ICON_CURRENT_WIDTH;
 
 /**
  * Text height in pixels.
  */
-static const uint16_t   WEATHER_INFO_TEXT_CURRENT_HEIGHT        = 16U;
+static const uint16_t   WEATHER_INFO_TEXT_CURRENT_HEIGHT        = 8U;
 
 /**
  * Text widget x-coordinate in pixels.
  * Left aligned, after icon.
  */
-static const int16_t    WEATHER_INFO_TEXT_CURRENT_X             = 0;
+static const int16_t    WEATHER_INFO_TEXT_CURRENT_X             = WEATHER_ICON_CURRENT_WIDTH;
 
 /**
  * Text widget y-coordinate in pixels.
  */
-static const int16_t    WEATHER_INFO_TEXT_CURRENT_Y             = WEATHER_ICON_CURRENT_Y + WEATHER_ICON_CURRENT_HEIGHT;
+static const int16_t    WEATHER_INFO_TEXT_CURRENT_Y             = WEATHER_ICON_CURRENT_Y;
 
 /** The epsilon is used to compare floats. */
 static const float  EPSILON = 0.0001F;
