@@ -257,7 +257,7 @@ OpenWeatherView64x64::OpenWeatherView64x64() :
     m_viewDurationTimer(),
     m_viewDuration(0U),
     m_units("metric"),
-    m_weatherInfo(),
+    m_weatherInfo(WEATHER_INFO_ALL),
     m_weatherInfoId(0U),
     m_weatherInfoCurrent(),
     m_weatherInfoForecast{},

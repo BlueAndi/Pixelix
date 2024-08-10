@@ -116,11 +116,12 @@ public:
     /** Weather info */
     enum WeatherInfo : uint8_t
     {
-        WEATHER_INFO_EMPTY          = 0x00, /**< Nothing enabled. */
-        WEATHER_INFO_TEMPERATURE    = 0x01, /**< Temperature */
-        WEATHER_INFO_HUMIDITY       = 0x02, /**< Humidity */
-        WEATHER_INFO_WIND_SPEED     = 0x04, /**< Wind speed */
-        WEATHER_INFO_UV_INDEX       = 0x08  /**< UV-index */
+        WEATHER_INFO_EMPTY          = 0x00U,    /**< Nothing enabled. */
+        WEATHER_INFO_TEMPERATURE    = 0x01U,    /**< Temperature */
+        WEATHER_INFO_HUMIDITY       = 0x02U,    /**< Humidity */
+        WEATHER_INFO_WIND_SPEED     = 0x04U,    /**< Wind speed */
+        WEATHER_INFO_UV_INDEX       = 0x08U,    /**< UV-index */
+        WEATHER_INFO_ALL            = 0x0FU     /**< All weather information */
     };
 
     /**

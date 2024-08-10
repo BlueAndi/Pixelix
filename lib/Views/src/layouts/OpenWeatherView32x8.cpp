@@ -160,7 +160,7 @@ OpenWeatherView32x8::OpenWeatherView32x8() :
     m_viewDurationTimer(),
     m_viewDuration(0U),
     m_units("metric"),
-    m_weatherInfo(),
+    m_weatherInfo(WEATHER_INFO_ALL),
     m_weatherInfoId(0U),
     m_weatherInfoCurrent(),
     m_isWeatherInfoCurrentUpdated(false),
