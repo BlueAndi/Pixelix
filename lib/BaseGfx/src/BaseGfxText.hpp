@@ -184,6 +184,26 @@ public:
     }
 
     /**
+     * Set cursor x-position.
+     *
+     * @param[in] x Cursor x-position
+     */
+    void setTextCursorPosX(int16_t x)
+    {
+        m_cursorX = x;
+    }
+
+    /**
+     * Set cursor y-position.
+     *
+     * @param[in] y Cursor y-position
+     */
+    void setTextCursorPosY(int16_t y)
+    {
+        m_cursorY = y;
+    }
+
+    /**
      * Get text color.
      *
      * @return Text color

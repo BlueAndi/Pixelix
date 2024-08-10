@@ -51,6 +51,7 @@
 #include <YAGfxText.h>
 #include <SimpleTimer.hpp>
 #include "Alignment.h"
+#include "TWAbstractSyntaxTree.h"
 
 /******************************************************************************
  * Macros
@@ -125,17 +126,6 @@ public:
     TextWidget& operator=(const TextWidget& widget);
 
     /**
-     * Set widget width.
-     * 
-     * @param[in] width Width in pixel
-     */
-    void setWidth(uint16_t width) override
-    {
-        Widget::setWidth(width);
-        alignText(m_hAlign, m_vAlign);
-    }
-
-    /**
      * Set widget height.
      * 
      * @param[in] height Height in pixel
@@ -143,7 +133,7 @@ public:
     void setHeight(uint16_t height) override
     {
         Widget::setHeight(height);
-        alignText(m_hAlign, m_vAlign);
+        alignTextVertical();
     }
 
     /**
@@ -152,34 +142,12 @@ public:
      * 
      * @param[in] formatStr String, which may contain format tags
      */
-    void setFormatStr(const String& formatStr)
-    {
-        /* Avoid update if not necessary. */
-        if (((m_formatStr != formatStr) && (false == m_prepareNewText)) ||
-            ((m_formatStrNew != formatStr) && (true == m_prepareNewText)))
-        {
-            m_formatStrNew      = formatStr;
-            m_prepareNewText    = true;
-        }
-    }
+    void setFormatStr(const String& formatStr);
 
     /**
      * Clear immediately and don't show anything further.
      */
-    void clear()
-    {
-        m_formatStr.clear();
-        m_scrollInfo.clear();
-
-        m_formatStrNew.clear();
-        m_scrollInfoNew.clear();
-
-        m_prepareNewText = false;
-
-        /* Reset calculated alignment coordinates. */
-        m_hAlignPosX    = 0U;
-        m_vAlignPosY    = 0U;
-    }
+    void clear();
 
     /**
      * Get the text string, which may contain format tags.
@@ -196,11 +164,7 @@ public:
      *
      * @return String
      */
-    String getStr() const
-    {
-        return removeFormatTags(m_formatStrNew);
-    }
-
+    String getStr() const;
     /**
      * Set the text color of the string.
      *
@@ -272,19 +236,7 @@ public:
      *
      * @return If scroll information is ready, it will return true otherwise false.
      */
-    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt)
-    {
-        bool status = false;
-        
-        if (false == m_prepareNewText)
-        {
-            isScrollingEnabled  = m_scrollInfoNew.isEnabled;
-            scrollingCnt        = m_scrollingCnt;
-            status              = true;
-        }
-
-        return status;
-    }
+    bool getScrollInfo(bool& isScrollingEnabled, uint32_t& scrollingCnt);
 
     /**
      * Set the horizontal alignment.
@@ -293,8 +245,7 @@ public:
      */
     void setHorizontalAlignment(Alignment::Horizontal align)
     {
-        m_hAlign        = align;
-        m_hAlignPosX    = alignTextHorizontal(m_hAlign);
+        m_hAlign = align;
     }
 
     /**
@@ -304,8 +255,8 @@ public:
      */
     void setVerticalAlignment(Alignment::Vertical align)
     {
-        m_vAlign        = align;
-        m_vAlignPosY    = alignTextVertical(m_vAlign);
+        m_vAlign = align;
+        alignTextVertical();
     }
 
     /**
@@ -395,8 +346,7 @@ private:
         bool        isScrollingToLeft;  /**< Is text scrolling to left? Otherwise scrolling to top. */
         int16_t     offsetDest;         /**< Offset destination in pixel */
         int16_t     offset;             /**< Current offset in pixel */
-        uint16_t    textWidth;          /**< Text width in pixel */
-        uint16_t    textHeight;          /**< Text height in pixel */
+        uint16_t    textHeight;         /**< Text height in pixel */
 
         /**
          * Initializes scroll information.
@@ -406,7 +356,6 @@ private:
             isScrollingToLeft(true),
             offsetDest(0),
             offset(0),
-            textWidth(0U),
             textHeight(0U)
         {
         }
@@ -420,19 +369,8 @@ private:
             isScrollingToLeft   = true;
             offsetDest          = 0;
             offset              = 0;
-            textWidth           = 0U;
             textHeight          = 0U;
         }
-    };
-
-    /**
-     * Parser results
-     */
-    enum Result
-    {
-        RESULT_TEXT = 0,    /**< Text found */
-        RESULT_KEYWORD,     /**< Format keyword found */
-        RESULT_EMPTY        /**< Empty */
     };
 
     String                  m_formatStr;            /**< Current shown string, which contains format tags. */
@@ -444,41 +382,72 @@ private:
     ScrollInfo              m_scrollInfoNew;        /**< Scroll information for the new text. */
     bool                    m_prepareNewText;       /**< User set new text, which shall be prepared. */
     bool                    m_updateText;           /**< New text is prepared shall be updated. */
+    TWAbstractSyntaxTree    m_ast;                  /**< AST for the current format string. */
+    TWAbstractSyntaxTree    m_astNew;               /**< AST for the new format string. */
     YAGfxText               m_gfxText;              /**< GFX for current text. */
     YAGfxText               m_gfxNewText;           /**< GFX for new text. */
     uint32_t                m_scrollingCnt;         /**< Counts how often a text was complete scrolled. */
     int16_t                 m_scrollOffset;         /**< Pixel offset of cursor x position, used for scrolling. */
     SimpleTimer             m_scrollTimer;          /**< Timer, used for scrolling */
-    Alignment::Horizontal   m_hAlign;               /**< Horizontal alignment. */
-    Alignment::Vertical     m_vAlign;               /**< Vertical alignment. */
-    int16_t                 m_hAlignPosX;           /**< x-coordinate derived from horizontal alignment. */
-    int16_t                 m_vAlignPosY;           /**< y-coordinate derived from vertical alignment. */
-
-    static uint32_t         m_scrollPause;          /**< Pause in ms, between each scroll movement. */
-
+    
     /**
-     * Align the text horizontal and vertical.
-     * It will adapt the m_hAlignPosX and m_vAlignPosY.
+     * Horizontal alignment which is the default one.
+     * During an display update it might be overwritten by a keyword, but will always
+     * be restored back, after the update is finished.
+     * 
+     * Horizontal alignment is done line by line, divided by a line feed.
      */
-    void alignText(Alignment::Horizontal hAlign, Alignment::Vertical vAlign);
+    Alignment::Horizontal   m_hAlign;
 
     /**
-     * Align the text horizontal by calculating the x-coordinate of the text box.
+     * Vertical alignment which is the default one.
+     * During an display update it might be overwritten by a keyword, but will always
+     * be restored back, after the update is finished.
+     * 
+     * Vertical alignment is done per text block.
+     */
+    Alignment::Vertical     m_vAlign;
+
+    /**
+     * y-coordinate calculated from vertical alignment.
+     */
+    int16_t                 m_vAlignPosY;
+
+    /**
+     * Pause in ms, between each scroll movement.
+     * Its used by all text widget instances.
+     */
+    static uint32_t         m_scrollPause;
+
+    /**
+     * Align the current text horizontal by calculating the x-coordinate of the
+     * current text box.
+     * 
+     * Horizontal alignment will only be done for
+     * - Static text
+     * - Text scrolling from bottom to top
+     * 
+     * Otherwise the x-coordinate will be set to 0.
      *
-     * @param[in] hAlign    Horizontal alignment
+     * @param[in] gfx       Graphic functionality, used for bound box calculation.
+     * @param[in] text      Text for which the alignment is calculated.
+     * @param[in] hAlign    Horizontal alignment.
      * 
      * @return x-coordinate
      */
-    int16_t alignTextHorizontal(Alignment::Horizontal hAlign) const;
+    int16_t alignTextHorizontal(YAGfx& gfx, const String& text, Alignment::Horizontal hAlign) const;
 
     /**
-     * Align the text vertical by calculating the y-coordinate of the text box.
-     *
-     * @param[in] vAlign    Vertical alignment
+     * Align the current text vertical by calculating the y-coordinate of the
+     * text box.
      * 
-     * @return y-coordinate
+     * Vertical alignment will only be done for
+     * - Static text
+     * - Text scrolling from left to right
+     * 
+     * Otherwise the y-coordinate will be set to 0.
      */
-    int16_t alignTextVertical(Alignment::Vertical vAlign) const;
+    void alignTextVertical();
 
     /**
      * Get the number of lines, which can be used by the text widget.
@@ -548,41 +517,43 @@ private:
     void paint(YAGfx& gfx) override;
 
     /**
-     * Remove format tags from string.
-     *
-     * @param[in] formatStr String which contains format tags
-     *
-     * @return String without format tags
+     * Walks throught the AST and integrates the character code keywords.
+     * Thats means the token will be converted to a text token and its
+     * string will be the character code.
+     * 
+     * @param[in, out] ast  The abstract syntax tree (AST)
      */
-    String removeFormatTags(const String& formatStr) const;
+    void characterCodeKeywordToText(TWAbstractSyntaxTree& ast);
+
+    /**
+     * Get only the text from abstract syntax tree.
+     * 
+     * @param[out]  text    Contains only the text from AST after call.
+     * @param[in]   ast     The abstract syntax tree.
+     */
+    void getText(String& text, const TWAbstractSyntaxTree& ast) const;
+
+    /**
+     * Get a single line from abstract syntax tree, starting at the given index.
+     * 
+     * @param[out]  singleLine  Contains the single line at the end.
+     * @param[in]   ast         The abstract syntax tree.
+     * @param[in]   startIdx    Start index in the AST.
+     * 
+     * @return Next index
+     */
+    uint32_t getSingleLine(String& singleLine, const TWAbstractSyntaxTree& ast, uint32_t startIdx);
 
     /**
      * Show formatted text.
      * Format tags:
      * - #RRGGBB Color in HTML form (RGB888)
      *
-     * @param[in] gfx           Graphics, used to draw the characters
-     * @param[in] formatStr     String which contains format tags
+     * @param[in] gfx           Graphics, used to draw the characters.
+     * @param[in] ast           The abstract syntax tree.
      * @param[in] isScrolling   Is text scrolling or not.
      */
-    void show(YAGfx& gfx, const String& formatStr, bool isScrolling);
-
-    /**
-     * Parse formatted text. Everytime a text or a format keyword is found, it will
-     * immediately return. Call this function continously for parsing the whole
-     * string, until its finished.
-     * 
-     * A format keyword is enclosed with {}.
-     * If a '{' is part of the text itself, it must be escaped with a backslash.
-     * 
-     * @param[in]   str             String with formatted text.
-     * @param[in]   beginIdx        Index in the string where to start parsing.
-     * @param[out]  resultStr       Result string may contain text, a format keyword or is empty.
-     * @param[out]  remainingIdx    Remaining index in the string
-     * 
-     * @return Parser result, consider it to know whats in the resultStr and whether to continoue parsing.
-     */
-    Result parseFormattedText(const String& str, size_t& beginIdx, String& resultStr, size_t& remainingIdx) const;
+    void show(YAGfx& gfx, const TWAbstractSyntaxTree& ast, bool isScrolling);
 
     /**
      * Compares two keywords.
@@ -661,14 +632,6 @@ private:
      * @param[in] keyword   Keyword
      */
     void handleColor(YAGfx& gfx, const String& keyword);
-
-    /**
-     * Handle character keyword code.
-     * 
-     * @param[in] gfx       Graphic functionality
-     * @param[in] keyword   Keyword
-     */
-    void handleCharCode(YAGfx& gfx, const String& keyword);
 
     /**
      * Move text cursor horizontal.
