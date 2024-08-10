@@ -111,7 +111,7 @@
                     </div>
                     <div class="form-group">
                         <label for="justText">Text:</label>
-                        <input type="text" id="justText" name="justText" value="" size="20" />
+                        <input type="text" id="justText" name="justText" value="" size="40" />
                     </div>
                     <div class="form-group">
                         <label for="iconFullPath">Icon full path:</label>
@@ -276,7 +276,7 @@
                     var justTextInput = document.getElementById(justTextId);
                     var iconFullPathInput = document.getElementById(iconFullPathId);
 
-                    justTextInput.value = rsp.data.text;
+                    justTextInput.value = rsp.data.text.replaceAll("\n", "\\n");
                     iconFullPathInput.value = rsp.data.iconFullPath;
 
                 }).catch(function(rsp) {
@@ -288,6 +288,9 @@
 
             function setText(pluginUid, justText, iconFullPath) {
                 disableUI();
+
+                justText = justText.replaceAll("\\n", "\n");
+                justText = justText.replaceAll("\\r", "");
 
                 return utils.makeRequest({
                     method: "POST",

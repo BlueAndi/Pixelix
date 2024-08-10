@@ -62,7 +62,7 @@
                     </div>
                     <div class="form-group">
                         <label for="justText">Text:</label>
-                        <input type="text" id="justText" name="justText" value="" size="20" />                            
+                        <input type="text" id="justText" name="justText" value="" size="40" />                            
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>          
@@ -156,6 +156,8 @@
 
                     justTextInput.value = rsp.data.text;
 
+                    justTextInput.value = rsp.data.text.replaceAll("\n", "\\n");
+
                 }).catch(function(rsp) {
                     alert("Internal error.");
                 }).finally(function() {
@@ -165,6 +167,9 @@
 
             function setText(pluginUid, justText) {
                 disableUI();
+
+                justText = justText.replaceAll("\\n", "\n");
+                justText = justText.replaceAll("\\r", "");
 
                 return utils.makeRequest({
                     method: "POST",
