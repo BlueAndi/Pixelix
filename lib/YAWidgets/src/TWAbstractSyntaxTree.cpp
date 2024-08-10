@@ -71,7 +71,7 @@ TWAbstractSyntaxTree& TWAbstractSyntaxTree::operator=(const TWAbstractSyntaxTree
     return *this;
 }
 
-TWAbstractSyntaxTree& TWAbstractSyntaxTree::operator=(TWAbstractSyntaxTree&& other)
+TWAbstractSyntaxTree& TWAbstractSyntaxTree::operator=(TWAbstractSyntaxTree&& other) noexcept
 {
     if (this != &other)
     {

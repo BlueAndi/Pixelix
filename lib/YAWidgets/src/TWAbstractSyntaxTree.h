@@ -107,7 +107,7 @@ public:
      *
      * @return The abstract syntax tree.
      */
-    TWAbstractSyntaxTree& operator=(TWAbstractSyntaxTree&& other);
+    TWAbstractSyntaxTree& operator=(TWAbstractSyntaxTree&& other) noexcept;
 
     /**
      * Clear AST.
