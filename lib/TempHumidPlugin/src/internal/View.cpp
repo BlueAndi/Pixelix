@@ -57,13 +57,13 @@ using namespace _TempHumidPlugin;
  *****************************************************************************/
 
 /* Initialize image path for temperature (scale) icon. */
-const char* View::IMAGE_PATH_TEMP_ICON  = "/plugins/TempHumidPlugin/temp.bmp";
+const char* View::IMAGE_PATH_TEMP_ICON  = "/plugins/TempHumidPlugin/temp.gif";
 
 /* Initialize image path for humidity (drop) icon. */
-const char* View::IMAGE_PATH_HUMID_ICON = "/plugins/TempHumidPlugin/drop.bmp";
+const char* View::IMAGE_PATH_HUMID_ICON = "/plugins/TempHumidPlugin/drop.gif";
 
 /* Initialize the icon mapping table. */
-const char* View::ICON_TABLE[ICON_MAX]      =
+const char* View::ICON_TABLE[ICON_MAX]  =
 {
     /* The order follows the order in the Icon enumeration! */
     View::IMAGE_PATH_TEMP_ICON,

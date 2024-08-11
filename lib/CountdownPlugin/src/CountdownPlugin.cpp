@@ -310,7 +310,7 @@ void CountdownPlugin::calculateRemainingDays()
         }
         else
         {
-            m_remainingDays = "ELAPSED!";
+            m_remainingDays = "{hc}ELAPSED!";
         }
 
         m_view.setFormatText(m_remainingDays);

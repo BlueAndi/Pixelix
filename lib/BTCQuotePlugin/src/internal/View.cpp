@@ -57,7 +57,7 @@ using namespace _BTCQuotePlugin;
  *****************************************************************************/
 
 /* Initialize icon path. */
-const char* View::ICON_PATH = "/plugins/BTCQuotePlugin/BTC_USD.bmp";
+const char* View::ICON_PATH = "/plugins/BTCQuotePlugin/btc_usd.gif";
 
 /******************************************************************************
  * Public Methods

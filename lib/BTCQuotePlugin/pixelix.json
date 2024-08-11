@@ -1,0 +1,28 @@
+{
+    "pixelix": {
+        "type": "plugin",
+        "name": "BTCQuotePlugin",
+        "web": {
+            "files": [
+                "./web/BTCQuotePlugin.html",
+                "./web/BTCQuotePlugin.jpg"
+            ],
+            "layouts": [{
+                "name": "LAYOUT_GENERIC",
+                "files": [
+                    "./web/icon8x8/btc_usd.gif"
+                ]
+            }, {
+                "name": "LAYOUT_32X8",
+                "files": [
+                    "./web/icon8x8/btc_usd.gif"
+                ]
+            }, {
+                "name": "LAYOUT_64X64",
+                "files": [
+                    "./web/icon16x16/btc_usd.gif"
+                ]
+            }]
+        }
+    }
+}

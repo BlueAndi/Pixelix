@@ -1,0 +1,28 @@
+{
+    "pixelix": {
+        "type": "plugin",
+        "name": "SunrisePlugin",
+        "web": {
+            "files": [
+                "./web/SunrisePlugin.html",
+                "./web/SunrisePlugin.jpg"
+            ],
+            "layouts": [{
+                "name": "LAYOUT_GENERIC",
+                "files": [
+                    "./web/icon8x8/sunrise.gif"
+                ]
+            }, {
+                "name": "LAYOUT_32X8",
+                "files": [
+                    "./web/icon8x8/sunrise.gif"
+                ]
+            }, {
+                "name": "LAYOUT_64X64",
+                "files": [
+                    "./web/icon16x16/sunrise.gif"
+                ]
+            }]
+        }
+    }
+}

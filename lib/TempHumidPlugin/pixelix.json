@@ -1,0 +1,31 @@
+{
+    "pixelix": {
+        "type": "plugin",
+        "name": "TempHumidPlugin",
+        "web": {
+            "files": [
+                "./web/TempHumidPlugin.html",
+                "./web/TempHumidPlugin.jpg"
+            ],
+            "layouts": [{
+                "name": "LAYOUT_GENERIC",
+                "files": [
+                    "./web/icon8x8/drop.gif",
+                    "./web/icon8x8/temp.gif"
+                ]
+            }, {
+                "name": "LAYOUT_32X8",
+                "files": [
+                    "./web/icon8x8/drop.gif",
+                    "./web/icon8x8/temp.gif"
+                ]
+            }, {
+                "name": "LAYOUT_64X64",
+                "files": [
+                    "./web/icon16x16/drop.gif",
+                    "./web/icon16x16/temp.gif"
+                ]
+            }]
+        }
+    }
+}

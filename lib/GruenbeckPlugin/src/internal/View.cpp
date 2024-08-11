@@ -57,7 +57,7 @@ using namespace _GruenbeckPlugin;
  *****************************************************************************/
 
 /* Initialize icon path. */
-const char* View::ICON_PATH = "/plugins/GruenbeckPlugin/gruenbeck.bmp";
+const char* View::ICON_PATH = "/plugins/GruenbeckPlugin/gruenbeck.gif";
 
 /******************************************************************************
  * Public Methods

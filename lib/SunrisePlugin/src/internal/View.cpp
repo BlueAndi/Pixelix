@@ -57,7 +57,7 @@ using namespace _SunrisePlugin;
  *****************************************************************************/
 
 /* Initialize icon path. */
-const char* View::ICON_PATH = "/plugins/SunrisePlugin/sunrise.bmp";
+const char* View::ICON_PATH = "/plugins/SunrisePlugin/sunrise.gif";
 
 /******************************************************************************
  * Public Methods

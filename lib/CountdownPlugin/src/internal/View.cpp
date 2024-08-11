@@ -57,7 +57,7 @@ using namespace _CountdownPlugin;
  *****************************************************************************/
 
 /* Initialize icon path. */
-const char* View::ICON_PATH = "/plugins/CountdownPlugin/countdown.bmp";
+const char* View::ICON_PATH = "/plugins/CountdownPlugin/countdown.gif";
 
 /******************************************************************************
  * Public Methods
