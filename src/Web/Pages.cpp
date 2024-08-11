@@ -115,9 +115,6 @@ static const char*      BOOTLOADER_FILENAME             = "bootloader.bin";
 /** Path to the plugin webpages. */
 static const String     PLUGIN_PAGE_PATH                = "/plugins/";
 
-/** SPIFFS limits the max. filename length, which includes the path as well. */
-static const uint32_t   SPIFFS_FILENAME_LENGTH_LIMIT    = 32U;
-
 /** Flag used to signal any kind of file upload error. */
 static bool             gIsUploadError                  = false;
 
