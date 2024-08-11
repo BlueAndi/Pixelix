@@ -117,13 +117,13 @@ void DateTimeView64x64::update(YAGfx& gfx)
 
     if (m_lastUpdateSecondVal != m_now.tm_sec)
     {
-        uint8_t idx = 0U;
+        uint8_t idx;
 
         gfx.fillScreen(ColorDef::BLACK);
 
         m_textWidget.update(gfx);
 
-        for (uint8_t idx = 0; MAX_LAMPS > idx; ++idx)
+        for (idx = 0; MAX_LAMPS > idx; ++idx)
         {
             m_lampWidgets[idx].update(gfx);
         }

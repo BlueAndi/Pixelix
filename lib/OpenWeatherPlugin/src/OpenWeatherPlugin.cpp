@@ -233,7 +233,6 @@ void OpenWeatherPlugin::process(bool isConnected)
 {
     Msg                         msg;
     MutexGuard<MutexRecursive>  guard(m_mutex);
-    uint32_t                    slotDuration            = 0U;
     bool                        isRestRequestRequired   = false;
 
     PluginWithConfig::process(isConnected);
@@ -269,7 +268,7 @@ void OpenWeatherPlugin::process(bool isConnected)
     /* Request of new weather information via REST API required? */
     if (true == isRestRequestRequired)
     {
-        IOpenWeatherGeneric* source = getWeatherSourceByStatus();
+        const IOpenWeatherGeneric* source = getWeatherSourceByStatus();
 
         /* A request without API key makes no sense. */
         if ((nullptr != source) &&
@@ -445,7 +444,7 @@ void OpenWeatherPlugin::getConfiguration(JsonObject& jsonCfg) const
 bool OpenWeatherPlugin::setConfiguration(JsonObjectConst& jsonCfg)
 {
     bool                status              = false;
-    JsonVariantConst	jsonSourceId        = jsonCfg["sourceId"];
+    JsonVariantConst    jsonSourceId        = jsonCfg["sourceId"];
     JsonVariantConst    jsonUpdatePeriod    = jsonCfg["updatePeriod"];
     JsonVariantConst    jsonApiKey          = jsonCfg["apiKey"];
     JsonVariantConst    jsonLatitude        = jsonCfg["latitude"];
@@ -622,8 +621,8 @@ void OpenWeatherPlugin::handleAsyncWebResponse(const HttpResponse& rsp)
 {
     if (HttpStatus::STATUS_CODE_OK == rsp.getStatusCode())
     {
-        bool                    isSuccessful    = false;
-        IOpenWeatherGeneric*    source          = getWeatherSourceByStatus();
+        bool                        isSuccessful    = false;
+        const IOpenWeatherGeneric*  source          = getWeatherSourceByStatus();
 
         if (nullptr != source)
         {

@@ -677,10 +677,10 @@ void TextWidget::paint(YAGfx& gfx)
 
 void TextWidget::characterCodeKeywordToText(TWAbstractSyntaxTree& ast)
 {
-    uint32_t    length  = ast.length();
+    uint32_t    astLength   = ast.length();
     uint32_t    idx;
 
-    for(idx = 0U; idx < length; ++idx)
+    for(idx = 0U; idx < astLength; ++idx)
     {
         TWToken& token = ast[idx];
 
@@ -770,13 +770,12 @@ uint32_t TextWidget::getSingleLine(String& singleLine, const TWAbstractSyntaxTre
 
 void TextWidget::show(YAGfx& gfx, const TWAbstractSyntaxTree& ast, bool isScrolling)
 {
-    uint32_t                astLength                   = ast.length();
-    Color                   textColorBackup             = m_gfxText.getTextColor(); /* Backup text color */
-    Alignment::Horizontal   hAlignBackup                = m_hAlign;                 /* Backup alignment */
-    Alignment::Vertical     vAlignBackup                = m_vAlign;                 /* Backup alignment */
-    Alignment::Horizontal   hAlign                      = m_hAlign;                 /* Used to detect horizontal alignment change */
-    int16_t                 hAlignPosX                  = 0;
-    bool                    isInitialAlignedHorizontal  = false;
+    uint32_t                astLength       = ast.length();
+    Color                   textColorBackup = m_gfxText.getTextColor(); /* Backup text color */
+    Alignment::Horizontal   hAlignBackup    = m_hAlign;                 /* Backup alignment */
+    Alignment::Vertical     vAlignBackup    = m_vAlign;                 /* Backup alignment */
+    Alignment::Horizontal   hAlign          = m_hAlign;                 /* Used to detect horizontal alignment change */
+    int16_t                 hAlignPosX      = 0;
     uint32_t                idx;
     String                  singleLine;
 

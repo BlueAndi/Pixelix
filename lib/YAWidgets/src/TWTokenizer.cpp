@@ -61,9 +61,7 @@
 bool TWTokenizer::parse(TWAbstractSyntaxTree& ast, const String& formattedText)
 {
     bool   isSuccessful        = true;
-    size_t formatTextLength    = formattedText.length();
     size_t idx                 = 0U;
-    size_t lastEscapeIdx       = 0U;
     bool   isKeywordBeginFound = false;
     bool   isEscapeActive      = false;
     size_t beginIdx            = 0U;
