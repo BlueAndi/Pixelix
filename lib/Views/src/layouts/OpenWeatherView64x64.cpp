@@ -230,7 +230,7 @@ static const UvIndexElem uvIndexTable[] =
 
 OpenWeatherView64x64::OpenWeatherView64x64() :
     IOpenWeatherView(),
-    m_fontType(Fonts::FONT_TYPE_DEFAULT),
+    m_fontType(Fonts::FONT_TYPE_LARGE),
     m_weatherIconCurrent(WEATHER_ICON_CURRENT_WIDTH, WEATHER_ICON_CURRENT_HEIGHT, WEATHER_ICON_CURRENT_X, WEATHER_ICON_CURRENT_Y),
     m_weatherInfoCurrentText(WEATHER_INFO_TEXT_CURRENT_WIDTH, WEATHER_INFO_TEXT_CURRENT_HEIGHT, WEATHER_INFO_TEXT_CURRENT_X, WEATHER_INFO_TEXT_CURRENT_Y),
     m_forecastDayNames{
@@ -285,6 +285,8 @@ OpenWeatherView64x64::OpenWeatherView64x64() :
         m_forecastTemperatures[day].setVerticalAlignment(Alignment::Vertical::VERTICAL_CENTER);
         m_forecastTemperatures[day].setHorizontalAlignment(Alignment::Horizontal::HORIZONTAL_RIGHT);
     }
+
+    m_weatherInfoCurrentText.setFont(Fonts::getFontByType(m_fontType));
 }
 
 void OpenWeatherView64x64::update(YAGfx& gfx)

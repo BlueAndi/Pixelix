@@ -102,8 +102,7 @@ public:
      */
     void setFontType(Fonts::FontType fontType) override
     {
-        m_fontType = fontType;
-        m_weatherInfoCurrentText.setFont(Fonts::getFontByType(m_fontType));
+        /* Not supported. */
     }
 
     /**
