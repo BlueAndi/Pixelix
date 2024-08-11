@@ -5,7 +5,7 @@
         "web": {
             "files": [
                 "./web/TempHumidPlugin.html",
-                "./web/TempHumidPlugin.jpg"
+                "./web/TempHumidPlugin.png"
             ],
             "layouts": [{
                 "name": "LAYOUT_GENERIC",
