@@ -214,9 +214,9 @@ void OpenWeatherForecast::getFilter(JsonDocument& jsonFilterDoc) const
 
     for(day = 0U; day < FORECAST_DAYS; ++day)
     {
-        jsonFilterDoc["list"][day]["main"]["temp_min"]  = true;
-        jsonFilterDoc["list"][day]["main"]["temp_max"]  = true;
-        jsonFilterDoc["list"][day]["weather"]["icon"]   = true;
+        jsonFilterDoc["list"][day]["main"]["temp_min"]      = true;
+        jsonFilterDoc["list"][day]["main"]["temp_max"]      = true;
+        jsonFilterDoc["list"][day]["weather"][0]["icon"]    = true;
     }
 }
 
@@ -228,7 +228,7 @@ void OpenWeatherForecast::parse(const JsonDocument& jsonDoc)
     {
         JsonVariantConst    jsonTemperatureMin  = jsonDoc["list"][day]["main"]["temp_min"];
         JsonVariantConst    jsonTemperatureMax  = jsonDoc["list"][day]["main"]["temp_max"];
-        JsonVariantConst    jsonIcon            = jsonDoc["list"][day]["weather"]["icon"];
+        JsonVariantConst    jsonIcon            = jsonDoc["list"][day]["weather"][0]["icon"];
 
         if (false == jsonTemperatureMin.isNull())
         {
