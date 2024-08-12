@@ -50,4 +50,4 @@ Import("env") # type: ignore
 # pylint: disable=undefined-variable
 layout = determine_layout(env["BUILD_FLAGS"]) # type: ignore
 
-configure("./config/configSmallHub75.ini", layout)
+configure("./config/configTiny.ini", layout)
