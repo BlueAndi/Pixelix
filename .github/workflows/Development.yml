@@ -28,7 +28,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2", "esp32doit-devkit-v1", "esp32-s3-devkitc-1-n16r8v", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "ulanzi-tc001", "wemos_lolin_s2_mini"]
+        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "lilygo-ttgo-t-displayTFT-32x8", "lilygo-t-display-s3TFT-32x8", "m5stack_coreTFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
@@ -72,7 +72,7 @@ jobs:
     needs: intro
     strategy:
       matrix:
-        environment: ["adafruit_feather_esp32_v2", "esp32doit-devkit-v1", "esp32-s3-devkitc-1-n16r8v", "lilygo-ttgo-t-display", "lilygo-t-display-s3", "ulanzi-tc001", "wemos_lolin_s2_mini"]
+        environment: ["adafruit_feather_esp32_v2-LED-32x8", "adafruit_matrixportal_s3-HUB75-64x64", "esp32doit-devkit-v1-LED-32x8", "esp32doit-devkit-v1-HUB75-64x64", "esp32-s3-devkitc-1-n16r8v-LED-32x8", "lilygo-ttgo-t-displayTFT-32x8", "lilygo-t-display-s3TFT-32x8", "m5stack_coreTFT-32x8", "ulanzi-tc001-LED-32x8", "wemos_lolin_s2_mini-LED-32x8"]
 
     steps:
     - name: Checkout repository
