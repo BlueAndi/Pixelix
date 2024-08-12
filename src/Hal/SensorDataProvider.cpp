@@ -50,6 +50,7 @@
  * Macros
  *****************************************************************************/
 
+/** The number of sensor topics: temperature, humidity, illuminance and battery */
 #define SENSOR_TOPICS_COUNT (4U)
 
 /******************************************************************************
