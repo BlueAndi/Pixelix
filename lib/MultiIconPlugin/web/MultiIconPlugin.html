@@ -147,9 +147,13 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="icon0FullPath">Icon ID 0 full path:</label>
-                            <input class="form-control" type="text" id="icon0FullPath" name="icon0FullPath" value="" size="40" /><br />
+                            <input class="form-control" type="text" id="icon0FullPath" name="icon0FullPath" value="" size="40" />
+                            <small id="icon0FullPathHelpBlock" class="form-text text-muted">The path in the Pixelix file system must start with '/' and refer to an already existing icon image.</small>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label" for="icon1FullPath">Icon ID 1 full path:</label>
                             <input class="form-control" type="text" id="icon1FullPath" name="icon1FullPath" value="" size="40" />
+                            <small id="icon1FullPathHelpBlock" class="form-text text-muted">The path in the Pixelix file system must start with '/' and refer to an already existing icon image.</small>
                         </div>
                         <input name="submit" type="submit" value="Update"/>
                     </form>
@@ -184,11 +188,13 @@
 
             function enableUI() {
                 utils.enableForm("setIconForm", true);
+                utils.enableForm("clearIconForm", true);
                 utils.enableForm("myFormSlot", true);
             }
 
             function disableUI() {
                 utils.enableForm("setIconForm", false);
+                utils.enableForm("clearIconForm", false);
                 utils.enableForm("myFormSlot", false);
             }
 
