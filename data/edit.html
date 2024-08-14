@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -20,7 +20,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -33,7 +33,7 @@
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
             <!-- Dialog -->
-            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header" id="dialogHeader">
@@ -54,26 +54,32 @@
                     </div>
                 </div>
                 <div class="row">
-                    <h4 id="fileName" class="text-secondary"></h4>
-                </div>
-                <div class="row">
                     <div class="col-3">
                         <p>Use STRG + s to save a modified file.</p>
                     </div>
                     <div class="col-9">
                         <div class="input-group">
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="uploadFile">
-                                <label class="custom-file-label" for="uploadFile">Choose file to upload:</label>
-                            </div>
-                            <div class="input-group-append" style="padding-left: 10px">
-                                <label for="directory">Directory:</label>
-                                <input type="text" id="directory" name="directory" value="/configuration" size="40" />
-                            </div>
-                            <div class="input-group-append">
-                                <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
-                            </div>
+                            <input type="file" class="form-control" id="uploadFile">
+                            <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
                         </div>
+                        <div class="input-group">
+                            <span class="input-group-text">Upload destination directory:</span>
+                            <input type="text" class="form-control" id="directory" value="/configuration" size="40" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                    </div>
+                    <div class="col-9">
+                        <p></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                    </div>
+                    <div class="col-9">
+                        <h4 id="fileName" class="text-secondary"></h4>
                     </div>
                 </div>
                 <div class="row">
@@ -81,7 +87,7 @@
                         <h2 class="mt-1">Files</h2>
                         <ul class="nav nav-pills flex-column" id="fileTree"></ul>
                     </div>
-                    <div class="col-9">
+                    <div class="col-9" style="position: relative;">
                         <div class="collapse show" id="editor"></div>
                         <div class="collapse" id="preview"></div>
                     </div>
@@ -93,13 +99,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
@@ -110,7 +116,7 @@
         <!-- Pixelix REST API -->
         <script type="text/javascript" src="/js/rest.js"></script>
         <!-- The high performance code editor Ace. -->
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.22.1/ace.min.js" referrerpolicy="origin"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.4/ace.min.js" referrerpolicy="origin"></script>
 
         <!-- Custom javascript -->
         <script>
@@ -200,7 +206,7 @@
                                     .attr("role", "button")
                                     .attr("class", "nav-link dropdown-toggle")
                                     .attr("id", itemId)
-                                    .attr("data-toggle", "dropdown")
+                                    .attr("data-bs-toggle", "dropdown")
                                     .attr("aria-haspopup", "true")
                                     .attr("aria-expanded", "false")
                                     .text(fileInfo.name);

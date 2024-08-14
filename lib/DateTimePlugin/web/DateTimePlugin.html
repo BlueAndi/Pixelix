@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -74,37 +74,37 @@
                 <h3 class="mt-1">Display</h3>
                 <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                     <div class="form-group">
-                        <label for="pluginUid">Plugin UID:</label>
-                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <label class="form-label" for="pluginUid">Plugin UID:</label>
+                        <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="mode">Display mode:</label>
-                        <select id="mode">
+                        <label class="form-label" for="mode">Display mode:</label>
+                        <select class="form-select" id="mode">
                             <option value="0">Show date and time.</option>
                             <option value="1">Show only the date.</option>
                             <option value="2">Show only the time.</option>
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="timeFormat">Time format:</label>
-                        <input type="text" id="timeFormat" name="timeFormat" value="" />    
+                        <label class="form-label" for="timeFormat">Time format:</label>
+                        <input class="form-control" type="text" id="timeFormat" name="timeFormat" value="" />    
                     </div>
                     <div class="form-group">
-                        <label for="timeFormat">Date format:</label>
-                        <input type="text" id="dateFormat" name="dateFormat" value="" />    
+                        <label class="form-label" for="timeFormat">Date format:</label>
+                        <input class="form-control" type="text" id="dateFormat" name="dateFormat" value="" />    
                     </div>
                     <div class="form-group">
-                        <label for="timeFormat">Time zone:</label>
-                        <input type="text" id="timeZone" name="timeZone" value="" />    
+                        <label class="form-label" for="timeFormat">Time zone:</label>
+                        <input class="form-control" type="text" id="timeZone" name="timeZone" value="" />    
                     </div>
                     <div class="form-group">
-                        <label for="timeFormat">Color of actual day:</label>
-                        <input type="text" id="dayOnColor" name="dayOnColor" value="" />    
+                        <label class="form-label" for="timeFormat">Color of actual day:</label>
+                        <input class="form-control" type="text" id="dayOnColor" name="dayOnColor" value="" />    
                     </div>
                     <div class="form-group">
-                        <label for="timeFormat">Color of other days:</label>
-                        <input type="text" id="dayOffColor" name="dayOffColor" value="" />    
+                        <label class="form-label" for="timeFormat">Color of other days:</label>
+                        <input class="form-control" type="text" id="dayOffColor" name="dayOffColor" value="" />    
                     </div>                    
                     <input name="submit" type="submit" value="Update"/>
                 </form>   
@@ -115,13 +115,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>

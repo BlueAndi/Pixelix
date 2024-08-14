@@ -88,7 +88,7 @@ menu._createSubMenu = function(ulId, menuItem) {
                     .attr("href", "#")
                     .attr("id", menuItem.title + "-dropdown")
                     .attr("role", "button")
-                    .attr("data-toggle", "dropdown")
+                    .attr("data-bs-toggle", "dropdown")
                     .attr("aria-haspopup", "true")
                     .attr("aria-expanded", "false")
                     .text(menuItem.title);

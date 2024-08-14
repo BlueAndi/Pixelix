@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -92,43 +92,43 @@
                 <h3 class="mt-1">Icon</h3>
                 <form id="myFormIcon" enctype="multipart/form-data" action="javascript:uploadIcon(pluginUidIcon.options[pluginUidIcon.selectedIndex].value, icon.files[0])">
                     <div class="form-group">
-                        <label for="pluginUidIcon">Plugin UID:</label>
-                        <select id="pluginUidIcon" name="pluginUid" size="1">
+                        <label class="form-label" for="pluginUidIcon">Plugin UID:</label>
+                        <select class="form-select" id="pluginUidIcon" name="pluginUid" size="1">
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="icon">Icon:</label>
-                        <input id="icon" type="file" accept=".bmp,.gif" />    
+                        <label class="form-label" for="icon">Icon:</label>
+                        <input class="form-control" id="icon" type="file" accept=".bmp,.gif" />    
                     </div>
                     <input name="submit" type="submit" value="Update" />
                 </form>
                 <h3 class="mt-1">Text</h3>
                 <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value, iconFullPath.value)">
                     <div class="form-group">
-                        <label for="pluginUidText">Plugin UID:</label>
-                        <select id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText', 'iconFullPath')">
+                        <label class="form-label" for="pluginUidText">Plugin UID:</label>
+                        <select class="form-select" id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText', 'iconFullPath')">
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="justText">Text:</label>
-                        <input type="text" id="justText" name="justText" value="" size="40" />
+                        <label class="form-label" for="justText">Text:</label>
+                        <input class="form-control" type="text" id="justText" name="justText" value="" size="40" />
                     </div>
                     <div class="form-group">
-                        <label for="iconFullPath">Icon full path:</label>
-                        <input type="text" id="iconFullPath" name="iconFullPath" value="" size="40" />    
+                        <label class="form-label" for="iconFullPath">Icon full path:</label>
+                        <input class="form-control" type="text" id="iconFullPath" name="iconFullPath" value="" size="40" />    
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h3 class="mt-1">Lamp</h3>
                 <form id="myFormLamp" action="javascript:setLamp(pluginUidLamp.options[pluginUidLamp.selectedIndex].value, lampId.options[lampId.selectedIndex].value, lampState.options[lampState.selectedIndex].value)">
                     <div class="form-group">
-                        <label for="pluginUidLamp">Plugin UID:</label>
-                        <select id="pluginUidLamp" name="pluginUid" size="1">
+                        <label class="form-label" for="pluginUidLamp">Plugin UID:</label>
+                        <select class="form-select" id="pluginUidLamp" name="pluginUid" size="1">
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="lampId">Lamp:</label>
-                        <select id="lampId" size="1" onChange="getLamp(pluginUidText.options[pluginUidText.selectedIndex].value, lampId.options[lampId.selectedIndex].value, 'lampState')">
+                        <label class="form-label" for="lampId">Lamp:</label>
+                        <select class="form-select" id="lampId" size="1" onChange="getLamp(pluginUidText.options[pluginUidText.selectedIndex].value, lampId.options[lampId.selectedIndex].value, 'lampState')">
                             <option value="0" selected>0</option>
                             <option value="1">1</option>
                             <option value="2">2</option>
@@ -136,8 +136,8 @@
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="lampState">State:</label>
-                        <select id="lampState" size="1">
+                        <label class="form-label" for="lampState">State:</label>
+                        <select class="form-select" id="lampState" size="1">
                             <option value="off" selected>off</option>
                             <option value="on">on</option>
                         </select>    
@@ -151,13 +151,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>

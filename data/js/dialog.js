@@ -47,7 +47,7 @@ dialog.showInfo = function(message, isBlocking) {
     var $btnClose = $("<button>")
                     .attr("type", "button")
                     .attr("class", "btn btn-secondary")
-                    .attr("data-dismiss", "modal")
+                    .attr("data-bs-dismiss", "modal")
                     .text("Ok")
 
     $("#dialogHeader").removeClass();
@@ -63,7 +63,7 @@ dialog.showWarning = function(message, isBlocking) {
     var $btnClose = $("<button>")
                     .attr("type", "button")
                     .attr("class", "btn btn-secondary")
-                    .attr("data-dismiss", "modal")
+                    .attr("data-bs-dismiss", "modal")
                     .text("Ok")
 
     $("#dialogHeader").removeClass();
@@ -79,7 +79,7 @@ dialog.showError = function(message, isBlocking) {
     var $btnClose = $("<button>")
                     .attr("type", "button")
                     .attr("class", "btn btn-secondary")
-                    .attr("data-dismiss", "modal")
+                    .attr("data-bs-dismiss", "modal")
                     .text("Ok")
 
     $("#dialogHeader").removeClass();

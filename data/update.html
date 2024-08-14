@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -32,7 +32,7 @@
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
             <!-- Dialog -->
-            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header" id="dialogHeader">
@@ -50,9 +50,9 @@
                 <h1 class="mt-5">Update</h1>
 
                 <ul class="nav nav-tabs" role="tablist">
-                    <li class="nav-item" role="presentation"><a class="nav-link active" id="update-tab" data-toggle="tab" role="tab" href="#update"  aria-controls="update" aria-selected="true">Update</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="backup-tab" data-toggle="tab" role="tab" href="#backup" aria-controls="backup" aria-selected="false">Backup</a></li>
-                    <li class="nav-item" role="presentation"><a class="nav-link" id="restore-tab" data-toggle="tab" role="tab" href="#restore" aria-controls="restore" aria-selected="false">Restore</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link active" id="update-tab" data-bs-toggle="tab" role="tab" href="#update"  aria-controls="update" aria-selected="true">Update</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="backup-tab" data-bs-toggle="tab" role="tab" href="#backup" aria-controls="backup" aria-selected="false">Backup</a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link" id="restore-tab" data-bs-toggle="tab" role="tab" href="#restore" aria-controls="restore" aria-selected="false">Restore</a></li>
                 </ul>
 
                 <div class="tab-content" id="myTabContent">
@@ -62,16 +62,11 @@
                         <p>Upload <u>~FIRMWARE_FILENAME~</u> and <u>~BOOTLOADER_FILENAME~</u> file for software update or <u>~FILESYSTEM_FILENAME~</u> for updating the filesystem.</p>
                         <p>Use multi-select to upload several files at once.</p>
                         <div class="input-group">
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="inputFile" multiple="multiple" accept=".bin">
-                                <label class="custom-file-label" for="inputFile">Choose file</label>
-                            </div>
-                            <div class="input-group-append">
-                                <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
-                            </div>
+                            <input type="file" class="form-control" id="inputFile" multiple="multiple" accept=".bin">
+                            <button class="btn btn-light" type="button" onclick="upload();">Upload</button>
                         </div>
                         <div class="progress">
-                            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                         </div>
                     </div>
 
@@ -85,13 +80,11 @@
                         <br />
                         <p>Restore the configuration.</p>
                         <div class="input-group">
-                            <div class="custom-file">
-                                <input type="file" class="custom-file-input" id="backupFile" accept=".zip">
-                                <label class="custom-file-label" for="backupFile">Choose backup file</label>
-                            </div>
-                            <div class="input-group-append">
-                                <button class="btn btn-light" type="button" onclick="restore();">Restore</button>
-                            </div>
+                            <input type="file" class="form-control" id="backupFile" accept=".zip">
+                            <button class="btn btn-light" type="button" onclick="restore();">Restore</button>
+                        </div>
+                        <div class="progress">
+                            <div id="progressBarRestore" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                         </div>
                     </div>
 
@@ -104,13 +97,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
@@ -141,15 +134,19 @@
                 $("main :button").prop("disabled", false);
             }
 
-            function updateProgress(evt) {
+            function updateProgressBar(id, progress) {
+                $("#" + id).css("width", progress + "%").attr("aria-valuenow", progress);
+                $("#" + id).text(progress + "%");
+            }
+
+            function updateProgressUpdate(evt) {
                 var progress = 0;
 
                 if (true === evt.lengthComputable) {
                     progress = Math.ceil(evt.loaded * 100 / evt.total);
                 }
 
-                $("#progressBar").css("width", progress + "%").attr("aria-valuenow", progress);
-                $("#progressBar").text(progress + "%");
+                updateProgressBar("progressBar", progress);
             }
 
             function upload() {
@@ -203,7 +200,7 @@
                         url: "/upload.html",
                         parameter: fileParameters,
                         headers: fileHeaders,
-                        onProgress: updateProgress
+                        onProgress: updateProgressUpdate
                     }).then(function(rsp) {
                         dialog.showInfo("<p>Upload successful.</p>")
                     }).catch(function(rsp) {
@@ -282,6 +279,9 @@
 
             function restore() {
                 var elem = document.getElementById("backupFile");
+                var progress = 0;
+
+                updateProgressBar("progressBarRestore", progress);
 
                 if (0 === elem.files.length) {
 
@@ -321,6 +321,9 @@
                                     }
                                 }
 
+                                progress += 2;
+                                updateProgressBar("progressBarRestore", progress);
+
                                 zipObj.file(filename).async(fileType).then(function(data) {
                                     promiseChain = promiseChain.then(restClient.writeFile("/configuration/" + filename, data, mimeType));
                                 });
@@ -328,10 +331,14 @@
 
                             return promiseChain;
                         }).then(function() {
-                            return dialog.showInfo("<p>Restore successful.</p>", true);
+                            progress = 90;
+                            updateProgressBar("progressBarRestore", progress);
                         }).then(function() {
                             return restClient.reset();
                         }).then(function() {
+                            progress = 100;
+                            updateProgressBar("progressBarRestore", progress);
+
                             return dialog.showInfo("<p>Reset performed to apply restored configuration.</p>");
                         }).catch(function() {
                             dialog.showError("<p>Restore failed.</p>");
@@ -348,11 +355,15 @@
                 $("#inputFile").on("change", function() {
                     var fileName = $(this).val().split("\\").pop();
                     $(this).next(".custom-file-label").addClass("selected").html(fileName);
+
+                    updateProgressBar("progressBar", 0);
                 });
 
                 $("#backupFile").on("change", function() {
                     var fileName = $(this).val().split("\\").pop();
                     $(this).next(".custom-file-label").addClass("selected").html(fileName);
+
+                    updateProgressBar("progressBarRestore", 0);
                 });
             });
         </script>

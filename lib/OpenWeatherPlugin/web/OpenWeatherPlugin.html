@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -67,47 +67,47 @@
                 <h3 class="mt-2">Configuration</h3>
                 <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                     <div class="form-group">
-                        <label for="pluginUid">Plugin UID:</label>
-                        <select id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
+                        <label class="form-label" for="pluginUid">Plugin UID:</label>
+                        <select class="form-select" id="pluginUid" size="1" onChange="getConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="sourceId">OpenWeather source id:</label>
-                        <select id="sourceId" size="1">
+                        <label class="form-label" for="sourceId">OpenWeather source id:</label>
+                        <select class="form-select" id="sourceId" size="1">
                             <option value="0">Current weather</option>
                             <option value="1">One-Call API v2.5</option>
                             <option value="2">One-Call API v3.0</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="updatePeriod">Update period in minutes:</label>
-                        <input type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" />
+                        <label class="form-label" for="updatePeriod">Update period in minutes:</label>
+                        <input class="form-control" type="number" id="updatePeriod" name="updatePeriod" value="10" min="1" max="120" />
                     </div>
                     <div class="form-group">
-                        <label for="apiKey">API key:</label>
-                        <input type="text" id="apiKey" name="apiKey" value="Your API key" />
+                        <label class="form-label" for="apiKey">API key:</label>
+                        <input class="form-control" type="text" id="apiKey" name="apiKey" value="Your API key" />
                     </div>
                     <div class="form-group">
-                        <label for="latitude">Latitude:</label>
-                        <input type="text" id="latitude" name="latitude" value="The latitude" />
+                        <label class="form-label" for="latitude">Latitude:</label>
+                        <input class="form-control" type="text" id="latitude" name="latitude" value="The latitude" />
                     </div>
                     <div class="form-group">
-                        <label for="longitude">Longitude:</label>
-                        <input type="text" id="longitude" name="longitude" value="The longitude" />
+                        <label class="form-label" for="longitude">Longitude:</label>
+                        <input class="form-control" type="text" id="longitude" name="longitude" value="The longitude" />
                     </div>
                     <div class="form-group">
-                        <input type="checkbox" id="temperature" name="weatherInfo" value="1" />
-                        <label for="temperature">Temperature</label>
-                        <input type="checkbox" id="humidity" name="weatherInfo" value="2" />
-                        <label for="humidity">Humidity</label>
-                        <input type="checkbox" id="windSpeed" name="weatherInfo" value="4" />
-                        <label for="windSpeed">Wind speed</label>
-                        <input type="checkbox" id="uvIndex" name="weatherInfo" value="8" />
-                        <label for="uvIndex">UV-index</label>
+                        <input class="form-control" type="checkbox" id="temperature" name="weatherInfo" value="1" />
+                        <label class="form-label" for="temperature">Temperature</label>
+                        <input class="form-control" type="checkbox" id="humidity" name="weatherInfo" value="2" />
+                        <label class="form-label" for="humidity">Humidity</label>
+                        <input class="form-control" type="checkbox" id="windSpeed" name="weatherInfo" value="4" />
+                        <label class="form-label" for="windSpeed">Wind speed</label>
+                        <input class="form-control" type="checkbox" id="uvIndex" name="weatherInfo" value="8" />
+                        <label class="form-label" for="uvIndex">UV-index</label>
                     </div>
                     <div class="form-group">
-                        <label for="units">Units:</label>
-                        <select id="units" size="1">
+                        <label class="form-label" for="units">Units:</label>
+                        <select class="form-select" id="units" size="1">
                             <option value="metric">metric</option>
                             <option value="imperial">imperial</option>
                         </select>
@@ -121,13 +121,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>

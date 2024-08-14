@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -85,39 +85,39 @@
                 <h3 class="mt-1">Icon</h3>
                 <form id="setIconForm" enctype="multipart/form-data" action="javascript:uploadIconByForm('setIconForm')">
                     <div class="form-group">
-                        <label for="pluginUidBitmap">Plugin UID:</label>
-                        <select id="pluginUidBitmap" name="pluginUid" size="1">
+                        <label class="form-label" for="pluginUidBitmap">Plugin UID:</label>
+                        <select class="form-select" id="pluginUidBitmap" name="pluginUid" size="1">
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="slotIdBitmap">Slot ID:</label>
-                        <select id="slotIdBitmap" name="slotId" size="1">
+                        <label class="form-label" for="slotIdBitmap">Slot ID:</label>
+                        <select class="form-select" id="slotIdBitmap" name="slotId" size="1">
                         </select>
-                        <label for="iconIdBitmap">Icon ID:</label>
-                        <select id="iconIdBitmap" name="iconId" size="1">
+                        <label class="form-label" for="iconIdBitmap">Icon ID:</label>
+                        <select class="form-select" id="iconIdBitmap" name="iconId" size="1">
                             <option value="0" selected>0 (default)</option>
                             <option value="1">1</option>
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="bitmap">Icon:</label>
-                        <input id="bitmap" name="bitmap" type="file" accept=".bmp,.gif" />    
+                        <label class="form-label" for="bitmap">Icon:</label>
+                        <input class="form-control" id="bitmap" name="bitmap" type="file" accept=".bmp,.gif" />    
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
                 <h4 class="mt-1">Clear Icon</h4>
                 <form id="clearIconForm" enctype="multipart/form-data" action="javascript:clearIconByForm('clearIconForm')">
                     <div class="form-group">
-                        <label for="pluginUidClearIcon">Plugin UID:</label>
-                        <select id="pluginUidClearIcon" name="pluginUid" size="1">
+                        <label class="form-label" for="pluginUidClearIcon">Plugin UID:</label>
+                        <select class="form-select" id="pluginUidClearIcon" name="pluginUid" size="1">
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="slotIdClearIcon">Slot ID:</label>
-                        <select id="slotIdClearIcon" name="slotId" size="1">
+                        <label class="form-label" for="slotIdClearIcon">Slot ID:</label>
+                        <select class="form-select" id="slotIdClearIcon" name="slotId" size="1">
                         </select>
-                        <label for="iconIdClearIcon">Icon ID:</label>
-                        <select id="iconIdClearIcon" name="iconId" size="1">
+                        <label class="form-label" for="iconIdClearIcon">Icon ID:</label>
+                        <select class="form-select" id="iconIdClearIcon" name="iconId" size="1">
                             <option value="0" selected>0 (default)</option>
                             <option value="1">1</option>
                         </select>    
@@ -127,24 +127,24 @@
                 <h3 class="mt-1">Slot configuration</h3>
                 <form id="myFormSlot" enctype="multipart/form-data" action="javascript:setSlotByForm('myFormSlot')">
                     <div class="form-group">
-                        <label for="pluginUidSlot">Plugin UID:</label>
-                        <select id="pluginUidSlot" name="pluginUid" size="1">
+                        <label class="form-label" for="pluginUidSlot">Plugin UID:</label>
+                        <select class="form-select" id="pluginUidSlot" name="pluginUid" size="1">
                         </select>    
                     </div>
                     <div class="form-group">
-                        <label for="slotIdSlot">Slot ID:</label>
-                        <select id="slotIdSlot" name="slotId" size="1" onchange="getSlotByForm('myFormSlot')">
+                        <label class="form-label" for="slotIdSlot">Slot ID:</label>
+                        <select class="form-select" id="slotIdSlot" name="slotId" size="1" onchange="getSlotByForm('myFormSlot')">
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="activeIconId">Active Icon ID:</label>
-                        <input type="number" id="activeIconId" name="activeIconId" value="0" min="0" max="1" />
+                        <label class="form-label" for="activeIconId">Active Icon ID:</label>
+                        <input class="form-control" type="number" id="activeIconId" name="activeIconId" value="0" min="0" max="1" />
                     </div>
                     <div class="form-group">
-                        <label for="icon0FullPath">Icon ID 0 full path:</label>
-                        <input type="text" id="icon0FullPath" name="icon0FullPath" value="" size="40" /><br />
-                        <label for="icon1FullPath">Icon ID 1 full path:</label>
-                        <input type="text" id="icon1FullPath" name="icon1FullPath" value="" size="40" />
+                        <label class="form-label" for="icon0FullPath">Icon ID 0 full path:</label>
+                        <input class="form-control" type="text" id="icon0FullPath" name="icon0FullPath" value="" size="40" /><br />
+                        <label class="form-label" for="icon1FullPath">Icon ID 1 full path:</label>
+                        <input class="form-control" type="text" id="icon1FullPath" name="icon1FullPath" value="" size="40" />
                     </div>
                     <input name="submit" type="submit" value="Update"/>
                 </form>
@@ -155,13 +155,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>

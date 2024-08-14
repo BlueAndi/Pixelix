@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -32,7 +32,7 @@
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
             <!-- Dialog -->
-            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header" id="dialogHeader">
@@ -57,13 +57,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix menu -->
         <script type="text/javascript" src="/js/menu.js"></script>
@@ -121,12 +121,13 @@
                 }).then(function() {
                     var $label      = null;
                     var $formGroup  = null;
+                    var $formCheck  = null;
                     var $inputField = null;
                     var $button     = null;
 
                     for(index = 0; index < data.length; ++index) {
                         $label      = $("<label>")
-                                    .attr("for", "for-" + index)
+                                    .attr("for", "setting-" + index)
                                     .attr("class", "form-label")
                                     .text(data[index].name);
 
@@ -146,6 +147,7 @@
                                     .attr("minlength", data[index].minlength)
                                     .attr("maxlength", data[index].maxlength)
                                     .val(data[index].value);
+
                         } else if ("number" === typeof data[index].value) {
                             $inputField = $("<input>")
                                     .attr("class", "form-control")
@@ -155,9 +157,11 @@
                                     .attr("min", data[index].min)
                                     .attr("max", data[index].max)
                                     .val(data[index].value);
+
                         } else if ("boolean" === typeof data[index].value) {
+
                             $inputField = $("<input>")
-                                    .attr("class", "form-control")
+                                    .attr("class", "form-check-input")
                                     .attr("id", "setting-" + index)
                                     .attr("placeholder", "")
                                     .attr("type", "checkbox");
@@ -165,6 +169,14 @@
                             if (true === data[index].value) {
                                 $($inputField).attr("checked", true);
                             }
+
+                            $label.attr("class", "form-check-label");
+
+                            $formCheck = $("<div>")
+                                    .attr("class", "form-check")
+                                    .append($inputField)
+                                    .append($label)
+
                         } else if ("object" === typeof data[index].value) {
                             $inputField = $("<textarea>")
                                     .attr("class", "form-control")
@@ -176,6 +188,7 @@
                                     .attr("minlength", data[index].minlength)
                                     .attr("maxlength", data[index].maxlength)
                                     .val(JSON.stringify(data[index].value, null, 2));
+
                         } else {
                             console.error("Data type" + typeof data[index].value + "not handled.");
                         }
@@ -185,13 +198,25 @@
                                     .attr("onclick", "store(\"setting-" + index + "\");")
                                     .text("Store");
 
-                        $formGroup  = $("<div>")
-                                    .attr("class", "form-group")
-                                    .append($label)
-                                    .append($inputField)
-                                    .append($button);
+                        if (null !== $formCheck) {
+                            $formGroup  = $("<div>")
+                                .attr("class", "form-group")
+                                .append($formCheck)
+                                .append($button);
+
+                        } else {
+
+                            $formGroup  = $("<div>")
+                                        .attr("class", "form-group")
+                                        .append($label)
+                                        .append($inputField)
+                                        .append($button);
+                        }
 
                         $("#settings").append($formGroup);
+
+                        /* Reset */
+                        $formCheck = null;
                     }
                 });
             });

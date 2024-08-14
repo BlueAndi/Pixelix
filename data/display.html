@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -19,7 +19,7 @@
                 <a class="navbar-brand" href="/index.html">
                     <img src="/images/LogoSmall.png" alt="PIXELIX" />
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -32,7 +32,7 @@
         <!-- Begin page content -->
         <main role="main" class="flex-shrink-0">
             <!-- Dialog -->
-            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+            <div class="modal fade" id="modalDialog" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-keyboard="false" data-bs-backdrop="static">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header" id="dialogHeader">
@@ -67,16 +67,26 @@
                 <p>Currently active fade effect: <span id="lableFadeEffect"> Linear</span></p>
                 <p><button class="btn btn-light" type="button" onclick="nextEffect()" disabled>Next fade effect</button></p>
                 <p>
-                    <select id="pluginToInstall" size="1">
-                    </select>
-                    <br />
-                    <button class="btn btn-light" type="button" onclick="install()" disabled>Install</button>
+                    <div class="form-group">
+                        <select class="form-select" id="pluginToInstall" size="1">
+                        </select>
+                        <br />
+                        <button class="btn btn-light" type="button" onclick="install()" disabled>Install</button>
+                    </div>
                 </p>
                 <p>
-                    <ul class="list-group">
-                        <li class="list-group-item text-dark">Automatic brightness control: <span id="autoBrightnessCtrl">?</span> <button id="bAutoBrightnessCtrl" type="button" onclick="changeAutoBrightnessCtrl()" disabled>?</button></li>
-                        <li class="list-group-item text-dark">Brightness: <span id="brightness">?</span> <input type="range" id="sliderBrightness" min="25" max="255" onchange="changeBrightness()" disabled /></li>
-                    </ul>
+                    <div class="form-group">
+                        <label class="form-label" for="bAutoBrightnessCtrl">Automatic brightness control:</label>
+                        <button class="btn btn-light" id="bAutoBrightnessCtrl" type="button" onclick="changeAutoBrightnessCtrl()" disabled>?</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="brightness">Brightness:</label>
+                        <div class="text-primary" id="brightness">?</div>
+                    </div>
+                        <div class="form-group">
+                        <label class="form-label" for="sliderBrightness">Change brightness:</label>
+                        <input type="range" class="form-range" id="sliderBrightness" min="25" max="255" onchange="changeBrightness()" disabled />
+                    </div>
                 </p>
             </div>
         </main>
@@ -85,13 +95,13 @@
         <footer class="footer mt-auto py-3">
             <div class="container">
                 <hr />
-                <span class="text-muted">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
-                <span class="text-muted"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
+                <span class="text-secondary">(C) 2019 - 2024 Andreas Merkle (web@blue-andi.de)</span><br />
+                <span class="text-secondary"><a href="https://github.com/BlueAndi/esp-rgb-led-matrix/blob/master/LICENSE">MIT License</a></span>
             </div>
         </footer>
 
         <!-- jQuery, and Bootstrap JS bundle -->
-        <script type="text/javascript" src="/js/jquery-3.6.3.slim.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-3.7.1.slim.min.js"></script>
         <script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
         <!-- Pixelix websocket library -->
         <script type="text/javascript" src="/js/ws.js"></script>
@@ -507,7 +517,8 @@
             }
 
             function updateBrightness() {
-                $("#brightness").text((brightness * 100 / 255).toFixed(2));
+                var brightnessInPercent = (brightness * 100 / 255).toFixed(2);
+                $("#brightness").text("" + brightnessInPercent + " %");
                 $("#sliderBrightness").val(brightness);
             }
 
@@ -534,10 +545,8 @@
 
             function updateAutoBrightnessCtrl() {
                 if (false === autoBrightnessCtrl) {
-                    $("#autoBrightnessCtrl").text("Disabled");
                     $("#bAutoBrightnessCtrl").text("Enable");
                 } else {
-                    $("#autoBrightnessCtrl").text("Enabled");
                     $("#bAutoBrightnessCtrl").text("Disable");
                 }
             }
