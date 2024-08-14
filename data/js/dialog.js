@@ -69,7 +69,7 @@ dialog.showWarning = function(message, isBlocking) {
     $("#dialogHeader").removeClass();
     $("#dialogFooter").empty();
 
-    $("#dialogHeader").addClass("modal-header bg-warning text-dark");
+    $("#dialogHeader").addClass("modal-header bg-warning");
     $("#dialogFooter").append($btnClose);
 
     return dialog._show("Warning", message, isBlocking);

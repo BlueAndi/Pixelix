@@ -35,15 +35,15 @@
                 <h1 class="mt-5">OpenWeatherPlugin</h1>
                 <p><img src="OpenWeatherPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows the current weather condition (icon and temperature) and one aditional information (see configuration below) provided by https://openweathermap.org/.</p>
-                <h2 class="mt-1">REST API</h2>
-                <h3 class="mt-1">Get the OpenWeather related configuration .</h3>
+                <h2>REST API</h2>
+                <h3>Get the OpenWeather related configuration .</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
-                <h3 class="mt-1">Set OpenWeather related configuration.</h3>
+                <h3>Set OpenWeather related configuration.</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&weatherInfo=&lt;WEATHER-INFO&gt;&units=&lt;UNITS&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/weather?sourceId=&lt;SOURCE-ID&gt;&updatePeriod=&lt;UPDATE-PERIOD&gt;&apiKey=&lt;API-KEY&gt;&latitude=&lt;LATITUDE&gt;&longitude=&lt;LONGITUDE&gt;&weatherInfo=&lt;WEATHER-INFO&gt;&units=&lt;UNITS&gt;</code></pre>
                 <ul>
@@ -64,7 +64,7 @@
                         </ul>
                     </li>
                 </ul>
-                <h3 class="mt-2">Configuration</h3>
+                <h2>Configuration</h2>
                 <form id="myForm" action="javascript:setConfig(pluginUid.options[pluginUid.selectedIndex].value)">
                     <div class="form-group">
                         <label class="form-label" for="pluginUid">Plugin UID:</label>

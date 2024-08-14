@@ -36,15 +36,15 @@
                 <p><img src="JustTextPlugin.jpg" alt="Screenshot" /></p>
                 <p>The plugin shows only text on the whole display. If no text is set, the plugin will be skipped in the slot.</p>
                 <p>If MQTT is built in and enabled, it will support Home Assistant MQTT discovery.</p>
-                <h2 class="mt-1">REST API</h2>
-                <h3 class="mt-1">Get text</h3>
+                <h2>REST API</h2>
+                <h3>Get text</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text</code></pre>
                 <ul>
                     <li>PLUGIN-UID: The plugin unique id.</li>
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                 </ul>
-                <h3 class="mt-1">Set text</h3>
+                <h3>Set text</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/text?text=&lt;TEXT&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/text?text=&lt;TEXT&gt;</code></pre>
                 <ul>
@@ -52,20 +52,22 @@
                     <li>PLUGIN-ALIAS: The plugin alias name.</li>
                     <li>TEXT: The text to show on the display.</li>
                 </ul>
-                <h2 class="mt-2">Configuration</h2>
-                <h3 class="mt-1">Text</h3>
-                <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
-                    <div class="form-group">
-                        <label class="form-label" for="pluginUid">Plugin UID:</label>
-                        <select class="form-select" id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="justText">Text:</label>
-                        <input class="form-control" type="text" id="justText" name="justText" value="" size="40" />                            
-                    </div>
-                    <input name="submit" type="submit" value="Update"/>
-                </form>          
+                <h2>Configuration</h2>
+                <h3>Text</h3>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                    <form id="myFormText" action="javascript:setText(pluginUidText.options[pluginUidText.selectedIndex].value, justText.value)">
+                        <div class="form-group">
+                            <label class="form-label" for="pluginUid">Plugin UID:</label>
+                            <select class="form-select" id="pluginUidText" name="pluginUid" size="1" onChange="getText(pluginUidText.options[pluginUidText.selectedIndex].value, 'justText')">
+                            </select>    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="justText">Text:</label>
+                            <input class="form-control" type="text" id="justText" name="justText" value="" size="40" />                            
+                        </div>
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
+                </div>
             </div>
         </main>
   

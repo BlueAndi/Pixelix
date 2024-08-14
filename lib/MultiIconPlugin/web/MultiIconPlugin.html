@@ -48,8 +48,8 @@
                     <li>Compatibility options: Don't write color informations.</li>
                     <li>Extended options: Select 24 bit per pixel.</li>
                 </ul>
-                <h2 class="mt-1">REST API</h2>
-                <h3 class="mt-1">Set icon</h3>
+                <h2>REST API</h2>
+                <h3>Set icon</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;</code></pre>
                 <ul>
@@ -58,7 +58,7 @@
                     <li>SLOT-ID: The id of the slot (starting with 0 from left ([0; 2])).</li>
                     <li>ICON-ID: The id of the icon ([0; 1]).</li>
                 </ul>
-                <h3 class="mt-1">Clear icon</h3>
+                <h3>Clear icon</h3>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/bitmap/&lt;SLOT-ID&gt;/&lt;ICON-ID&gt;?clear=&lt;STATE&gt;</code></pre>
                 <ul>
@@ -68,7 +68,7 @@
                     <li>ICON-ID: The id of the icon ([0; 1]).</li>
                     <li>STATE: <code>true</code> or <code>false</code></li>
                 </ul>
-                <h3 class="mt-1">Control slot</h3>
+                <h3>Control slot</h3>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slot/&lt;SLOT-ID&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>GET {{ORIGIN}}/rest/api/v1/display/alias/&lt;PLUGIN-ALIAS&gt;/slot/&lt;SLOT-ID&gt;</code></pre>
                 <pre name="injectOrigin" class="text-light"><code>POST {{ORIGIN}}/rest/api/v1/display/uid/&lt;PLUGIN-UID&gt;/slot/&lt;SLOT-ID&gt;?activeIconId=&lt;ACTIVE-ICON-ID&gt;&amp;icons._0_.iconid=&lt;ICON-ID&gt;&amp;icons._0_.fullPath=&lt;FULL-PATH&gt;&amp;icons._1_.iconid=&lt;ICON-ID&gt;&amp;icons._1_.fullPath=&lt;FULL-PATH&gt;</code></pre>
@@ -81,73 +81,79 @@
                     <li>ICON-ID: The id of the icon, the path relates to.</li>
                     <li>FULL-PATH: The full path to the icon image.</li>
                 </ul>
-                <h2 class="mt-2">Configuration</h2>
-                <h3 class="mt-1">Icon</h3>
-                <form id="setIconForm" enctype="multipart/form-data" action="javascript:uploadIconByForm('setIconForm')">
-                    <div class="form-group">
-                        <label class="form-label" for="pluginUidBitmap">Plugin UID:</label>
-                        <select class="form-select" id="pluginUidBitmap" name="pluginUid" size="1">
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="slotIdBitmap">Slot ID:</label>
-                        <select class="form-select" id="slotIdBitmap" name="slotId" size="1">
-                        </select>
-                        <label class="form-label" for="iconIdBitmap">Icon ID:</label>
-                        <select class="form-select" id="iconIdBitmap" name="iconId" size="1">
-                            <option value="0" selected>0 (default)</option>
-                            <option value="1">1</option>
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="bitmap">Icon:</label>
-                        <input class="form-control" id="bitmap" name="bitmap" type="file" accept=".bmp,.gif" />    
-                    </div>
-                    <input name="submit" type="submit" value="Update"/>
-                </form>
-                <h4 class="mt-1">Clear Icon</h4>
-                <form id="clearIconForm" enctype="multipart/form-data" action="javascript:clearIconByForm('clearIconForm')">
-                    <div class="form-group">
-                        <label class="form-label" for="pluginUidClearIcon">Plugin UID:</label>
-                        <select class="form-select" id="pluginUidClearIcon" name="pluginUid" size="1">
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="slotIdClearIcon">Slot ID:</label>
-                        <select class="form-select" id="slotIdClearIcon" name="slotId" size="1">
-                        </select>
-                        <label class="form-label" for="iconIdClearIcon">Icon ID:</label>
-                        <select class="form-select" id="iconIdClearIcon" name="iconId" size="1">
-                            <option value="0" selected>0 (default)</option>
-                            <option value="1">1</option>
-                        </select>    
-                    </div>
-                    <input name="submit" type="submit" value="Clear"/>
-                </form>
-                <h3 class="mt-1">Slot configuration</h3>
-                <form id="myFormSlot" enctype="multipart/form-data" action="javascript:setSlotByForm('myFormSlot')">
-                    <div class="form-group">
-                        <label class="form-label" for="pluginUidSlot">Plugin UID:</label>
-                        <select class="form-select" id="pluginUidSlot" name="pluginUid" size="1">
-                        </select>    
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="slotIdSlot">Slot ID:</label>
-                        <select class="form-select" id="slotIdSlot" name="slotId" size="1" onchange="getSlotByForm('myFormSlot')">
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="activeIconId">Active Icon ID:</label>
-                        <input class="form-control" type="number" id="activeIconId" name="activeIconId" value="0" min="0" max="1" />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="icon0FullPath">Icon ID 0 full path:</label>
-                        <input class="form-control" type="text" id="icon0FullPath" name="icon0FullPath" value="" size="40" /><br />
-                        <label class="form-label" for="icon1FullPath">Icon ID 1 full path:</label>
-                        <input class="form-control" type="text" id="icon1FullPath" name="icon1FullPath" value="" size="40" />
-                    </div>
-                    <input name="submit" type="submit" value="Update"/>
-                </form>
+                <h2>Configuration</h2>
+                <h3>Icon</h3>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                    <form id="setIconForm" enctype="multipart/form-data" action="javascript:uploadIconByForm('setIconForm')">
+                        <div class="form-group">
+                            <label class="form-label" for="pluginUidBitmap">Plugin UID:</label>
+                            <select class="form-select" id="pluginUidBitmap" name="pluginUid" size="1">
+                            </select>    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="slotIdBitmap">Slot ID:</label>
+                            <select class="form-select" id="slotIdBitmap" name="slotId" size="1">
+                            </select>
+                            <label class="form-label" for="iconIdBitmap">Icon ID:</label>
+                            <select class="form-select" id="iconIdBitmap" name="iconId" size="1">
+                                <option value="0" selected>0 (default)</option>
+                                <option value="1">1</option>
+                            </select>    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="bitmap">Icon:</label>
+                            <input class="form-control" id="bitmap" name="bitmap" type="file" accept=".bmp,.gif" />    
+                        </div>
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
+                </div>
+                <h3 class="mt-1">Clear Icon</h3>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                    <form id="clearIconForm" enctype="multipart/form-data" action="javascript:clearIconByForm('clearIconForm')">
+                        <div class="form-group">
+                            <label class="form-label" for="pluginUidClearIcon">Plugin UID:</label>
+                            <select class="form-select" id="pluginUidClearIcon" name="pluginUid" size="1">
+                            </select>    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="slotIdClearIcon">Slot ID:</label>
+                            <select class="form-select" id="slotIdClearIcon" name="slotId" size="1">
+                            </select>
+                            <label class="form-label" for="iconIdClearIcon">Icon ID:</label>
+                            <select class="form-select" id="iconIdClearIcon" name="iconId" size="1">
+                                <option value="0" selected>0 (default)</option>
+                                <option value="1">1</option>
+                            </select>    
+                        </div>
+                        <input name="submit" type="submit" value="Clear"/>
+                    </form>
+                </div>
+                <h3>Slot configuration</h3>
+                <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                    <form id="myFormSlot" enctype="multipart/form-data" action="javascript:setSlotByForm('myFormSlot')">
+                        <div class="form-group">
+                            <label class="form-label" for="pluginUidSlot">Plugin UID:</label>
+                            <select class="form-select" id="pluginUidSlot" name="pluginUid" size="1">
+                            </select>    
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="slotIdSlot">Slot ID:</label>
+                            <select class="form-select" id="slotIdSlot" name="slotId" size="1" onchange="getSlotByForm('myFormSlot')">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="activeIconId">Active Icon ID:</label>
+                            <input class="form-control" type="number" id="activeIconId" name="activeIconId" value="0" min="0" max="1" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="icon0FullPath">Icon ID 0 full path:</label>
+                            <input class="form-control" type="text" id="icon0FullPath" name="icon0FullPath" value="" size="40" /><br />
+                            <label class="form-label" for="icon1FullPath">Icon ID 1 full path:</label>
+                            <input class="form-control" type="text" id="icon1FullPath" name="icon1FullPath" value="" size="40" />
+                        </div>
+                        <input name="submit" type="submit" value="Update"/>
+                    </form>
+                </div>
             </div>
         </main>
   
