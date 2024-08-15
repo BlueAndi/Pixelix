@@ -248,7 +248,25 @@ bool IconTextLampPlugin::setTopic(const String& topic, const JsonObjectConst& va
         {
             String fullPath = jsonFullPath.as<String>();
 
-            isSuccessful = loadIcon(fullPath);
+            /* Clear always the icon indpended whether its requested by user.
+             * In case of an uploaded new icon, clearing will close the image
+             * file and makes it possible to overwrite the file.
+             */
+            clearIcon();
+
+            if (false == fullPath.isEmpty())
+            {
+                /* Rename uploaded icon by removing the file extension for temporary files. */
+                String iconFullPathWithoutTmp = fullPath.substring(0, fullPath.length() - strlen(FILE_EXT_TMP));
+
+                FILESYSTEM.rename(fullPath, iconFullPathWithoutTmp);
+
+                isSuccessful = loadIcon(iconFullPathWithoutTmp);
+            }
+            else
+            {
+                isSuccessful = true;
+            }
         }
     }
     else
