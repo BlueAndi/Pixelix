@@ -415,10 +415,19 @@
                     var $divSlots = $("#divSlots");
                     var $divSlot = null;
                     var $header = null;
+                    var $spanAlias = null;
                     var $inputAlias = null;
+                    var $inputGroupAlias = null;
+                    var $divDuration = null;
                     var $inputDuration = null;
+                    var $divDuration = null;
+                    var $durationUnit = null;
                     var $dragableSlot = null;
+                    var dragableSlotId = "";
+                    var pluginName = "";
+                    var pluginUid = "";
                     var pluginAlias = "";
+                    var inputAliasDisabled = false;
 
                     $divSlots.empty();
                     for(index = 0; index < rsp.slots.length; ++index) {
@@ -449,15 +458,24 @@
                         $header.append("Slot " + index + "<br />");
 
                         $inputDuration = $("<input>")
+                            .attr("class", "form-control")
                             .attr("id", "duration" + index)
                             .attr("type", "number")
                             .attr("value", rsp.slots[index].duration / 1000)
                             .attr("min", "1")
                             .attr("max", "3600")
                             .attr("onchange", "setDuration(" + index + ")");
+                        
+                        $durationUnit = $("<span>")
+                            .attr("class", "input-group-text")
+                            .append("[s]");
 
-                        $header.append($inputDuration);
-                        $header.append("[s]");
+                        $divDuration = $("<div>")
+                            .attr("class", "input-group")
+                            .append($inputDuration)
+                            .append($durationUnit);
+
+                        $header.append($divDuration);
 
                         $divSlot.append($header);
 
@@ -472,32 +490,84 @@
                         }
 
                         if (0 == rsp.slots[index].name.length) {
-                            $dragableSlot.attr("id", "A" + index);
-                            $dragableSlot.append("-<br />UID -<br />Alias -");
+                            dragableSlotId = "A" + index;
+                            inputAliasId = "aliasA" + index;
+                            pluginName = "-";
+                            pluginUid = "-";
+                            pluginAlias = "-";
+
                         } else {
-                            $dragableSlot.attr("id", rsp.slots[index].uid);
-                            $dragableSlot.append(rsp.slots[index].name + "<br />UID " + rsp.slots[index].uid);
+                            dragableSlotId = rsp.slots[index].uid;
+                            inputAliasId = "alias" + rsp.slots[index].uid;
+                            pluginName = rsp.slots[index].name;
+                            pluginUid = rsp.slots[index].uid;
+                            pluginAlias = "-";
 
                             if (0 === rsp.slots[index].alias.length) {
                                 pluginAlias = "";
                             } else {
                                 pluginAlias = rsp.slots[index].alias;
                             }
+                        }
 
+                        $dragableSlot.attr("id", dragableSlotId);
+
+                        $spanAlias = $("<span>")
+                            .attr("class", "input-group-text")
+                            .append("Alias:");
+
+                        if (0 == rsp.slots[index].name.length) {
+                            $inputAlias = $("<span>")
+                                .attr("class", "input-group-text")
+                                .attr("style", "width: 8em;")
+                                .append(pluginAlias)
+
+                        } else {
                             $inputAlias = $("<input>")
-                                .attr("id", "alias" + rsp.slots[index].uid)
+                                .attr("class", "form-control")
+                                .attr("id", inputAliasId)
                                 .attr("type", "text")
                                 .attr("value", pluginAlias)
                                 .attr("size", "8")
                                 .attr("minlength", "0")
                                 .attr("maxlength", "8")
-                                .attr("onchange", "setAlias(" + rsp.slots[index].uid + ")");
-
-                                $dragableSlot.append("<br />Alias ");
-                                $dragableSlot.append($inputAlias);
+                                .attr("onchange", "setAlias(" + pluginUid + ")");
                         }
-                        $divSlot.append($dragableSlot);
 
+                        $inputGroupAlias = $("<div>")
+                            .attr("class", "input-group")
+                            .append($spanAlias)
+                            .append($inputAlias);
+                        
+                        var $divCol11 = $("<div>")
+                            .attr("class", "col")
+                            .append(pluginName);
+                        var $divCol21 = $("<div>")
+                            .attr("class", "col")
+                            .append("UID: " + pluginUid);
+                        var $divCol31 = $("<div>")
+                            .attr("class", "col")
+                            .append($inputGroupAlias);
+
+                        var $divRow1 = $("<div>")
+                            .attr("class", "row")
+                            .append($divCol11);
+                        var $divRow2 = $("<div>")
+                            .attr("class", "row")
+                            .append($divCol21);
+                        var $divRow3 = $("<div>")
+                            .attr("class", "row")
+                            .append($divCol31);
+
+                        var $divContainer = $("<div>")
+                            .attr("class", "container text-center")
+                            .append($divRow1)
+                            .append($divRow2)
+                            .append($divRow3);
+
+                        $dragableSlot.append($divContainer);
+
+                        $divSlot.append($dragableSlot);
                         $divSlots.append($divSlot);
                     }
 
@@ -511,6 +581,12 @@
                         .text("Uninstall");
 
                     $divSlot.append($header);
+
+                    var $divUninstall = $("<p>")
+                        .attr("class", "dragableSlot")
+                        .text("Drop the plugin here to uninstall it.");
+
+                        $divSlot.append($divUninstall);
 
                     $divSlots.append($divSlot);
                 });

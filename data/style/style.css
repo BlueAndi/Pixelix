@@ -45,8 +45,8 @@ code {
 }
 
 div.divSlot {
-    height: 12em;
-    width: 12em;
+    height: fit-content;
+    width: fit-content;
     border: 2px solid #666666;
     background-color: #ccc;
     margin-right: 5px;
