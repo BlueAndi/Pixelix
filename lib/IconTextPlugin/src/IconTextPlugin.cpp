@@ -145,25 +145,7 @@ bool IconTextPlugin::setTopic(const String& topic, const JsonObjectConst& value)
         {
             String iconFullPath = jsonIconFullPath.as<String>();
 
-            /* Clear always the icon indpended whether its requested by user.
-             * In case of an uploaded new icon, clearing will close the image
-             * file and makes it possible to overwrite the file.
-             */
-            clearIcon();
-
-            if (false == iconFullPath.isEmpty())
-            {
-                /* Rename uploaded icon by removing the file extension for temporary files. */
-                String iconFullPathWithoutTmp = iconFullPath.substring(0, iconFullPath.length() - strlen(FILE_EXT_TMP));
-
-                FILESYSTEM.rename(iconFullPath, iconFullPathWithoutTmp);
-
-                isSuccessful = loadIcon(iconFullPathWithoutTmp);
-            }
-            else
-            {
-                isSuccessful = true;
-            }
+            isSuccessful = loadIcon(iconFullPath);
         }
     }
     else if (0U != topic.equals(TOPIC_ICON))
